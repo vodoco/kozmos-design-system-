@@ -1,0 +1,74 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as FloatingActionButtonStories from "./FloatingActionButton.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={FloatingActionButtonStories} />
+
+# FloatingActionButton
+
+Displays the FloatingActionButton interface topology natively.
+
+<Canvas>
+  <Story of={FloatingActionButtonStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { FloatingActionButton } from "@kozmos/react"
+
+<FloatingActionButton />
+    `}
+    vue={`
+<script setup>
+import { KozmosFloatingActionButton } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosFloatingActionButton />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosFloatingActionButton: View {
+    var body: some View {
+        Text("FloatingActionButton Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.floatingactionbutton
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosFloatingActionButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Default.Add
+) {
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier,
+        containerColor = KozmosColors.primitivesColorsTheme500,
+        contentColor = KozmosColors.primitivesColorsBackground0
+    ) {
+        Icon(icon, contentDescription = "Action")
+    }
+}
+
+    `}
+/>

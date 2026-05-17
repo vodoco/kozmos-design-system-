@@ -1,0 +1,71 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as LinkStories from "./Link.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={LinkStories} />
+
+# Link
+
+Displays the Link interface topology natively.
+
+<Canvas>
+  <Story of={LinkStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Link } from "@kozmos/react"
+
+<Link />
+    `}
+    vue={`
+<script setup>
+import { KozmosLink } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosLink />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosLink: View {
+    var body: some View {
+        Text("Link Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.link
+
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDecoration
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosLink(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        color = KozmosColors.primitivesColorsTheme500,
+        textDecoration = TextDecoration.Underline,
+        modifier = modifier.clickable { onClick() }
+    )
+}
+
+    `}
+/>

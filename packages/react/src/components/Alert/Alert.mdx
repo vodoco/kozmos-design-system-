@@ -1,0 +1,199 @@
+
+import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import * as AlertStories from './Alert.stories';
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<Meta of={AlertStories} />
+
+# Alert
+
+Displays a callout for user attention.
+
+<Canvas>
+  <Story of={AlertStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Alert, AlertDescription, AlertTitle } from "@kozmos/react"
+import { Terminal } from "lucide-react"
+
+<Alert>
+  <Terminal className="h-4 w-4" />
+  <AlertTitle>Heads up!</AlertTitle>
+  <AlertDescription>
+    You can add components and dependencies to your app using the cli.
+  </AlertDescription>
+</Alert>
+    `}
+    vue={`
+<script setup>
+import { Alert, AlertDescription, AlertTitle } from "@kozmos/vue"
+import { Terminal } from "lucide-vue-next"
+</script>
+
+<template>
+  <Alert>
+    <Terminal class="h-4 w-4" />
+    <AlertTitle>Heads up!</AlertTitle>
+    <AlertDescription>
+      You can add components and dependencies to your app using the cli.
+    </AlertDescription>
+  </Alert>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+// Example SwiftUI Implementation using Kozmos Tokens
+struct KozmosAlert: View {
+    let title: String
+    let description: String
+    let variant: AlertVariant // default or destructive
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: variant == .destructive ? "exclamationmark.circle" : "info.circle")
+                .foregroundColor(variant == .destructive ? KozmosColors.semanticColorTextDestructive : KozmosColors.semanticColorTextDefault)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(variant == .destructive ? KozmosColors.semanticColorTextDestructive : KozmosColors.semanticColorTextDefault)
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(variant == .destructive ? KozmosColors.semanticColorTextDestructive : KozmosColors.semanticColorTextDefault)
+            }
+        }
+        .padding()
+        .background(variant == .destructive ? KozmosColors.semanticColorBackgroundDestructive : KozmosColors.semanticColorBackgroundDefault)
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(variant == .destructive ? KozmosColors.semanticColorBorderDestructive : KozmosColors.semanticColorBorderDefault, lineWidth: 1)
+        )
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.alert
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+
+enum class AlertStatus {
+    Info, Success, Warning, Error
+}
+
+@Composable
+fun KozmosAlert(
+    modifier: Modifier = Modifier,
+    status: AlertStatus = AlertStatus.Info,
+    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
+) {
+    val color = when (status) {
+        AlertStatus.Info -> KozmosColors.primitivesColorsEmotionalInfo600
+        AlertStatus.Success -> KozmosColors.primitivesColorsEmotionalSuccess600
+        AlertStatus.Warning -> KozmosColors.primitivesColorsEmotionalAlert600
+        AlertStatus.Error -> KozmosColors.primitivesColorsEmotionalDanger600
+    }
+    
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(color.copy(alpha = 0.1f), RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .padding(KozmosDimensions.primitivesLayoutSpacing200),
+        verticalAlignment = Alignment.Top
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun KozmosAlertIcon(
+    status: AlertStatus = AlertStatus.Info,
+    modifier: Modifier = Modifier,
+    customIcon: ImageVector? = null
+) {
+    val (color, icon) = when (status) {
+        AlertStatus.Info -> KozmosColors.primitivesColorsEmotionalInfo600 to Icons.Default.Info
+        AlertStatus.Success -> KozmosColors.primitivesColorsEmotionalSuccess600 to Icons.Default.CheckCircle
+        AlertStatus.Warning -> KozmosColors.primitivesColorsEmotionalAlert600 to Icons.Default.Warning
+        AlertStatus.Error -> KozmosColors.primitivesColorsEmotionalDanger600 to Icons.Default.Info
+    }
+    Icon(
+        imageVector = customIcon ?: icon,
+        contentDescription = null,
+        tint = color,
+        modifier = modifier.padding(end = KozmosDimensions.primitivesLayoutSpacing150)
+    )
+}
+
+@Composable
+fun KozmosAlertContent(
+    modifier: Modifier = Modifier,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit
+) {
+    Column(modifier = modifier) {
+        content()
+    }
+}
+
+@Composable
+fun KozmosAlertTitle(
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = KozmosColors.primitivesColorsForeground100,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun KozmosAlertDescription(
+    description: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = description,
+        style = MaterialTheme.typography.bodyMedium,
+        color = KozmosColors.primitivesColorsForeground500,
+        modifier = modifier
+    )
+}
+
+    `}
+/>

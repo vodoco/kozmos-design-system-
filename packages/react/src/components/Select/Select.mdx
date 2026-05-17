@@ -1,0 +1,177 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as SelectStories from './Select.stories';
+
+<Meta of={SelectStories} />
+
+# Select
+
+Displays a list of options for the user to pick from—triggered by a button.
+
+## Usage
+
+Use a Select component when:
+- Users need to choose a single option from a list.
+- Space is limited (dropdown vs radio group).
+- The list of options is static or small (< 20 items).
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+    react={`
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@kozmos/react"
+
+<Select>
+  <SelectTrigger className="w-[180px]">
+    <SelectValue placeholder="Theme" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="light">Light</SelectItem>
+    <SelectItem value="dark">Dark</SelectItem>
+    <SelectItem value="system">System</SelectItem>
+  </SelectContent>
+</Select>
+    `}
+    vue={`
+<script setup>
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@kozmos/vue"
+</script>
+
+<template>
+  <Select>
+    <SelectTrigger class="w-[180px]">
+      <SelectValue placeholder="Theme" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="light">Light</SelectItem>
+      <SelectItem value="dark">Dark</SelectItem>
+      <SelectItem value="system">System</SelectItem>
+    </SelectContent>
+  </Select>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+public struct KozmosSelect<Trigger: View, Content: View>: View {
+    let trigger: Trigger
+    let content: Content
+    
+    public init(@ViewBuilder trigger: () -> Trigger, @ViewBuilder content: () -> Content) {
+        self.trigger = trigger()
+        self.content = content()
+    }
+    
+    public var body: some View {
+        Menu {
+            content
+        } label: {
+            trigger
+        }
+    }
+}
+
+public struct KozmosSelectItem: View {
+    let value: String
+    let label: String
+    @Binding var selection: String
+    @Environment(\.kozmosAnalytics) var trackEvent
+    
+    public init(value: String, label: String, selection: Binding<String>) {
+        self.value = value
+        self.label = label
+        self._selection = selection
+    }
+    
+    public var body: some View {
+        Button(action: {
+            trackEvent(KozmosAnalyticsEvent(eventName: "select_value_changed", component: "Select", properties: ["value": value]))
+            selection = value
+        }) {
+            HStack {
+                Text(label)
+                if selection == value {
+                    Image(systemName: "checkmark")
+                }
+            }
+        }
+    }
+}
+
+    `}
+    kotlin={`
+package com.kozmos.components.select
+
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun KozmosSelect(
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    trigger: @Composable ExposedDropdownMenuBoxScope.(Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = onExpandedChange,
+        modifier = modifier
+    ) {
+        trigger(expanded)
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) },
+        ) {
+            content()
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun KozmosSelectItem(
+    value: String,
+    label: String,
+    onValueChange: (String) -> Unit,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+    DropdownMenuItem(
+        text = { Text(label) },
+        onClick = {
+            trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Select", eventName = "select_value_changed", properties = mapOf("value" to value.toString())))
+            onValueChange(value)
+            onDismissRequest()
+        },
+        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+        modifier = modifier
+    )
+}
+
+    `}
+/>
+
+## Stories
+
+### Default
+<Canvas of={SelectStories.Default} />

@@ -1,0 +1,246 @@
+
+import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import * as CardStories from './Card.stories';
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<Meta of={CardStories} />
+
+# Card
+
+Displays a card with header, content, and footer.
+
+<Canvas>
+  <Story of={CardStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@kozmos/react"
+
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card Description</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <p>Card Content</p>
+  </CardContent>
+  <CardFooter>
+    <p>Card Footer</p>
+  </CardFooter>
+</Card>
+    `}
+    vue={`
+<script setup>
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@kozmos/vue"
+</script>
+
+<template>
+  <Card>
+    <CardHeader>
+      <CardTitle>Card Title</CardTitle>
+      <CardDescription>Card Description</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <p>Card Content</p>
+    </CardContent>
+    <CardFooter>
+      <p>Card Footer</p>
+    </CardFooter>
+  </Card>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosCard<Content: View>: View {
+    let title: String?
+    let description: String?
+    let content: Content
+    let footer: AnyView?
+    
+    init(
+        title: String? = nil,
+        description: String? = nil,
+        @ViewBuilder content: () -> Content,
+        footer: AnyView? = nil
+    ) {
+        self.title = title
+        self.description = description
+        self.content = content()
+        self.footer = footer
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if title != nil || description != nil {
+                VStack(alignment: .leading, spacing: 4) {
+                    if let title = title {
+                        Text(title)
+                            .font(.headline)
+                            .foregroundColor(KozmosColors.semanticColorTextDefault)
+                    }
+                    if let description = description {
+                        Text(description)
+                            .font(.subheadline)
+                            .foregroundColor(KozmosColors.semanticColorTextMuted)
+                    }
+                }
+                .padding([.top, .horizontal])
+            }
+            
+            content
+                .padding(.horizontal)
+            
+            if let footer = footer {
+                footer
+                    .padding([.bottom, .horizontal])
+            } else {
+                 Spacer().frame(height: 16)
+            }
+        }
+        .background(KozmosColors.componentCardBackgroundColorDefault)
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(KozmosColors.componentCardBorderColorDefault, lineWidth: 1)
+        )
+        // Shadow could be added here if elevation tokens are available
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.card
+
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosDimensions
+
+@Composable
+fun KozmosCard(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = modifier.border(
+            1.dp,
+            KozmosColors.primitivesColorsBackground200,
+            RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200)
+        ),
+        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+        colors = CardDefaults.cardColors(
+            containerColor = KozmosColors.primitivesColorsBackground0,
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        content = {
+            Column(modifier = Modifier) {
+                content()
+            }
+        }
+    )
+}
+
+@Composable
+fun KozmosCardHeader(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier.padding(KozmosDimensions.primitivesLayoutSpacing300)
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun KozmosCardTitle(
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.SemiBold,
+        color = KozmosColors.primitivesColorsForeground100,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun KozmosCardDescription(
+    description: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = description,
+        style = MaterialTheme.typography.bodyMedium,
+        color = KozmosColors.primitivesColorsForeground400,
+        modifier = modifier.padding(top = KozmosDimensions.primitivesLayoutSpacing50)
+    )
+}
+
+@Composable
+fun KozmosCardContent(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier
+            .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing300)
+            .padding(bottom = KozmosDimensions.primitivesLayoutSpacing300)
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun KozmosCardFooter(
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit
+) {
+    Row(
+        modifier = modifier
+            .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing300)
+            .padding(bottom = KozmosDimensions.primitivesLayoutSpacing300),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    ) {
+        content()
+    }
+}
+
+    `}
+/>

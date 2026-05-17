@@ -1,0 +1,79 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as GridStories from "./Grid.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={GridStories} />
+
+# Grid
+
+Displays the Grid interface topology natively.
+
+<Canvas>
+  <Story of={GridStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Grid } from "@kozmos/react"
+
+<Grid />
+    `}
+    vue={`
+<script setup>
+import { KozmosGrid } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosGrid />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosGrid: View {
+    var body: some View {
+        Text("Grid Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.grid
+
+import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun KozmosGrid(
+    modifier: Modifier = Modifier,
+    cols: Int = 2,
+    spacing: Dp = KozmosDimensions.primitivesLayoutSpacing200,
+    content: LazyGridScope.() -> Unit
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(cols),
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(spacing),
+        horizontalArrangement = Arrangement.spacedBy(spacing),
+        content = content
+    )
+}
+
+    `}
+/>

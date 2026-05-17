@@ -1,0 +1,126 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as SearchBarStories from "./SearchBar.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={SearchBarStories} />
+
+# SearchBar
+
+Displays the SearchBar interface topology natively.
+
+<Canvas>
+  <Story of={SearchBarStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { SearchBar } from "@kozmos/react"
+
+<SearchBar />
+    `}
+    vue={`
+<script setup>
+import { KozmosSearchBar } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosSearchBar />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosSearchBar: View {
+    var body: some View {
+        Text("SearchBar Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.searchbar
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+import com.kozmos.providers.LocalKozmosAnalytics
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+
+@Composable
+fun KozmosSearchBar(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onClear: (() -> Unit)? = null,
+    placeholder: String = "Search...",
+    modifier: Modifier = Modifier
+) {
+    val trackEvent = LocalKozmosAnalytics.current
+
+    Surface(
+        modifier = modifier.fillMaxWidth().padding(horizontal = KozmosDimensions.primitivesLayoutSpacing200, vertical = KozmosDimensions.primitivesLayoutSpacing100),
+        shadowElevation = 8.dp,
+        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+        color = KozmosColors.primitivesColorsBackground0
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = {
+                if (value.isNotEmpty() && onClear != null) {
+                    IconButton(onClick = {
+                        trackEvent(com.kozmos.providers.KozmosAnalyticsEvent("SearchBar", "search_cleared"))
+                        onClear()
+                    }) {
+                        Icon(Icons.Default.Close, contentDescription = "Clear")
+                    }
+                }
+            },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(
+                        component = "SearchBar",
+                        eventName = "search_initiated",
+                        properties = mapOf("query" to value)
+                    ))
+                }
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+            singleLine = true,
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+                unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+                cursorColor = KozmosColors.primitivesColorsTheme500,
+                focusedLeadingIconColor = KozmosColors.primitivesColorsForeground500,
+                unfocusedLeadingIconColor = KozmosColors.primitivesColorsForeground500
+            )
+        )
+    }
+}
+
+    `}
+/>

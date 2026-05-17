@@ -1,0 +1,122 @@
+package com.kozmos.components.userlocationmarker
+
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosDesignTokens
+
+@Composable
+fun KozmosUserLocationMarker(
+    heading: Float = 0f,
+    showHeading: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulseScale"
+    )
+    
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulseAlpha"
+    )
+
+    Box(
+        modifier = modifier.size(64.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Pulsing background
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .graphicsLayer {
+                    scaleX = pulseScale
+                    scaleY = pulseScale
+                    alpha = pulseAlpha
+                }
+                .background(KozmosDesignTokens.semanticsDataBlue, CircleShape)
+        )
+        
+        // Static ring
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .alpha(0.2f)
+                .background(KozmosDesignTokens.semanticsDataBlue, CircleShape)
+        )
+
+        // Heading Cone
+        if (showHeading) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .graphicsLayer {
+                        rotationZ = heading
+                    }
+                    .drawBehind {
+                        val path = Path().apply {
+                            moveTo(size.width / 2f, size.height / 2f)
+                            lineTo(size.width * 0.15f, 0f)
+                            quadraticBezierTo(
+                                size.width / 2f, -size.height * 0.1f,
+                                size.width * 0.85f, 0f
+                            )
+                            close()
+                        }
+                        
+                        drawPath(
+                            path = path,
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    KozmosDesignTokens.semanticsDataBlue.copy(alpha = 0.4f),
+                                    Color.Transparent
+                                ),
+                                center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f),
+                                radius = size.width / 2f
+                            )
+                        )
+                    }
+            )
+        }
+
+        // Core Dot
+        Box(
+            modifier = Modifier
+                .size(16.dp)
+                .background(KozmosDesignTokens.semanticsDataBlue, CircleShape)
+                .border(2.dp, Color.White, CircleShape)
+        )
+    }
+}

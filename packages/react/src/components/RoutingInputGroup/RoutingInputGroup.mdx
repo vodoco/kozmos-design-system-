@@ -1,0 +1,26 @@
+import { Meta, Story } from '@storybook/blocks';
+
+<Meta title="Components/RoutingInputGroup" />
+
+# Routing Input Group
+
+The `RoutingInputGroup` maps Pointr's timeline logic into physical multi-point data entry boxes, allowing dynamic addition/reduction of navigational stops while keeping layout structures aligned cleanly against timeline borders.
+
+## React Usage
+
+```tsx
+import { RoutingInputGroup } from '@kozmos/react';
+
+<RoutingInputGroup
+    points={[
+        { id: '1', value: 'Reception' },
+        { id: '2', value: '', placeholder: 'Add a specific Stop' },
+        { id: '3', value: 'Marketing Department 4th Floor' }
+    ]}
+    onPointChange={(id, value) => console.log(id, value)}
+    onRemovePoint={(id) => console.log("Removed: ", id)}
+    onAddPoint={() => console.log("Add Point Request")}
+/>
+```
+
+When rendering precisely two inputs (`len == 2`), the component natively injects a visual physical swap `ArrowDownUp` actuator instead of the generic `<Plus />` structure, reflecting exactly the Wayfinding parity behaviors out-of-the-box.

@@ -1,0 +1,96 @@
+package com.kozmos.components.tabs
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosDimensions
+
+@Composable
+fun KozmosTabs(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        content()
+    }
+}
+
+@Composable
+fun KozmosTabsList(
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(KozmosColors.primitivesColorsBackground0),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun RowScope.KozmosTabsTrigger(
+    value: String,
+    title: String,
+    selectedValue: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+    val isSelected = value == selectedValue
+    
+    Box(
+        modifier = modifier
+            .weight(1f)
+            .clickable {
+                trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Tabs", eventName = "tab_switched", properties = mapOf("value" to value.toString())))
+                onValueChange(value)
+            }
+            .padding(vertical = KozmosDimensions.primitivesLayoutSpacing100),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = title,
+                color = if (isSelected) KozmosColors.primitivesColorsForeground100 else KozmosColors.primitivesColorsForeground500,
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = KozmosDimensions.primitivesLayoutSpacing100)
+                    .height(2.dp)
+                    .background(if (isSelected) KozmosColors.primitivesColorsTheme500 else Color.Transparent)
+            )
+        }
+    }
+}
+
+@Composable
+fun KozmosTabsContent(
+    value: String,
+    selectedValue: String,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    if (value == selectedValue) {
+        Box(modifier = modifier.padding(top = KozmosDimensions.primitivesLayoutSpacing100)) {
+            content()
+        }
+    }
+}

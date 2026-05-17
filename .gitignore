@@ -1,0 +1,22 @@
+node_modules
+dist
+build
+.turbo
+.env
+.DS_Store
+coverage
+storybook-static
+
+# Native Build Tooling
+.gradle/
+local.properties
+/.idea/
+*.iml
+/*.xcworkspace/xcuserdata/
+/*.xcodeproj/xcuserdata/
+/packages/android/build/
+/packages/android/.gradle/
+
+# iOS Build Artifacts
+.build/
+packages/ios/.build/

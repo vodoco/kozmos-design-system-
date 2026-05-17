@@ -1,0 +1,202 @@
+
+import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import * as AccordionStories from './Accordion.stories';
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<Meta of={AccordionStories} />
+
+# Accordion
+
+A vertically stacked set of interactive headings that each reveal a section of content.
+
+<Canvas>
+  <Story of={AccordionStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@kozmos/react"
+
+<Accordion type="single" collapsible>
+  <AccordionItem value="item-1">
+    <AccordionTrigger>Is it accessible?</AccordionTrigger>
+    <AccordionContent>
+      Yes. It adheres to the WAI-ARIA design pattern.
+    </AccordionContent>
+  </AccordionItem>
+</Accordion>
+    `}
+    vue={`
+<script setup>
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@kozmos/vue"
+</script>
+
+<template>
+  <Accordion type="single" collapsible>
+    <AccordionItem value="item-1">
+      <AccordionTrigger>Is it accessible?</AccordionTrigger>
+      <AccordionContent>
+        Yes. It adheres to the WAI-ARIA design pattern.
+      </AccordionContent>
+    </AccordionItem>
+  </Accordion>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+// Example SwiftUI Implementation using Kozmos Tokens
+struct KozmosAccordionItem: View {
+    let title: String
+    let content: String
+    @State private var isExpanded: Bool = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Button(action: { withAnimation { isExpanded.toggle() } }) {
+                HStack {
+                    Text(title)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(KozmosColors.semanticColorTextDefault)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .foregroundColor(KozmosColors.semanticColorIconDefault)
+                }
+                .padding()
+                .background(KozmosColors.semanticColorBackgroundDefault)
+            }
+            
+            if isExpanded {
+                Text(content)
+                    .font(.system(size: 14))
+                    .foregroundColor(KozmosColors.semanticColorTextMuted)
+                    .padding([.leading, .trailing, .bottom])
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(KozmosColors.semanticColorBackgroundDefault)
+            }
+            
+            Divider()
+                .background(KozmosColors.semanticColorBorderDefault)
+        }
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.accordion
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosDimensions
+
+@Composable
+fun KozmosAccordion(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = modifier) {
+        content()
+    }
+}
+
+@Composable
+fun KozmosAccordionItem(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = modifier) {
+        content()
+    }
+}
+
+@Composable
+fun KozmosAccordionTrigger(
+    value: String,
+    selectedValue: String?,
+    onValueChange: (String?) -> Unit,
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+    val isExpanded = value == selectedValue
+    val rotation by animateFloatAsState(if (isExpanded) 180f else 0f, label = "rotation")
+
+    Column(modifier = modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    if (!isExpanded) {
+                        trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Accordion", eventName = "accordion_toggled", properties = mapOf("value" to value.toString())))
+                        onValueChange(value)
+                    } else {
+                        onValueChange(null)
+                    }
+                }
+                .padding(KozmosDimensions.primitivesLayoutSpacing200)
+        ) {
+            Text(
+                text = title,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                modifier = Modifier.rotate(rotation)
+            )
+        }
+        Divider(color = KozmosColors.primitivesColorsBackground300)
+    }
+}
+
+@Composable
+fun KozmosAccordionContent(
+    value: String,
+    selectedValue: String?,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val isExpanded = value == selectedValue
+    AnimatedVisibility(visible = isExpanded) {
+        Column(modifier = modifier.padding(horizontal = KozmosDimensions.primitivesLayoutSpacing200, vertical = KozmosDimensions.primitivesLayoutSpacing100)) {
+            content()
+        }
+    }
+}
+
+    `}
+/>

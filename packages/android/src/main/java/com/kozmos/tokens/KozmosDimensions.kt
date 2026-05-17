@@ -1,0 +1,81 @@
+// Do not edit directly, this file was auto-generated.
+package com.kozmos.tokens
+
+import androidx.compose.ui.unit.dp
+
+object KozmosDimensions {
+  val primitivesRadiusCard = 1.dp
+  val primitivesRadiusInput = 1.dp
+  val primitivesRadiusButton = 1.dp
+  val primitivesScreenMobile = 6000.dp
+  val primitivesScreenTablet = 12288.dp
+  val primitivesScreenLaptop = 16384.dp
+  val primitivesScreenDesktop = 23040.dp
+  val primitivesIconStrokeSm = 24.dp
+  val primitivesIconStrokeMd = 32.dp
+  val primitivesIconStrokeLg = 40.dp
+  val primitivesInsetSafeTop = 0.dp
+  val primitivesInsetSafeBottom = 0.dp
+  val primitivesTypographyLetterSpacingDefault = -0.20800000429153442.dp
+  val primitivesTypographyLetterSpacingCompact = -0.4000000059604645.dp
+  val primitivesTypographyLetterSpacingComfortable = 0.4000000059604645.dp
+  val primitivesTypographyParagraphSpacing0 = 0.dp
+  val primitivesTypographyParagraphSpacing50 = 4.dp
+  val primitivesTypographyParagraphSpacing100 = 6.dp
+  val primitivesTypographyParagraphSpacing200 = 8.dp
+  val primitivesTypographyParagraphSpacing300 = 12.dp
+  val primitivesTypographyParagraphSpacing400 = 16.dp
+  val primitivesTypographyParagraphSpacing500 = 22.dp
+  val primitivesTypographyParagraphSpacing600 = 28.dp
+  val primitivesTypographyParagraphSpacing700 = 36.dp
+  val primitivesTypographyParagraphSpacing800 = 45.007999420166016.dp
+  val primitivesTypographyParagraphSpacing900 = 54.dp
+  val primitivesTypographyParagraphSpacing1000 = 64.dp
+  val primitivesTypographyParagraphSpacing1100 = 76.dp
+  val primitivesTypographyParagraphSpacing1200 = 88.dp
+  val primitivesTypographyParagraphSpacing1300 = 104.dp
+  val primitivesTypographyParagraphSpacing1400 = 118.dp
+  val primitivesTypographyParagraphSpacing1500 = 134.dp
+  val primitivesLayoutSpacing0 = 0.dp
+  val primitivesLayoutSpacing25 = 2.dp
+  val primitivesLayoutSpacing50 = 4.dp
+  val primitivesLayoutSpacing75 = 6.dp
+  val primitivesLayoutSpacing100 = 8.dp
+  val primitivesLayoutSpacing150 = 12.dp
+  val primitivesLayoutSpacing200 = 16.dp
+  val primitivesLayoutSpacing300 = 24.dp
+  val primitivesLayoutSpacing400 = 32.dp
+  val primitivesLayoutSpacing500 = 40.dp
+  val primitivesLayoutSpacing600 = 48.dp
+  val primitivesLayoutSpacing700 = 64.dp
+  val primitivesLayoutSpacing800 = 72.dp
+  val primitivesLayoutSpacing900 = 96.dp
+  val primitivesLayoutSpacing1000 = 128.dp
+  val primitivesLayoutSizing0 = 0.dp
+  val primitivesLayoutSizing100 = 8.dp
+  val primitivesLayoutSizing200 = 16.dp
+  val primitivesLayoutSizing300 = 24.dp
+  val primitivesLayoutSizing400 = 32.dp
+  val primitivesLayoutSizing500 = 40.dp
+  val primitivesLayoutSizing600 = 48.dp
+  val primitivesLayoutSizing700 = 56.dp
+  val primitivesLayoutSizing800 = 64.dp
+  val primitivesLayoutSizing900 = 72.dp
+  val primitivesLayoutSizing1000 = 80.dp
+  val primitivesLayoutRadius0 = 0.dp
+  val primitivesLayoutRadius50 = 4.dp
+  val primitivesLayoutRadius100 = 8.dp
+  val primitivesLayoutRadius200 = 16.dp
+  val primitivesLayoutRadius300 = 24.dp
+  val primitivesLayoutRadius400 = 32.dp
+  val primitivesLayoutRadius500 = 40.dp
+  val primitivesLayoutRadius600 = 48.dp
+  val primitivesLayoutRadius700 = 64.dp
+  val primitivesLayoutRadius800 = 72.dp
+  val primitivesLayoutRadius900 = 96.dp
+  val primitivesLayoutRadius1000 = 128.dp
+  val componentsHtmlElementsHeadingsH1LetterSpacing = -0.4000000059604645.dp
+  val componentsHtmlElementsHeadingsH1ParagraphSpacing = 28.dp
+  val componentsHtmlElementsHeadingsH2LetterSpacing = -0.4000000059604645.dp
+  val componentsHtmlElementsHeadingsH2ParagraphSpacing = 22.dp
+}

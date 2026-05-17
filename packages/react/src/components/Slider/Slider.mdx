@@ -1,0 +1,82 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as SliderStories from "./Slider.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={SliderStories} />
+
+# Slider
+
+Displays the Slider interface topology natively.
+
+<Canvas>
+  <Story of={SliderStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Slider } from "@kozmos/react"
+
+<Slider />
+    `}
+    vue={`
+<script setup>
+import { KozmosSlider } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosSlider />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosSlider: View {
+    var body: some View {
+        Text("Slider Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.slider
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    enabled: Boolean = true
+) {
+    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+    Slider(
+        value = value,
+        onValueChange = onValueChange,
+        onValueChangeFinished = {
+            trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Slider", eventName = "slider_value_changed", properties = mapOf("value" to value.toString())))
+        },
+        modifier = modifier,
+        valueRange = valueRange,
+        enabled = enabled,
+        colors = SliderDefaults.colors(
+            thumbColor = KozmosColors.primitivesColorsTheme500,
+            activeTrackColor = KozmosColors.primitivesColorsTheme500,
+            inactiveTrackColor = KozmosColors.primitivesColorsBackground300,
+        )
+    )
+}
+
+    `}
+/>

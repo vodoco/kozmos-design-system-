@@ -1,0 +1,16 @@
+{
+    "name": "@kozmos/icons",
+    "version": "0.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "echo 'Building icons...' && mkdir -p dist && touch dist/index.js"
+    },
+    "peerDependencies": {
+        "react": ">=18"
+    }
+}

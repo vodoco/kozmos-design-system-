@@ -1,0 +1,3171 @@
+{
+  "Primary Buttons": {
+    "themed": {
+      "button": {
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FFFFFF",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2674",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2678",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FFFFFF",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2675",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2676",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2677",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#0D44C2",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2679",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2683",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#1051E8",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2680",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#0B369C",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2681",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#1051E8",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2682",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#CAD9FC",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2684",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2688",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#CAD9FC",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2685",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#CAD9FC",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2686",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#CAD9FC",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2687",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "success": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#1E995B",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2689",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2693",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#23B26B",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2690",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#197F4C",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2691",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#23B26B",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2692",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FFFFFF",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2694",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2698",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FFFFFF",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2695",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2696",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2697",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#CBF5E0",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2699",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2703",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#CBF5E0",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2700",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#CBF5E0",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2701",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#CBF5E0",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2702",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "alert": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#CD8905",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2704",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2708",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#F9A707",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2705",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#A06B04",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2706",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#F9A707",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2707",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FFFFFF",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2709",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2713",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FFFFFF",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2710",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2711",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2712",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FEEED0",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2714",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2718",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FEEED0",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2715",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FEEED0",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2716",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FEEED0",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2717",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "danger": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#B01736",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2719",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2723",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#D41C42",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2720",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#8C132B",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2721",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#D41C42",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2722",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FFFFFF",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2724",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2728",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FFFFFF",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2725",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2726",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2727",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FCEAEE",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2729",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2733",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FCEAEE",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2730",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FCEAEE",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2731",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FCEAEE",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2732",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "informative": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#2379A4",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2734",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2738",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#2A92C6",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2735",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#1C6082",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2736",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#2A92C6",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2737",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FFFFFF",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2739",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2743",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FFFFFF",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2740",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2741",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2742",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#CAE6F3",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2744",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2748",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#CAE6F3",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2745",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#CAE6F3",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2746",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#CAE6F3",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2747",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "neutral": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#464A53",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2749",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2753",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#5C6069",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2750",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#2E3138",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2751",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#5C6069",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2752",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FFFFFF",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2754",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2758",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FFFFFF",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2755",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2756",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2757",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#17191C",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2759",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2763",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#17191C",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2760",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#17191C",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2761",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#17191C",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2762",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "Secondary Buttons": {
+    "themed": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#0D44C2",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2764",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2768",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#1051E8",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2765",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#0B369C",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2766",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#1051E8",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2767",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#0D44C2",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2769",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2773",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#1051E8",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2770",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#0B369C",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2771",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#1051E8",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2772",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#1051E8",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2774",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2778",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#135BEC",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2775",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#0D44C2",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2776",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#135BEC",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2777",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "success": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#1E995B",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2779",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2783",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#23B26B",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2780",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#197F4C",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2781",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#23B26B",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2782",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#1E995B",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2784",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2788",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#23B26B",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2785",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#197F4C",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2786",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#23B26B",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2787",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#23B26B",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2789",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2793",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#28CC7A",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2790",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#1E995B",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2791",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#28CC7A",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2792",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "danger": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#B01736",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2794",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2798",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#D41C42",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2795",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#8C132B",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2796",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#D41C42",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2797",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#B01736",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2799",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2803",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#D41C42",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2800",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#8C132B",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2801",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#D41C42",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2802",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#D41C42",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2804",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2808",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#E43458",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2805",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#B01736",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2806",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#E43458",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2807",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "alert": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#CD8905",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2809",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2813",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#F9A707",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2810",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#A06B04",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2811",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#F9A707",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2812",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#CD8905",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2814",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2818",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#F9A707",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2815",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#A06B04",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2816",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#F9A707",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2817",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#F9A707",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2819",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2823",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FAB735",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2820",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#CD8905",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2821",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FAB735",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2822",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "informative": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#2379A4",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2824",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2828",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#2A92C6",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2825",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#1C6082",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2826",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#2A92C6",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2827",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#2379A4",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2829",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2833",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#2A92C6",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2830",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#1C6082",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2831",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#2A92C6",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2832",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#2A92C6",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2834",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2838",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#42A5D7",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2835",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#2379A4",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2836",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#42A5D7",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2837",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "neutral": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#5C6069",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2839",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2843",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#9095A2",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2840",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#464A53",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2841",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#9095A2",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2842",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#5C6069",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2844",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2848",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#9095A2",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2845",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#464A53",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2846",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#9095A2",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2847",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#9095A2",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2849",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2853",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#747B8B",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2850",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#5C6069",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2851",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#747B8B",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2852",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "Tertiary Buttons": {
+    "themed": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#0D44C2",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2854",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2858",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#1051E8",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2855",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#0B369C",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2856",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#1051E8",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2857",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#0D44C2",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2859",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2863",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#1051E8",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2860",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#0B369C",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2861",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#1051E8",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2862",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#1051E8",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2864",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2868",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#135BEC",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2865",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#0D44C2",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2866",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#135BEC",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2867",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "success": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#1E995B",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2869",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2873",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#23B26B",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2870",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#197F4C",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2871",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#23B26B",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2872",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#1E995B",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2874",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2878",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#23B26B",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2875",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#197F4C",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2876",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#23B26B",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2877",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#23B26B",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2879",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2883",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#28CC7A",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2880",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#1E995B",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2881",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#28CC7A",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2882",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "danger": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#B01736",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2884",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2888",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#D41C42",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2885",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#8C132B",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2886",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#D41C42",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2887",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#B01736",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2889",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2893",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#D41C42",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2890",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#8C132B",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2891",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#D41C42",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2892",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#D41C42",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2894",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2898",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#E43458",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2895",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#B01736",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2896",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#E43458",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2897",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "alert": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#CD8905",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2899",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2903",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#F9A707",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2900",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#A06B04",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2901",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#F9A707",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2902",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FFFFFF",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2904",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2908",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FFFFFF",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2905",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2906",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FFFFFF",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2907",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#FEEED0",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2909",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2913",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#FEEED0",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2910",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#FEEED0",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2911",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#FEEED0",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2912",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "informative": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#2379A4",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2914",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2918",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#2A92C6",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2915",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#1C6082",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2916",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#2A92C6",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2917",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#2379A4",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2919",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2923",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#2A92C6",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2920",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#1C6082",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2921",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#2A92C6",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2922",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#2A92C6",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2924",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2928",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#42A5D7",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2925",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#2379A4",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2926",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#42A5D7",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2927",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "neutral": {
+      "button": {
+        "background": {
+          "idle": {
+            "$type": "color",
+            "$value": "#464A53",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2929",
+              "com.figma.isOverride": true
+            }
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "#2E3138",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2933",
+              "com.figma.isOverride": true
+            }
+          },
+          "on": {
+            "hover": {
+              "$type": "color",
+              "$value": "#5C6069",
+              "$extensions": {
+                "com.figma.variableId": "VariableID:1440:2930",
+                "com.figma.isOverride": true
+              }
+            },
+            "mouse": {
+              "down": {
+                "$type": "color",
+                "$value": "#2E3138",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2931",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          },
+          "in": {
+            "focus": {
+              "selected": {
+                "$type": "color",
+                "$value": "#5C6069",
+                "$extensions": {
+                  "com.figma.variableId": "VariableID:1440:2932",
+                  "com.figma.isOverride": true
+                }
+              }
+            }
+          }
+        },
+        "foreground": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#5C6069",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2934",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2938",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#9095A2",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2935",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#464A53",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2936",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#9095A2",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2937",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "foreground": {
+        "dimmed": {
+          "symbol": {
+            "or": {
+              "text": {
+                "idle": {
+                  "$type": "color",
+                  "$value": "#9095A2",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2939",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "disabled": {
+                  "$type": "color",
+                  "$value": "#464A53",
+                  "$extensions": {
+                    "com.figma.variableId": "VariableID:1440:2943",
+                    "com.figma.isOverride": true
+                  }
+                },
+                "on": {
+                  "hover": {
+                    "$type": "color",
+                    "$value": "#747B8B",
+                    "$extensions": {
+                      "com.figma.variableId": "VariableID:1440:2940",
+                      "com.figma.isOverride": true
+                    }
+                  },
+                  "mouse": {
+                    "down": {
+                      "$type": "color",
+                      "$value": "#5C6069",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2941",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                },
+                "in": {
+                  "focus": {
+                    "selected": {
+                      "$type": "color",
+                      "$value": "#747B8B",
+                      "$extensions": {
+                        "com.figma.variableId": "VariableID:1440:2942",
+                        "com.figma.isOverride": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "HTML elements": {
+    "headings": {
+      "h1": {
+        "font": {
+          "family": {
+            "$type": "string",
+            "$value": "Readex Pro",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2944",
+              "com.figma.type": "string",
+              "com.figma.isOverride": true
+            }
+          },
+          "weight": {
+            "$type": "string",
+            "$value": "Light",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2945",
+              "com.figma.type": "string",
+              "com.figma.isOverride": true
+            }
+          },
+          "size": {
+            "$type": "number",
+            "$value": 60,
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2946",
+              "com.figma.isOverride": true
+            }
+          }
+        },
+        "letter": {
+          "spacing": {
+            "$type": "number",
+            "$value": -0.4000000059604645,
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2947",
+              "com.figma.isOverride": true
+            }
+          }
+        },
+        "line": {
+          "height": {
+            "$type": "number",
+            "$value": 66,
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2948",
+              "com.figma.isOverride": true
+            }
+          }
+        },
+        "paragraph": {
+          "spacing": {
+            "$type": "number",
+            "$value": 28,
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2949",
+              "com.figma.isOverride": true
+            }
+          }
+        }
+      },
+      "h2": {
+        "font": {
+          "family": {
+            "$type": "string",
+            "$value": "Readex Pro",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2950",
+              "com.figma.type": "string",
+              "com.figma.isOverride": true
+            }
+          },
+          "weight": {
+            "$type": "string",
+            "$value": "Light",
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2951",
+              "com.figma.type": "string",
+              "com.figma.isOverride": true
+            }
+          },
+          "size": {
+            "$type": "number",
+            "$value": 48,
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2952",
+              "com.figma.isOverride": true
+            }
+          }
+        },
+        "letter": {
+          "spacing": {
+            "$type": "number",
+            "$value": -0.4000000059604645,
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2953",
+              "com.figma.isOverride": true
+            }
+          }
+        },
+        "line": {
+          "height": {
+            "$type": "number",
+            "$value": 54,
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2954",
+              "com.figma.isOverride": true
+            }
+          }
+        },
+        "paragraph": {
+          "spacing": {
+            "$type": "number",
+            "$value": 22,
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2955",
+              "com.figma.isOverride": true
+            }
+          }
+        }
+      },
+      "paragraphs": {
+        "font": {
+          "size": {
+            "$type": "number",
+            "$value": 0,
+            "$extensions": {
+              "com.figma.variableId": "VariableID:1440:2956",
+              "com.figma.isOverride": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "$extensions": {
+    "com.figma.modeName": "Components (dark)"
+  }
+}

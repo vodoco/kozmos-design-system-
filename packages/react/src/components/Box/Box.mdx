@@ -1,0 +1,63 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as BoxStories from "./Box.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={BoxStories} />
+
+# Box
+
+Displays the Box interface topology natively.
+
+<Canvas>
+  <Story of={BoxStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Box } from "@kozmos/react"
+
+<Box />
+    `}
+    vue={`
+<script setup>
+import { KozmosBox } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosBox />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosBox: View {
+    var body: some View {
+        Text("Box Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.box
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+@Composable
+fun KozmosBox(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Box(modifier = modifier) {
+        content()
+    }
+}
+
+    `}
+/>

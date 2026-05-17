@@ -1,0 +1,121 @@
+
+import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import * as ToastStories from './Toast.stories';
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<Meta of={ToastStories} />
+
+# Toast
+
+A succinct message that is displayed temporarily.
+
+<Canvas>
+  <Story of={ToastStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { useToast } from "@kozmos/react"
+
+export const ToastDemo = () => {
+  const { toast } = useToast()
+
+  return (
+    <Button
+      onClick={() => {
+        toast({
+          title: "Scheduled: Catch up",
+          description: "Friday, February 10, 2023 at 5:57 PM",
+        })
+      }}
+    >
+      Show Toast
+    </Button>
+  )
+}
+    `}
+    vue={`
+<script setup>
+import { useToast, KozmosButton } from "@kozmos/vue"
+
+const { toast } = useToast()
+</script>
+
+<template>
+  <KozmosButton
+    @click="() => {
+      toast({
+        title: 'Scheduled: Catch up',
+        description: 'Friday, February 10, 2023 at 5:57 PM',
+      })
+    }"
+  >
+    Show Toast
+  </KozmosButton>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosToast: View {
+    let title: String
+    let description: String?
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(KozmosColors.semanticColorTextDefault)
+                if let description = description {
+                    Text(description)
+                        .font(.subheadline)
+                        .foregroundColor(KozmosColors.semanticColorTextMuted)
+                }
+            }
+            Spacer()
+        }
+        .padding()
+        .background(KozmosColors.semanticColorSurfaceDefault)
+        .cornerRadius(8)
+        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(KozmosColors.semanticColorBorderDefault, lineWidth: 1)
+        )
+    }
+}
+// Note: In SwiftUI, this would typically be used with an overlay modifier
+    `}
+    kotlin={`
+package com.kozmos.components.toast
+
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+@Composable
+fun KozmosToast(
+    hostState: SnackbarHostState,
+    modifier: Modifier = Modifier
+) {
+    SnackbarHost(
+        hostState = hostState,
+        modifier = modifier
+    ) { data ->
+        Snackbar(
+            snackbarData = data
+        )
+    }
+}
+
+    `}
+/>

@@ -1,0 +1,140 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as StepperStories from "./Stepper.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={StepperStories} />
+
+# Stepper
+
+Displays the Stepper interface topology natively.
+
+<Canvas>
+  <Story of={StepperStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Stepper } from "@kozmos/react"
+
+<Stepper />
+    `}
+    vue={`
+<script setup>
+import { KozmosStepper } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosStepper />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosStepper: View {
+    var body: some View {
+        Text("Stepper Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.stepper
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosStepper(
+    steps: List<String>,
+    currentStep: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        steps.forEachIndexed { index, step ->
+            val isCompleted = index < currentStep
+            val isCurrent = index == currentStep
+            
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing50)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(KozmosDimensions.primitivesLayoutSizing400)
+                        .clip(CircleShape)
+                        .background(if (isCompleted) KozmosColors.primitivesColorsTheme500 else Color.Transparent)
+                        .border(
+                            width = KozmosDimensions.primitivesLayoutSpacing25,
+                            color = if (isCompleted || isCurrent) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsForeground300,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isCompleted) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = KozmosColors.primitivesColorsBackground0,
+                            modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing200)
+                        )
+                    } else {
+                        Text(
+                            text = (index + 1).toString(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isCurrent) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsForeground500
+                        )
+                    }
+                }
+                
+                Text(
+                    text = step,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isCurrent) KozmosColors.primitivesColorsForeground100 else KozmosColors.primitivesColorsForeground500
+                )
+            }
+            
+            if (index < steps.size - 1) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(KozmosDimensions.primitivesLayoutSpacing25)
+                        .background(if (index < currentStep) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsBackground300)
+                )
+            }
+        }
+    }
+}
+
+    `}
+/>

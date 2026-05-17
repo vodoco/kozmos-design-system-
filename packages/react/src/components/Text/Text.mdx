@@ -1,0 +1,61 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as TextStories from "./Text.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={TextStories} />
+
+# Text
+
+Displays the Text interface topology natively.
+
+<Canvas>
+  <Story of={TextStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Text } from "@kozmos/react"
+
+<Text />
+    `}
+    vue={`
+<script setup>
+import { KozmosText } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosText />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosText: View {
+    var body: some View {
+        Text("Text Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.text
+
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+@Composable
+fun KozmosText(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(text = text, modifier = modifier)
+}
+
+    `}
+/>

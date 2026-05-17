@@ -1,0 +1,48 @@
+import { Meta, Story, Canvas } from '@storybook/blocks';
+import * as EmptyStateStories from './EmptyState.stories';
+
+<Meta of={EmptyStateStories} />
+
+# EmptyState
+
+The `EmptyState` component is used to communicate a zero-results condition or an empty state of an interface securely across all platforms.
+
+## React Usage
+
+```tsx
+import { EmptyState } from '@kozmos/react';
+import { SearchX } from 'lucide-react';
+
+<EmptyState 
+    icon={<SearchX />} 
+    title="No results found" 
+    description="Try adjusting your filter parameters to discover new locations." 
+/>
+```
+
+## Android Jetpack Compose
+
+```kotlin
+import com.kozmos.components.emptystate.KozmosEmptyState
+
+KozmosEmptyState(
+    title = "No results found",
+    description = "Try adjusting your filter parameters to discover new locations.",
+    icon = { /* Icon Composable */ }
+)
+```
+
+## iOS SwiftUI
+
+```swift
+import KozmosDesignSystem
+
+KozmosEmptyState(
+    title: "No results found",
+    description: "Try adjusting your filter parameters to discover new locations."
+) {
+    Image(systemName: "magnifyingglass")
+} action: {
+    EmptyView()
+}
+```

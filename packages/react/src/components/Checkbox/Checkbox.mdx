@@ -1,0 +1,166 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as CheckboxStories from './Checkbox.stories';
+
+<Meta of={CheckboxStories} />
+
+# Checkbox
+
+A control that allows the user to toggle between checked and unchecked states.
+
+## Usage
+
+Use checkboxes when:
+- Users need to select one or more options from a list.
+- Users need to toggle a single setting (e.g., "Accept Terms").
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+    react={`
+import { Checkbox } from "@kozmos/react"
+
+<div className="flex items-center space-x-2">
+  <Checkbox id="terms" />
+  <label
+    htmlFor="terms"
+    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+  >
+    Accept terms and conditions
+  </label>
+</div>
+    `}
+    vue={`
+<script setup>
+import { Checkbox } from "@kozmos/vue"
+import { ref } from "vue"
+
+const isChecked = ref(false)
+</script>
+
+<template>
+  <div class="flex items-center space-x-2">
+    <Checkbox id="terms" v-model:checked="isChecked" />
+    <label
+      for="terms"
+      class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+    >
+      Accept terms and conditions
+    </label>
+  </div>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+public struct KozmosCheckbox: View {
+    @Binding var checked: Bool
+    let label: String?
+    @Environment(\.kozmosAnalytics) var trackEvent
+    
+    public init(checked: Binding<Bool>, label: String? = nil) {
+        self._checked = checked
+        self.label = label
+    }
+    
+    public var body: some View {
+        Button(action: {
+            trackEvent(KozmosAnalyticsEvent(eventName: "checkbox_toggled", component: "Checkbox", properties: ["checked": !checked]))
+            checked.toggle()
+        }) {
+            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius50)
+                        .stroke(checked ? KozmosColors.primitivesColorsTheme500 : KozmosColors.primitivesColorsForeground400, lineWidth: 1)
+                        .background(checked ? KozmosColors.primitivesColorsTheme500 : Color.clear)
+                        .frame(width: 20, height: 20)
+                        .cornerRadius(KozmosDimensions.primitivesLayoutRadius50)
+                    
+                    if checked {
+                        Image(systemName: "checkmark")
+                            .font(.caption)
+                            .bold()
+                            .foregroundColor(KozmosColors.primitivesColorsBackground0)
+                    }
+                }
+                
+                if let label = label {
+                    Text(label)
+                        .font(.subheadline)
+                        .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                }
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+    `}
+    kotlin={`
+package com.kozmos.components.checkbox
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosCheckbox(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    label: String? = null,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .clickable(enabled = enabled) { 
+                trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Checkbox", eventName = "checkbox_toggled", properties = mapOf("checked" to (!checked).toString())))
+                onCheckedChange(!checked) 
+            }
+            .padding(KozmosDimensions.primitivesLayoutSpacing50)
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = null, // Handled by Row clickable for better touch target
+            enabled = enabled,
+            colors = CheckboxDefaults.colors(
+                checkedColor = KozmosColors.primitivesColorsTheme500,
+                uncheckedColor = KozmosColors.primitivesColorsForeground500
+            )
+        )
+        
+        if (label != null) {
+            Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing100))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+    `}
+/>
+
+## Stories
+
+### Default
+<Canvas of={CheckboxStories.Default} />

@@ -1,0 +1,68 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as HeadingStories from "./Heading.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={HeadingStories} />
+
+# Heading
+
+Displays the Heading interface topology natively.
+
+<Canvas>
+  <Story of={HeadingStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Heading } from "@kozmos/react"
+
+<Heading />
+    `}
+    vue={`
+<script setup>
+import { KozmosHeading } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosHeading />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosHeading: View {
+    var body: some View {
+        Text("Heading Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.heading
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosHeading(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.titleLarge,
+        color = KozmosColors.primitivesColorsForeground100
+    )
+}
+
+    `}
+/>

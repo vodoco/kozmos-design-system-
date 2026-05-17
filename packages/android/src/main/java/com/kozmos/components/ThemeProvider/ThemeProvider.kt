@@ -1,0 +1,56 @@
+package com.kozmos.components.themeprovider
+
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+
+enum class KozmosThemeMode {
+    LIGHT, DARK, SYSTEM
+}
+
+class KozmosThemeManager(initialMode: KozmosThemeMode = KozmosThemeMode.SYSTEM) {
+    var mode by mutableStateOf(initialMode)
+
+    fun setThemeMode(newMode: KozmosThemeMode) {
+        mode = newMode
+    }
+}
+
+val LocalThemeManager = compositionLocalOf<KozmosThemeManager> {
+    error("No KozmosThemeManager provided")
+}
+
+@Composable
+fun KozmosThemeProvider(
+    content: @Composable () -> Unit
+) {
+    val themeManager = remember { KozmosThemeManager() }
+    val isSystemDark = isSystemInDarkTheme()
+
+    val useDarkTheme = when (themeManager.mode) {
+        KozmosThemeMode.SYSTEM -> isSystemDark
+        KozmosThemeMode.LIGHT -> false
+        KozmosThemeMode.DARK -> true
+    }
+
+    val colors = if (useDarkTheme) {
+        darkColorScheme()
+    } else {
+        lightColorScheme()
+    }
+
+    CompositionLocalProvider(LocalThemeManager provides themeManager) {
+        MaterialTheme(
+            colorScheme = colors,
+            content = content
+        )
+    }
+}

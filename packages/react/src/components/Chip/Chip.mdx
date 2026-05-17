@@ -1,0 +1,57 @@
+import { Meta, Story, Canvas } from '@storybook/blocks';
+import * as ChipStories from './Chip.stories';
+
+<Meta of={ChipStories} />
+
+# Chip
+
+The `Chip` component represents a dense interactive filter UI abstraction, often utilized in Pointr Maps view states.
+
+## React Usage
+
+```tsx
+import { Chip, ChipGroup } from '@kozmos/react';
+import { Coffee } from 'lucide-react';
+
+<ChipGroup>
+    <Chip active={true}>All Categories</Chip>
+    <Chip active={false} icon={<Coffee />}>Food</Chip>
+</ChipGroup>
+```
+
+## Android Jetpack Compose
+
+```kotlin
+import com.kozmos.components.chip.KozmosChip
+import com.kozmos.components.chip.KozmosChipGroup
+
+KozmosChipGroup {
+    KozmosChip(
+        text = "All Categories",
+        active = true,
+        onClick = { }
+    )
+    KozmosChip(
+        text = "Food",
+        active = false,
+        onClick = { }
+    )
+}
+```
+
+## iOS SwiftUI
+
+```swift
+import KozmosDesignSystem
+
+KozmosChipGroup {
+    KozmosChip(text: "All Categories", active: true) {
+        // action 
+    }
+    KozmosChip(text: "Food", active: false) {
+        Image(systemName: "cup.and.saucer.fill")
+    } action: {
+        // action
+    }
+}
+```

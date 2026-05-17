@@ -1,0 +1,101 @@
+package com.kozmos.components.poicard
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+import com.kozmos.providers.LocalKozmosAnalytics
+
+@Composable
+fun KozmosPOICard(
+    title: String,
+    modifier: Modifier = Modifier,
+    category: String? = null,
+    description: (@Composable () -> Unit)? = null,
+    imageContent: (@Composable () -> Unit)? = null,
+    actions: (@Composable androidx.compose.foundation.layout.RowScope.() -> Unit)? = null,
+    onClose: (() -> Unit)? = null
+) {
+    Card(
+        modifier = modifier.width(300.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = KozmosColors.primitivesColorsBackground0)
+    ) {
+        Column {
+            if (imageContent != null) {
+                Box(modifier = Modifier.fillMaxWidth().height(140.dp)) {
+                    imageContent()
+                }
+            }
+            
+            Column(modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        if (category != null) {
+                            Text(
+                                text = category,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = KozmosColors.primitivesColorsForeground500
+                            )
+                        }
+                    }
+                    if (onClose != null) {
+                        IconButton(onClick = onClose, modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300)) {
+                            Icon(Icons.Default.Close, contentDescription = "Close")
+                        }
+                    }
+                }
+                
+                if (description != null) {
+                    Spacer(modifier = Modifier.height(KozmosDimensions.primitivesLayoutSpacing100))
+                    description()
+                }
+                
+                if (actions != null) {
+                    Spacer(modifier = Modifier.height(KozmosDimensions.primitivesLayoutSpacing200))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        actions()
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,5298 @@
+import SwiftUI
+
+#if canImport(UIKit)
+import UIKit
+
+// Extension to create Color from Hex safely natively
+extension UIColor {
+    convenience init(hex: String?) {
+        guard let hex = hex else {
+            self.init(white: 0, alpha: 0)
+            return
+        }
+        let hexString = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hexString).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hexString.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        self.init(red: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: CGFloat(a) / 255)
+    }
+}
+#elseif canImport(AppKit)
+import AppKit
+
+extension NSColor {
+    convenience init(hex: String?) {
+        guard let hex = hex else {
+            self.init(white: 0, alpha: 0)
+            return
+        }
+        let hexString = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hexString).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hexString.count {
+        case 3: 
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: 
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: 
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        self.init(red: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: CGFloat(a) / 255)
+    }
+}
+#endif
+
+public class KozmosColors {
+    public static var primitivesColorsTheme0: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0e0a01") : UIColor(hex: "#F1F5FE")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0e0a01") : NSColor(hex: "#F1F5FE")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#352603") : UIColor(hex: "#CAD9FC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#352603") : NSColor(hex: "#CAD9FC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5b4106") : UIColor(hex: "#A4BEF9")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5b4106") : NSColor(hex: "#A4BEF9")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#815d09") : UIColor(hex: "#7EA2F6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#815d09") : NSColor(hex: "#7EA2F6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme400: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#a7780c") : UIColor(hex: "#5887F3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#a7780c") : NSColor(hex: "#5887F3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme500: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#eca413") : UIColor(hex: "#135BEC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#eca413") : NSColor(hex: "#135BEC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme600: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme700: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f2bb3d") : UIColor(hex: "#0D44C2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f2bb3d") : NSColor(hex: "#0D44C2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme800: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f4c963") : UIColor(hex: "#0B369C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f4c963") : NSColor(hex: "#0B369C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme900: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f7d68a") : UIColor(hex: "#082975")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f7d68a") : NSColor(hex: "#082975")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTheme1000: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#fae3b0") : UIColor(hex: "#051C4F")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#fae3b0") : NSColor(hex: "#051C4F")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant10: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0e0e01") : UIColor(hex: "#F1F1FE")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0e0e01") : NSColor(hex: "#F1F1FE")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant1100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#313503") : UIColor(hex: "#CECAFC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#313503") : NSColor(hex: "#CECAFC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant1200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#555b06") : UIColor(hex: "#AAA4F9")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#555b06") : NSColor(hex: "#AAA4F9")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant1300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#798109") : UIColor(hex: "#867EF6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#798109") : NSColor(hex: "#867EF6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant1400: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#9da70c") : UIColor(hex: "#6258F3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#9da70c") : NSColor(hex: "#6258F3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant1500: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#becb0e") : UIColor(hex: "#4134F1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#becb0e") : NSColor(hex: "#4134F1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant1600: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e1ef17") : UIColor(hex: "#1E10E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e1ef17") : NSColor(hex: "#1E10E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant1700: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e6f23d") : UIColor(hex: "#190DC2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e6f23d") : NSColor(hex: "#190DC2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant1800: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#ebf463") : UIColor(hex: "#140B9C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#ebf463") : NSColor(hex: "#140B9C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant1900: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f0f78a") : UIColor(hex: "#0F0875")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f0f78a") : NSColor(hex: "#0F0875")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant11000: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f5fab0") : UIColor(hex: "#0A054F")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f5fab0") : NSColor(hex: "#0A054F")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant20: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#090e01") : UIColor(hex: "#F6F1FE")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#090e01") : NSColor(hex: "#F6F1FE")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant2100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#213503") : UIColor(hex: "#DECAFC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#213503") : NSColor(hex: "#DECAFC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant2200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#395b06") : UIColor(hex: "#C6A4F9")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#395b06") : NSColor(hex: "#C6A4F9")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant2300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#518109") : UIColor(hex: "#AE7EF6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#518109") : NSColor(hex: "#AE7EF6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant2400: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#69a70c") : UIColor(hex: "#9658F3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#69a70c") : NSColor(hex: "#9658F3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant2500: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#7fcb0e") : UIColor(hex: "#8034F1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#7fcb0e") : NSColor(hex: "#8034F1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant2600: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#99ef17") : UIColor(hex: "#6610E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#99ef17") : NSColor(hex: "#6610E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant2700: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#aaf23d") : UIColor(hex: "#550DC2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#aaf23d") : NSColor(hex: "#550DC2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant2800: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#baf463") : UIColor(hex: "#450B9C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#baf463") : NSColor(hex: "#450B9C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant2900: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#cbf78a") : UIColor(hex: "#340875")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#cbf78a") : NSColor(hex: "#340875")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsThemeVariant21000: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dcfab0") : UIColor(hex: "#23054F")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dcfab0") : NSColor(hex: "#23054F")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess0: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#090206") : UIColor(hex: "#F6FDF9")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#090206") : NSColor(hex: "#F6FDF9")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#340a1f") : UIColor(hex: "#CBF5E0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#340a1f") : NSColor(hex: "#CBF5E0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5f1339") : UIColor(hex: "#A0ECC6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5f1339") : NSColor(hex: "#A0ECC6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#891b52") : UIColor(hex: "#76E4AD")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#891b52") : NSColor(hex: "#76E4AD")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess400: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b4236c") : UIColor(hex: "#4BDC93")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b4236c") : NSColor(hex: "#4BDC93")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess500: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d73385") : UIColor(hex: "#28CC7A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d73385") : NSColor(hex: "#28CC7A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess600: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess700: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e166a4") : UIColor(hex: "#1E995B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e166a4") : NSColor(hex: "#1E995B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess800: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e680b3") : UIColor(hex: "#197F4C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e680b3") : NSColor(hex: "#197F4C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess900: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#eb9ac2") : UIColor(hex: "#14653D")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#eb9ac2") : NSColor(hex: "#14653D")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalSuccess1000: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f0b3d2") : UIColor(hex: "#0F4C2D")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f0b3d2") : NSColor(hex: "#0F4C2D")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger0: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#031511") : UIColor(hex: "#FCEAEE")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#031511") : NSColor(hex: "#FCEAEE")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#07392f") : UIColor(hex: "#F8C6D0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#07392f") : NSColor(hex: "#F8C6D0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0c5d4c") : UIColor(hex: "#F3A2B3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0c5d4c") : NSColor(hex: "#F3A2B3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#11816a") : UIColor(hex: "#EE7E95")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#11816a") : NSColor(hex: "#EE7E95")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger400: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#16a588") : UIColor(hex: "#E95A77")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#16a588") : NSColor(hex: "#E95A77")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger500: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1bcba7") : UIColor(hex: "#E43458")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#1bcba7") : NSColor(hex: "#E43458")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger600: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger700: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4fe8c9") : UIColor(hex: "#B01736")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4fe8c9") : NSColor(hex: "#B01736")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger800: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#73ecd4") : UIColor(hex: "#8C132B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#73ecd4") : NSColor(hex: "#8C132B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger900: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#98f1df") : UIColor(hex: "#670E20")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#98f1df") : NSColor(hex: "#670E20")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalDanger1000: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#bcf6ea") : UIColor(hex: "#430915")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#bcf6ea") : NSColor(hex: "#430915")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert0: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000307") : UIColor(hex: "#FFFCF8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000307") : NSColor(hex: "#FFFCF8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#01112f") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#01112f") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#021f57") : UIColor(hex: "#FDE0A8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#021f57") : NSColor(hex: "#FDE0A8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#032d7e") : UIColor(hex: "#FCD281")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#032d7e") : NSColor(hex: "#FCD281")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert400: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#043ba6") : UIColor(hex: "#FBC459")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#043ba6") : NSColor(hex: "#FBC459")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert500: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0548ca") : UIColor(hex: "#FAB735")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0548ca") : NSColor(hex: "#FAB735")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert600: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert700: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#3276fa") : UIColor(hex: "#CD8905")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#3276fa") : NSColor(hex: "#CD8905")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert800: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5f94fb") : UIColor(hex: "#A06B04")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5f94fb") : NSColor(hex: "#A06B04")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert900: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#8bb2fc") : UIColor(hex: "#744D03")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#8bb2fc") : NSColor(hex: "#744D03")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalAlert1000: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b8d0fd") : UIColor(hex: "#472F02")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b8d0fd") : NSColor(hex: "#472F02")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo0: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#130904") : UIColor(hex: "#ECF6FB")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#130904") : NSColor(hex: "#ECF6FB")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#35190c") : UIColor(hex: "#CAE6F3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#35190c") : NSColor(hex: "#CAE6F3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#562913") : UIColor(hex: "#A9D6EC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#562913") : NSColor(hex: "#A9D6EC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#78391a") : UIColor(hex: "#87C6E5")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#78391a") : NSColor(hex: "#87C6E5")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo400: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#9a4921") : UIColor(hex: "#65B6DE")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#9a4921") : NSColor(hex: "#65B6DE")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo500: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#bd5a28") : UIColor(hex: "#42A5D7")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#bd5a28") : NSColor(hex: "#42A5D7")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo600: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo700: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc865b") : UIColor(hex: "#2379A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc865b") : NSColor(hex: "#2379A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo800: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e39f7d") : UIColor(hex: "#1C6082")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e39f7d") : NSColor(hex: "#1C6082")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo900: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#eab89e") : UIColor(hex: "#154761")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#eab89e") : NSColor(hex: "#154761")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsEmotionalInfo1000: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f1d1c0") : UIColor(hex: "#0E2E3F")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f1d1c0") : NSColor(hex: "#0E2E3F")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent3: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C08") : UIColor(hex: "#17191C08")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C08") : NSColor(hex: "#17191C08")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent5: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C0D") : UIColor(hex: "#17191C0D")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C0D") : NSColor(hex: "#17191C0D")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent10: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C1A") : UIColor(hex: "#17191C1A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C1A") : NSColor(hex: "#17191C1A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent25: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C40") : UIColor(hex: "#17191C40")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C40") : NSColor(hex: "#17191C40")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent50: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C80") : UIColor(hex: "#17191C80")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C80") : NSColor(hex: "#17191C80")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent60: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C99") : UIColor(hex: "#17191C99")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C99") : NSColor(hex: "#17191C99")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent75: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191CBF") : UIColor(hex: "#17191CBF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191CBF") : NSColor(hex: "#17191CBF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent80: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191CCC") : UIColor(hex: "#17191CCC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191CCC") : NSColor(hex: "#17191CCC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent90: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191CE5") : UIColor(hex: "#17191CE5")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191CE5") : NSColor(hex: "#17191CE5")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparent95: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191CF2") : UIColor(hex: "#17191CF2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191CF2") : NSColor(hex: "#17191CF2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted3: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD08") : UIColor(hex: "#FCFCFD08")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD08") : NSColor(hex: "#FCFCFD08")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted5: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD0D") : UIColor(hex: "#FCFCFD0D")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD0D") : NSColor(hex: "#FCFCFD0D")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted10: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD1A") : UIColor(hex: "#FCFCFD1A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD1A") : NSColor(hex: "#FCFCFD1A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted25: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD40") : UIColor(hex: "#FCFCFD40")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD40") : NSColor(hex: "#FCFCFD40")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted50: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD80") : UIColor(hex: "#FCFCFD80")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD80") : NSColor(hex: "#FCFCFD80")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted60: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD99") : UIColor(hex: "#FCFCFD99")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD99") : NSColor(hex: "#FCFCFD99")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted75: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFDBF") : UIColor(hex: "#FCFCFDBF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFDBF") : NSColor(hex: "#FCFCFDBF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted80: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFDCC") : UIColor(hex: "#FCFCFDCC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFDCC") : NSColor(hex: "#FCFCFDCC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted90: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFDE5") : UIColor(hex: "#FCFCFDE5")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFDE5") : NSColor(hex: "#FCFCFDE5")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsTransparentInverted95: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFDF2") : UIColor(hex: "#FCFCFDF2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFDF2") : NSColor(hex: "#FCFCFDF2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground0: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#E3E4E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#E3E4E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2E3138") : UIColor(hex: "#C7CAD1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2E3138") : NSColor(hex: "#C7CAD1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#464A53") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#464A53") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground400: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground500: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#8b8474") : UIColor(hex: "#747B8B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#8b8474") : NSColor(hex: "#747B8B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground600: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#a29d90") : UIColor(hex: "#5D626F")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#a29d90") : NSColor(hex: "#5D626F")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground700: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground800: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground900: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e8e6e3") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e8e6e3") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsBackground1000: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#ffffff") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#ffffff") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground0: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#ffffff") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#ffffff") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e8e6e3") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e8e6e3") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground400: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#a29d90") : UIColor(hex: "#5D626F")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#a29d90") : NSColor(hex: "#5D626F")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground500: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#8b8474") : UIColor(hex: "#747B8B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#8b8474") : NSColor(hex: "#747B8B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground600: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground700: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#545045") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#545045") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground800: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#38352e") : UIColor(hex: "#C7CAD1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#38352e") : NSColor(hex: "#C7CAD1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground900: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1c1b17") : UIColor(hex: "#E3E4E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#1c1b17") : NSColor(hex: "#E3E4E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesColorsForeground1000: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesBorderBevelTop: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF80") : UIColor(hex: "#FFFFFF80")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF80") : NSColor(hex: "#FFFFFF80")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var primitivesBorderBevelBottom: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#00000033") : UIColor(hex: "#00000033")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#00000033") : NSColor(hex: "#00000033")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsSurface0: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsSurface100: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#F8F9FA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#F8F9FA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsSurface200: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2E3138") : UIColor(hex: "#E9ECEF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2E3138") : NSColor(hex: "#E9ECEF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsSurface300: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#464A53") : UIColor(hex: "#DEE2E6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#464A53") : NSColor(hex: "#DEE2E6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsDataBlue: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#da9c14") : UIColor(hex: "#2563EB")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#da9c14") : NSColor(hex: "#2563EB")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsDataPurple: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6ccc15") : UIColor(hex: "#9333EA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6ccc15") : NSColor(hex: "#9333EA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsDataTeal: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f26b77") : UIColor(hex: "#0D9488")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f26b77") : NSColor(hex: "#0D9488")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsDataOrange: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#15a7f3") : UIColor(hex: "#EA580C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#15a7f3") : NSColor(hex: "#EA580C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsDataRed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#23d9d9") : UIColor(hex: "#DC2626")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#23d9d9") : NSColor(hex: "#DC2626")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsDataYellow: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2688f9") : UIColor(hex: "#D97706")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2688f9") : NSColor(hex: "#D97706")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsOverlayScrim: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "rgba(0, 0, 0, 0.5)") : UIColor(hex: "rgba(0, 0, 0, 0.5)")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "rgba(0, 0, 0, 0.5)") : NSColor(hex: "rgba(0, 0, 0, 0.5)")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsOverlayDim: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "rgba(0, 0, 0, 0.2)") : UIColor(hex: "rgba(0, 0, 0, 0.2)")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "rgba(0, 0, 0, 0.2)") : NSColor(hex: "rgba(0, 0, 0, 0.2)")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f2bb3d") : UIColor(hex: "#0D44C2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f2bb3d") : NSColor(hex: "#0D44C2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f4c963") : UIColor(hex: "#0B369C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f4c963") : NSColor(hex: "#0B369C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#352603") : UIColor(hex: "#CAD9FC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#352603") : NSColor(hex: "#CAD9FC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#352603") : UIColor(hex: "#CAD9FC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#352603") : NSColor(hex: "#CAD9FC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#352603") : UIColor(hex: "#CAD9FC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#352603") : NSColor(hex: "#CAD9FC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsThemedForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#352603") : UIColor(hex: "#CAD9FC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#352603") : NSColor(hex: "#CAD9FC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e166a4") : UIColor(hex: "#1E995B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e166a4") : NSColor(hex: "#1E995B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e680b3") : UIColor(hex: "#197F4C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e680b3") : NSColor(hex: "#197F4C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#340a1f") : UIColor(hex: "#CBF5E0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#340a1f") : NSColor(hex: "#CBF5E0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#340a1f") : UIColor(hex: "#CBF5E0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#340a1f") : NSColor(hex: "#CBF5E0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#340a1f") : UIColor(hex: "#CBF5E0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#340a1f") : NSColor(hex: "#CBF5E0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsSuccessForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#340a1f") : UIColor(hex: "#CBF5E0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#340a1f") : NSColor(hex: "#CBF5E0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#3276fa") : UIColor(hex: "#CD8905")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#3276fa") : NSColor(hex: "#CD8905")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5f94fb") : UIColor(hex: "#A06B04")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5f94fb") : NSColor(hex: "#A06B04")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#01112f") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#01112f") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#01112f") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#01112f") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#01112f") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#01112f") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsAlertForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#01112f") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#01112f") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4fe8c9") : UIColor(hex: "#B01736")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4fe8c9") : NSColor(hex: "#B01736")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#73ecd4") : UIColor(hex: "#8C132B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#73ecd4") : NSColor(hex: "#8C132B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#031511") : UIColor(hex: "#FCEAEE")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#031511") : NSColor(hex: "#FCEAEE")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#031511") : UIColor(hex: "#FCEAEE")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#031511") : NSColor(hex: "#FCEAEE")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#031511") : UIColor(hex: "#FCEAEE")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#031511") : NSColor(hex: "#FCEAEE")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsDangerForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#031511") : UIColor(hex: "#FCEAEE")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#031511") : NSColor(hex: "#FCEAEE")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc865b") : UIColor(hex: "#2379A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc865b") : NSColor(hex: "#2379A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e39f7d") : UIColor(hex: "#1C6082")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e39f7d") : NSColor(hex: "#1C6082")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#000000") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#000000") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#35190c") : UIColor(hex: "#CAE6F3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#35190c") : NSColor(hex: "#CAE6F3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#35190c") : UIColor(hex: "#CAE6F3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#35190c") : NSColor(hex: "#CAE6F3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#35190c") : UIColor(hex: "#CAE6F3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#35190c") : NSColor(hex: "#CAE6F3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsInformativeForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#35190c") : UIColor(hex: "#CAE6F3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#35190c") : NSColor(hex: "#CAE6F3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#464A53") : UIColor(hex: "#C7CAD1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#464A53") : NSColor(hex: "#C7CAD1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2E3138") : UIColor(hex: "#E3E4E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2E3138") : NSColor(hex: "#E3E4E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e8e6e3") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e8e6e3") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e8e6e3") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e8e6e3") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e8e6e3") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e8e6e3") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsPrimaryButtonsNeutralForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e8e6e3") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e8e6e3") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f2bb3d") : UIColor(hex: "#0D44C2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f2bb3d") : NSColor(hex: "#0D44C2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f4c963") : UIColor(hex: "#0B369C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f4c963") : NSColor(hex: "#0B369C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f2bb3d") : UIColor(hex: "#0D44C2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f2bb3d") : NSColor(hex: "#0D44C2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f4c963") : UIColor(hex: "#0B369C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f4c963") : NSColor(hex: "#0B369C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#eca413") : UIColor(hex: "#135BEC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#eca413") : NSColor(hex: "#135BEC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f2bb3d") : UIColor(hex: "#0D44C2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f2bb3d") : NSColor(hex: "#0D44C2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsThemedForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#eca413") : UIColor(hex: "#135BEC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#eca413") : NSColor(hex: "#135BEC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e166a4") : UIColor(hex: "#1E995B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e166a4") : NSColor(hex: "#1E995B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e680b3") : UIColor(hex: "#197F4C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e680b3") : NSColor(hex: "#197F4C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e166a4") : UIColor(hex: "#1E995B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e166a4") : NSColor(hex: "#1E995B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e680b3") : UIColor(hex: "#197F4C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e680b3") : NSColor(hex: "#197F4C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d73385") : UIColor(hex: "#28CC7A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d73385") : NSColor(hex: "#28CC7A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e166a4") : UIColor(hex: "#1E995B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e166a4") : NSColor(hex: "#1E995B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsSuccessForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d73385") : UIColor(hex: "#28CC7A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d73385") : NSColor(hex: "#28CC7A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4fe8c9") : UIColor(hex: "#B01736")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4fe8c9") : NSColor(hex: "#B01736")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#73ecd4") : UIColor(hex: "#8C132B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#73ecd4") : NSColor(hex: "#8C132B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4fe8c9") : UIColor(hex: "#B01736")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4fe8c9") : NSColor(hex: "#B01736")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#73ecd4") : UIColor(hex: "#8C132B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#73ecd4") : NSColor(hex: "#8C132B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1bcba7") : UIColor(hex: "#E43458")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#1bcba7") : NSColor(hex: "#E43458")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4fe8c9") : UIColor(hex: "#B01736")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4fe8c9") : NSColor(hex: "#B01736")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsDangerForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1bcba7") : UIColor(hex: "#E43458")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#1bcba7") : NSColor(hex: "#E43458")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#3276fa") : UIColor(hex: "#CD8905")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#3276fa") : NSColor(hex: "#CD8905")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5f94fb") : UIColor(hex: "#A06B04")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5f94fb") : NSColor(hex: "#A06B04")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#3276fa") : UIColor(hex: "#CD8905")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#3276fa") : NSColor(hex: "#CD8905")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5f94fb") : UIColor(hex: "#A06B04")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5f94fb") : NSColor(hex: "#A06B04")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0548ca") : UIColor(hex: "#FAB735")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0548ca") : NSColor(hex: "#FAB735")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#3276fa") : UIColor(hex: "#CD8905")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#3276fa") : NSColor(hex: "#CD8905")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsAlertForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0548ca") : UIColor(hex: "#FAB735")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0548ca") : NSColor(hex: "#FAB735")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc865b") : UIColor(hex: "#2379A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc865b") : NSColor(hex: "#2379A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e39f7d") : UIColor(hex: "#1C6082")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e39f7d") : NSColor(hex: "#1C6082")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc865b") : UIColor(hex: "#2379A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc865b") : NSColor(hex: "#2379A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e39f7d") : UIColor(hex: "#1C6082")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e39f7d") : NSColor(hex: "#1C6082")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#bd5a28") : UIColor(hex: "#42A5D7")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#bd5a28") : NSColor(hex: "#42A5D7")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc865b") : UIColor(hex: "#2379A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc865b") : NSColor(hex: "#2379A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsInformativeForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#bd5a28") : UIColor(hex: "#42A5D7")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#bd5a28") : NSColor(hex: "#42A5D7")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#464A53") : UIColor(hex: "#C7CAD1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#464A53") : NSColor(hex: "#C7CAD1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#464A53") : UIColor(hex: "#C7CAD1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#464A53") : NSColor(hex: "#C7CAD1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#8b8474") : UIColor(hex: "#747B8B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#8b8474") : NSColor(hex: "#747B8B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsSecondaryButtonsNeutralForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#8b8474") : UIColor(hex: "#747B8B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#8b8474") : NSColor(hex: "#747B8B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f2bb3d") : UIColor(hex: "#0D44C2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f2bb3d") : NSColor(hex: "#0D44C2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f4c963") : UIColor(hex: "#0B369C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f4c963") : NSColor(hex: "#0B369C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f2bb3d") : UIColor(hex: "#0D44C2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f2bb3d") : NSColor(hex: "#0D44C2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f4c963") : UIColor(hex: "#0B369C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f4c963") : NSColor(hex: "#0B369C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#efae17") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#efae17") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#eca413") : UIColor(hex: "#135BEC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#eca413") : NSColor(hex: "#135BEC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#f2bb3d") : UIColor(hex: "#0D44C2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#f2bb3d") : NSColor(hex: "#0D44C2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsThemedForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#eca413") : UIColor(hex: "#135BEC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#eca413") : NSColor(hex: "#135BEC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e166a4") : UIColor(hex: "#1E995B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e166a4") : NSColor(hex: "#1E995B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e680b3") : UIColor(hex: "#197F4C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e680b3") : NSColor(hex: "#197F4C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e166a4") : UIColor(hex: "#1E995B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e166a4") : NSColor(hex: "#1E995B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e680b3") : UIColor(hex: "#197F4C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e680b3") : NSColor(hex: "#197F4C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc4d94") : UIColor(hex: "#23B26B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc4d94") : NSColor(hex: "#23B26B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d73385") : UIColor(hex: "#28CC7A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d73385") : NSColor(hex: "#28CC7A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e166a4") : UIColor(hex: "#1E995B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e166a4") : NSColor(hex: "#1E995B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsSuccessForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d73385") : UIColor(hex: "#28CC7A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d73385") : NSColor(hex: "#28CC7A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4fe8c9") : UIColor(hex: "#B01736")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4fe8c9") : NSColor(hex: "#B01736")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#73ecd4") : UIColor(hex: "#8C132B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#73ecd4") : NSColor(hex: "#8C132B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4fe8c9") : UIColor(hex: "#B01736")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4fe8c9") : NSColor(hex: "#B01736")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#73ecd4") : UIColor(hex: "#8C132B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#73ecd4") : NSColor(hex: "#8C132B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2be3bd") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2be3bd") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1bcba7") : UIColor(hex: "#E43458")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#1bcba7") : NSColor(hex: "#E43458")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4fe8c9") : UIColor(hex: "#B01736")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4fe8c9") : NSColor(hex: "#B01736")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsDangerForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1bcba7") : UIColor(hex: "#E43458")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#1bcba7") : NSColor(hex: "#E43458")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#3276fa") : UIColor(hex: "#CD8905")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#3276fa") : NSColor(hex: "#CD8905")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5f94fb") : UIColor(hex: "#A06B04")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5f94fb") : NSColor(hex: "#A06B04")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0658f8") : UIColor(hex: "#F9A707")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#0658f8") : NSColor(hex: "#F9A707")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#01112f") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#01112f") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#01112f") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#01112f") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#01112f") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#01112f") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsAlertForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#01112f") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#01112f") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc865b") : UIColor(hex: "#2379A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc865b") : NSColor(hex: "#2379A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e39f7d") : UIColor(hex: "#1C6082")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e39f7d") : NSColor(hex: "#1C6082")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc865b") : UIColor(hex: "#2379A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc865b") : NSColor(hex: "#2379A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#e39f7d") : UIColor(hex: "#1C6082")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#e39f7d") : NSColor(hex: "#1C6082")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d56d39") : UIColor(hex: "#2A92C6")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d56d39") : NSColor(hex: "#2A92C6")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#bd5a28") : UIColor(hex: "#42A5D7")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#bd5a28") : NSColor(hex: "#42A5D7")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#dc865b") : UIColor(hex: "#2379A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#dc865b") : NSColor(hex: "#2379A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsInformativeForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#bd5a28") : UIColor(hex: "#42A5D7")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#bd5a28") : NSColor(hex: "#42A5D7")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonBackgroundIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#464A53") : UIColor(hex: "#C7CAD1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#464A53") : NSColor(hex: "#C7CAD1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonBackgroundDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonBackgroundHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonBackgroundPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2E3138") : UIColor(hex: "#E3E4E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2E3138") : NSColor(hex: "#E3E4E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonBackgroundFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonForegroundContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonForegroundContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonForegroundContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonForegroundContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#464A53") : UIColor(hex: "#C7CAD1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#464A53") : NSColor(hex: "#C7CAD1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralButtonForegroundContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralForegroundDimmedContentIdle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralForegroundDimmedContentDisabled: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralForegroundDimmedContentHover: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#8b8474") : UIColor(hex: "#747B8B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#8b8474") : NSColor(hex: "#747B8B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralForegroundDimmedContentPressed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var componentsTertiaryButtonsNeutralForegroundDimmedContentFocus: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#8b8474") : UIColor(hex: "#747B8B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#8b8474") : NSColor(hex: "#747B8B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+}

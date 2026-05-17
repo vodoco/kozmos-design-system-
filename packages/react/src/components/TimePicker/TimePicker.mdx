@@ -1,0 +1,110 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as TimePickerStories from "./TimePicker.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={TimePickerStories} />
+
+# TimePicker
+
+Displays the TimePicker interface topology natively.
+
+<Canvas>
+  <Story of={TimePickerStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { TimePicker } from "@kozmos/react"
+
+<TimePicker />
+    `}
+    vue={`
+<script setup>
+import { KozmosTimePicker } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosTimePicker />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosTimePicker: View {
+    var body: some View {
+        Text("TimePicker Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.timepicker
+
+import android.app.TimePickerDialog
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+
+@Composable
+fun KozmosTimePicker(
+    time: LocalTime?,
+    onTimeSelected: (LocalTime) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String = "Select Time"
+) {
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    
+    if (time != null) {
+        calendar.set(Calendar.HOUR_OF_DAY, time.hour)
+        calendar.set(Calendar.MINUTE, time.minute)
+    }
+
+    val timePickerDialog = TimePickerDialog(
+        context,
+        { _, hourOfDay, minute ->
+            onTimeSelected(LocalTime.of(hourOfDay, minute))
+        },
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE),
+        false // is24HourView
+    )
+
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = time?.format(DateTimeFormatter.ofPattern("hh:mm a")) ?: "",
+            onValueChange = {},
+            label = { Text(label) },
+            readOnly = true,
+            trailingIcon = {
+                Icon(Icons.Default.AccessTime, contentDescription = "Select Time")
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+         Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable { timePickerDialog.show() }
+        )
+    }
+}
+
+    `}
+/>

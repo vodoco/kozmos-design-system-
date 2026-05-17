@@ -1,0 +1,91 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as ListStories from "./List.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={ListStories} />
+
+# List
+
+Displays the List interface topology natively.
+
+<Canvas>
+  <Story of={ListStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { List } from "@kozmos/react"
+
+<List />
+    `}
+    vue={`
+<script setup>
+import { KozmosList } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosList />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosList: View {
+    var body: some View {
+        Text("List Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.list
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosList(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = modifier) {
+        content()
+    }
+}
+
+@Composable
+fun KozmosListItem(
+    text: String,
+    modifier: Modifier = Modifier,
+    showDivider: Boolean = true
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = KozmosColors.primitivesColorsForeground100,
+            modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)
+        )
+        if (showDivider) {
+            Divider(color = KozmosColors.primitivesColorsBackground300)
+        }
+    }
+}
+
+    `}
+/>

@@ -1,0 +1,124 @@
+
+import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import * as ButtonStories from './Button.stories';
+
+<Meta of={ButtonStories} />
+
+# Button
+
+Buttons allow users to take actions, and make choices, with a single tap.
+
+<Canvas>
+  <Story of={ButtonStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Button } from '@kozmos/react';
+
+<Button variant="default">Button</Button>
+    `}
+    vue={`
+<script setup lang="ts">
+import { KozmosButton } from '@kozmos/vue';
+</script>
+
+<template>
+  <KozmosButton variant="default">Button</KozmosButton>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+public enum KozmosButtonVariant {
+    case \`default\`
+    case destructive
+    case outline
+    case secondary
+    case ghost
+    case link
+}
+
+public enum KozmosButtonSize {
+    case \`default\`
+    case sm
+    case lg
+    case icon
+}
+
+public struct KozmosButton: View {
+    let label: String
+    let variant: KozmosButtonVariant
+    let size: KozmosButtonSize
+    let action: () -> Void
+    
+    public init(
+        _ label: String,
+        variant: KozmosButtonVariant = .default,
+        size: KozmosButtonSize = .default,
+        action: @escaping () -> Void
+    ) {
+        self.label = label
+        self.variant = variant
+        self.size = size
+        self.action = action
+    }
+    
+    public var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: fontSize, weight: .medium))
+                .padding(padding)
+                .background(backgroundColor)
+                .foregroundColor(foregroundColor)
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
+                )
+        }
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.button
+
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+enum class KozmosButtonVariant {
+    Default,
+    Destructive,
+    Outline,
+    Secondary,
+    Ghost,
+    Link
+}
+
+@Composable
+fun KozmosButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    variant: KozmosButtonVariant = KozmosButtonVariant.Default,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+    ) {
+        Text(text)
+    }
+}
+    `}
+/>

@@ -1,0 +1,137 @@
+
+import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import * as BadgeStories from './Badge.stories';
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<Meta of={BadgeStories} />
+
+# Badge
+
+Displays a badge or a component that looks like a badge.
+
+<Canvas>
+  <Story of={BadgeStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Badge } from "@kozmos/react"
+
+<Badge variant="outline">Badge</Badge>
+    `}
+    vue={`
+<script setup>
+import { Badge } from "@kozmos/vue"
+</script>
+
+<template>
+  <Badge variant="outline">Badge</Badge>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosBadge: View {
+    let label: String
+    let variant: BadgeVariant // default, secondary, destructive, outline
+    
+    var body: some View {
+        Text(label)
+            .font(.system(size: 12, weight: .semibold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 2)
+            .background(backgroundColor)
+            .foregroundColor(foregroundColor)
+            .cornerRadius(100) // Stadium shape
+            .overlay(
+                RoundedRectangle(cornerRadius: 100)
+                    .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
+            )
+    }
+    
+    private var backgroundColor: Color {
+        switch variant {
+        case .default: return KozmosColors.componentBadgeBackgroundColorDefault
+        case .secondary: return KozmosColors.componentBadgeBackgroundColorSecondary
+        case .destructive: return KozmosColors.componentBadgeBackgroundColorDestructive
+        case .outline: return Color.clear
+        }
+    }
+    
+    private var foregroundColor: Color {
+        switch variant {
+        case .default: return KozmosColors.componentBadgeTextColorDefault
+        case .secondary: return KozmosColors.componentBadgeTextColorSecondary
+        case .destructive: return KozmosColors.componentBadgeTextColorDestructive
+        case .outline: return KozmosColors.componentBadgeTextColorOutline
+        }
+    }
+    
+    private var borderColor: Color {
+        switch variant {
+        case .outline: return KozmosColors.componentBadgeBorderColorOutline
+        default: return Color.clear
+        }
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.badge
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+import androidx.compose.ui.unit.sp
+
+enum class BadgeVariant {
+    Default, Secondary, Destructive, Outline
+}
+
+@Composable
+fun KozmosBadge(
+    text: String,
+    variant: BadgeVariant = BadgeVariant.Default,
+    modifier: Modifier = Modifier
+) {
+    val (containerColor, contentColor) = when (variant) {
+        BadgeVariant.Default -> KozmosColors.primitivesColorsTheme500 to androidx.compose.ui.graphics.Color.White
+        BadgeVariant.Secondary -> KozmosColors.primitivesColorsBackground200 to KozmosColors.primitivesColorsForeground100
+        BadgeVariant.Destructive -> KozmosColors.primitivesColorsEmotionalDanger600 to androidx.compose.ui.graphics.Color.White
+        BadgeVariant.Outline -> Color.Transparent to KozmosColors.primitivesColorsForeground100
+    }
+
+    Box(
+        modifier = modifier
+            .background(containerColor, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200))
+            .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing100, vertical = KozmosDimensions.primitivesLayoutSpacing25),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = contentColor,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+    `}
+/>

@@ -1,0 +1,46 @@
+package com.kozmos.components.rating
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosRating(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    max: Int = 5,
+    readOnly: Boolean = false
+) {
+    Row(modifier = modifier) {
+        repeat(max) { index ->
+            val ratingValue = index + 1
+            val isFilled = ratingValue <= value
+            
+            Icon(
+                imageVector = if (isFilled) Icons.Filled.Star else Icons.Outlined.Star,
+                contentDescription = null,
+                tint = if (isFilled) KozmosColors.primitivesColorsEmotionalAlert600 else KozmosColors.primitivesColorsForeground400,
+                modifier = Modifier
+                    .size(KozmosDimensions.primitivesLayoutSizing400)
+                    .padding(KozmosDimensions.primitivesLayoutSpacing25)
+                    .clickable(enabled = !readOnly) {
+                        onValueChange(ratingValue)
+                    }
+            )
+        }
+    }
+}

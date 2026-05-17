@@ -1,0 +1,38 @@
+import { Meta, Story, Canvas } from '@storybook/blocks';
+import * as UserLocationMarkerStories from './UserLocationMarker.stories';
+
+<Meta of={UserLocationMarkerStories} />
+
+# User Location Marker (Blue Dot)
+
+The `UserLocationMarker` abstracts the highly intricate pulsating radar logic of a 2D Indoor map into a pure declarative component without needing map engine integrations like MapboxGL.
+
+## React Usage
+
+```tsx
+import { UserLocationMarker } from '@kozmos/react';
+
+<UserLocationMarker heading={45} showHeading={true} />
+```
+
+## Android Jetpack Compose
+
+```kotlin
+import com.kozmos.components.userlocationmarker.KozmosUserLocationMarker
+
+KozmosUserLocationMarker(
+    heading = 45f,
+    showHeading = true
+)
+```
+
+## iOS SwiftUI
+
+```swift
+import KozmosDesignSystem
+
+KozmosUserLocationMarker(
+    heading: 45.0,
+    showHeading: true
+)
+```

@@ -1,0 +1,22 @@
+import { Meta, Story } from '@storybook/blocks';
+
+<Meta title="Components/RouteSummary" />
+
+# Route Summary
+
+The `RouteSummary` serves as the primary bottom-anchored modal sheet during active turn-by-turn Wayfinding sessions. It safely structures ETAs, unit distances, and core routing logic into a distinct hardware-independent layer.
+
+## React
+
+```tsx
+import { RouteSummary } from '@kozmos/react';
+import { PersonStanding } from 'lucide-react';
+
+<RouteSummary
+    etaText="7 min"
+    distanceText="500 ft"
+    state="active"
+    transportModeIcon={<PersonStanding />}
+    onEndRoute={() => prompt("End Route Confirmation")}
+/>
+```

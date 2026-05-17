@@ -1,0 +1,198 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as RadioStories from './Radio.stories';
+
+<Meta of={RadioStories} />
+
+# Radio Group
+
+A set of checkable buttons—known as radio buttons—where no more than one of the buttons can be checked at a time.
+
+## Usage
+
+Use radio buttons when:
+- Users need to select a single option from a list.
+- All available options should be visible at once (unlike Select).
+- There are fewer than 5-7 options.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+    react={`
+import { Label } from "@kozmos/react"
+import { RadioGroup, RadioGroupItem } from "@kozmos/react"
+
+<RadioGroup defaultValue="option-one">
+  <div className="flex items-center space-x-2">
+    <RadioGroupItem value="option-one" id="r1" />
+    <Label htmlFor="r1">Option One</Label>
+  </div>
+  <div className="flex items-center space-x-2">
+    <RadioGroupItem value="option-two" id="r2" />
+    <Label htmlFor="r2">Option Two</Label>
+  </div>
+</RadioGroup>
+    `}
+    vue={`
+<script setup>
+import { Label, RadioGroup, RadioGroupItem } from "@kozmos/vue"
+</script>
+
+<template>
+  <RadioGroup defaultValue="option-one">
+    <div class="flex items-center space-x-2">
+      <RadioGroupItem value="option-one" id="r1" />
+      <Label for="r1">Option One</Label>
+    </div>
+    <div class="flex items-center space-x-2">
+      <RadioGroupItem value="option-two" id="r2" />
+      <Label for="r2">Option Two</Label>
+    </div>
+  </RadioGroup>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+public struct KozmosRadioGroup<Content: View>: View {
+    let content: Content
+    
+    public init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    public var body: some View {
+        VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+            content
+        }
+    }
+}
+
+public struct KozmosRadioGroupItem: View {
+    let value: String
+    let label: String?
+    @Binding var selection: String
+    @Environment(\.kozmosAnalytics) var trackEvent
+    
+    public init(value: String, label: String? = nil, selection: Binding<String>) {
+        self.value = value
+        self.label = label
+        self._selection = selection
+    }
+    
+    public var body: some View {
+        Button(action: {
+            trackEvent(KozmosAnalyticsEvent(eventName: "radio_selection_changed", component: "RadioGroup", properties: ["value": value]))
+            selection = value
+        }) {
+            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                ZStack {
+                    Circle()
+                        .stroke(selection == value ? KozmosColors.primitivesColorsTheme500 : KozmosColors.primitivesColorsForeground400, lineWidth: 1)
+                        .frame(width: 20, height: 20)
+                    
+                    if selection == value {
+                        Circle()
+                            .fill(KozmosColors.primitivesColorsTheme500)
+                            .frame(width: 10, height: 10)
+                    }
+                }
+                
+                if let label = label {
+                    Text(label)
+                        .font(.subheadline)
+                        .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                }
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+    `}
+    kotlin={`
+package com.kozmos.components.radio
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosDimensions
+
+@Composable
+fun KozmosRadioGroup(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = modifier.selectableGroup()) {
+        content()
+    }
+}
+
+@Composable
+fun KozmosRadioGroupItem(
+    value: String,
+    selectedValue: String,
+    onOptionSelected: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String? = null
+) {
+    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = (value == selectedValue),
+                onClick = { 
+                    trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "RadioGroup", eventName = "radio_selection_changed", properties = mapOf("value" to value.toString())))
+                    onOptionSelected(value) 
+                },
+                role = Role.RadioButton
+            )
+            .padding(vertical = KozmosDimensions.primitivesLayoutSpacing100),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = (value == selectedValue),
+            onClick = null,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = KozmosColors.primitivesColorsTheme500,
+                unselectedColor = KozmosColors.primitivesColorsForeground500
+            )
+        )
+        if (label != null) {
+            Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing100))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = KozmosColors.primitivesColorsForeground100
+            )
+        }
+    }
+}
+
+    `}
+/>
+
+## Stories
+
+### Default
+<Canvas of={RadioStories.Default} />

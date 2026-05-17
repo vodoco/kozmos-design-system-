@@ -1,0 +1,74 @@
+package com.kozmos.components.otpinput
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosOTPInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    length: Int = 6,
+    modifier: Modifier = Modifier
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = {
+            if (it.length <= length && it.all { char -> char.isDigit() }) {
+                onValueChange(it)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        decorationBox = {
+            Row(
+                modifier = modifier,
+                horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(length) { index ->
+                    val char = if (index < value.length) value[index] else null
+                    val isFocused = index == value.length
+                    
+                    Box(
+                        modifier = Modifier
+                            .width(44.dp)
+                            .height(50.dp)
+                            .background(KozmosColors.primitivesColorsBackground100, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+                            .border(
+                                width = if (isFocused) 2.dp else 1.dp,
+                                color = if (isFocused) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsBackground300,
+                                shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (char != null) {
+                            Text(
+                                text = char.toString(),
+                                style = MaterialTheme.typography.titleLarge,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    )
+}

@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  web:
+    name: Web Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build Web
+        run: pnpm build
+
+      - name: Test Web (Unit & A11y)
+        run: pnpm test
+        
+      - name: Verify Web Contracts (Pact)
+        run: pnpm --filter @kozmos/react test:contracts
+
+      - name: Install Playwright
+        run: pnpm --filter @kozmos/react exec playwright install --with-deps chromium
+
+      - name: Core Pipeline - Storybook E2E Verification
+        run: |
+          npx concurrently -k -s first -n "SB,TEST" \
+            "npm run storybook:react --prefix apps/docs -- --ci --port 6006" \
+            "npx wait-on tcp:6006 && pnpm --filter @kozmos/react exec playwright test && pnpm run test:visual && npx tsx scripts/skills/check-a11y.ts"
+
+      - name: Enforce SDK Assembly & Accessibility Governance
+        run: |
+          npx tsx scripts/skills/check-completion.ts
+
+      - name: Verify Proof-of-Output (Web & Tokens)
+        run: |
+          test -s packages/tokens/dist/css/variables-light.css
+          test -s packages/vue/dist/index.d.ts
+          node -e "
+            const light = require('./packages/tokens/src/tokens-light.json');
+            const dark = require('./packages/tokens/src/tokens-dark.json');
+            const bgLight = light?.Primitives?.Colors?.background?.['0']?.value || light?.Primitives?.Colors?.background?.['0']?.['\$value'];
+            const bgDark = dark?.Primitives?.Colors?.background?.['0']?.value || dark?.Primitives?.Colors?.background?.['0']?.['\$value'];
+            if (bgLight === bgDark) {
+               console.error('❌ Dark mode tokens match Light mode! Propagation failed.');
+               process.exit(1);
+            }
+            console.log('✅ Dark Mode divergence verified cross-platform.');
+          "
+  ios:
+    name: iOS Build
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Build iOS Package
+        working-directory: packages/ios
+        run: swift build
+
+      - name: Test iOS Package
+        working-directory: packages/ios
+        run: swift test
+
+      - name: Verify Proof-of-Output (iOS)
+        run: test -s packages/tokens/dist/ios/KozmosColors.swift
+
+  android:
+    name: Android Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Build Android Library
+        working-directory: packages/android
+        run: gradle assembleDebug
+
+      - name: Test Android Library
+        working-directory: packages/android
+        run: gradle verifyPaparazziDebug
+
+      - name: Verify Proof-of-Output (Android)
+        run: test -s packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColors.kt

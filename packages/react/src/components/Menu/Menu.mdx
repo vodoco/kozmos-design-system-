@@ -1,0 +1,80 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as MenuStories from "./Menu.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={MenuStories} />
+
+# Menu
+
+Displays the Menu interface topology natively.
+
+<Canvas>
+  <Story of={MenuStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Menu } from "@kozmos/react"
+
+<Menu />
+    `}
+    vue={`
+<script setup>
+import { KozmosMenu } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosMenu />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosMenu: View {
+    var body: some View {
+        Text("Menu Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.menu
+
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+@Composable
+fun KozmosMenu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    items: List<String>,
+    onItemClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        modifier = modifier
+    ) {
+        items.forEach { item ->
+            DropdownMenuItem(
+                text = { Text(item) },
+                onClick = {
+                    onItemClick(item)
+                    onDismissRequest()
+                }
+            )
+        }
+    }
+}
+
+    `}
+/>

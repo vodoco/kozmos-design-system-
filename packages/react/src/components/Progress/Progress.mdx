@@ -1,0 +1,68 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as ProgressStories from "./Progress.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={ProgressStories} />
+
+# Progress
+
+Displays the Progress interface topology natively.
+
+<Canvas>
+  <Story of={ProgressStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Progress } from "@kozmos/react"
+
+<Progress />
+    `}
+    vue={`
+<script setup>
+import { KozmosProgress } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosProgress />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosProgress: View {
+    var body: some View {
+        Text("Progress Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.progress
+
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosProgress(
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
+    LinearProgressIndicator(
+        progress = progress,
+        modifier = modifier,
+        color = KozmosColors.primitivesColorsTheme500,
+        trackColor = KozmosColors.primitivesColorsBackground300,
+    )
+}
+
+    `}
+/>

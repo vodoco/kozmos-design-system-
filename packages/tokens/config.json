@@ -1,0 +1,48 @@
+{
+    "platforms": {
+        "css-light": {
+            "transformGroup": "css",
+            "buildPath": "dist/css/",
+            "files": [
+                {
+                    "destination": "variables-light.css",
+                    "format": "css/variables",
+                    "options": {
+                        "selector": ":root"
+                    }
+                }
+            ]
+        },
+        "css-dark": {
+            "transformGroup": "css",
+            "buildPath": "dist/css/",
+            "files": [
+                {
+                    "destination": "variables-dark.css",
+                    "format": "css/variables",
+                    "options": {
+                        "selector": "[data-theme='dark']"
+                    }
+                }
+            ]
+        },
+        "js": {
+            "transformGroup": "js",
+            "buildPath": "dist/js/",
+            "files": [
+                {
+                    "destination": "tokens.js",
+                    "format": "javascript/module-flat"
+                },
+                {
+                    "destination": "tokens.mjs",
+                    "format": "javascript/es6"
+                },
+                {
+                    "destination": "tokens.d.ts",
+                    "format": "typescript/es6-declarations"
+                }
+            ]
+        }
+    }
+}

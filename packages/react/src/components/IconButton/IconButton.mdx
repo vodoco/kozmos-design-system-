@@ -1,0 +1,93 @@
+
+import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import * as IconButtonStories from './IconButton.stories';
+
+<Meta of={IconButtonStories} />
+
+# IconButton
+
+IconButtons are used for actions that don't require a label, such as "flaging" or "liking" an item.
+
+<Canvas>
+  <Story of={IconButtonStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<PlatformSnippets
+    react={`
+import { IconButton } from '@kozmos/react';
+import { Home } from 'lucide-react';
+
+<IconButton>
+    <Home className="h-4 w-4" />
+</IconButton>
+    `}
+    vue={`
+<script setup>
+import { KozmosIconButton } from '@kozmos/vue';
+import { Home } from 'lucide-vue-next';
+</script>
+
+<template>
+  <KozmosIconButton>
+    <Home class="h-4 w-4" />
+  </KozmosIconButton>
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+public struct KozmosIconButton: View {
+    let iconName: String
+    let action: () -> Void
+    
+    public init(
+        iconName: String,
+        action: @escaping () -> Void
+    ) {
+        self.iconName = iconName
+        self.action = action
+    }
+    
+    public var body: some View {
+        Button(action: action) {
+            Image(systemName: iconName)
+                .font(.system(size: 20))
+                .foregroundColor(.primary)
+                .padding(8)
+                .background(Color.clear)
+                .clipShape(Circle())
+        }
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.iconbutton
+
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
+
+@Composable
+fun KozmosIconButton(
+    icon: ImageVector,
+    onClick: () -> Unit,
+    contentDescription: String? = null
+) {
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription
+        )
+    }
+}
+    `}
+/>

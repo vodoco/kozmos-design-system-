@@ -1,0 +1,24 @@
+{
+    "name": "@kozmos/tokens",
+    "version": "0.0.1",
+    "publishConfig": {
+        "access": "public"
+    },
+    "main": "dist/js/tokens.js",
+    "module": "dist/js/tokens.mjs",
+    "types": "dist/js/tokens.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "node build.mjs",
+        "build:light": "style-dictionary build --config config.json --platform css-light",
+        "build:dark": "style-dictionary build --config config.json --platform css-dark",
+        "build:js": "style-dictionary build --config config.json --platform js",
+        "test": "echo 'No tests yet'"
+    },
+    "devDependencies": {
+        "@tokens-studio/sd-transforms": "2.0.3",
+        "style-dictionary": "5.2.0"
+    }
+}

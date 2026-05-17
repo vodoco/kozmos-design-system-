@@ -1,0 +1,141 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as DirectionStepStories from "./DirectionStep.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={DirectionStepStories} />
+
+# DirectionStep
+
+Displays the DirectionStep interface topology natively.
+
+<Canvas>
+  <Story of={DirectionStepStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { DirectionStep } from "@kozmos/react"
+
+<DirectionStep />
+    `}
+    vue={`
+<script setup>
+import { KozmosDirectionStep } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosDirectionStep />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosDirectionStep: View {
+    var body: some View {
+        Text("DirectionStep Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.directionstep
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+
+enum class DirectionType {
+    Straight, Left, Right, Destination
+}
+
+@Composable
+fun KozmosDirectionStep(
+    type: DirectionType,
+    instruction: String,
+    modifier: Modifier = Modifier,
+    distance: String? = null,
+    duration: String? = null
+) {
+    val icon = when (type) {
+        DirectionType.Straight -> Icons.Default.ArrowUpward
+        DirectionType.Left -> Icons.Default.ArrowBack // Approximated
+        DirectionType.Right -> Icons.Default.ArrowForward
+        DirectionType.Destination -> Icons.Default.LocationOn
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .background(KozmosColors.primitivesColorsBackground0)
+            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .padding(KozmosDimensions.primitivesLayoutSpacing150),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(KozmosDimensions.primitivesLayoutSizing500)
+                .clip(CircleShape)
+                .background(KozmosColors.primitivesColorsTheme500.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = KozmosColors.primitivesColorsTheme500,
+                modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300)
+            )
+        }
+        
+        Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing150))
+        
+        Column {
+            Text(
+                text = instruction,
+                style = MaterialTheme.typography.titleMedium,
+                color = KozmosColors.primitivesColorsForeground100
+            )
+            if (distance != null || duration != null) {
+                Text(
+                    text = "\${distance ?: \"\"} \${if (duration != null) \"• \$duration\" else \"\"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = KozmosColors.primitivesColorsForeground500
+                )
+            }
+        }
+    }
+}
+
+    `}
+/>

@@ -1,0 +1,65 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as SpinnerStories from "./Spinner.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={SpinnerStories} />
+
+# Spinner
+
+Displays the Spinner interface topology natively.
+
+<Canvas>
+  <Story of={SpinnerStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Spinner } from "@kozmos/react"
+
+<Spinner />
+    `}
+    vue={`
+<script setup>
+import { KozmosSpinner } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosSpinner />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosSpinner: View {
+    var body: some View {
+        Text("Spinner Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.spinner
+
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.kozmos.tokens.KozmosColors
+
+@Composable
+fun KozmosSpinner(
+    modifier: Modifier = Modifier
+) {
+    CircularProgressIndicator(
+        modifier = modifier,
+        color = KozmosColors.primitivesColorsTheme500
+    )
+}
+
+    `}
+/>

@@ -1,0 +1,59 @@
+package com.kozmos.components.floorselector
+
+import com.kozmos.tokens.KozmosDimensions
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import com.kozmos.tokens.KozmosColors
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun KozmosFloorSelector(
+    floors: List<String>,
+    selectedFloor: String,
+    onFloorSelect: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+    Column(
+        modifier = modifier
+            .shadow(4.dp, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
+            .background(KozmosColors.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
+            .padding(KozmosDimensions.primitivesLayoutSpacing50)
+    ) {
+        floors.forEach { floor ->
+            val isSelected = floor == selectedFloor
+            Box(
+                modifier = Modifier
+                    .size(KozmosDimensions.primitivesLayoutSizing500)
+                    .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
+                    .background(if (isSelected) KozmosColors.primitivesColorsTheme500 else Color.Transparent)
+                    .clickable { 
+                        trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "FloorSelector", eventName = "floor_selected", properties = mapOf("floor" to floor)))
+                        onFloorSelect(floor) 
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = floor,
+                    color = if (isSelected) KozmosColors.primitivesColorsBackground0 else KozmosColors.primitivesColorsForeground100,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+        }
+    }
+}

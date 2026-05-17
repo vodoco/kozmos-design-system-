@@ -1,0 +1,62 @@
+{
+  "name": "kozmos-design-system",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Multi-platform design system for Pointr SDK",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:visual": "playwright test visual-regression.spec.ts",
+    "test:visual:update": "playwright test visual-regression.spec.ts --update-snapshots",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "tokens:build": "pnpm --filter @kozmos/tokens build",
+    "tokens:sync": "tsx scripts/sync-figma.ts",
+    "update-tokens": "tsx scripts/update-tokens.ts",
+    "new-component": "tsx scripts/skills/generate-component.ts",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo run build && changeset publish",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.1",
+    "@changesets/cli": "^2.27.0",
+    "@playwright/test": "1.58.2",
+    "@storybook/blocks": "^8.0.0",
+    "@turbo/gen": "^1.11.3",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "8.56.1",
+    "dotenv": "17.2.4",
+    "eslint": "^8.56.0",
+    "eslint-config-turbo": "2.8.12",
+    "eslint-plugin-react": "7.37.5",
+    "globals": "^17.4.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.2.0",
+    "playwright": "1.58.2",
+    "prettier": "^3.2.0",
+    "tsx": "^4.7.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.57.0",
+    "vitest": "^1.2.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

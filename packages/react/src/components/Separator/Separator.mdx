@@ -1,0 +1,79 @@
+import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import * as SeparatorStories from "./Separator.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={SeparatorStories} />
+
+# Separator
+
+Displays the Separator interface topology natively.
+
+<Canvas>
+  <Story of={SeparatorStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Separator } from "@kozmos/react"
+
+<Separator />
+    `}
+    vue={`
+<script setup>
+import { KozmosSeparator } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosSeparator />
+</template>
+    `}
+    swift={`
+import SwiftUI
+
+struct KozmosSeparator: View {
+    var body: some View {
+        Text("Separator Content placeholder")
+    }
+}
+    `}
+    kotlin={`
+package com.kozmos.components.separator
+
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Divider
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosColors
+
+enum class SeparatorOrientation {
+    Horizontal,
+    Vertical
+}
+
+@Composable
+fun KozmosSeparator(
+    modifier: Modifier = Modifier,
+    orientation: SeparatorOrientation = SeparatorOrientation.Horizontal
+) {
+    if (orientation == SeparatorOrientation.Horizontal) {
+        Divider(modifier = modifier, color = KozmosColors.primitivesColorsBackground300)
+    } else {
+        Divider(
+            modifier = modifier
+                .fillMaxHeight()
+                .width(1.dp),
+            color = KozmosColors.primitivesColorsBackground300
+        )
+    }
+}
+
+    `}
+/>

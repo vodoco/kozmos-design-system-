@@ -1,0 +1,62 @@
+name: "Figma Token Synchronization"
+
+on:
+  repository_dispatch:
+    types: [update-tokens] # Invoked directly via Figma Plugin Webhooks
+
+jobs:
+  sync_and_compile:
+    name: "Compile & Propagate Design Dictionary"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node Ecosystem
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup PNPM Package Manager
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.0.0
+
+      - name: Dependency Hydration
+        run: pnpm install --frozen-lockfile
+
+      - name: Synchronize Figma Variables
+        env:
+          FIGMA_ACCESS_TOKEN: ${{ secrets.FIGMA_ACCESS_TOKEN }}
+          FIGMA_FILE_KEY: ${{ secrets.FIGMA_FILE_KEY }}
+        run: npx tsx scripts/sync-figma.ts
+
+      - name: Process Raw Figma JSON
+        run: npx tsx scripts/process-tokens.ts
+
+      - name: Propagate iOS Dark Overrides
+        run: node scripts/skills/darken-tokens.mjs
+
+      - name: Execute StyleDictionary Aggregation
+        run: npx turbo run build --filter=@kozmos/tokens
+        
+      - name: Route Native Token Output Arrays
+        run: |
+          mkdir -p packages/ios/Sources
+          cp packages/tokens/dist/ios/KozmosColors.swift packages/ios/Sources/KozmosColors.swift
+          mkdir -p packages/android/src/main/java/com/kozmos/tokens
+          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColors.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColors.kt
+          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt
+          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosDesignTokens.kt packages/android/src/main/java/com/kozmos/tokens/KozmosDesignTokens.kt
+
+      - name: Generate Cross-Platform Semantic PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(tokens): sync stylistic properties securely from Figma"
+          title: "🤖 Automated Figma Sync Pipeline"
+          body: "Direct topological transmission from the primary Figma Token cloud repository natively generating `tokens.css`, `KozmosColors.swift`, and Kotlin structural aliases."
+          branch: "figma-sync/automation-${{ github.run_id }}"

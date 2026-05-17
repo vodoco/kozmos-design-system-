@@ -1,0 +1,86 @@
+{
+  "consumer": {
+    "name": "KozmosUI_POICard"
+  },
+  "interactions": [
+    {
+      "description": "a structural request for a specific Point of Interest",
+      "request": {
+        "method": "GET",
+        "path": "/v1/pois/native-poi-1"
+      },
+      "response": {
+        "body": {
+          "category": "Meeting Space",
+          "description": "Equipped with Apple TV and Whiteboard",
+          "id": "native-poi-1",
+          "imageUrl": "https://example.com/assets/conference.jpg",
+          "title": "Level 2 Conference Room"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.category": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.description": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.imageUrl": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.title": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      }
+    }
+  ],
+  "metadata": {
+    "pact-js": {
+      "version": "16.3.0"
+    },
+    "pactRust": {
+      "ffi": "0.5.3",
+      "models": "1.3.9"
+    },
+    "pactSpecification": {
+      "version": "3.0.0"
+    }
+  },
+  "provider": {
+    "name": "Pointr_Places_API"
+  }
+}
