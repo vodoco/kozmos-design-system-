@@ -16,16 +16,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
@@ -103,11 +103,11 @@ jobs:
 
       - name: Build Android Library
         working-directory: packages/android
-        run: gradle assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Test Android Library
         working-directory: packages/android
-        run: gradle verifyPaparazziDebug
+        run: ./gradlew verifyPaparazziDebug
 
       - name: Verify Proof-of-Output (Android)
         run: test -s packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColors.kt
