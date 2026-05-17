@@ -20,3 +20,15 @@ local.properties
 # iOS Build Artifacts
 .build/
 packages/ios/.build/
+
+# Testing & Logs
+playwright-report/
+test-results/
+*.log
+
+# SwiftPM / Xcode
+.swiftpm/
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+
