@@ -1,7 +1,5 @@
 import figma from "@figma/code-connect";
 import { Button } from "../Button/Button";
-import { Input } from "../Input/Input";
-import { Label } from "../Label/Label";
 import {
   Dialog,
   DialogContent,
@@ -44,9 +42,10 @@ figma.connect(DialogContent, dialogUrl, {
     title: figma.string("Title Text"),
     description: figma.string("Description Text"),
     body: figma.string("Body Text"),
-    primaryAction: figma.string("Primary Action Text"),
+    fields: figma.children(["Name Input", "Username Input"]),
+    actions: figma.children(["Secondary Action", "Primary Action"]),
   },
-  example: ({ body, description, primaryAction, title }) => (
+  example: ({ actions, body, description, fields, title }) => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Edit profile</Button>
@@ -58,30 +57,9 @@ figma.connect(DialogContent, dialogUrl, {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <p>{body}</p>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="name"
-              defaultValue="Pedro Duarte"
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="username" className="text-right">
-              Username
-            </Label>
-            <Input
-              id="username"
-              defaultValue="@peduarte"
-              className="col-span-3"
-            />
-          </div>
+          {fields}
         </div>
-        <DialogFooter>
-          <Button type="submit">{primaryAction}</Button>
-        </DialogFooter>
+        <DialogFooter>{actions}</DialogFooter>
       </DialogContent>
     </Dialog>
   ),
@@ -93,10 +71,9 @@ figma.connect(DialogContent, dialogUrl, {
     title: figma.string("Title Text"),
     description: figma.string("Description Text"),
     body: figma.string("Body Text"),
-    primaryAction: figma.string("Primary Action Text"),
-    secondaryAction: figma.string("Secondary Action Text"),
+    actions: figma.children(["Secondary Action", "Primary Action"]),
   },
-  example: ({ body, description, primaryAction, secondaryAction, title }) => (
+  example: ({ actions, body, description, title }) => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Review changes</Button>
@@ -107,10 +84,7 @@ figma.connect(DialogContent, dialogUrl, {
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <p>{body}</p>
-        <DialogFooter>
-          <Button variant="outline">{secondaryAction}</Button>
-          <Button>{primaryAction}</Button>
-        </DialogFooter>
+        <DialogFooter>{actions}</DialogFooter>
       </DialogContent>
     </Dialog>
   ),

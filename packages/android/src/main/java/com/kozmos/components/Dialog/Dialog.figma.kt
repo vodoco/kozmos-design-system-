@@ -41,9 +41,6 @@ class KozmosDialogFormConnect {
     @FigmaProperty(FigmaType.Text, "Body Text")
     val bodyText: String = "Use dialog body content for a short task, form, or confirmation."
 
-    @FigmaProperty(FigmaType.Text, "Primary Action Text")
-    val primaryActionText: String = "Save changes"
-
     @Composable
     fun ComponentExample() {
         KozmosDialog(
@@ -51,7 +48,7 @@ class KozmosDialogFormConnect {
             title = title,
             description = description,
             bodyText = bodyText,
-            primaryActionText = primaryActionText,
+            primaryActionText = "Save changes",
             onPrimaryAction = {}
         )
     }
@@ -69,12 +66,6 @@ class KozmosDialogFooterConnect {
     @FigmaProperty(FigmaType.Text, "Body Text")
     val bodyText: String = "Use dialog body content for a short task, form, or confirmation."
 
-    @FigmaProperty(FigmaType.Text, "Primary Action Text")
-    val primaryActionText: String = "Save changes"
-
-    @FigmaProperty(FigmaType.Text, "Secondary Action Text")
-    val secondaryActionText: String = "Cancel"
-
     @Composable
     fun ComponentExample() {
         KozmosDialog(
@@ -82,8 +73,8 @@ class KozmosDialogFooterConnect {
             title = title,
             description = description,
             bodyText = bodyText,
-            primaryActionText = primaryActionText,
-            secondaryActionText = secondaryActionText,
+            primaryActionText = "Save changes",
+            secondaryActionText = "Cancel",
             onPrimaryAction = {},
             onSecondaryAction = {}
         )

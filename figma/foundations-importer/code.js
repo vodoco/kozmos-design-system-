@@ -304,6 +304,7 @@ const COMPONENT_DOCS = [
       "Title Text maps to CardTitle children.",
       "Description Text maps to CardDescription children.",
       "Body Text maps to CardContent children.",
+      "Full cards compose live Button instances for footer actions.",
     ],
     properties: [
       "Content: Basic, Header, Full",
@@ -390,12 +391,13 @@ const COMPONENT_DOCS = [
       "Title Text maps to DialogTitle children.",
       "Description Text maps to DialogDescription children.",
       "Body Text maps to composed dialog body content.",
-      "Footer action text maps to Button children in composed examples.",
+      "Form content composes live Input instances.",
+      "Footer actions compose live Button instances.",
     ],
     properties: [
       "Content: Basic, Form, Footer",
       "Title Text, Description Text, Body Text",
-      "Primary Action Text, Secondary Action Text",
+      "Nested Input and Button instances expose their own component properties.",
     ],
     accessibility: [
       "Dialog content uses a mode-aware surface over Overlay/Scrim.",
@@ -3727,6 +3729,31 @@ function setInstanceTextProperty(
   }
 }
 
+function setInstanceBooleanProperty(
+  instance,
+  componentSet,
+  baseName,
+  value,
+  stats,
+) {
+  const propertyName = componentPropertyNameByBaseName(
+    componentSet,
+    baseName,
+    "BOOLEAN",
+  );
+  if (!propertyName) return;
+
+  try {
+    instance.setProperties({ [propertyName]: value });
+  } catch (error) {
+    if (stats && stats.warnings) {
+      stats.warnings.push(
+        `${componentSet.name}: could not set ${baseName} instance property (${messageFor(error)})`,
+      );
+    }
+  }
+}
+
 function componentPropertyNameByBaseName(componentSet, baseName, type) {
   const read = safeComponentPropertyDefinitions(componentSet, null, "preview");
   const definitions = read.definitions;
@@ -3738,6 +3765,130 @@ function componentPropertyNameByBaseName(componentSet, baseName, type) {
   }
 
   return null;
+}
+
+async function findLocalComponentSetByName(name) {
+  for (const page of figma.root.children) {
+    await page.loadAsync();
+    const match = page.findOne(
+      (node) => node.type === "COMPONENT_SET" && node.name === name,
+    );
+    if (match && match.type === "COMPONENT_SET") return match;
+  }
+
+  return null;
+}
+
+function findComponentVariantByProperties(componentSet, properties) {
+  if (!componentSet || !componentSet.children) return null;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    if (componentVariantNameMatches(child.name, properties)) return child;
+  }
+
+  return null;
+}
+
+function componentVariantNameMatches(name, properties) {
+  const actual = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    actual[key] = value;
+  }
+
+  for (const key of Object.keys(properties)) {
+    if (actual[key] !== properties[key]) return false;
+  }
+
+  return true;
+}
+
+async function createNestedComponentInstance(config) {
+  const componentSet = await findLocalComponentSetByName(
+    config.componentSetName,
+  );
+  if (!componentSet) {
+    if (config.stats && config.stats.warnings) {
+      config.stats.warnings.push(
+        `Missing ${config.componentSetName}; could not create nested ${config.name} instance.`,
+      );
+    }
+    return null;
+  }
+
+  const variant = findComponentVariantByProperties(
+    componentSet,
+    config.variantProperties,
+  );
+  if (!variant) {
+    if (config.stats && config.stats.warnings) {
+      config.stats.warnings.push(
+        `${config.componentSetName}: missing variant for nested ${config.name} instance.`,
+      );
+    }
+    return null;
+  }
+
+  const instance = variant.createInstance();
+  instance.name = config.name;
+  instance.setSharedPluginData(
+    RUN_NAMESPACE,
+    "kind",
+    "nested-component-instance",
+  );
+  instance.setSharedPluginData(
+    RUN_NAMESPACE,
+    "sourceComponentSet",
+    config.componentSetName,
+  );
+
+  return {
+    componentSet,
+    instance,
+  };
+}
+
+function createMissingNestedComponentNode(name, message, stats) {
+  const frame = figma.createFrame();
+  frame.name = name;
+  frame.layoutMode = "HORIZONTAL";
+  frame.primaryAxisSizingMode = "AUTO";
+  frame.counterAxisSizingMode = "AUTO";
+  frame.primaryAxisAlignItems = "CENTER";
+  frame.counterAxisAlignItems = "CENTER";
+  frame.paddingLeft = 12;
+  frame.paddingRight = 12;
+  frame.paddingTop = 8;
+  frame.paddingBottom = 8;
+  frame.cornerRadius = 8;
+  frame.fills = [];
+  frame.strokes = [];
+  frame.resizeWithoutConstraints(180, 44);
+  frame.setSharedPluginData(RUN_NAMESPACE, "kind", "missing-nested-component");
+
+  if (stats && stats.warnings) {
+    stats.warnings.push(`${name}: ${message}`);
+  }
+
+  return frame;
+}
+
+function isNestedComponentInstance(node, componentSetName) {
+  return (
+    node &&
+    node.type === "INSTANCE" &&
+    node.getSharedPluginData &&
+    node.getSharedPluginData(RUN_NAMESPACE, "kind") ===
+      "nested-component-instance" &&
+    node.getSharedPluginData(RUN_NAMESPACE, "sourceComponentSet") ===
+      componentSetName
+  );
 }
 
 function docsPreviewLimitFor(componentName) {
@@ -4481,6 +4632,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     componentSet,
     childComponents,
   );
+  const compositionIntegrity = auditCompositionIntegrity(componentSet);
   const boundVariableFields = auditBoundVariableFields(componentSet);
   const record = {
     id: componentSet.id,
@@ -4497,6 +4649,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     focusVisibleProperty,
     iconSlotIntegrity,
     tooltipTipIntegrity,
+    compositionIntegrity,
     boundVariableCount: boundVariableIds.length,
     boundVariableFields,
     width: Math.round(componentSet.width),
@@ -4630,6 +4783,12 @@ function auditComponentSet(componentSet, pageName, variableContext) {
         );
       }
     }
+  }
+
+  if (compositionIntegrity.issueCount > 0) {
+    record.warnings.push(
+      `${compositionIntegrity.issueCount} cloned subcomponent frame(s) found. Composite components must use live nested instances or slots, not hand-drawn Button/Input copies.`,
+    );
   }
 
   if (record.name === "Tabs / v1") {
@@ -5308,6 +5467,103 @@ function auditTooltipTipIntegrity(componentSet, childComponents) {
 
   walk(componentSet);
   return result;
+}
+
+function auditCompositionIntegrity(componentSet) {
+  const issues = [];
+
+  if (componentSet.name === "Card / v1") {
+    auditExpectedNestedInstance(
+      componentSet,
+      issues,
+      "Secondary Action",
+      "Button / v1",
+    );
+    auditExpectedNestedInstance(
+      componentSet,
+      issues,
+      "Primary Action",
+      "Button / v1",
+    );
+  }
+
+  if (componentSet.name === "Dialog / v1") {
+    auditExpectedNestedInstance(
+      componentSet,
+      issues,
+      "Secondary Action",
+      "Button / v1",
+    );
+    auditExpectedNestedInstance(
+      componentSet,
+      issues,
+      "Primary Action",
+      "Button / v1",
+    );
+    auditExpectedNestedInstance(
+      componentSet,
+      issues,
+      "Name Input",
+      "Input / v1",
+    );
+    auditExpectedNestedInstance(
+      componentSet,
+      issues,
+      "Username Input",
+      "Input / v1",
+    );
+    auditLegacyFrameClone(componentSet, issues, "Name Field", "Input / v1");
+    auditLegacyFrameClone(componentSet, issues, "Username Field", "Input / v1");
+  }
+
+  return {
+    issueCount: issues.length,
+    issues,
+  };
+}
+
+function auditExpectedNestedInstance(
+  componentSet,
+  issues,
+  nodeName,
+  sourceComponentSet,
+) {
+  const nodes = componentSet.findAll((node) => node.name === nodeName);
+  for (const node of nodes) {
+    if (isNestedComponentInstance(node, sourceComponentSet)) {
+      continue;
+    }
+
+    issues.push({
+      kind: "cloned-subcomponent-frame",
+      node: node.name,
+      nodeType: node.type,
+      nodeId: node.id,
+      urlNodeId: nodeIdForUrl(node.id),
+      expectedSource: sourceComponentSet,
+    });
+  }
+}
+
+function auditLegacyFrameClone(
+  componentSet,
+  issues,
+  nodeName,
+  sourceComponentSet,
+) {
+  const nodes = componentSet.findAll(
+    (node) => node.name === nodeName && node.type !== "INSTANCE",
+  );
+  for (const node of nodes) {
+    issues.push({
+      kind: "legacy-composition-frame",
+      node: node.name,
+      nodeType: node.type,
+      nodeId: node.id,
+      urlNodeId: nodeIdForUrl(node.id),
+      expectedSource: sourceComponentSet,
+    });
+  }
 }
 
 function hasTintableIconPaint(node) {
@@ -10244,6 +10500,7 @@ async function updateCardComponent() {
       "Title Text maps to CardTitle children.",
       "Description Text maps to CardDescription children.",
       "Body Text maps to CardContent children.",
+      "Full cards compose live Button instances for footer actions.",
       "Updated in place to preserve the Code Connect node ID.",
     ],
   });
@@ -10460,7 +10717,8 @@ async function buildDialogComponent() {
       "Content maps to composed DialogContent anatomy.",
       "Title Text maps to DialogTitle children.",
       "Description Text maps to DialogDescription children.",
-      "Footer action text maps to composed Button children.",
+      "Form content composes live Input instances.",
+      "Footer actions compose live Button instances.",
     ],
   });
 }
@@ -10481,7 +10739,8 @@ async function updateDialogComponent() {
       "Content maps to composed DialogContent anatomy.",
       "Title Text maps to DialogTitle children.",
       "Description Text maps to DialogDescription children.",
-      "Footer action text maps to composed Button children.",
+      "Form content composes live Input instances.",
+      "Footer actions compose live Button instances.",
       "Updated in place to preserve the Code Connect node ID.",
     ],
   });
@@ -12227,18 +12486,10 @@ function configureDialogProperties(componentSet, stats) {
     "Use dialog body content for a short task, form, or confirmation.",
     stats,
   );
-  configureNamedTextProperty(
+  deleteComponentPropertiesByBaseName(
     componentSet,
-    "Primary Action Text",
-    "Primary Action Text",
-    "Save changes",
-    stats,
-  );
-  configureNamedTextProperty(
-    componentSet,
-    "Secondary Action Text",
-    "Secondary Action Text",
-    "Cancel",
+    ["Primary Action Text", "Secondary Action Text"],
+    ["TEXT"],
     stats,
   );
 }
@@ -14830,22 +15081,18 @@ async function syncCardVariantChildren({
     footer.clipsContent = false;
     setLayoutSizingHorizontal(footer, "FILL");
 
-    syncCardFooterAction({
+    await syncCardFooterAction({
       footer,
       name: "Secondary Action",
       label: "Cancel",
       primary: false,
-      variableByName,
-      fonts,
       stats,
     });
-    syncCardFooterAction({
+    await syncCardFooterAction({
       footer,
       name: "Primary Action",
       label: "Save",
       primary: true,
-      variableByName,
-      fonts,
       stats,
     });
     component.appendChild(footer);
@@ -14873,97 +15120,60 @@ async function syncCardVariantChildren({
   }
 }
 
-function syncCardFooterAction({
-  footer,
-  name,
-  label,
-  primary,
-  variableByName,
-  fonts,
-  stats,
-}) {
+async function syncCardFooterAction({ footer, name, label, primary, stats }) {
   let action = directChildNamed(footer, name);
-  if (action && action.type !== "FRAME") {
+  if (action && !isNestedComponentInstance(action, "Button / v1")) {
     action.remove();
     action = null;
   }
-  if (!action || action.type !== "FRAME") {
-    action = figma.createFrame();
-    action.name = name;
+
+  let buttonSet = null;
+  if (!action) {
+    const created = await createNestedComponentInstance({
+      componentSetName: "Button / v1",
+      variantProperties: {
+        Variant: primary ? "Default" : "Outline",
+        Size: "Default",
+        State: "Default",
+      },
+      name,
+      stats,
+    });
+    if (!created) {
+      action = createMissingNestedComponentNode(
+        name,
+        "Build Button / v1 before updating Card.",
+        stats,
+      );
+    } else {
+      action = created.instance;
+      buttonSet = created.componentSet;
+    }
+  } else {
+    buttonSet = await findLocalComponentSetByName("Button / v1");
   }
 
-  action.layoutMode = "HORIZONTAL";
-  action.primaryAxisSizingMode = "FIXED";
-  action.counterAxisSizingMode = "FIXED";
-  action.primaryAxisAlignItems = "CENTER";
-  action.counterAxisAlignItems = "CENTER";
-  action.itemSpacing = 0;
-  action.paddingLeft = 16;
-  action.paddingRight = 16;
-  action.paddingTop = 0;
-  action.paddingBottom = 0;
-  action.resizeWithoutConstraints(primary ? 92 : 104, 44);
-  action.cornerRadius = 8;
-  action.fills = primary
-    ? [paintFromVariable("Colors/theme/500", "#135BEC", variableByName, stats)]
-    : [paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats)];
-  action.strokes = primary
-    ? []
-    : [
-        paintFromVariable(
-          "Colors/foreground/500",
-          "#747B8B",
-          variableByName,
-          stats,
-        ),
-      ];
-  action.strokeWeight = primary ? 0 : 1;
-  action.clipsContent = false;
-  action.setSharedPluginData(RUN_NAMESPACE, "kind", "card-action");
+  if (action.type === "INSTANCE" && buttonSet) {
+    try {
+      action.setProperties({
+        Variant: primary ? "Default" : "Outline",
+        Size: "Default",
+        State: "Default",
+      });
+    } catch (error) {
+      stats.warnings.push(
+        `Card ${name}: could not set Button variant properties (${messageFor(error)}).`,
+      );
+    }
+    setInstanceTextProperty(action, buttonSet, "Label Text", label, stats);
+  }
+
   action.setSharedPluginData(
     RUN_NAMESPACE,
     "role",
     primary ? "primary" : "secondary",
   );
-
-  let text = directChildNamed(action, "Action Text");
-  if (text && text.type !== "TEXT") {
-    text.remove();
-    text = null;
-  }
-  if (!text || text.type !== "TEXT") {
-    text = figma.createText();
-    text.name = "Action Text";
-  }
-
-  text.fontName = fonts.medium;
-  text.fontSize = 14;
-  text.lineHeight = { unit: "PIXELS", value: 20 };
-  text.textAutoResize = "WIDTH_AND_HEIGHT";
-  text.characters = label;
-  bindFloatVariable(
-    text,
-    "fontSize",
-    "Button/label/font-size",
-    variableByName,
-    stats,
-  );
-  bindFloatVariable(
-    text,
-    "lineHeight",
-    "Button/label/line-height",
-    variableByName,
-    stats,
-  );
-  text.fills = [
-    paintFromVariable(
-      primary ? "Colors/foreground/1000" : "Colors/foreground/0",
-      primary ? "#FFFFFF" : "#000000",
-      variableByName,
-      stats,
-    ),
-  ];
-  action.appendChild(text);
+  setLayoutSizingHorizontal(action, "HUG");
   footer.appendChild(action);
 }
 
@@ -15527,27 +15737,27 @@ async function syncDialogVariantChildren({
   body.appendChild(bodyText);
 
   if (value === "Form") {
-    await syncDialogField({
+    removeGeneratedButtonChild(body, "Name Field", true);
+    removeGeneratedButtonChild(body, "Username Field", true);
+    await syncDialogInput({
       body,
-      name: "Name Field",
+      name: "Name Input",
       label: "Name",
-      value: "Pedro Duarte",
-      variableByName,
-      fonts,
+      placeholder: "Pedro Duarte",
       stats,
     });
-    await syncDialogField({
+    await syncDialogInput({
       body,
-      name: "Username Field",
+      name: "Username Input",
       label: "Username",
-      value: "@peduarte",
-      variableByName,
-      fonts,
+      placeholder: "@peduarte",
       stats,
     });
   } else {
     removeGeneratedButtonChild(body, "Name Field", true);
     removeGeneratedButtonChild(body, "Username Field", true);
+    removeGeneratedButtonChild(body, "Name Input", true);
+    removeGeneratedButtonChild(body, "Username Input", true);
   }
 
   component.appendChild(body);
@@ -15580,24 +15790,18 @@ async function syncDialogVariantChildren({
     footer.clipsContent = false;
     setLayoutSizingHorizontal(footer, "FILL");
 
-    syncDialogFooterAction({
+    await syncDialogFooterAction({
       footer,
       name: "Secondary Action",
-      textName: "Secondary Action Text",
       label: "Cancel",
       primary: false,
-      variableByName,
-      fonts,
       stats,
     });
-    syncDialogFooterAction({
+    await syncDialogFooterAction({
       footer,
       name: "Primary Action",
-      textName: "Primary Action Text",
       label: "Save changes",
       primary: true,
-      variableByName,
-      fonts,
       stats,
     });
     component.appendChild(footer);
@@ -15617,212 +15821,129 @@ async function syncDialogVariantChildren({
   );
 }
 
-async function syncDialogField({
-  body,
-  name,
-  label,
-  value,
-  variableByName,
-  fonts,
-  stats,
-}) {
-  let row = directChildNamed(body, name);
-  if (row && row.type !== "FRAME") {
-    row.remove();
-    row = null;
+async function syncDialogInput({ body, name, label, placeholder, stats }) {
+  let input = directChildNamed(body, name);
+  if (input && !isNestedComponentInstance(input, "Input / v1")) {
+    input.remove();
+    input = null;
   }
-  if (!row || row.type !== "FRAME") {
-    row = figma.createFrame();
-    row.name = name;
-  }
-  row.layoutMode = "HORIZONTAL";
-  row.primaryAxisSizingMode = "FIXED";
-  row.counterAxisSizingMode = "FIXED";
-  row.primaryAxisAlignItems = "CENTER";
-  row.counterAxisAlignItems = "CENTER";
-  row.itemSpacing = 12;
-  row.paddingLeft = 0;
-  row.paddingRight = 0;
-  row.paddingTop = 0;
-  row.paddingBottom = 0;
-  row.resizeWithoutConstraints(464, 44);
-  row.fills = [];
-  row.strokes = [];
-  row.clipsContent = false;
-  setLayoutSizingHorizontal(row, "FILL");
 
-  let labelText = directChildNamed(row, `${label} Label`);
-  if (labelText && labelText.type !== "TEXT") {
-    labelText.remove();
-    labelText = null;
-  }
-  if (!labelText || labelText.type !== "TEXT") {
-    labelText = figma.createText();
-    labelText.name = `${label} Label`;
-  }
-  applyDialogBodyTypography(labelText, fonts, variableByName, stats);
-  labelText.characters = label;
-  labelText.fills = [
-    paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
-  ];
-  labelText.resizeWithoutConstraints(88, 20);
-
-  let field = directChildNamed(row, `${label} Input`);
-  if (field && field.type !== "FRAME") {
-    field.remove();
-    field = null;
-  }
-  if (!field || field.type !== "FRAME") {
-    field = figma.createFrame();
-    field.name = `${label} Input`;
-  }
-  field.layoutMode = "HORIZONTAL";
-  field.primaryAxisSizingMode = "FIXED";
-  field.counterAxisSizingMode = "FIXED";
-  field.primaryAxisAlignItems = "MIN";
-  field.counterAxisAlignItems = "CENTER";
-  field.itemSpacing = 0;
-  field.paddingLeft = 12;
-  field.paddingRight = 12;
-  field.paddingTop = 0;
-  field.paddingBottom = 0;
-  field.resizeWithoutConstraints(364, 44);
-  field.cornerRadius = 8;
-  field.fills = [
-    paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
-  ];
-  field.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
+  let inputSet = null;
+  if (!input) {
+    const created = await createNestedComponentInstance({
+      componentSetName: "Input / v1",
+      variantProperties: {
+        State: "Default",
+        Status: "Default",
+      },
+      name,
       stats,
-    ),
-  ];
-  field.strokeWeight = 1;
-  field.clipsContent = false;
-  setLayoutSizingHorizontal(field, "FILL");
-  try {
-    field.layoutGrow = 1;
-  } catch (_error) {
-    // layoutGrow is unavailable on older plugin runtimes.
+    });
+    if (!created) {
+      input = createMissingNestedComponentNode(
+        name,
+        "Build Input / v1 before updating Dialog.",
+        stats,
+      );
+    } else {
+      input = created.instance;
+      inputSet = created.componentSet;
+    }
+  } else {
+    inputSet = await findLocalComponentSetByName("Input / v1");
   }
 
-  let valueText = directChildNamed(field, `${label} Value`);
-  if (valueText && valueText.type !== "TEXT") {
-    valueText.remove();
-    valueText = null;
-  }
-  if (!valueText || valueText.type !== "TEXT") {
-    valueText = figma.createText();
-    valueText.name = `${label} Value`;
-  }
-  applyDialogBodyTypography(valueText, fonts, variableByName, stats);
-  valueText.characters = value;
-  valueText.fills = [
-    paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
-  ];
-  valueText.resizeWithoutConstraints(320, 20);
-  setLayoutSizingHorizontal(valueText, "FILL");
-  setTextAutoResize(valueText, "TRUNCATE");
-  valueText.textAlignVertical = "CENTER";
-  try {
-    valueText.layoutGrow = 1;
-  } catch (_error) {
-    // layoutGrow is unavailable on older plugin runtimes.
+  if (input.type === "INSTANCE" && inputSet) {
+    try {
+      input.setProperties({
+        State: "Default",
+        Status: "Default",
+      });
+    } catch (error) {
+      stats.warnings.push(
+        `Dialog ${name}: could not set Input variant properties (${messageFor(error)}).`,
+      );
+    }
+    setInstanceTextProperty(input, inputSet, "Label Text", label, stats);
+    setInstanceTextProperty(
+      input,
+      inputSet,
+      "Placeholder Text",
+      placeholder,
+      stats,
+    );
+    setInstanceBooleanProperty(
+      input,
+      inputSet,
+      "Show Helper Text",
+      false,
+      stats,
+    );
+    setLayoutSizingHorizontal(input, "FILL");
+    try {
+      input.layoutGrow = 1;
+    } catch (_error) {
+      // layoutGrow is unavailable on older plugin runtimes.
+    }
   }
 
-  field.appendChild(valueText);
-  row.appendChild(labelText);
-  row.appendChild(field);
-  body.appendChild(row);
+  body.appendChild(input);
 }
 
-function syncDialogFooterAction({
-  footer,
-  name,
-  textName,
-  label,
-  primary,
-  variableByName,
-  fonts,
-  stats,
-}) {
+async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
   let action = directChildNamed(footer, name);
-  if (action && action.type !== "FRAME") {
+  if (action && !isNestedComponentInstance(action, "Button / v1")) {
     action.remove();
     action = null;
   }
-  if (!action || action.type !== "FRAME") {
-    action = figma.createFrame();
-    action.name = name;
-  }
-  action.layoutMode = "HORIZONTAL";
-  action.primaryAxisSizingMode = "FIXED";
-  action.counterAxisSizingMode = "FIXED";
-  action.primaryAxisAlignItems = "CENTER";
-  action.counterAxisAlignItems = "CENTER";
-  action.itemSpacing = 0;
-  action.paddingLeft = 16;
-  action.paddingRight = 16;
-  action.paddingTop = 0;
-  action.paddingBottom = 0;
-  action.resizeWithoutConstraints(primary ? 124 : 92, 44);
-  action.cornerRadius = 8;
-  action.fills = primary
-    ? [paintFromVariable("Colors/theme/500", "#135BEC", variableByName, stats)]
-    : [paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats)];
-  action.strokes = primary
-    ? []
-    : [
-        paintFromVariable(
-          "Colors/foreground/500",
-          "#747B8B",
-          variableByName,
-          stats,
-        ),
-      ];
-  action.strokeWeight = primary ? 0 : 1;
-  action.clipsContent = false;
-  action.setSharedPluginData(RUN_NAMESPACE, "kind", "dialog-action");
 
-  let text = directChildNamed(action, textName);
-  if (text && text.type !== "TEXT") {
-    text.remove();
-    text = null;
-  }
-  if (!text || text.type !== "TEXT") {
-    text = figma.createText();
-    text.name = textName;
-  }
-  text.fontName = fonts.medium;
-  text.fontSize = 14;
-  text.lineHeight = { unit: "PIXELS", value: 20 };
-  text.textAutoResize = "WIDTH_AND_HEIGHT";
-  bindFloatVariable(
-    text,
-    "fontSize",
-    "Button/label/font-size",
-    variableByName,
-    stats,
-  );
-  bindFloatVariable(
-    text,
-    "lineHeight",
-    "Button/label/line-height",
-    variableByName,
-    stats,
-  );
-  text.characters = label;
-  text.fills = [
-    paintFromVariable(
-      primary ? "Colors/foreground/1000" : "Colors/foreground/0",
-      primary ? "#FFFFFF" : "#000000",
-      variableByName,
+  let buttonSet = null;
+  if (!action) {
+    const created = await createNestedComponentInstance({
+      componentSetName: "Button / v1",
+      variantProperties: {
+        Variant: primary ? "Default" : "Outline",
+        Size: primary ? "Large" : "Default",
+        State: "Default",
+      },
+      name,
       stats,
-    ),
-  ];
-  action.appendChild(text);
+    });
+    if (!created) {
+      action = createMissingNestedComponentNode(
+        name,
+        "Build Button / v1 before updating Dialog.",
+        stats,
+      );
+    } else {
+      action = created.instance;
+      buttonSet = created.componentSet;
+    }
+  } else {
+    buttonSet = await findLocalComponentSetByName("Button / v1");
+  }
+
+  if (action.type === "INSTANCE" && buttonSet) {
+    try {
+      action.setProperties({
+        Variant: primary ? "Default" : "Outline",
+        Size: primary ? "Large" : "Default",
+        State: "Default",
+      });
+    } catch (error) {
+      stats.warnings.push(
+        `Dialog ${name}: could not set Button variant properties (${messageFor(error)}).`,
+      );
+    }
+    setInstanceTextProperty(action, buttonSet, "Label Text", label, stats);
+  }
+
+  action.setSharedPluginData(
+    RUN_NAMESPACE,
+    "role",
+    primary ? "primary" : "secondary",
+  );
+  setLayoutSizingHorizontal(action, "HUG");
   footer.appendChild(action);
 }
 
@@ -19112,6 +19233,42 @@ function bindVisibilityProperty(node, propertyName, stats) {
     stats.warnings.push(
       `Could not bind visibility property (${messageFor(error)}).`,
     );
+  }
+}
+
+function deleteComponentPropertiesByBaseName(
+  componentSet,
+  baseNames,
+  types,
+  stats,
+) {
+  const read = safeComponentPropertyDefinitions(
+    componentSet,
+    stats,
+    "delete stale component properties",
+  );
+  const definitions = read.definitions;
+  if (read.error) return;
+
+  for (const propertyName of Object.keys(definitions)) {
+    const definition = definitions[propertyName];
+    const baseName = propertyName.split("#")[0];
+    if (baseNames.indexOf(baseName) === -1) continue;
+    if (types && types.indexOf(definition.type) === -1) continue;
+
+    if (!componentSet.deleteComponentProperty) {
+      continue;
+    }
+
+    try {
+      componentSet.deleteComponentProperty(propertyName);
+      stats.componentPropertiesRemoved =
+        (stats.componentPropertiesRemoved || 0) + 1;
+    } catch (error) {
+      stats.warnings.push(
+        `Could not remove stale component property "${propertyName}" (${messageFor(error)}).`,
+      );
+    }
   }
 }
 

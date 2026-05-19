@@ -1,5 +1,4 @@
 import figma from "@figma/code-connect";
-import { Button } from "../Button/Button";
 import {
   Card,
   CardContent,
@@ -48,18 +47,16 @@ figma.connect(Card, cardUrl, {
     title: figma.string("Title Text"),
     description: figma.string("Description Text"),
     body: figma.string("Body Text"),
+    actions: figma.children(["Secondary Action", "Primary Action"]),
   },
-  example: ({ body, description, title }) => (
+  example: ({ actions, body, description, title }) => (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>{body}</CardContent>
-      <CardFooter className="justify-end gap-2">
-        <Button variant="outline">Cancel</Button>
-        <Button>Save</Button>
-      </CardFooter>
+      <CardFooter className="justify-end gap-2">{actions}</CardFooter>
     </Card>
   ),
 });

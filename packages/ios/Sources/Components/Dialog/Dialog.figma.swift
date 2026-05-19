@@ -39,16 +39,13 @@ struct KozmosDialogFormConnect: FigmaConnect {
     @FigmaString("Body Text")
     var bodyText: String = "Use dialog body content for a short task, form, or confirmation."
 
-    @FigmaString("Primary Action Text")
-    var primaryActionTitle: String = "Save changes"
-
     var body: some View {
         KozmosDialog(
             isPresented: .constant(true),
             title: self.title,
             description: self.description,
             bodyText: self.bodyText,
-            primaryActionTitle: self.primaryActionTitle,
+            primaryActionTitle: "Save changes",
             onPrimaryAction: {}
         )
     }
@@ -68,20 +65,14 @@ struct KozmosDialogFooterConnect: FigmaConnect {
     @FigmaString("Body Text")
     var bodyText: String = "Use dialog body content for a short task, form, or confirmation."
 
-    @FigmaString("Primary Action Text")
-    var primaryActionTitle: String = "Save changes"
-
-    @FigmaString("Secondary Action Text")
-    var secondaryActionTitle: String = "Cancel"
-
     var body: some View {
         KozmosDialog(
             isPresented: .constant(true),
             title: self.title,
             description: self.description,
             bodyText: self.bodyText,
-            primaryActionTitle: self.primaryActionTitle,
-            secondaryActionTitle: self.secondaryActionTitle,
+            primaryActionTitle: "Save changes",
+            secondaryActionTitle: "Cancel",
             onPrimaryAction: {},
             onSecondaryAction: {}
         )

@@ -1542,8 +1542,20 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'setSharedPluginData(RUN_NAMESPACE, "kind", "card-action")',
-  "Card footer action audit marker",
+  '"nested-component-instance"',
+  "Nested component composition audit marker",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "auditCompositionIntegrity",
+  "Composite component clone-frame audit",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "createNestedComponentInstance",
+  "Composite component nested instance creation",
 );
 assertContains(
   files.figma,

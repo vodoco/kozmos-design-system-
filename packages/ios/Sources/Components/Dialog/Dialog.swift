@@ -158,19 +158,11 @@ public struct KozmosDialog<Content: View>: View {
         variant: DialogActionVariant,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(variant == .primary ? KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle : KozmosColors.primitivesColorsForeground100)
-                .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
-                .frame(minHeight: 44)
-                .background(variant == .primary ? KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle : Color.clear)
-                .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
-                .overlay(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
-                        .stroke(variant == .primary ? Color.clear : KozmosColors.primitivesColorsForeground400, lineWidth: 1)
-                )
-        }
+        KozmosButton(
+            title,
+            variant: variant == .primary ? .default : .outline,
+            size: variant == .primary ? .lg : .default,
+            action: action
+        )
     }
 }

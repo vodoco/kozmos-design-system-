@@ -37,13 +37,13 @@ Select **IconButton / v1** and click **Build** after Button is stable. It create
 
 Select **Badge / v1** and click **Build** after Button/IconButton are stable. It creates `Badge / v1` with `Variant` and `Size` axes from the React Badge API. Use **Update** after token or visual changes to preserve the Code Connect node ID. Badge is generated as a text/content component; the React API owns arbitrary children, so the Figma build exposes `Label Text` rather than a dedicated icon prop.
 
-Select **Card / v1** and click **Build** after the core content/status primitives are stable. It creates `Card / v1` with `Content` variants for Basic, Header, and Full card anatomy plus editable title, description, and body text. Use **Update** after token or documentation changes to preserve the Code Connect node ID.
+Select **Card / v1** and click **Build** after the core content/status primitives are stable. It creates `Card / v1` with `Content` variants for Basic, Header, and Full card anatomy plus editable title, description, and body text. Full cards compose live `Button / v1` instances for footer actions instead of hand-drawn button frames. Use **Update** after token or documentation changes to preserve the Code Connect node ID.
 
 Select **Tabs / v1** and click **Build** after Card is stable. It creates `Tabs / v1` with `Count`, `Active`, and `State` axes plus editable trigger labels. Use **Update** after token, copy, or focus-state changes to preserve the Code Connect node ID.
 
 Select **Tooltip / v1** and click **Build** after Tabs is stable. It creates `Tooltip / v1` with `Side` variants, editable `Content Text`, and a side-aware triangular `Tip` layer that points toward the trigger, matching the React `TooltipContent` surface, radius, border, padding, shadow, arrow, and side offset contract. Use **Update** after token or copy changes to preserve the Code Connect node ID.
 
-Select **Dialog / v1**, **Popover / v1**, then **Menu / v1** for the next overlay pass. Dialog exposes Basic, Form, and Footer content variants with editable title, description, body, and action text. Popover exposes `Side` variants plus editable title and description text. Menu exposes Basic, Checkbox, Radio, and Submenu content variants with editable label, item, and shortcut text. Use **Update** after token, copy, or composition changes to preserve each Code Connect node ID.
+Select **Dialog / v1**, **Popover / v1**, then **Menu / v1** for the next overlay pass. Dialog exposes Basic, Form, and Footer content variants with editable title, description, and body text; Form composes live `Input / v1` instances and footer actions compose live `Button / v1` instances. Popover exposes `Side` variants plus editable title and description text. Menu exposes Basic, Checkbox, Radio, and Submenu content variants with editable label, item, and shortcut text. Use **Update** after token, copy, or composition changes to preserve each Code Connect node ID.
 
 After the core controls are stable, build the next field/control batch one component at a time: **Textarea / v1**, **Search / v1**, **Select / v1**, then **Slider / v1**. Textarea and Search mirror the Input field contract with `State` and `Status` axes plus editable label and placeholder text. Select maps to the React `SelectTrigger` API, so its Figma component exposes `Placeholder Text` but not a standalone label. Slider exposes `Label Text`, `State`, and `Status`, with focus visible shown on the thumb to match the React focus ring.
 
@@ -68,6 +68,7 @@ Use **Audit Library** after designer edits or component builds. It produces a JS
 - Icon source count and icon slot integrity
 - Icon source sizing and constraint issues
 - Transparent surface QA page coverage when the generated QA page exists
+- Composition integrity warnings for composite components that still contain cloned Button/Input frames instead of live nested instances
 
 Use **Copy Log** to copy that JSON for review. If the Figma iframe blocks the Clipboard API, the plugin falls back to legacy copy and then selects the log text so `Cmd+C` still works.
 

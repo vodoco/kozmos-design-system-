@@ -11,11 +11,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.kozmos.components.button.KozmosButton
+import com.kozmos.components.button.KozmosButtonSize
+import com.kozmos.components.button.KozmosButtonVariant
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 
@@ -155,13 +155,10 @@ fun KozmosDialog(
                         Spacer(modifier = Modifier.weight(1f))
 
                         if (content.secondaryActionText != null && onSecondaryAction != null) {
-                            OutlinedButton(
+                            KozmosButton(
                                 modifier = Modifier.defaultMinSize(minHeight = 44.dp),
                                 onClick = onSecondaryAction,
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = KozmosThemeTokens.primitivesColorsForeground100
-                                ),
-                                border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsForeground400)
+                                variant = KozmosButtonVariant.Outline
                             ) {
                                 Text(content.secondaryActionText)
                             }
@@ -169,13 +166,10 @@ fun KozmosDialog(
 
                         if (content.primaryActionText != null && onPrimaryAction != null) {
                             Spacer(modifier = Modifier.defaultMinSize(minWidth = KozmosDimensions.primitivesLayoutSpacing150))
-                            Button(
+                            KozmosButton(
                                 modifier = Modifier.defaultMinSize(minHeight = 44.dp),
                                 onClick = onPrimaryAction,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle,
-                                    contentColor = KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle
-                                )
+                                size = KozmosButtonSize.Lg
                             ) {
                                 Text(content.primaryActionText)
                             }
