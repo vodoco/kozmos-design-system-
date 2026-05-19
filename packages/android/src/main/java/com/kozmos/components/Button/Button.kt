@@ -3,9 +3,13 @@ package com.kozmos.components.button
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -13,10 +17,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 enum class KozmosButtonVariant {
     Default,
@@ -24,7 +27,8 @@ enum class KozmosButtonVariant {
     Outline,
     Secondary,
     Ghost,
-    Link
+    Link,
+    Glass
 }
 
 enum class KozmosButtonSize {
@@ -40,20 +44,26 @@ fun KozmosButton(
     modifier: Modifier = Modifier,
     variant: KozmosButtonVariant = KozmosButtonVariant.Default,
     size: KozmosButtonSize = KozmosButtonSize.Default,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
     val height = when (size) {
-        KozmosButtonSize.Default -> KozmosDimensions.primitivesLayoutSizing500
-        KozmosButtonSize.Sm -> 36.dp // No token for 36
-        KozmosButtonSize.Lg -> 44.dp // No token for 44
-        KozmosButtonSize.Icon -> KozmosDimensions.primitivesLayoutSizing500
+        KozmosButtonSize.Default -> 44.dp
+        KozmosButtonSize.Sm -> 44.dp
+        KozmosButtonSize.Lg -> 44.dp
+        KozmosButtonSize.Icon -> 44.dp
     }
+
+    val rootModifier = modifier
+        .height(height)
+        .then(if (size == KozmosButtonSize.Icon) Modifier.width(44.dp) else Modifier)
     
     val contentPadding = when (size) {
-        KozmosButtonSize.Default -> PaddingValues(horizontal = KozmosDimensions.primitivesLayoutSpacing200, vertical = KozmosDimensions.primitivesLayoutSpacing100)
-        KozmosButtonSize.Sm -> PaddingValues(horizontal = KozmosDimensions.primitivesLayoutSpacing150, vertical = KozmosDimensions.primitivesLayoutSpacing75)
-        KozmosButtonSize.Lg -> PaddingValues(horizontal = KozmosDimensions.primitivesLayoutSpacing400, vertical = 10.dp) // No 10 token
-        KozmosButtonSize.Icon -> PaddingValues(KozmosDimensions.primitivesLayoutSpacing100)
+        KozmosButtonSize.Default -> PaddingValues(horizontal = KozmosDimensions.primitivesLayoutSpacing200, vertical = 0.dp)
+        KozmosButtonSize.Sm -> PaddingValues(horizontal = KozmosDimensions.primitivesLayoutSpacing150, vertical = 0.dp)
+        KozmosButtonSize.Lg -> PaddingValues(horizontal = KozmosDimensions.primitivesLayoutSpacing400, vertical = 0.dp)
+        KozmosButtonSize.Icon -> PaddingValues(0.dp)
     }
 
     // Dimension token graph synced from build.mjs
@@ -63,53 +73,48 @@ fun KozmosButton(
         KozmosButtonVariant.Outline -> {
             OutlinedButton(
                 onClick = onClick,
-                modifier = modifier.height(height),
+                modifier = rootModifier,
+                enabled = enabled && !isLoading,
                 shape = shape,
                 contentPadding = contentPadding,
-                border = BorderStroke(1.dp, KozmosColors.primitivesColorsBackground200),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = KozmosColors.primitivesColorsTheme500)
+                border = BorderStroke(1.dp, KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle)
             ) {
-                content()
+                ButtonContent(isLoading, content)
             }
         }
-        KozmosButtonVariant.Ghost -> {
+        KozmosButtonVariant.Ghost, KozmosButtonVariant.Link -> {
             TextButton(
                 onClick = onClick,
-                modifier = modifier.height(height),
+                modifier = rootModifier,
+                enabled = enabled && !isLoading,
                 shape = shape,
                 contentPadding = contentPadding,
-                colors = ButtonDefaults.textButtonColors(contentColor = KozmosColors.primitivesColorsTheme500)
+                colors = ButtonDefaults.textButtonColors(contentColor = KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle)
             ) {
-                content()
-            }
-        }
-        KozmosButtonVariant.Link -> {
-             TextButton(
-                onClick = onClick,
-                modifier = modifier.height(height),
-                shape = shape,
-                contentPadding = contentPadding,
-                colors = ButtonDefaults.textButtonColors(contentColor = KozmosColors.primitivesColorsTheme500)
-            ) {
-                content()
+                ButtonContent(isLoading, content)
             }
         }
         else -> {
-            // Default, Destructive, Secondary
+            // Default, Destructive, Secondary, Glass
             val containerColor = when(variant) {
-                KozmosButtonVariant.Destructive -> KozmosColors.primitivesColorsEmotionalDanger600
-                KozmosButtonVariant.Secondary -> KozmosColors.primitivesColorsBackground200
-                else -> KozmosColors.primitivesColorsTheme500
+                KozmosButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonBackgroundIdle
+                KozmosButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonBackgroundIdle
+                KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = 0.16f)
+                else -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle
             }
             
             val contentColor = when(variant) {
-                 KozmosButtonVariant.Secondary -> KozmosColors.primitivesColorsForeground100
-                 else -> KozmosColors.primitivesColorsBackground0
+                 KozmosButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonForegroundContentIdle
+                 KozmosButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonForegroundContentIdle
+                 KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground1000
+                 else -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle
             }
             
             Button(
                 onClick = onClick,
-                modifier = modifier.height(height),
+                modifier = rootModifier,
+                enabled = enabled && !isLoading,
                 shape = shape,
                 contentPadding = contentPadding,
                 colors = ButtonDefaults.buttonColors(
@@ -117,8 +122,23 @@ fun KozmosButton(
                     contentColor = contentColor
                 )
             ) {
-                content()
+                ButtonContent(isLoading, content)
             }
         }
     }
+}
+
+@Composable
+private fun RowScope.ButtonContent(
+    isLoading: Boolean,
+    content: @Composable RowScope.() -> Unit
+) {
+    if (isLoading) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(14.dp),
+            color = LocalContentColor.current,
+            strokeWidth = 2.dp
+        )
+    }
+    content()
 }

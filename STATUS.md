@@ -1,74 +1,104 @@
 # Kozmos Design System - Implementation Status
 
-**Last Updated:** Sun, 29 Mar 2026 11:22:53 GMT
+Generated from the component directories by `scripts/skills/check-completion.ts`.
 
-| Component | Web (Comp) | Web (Story) | Web (Test) | Web (Figma) | Web (Barrel) | Web (Export) | iOS (Comp) | iOS (Figma) | Android (Comp) | Android (Figma) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ThemeProvider | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Box | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Stack | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Grid | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Container | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Text | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Heading | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Icon | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Button | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| IconButton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| FloatingActionButton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| SplitButton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ToggleButton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| SegmentedControl | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Input | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Textarea | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Select | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Checkbox | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Radio | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Switch | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Slider | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Rating | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| FileUpload | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| DatePicker | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| TimePicker | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Search | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| OTPInput | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Tabs | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Breadcrumb | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Menu | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Sidebar | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| BottomNavigation | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Stepper | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Pagination | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Link | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Navbar | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Alert | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Toast | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Progress | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Skeleton | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Spinner | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Dialog | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Drawer | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Backdrop | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Table | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| List | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Card | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Avatar | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Badge | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Tag | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Tree | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Timeline | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Tooltip | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Popover | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Accordion | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Separator | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| MapView | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| WayfindingCard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| FloorSelector | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| POICard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| LocationPin | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| DirectionStep | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| BottomSheet | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+`Code Connect File` means a scaffold or mapping file exists. `Code Connect Linked` means the mapping uses a real Figma node ID and has no placeholder markers such as `node-id=TBD`.
+
+| Component            | Web (Comp) | Web (Story) | Web (Test) | Web (Code Connect File) | Web (Code Connect Linked) | Web (Barrel) | Web (Export) | iOS (Comp) | iOS (Code Connect File) | iOS (Code Connect Linked) | Android (Comp) | Android (Code Connect File) | Android (Code Connect Linked) |
+| -------------------- | ---------- | ----------- | ---------- | ----------------------- | ------------------------- | ------------ | ------------ | ---------- | ----------------------- | ------------------------- | -------------- | --------------------------- | ----------------------------- |
+| Accordion            | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Alert                | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Avatar               | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Backdrop             | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Badge                | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| BottomNavigation     | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| BottomSheet          | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Box                  | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Breadcrumb           | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Button               | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Card                 | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Checkbox             | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Chip                 | ✅         | ✅          | ❌         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| Container            | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| DatePicker           | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Dialog               | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
+| DirectionStep        | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Drawer               | ✅         | ✅          | ✅         | ✅                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| DynamicIsland        | ✅         | ❌          | ❌         | ❌                      | ❌                        | ❌           | ✅           | ✅         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| EmptyState           | ✅         | ✅          | ❌         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| FeedbackCard         | ✅         | ❌          | ❌         | ❌                      | ❌                        | ❌           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| FieldWrapper         | ✅         | ❌          | ❌         | ❌                      | ❌                        | ✅           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| FileUpload           | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| FloatingActionButton | ✅         | ✅          | ✅         | ✅                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| FloorSelector        | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| GlassSettingsPanel   | ✅         | ❌          | ❌         | ❌                      | ❌                        | ❌           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| Grid                 | ✅         | ✅          | ✅         | ✅                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Heading              | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Icon                 | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| IconButton           | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Input                | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Label                | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| Link                 | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| List                 | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| LocationPin          | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| MapControlsGroup     | ✅         | ❌          | ❌         | ❌                      | ❌                        | ❌           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| MapOverlay           | ✅         | ❌          | ❌         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| MapView              | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Menu                 | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
+| Navbar               | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| NavigationAnnouncer  | ✅         | ❌          | ❌         | ❌                      | ❌                        | ❌           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| OTPInput             | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Pagination           | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| POICard              | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Popover              | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
+| Progress             | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Radio                | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Rating               | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| RouteSummary         | ✅         | ❌          | ❌         | ❌                      | ❌                        | ❌           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| RoutingInputGroup    | ✅         | ❌          | ❌         | ❌                      | ❌                        | ❌           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| SaveLocationCard     | ✅         | ❌          | ❌         | ❌                      | ❌                        | ❌           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| ScrollArea           | ✅         | ✅          | ❌         | ❌                      | ❌                        | ✅           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| Search               | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| SearchBar            | ✅         | ✅          | ❌         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| SegmentedControl     | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Select               | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Separator            | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Sidebar              | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Skeleton             | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Slider               | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Spinner              | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| SplitButton          | ✅         | ✅          | ✅         | ✅                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Stack                | ✅         | ✅          | ✅         | ✅                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Stepper              | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Switch               | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Table                | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Tabs                 | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Tag                  | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Text                 | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Textarea             | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| ThemeProvider        | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Timeline             | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| TimePicker           | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Toast                | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
+| ToggleButton         | ✅         | ✅          | ✅         | ✅                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Tooltip              | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| Tree                 | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
+| UserLocationMarker   | ✅         | ✅          | ❌         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| WayfindingCard       | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
 
 ## Summary
-- **Web (React):** 63/63 (100%)
-- **iOS (SwiftUI):** 63/63 (100%)
-- **Android (Jetpack):** 63/63 (100%)
+
+- Web components: 79/79
+- Web stories: 69/79
+- Web tests: 64/79
+- Web Code Connect files: 29/79
+- Web Code Connect scaffolds: 6/79
+- Web Code Connect linked: 23/79
+- iOS components: 69/79
+- iOS Code Connect files: 63/79
+- iOS Code Connect scaffolds: 59/79
+- iOS Code Connect linked: 4/79
+- Android components: 79/79
+- Android Code Connect files: 63/79
+- Android Code Connect scaffolds: 59/79
+- Android Code Connect linked: 4/79

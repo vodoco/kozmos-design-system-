@@ -16,6 +16,8 @@ local.properties
 /*.xcodeproj/xcuserdata/
 /packages/android/build/
 /packages/android/.gradle/
+/packages/android/tmp/
+/packages/react/tmp/
 
 # iOS Build Artifacts
 .build/
@@ -25,10 +27,11 @@ packages/ios/.build/
 playwright-report/
 test-results/
 *.log
+*.hprof
+*.hprof.gz
 
 # SwiftPM / Xcode
 .swiftpm/
 xcuserdata/
 *.xcuserstate
 *.xcuserdatad/
-

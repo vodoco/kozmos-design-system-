@@ -17,13 +17,23 @@ public struct KozmosRadioGroup<Content: View>: View {
 public struct KozmosRadioGroupItem: View {
     let value: String
     let label: String?
+    let disabled: Bool
+    let error: Bool
     @Binding var selection: String
     @Environment(\.kozmosAnalytics) var trackEvent
     
-    public init(value: String, label: String? = nil, selection: Binding<String>) {
+    public init(
+        value: String,
+        label: String? = nil,
+        selection: Binding<String>,
+        disabled: Bool = false,
+        error: Bool = false
+    ) {
         self.value = value
         self.label = label
         self._selection = selection
+        self.disabled = disabled
+        self.error = error
     }
     
     public var body: some View {
@@ -34,12 +44,12 @@ public struct KozmosRadioGroupItem: View {
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                 ZStack {
                     Circle()
-                        .stroke(selection == value ? KozmosColors.primitivesColorsTheme500 : KozmosColors.primitivesColorsForeground400, lineWidth: 1)
+                        .stroke(controlColor, lineWidth: 1)
                         .frame(width: 20, height: 20)
                     
                     if selection == value {
                         Circle()
-                            .fill(KozmosColors.primitivesColorsTheme500)
+                            .fill(dotColor)
                             .frame(width: 10, height: 10)
                     }
                 }
@@ -47,10 +57,32 @@ public struct KozmosRadioGroupItem: View {
                 if let label = label {
                     Text(label)
                         .font(.subheadline)
-                        .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                        .foregroundColor(labelColor)
                 }
             }
+            .frame(minHeight: 44, alignment: .center)
         }
         .buttonStyle(PlainButtonStyle())
+        .disabled(disabled)
+    }
+
+    private var isSelected: Bool {
+        selection == value
+    }
+
+    private var controlColor: Color {
+        if error { return KozmosColors.primitivesColorsEmotionalDanger600 }
+        if isSelected { return disabled ? KozmosColors.primitivesColorsForeground500 : KozmosColors.primitivesColorsTheme500 }
+        return KozmosColors.primitivesColorsForeground500
+    }
+
+    private var dotColor: Color {
+        if error { return KozmosColors.primitivesColorsEmotionalDanger600 }
+        return disabled ? KozmosColors.primitivesColorsForeground500 : KozmosColors.primitivesColorsTheme500
+    }
+
+    private var labelColor: Color {
+        if error { return KozmosColors.primitivesColorsEmotionalDanger600 }
+        return disabled ? KozmosColors.primitivesColorsForeground500 : KozmosColors.primitivesColorsForeground100
     }
 }

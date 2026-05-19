@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "2026-05-18",
+  "components": {
+    "button": {
+      "variants": [
+        "default",
+        "destructive",
+        "outline",
+        "secondary",
+        "ghost",
+        "link",
+        "glass"
+      ],
+      "states": ["default", "disabled", "loading"],
+      "sizes": {
+        "small": { "width": 96, "height": 44, "paddingX": 12, "gap": 8 },
+        "default": { "width": 112, "height": 44, "paddingX": 16, "gap": 8 },
+        "large": { "width": 136, "height": 44, "paddingX": 32, "gap": 8 },
+        "icon": { "width": 44, "height": 44, "paddingX": 0, "gap": 0 }
+      },
+      "content": {
+        "labelFontSize": 14,
+        "labelLineHeight": 20,
+        "iconSize": 16,
+        "spinnerSize": 14,
+        "radius": 8,
+        "strokeWidth": 1
+      }
+    },
+    "iconButton": {
+      "variants": [
+        "default",
+        "destructive",
+        "outline",
+        "secondary",
+        "ghost",
+        "link",
+        "glass"
+      ],
+      "states": ["default", "disabled", "loading"],
+      "sizes": {
+        "small": {
+          "width": 44,
+          "height": 44,
+          "iconSize": 14,
+          "spinnerSize": 14
+        },
+        "default": {
+          "width": 44,
+          "height": 44,
+          "iconSize": 16,
+          "spinnerSize": 14
+        },
+        "large": {
+          "width": 44,
+          "height": 44,
+          "iconSize": 20,
+          "spinnerSize": 16
+        }
+      },
+      "content": {
+        "radius": 9999,
+        "strokeWidth": 1
+      }
+    },
+    "badge": {
+      "variants": [
+        "default",
+        "destructive",
+        "outline",
+        "secondary",
+        "ghost",
+        "link"
+      ],
+      "sizes": {
+        "small": { "height": 44, "paddingX": 12 },
+        "default": { "height": 44, "paddingX": 16 },
+        "large": { "height": 44, "paddingX": 32 },
+        "icon": { "width": 44, "height": 44, "paddingX": 0 }
+      },
+      "content": {
+        "labelFontSize": 14,
+        "labelLineHeight": 20,
+        "radius": 8,
+        "strokeWidth": 1
+      }
+    },
+    "checkbox": {
+      "checked": ["unchecked", "checked"],
+      "states": ["default", "disabled", "error"],
+      "size": {
+        "width": 176,
+        "height": 44,
+        "controlSize": 20,
+        "gap": 8
+      },
+      "content": {
+        "labelFontSize": 14,
+        "labelLineHeight": 20,
+        "radius": 4,
+        "strokeWidth": 1
+      }
+    },
+    "radio": {
+      "checked": ["unchecked", "checked"],
+      "states": ["default", "disabled", "error"],
+      "size": {
+        "width": 176,
+        "height": 44,
+        "controlSize": 20,
+        "dotSize": 10,
+        "gap": 8
+      },
+      "content": {
+        "labelFontSize": 14,
+        "labelLineHeight": 20,
+        "radius": 9999,
+        "strokeWidth": 1
+      }
+    },
+    "switch": {
+      "checked": ["unchecked", "checked"],
+      "states": ["default", "disabled", "error"],
+      "size": {
+        "width": 176,
+        "height": 44,
+        "trackWidth": 44,
+        "trackHeight": 24,
+        "thumbSize": 20,
+        "gap": 8
+      },
+      "content": {
+        "labelFontSize": 14,
+        "labelLineHeight": 20,
+        "radius": 9999,
+        "strokeWidth": 2
+      }
+    },
+    "input": {
+      "states": ["default", "focus", "disabled", "readonly"],
+      "statuses": ["default", "error", "warning", "success"],
+      "size": {
+        "width": 320,
+        "fieldHeight": 44,
+        "height": 96,
+        "paddingX": 12,
+        "gap": 6
+      },
+      "content": {
+        "labelFontSize": 14,
+        "labelLineHeight": 20,
+        "textFontSize": 14,
+        "textLineHeight": 20,
+        "radius": 8,
+        "strokeWidth": 1
+      }
+    }
+  }
+}

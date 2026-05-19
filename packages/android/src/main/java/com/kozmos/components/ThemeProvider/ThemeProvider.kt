@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.kozmos.tokens.LocalKozmosUseDarkTokens
 
 enum class KozmosThemeMode {
     LIGHT, DARK, SYSTEM
@@ -47,7 +48,10 @@ fun KozmosThemeProvider(
         lightColorScheme()
     }
 
-    CompositionLocalProvider(LocalThemeManager provides themeManager) {
+    CompositionLocalProvider(
+        LocalThemeManager provides themeManager,
+        LocalKozmosUseDarkTokens provides useDarkTheme
+    ) {
         MaterialTheme(
             colorScheme = colors,
             content = content

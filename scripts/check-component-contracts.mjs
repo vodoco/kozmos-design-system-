@@ -1,0 +1,513 @@
+import fs from "node:fs";
+import path from "node:path";
+
+const root = process.cwd();
+const contractPath = path.join(root, "packages/tokens/src/component-contracts.json");
+const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), "utf8");
+}
+
+function fail(message) {
+  throw new Error(message);
+}
+
+function assertContains(filePath, content, pattern, label) {
+  const ok =
+    pattern instanceof RegExp ? pattern.test(content) : content.includes(pattern);
+  if (!ok) {
+    fail(`${filePath}: missing ${label}`);
+  }
+}
+
+function assertOrder(filePath, content, before, after, label) {
+  const beforeIndex = content.indexOf(before);
+  const afterIndex = content.indexOf(after);
+  if (beforeIndex === -1 || afterIndex === -1 || beforeIndex > afterIndex) {
+    fail(`${filePath}: invalid order for ${label}`);
+  }
+}
+
+function assertAllVariants(filePath, content, variants, mapper, label) {
+  for (const variant of variants) {
+    assertContains(filePath, content, mapper(variant), `${label} variant "${variant}"`);
+  }
+}
+
+const files = {
+  figma: "figma/foundations-importer/code.js",
+  figmaUi: "figma/foundations-importer/ui.html",
+  figmaReadme: "figma/foundations-importer/README.md",
+  figmaLinked: "figma.linked.config.json",
+  reactButton: "packages/react/src/components/Button/Button.tsx",
+  reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
+  reactBadge: "packages/react/src/components/Badge/Badge.tsx",
+  reactCardFigma: "packages/react/src/components/Card/Card.figma.tsx",
+  reactTabsFigma: "packages/react/src/components/Tabs/Tabs.figma.tsx",
+  reactCheckbox: "packages/react/src/components/Checkbox/Checkbox.tsx",
+  reactRadio: "packages/react/src/components/Radio/Radio.tsx",
+  reactSwitch: "packages/react/src/components/Switch/Switch.tsx",
+  reactInput: "packages/react/src/components/Input/Input.tsx",
+  reactInputFigma: "packages/react/src/components/Input/Input.figma.tsx",
+  reactSelect: "packages/react/src/components/Select/Select.tsx",
+  reactSlider: "packages/react/src/components/Slider/Slider.tsx",
+  reactTextareaFigma: "packages/react/src/components/Textarea/Textarea.figma.tsx",
+  reactSearchFigma: "packages/react/src/components/Search/Search.figma.tsx",
+  reactSelectFigma: "packages/react/src/components/Select/Select.figma.tsx",
+  reactSliderFigma: "packages/react/src/components/Slider/Slider.figma.tsx",
+  reactProgressFigma: "packages/react/src/components/Progress/Progress.figma.tsx",
+  reactSpinnerFigma: "packages/react/src/components/Spinner/Spinner.figma.tsx",
+  reactAvatarFigma: "packages/react/src/components/Avatar/Avatar.figma.tsx",
+  reactAlertFigma: "packages/react/src/components/Alert/Alert.figma.tsx",
+  reactTooltip: "packages/react/src/components/Tooltip/Tooltip.tsx",
+  reactTooltipFigma: "packages/react/src/components/Tooltip/Tooltip.figma.tsx",
+  vueIndex: "packages/vue/src/index.ts",
+  iosButton: "packages/ios/Sources/Components/Button/Button.swift",
+  iosIconButton: "packages/ios/Sources/Components/IconButton/IconButton.swift",
+  iosBadge: "packages/ios/Sources/Components/Badge/Badge.swift",
+  iosCheckbox: "packages/ios/Sources/Components/Checkbox/Checkbox.swift",
+  iosRadio: "packages/ios/Sources/Components/Radio/Radio.swift",
+  iosSwitch: "packages/ios/Sources/Components/Switch/Switch.swift",
+  iosInput: "packages/ios/Sources/Components/Input/Input.swift",
+  iosTooltip: "packages/ios/Sources/Components/Tooltip/Tooltip.swift",
+  androidButton: "packages/android/src/main/java/com/kozmos/components/Button/Button.kt",
+  androidIconButton: "packages/android/src/main/java/com/kozmos/components/IconButton/IconButton.kt",
+  androidBadge: "packages/android/src/main/java/com/kozmos/components/Badge/Badge.kt",
+  androidCheckbox: "packages/android/src/main/java/com/kozmos/components/Checkbox/Checkbox.kt",
+  androidRadio: "packages/android/src/main/java/com/kozmos/components/Radio/Radio.kt",
+  androidSwitch: "packages/android/src/main/java/com/kozmos/components/Switch/Switch.kt",
+  androidInput: "packages/android/src/main/java/com/kozmos/components/Input/Input.kt",
+  androidTooltip: "packages/android/src/main/java/com/kozmos/components/Tooltip/Tooltip.kt",
+  androidThemeTokens: "packages/android/src/main/java/com/kozmos/tokens/KozmosThemeTokens.kt",
+  androidThemeProvider: "packages/android/src/main/java/com/kozmos/components/ThemeProvider/ThemeProvider.kt",
+};
+
+const source = Object.fromEntries(
+  Object.entries(files).map(([key, filePath]) => [key, read(filePath)]),
+);
+
+const { button, iconButton, badge, checkbox, radio, switch: switchContract, input } = contract.components;
+const target = button.sizes.default.height;
+
+if (target !== 44) fail("component contract must keep the current v1 target at 44px");
+
+// React and Vue parity.
+assertContains(files.reactButton, source.reactButton, "default: 'h-11 px-4 py-2'", "44px default Button class");
+assertContains(files.reactButton, source.reactButton, "sm: 'h-11 rounded-md px-3'", "44px small Button class");
+assertContains(files.reactButton, source.reactButton, "icon: 'h-11 w-11'", "44px icon Button class");
+assertContains(files.reactIconButton, source.reactIconButton, "h-11 w-11 px-0", "44px IconButton root class");
+assertContains(files.reactBadge, source.reactBadge, "default: 'h-11 px-4 py-2'", "44px default Badge class");
+assertContains(files.reactBadge, source.reactBadge, "sm: 'h-11 rounded-md px-3'", "44px small Badge class");
+assertContains(files.reactBadge, source.reactBadge, "icon: 'h-11 w-11'", "44px icon Badge class");
+assertContains(files.reactCheckbox, source.reactCheckbox, "min-h-11", "React Checkbox 44px row target");
+assertContains(files.reactCheckbox, source.reactCheckbox, "h-5 w-5", "React Checkbox 20px visual control");
+assertContains(files.reactCheckbox, source.reactCheckbox, "border-input", "React Checkbox neutral unchecked border");
+assertContains(files.reactRadio, source.reactRadio, "min-h-11", "React Radio 44px row target");
+assertContains(files.reactRadio, source.reactRadio, "h-5 w-5", "React Radio 20px visual control");
+assertContains(files.reactRadio, source.reactRadio, "border-input", "React Radio neutral unchecked border");
+assertContains(files.reactRadio, source.reactRadio, "error?: boolean", "React Radio item error API");
+assertContains(files.reactSwitch, source.reactSwitch, "min-h-11", "React Switch 44px row target");
+assertContains(files.reactSwitch, source.reactSwitch, "h-6 w-11", "React Switch 44x24 visual track");
+assertContains(files.reactSwitch, source.reactSwitch, "h-5 w-5", "React Switch 20px visual thumb");
+assertContains(files.reactSwitch, source.reactSwitch, "border-muted-foreground bg-muted-foreground", "React Switch neutral unchecked track");
+assertContains(files.reactInput, source.reactInput, "h-11", "React Input 44px field height");
+assertContains(files.reactInput, source.reactInput, "rounded-md", "React Input 8px radius class");
+assertContains(files.reactInput, source.reactInput, "--primitives-colors-foreground-500", "React Input neutral border token");
+assertContains(files.reactInput, source.reactInput, "label?: string", "React Input label API");
+assertContains(files.reactInput, source.reactInput, "helperText?: string", "React Input helper text API");
+assertContains(files.reactInput, source.reactInput, "status?: InputStatus", "React Input validation status API");
+assertContains(files.reactSelect, source.reactSelect, "flex h-11 w-full", "React SelectTrigger 44px field height");
+assertContains(files.reactSlider, source.reactSlider, "border-[color:var(--primitives-colors-foreground-500)] bg-secondary", "React Slider inactive track boundary");
+assertContains(files.reactInputFigma, source.reactInputFigma, "helperText: figma.boolean(\"Show Helper Text\"", "Input Code Connect helper visibility mapping");
+assertContains(files.reactInputFigma, source.reactInputFigma, "true: figma.string(\"Helper Text\")", "Input Code Connect helper text mapping");
+assertContains(files.reactInputFigma, source.reactInputFigma, "false: undefined", "Input Code Connect hides helper text by default");
+assertContains(files.reactTextareaFigma, source.reactTextareaFigma, "figma.enum(\"State\"", "Textarea Code Connect state mapping");
+assertContains(files.reactTextareaFigma, source.reactTextareaFigma, "node-id=80-328", "Textarea Code Connect node ID");
+assertContains(files.reactTextareaFigma, source.reactTextareaFigma, "label: figma.string(\"Label Text\")", "Textarea Code Connect label mapping");
+assertContains(files.reactTextareaFigma, source.reactTextareaFigma, "placeholder: figma.string(\"Placeholder Text\")", "Textarea Code Connect placeholder mapping");
+assertContains(files.reactSearchFigma, source.reactSearchFigma, "figma.enum(\"State\"", "Search Code Connect state mapping");
+assertContains(files.reactSearchFigma, source.reactSearchFigma, "node-id=80-391", "Search Code Connect node ID");
+assertContains(files.reactSearchFigma, source.reactSearchFigma, "label: figma.string(\"Label Text\")", "Search Code Connect label mapping");
+assertContains(files.reactSearchFigma, source.reactSearchFigma, "placeholder: figma.string(\"Placeholder Text\")", "Search Code Connect placeholder mapping");
+assertContains(files.reactSelectFigma, source.reactSelectFigma, "disabled: figma.enum(\"State\"", "Select Code Connect disabled state mapping");
+assertContains(files.reactSelectFigma, source.reactSelectFigma, "node-id=80-432", "Select Code Connect node ID");
+assertContains(files.reactSelectFigma, source.reactSelectFigma, "autoFocus: figma.enum(\"State\"", "Select Code Connect focus state mapping");
+assertContains(files.reactSelectFigma, source.reactSelectFigma, "placeholder: figma.string(\"Placeholder Text\")", "Select Code Connect placeholder mapping");
+assertContains(files.reactSliderFigma, source.reactSliderFigma, "disabled: figma.enum(\"State\"", "Slider Code Connect disabled state mapping");
+assertContains(files.reactSliderFigma, source.reactSliderFigma, "node-id=80-473", "Slider Code Connect node ID");
+assertContains(files.reactSliderFigma, source.reactSliderFigma, "label: figma.string(\"Label Text\")", "Slider Code Connect label mapping");
+assertContains(files.reactProgressFigma, source.reactProgressFigma, "value: figma.enum(\"Value\"", "Progress Code Connect value enum mapping");
+assertContains(files.reactProgressFigma, source.reactProgressFigma, "node-id=83-252", "Progress Code Connect node ID");
+assertContains(files.reactProgressFigma, source.reactProgressFigma, "\"100\": 100", "Progress Code Connect numeric value mapping");
+assertContains(files.reactSpinnerFigma, source.reactSpinnerFigma, "size: figma.enum(\"Size\"", "Spinner Code Connect size mapping");
+assertContains(files.reactSpinnerFigma, source.reactSpinnerFigma, "node-id=83-261", "Spinner Code Connect node ID");
+assertContains(files.reactAvatarFigma, source.reactAvatarFigma, "src: figma.string(\"Image URL\")", "Avatar Code Connect image URL mapping");
+assertContains(files.reactAvatarFigma, source.reactAvatarFigma, "node-id=83-272", "Avatar Code Connect node ID");
+assertContains(files.reactAvatarFigma, source.reactAvatarFigma, "alt: figma.string(\"Alt Text\")", "Avatar Code Connect alt text mapping");
+assertContains(files.reactAvatarFigma, source.reactAvatarFigma, "fallback: figma.string(\"Fallback\")", "Avatar Code Connect fallback mapping");
+assertContains(files.reactAlertFigma, source.reactAlertFigma, "import { Alert, AlertDescription, AlertTitle }", "Alert Code Connect composed subcomponent import");
+assertContains(files.reactAlertFigma, source.reactAlertFigma, "node-id=83-308", "Alert Code Connect node ID");
+assertContains(files.reactAlertFigma, source.reactAlertFigma, "description: figma.string(\"Description\")", "Alert Code Connect description mapping");
+assertContains(files.reactAlertFigma, source.reactAlertFigma, "<AlertTitle>{title}</AlertTitle>", "Alert Code Connect title composition");
+assertContains(files.reactAlertFigma, source.reactAlertFigma, "<AlertDescription>{description}</AlertDescription>", "Alert Code Connect description composition");
+assertContains(files.reactCardFigma, source.reactCardFigma, "variant: { Content: \"Basic\" }", "Card Code Connect Basic variant filter");
+assertContains(files.reactCardFigma, source.reactCardFigma, "variant: { Content: \"Header\" }", "Card Code Connect Header variant filter");
+assertContains(files.reactCardFigma, source.reactCardFigma, "variant: { Content: \"Full\" }", "Card Code Connect Full variant filter");
+assertContains(files.reactCardFigma, source.reactCardFigma, "node-id=87-2536", "Card Code Connect node ID");
+assertContains(files.reactCardFigma, source.reactCardFigma, "title: figma.string(\"Title Text\")", "Card Code Connect title mapping");
+assertContains(files.reactCardFigma, source.reactCardFigma, "description: figma.string(\"Description Text\")", "Card Code Connect description mapping");
+assertContains(files.reactCardFigma, source.reactCardFigma, "body: figma.string(\"Body Text\")", "Card Code Connect body mapping");
+assertContains(files.reactCardFigma, source.reactCardFigma, "<CardHeader>", "Card Code Connect header composition");
+assertContains(files.reactCardFigma, source.reactCardFigma, "<CardFooter", "Card Code Connect footer composition");
+assertContains(files.reactTabsFigma, source.reactTabsFigma, "node-id=90-3387", "Tabs Code Connect node ID");
+assertContains(files.reactTabsFigma, source.reactTabsFigma, "defaultValue: figma.enum(\"Active\"", "Tabs Code Connect active mapping");
+assertContains(files.reactTabsFigma, source.reactTabsFigma, "disabled: figma.enum(\"State\"", "Tabs Code Connect disabled mapping");
+assertContains(files.reactTabsFigma, source.reactTabsFigma, "tab1Text: figma.string(\"Tab 1 Text\")", "Tabs Code Connect first tab label mapping");
+assertContains(files.reactTabsFigma, source.reactTabsFigma, "<TabsList>", "Tabs Code Connect list composition");
+assertContains(files.reactTabsFigma, source.reactTabsFigma, "<TabsTrigger", "Tabs Code Connect trigger composition");
+assertContains(files.reactTooltipFigma, source.reactTooltipFigma, "side: figma.enum(\"Side\"", "Tooltip Code Connect side mapping");
+assertContains(files.reactTooltipFigma, source.reactTooltipFigma, "node-id=91-4672", "Tooltip Code Connect node ID");
+assertContains(files.reactTooltipFigma, source.reactTooltipFigma, "children: figma.string(\"Content Text\")", "Tooltip Code Connect content text mapping");
+assertContains(files.reactTooltipFigma, source.reactTooltipFigma, "<TooltipContent side={side}>{children}</TooltipContent>", "Tooltip Code Connect content composition");
+assertContains(files.reactTooltip, source.reactTooltip, "TooltipPrimitive.Arrow", "React Tooltip arrow rendering");
+assertContains(files.reactTooltip, source.reactTooltip, "overflow-visible", "React Tooltip content lets the arrow protrude");
+assertContains(files.iosTooltip, source.iosTooltip, "public enum KozmosTooltipSide", "iOS Tooltip side API");
+assertContains(files.iosTooltip, source.iosTooltip, "KozmosTooltipTip", "iOS Tooltip triangular tip");
+assertContains(files.iosTooltip, source.iosTooltip, "Path { path in", "iOS Tooltip custom tip path");
+assertContains(files.androidTooltip, source.androidTooltip, "enum class KozmosTooltipSide", "Android Tooltip side API");
+assertContains(files.androidTooltip, source.androidTooltip, "TooltipTip", "Android Tooltip triangular tip");
+assertContains(files.androidTooltip, source.androidTooltip, "Canvas", "Android Tooltip custom tip path");
+assertContains(files.androidTooltip, source.androidTooltip, "PopupPositionProvider", "Android Tooltip measured popup positioning");
+assertContains(files.figmaLinked, source.figmaLinked, "src/components/Card/Card.figma.tsx", "Linked Code Connect includes Card template");
+assertContains(files.figmaLinked, source.figmaLinked, "src/components/Card/Card.tsx", "Linked Code Connect includes Card source");
+assertContains(files.figmaLinked, source.figmaLinked, "src/components/Tabs/Tabs.figma.tsx", "Linked Code Connect includes Tabs template");
+assertContains(files.figmaLinked, source.figmaLinked, "src/components/Tabs/Tabs.tsx", "Linked Code Connect includes Tabs source");
+assertContains(files.figmaLinked, source.figmaLinked, "src/components/Tooltip/Tooltip.figma.tsx", "Linked Code Connect includes Tooltip template");
+assertContains(files.figmaLinked, source.figmaLinked, "src/components/Tooltip/Tooltip.tsx", "Linked Code Connect includes Tooltip source");
+assertContains(files.vueIndex, source.vueIndex, "KozmosButton = createVueWrapper(ReactButton)", "Vue Button wraps React Button");
+assertContains(files.vueIndex, source.vueIndex, "KozmosBadge = createVueWrapper(ReactBadge)", "Vue Badge wraps React Badge");
+assertContains(files.vueIndex, source.vueIndex, "KozmosIconButton = createVueWrapper(IconButton)", "Vue IconButton wraps React IconButton");
+
+// Figma generator parity.
+for (const tokenName of [
+  "Button/height/small",
+  "Button/height/default",
+  "Button/height/large",
+  "Button/height/icon",
+  "IconButton/size/small",
+  "IconButton/size/default",
+  "IconButton/size/large",
+  "Badge/height/small",
+  "Badge/height/default",
+  "Badge/height/large",
+  "Badge/height/icon",
+  "Checkbox/height/default",
+  "Radio/height/default",
+  "Switch/height/default",
+  "Input/field/height",
+  "Search/field/height",
+  "Select/trigger/height",
+  "Slider/height/default",
+]) {
+  assertContains(files.figma, source.figma, `{ name: "${tokenName}", value: ${target}`, `${tokenName} token at ${target}px`);
+}
+assertContains(files.figma, source.figma, `{ name: "Button/width/icon", value: ${target}`, "Button icon width token at 44px");
+assertContains(files.figma, source.figma, `{ name: "Badge/width/icon", value: ${target}`, "Badge icon width token at 44px");
+assertContains(files.figma, source.figma, `{ name: "Checkbox/control/size", value: ${checkbox.size.controlSize}`, "Checkbox visual control token");
+assertContains(files.figma, source.figma, `{ name: "Radio/control/size", value: ${radio.size.controlSize}`, "Radio visual control token");
+assertContains(files.figma, source.figma, `{ name: "Radio/dot/size", value: ${radio.size.dotSize}`, "Radio checked dot token");
+assertContains(files.figma, source.figma, `{ name: "Switch/track/width", value: ${switchContract.size.trackWidth}`, "Switch visual track width token");
+assertContains(files.figma, source.figma, `{ name: "Switch/track/height", value: ${switchContract.size.trackHeight}`, "Switch visual track height token");
+assertContains(files.figma, source.figma, `{ name: "Switch/thumb/size", value: ${switchContract.size.thumbSize}`, "Switch visual thumb token");
+assertContains(files.figma, source.figma, `{ name: "Input/width/default", value: ${input.size.width}`, "Input default width token");
+assertContains(files.figma, source.figma, `{ name: "Input/field/padding/x", value: ${input.size.paddingX}`, "Input horizontal padding token");
+assertContains(files.figma, source.figma, `{ name: "Input/gap", value: ${input.size.gap}`, "Input label-field gap token");
+assertContains(files.figma, source.figma, `{ name: "Input/field/radius", value: ${input.content.radius}`, "Input field radius token");
+assertContains(files.figma, source.figma, `{ name: "Textarea/field/height", value: 80`, "Textarea default field height token");
+assertContains(files.figma, source.figma, `{ name: "Slider/thumb/size", value: ${radio.size.controlSize}`, "Slider thumb visual size token");
+assertContains(files.figma, source.figma, `{ name: "Progress/width/default", value: ${input.size.width}`, "Progress default width token");
+assertContains(files.figma, source.figma, `{ name: "Progress/height/default", value: 8`, "Progress track height token");
+assertContains(files.figma, source.figma, `{ name: "Spinner/size/medium", value: 24`, "Spinner medium size token");
+assertContains(files.figma, source.figma, `{ name: "Avatar/size/default", value: 40`, "Avatar default size token");
+assertContains(files.figma, source.figma, `{ name: "Alert/width/default", value: 360`, "Alert default width token");
+assertContains(files.figma, source.figma, `{ name: "Alert/padding", value: 16`, "Alert padding token");
+assertContains(files.figma, source.figma, `{ name: "Card/width/default", value: 360`, "Card default width token");
+assertContains(files.figma, source.figma, `{ name: "Card/padding", value: 24`, "Card padding token");
+assertContains(files.figma, source.figma, `{ name: "Card/radius", value: 16`, "Card radius token");
+assertContains(files.figma, source.figma, `{ name: "Tabs/list/height", value: 44`, "Tabs list height token");
+assertContains(files.figma, source.figma, `{ name: "Tabs/list/radius", value: 16`, "Tabs outer radius token");
+assertContains(files.figma, source.figma, `{ name: "Tabs/trigger/height", value: 36`, "Tabs trigger height token");
+assertContains(files.figma, source.figma, `{ name: "Tabs/trigger/radius", value: 12`, "Tabs trigger radius is outer radius minus inset");
+assertContains(files.figma, source.figma, `{ name: "Tabs/trigger/font-size", value: 14`, "Tabs trigger font-size token");
+assertContains(files.figma, source.figma, `{ name: "Tooltip/padding/x", value: 12`, "Tooltip horizontal padding token");
+assertContains(files.figma, source.figma, `{ name: "Tooltip/padding/y", value: 6`, "Tooltip vertical padding token");
+assertContains(files.figma, source.figma, `{ name: "Tooltip/radius", value: 8`, "Tooltip radius token");
+assertContains(files.figma, source.figma, `{ name: "Tooltip/tip/size", value: 8`, "Tooltip tip size token");
+assertContains(files.figma, source.figma, `{ name: "Tooltip/tip/height", value: 4`, "Tooltip tip height token");
+assertContains(files.figma, source.figma, `{ name: "Tooltip/side-offset", value: 4`, "Tooltip side offset token");
+assertContains(files.figma, source.figma, `{ name: "Tooltip/content/font-size", value: 14`, "Tooltip content font-size token");
+assertContains(files.figma, source.figma, "SURFACE_QA_PAGE_NAME = \"QA / Transparent Surfaces\"", "Surface QA page constant");
+assertContains(files.figma, source.figma, "async function buildSurfaceQaPage()", "Surface QA page builder");
+assertContains(files.figma, source.figma, "setExplicitVariableModeForCollection", "Surface QA applies explicit Light/Dark variable modes");
+assertContains(files.figma, source.figma, "Map Layer / fill-extrusion", "Surface QA product map fill-extrusion layer");
+assertContains(files.figma, source.figma, "Map Layer / symbol_label", "Surface QA product map symbol_label layer");
+assertContains(files.figma, source.figma, "surfaceQa = await auditSurfaceQaPage", "Surface QA audit summary");
+assertContains(files.figma, source.figma, "auditSurfaceQaPanelContrast", "Surface QA audits live-instance contrast on host surfaces");
+assertContains(files.figma, source.figma, "kind: \"surface-contrast\"", "Surface QA reports contrast failures as audit issues");
+assertContains(files.figma, source.figma, "Glass: {\n      background: \"Colors/transparent/inverted/10\",\n      foreground: \"Colors/foreground/0\"", "Glass Button foreground follows mode-aware text-foreground token");
+assertContains(files.figmaUi, source.figmaUi, "Build Surface QA", "Surface QA plugin action");
+assertContains(files.figmaUi, source.figmaUi, "build-surface-qa", "Surface QA UI posts plugin message");
+assertContains(files.figmaReadme, source.figmaReadme, "Build Surface QA", "Surface QA plugin documentation");
+assertContains(files.figma, source.figma, "trackStroke: \"Colors/foreground/500\"", "Slider inactive track accessible boundary token");
+assertContains(files.figma, source.figma, "trackStroke: \"Colors/foreground/500\"", "Progress inactive track accessible boundary token");
+assertContains(files.figma, source.figma, "const INPUT_STATES = [\"Default\", \"Focus\", \"Disabled\", \"Readonly\"]", "Input interaction state axis");
+assertContains(files.figma, source.figma, "const INPUT_STATUSES = [\"Default\", \"Error\", \"Warning\", \"Success\"]", "Input validation status axis");
+assertContains(files.figma, source.figma, "const TEXTAREA_STATES = [\"Default\", \"Focus\", \"Disabled\", \"Readonly\"]", "Textarea interaction state axis");
+assertContains(files.figma, source.figma, "const SEARCH_STATES = [\"Default\", \"Focus\", \"Disabled\", \"Readonly\"]", "Search interaction state axis");
+assertContains(files.figma, source.figma, "const SELECT_STATES = [\"Default\", \"Focus\", \"Disabled\"]", "Select interaction state axis");
+assertContains(files.figma, source.figma, "const SLIDER_STATES = [\"Default\", \"Focus\", \"Disabled\"]", "Slider interaction state axis");
+assertContains(files.figma, source.figma, "const PROGRESS_VALUES = [\"0\", \"25\", \"50\", \"75\", \"100\"]", "Progress value axis");
+assertContains(files.figma, source.figma, "const SPINNER_SIZES = [\"Small\", \"Medium\", \"Large\", \"XLarge\"]", "Spinner size axis");
+assertContains(files.figma, source.figma, "const AVATAR_CONTENT = [\"Fallback\", \"Image\"]", "Avatar content axis");
+assertContains(files.figma, source.figma, "const ALERT_VARIANTS = [\"Default\", \"Destructive\", \"Success\", \"Warning\", \"Info\"]", "Alert variant axis");
+assertContains(files.figma, source.figma, "const CARD_CONTENT = [\"Basic\", \"Header\", \"Full\"]", "Card content axis");
+assertContains(files.figma, source.figma, "const TABS_COUNTS = [\"Two\", \"Three\", \"Four\"]", "Tabs count axis");
+assertContains(files.figma, source.figma, "const TABS_ACTIVE = [\"One\", \"Two\", \"Three\", \"Four\"]", "Tabs active axis");
+assertContains(files.figma, source.figma, "const TABS_STATES = [\"Default\", \"Focus\", \"Disabled\"]", "Tabs interaction state axis");
+assertContains(files.figma, source.figma, "const TOOLTIP_SIDES = [\"Top\", \"Right\", \"Bottom\", \"Left\"]", "Tooltip side axis");
+assertContains(files.figma, source.figma, "const DIALOG_CONTENT = [\"Basic\", \"Form\", \"Footer\"]", "Dialog content axis");
+assertContains(files.figma, source.figma, "const POPOVER_SIDES = [\"Top\", \"Right\", \"Bottom\", \"Left\"]", "Popover side axis");
+assertContains(files.figma, source.figma, "const MENU_CONTENT = [\"Basic\", \"Checkbox\", \"Radio\", \"Submenu\"]", "Menu content axis");
+assertContains(files.figma, source.figma, "const TOAST_CONTENT = [\"Basic\", \"Action\"]", "Toast content axis");
+assertContains(files.figma, source.figma, "const FOCUS_VISIBLE_PROPERTY_NAME = \"Focus Visible\"", "shared Focus Visible component property name");
+assertContains(files.figma, source.figma, "setLayoutSizingHorizontal(field, \"FILL\")", "Input field fills resizable instance width");
+assertContains(files.figma, source.figma, "setTextAutoResize(placeholder, \"TRUNCATE\")", "Input placeholder truncates instead of hugging content");
+assertContains(files.figma, source.figma, "helper.visible = status !== \"Default\"", "Input helper text hidden by default");
+assertContains(files.figma, source.figma, "helper.characters = helperTextForInputStatus(status)", "Input helper text keeps non-zero default content");
+assertContains(files.figma, source.figma, "if (node && node.visible === false) return", "Contrast audit ignores hidden component-property content");
+assertContains(files.figma, source.figma, "syncFocusRing(component", "Button and IconButton focus ring generation");
+assertContains(files.figma, source.figma, "syncFocusRing(control", "Checkbox and Radio focus ring generation");
+assertContains(files.figma, source.figma, "syncFocusRing(track", "Switch focus ring generation");
+assertContains(files.figma, source.figma, "syncFocusRing(field", "Input focus ring generation");
+assertContains(files.figma, source.figma, "syncFocusRing(thumb", "Slider thumb focus ring generation");
+assertContains(files.figma, source.figma, /minimumTouchTargetPass:\s*minimumInteractiveSize >= 44/, "44px audit threshold");
+assertContains(files.figma, source.figma, "configureLabelTextProperty(componentSet, \"Button\", stats)", "Button Label Text component property binding");
+assertContains(files.figma, source.figma, "configureLabelTextProperty(componentSet, \"Badge\", stats)", "Badge Label Text component property binding");
+assertContains(files.figma, source.figma, "configureLabelTextProperty(componentSet, \"Checkbox\", stats)", "Checkbox Label Text component property binding");
+assertContains(files.figma, source.figma, "configureLabelTextProperty(componentSet, \"Radio\", stats)", "Radio Label Text component property binding");
+assertContains(files.figma, source.figma, "configureLabelTextProperty(componentSet, \"Switch\", stats)", "Switch Label Text component property binding");
+assertContains(files.figma, source.figma, "configureLabelTextProperty(componentSet, \"Input\", stats)", "Input Label Text component property binding");
+assertContains(files.figma, source.figma, "configurePlaceholderTextProperty(componentSet, \"Placeholder\", stats)", "Input Placeholder Text component property binding");
+assertContains(files.figma, source.figma, "configureHelperTextProperty(componentSet, \"Helper text\", stats)", "Input Helper Text component property binding");
+assertContains(files.figma, source.figma, "configureHelperVisibilityProperty(componentSet, stats)", "Input helper visibility component property binding");
+assertContains(files.figma, source.figma, "configureLabelTextProperty(componentSet, \"Textarea\", stats)", "Textarea Label Text component property binding");
+assertContains(files.figma, source.figma, "configureLabelTextProperty(componentSet, \"Search\", stats)", "Search Label Text component property binding");
+assertContains(files.figma, source.figma, "configureLabelTextProperty(componentSet, \"Slider\", stats)", "Slider Label Text component property binding");
+assertContains(files.figma, source.figma, "configureTabsProperties(componentSet, stats)", "Tabs text and focus component property binding");
+assertContains(files.figma, source.figma, "configureNamedTextProperty(componentSet, label, label", "Tabs numbered tab label property binding");
+assertContains(files.figma, source.figma, "configureTooltipProperties(componentSet, stats)", "Tooltip component property binding");
+assertContains(files.figma, source.figma, "configureNamedTextProperty(\n    componentSet,\n    \"Content Text\"", "Tooltip Content Text component property binding");
+assertContains(files.figma, source.figma, "configureDialogProperties(componentSet, stats)", "Dialog text component property binding");
+assertContains(files.figma, source.figma, "configurePopoverProperties(componentSet, stats)", "Popover text component property binding");
+assertContains(files.figma, source.figma, "configureMenuProperties(componentSet, stats)", "Menu text component property binding");
+assertContains(files.figma, source.figma, "configureToastProperties(componentSet, stats)", "Toast text component property binding");
+assertContains(files.figma, source.figma, "syncTooltipTip", "Tooltip side-aware tip generation");
+assertContains(files.figma, source.figma, "figma.createFrame()", "Tooltip tip uses a stable absolute wrapper");
+assertContains(files.figma, source.figma, "figma.createVector()", "Tooltip tip uses an explicit vector triangle");
+assertContains(files.figma, source.figma, "setVectorNetworkAsync", "Tooltip tip uses dynamic-page vector network API");
+assertContains(files.figma, source.figma, "\"Tip Fill\"", "Tooltip tip vector fill child");
+assertContains(files.figma, source.figma, "tooltipTipVectorNetwork", "Tooltip tip vector network");
+assertContains(files.figma, source.figma, "regions: [", "Tooltip tip vector has a filled region");
+assertContains(files.figma, source.figma, "tooltipTipIntegrity", "Tooltip tip audit");
+assertContains(files.figma, source.figma, "configureNamedTextProperty(componentSet, \"Fallback\", \"Fallback\"", "Avatar Fallback component property binding");
+assertContains(files.figma, source.figma, "componentSet,\n    \"Image URL\"", "Avatar Image URL component property binding");
+assertContains(files.figma, source.figma, "configureNamedTextProperty(componentSet, \"Title\", \"Title\"", "Alert Title component property binding");
+assertContains(files.figma, source.figma, "componentSet,\n    \"Description\"", "Alert Description component property binding");
+assertContains(files.figma, source.figma, "configureFocusVisibleProperty(componentSet, stats)", "Focus Visible component property binding");
+assertContains(files.figma, source.figma, "node.componentPropertyReferences.visible === result.propertyName", "Focus Visible property audit");
+assertContains(files.figma, source.figma, "ring.layoutPositioning = \"ABSOLUTE\"", "Focus ring uses absolute positioning");
+assertContains(files.figma, source.figma, "horizontal: \"STRETCH\"", "Focus ring stretches with resized controls");
+assertContains(files.figma, source.figma, "focusVisibleProperty.geometryIssueCount > 0", "Focus ring geometry audit warning");
+assertOrder(files.figma, source.figma, "target.appendChild(ring);", "ring.layoutPositioning = \"ABSOLUTE\"", "Focus ring appended before absolute positioning");
+assertContains(files.figma, source.figma, "findKozmosIconSourceComponent(\"check\")", "Checkbox generated mark uses curated check icon");
+assertContains(files.figma, source.figma, "isGeneratedCheckboxControl", "Checkbox non-text contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedCheckboxMark", "Checkbox mark contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedRadioControl", "Radio non-text contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedRadioDot", "Radio checked-dot contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedSwitchTrack", "Switch non-text contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedSwitchThumb", "Switch thumb contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedInputField", "Input field contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedSliderTrack", "Slider track contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedSliderThumb", "Slider thumb contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedProgressTrack", "Progress track contrast audit");
+assertContains(files.figma, source.figma, "isGeneratedCardAction", "Card footer action local-background contrast audit");
+assertContains(files.figma, source.figma, "auditSliderTrackPaints", "Slider track contrast boundary audit");
+assertContains(files.figma, source.figma, "auditSliderThumbPaints", "Slider thumb contrast boundary audit");
+assertContains(files.figma, source.figma, "auditCardActionPaints", "Card action text contrast audit");
+assertContains(files.figma, source.figma, "Colors/foreground/400", "Card description uses accessible muted foreground");
+assertContains(files.figma, source.figma, "setSharedPluginData(RUN_NAMESPACE, \"kind\", \"card-action\")", "Card footer action audit marker");
+assertContains(files.figma, source.figma, "applyTabsTriggerTypography", "Tabs trigger typography bindings");
+assertContains(files.figma, source.figma, "setSharedPluginData(RUN_NAMESPACE, \"kind\", \"tabs-trigger\")", "Tabs trigger audit marker");
+assertContains(files.figma, source.figma, "syncFocusRing(trigger", "Tabs active trigger focus ring generation");
+assertContains(files.figma, source.figma, "references.characters = propertyName", "Figma Label Text characters property reference");
+assertContains(files.figma, source.figma, "variantProperties: variantProperties.properties", "Figma variant property audit output");
+assertContains(files.figma, source.figma, "normalizeComponentSetVariantProperties", "Figma stale variant property cleanup");
+assertContains(files.figma, source.figma, "safeComponentPropertyDefinitions", "Figma component property definition error recovery");
+assertContains(files.figma, source.figma, "rebuildButtonComponent", "Figma Button rebuild recovery action");
+assertContains(files.figma, source.figma, "buildCheckboxComponent", "Figma Checkbox build action");
+assertContains(files.figma, source.figma, "rebuildCheckboxComponent", "Figma Checkbox rebuild recovery action");
+assertContains(files.figma, source.figma, "buildRadioComponent", "Figma Radio build action");
+assertContains(files.figma, source.figma, "rebuildRadioComponent", "Figma Radio rebuild recovery action");
+assertContains(files.figma, source.figma, "buildSwitchComponent", "Figma Switch build action");
+assertContains(files.figma, source.figma, "rebuildSwitchComponent", "Figma Switch rebuild recovery action");
+assertContains(files.figma, source.figma, "buildInputComponent", "Figma Input build action");
+assertContains(files.figma, source.figma, "rebuildInputComponent", "Figma Input rebuild recovery action");
+assertContains(files.figma, source.figma, "buildTextareaComponent", "Figma Textarea build action");
+assertContains(files.figma, source.figma, "rebuildTextareaComponent", "Figma Textarea rebuild recovery action");
+assertContains(files.figma, source.figma, "buildSearchComponent", "Figma Search build action");
+assertContains(files.figma, source.figma, "rebuildSearchComponent", "Figma Search rebuild recovery action");
+assertContains(files.figma, source.figma, "buildSelectComponent", "Figma Select build action");
+assertContains(files.figma, source.figma, "rebuildSelectComponent", "Figma Select rebuild recovery action");
+assertContains(files.figma, source.figma, "buildSliderComponent", "Figma Slider build action");
+assertContains(files.figma, source.figma, "rebuildSliderComponent", "Figma Slider rebuild recovery action");
+assertContains(files.figma, source.figma, "buildProgressComponent", "Figma Progress build action");
+assertContains(files.figma, source.figma, "rebuildProgressComponent", "Figma Progress rebuild recovery action");
+assertContains(files.figma, source.figma, "buildSpinnerComponent", "Figma Spinner build action");
+assertContains(files.figma, source.figma, "rebuildSpinnerComponent", "Figma Spinner rebuild recovery action");
+assertContains(files.figma, source.figma, "buildAvatarComponent", "Figma Avatar build action");
+assertContains(files.figma, source.figma, "rebuildAvatarComponent", "Figma Avatar rebuild recovery action");
+assertContains(files.figma, source.figma, "buildAlertComponent", "Figma Alert build action");
+assertContains(files.figma, source.figma, "rebuildAlertComponent", "Figma Alert rebuild recovery action");
+assertContains(files.figma, source.figma, "buildCardComponent", "Figma Card build action");
+assertContains(files.figma, source.figma, "rebuildCardComponent", "Figma Card rebuild recovery action");
+assertContains(files.figma, source.figma, "buildTabsComponent", "Figma Tabs build action");
+assertContains(files.figma, source.figma, "rebuildTabsComponent", "Figma Tabs rebuild recovery action");
+assertContains(files.figma, source.figma, "buildTooltipComponent", "Figma Tooltip build action");
+assertContains(files.figma, source.figma, "rebuildTooltipComponent", "Figma Tooltip rebuild recovery action");
+assertContains(files.figma, source.figma, "buildDialogComponent", "Figma Dialog build action");
+assertContains(files.figma, source.figma, "rebuildDialogComponent", "Figma Dialog rebuild recovery action");
+assertContains(files.figma, source.figma, "buildPopoverComponent", "Figma Popover build action");
+assertContains(files.figma, source.figma, "rebuildPopoverComponent", "Figma Popover rebuild recovery action");
+assertContains(files.figma, source.figma, "buildMenuComponent", "Figma Menu build action");
+assertContains(files.figma, source.figma, "rebuildMenuComponent", "Figma Menu rebuild recovery action");
+assertContains(files.figma, source.figma, "buildToastComponent", "Figma Toast build action");
+assertContains(files.figma, source.figma, "rebuildToastComponent", "Figma Toast rebuild recovery action");
+assertContains(files.figma, source.figma, "documentComponentLibrary", "Figma component documentation action");
+assertContains(files.figma, source.figma, "COMPONENT_DOCS_PAGE_NAME = \"Docs\"", "Figma component docs catalog page");
+assertContains(files.figma, source.figma, "DOCS_COLUMNS = 3", "Figma component docs side-by-side grid");
+assertContains(files.figma, source.figma, "removeGeneratedSplitDocPages", "Figma split docs page cleanup");
+assertContains(files.figma, source.figma, "applyComponentSetDescription", "Figma right-panel description refresh");
+assertContains(files.figma, source.figma, "applyDocsPreviewOverrides", "Figma docs preview property override");
+assertContains(files.figma, source.figma, "Boolean(componentSet.findOne((node) => /focus/i.test(node.name)))", "Figma focus audit uses real focus nodes");
+if (source.figma.includes("componentSet.description && /focus/i.test(componentSet.description)")) {
+  fail(`${files.figma}: focus audit must not infer focus support from description prose`);
+}
+assertContains(files.figma, source.figma, "archiveGeneratedNodesForRebuild", "Figma corrupted component archive before rebuild");
+assertContains(files.figma, source.figma, "isArchivePageName", "Figma active-library audit excludes archive health");
+
+// Native API and target-size parity.
+assertAllVariants(files.iosButton, source.iosButton, button.variants, (variant) => `case ${variant === "default" ? "`default`" : variant}`, "iOS Button");
+assertContains(files.iosButton, source.iosButton, "minHeight: 44", "iOS Button 44px minimum height");
+assertContains(files.iosButton, source.iosButton, "minWidth: size == .icon ? 44 : nil", "iOS Button icon 44px minimum width");
+assertContains(files.iosButton, source.iosButton, ".tint(foregroundColor)", "iOS Button loading indicator foreground tint");
+
+assertAllVariants(files.iosIconButton, source.iosIconButton, iconButton.variants, (variant) => `case ${variant === "default" ? "`default`" : variant}`, "iOS IconButton");
+assertContains(files.iosIconButton, source.iosIconButton, ".frame(width: 44, height: 44)", "iOS IconButton 44px frame");
+assertContains(files.iosIconButton, source.iosIconButton, ".tint(foregroundColor)", "iOS IconButton loading indicator foreground tint");
+
+assertAllVariants(files.iosBadge, source.iosBadge, badge.variants, (variant) => `case ${variant === "default" ? "`default`" : variant}`, "iOS Badge");
+for (const sizeName of ["`default`", "sm", "lg", "icon"]) {
+  assertContains(files.iosBadge, source.iosBadge, `case ${sizeName}`, `iOS Badge size "${sizeName}"`);
+}
+assertContains(files.iosBadge, source.iosBadge, "minHeight: 44", "iOS Badge 44px minimum height");
+assertContains(files.iosBadge, source.iosBadge, "minWidth: size == .icon ? 44 : nil", "iOS Badge icon 44px minimum width");
+
+assertContains(files.iosCheckbox, source.iosCheckbox, "disabled: Bool = false", "iOS Checkbox disabled API");
+assertContains(files.iosCheckbox, source.iosCheckbox, "error: Bool = false", "iOS Checkbox error API");
+assertContains(files.iosCheckbox, source.iosCheckbox, ".frame(minHeight: 44", "iOS Checkbox 44px row target");
+assertContains(files.iosCheckbox, source.iosCheckbox, "frame(width: 20, height: 20)", "iOS Checkbox 20px visual control");
+assertContains(files.iosRadio, source.iosRadio, "disabled: Bool = false", "iOS Radio disabled API");
+assertContains(files.iosRadio, source.iosRadio, "error: Bool = false", "iOS Radio error API");
+assertContains(files.iosRadio, source.iosRadio, ".frame(minHeight: 44", "iOS Radio 44px row target");
+assertContains(files.iosRadio, source.iosRadio, ".frame(width: 20, height: 20)", "iOS Radio 20px visual control");
+assertContains(files.iosRadio, source.iosRadio, ".frame(width: 10, height: 10)", "iOS Radio checked dot");
+assertContains(files.iosSwitch, source.iosSwitch, "disabled: Bool = false", "iOS Switch disabled API");
+assertContains(files.iosSwitch, source.iosSwitch, "error: Bool = false", "iOS Switch error API");
+assertContains(files.iosSwitch, source.iosSwitch, ".frame(minHeight: 44", "iOS Switch 44px row target");
+assertContains(files.iosSwitch, source.iosSwitch, ".frame(width: 44, height: 24)", "iOS Switch 44x24 visual track");
+assertContains(files.iosSwitch, source.iosSwitch, ".frame(width: 20, height: 20)", "iOS Switch 20px visual thumb");
+assertContains(files.iosInput, source.iosInput, "disabled: Bool = false", "iOS Input disabled API");
+assertContains(files.iosInput, source.iosInput, "readOnly: Bool = false", "iOS Input readOnly API");
+assertContains(files.iosInput, source.iosInput, "status: KozmosInputStatus = .default", "iOS Input validation status API");
+assertContains(files.iosInput, source.iosInput, "helperText: String? = nil", "iOS Input helper text API");
+assertContains(files.iosInput, source.iosInput, "error: Bool = false", "iOS Input error API");
+assertContains(files.iosInput, source.iosInput, ".frame(height: 44", "iOS Input 44px field height");
+assertContains(files.iosInput, source.iosInput, "primitivesLayoutRadius100", "iOS Input 8px field radius");
+assertContains(files.iosInput, source.iosInput, "KozmosDimensions.primitivesLayoutSpacing150", "iOS Input 12px horizontal padding");
+
+assertAllVariants(files.androidButton, source.androidButton, button.variants, (variant) => {
+  const name = variant === "default" ? "Default" : variant[0].toUpperCase() + variant.slice(1);
+  return name;
+}, "Android Button");
+assertContains(files.androidButton, source.androidButton, "KozmosButtonSize.Sm -> 44.dp", "Android Button small 44dp height");
+assertContains(files.androidButton, source.androidButton, "KozmosButtonSize.Default -> 44.dp", "Android Button default 44dp height");
+assertContains(files.androidButton, source.androidButton, "KozmosButtonSize.Icon -> 44.dp", "Android Button icon 44dp height");
+assertContains(files.androidButton, source.androidButton, "Modifier.width(44.dp)", "Android Button icon 44dp width");
+assertContains(files.androidButton, source.androidButton, "color = LocalContentColor.current", "Android Button loading indicator foreground color");
+assertContains(files.androidButton, source.androidButton, "KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle", "Android Button themed runtime token");
+
+assertAllVariants(files.androidIconButton, source.androidIconButton, iconButton.variants, (variant) => {
+  const name = variant === "default" ? "Default" : variant[0].toUpperCase() + variant.slice(1);
+  return name;
+}, "Android IconButton");
+assertContains(files.androidIconButton, source.androidIconButton, "modifier.size(44.dp)", "Android IconButton 44dp frame");
+assertContains(files.androidIconButton, source.androidIconButton, "color = LocalContentColor.current", "Android IconButton loading indicator foreground color");
+assertContains(files.androidIconButton, source.androidIconButton, "KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle", "Android IconButton themed runtime token");
+
+assertAllVariants(files.androidBadge, source.androidBadge, badge.variants, (variant) => {
+  const name = variant === "default" ? "Default" : variant[0].toUpperCase() + variant.slice(1);
+  return name;
+}, "Android Badge");
+assertContains(files.androidBadge, source.androidBadge, ".height(44.dp)", "Android Badge 44dp height");
+assertContains(files.androidBadge, source.androidBadge, "Modifier.width(44.dp)", "Android Badge icon 44dp width");
+assertContains(files.androidBadge, source.androidBadge, "KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle", "Android Badge themed runtime token");
+assertContains(files.androidCheckbox, source.androidCheckbox, ".heightIn(min = 44.dp)", "Android Checkbox 44dp row target");
+assertContains(files.androidCheckbox, source.androidCheckbox, "error: Boolean = false", "Android Checkbox error API");
+assertContains(files.androidCheckbox, source.androidCheckbox, "KozmosThemeTokens.primitivesColorsTheme500", "Android Checkbox themed runtime checked token");
+assertContains(files.androidCheckbox, source.androidCheckbox, "KozmosThemeTokens.primitivesColorsEmotionalDanger600", "Android Checkbox error token");
+assertContains(files.androidRadio, source.androidRadio, ".heightIn(min = 44.dp)", "Android Radio 44dp row target");
+assertContains(files.androidRadio, source.androidRadio, "enabled: Boolean = true", "Android Radio enabled API");
+assertContains(files.androidRadio, source.androidRadio, "error: Boolean = false", "Android Radio error API");
+assertContains(files.androidRadio, source.androidRadio, "KozmosThemeTokens.primitivesColorsTheme500", "Android Radio themed runtime checked token");
+assertContains(files.androidRadio, source.androidRadio, "KozmosThemeTokens.primitivesColorsEmotionalDanger600", "Android Radio error token");
+assertContains(files.androidSwitch, source.androidSwitch, ".heightIn(min = 44.dp)", "Android Switch 44dp row target");
+assertContains(files.androidSwitch, source.androidSwitch, ".width(44.dp)", "Android Switch 44dp visual track width");
+assertContains(files.androidSwitch, source.androidSwitch, ".height(24.dp)", "Android Switch 24dp visual track height");
+assertContains(files.androidSwitch, source.androidSwitch, ".size(20.dp)", "Android Switch 20dp visual thumb");
+assertContains(files.androidSwitch, source.androidSwitch, "enabled: Boolean = true", "Android Switch enabled API");
+assertContains(files.androidSwitch, source.androidSwitch, "error: Boolean = false", "Android Switch error API");
+assertContains(files.androidSwitch, source.androidSwitch, "KozmosThemeTokens.primitivesColorsTheme500", "Android Switch themed runtime checked token");
+assertContains(files.androidSwitch, source.androidSwitch, "KozmosThemeTokens.primitivesColorsEmotionalDanger600", "Android Switch error token");
+assertContains(files.androidInput, source.androidInput, ".height(44.dp)", "Android Input 44dp field height");
+assertContains(files.androidInput, source.androidInput, "enabled: Boolean = true", "Android Input enabled API");
+assertContains(files.androidInput, source.androidInput, "readOnly: Boolean = false", "Android Input readOnly API");
+assertContains(files.androidInput, source.androidInput, "status: KozmosInputStatus = KozmosInputStatus.Default", "Android Input validation status API");
+assertContains(files.androidInput, source.androidInput, "helperText: String? = null", "Android Input helper text API");
+assertContains(files.androidInput, source.androidInput, "error: Boolean = false", "Android Input error API");
+assertContains(files.androidInput, source.androidInput, "KozmosThemeTokens.primitivesColorsForeground500", "Android Input neutral border token");
+assertContains(files.androidInput, source.androidInput, "KozmosThemeTokens.primitivesColorsEmotionalDanger600", "Android Input error token");
+assertContains(files.androidInput, source.androidInput, "KozmosThemeTokens.primitivesColorsEmotionalAlert600", "Android Input warning token");
+assertContains(files.androidInput, source.androidInput, "KozmosThemeTokens.primitivesColorsEmotionalSuccess600", "Android Input success token");
+assertContains(files.androidInput, source.androidInput, "primitivesLayoutRadius100", "Android Input 8px field radius");
+assertContains(files.androidThemeTokens, source.androidThemeTokens, "LocalKozmosUseDarkTokens", "Android runtime dark token selector");
+assertContains(files.androidThemeTokens, source.androidThemeTokens, "KozmosColorsDark.componentsPrimaryButtonsThemedButtonBackgroundIdle", "Android dark component token source");
+assertContains(files.androidThemeTokens, source.androidThemeTokens, "KozmosColorsDark.primitivesColorsTheme500", "Android dark primitive checked token source");
+assertContains(files.androidThemeTokens, source.androidThemeTokens, "KozmosColorsDark.primitivesColorsEmotionalDanger600", "Android dark primitive error token source");
+assertContains(files.androidThemeTokens, source.androidThemeTokens, "KozmosColorsDark.primitivesColorsEmotionalAlert600", "Android dark primitive warning token source");
+assertContains(files.androidThemeTokens, source.androidThemeTokens, "KozmosColorsDark.primitivesColorsEmotionalSuccess600", "Android dark primitive success token source");
+assertContains(files.androidThemeTokens, source.androidThemeTokens, "KozmosColorsDark.primitivesColorsBackground100", "Android dark Input disabled background token source");
+assertContains(files.androidThemeTokens, source.androidThemeTokens, "KozmosColorsDark.primitivesColorsForeground400", "Android dark Input placeholder token source");
+assertContains(files.androidThemeProvider, source.androidThemeProvider, "LocalKozmosUseDarkTokens provides useDarkTheme", "Android ThemeProvider dark token binding");
+
+console.log("Component contract parity ok");

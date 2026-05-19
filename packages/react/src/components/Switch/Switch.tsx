@@ -1,13 +1,15 @@
-import React from 'react';
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-import { cn } from '../../utils';
-import { Label } from '../Label';
-import { useKozmosAnalytics } from '../../utils/analytics';
+import React from "react";
+import * as SwitchPrimitive from "@radix-ui/react-switch";
+import { cn } from "../../utils";
+import { Label } from "../Label";
+import { useKozmosAnalytics } from "../../utils/analytics";
 
-export interface SwitchProps extends React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root> {
-    label?: string;
-    error?: boolean | string;
-    wrapperClassName?: string;
+export interface SwitchProps extends React.ComponentPropsWithoutRef<
+  typeof SwitchPrimitive.Root
+> {
+  label?: string;
+  error?: boolean | string;
+  wrapperClassName?: string;
 }
 
 const Switch = React.forwardRef<
@@ -18,22 +20,23 @@ const Switch = React.forwardRef<
   const inputId = props.id || defaultId;
   const errorId = React.useId();
   const hasError = !!error;
-  const isStringError = typeof error === 'string';
+  const isStringError = typeof error === "string";
   const { trackEvent } = useKozmosAnalytics();
 
   return (
     <div className={cn("flex flex-col gap-1.5 w-full", wrapperClassName)}>
-      <div className="flex items-center space-x-2">
+      <div className="flex min-h-11 items-center gap-2">
         <SwitchPrimitive.Root
           id={inputId}
           className={cn(
-            'peer inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=unchecked]:bg-input data-[state=unchecked]:border-input',
-            hasError && "focus-visible:ring-destructive",
-            className
+            "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-muted-foreground bg-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary",
+            hasError &&
+              "border-destructive focus-visible:ring-destructive data-[state=checked]:border-destructive data-[state=checked]:bg-destructive",
+            className,
           )}
           {...props}
           onCheckedChange={(checked) => {
-            trackEvent('Switch', 'switch_toggled', { checked });
+            trackEvent("Switch", "switch_toggled", { checked });
             props.onCheckedChange?.(checked);
           }}
           ref={ref}
@@ -42,23 +45,29 @@ const Switch = React.forwardRef<
         >
           <SwitchPrimitive.Thumb
             className={cn(
-              'pointer-events-none block h-[20px] w-[20px] rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-[20px] data-[state=unchecked]:translate-x-0'
+              "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0",
             )}
           />
         </SwitchPrimitive.Root>
         {label && (
-           <Label htmlFor={inputId} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50">
-             {label}
-           </Label>
+          <Label
+            htmlFor={inputId}
+            className={cn(
+              "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+              hasError && "text-destructive",
+            )}
+          >
+            {label}
+          </Label>
         )}
       </div>
       {isStringError && (
-         <p id={errorId} className="text-sm text-destructive">
-             {error}
-         </p>
+        <p id={errorId} className="text-sm text-destructive">
+          {error}
+        </p>
       )}
     </div>
-  )
+  );
 });
 Switch.displayName = SwitchPrimitive.Root.displayName;
 

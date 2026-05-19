@@ -1,20 +1,35 @@
-import figma from '@figma/code-connect';
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from './Tooltip';
+import figma from "@figma/code-connect";
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipContent,
+  TooltipTrigger,
+} from "./Tooltip";
 
 /**
  * Figma Code Connect: Tooltip
- * @url https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD
- * 
- * TODO: Replace node-id=TBD with the exact Figma component node ID.
+ * @url https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=91-4672
  */
-figma.connect(TooltipContent, "https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD", {
-    props: { children: figma.children('*') } /* Connect to TooltipContent */,
-  example: (props) => (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger>Hover me</TooltipTrigger>
-        <TooltipContent {...props} />
-      </Tooltip>
-    </TooltipProvider>
-  )
-});
+figma.connect(
+  TooltipContent,
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=91-4672",
+  {
+    props: {
+      side: figma.enum("Side", {
+        Top: "top",
+        Right: "right",
+        Bottom: "bottom",
+        Left: "left",
+      }),
+      children: figma.string("Content Text"),
+    },
+    example: ({ children, side }) => (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>Hover me</TooltipTrigger>
+          <TooltipContent side={side}>{children}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ),
+  },
+);

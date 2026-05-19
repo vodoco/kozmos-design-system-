@@ -7,6 +7,7 @@ public enum KozmosButtonVariant {
     case secondary
     case ghost
     case link
+    case glass
 }
 
 public enum KozmosButtonSize {
@@ -20,44 +21,63 @@ public struct KozmosButton: View {
     let label: String
     let variant: KozmosButtonVariant
     let size: KozmosButtonSize
+    let isDisabled: Bool
+    let isLoading: Bool
     let action: () -> Void
     
     public init(
         _ label: String,
         variant: KozmosButtonVariant = .default,
         size: KozmosButtonSize = .default,
+        isDisabled: Bool = false,
+        isLoading: Bool = false,
         action: @escaping () -> Void
     ) {
         self.label = label
         self.variant = variant
         self.size = size
+        self.isDisabled = isDisabled
+        self.isLoading = isLoading
         self.action = action
     }
     
     public var body: some View {
         Button(action: action) {
-            Text(label)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .padding(padding)
-                .background(backgroundColor)
-                .foregroundColor(foregroundColor)
-                .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
-                .overlay(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
-                        .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
-                )
+            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(foregroundColor)
+                }
+                Text(label)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .padding(padding)
+            .foregroundColor(foregroundColor)
+            .frame(
+                minWidth: size == .icon ? 44 : nil,
+                minHeight: 44
+            )
+            .background(backgroundColor)
+            .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+            .overlay(
+                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                    .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
+            )
         }
+        .disabled(isDisabled || isLoading)
+        .opacity(isDisabled ? 0.5 : 1)
     }
     
 
     
     private var padding: EdgeInsets {
         switch size {
-        case .default: return EdgeInsets(top: KozmosDimensions.primitivesLayoutSpacing100, leading: KozmosDimensions.primitivesLayoutSpacing200, bottom: KozmosDimensions.primitivesLayoutSpacing100, trailing: KozmosDimensions.primitivesLayoutSpacing200) // h-10 px-4 py-2
-        case .sm: return EdgeInsets(top: KozmosDimensions.primitivesLayoutSpacing75, leading: KozmosDimensions.primitivesLayoutSpacing150, bottom: KozmosDimensions.primitivesLayoutSpacing75, trailing: KozmosDimensions.primitivesLayoutSpacing150) // h-9 px-3
-        case .lg: return EdgeInsets(top: KozmosDimensions.primitivesLayoutSpacing150, leading: KozmosDimensions.primitivesLayoutSpacing400, bottom: KozmosDimensions.primitivesLayoutSpacing150, trailing: KozmosDimensions.primitivesLayoutSpacing400) // h-11 px-8
-        case .icon: return EdgeInsets(top: KozmosDimensions.primitivesLayoutSpacing100, leading: KozmosDimensions.primitivesLayoutSpacing100, bottom: KozmosDimensions.primitivesLayoutSpacing100, trailing: KozmosDimensions.primitivesLayoutSpacing100) // h-10 w-10
+        case .default: return EdgeInsets(top: 0, leading: KozmosDimensions.primitivesLayoutSpacing200, bottom: 0, trailing: KozmosDimensions.primitivesLayoutSpacing200)
+        case .sm: return EdgeInsets(top: 0, leading: KozmosDimensions.primitivesLayoutSpacing150, bottom: 0, trailing: KozmosDimensions.primitivesLayoutSpacing150)
+        case .lg: return EdgeInsets(top: 0, leading: KozmosDimensions.primitivesLayoutSpacing400, bottom: 0, trailing: KozmosDimensions.primitivesLayoutSpacing400)
+        case .icon: return EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
         }
     }
     
@@ -68,6 +88,7 @@ public struct KozmosButton: View {
         case .outline, .ghost: return Color.clear
         case .secondary: return KozmosColors.componentsPrimaryButtonsNeutralButtonBackgroundIdle
         case .link: return Color.clear
+        case .glass: return KozmosColors.primitivesColorsForeground0.opacity(0.16)
         }
     }
     
@@ -77,6 +98,7 @@ public struct KozmosButton: View {
         case .destructive: return KozmosColors.componentsPrimaryButtonsDangerButtonForegroundContentIdle
         case .outline, .ghost, .link: return KozmosColors.primitivesColorsTheme500
         case .secondary: return KozmosColors.primitivesColorsForeground100
+        case .glass: return KozmosColors.primitivesColorsForeground1000
         }
     }
     

@@ -1,7 +1,25 @@
+buildscript {
+    if (gradle.startParameter.taskNames.any { it.endsWith("parseCodeConnect") || it.endsWith("createCodeConnect") }) {
+        repositories {
+            google()
+            mavenCentral()
+            gradlePluginPortal()
+        }
+        dependencies {
+            classpath("com.figma.code.connect:com.figma.code.connect.gradle.plugin:1.2.10")
+        }
+    }
+}
+
 plugins {
-    id("com.android.library") version "8.2.2"
-    id("org.jetbrains.kotlin.android") version "1.9.22"
+    id("com.android.library") version "8.4.2"
+    id("org.jetbrains.kotlin.android") version "2.0.21"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.21"
     id("app.cash.paparazzi") version "1.3.5"
+}
+
+if (gradle.startParameter.taskNames.any { it.endsWith("parseCodeConnect") || it.endsWith("createCodeConnect") }) {
+    apply(plugin = "com.figma.code.connect")
 }
 
 android {
@@ -31,9 +49,6 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
-    }
 }
 
 dependencies {
@@ -45,6 +60,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation("io.coil-kt:coil-compose:2.5.0")
+    compileOnly("com.figma.code.connect:code-connect-lib:1.1.3")
     testImplementation("junit:junit:4.13.2")
     testImplementation("app.cash.paparazzi:paparazzi:1.3.5")
 }

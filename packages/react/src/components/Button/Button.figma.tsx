@@ -1,31 +1,50 @@
-import figma from '@figma/code-connect';
-import { Button } from './Button';
+import figma from "@figma/code-connect";
+import { Button } from "./Button";
 
 /**
- * Validated Code Connect definition natively mapping physical React 
- * props securely up to the Figma Dev Mode variables dynamically!
+ * Code Connect: Kozmos DS Core Library / Button / v1
  */
 figma.connect(
   Button,
-  'https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD',
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=77-1055",
   {
     props: {
-        variant: figma.enum('Variant', {
-            Default: 'default',
-            Secondary: 'secondary',
-            Destructive: 'destructive',
-            Outline: 'outline',
-            Ghost: 'ghost',
-            Link: 'link',
-            Glass: 'glass'
-        }),
-        children: figma.string('Label Text'),
-        disabled: figma.boolean('Disabled'),
+      variant: figma.enum("Variant", {
+        Default: "default",
+        Secondary: "secondary",
+        Destructive: "destructive",
+        Outline: "outline",
+        Ghost: "ghost",
+        Link: "link",
+        Glass: "glass",
+      }),
+      size: figma.enum("Size", {
+        Default: "default",
+        Small: "sm",
+        Large: "lg",
+        Icon: "icon",
+      }),
+      disabled: figma.enum("State", {
+        Default: false,
+        Disabled: true,
+        Loading: false,
+      }),
+      isLoading: figma.enum("State", {
+        Default: false,
+        Disabled: false,
+        Loading: true,
+      }),
+      children: figma.children(["Icon", "Label Text"]),
     },
-    example: ({ variant, children, disabled }) => (
-      <Button variant={variant} disabled={disabled}>
+    example: ({ variant, size, children, disabled, isLoading }) => (
+      <Button
+        variant={variant}
+        size={size}
+        disabled={disabled}
+        isLoading={isLoading}
+      >
         {children}
       </Button>
     ),
-  }
+  },
 );

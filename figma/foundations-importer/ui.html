@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        font-size: 12px;
+      }
+
+      body {
+        margin: 0;
+        background: var(--figma-color-bg);
+        color: var(--figma-color-text);
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 16px;
+        line-height: 22px;
+      }
+
+      h2 {
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      p {
+        color: var(--figma-color-text-secondary);
+        line-height: 18px;
+      }
+
+      .panel {
+        border: 1px solid var(--figma-color-border);
+        border-radius: 8px;
+        padding: 12px;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      input[type="file"] {
+        max-width: 100%;
+      }
+
+      select {
+        box-sizing: border-box;
+        width: 100%;
+        height: 32px;
+        border: 1px solid var(--figma-color-border);
+        border-radius: 6px;
+        padding: 0 8px;
+        background: var(--figma-color-bg);
+        color: var(--figma-color-text);
+        font: inherit;
+      }
+
+      textarea {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 120px;
+        resize: vertical;
+        border: 1px solid var(--figma-color-border);
+        border-radius: 6px;
+        padding: 8px;
+        background: var(--figma-color-bg);
+        color: var(--figma-color-text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      button {
+        height: 32px;
+        border: 1px solid var(--figma-color-border);
+        border-radius: 6px;
+        padding: 0 12px;
+        background: var(--figma-color-bg-secondary);
+        color: var(--figma-color-text);
+        font: inherit;
+      }
+
+      button.primary {
+        border-color: var(--figma-color-bg-brand);
+        background: var(--figma-color-bg-brand);
+        color: var(--figma-color-text-onbrand);
+      }
+
+      button:disabled {
+        opacity: 0.45;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .component-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .status {
+        border-radius: 6px;
+        padding: 8px;
+        background: var(--figma-color-bg-secondary);
+      }
+
+      pre {
+        max-height: 190px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        border: 1px solid var(--figma-color-border);
+        border-radius: 6px;
+        margin: 0;
+        padding: 10px;
+        background: var(--figma-color-bg-secondary);
+        color: var(--figma-color-text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .ok {
+        color: var(--figma-color-text-success);
+      }
+
+      .error {
+        color: var(--figma-color-text-danger);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="stack">
+        <h1>Kozmos DS Foundations Importer</h1>
+        <p>
+          Import pages and local variables from the generated foundations
+          payload.
+        </p>
+      </section>
+
+      <section class="panel stack">
+        <h2>Payload</h2>
+        <input id="file" type="file" accept="application/json,.json" />
+        <textarea
+          id="payload"
+          spellcheck="false"
+          placeholder="Or paste docs/figma-foundations-payload.json here"
+        ></textarea>
+        <p id="payloadStatus">No payload loaded.</p>
+      </section>
+
+      <section class="panel stack">
+        <h2>Options</h2>
+        <label
+          ><input id="createPages" type="checkbox" checked /> Create
+          pages</label
+        >
+        <label
+          ><input id="createVariables" type="checkbox" checked /> Create
+          variables and modes</label
+        >
+        <label
+          ><input id="createDocs" type="checkbox" checked /> Create foundations
+          overview frame</label
+        >
+      </section>
+
+      <section class="actions">
+        <button id="inspect">Inspect File</button>
+        <button id="audit">Audit Library</button>
+        <button id="import" class="primary" disabled>Import Foundations</button>
+      </section>
+
+      <section class="panel stack">
+        <h2>Components</h2>
+        <p>
+          Build code-aligned component sets after the foundations import has
+          completed, or update existing sets in place to preserve Code Connect
+          node IDs.
+        </p>
+        <div class="component-row">
+          <select id="componentSelect" aria-label="Component">
+            <optgroup label="Actions">
+              <option value="button">Button / v1</option>
+              <option value="iconButton">IconButton / v1</option>
+            </optgroup>
+            <optgroup label="Status">
+              <option value="badge">Badge / v1</option>
+            </optgroup>
+            <optgroup label="Layout">
+              <option value="card">Card / v1</option>
+            </optgroup>
+            <optgroup label="Navigation">
+              <option value="tabs">Tabs / v1</option>
+            </optgroup>
+            <optgroup label="Overlay">
+              <option value="tooltip">Tooltip / v1</option>
+              <option value="dialog">Dialog / v1</option>
+              <option value="popover">Popover / v1</option>
+              <option value="menu">Menu / v1</option>
+            </optgroup>
+            <optgroup label="Selection">
+              <option value="checkbox">Checkbox / v1</option>
+              <option value="radio">Radio / v1</option>
+              <option value="switch">Switch / v1</option>
+            </optgroup>
+            <optgroup label="Inputs">
+              <option value="input">Input / v1</option>
+              <option value="textarea">Textarea / v1</option>
+              <option value="search">Search / v1</option>
+              <option value="select">Select / v1</option>
+              <option value="slider">Slider / v1</option>
+            </optgroup>
+            <optgroup label="Feedback">
+              <option value="progress">Progress / v1</option>
+              <option value="spinner">Spinner / v1</option>
+              <option value="alert">Alert / v1</option>
+              <option value="toast">Toast / v1</option>
+            </optgroup>
+            <optgroup label="Media">
+              <option value="avatar">Avatar / v1</option>
+            </optgroup>
+            <optgroup label="Utilities">
+              <option value="icons">Curated Icons</option>
+            </optgroup>
+          </select>
+          <button id="buildComponent">Build</button>
+          <button id="updateComponent">Update</button>
+          <button id="rebuildComponent">Rebuild</button>
+        </div>
+        <div class="component-row">
+          <button id="documentComponents" class="primary">
+            Document Components
+          </button>
+        </div>
+        <div class="component-row">
+          <button id="surfaceQa" class="primary">Build Surface QA</button>
+        </div>
+        <p id="componentHint" class="status"></p>
+      </section>
+
+      <section class="actions">
+        <button id="copyLog">Copy Log</button>
+      </section>
+
+      <pre id="log">Ready.</pre>
+    </main>
+
+    <script>
+      const fileInput = document.getElementById("file");
+      const payloadInput = document.getElementById("payload");
+      const payloadStatus = document.getElementById("payloadStatus");
+      const importButton = document.getElementById("import");
+      const inspectButton = document.getElementById("inspect");
+      const auditButton = document.getElementById("audit");
+      const componentSelect = document.getElementById("componentSelect");
+      const buildComponent = document.getElementById("buildComponent");
+      const updateComponent = document.getElementById("updateComponent");
+      const rebuildComponent = document.getElementById("rebuildComponent");
+      const documentComponentsButton =
+        document.getElementById("documentComponents");
+      const surfaceQaButton = document.getElementById("surfaceQa");
+      const componentHint = document.getElementById("componentHint");
+      const copyLogButton = document.getElementById("copyLog");
+      const log = document.getElementById("log");
+
+      let parsedPayload = null;
+      let activeComponentAction = null;
+
+      const componentActions = {
+        button: {
+          label: "Button / v1",
+          build: "build-button",
+          update: "update-button",
+          rebuild: "rebuild-button",
+          hint:
+            "Build creates Button / v1 once. Update patches it in place to preserve the current Code Connect node ID. Rebuild archives the current set and creates a fresh node ID.",
+        },
+        iconButton: {
+          label: "IconButton / v1",
+          build: "build-icon-button",
+          update: "update-icon-button",
+          rebuild: "rebuild-icon-button",
+          hint:
+            "Build creates IconButton / v1 once. Update preserves node-id=19-757 and refreshes icon slots. Rebuild archives the current set and creates a fresh node ID.",
+        },
+        badge: {
+          label: "Badge / v1",
+          build: "build-badge",
+          update: "update-badge",
+          rebuild: "rebuild-badge",
+          hint:
+            "Build creates Badge / v1 once. After it exists, use Update to preserve its Code Connect node ID. Rebuild archives the current set and creates a fresh node ID.",
+        },
+        card: {
+          label: "Card / v1",
+          build: "build-card",
+          update: "update-card",
+          rebuild: "rebuild-card",
+          hint:
+            "Build creates Card / v1 with Basic, Header, and Full content variants plus editable text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        tabs: {
+          label: "Tabs / v1",
+          build: "build-tabs",
+          update: "update-tabs",
+          rebuild: "rebuild-tabs",
+          hint:
+            "Build creates Tabs / v1 with Count, Active, and State axes plus editable tab labels. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        tooltip: {
+          label: "Tooltip / v1",
+          build: "build-tooltip",
+          update: "update-tooltip",
+          rebuild: "rebuild-tooltip",
+          hint:
+            "Build creates Tooltip / v1 with Side variants plus editable content text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        dialog: {
+          label: "Dialog / v1",
+          build: "build-dialog",
+          update: "update-dialog",
+          rebuild: "rebuild-dialog",
+          hint:
+            "Build creates Dialog / v1 with Basic, Form, and Footer content variants plus editable title, description, body, and action text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        popover: {
+          label: "Popover / v1",
+          build: "build-popover",
+          update: "update-popover",
+          rebuild: "rebuild-popover",
+          hint:
+            "Build creates Popover / v1 with Side variants plus editable title and description text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        menu: {
+          label: "Menu / v1",
+          build: "build-menu",
+          update: "update-menu",
+          rebuild: "rebuild-menu",
+          hint:
+            "Build creates Menu / v1 with Basic, Checkbox, Radio, and Submenu content variants plus editable labels/items. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        checkbox: {
+          label: "Checkbox / v1",
+          build: "build-checkbox",
+          update: "update-checkbox",
+          rebuild: "rebuild-checkbox",
+          hint:
+            "Build creates Checkbox / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        radio: {
+          label: "Radio / v1",
+          build: "build-radio",
+          update: "update-radio",
+          rebuild: "rebuild-radio",
+          hint:
+            "Build creates Radio / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        switch: {
+          label: "Switch / v1",
+          build: "build-switch",
+          update: "update-switch",
+          rebuild: "rebuild-switch",
+          hint:
+            "Build creates Switch / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        input: {
+          label: "Input / v1",
+          build: "build-input",
+          update: "update-input",
+          rebuild: "rebuild-input",
+          hint:
+            "Build creates Input / v1 with a State axis plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        textarea: {
+          label: "Textarea / v1",
+          build: "build-textarea",
+          update: "update-textarea",
+          rebuild: "rebuild-textarea",
+          hint:
+            "Build creates Textarea / v1 with State and Status axes plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        search: {
+          label: "Search / v1",
+          build: "build-search",
+          update: "update-search",
+          rebuild: "rebuild-search",
+          hint:
+            "Build creates Search / v1 with State and Status axes, search icon, and editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        select: {
+          label: "Select / v1",
+          build: "build-select",
+          update: "update-select",
+          rebuild: "rebuild-select",
+          hint:
+            "Build creates Select / v1 for SelectTrigger with State and Status axes plus editable Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        slider: {
+          label: "Slider / v1",
+          build: "build-slider",
+          update: "update-slider",
+          rebuild: "rebuild-slider",
+          hint:
+            "Build creates Slider / v1 with State and Status axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        progress: {
+          label: "Progress / v1",
+          build: "build-progress",
+          update: "update-progress",
+          rebuild: "rebuild-progress",
+          hint:
+            "Build creates Progress / v1 with a Value axis. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        spinner: {
+          label: "Spinner / v1",
+          build: "build-spinner",
+          update: "update-spinner",
+          rebuild: "rebuild-spinner",
+          hint:
+            "Build creates Spinner / v1 with a Size axis. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        avatar: {
+          label: "Avatar / v1",
+          build: "build-avatar",
+          update: "update-avatar",
+          rebuild: "rebuild-avatar",
+          hint:
+            "Build creates Avatar / v1 with Content variants plus editable Image URL, Alt Text, and Fallback. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        alert: {
+          label: "Alert / v1",
+          build: "build-alert",
+          update: "update-alert",
+          rebuild: "rebuild-alert",
+          hint:
+            "Build creates Alert / v1 with Variant axis plus editable Title and Description text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        toast: {
+          label: "Toast / v1",
+          build: "build-toast",
+          update: "update-toast",
+          rebuild: "rebuild-toast",
+          hint:
+            "Build creates Toast / v1 with Basic and Action content variants plus editable title, description, and action text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        icons: {
+          label: "Curated Icons",
+          build: "build-icons",
+          update: "update-icons",
+          rebuild: "update-icons",
+          hint:
+            "Build or update the 38 local Icon / ... sources and preferred icon swap values.",
+        },
+      };
+
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+
+        const text = await file.text();
+        payloadInput.value = text;
+        parsePayload();
+      });
+
+      payloadInput.addEventListener("input", parsePayload);
+
+      inspectButton.addEventListener("click", () => {
+        log.textContent = "Inspecting file...";
+        parent.postMessage({ pluginMessage: { type: "inspect" } }, "*");
+      });
+
+      auditButton.addEventListener("click", () => {
+        log.textContent = "Auditing library...";
+        auditButton.disabled = true;
+        parent.postMessage({ pluginMessage: { type: "audit-library" } }, "*");
+      });
+
+      importButton.addEventListener("click", () => {
+        parsePayload();
+        if (!parsedPayload) return;
+
+        log.textContent = "Importing foundations...";
+        importButton.disabled = true;
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "import-foundations",
+              payload: parsedPayload,
+              options: {
+                createPages: document.getElementById("createPages").checked,
+                createVariables:
+                  document.getElementById("createVariables").checked,
+                createDocs: document.getElementById("createDocs").checked,
+              },
+            },
+          },
+          "*",
+        );
+      });
+
+      componentSelect.addEventListener("change", updateComponentHint);
+
+      buildComponent.addEventListener("click", () => {
+        runSelectedComponentAction("build");
+      });
+
+      updateComponent.addEventListener("click", () => {
+        runSelectedComponentAction("update");
+      });
+
+      rebuildComponent.addEventListener("click", () => {
+        runSelectedComponentAction("rebuild");
+      });
+
+      documentComponentsButton.addEventListener("click", () => {
+        activeComponentAction = {
+          action: "document",
+          label: "Component documentation",
+        };
+        log.className = "";
+        log.textContent = "Documenting component library...";
+        componentHint.textContent =
+          "Creating docs pages and refreshing component descriptions.";
+        componentHint.className = "status";
+        setComponentControlsDisabled(true);
+        parent.postMessage(
+          { pluginMessage: { type: "document-components" } },
+          "*",
+        );
+      });
+
+      surfaceQaButton.addEventListener("click", () => {
+        activeComponentAction = {
+          action: "surface QA",
+          label: "Transparent surface QA",
+        };
+        log.className = "";
+        log.textContent = "Building transparent surface QA...";
+        componentHint.textContent =
+          "Creating Light/Dark Surface/0 and product-map QA panels.";
+        componentHint.className = "status";
+        setComponentControlsDisabled(true);
+        parent.postMessage(
+          { pluginMessage: { type: "build-surface-qa" } },
+          "*",
+        );
+      });
+
+      copyLogButton.addEventListener("click", async () => {
+        const text = log.textContent || "";
+        let copied = false;
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+            copied = true;
+          }
+        } catch (error) {
+          copied = false;
+        }
+
+        if (!copied) copied = copyTextFallback(text);
+
+        if (copied) {
+          flashCopyButton("Copied");
+        } else {
+          selectLogText();
+          flashCopyButton("Press Cmd+C");
+        }
+      });
+
+      window.onmessage = (event) => {
+        const message = event.data.pluginMessage;
+        if (!message) return;
+
+        if (message.type === "inspect-result") {
+          log.textContent = JSON.stringify(message.result, null, 2);
+          return;
+        }
+
+        if (message.type === "import-result") {
+          importButton.disabled = !parsedPayload;
+          log.textContent = JSON.stringify(message.result, null, 2);
+          return;
+        }
+
+        if (message.type === "audit-result") {
+          auditButton.disabled = false;
+          log.textContent = JSON.stringify(message.result, null, 2);
+          return;
+        }
+
+        if (message.type === "component-result") {
+          setComponentControlsDisabled(false);
+          showComponentDone(message.result);
+          log.textContent = JSON.stringify(message.result, null, 2);
+          return;
+        }
+
+        if (message.type === "error") {
+          importButton.disabled = !parsedPayload;
+          auditButton.disabled = false;
+          setComponentControlsDisabled(false);
+          componentHint.textContent = "Action failed. See log below.";
+          componentHint.className = "status error";
+          log.textContent = message.message;
+          log.className = "error";
+        }
+      };
+
+      function selectedComponentAction() {
+        return componentActions[componentSelect.value] || componentActions.button;
+      }
+
+      function updateComponentHint() {
+        const selected = selectedComponentAction();
+        componentHint.textContent = selected.hint;
+        componentHint.className = "status";
+      }
+
+      function runSelectedComponentAction(action) {
+        const selected = selectedComponentAction();
+        const messageType = selected[action];
+        activeComponentAction = {
+          action,
+          label: selected.label,
+        };
+        log.className = "";
+        log.textContent = `${progressVerb(action)} ${selected.label}...`;
+        componentHint.textContent = `${progressVerb(action)} ${selected.label}. Waiting for Figma to finish...`;
+        componentHint.className = "status";
+        setComponentControlsDisabled(true);
+        parent.postMessage({ pluginMessage: { type: messageType } }, "*");
+      }
+
+      function showComponentDone(result) {
+        const action = activeComponentAction;
+        activeComponentAction = null;
+        const label =
+          action && action.label
+            ? action.label
+            : result && result.page
+              ? result.page
+              : "Selected component";
+        const verb = action && action.action ? capitalize(action.action) : "Action";
+
+        if (result && result.message) {
+          componentHint.textContent = `${label}: ${result.message}`;
+          componentHint.className = "status";
+          return;
+        }
+
+        const nodeId =
+          result && result.urlNodeId ? ` node-id=${result.urlNodeId}` : "";
+        componentHint.textContent = `${pastVerb(verb)} finished for ${label}.${nodeId}`;
+        componentHint.className = "status ok";
+      }
+
+      function setComponentControlsDisabled(disabled) {
+        componentSelect.disabled = disabled;
+        buildComponent.disabled = disabled;
+        updateComponent.disabled = disabled;
+        rebuildComponent.disabled = disabled;
+        documentComponentsButton.disabled = disabled;
+        surfaceQaButton.disabled = disabled;
+      }
+
+      function capitalize(value) {
+        return value.charAt(0).toUpperCase() + value.slice(1);
+      }
+
+      function progressVerb(action) {
+        if (action === "rebuild") return "Rebuilding";
+        if (action === "document") return "Documenting";
+        return action === "update" ? "Updating" : "Building";
+      }
+
+      function pastVerb(action) {
+        if (action === "Document") return "Document";
+        if (action === "Rebuild") return "Rebuild";
+        return action === "Update" ? "Update" : "Build";
+      }
+
+      function parsePayload() {
+        try {
+          const text = payloadInput.value.trim();
+          parsedPayload = text ? JSON.parse(text) : null;
+          importButton.disabled = !parsedPayload;
+          log.className = "";
+
+          if (!parsedPayload) {
+            payloadStatus.textContent = "No payload loaded.";
+            payloadStatus.className = "";
+            return;
+          }
+
+          const summary = parsedPayload.summary || {};
+          payloadStatus.textContent = `Loaded ${summary.totalTokens || parsedPayload.variables.length} tokens for ${parsedPayload.target && parsedPayload.target.fileName ? parsedPayload.target.fileName : "current file"}.`;
+          payloadStatus.className = "ok";
+        } catch (error) {
+          parsedPayload = null;
+          importButton.disabled = true;
+          payloadStatus.textContent = error.message;
+          payloadStatus.className = "error";
+        }
+      }
+
+      updateComponentHint();
+
+      function copyTextFallback(text) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.top = "0";
+        textarea.style.left = "0";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        let copied = false;
+        try {
+          copied = document.execCommand("copy");
+        } catch (error) {
+          copied = false;
+        }
+
+        document.body.removeChild(textarea);
+        return copied;
+      }
+
+      function selectLogText() {
+        const selection = window.getSelection();
+        if (!selection) return;
+
+        const range = document.createRange();
+        range.selectNodeContents(log);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      function flashCopyButton(label) {
+        copyLogButton.textContent = label;
+        setTimeout(() => {
+          copyLogButton.textContent = "Copy Log";
+        }, 1400);
+      }
+    </script>
+  </body>
+</html>

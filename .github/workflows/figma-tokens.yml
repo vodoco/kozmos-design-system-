@@ -1,6 +1,7 @@
 name: "Figma Token Synchronization"
 
 on:
+  workflow_dispatch:
   repository_dispatch:
     types: [update-tokens] # Invoked directly via Figma Plugin Webhooks
 
@@ -8,13 +9,14 @@ jobs:
   sync_and_compile:
     name: "Compile & Propagate Design Dictionary"
     runs-on: ubuntu-latest
+    if: ${{ vars.FIGMA_VARIABLES_API_ENABLED == 'true' }}
     permissions:
       contents: write
       pull-requests: write
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
-        
+
       - name: Setup Node Ecosystem
         uses: actions/setup-node@v4
         with:
@@ -32,25 +34,26 @@ jobs:
         env:
           FIGMA_ACCESS_TOKEN: ${{ secrets.FIGMA_ACCESS_TOKEN }}
           FIGMA_FILE_KEY: ${{ secrets.FIGMA_FILE_KEY }}
-        run: npx tsx scripts/sync-figma.ts
-
-      - name: Process Raw Figma JSON
-        run: npx tsx scripts/process-tokens.ts
+        run: pnpm exec tsx scripts/sync-figma.ts
 
       - name: Propagate iOS Dark Overrides
         run: node scripts/skills/darken-tokens.mjs
 
       - name: Execute StyleDictionary Aggregation
-        run: npx turbo run build --filter=@kozmos/tokens
-        
+        run: pnpm --filter @kozmos/tokens build
+
       - name: Route Native Token Output Arrays
         run: |
           mkdir -p packages/ios/Sources
           cp packages/tokens/dist/ios/KozmosColors.swift packages/ios/Sources/KozmosColors.swift
+          cp packages/tokens/dist/ios/KozmosDimensions.swift packages/ios/Sources/KozmosDimensions.swift
+          cp packages/tokens/dist/ios/KozmosShadows.swift packages/ios/Sources/KozmosShadows.swift
           mkdir -p packages/android/src/main/java/com/kozmos/tokens
           cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColors.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColors.kt
           cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt
           cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosDesignTokens.kt packages/android/src/main/java/com/kozmos/tokens/KozmosDesignTokens.kt
+          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosDimensions.kt packages/android/src/main/java/com/kozmos/tokens/KozmosDimensions.kt
+          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosShadows.kt packages/android/src/main/java/com/kozmos/tokens/KozmosShadows.kt
 
       - name: Generate Cross-Platform Semantic PR
         uses: peter-evans/create-pull-request@v6

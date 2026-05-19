@@ -1,62 +1,55 @@
 {
-    "$schema": "https://turbo.build/schema.json",
-    "globalDependencies": [
-        ".env",
-        "tsconfig.base.json"
-    ],
-    "tasks": {
-        "build": {
-            "dependsOn": [
-                "^build"
-            ],
-            "inputs": ["src/**", "package.json", "tsconfig.json"],
-            "outputs": [
-                "dist/**",
-                ".next/**",
-                "!.next/cache/**",
-                "build/**",
-                "storybook-static/**"
-            ],
-            "cache": true
-        },
-        "dev": {
-            "dependsOn": [
-                "^build"
-            ],
-            "cache": false,
-            "persistent": true
-        },
-        "test": {
-            "dependsOn": [
-                "build"
-            ],
-            "inputs": ["src/**", "tests/**", "package.json", "vitest.config.ts"],
-            "outputs": [
-                "coverage/**"
-            ],
-            "cache": true
-        },
-        "lint": {
-            "outputs": [],
-            "cache": true
-        },
-        "typecheck": {
-            "dependsOn": [
-                "^build"
-            ],
-            "outputs": [],
-            "cache": true
-        },
-        "clean": {
-            "cache": false
-        },
-        "tokens:build": {
-            "inputs": ["src/**", "tokens/**", "package.json"],
-            "cache": true,
-            "outputs": [
-                "dist/**",
-                "build/**"
-            ]
-        }
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env", "tsconfig.base.json"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**",
+        "build.mjs",
+        "package.json",
+        "postcss.config.*",
+        "tailwind.config.*",
+        "tsconfig.json",
+        "tsconfig.*.json",
+        "vite.config.*"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        "build/**",
+        "storybook-static/**"
+      ],
+      "cache": true
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "inputs": ["src/**", "tests/**", "package.json", "vitest.config.ts"],
+      "outputs": ["coverage/**"],
+      "cache": true
+    },
+    "lint": {
+      "outputs": [],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "cache": true
+    },
+    "clean": {
+      "cache": false
+    },
+    "tokens:build": {
+      "inputs": ["src/**", "tokens/**", "build.mjs", "package.json"],
+      "cache": true,
+      "outputs": ["dist/**", "build/**"]
     }
+  }
 }

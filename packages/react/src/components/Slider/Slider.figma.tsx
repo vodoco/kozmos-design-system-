@@ -1,19 +1,28 @@
-import figma from '@figma/code-connect';
-import { Slider } from './Slider';
+import figma from "@figma/code-connect";
+import { Slider } from "./Slider";
 
 /**
  * Figma Code Connect: Slider
- * @url https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD
- * 
- * TODO: Replace node-id=TBD with the exact Figma component node ID.
+ * @url https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=80-473
  */
-figma.connect(Slider, "https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD", {
-    props: { 
-      disabled: figma.boolean('Disabled'), 
-      // @ts-expect-error (SDK 1.3.18 is missing number signature)
-      min: figma.number('Min'), 
-      // @ts-expect-error (SDK 1.3.18 is missing number signature)
-      max: figma.number('Max') 
+figma.connect(
+  Slider,
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=80-473",
+  {
+    props: {
+      disabled: figma.enum("State", {
+        Default: false,
+        Focus: false,
+        Disabled: true,
+      }),
+      error: figma.enum("Status", {
+        Default: false,
+        Error: true,
+      }),
+      label: figma.string("Label Text"),
     },
-  example: ({ min, max, disabled }) => <Slider disabled={disabled} min={min} max={max} defaultValue={[min ?? 0]} />
-});
+    example: ({ disabled, error, label }) => (
+      <Slider disabled={disabled} error={error} label={label} />
+    ),
+  },
+);

@@ -1,33 +1,99 @@
 package com.kozmos.components.switch
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.kozmos.tokens.KozmosColors
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    label: String? = null,
+    error: Boolean = false
 ) {
     val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
-    Switch(
-        checked = checked,
-        onCheckedChange = { 
-            trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Switch", eventName = "switch_toggled", properties = mapOf("checked" to it.toString())))
-            onCheckedChange(it) 
-        },
-        modifier = modifier,
-        enabled = enabled,
-        colors = SwitchDefaults.colors(
-            checkedThumbColor = KozmosColors.primitivesColorsBackground0,
-            checkedTrackColor = KozmosColors.primitivesColorsTheme500,
-            uncheckedThumbColor = KozmosColors.primitivesColorsBackground300,
-            uncheckedTrackColor = KozmosColors.primitivesColorsBackground100,
-        )
-    )
+    val checkedTrackColor = if (error) {
+        KozmosThemeTokens.primitivesColorsEmotionalDanger600
+    } else {
+        KozmosThemeTokens.primitivesColorsTheme500
+    }
+    val uncheckedTrackColor = KozmosThemeTokens.primitivesColorsForeground500
+    val disabledTrackColor = KozmosThemeTokens.primitivesColorsForeground500
+    val trackColor = when {
+        !enabled -> disabledTrackColor
+        checked -> checkedTrackColor
+        else -> uncheckedTrackColor
+    }
+    val trackBorderColor = if (error) {
+        KozmosThemeTokens.primitivesColorsEmotionalDanger600
+    } else {
+        trackColor
+    }
+    val thumbColor = KozmosThemeTokens.primitivesColorsBackground0
+    val labelColor = when {
+        error -> KozmosThemeTokens.primitivesColorsEmotionalDanger600
+        !enabled -> KozmosThemeTokens.primitivesColorsForeground500
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .heightIn(min = 44.dp)
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Switch,
+                onValueChange = {
+                    trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Switch", eventName = "switch_toggled", properties = mapOf("checked" to it.toString())))
+                    onCheckedChange(it)
+                }
+            )
+            .padding(KozmosDimensions.primitivesLayoutSpacing50)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(44.dp)
+                .height(24.dp)
+                .background(trackColor, CircleShape)
+                .border(2.dp, trackBorderColor, CircleShape)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(20.dp)
+                    .align(Alignment.CenterStart)
+                    .offset(x = if (checked) 22.dp else 2.dp)
+                    .background(thumbColor, CircleShape)
+            )
+        }
+        if (label != null) {
+            Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing100))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = labelColor
+            )
+        }
+    }
 }

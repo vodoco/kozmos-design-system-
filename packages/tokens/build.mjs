@@ -8,6 +8,27 @@ register(StyleDictionary);
 
 console.log('🏗️  Starting Style Dictionary Build (v5)...');
 
+const pointrPaletteDir = process.env.POINTR_COLOR_PALETTE_DIR;
+
+function optionalPointrPlatform(destination) {
+    if (!pointrPaletteDir) return {};
+
+    const buildPath = pointrPaletteDir.endsWith(path.sep)
+        ? pointrPaletteDir
+        : `${pointrPaletteDir}${path.sep}`;
+
+    return {
+        pointr: {
+            transformGroup: 'css',
+            buildPath,
+            files: [{
+                destination,
+                format: 'pointr/color-palette'
+            }]
+        }
+    };
+}
+
 // Helper to merge Dark tokens into Light tokens as 'darkValue'
 function mergeDarkTokens(light, dark) {
     for (const key in light) {
@@ -43,6 +64,12 @@ function toCamelCase(path) {
     }
     return result;
 }
+
+StyleDictionary.registerTransform({
+    name: 'name/kozmos/camel',
+    type: 'name',
+    transform: (token) => toCamelCase(token.path || [token.name])
+});
 
 // Fix for Android AAPT not allowing floats in <integer>
 function fixAndroidXML(filePath) {
@@ -404,14 +431,7 @@ async function build() {
                         options: { selector: ':root' }
                     }]
                 },
-                pointr: {
-                    transformGroup: 'css',
-                    buildPath: '/Volumes/4TB Depo/development/T/pointr-taxonomy-suite/apps/style-api/backend/color_palettes/',
-                    files: [{
-                        destination: 'kozmos-light.json',
-                        format: 'pointr/color-palette'
-                    }]
-                }
+                ...optionalPointrPlatform('kozmos-light.json')
             }
         });
         await sdLight.buildAllPlatforms();
@@ -430,14 +450,7 @@ async function build() {
                         options: { selector: "[data-theme='dark']" }
                     }]
                 },
-                pointr: {
-                    transformGroup: 'css',
-                    buildPath: '/Volumes/4TB Depo/development/T/pointr-taxonomy-suite/apps/style-api/backend/color_palettes/',
-                    files: [{
-                        destination: 'kozmos-dark.json',
-                        format: 'pointr/color-palette'
-                    }]
-                }
+                ...optionalPointrPlatform('kozmos-dark.json')
             }
         });
         await sdDark.buildAllPlatforms();
@@ -564,7 +577,7 @@ async function build() {
             source: ['src/tokens-merged-temp.json'],
             platforms: {
                 ios: {
-                    transforms: ['attribute/cti'],
+                    transforms: ['attribute/cti', 'name/kozmos/camel'],
                     buildPath: 'dist/ios/',
                     files: [
                         {

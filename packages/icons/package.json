@@ -1,16 +1,25 @@
 {
-    "name": "@kozmos/icons",
-    "version": "0.0.0",
-    "private": true,
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "files": [
-        "dist"
-    ],
-    "scripts": {
-        "build": "echo 'Building icons...' && mkdir -p dist && touch dist/index.js"
-    },
-    "peerDependencies": {
-        "react": ">=18"
-    }
+  "name": "@kozmos/icons",
+  "version": "0.0.1",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "lucide-react": ">=0.300.0",
+    "react": "^18.2.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "lucide-react": "0.563.0",
+    "react": "19.2.4",
+    "typescript": "^5.3.0"
+  }
 }

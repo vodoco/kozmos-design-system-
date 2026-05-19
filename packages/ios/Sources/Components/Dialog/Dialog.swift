@@ -1,36 +1,176 @@
 import SwiftUI
-import Kozmos
 
 public struct KozmosDialog<Content: View>: View {
     @Binding var isPresented: Bool
+    let title: String?
+    let description: String?
+    let bodyText: String?
+    let primaryActionTitle: String?
+    let secondaryActionTitle: String?
+    let showsCloseButton: Bool
+    let onPrimaryAction: (() -> Void)?
+    let onSecondaryAction: (() -> Void)?
     let content: () -> Content
-    
-    public init(isPresented: Binding<Bool>, @ViewBuilder content: @escaping () -> Content) {
+
+    public init(
+        isPresented: Binding<Bool>,
+        showsCloseButton: Bool = true,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
         self._isPresented = isPresented
+        self.title = nil
+        self.description = nil
+        self.bodyText = nil
+        self.primaryActionTitle = nil
+        self.secondaryActionTitle = nil
+        self.showsCloseButton = showsCloseButton
+        self.onPrimaryAction = nil
+        self.onSecondaryAction = nil
         self.content = content
     }
-    
+
+    public init(
+        isPresented: Binding<Bool>,
+        title: String,
+        description: String? = nil,
+        bodyText: String? = nil,
+        primaryActionTitle: String? = nil,
+        secondaryActionTitle: String? = nil,
+        showsCloseButton: Bool = true,
+        onPrimaryAction: (() -> Void)? = nil,
+        onSecondaryAction: (() -> Void)? = nil
+    ) where Content == EmptyView {
+        self._isPresented = isPresented
+        self.title = title
+        self.description = description
+        self.bodyText = bodyText
+        self.primaryActionTitle = primaryActionTitle
+        self.secondaryActionTitle = secondaryActionTitle
+        self.showsCloseButton = showsCloseButton
+        self.onPrimaryAction = onPrimaryAction
+        self.onSecondaryAction = onSecondaryAction
+        self.content = { EmptyView() }
+    }
+
     public var body: some View {
         ZStack {
             if isPresented {
-                // Dimming Backdrop
-                KozmosColors.primitivesColorsBackground900.opacity(0.4)
+                KozmosColors.semanticsOverlayScrim
                     .edgesIgnoringSafeArea(.all)
                     .onTapGesture {
                         isPresented = false
                     }
-                
-                // Content Payload
-                VStack(spacing: KozmosDimensions.primitivesLayoutSpacing300) {
-                    content()
-                }
-                .padding(KozmosDimensions.primitivesLayoutSpacing300)
-                .background(KozmosColors.primitivesColorsTheme0)
-                .cornerRadius(KozmosDimensions.primitivesLayoutRadius200)
-                .shadow(color: KozmosColors.primitivesColorsBackground900.opacity(0.15), radius: 20, x: 0, y: 10)
-                .padding(KozmosDimensions.primitivesLayoutSpacing400)
+
+                dialogSurface
+                    .padding(KozmosDimensions.primitivesLayoutSpacing400)
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isPresented)
+    }
+
+    private var dialogSurface: some View {
+        VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing300) {
+            HStack(alignment: .top, spacing: KozmosDimensions.primitivesLayoutSpacing200) {
+                VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                    if let title {
+                        Text(title)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                    }
+
+                    if let description {
+                        Text(description)
+                            .font(.subheadline)
+                            .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if showsCloseButton {
+                    Button {
+                        withAnimation {
+                            isPresented = false
+                        }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                            .frame(width: 44, height: 44)
+                    }
+                    .accessibilityLabel("Close dialog")
+                }
+            }
+
+            dialogContent
+
+            if primaryActionTitle != nil || secondaryActionTitle != nil {
+                HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                    Spacer()
+
+                    if let secondaryActionTitle, let onSecondaryAction {
+                        dialogActionButton(
+                            title: secondaryActionTitle,
+                            variant: .secondary,
+                            action: onSecondaryAction
+                        )
+                    }
+
+                    if let primaryActionTitle, let onPrimaryAction {
+                        dialogActionButton(
+                            title: primaryActionTitle,
+                            variant: .primary,
+                            action: onPrimaryAction
+                        )
+                    }
+                }
+            }
+        }
+        .padding(KozmosDimensions.primitivesLayoutSpacing300)
+        .frame(maxWidth: 512)
+        .background(KozmosColors.semanticsSurface0)
+        .cornerRadius(KozmosDimensions.primitivesLayoutRadius200)
+        .overlay(
+            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius200)
+                .stroke(KozmosColors.primitivesColorsForeground400, lineWidth: 1)
+        )
+        .shadow(color: KozmosColors.primitivesColorsForeground0.opacity(0.16), radius: 20, x: 0, y: 10)
+    }
+
+    @ViewBuilder
+    private var dialogContent: some View {
+        if let bodyText {
+            Text(bodyText)
+                .font(.body)
+                .foregroundColor(KozmosColors.primitivesColorsForeground100)
+        } else {
+            content()
+        }
+    }
+
+    private enum DialogActionVariant {
+        case primary
+        case secondary
+    }
+
+    private func dialogActionButton(
+        title: String,
+        variant: DialogActionVariant,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(variant == .primary ? KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle : KozmosColors.primitivesColorsForeground100)
+                .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
+                .frame(minHeight: 44)
+                .background(variant == .primary ? KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle : Color.clear)
+                .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+                .overlay(
+                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                        .stroke(variant == .primary ? Color.clear : KozmosColors.primitivesColorsForeground400, lineWidth: 1)
+                )
+        }
     }
 }

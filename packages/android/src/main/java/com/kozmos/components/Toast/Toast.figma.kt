@@ -1,3 +1,50 @@
 package com.kozmos.components.toast
 
-// Placeholder
+import androidx.compose.runtime.Composable
+import com.figma.code.connect.FigmaConnect
+import com.figma.code.connect.FigmaProperty
+import com.figma.code.connect.FigmaType
+import com.figma.code.connect.FigmaVariant
+
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8189")
+@FigmaVariant("Content", "Basic")
+class KozmosToastBasicConnect {
+    @FigmaProperty(FigmaType.Text, "Title Text")
+    val title: String = "Notification"
+
+    @FigmaProperty(FigmaType.Text, "Description Text")
+    val description: String = "Your changes have been saved."
+
+    @Composable
+    fun ComponentExample() {
+        KozmosToast(
+            title = title,
+            description = description,
+            onDismiss = {}
+        )
+    }
+}
+
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8189")
+@FigmaVariant("Content", "Action")
+class KozmosToastActionConnect {
+    @FigmaProperty(FigmaType.Text, "Title Text")
+    val title: String = "Notification"
+
+    @FigmaProperty(FigmaType.Text, "Description Text")
+    val description: String = "Your changes have been saved."
+
+    @FigmaProperty(FigmaType.Text, "Action Text")
+    val actionText: String = "Undo"
+
+    @Composable
+    fun ComponentExample() {
+        KozmosToast(
+            title = title,
+            description = description,
+            actionText = actionText,
+            onAction = {},
+            onDismiss = {}
+        )
+    }
+}

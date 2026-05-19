@@ -1,11 +1,52 @@
-import figma from '@figma/code-connect';
-import { IconButton } from './IconButton';
+import figma from "@figma/code-connect";
+import { IconButton } from "./IconButton";
 
 /**
- * Figma Code Connect: IconButton
- * @url https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD
+ * Code Connect: Kozmos DS Core Library / IconButton / v1
+ *
+ * @url https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=77-1203
  */
-figma.connect(IconButton, "https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD", {
-  props: { variant: figma.enum('Variant', { 'Default': 'default', 'Destructive': 'destructive', 'Outline': 'outline', 'Secondary': 'secondary', 'Ghost': 'ghost', 'Link': 'link', 'Glass': 'glass' }), disabled: figma.boolean('Disabled') },
-  example: (props) => <IconButton {...props} />
-});
+figma.connect(
+  IconButton,
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=77-1203",
+  {
+    props: {
+      variant: figma.enum("Variant", {
+        Default: "default",
+        Destructive: "destructive",
+        Outline: "outline",
+        Secondary: "secondary",
+        Ghost: "ghost",
+        Link: "link",
+        Glass: "glass",
+      }),
+      size: figma.enum("Size", {
+        Default: "icon",
+        Small: "sm",
+        Large: "lg",
+      }),
+      disabled: figma.enum("State", {
+        Default: false,
+        Disabled: true,
+        Loading: false,
+      }),
+      isLoading: figma.enum("State", {
+        Default: false,
+        Disabled: false,
+        Loading: true,
+      }),
+      icon: figma.instance("Icon"),
+    },
+    example: ({ variant, size, disabled, isLoading, icon }) => (
+      <IconButton
+        variant={variant}
+        size={size}
+        disabled={disabled}
+        isLoading={isLoading}
+        aria-label="Icon action"
+      >
+        {icon}
+      </IconButton>
+    ),
+  },
+);

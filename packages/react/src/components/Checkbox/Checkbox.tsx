@@ -1,14 +1,16 @@
-import React from 'react';
-import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
-import { Check } from 'lucide-react';
-import { cn } from '../../utils';
-import { Label } from '../Label';
-import { useKozmosAnalytics } from '../../utils/analytics';
+import React from "react";
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
+import { Check } from "lucide-react";
+import { cn } from "../../utils";
+import { Label } from "../Label";
+import { useKozmosAnalytics } from "../../utils/analytics";
 
-export interface CheckboxProps extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> {
-    label?: string;
-    error?: boolean | string;
-    wrapperClassName?: string;
+export interface CheckboxProps extends React.ComponentPropsWithoutRef<
+  typeof CheckboxPrimitive.Root
+> {
+  label?: string;
+  error?: boolean | string;
+  wrapperClassName?: string;
 }
 
 const Checkbox = React.forwardRef<
@@ -19,47 +21,50 @@ const Checkbox = React.forwardRef<
   const inputId = props.id || defaultId;
   const errorId = React.useId();
   const hasError = !!error;
-  const isStringError = typeof error === 'string';
+  const isStringError = typeof error === "string";
   const { trackEvent } = useKozmosAnalytics();
 
   return (
     <div className={cn("flex flex-col gap-1.5 w-full", wrapperClassName)}>
-      <div className="flex items-center space-x-2">
+      <div className="flex min-h-11 items-center gap-2">
         <CheckboxPrimitive.Root
           id={inputId}
           ref={ref}
           className={cn(
-            'peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+            "peer h-5 w-5 shrink-0 rounded-sm border border-input ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
             hasError && "border-destructive focus-visible:ring-destructive",
-            className
+            className,
           )}
           aria-invalid={hasError}
           aria-describedby={hasError && isStringError ? errorId : undefined}
           onCheckedChange={(checked) => {
-            trackEvent('Checkbox', 'checkbox_toggled', { checked });
+            trackEvent("Checkbox", "checkbox_toggled", { checked });
             props.onCheckedChange?.(checked);
           }}
           {...props}
         >
           <CheckboxPrimitive.Indicator
-            className={cn('flex items-center justify-center text-current')}
+            className={cn("flex items-center justify-center text-current")}
           >
             <Check className="h-4 w-4" />
           </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Root>
         {label && (
-           <Label htmlFor={inputId} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50">
-             {label}
-           </Label>
+          <Label
+            htmlFor={inputId}
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+          >
+            {label}
+          </Label>
         )}
       </div>
       {isStringError && (
-         <p id={errorId} className="text-sm text-destructive">
-             {error}
-         </p>
+        <p id={errorId} className="text-sm text-destructive">
+          {error}
+        </p>
       )}
     </div>
-  )
+  );
 });
 Checkbox.displayName = CheckboxPrimitive.Root.displayName;
 

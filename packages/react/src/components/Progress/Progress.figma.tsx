@@ -1,16 +1,23 @@
-import figma from '@figma/code-connect';
-import { Progress } from './Progress';
+import figma from "@figma/code-connect";
+import { Progress } from "./Progress";
 
 /**
  * Figma Code Connect: Progress
- * @url https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD
- * 
- * TODO: Replace node-id=TBD with the exact Figma component node ID.
+ * @url https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=83-252
  */
-figma.connect(Progress, "https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD", {
-    props: { 
-      // @ts-expect-error (SDK 1.3.18 is missing number signature on definition despite Native support)
-      value: figma.number('Value') 
+figma.connect(
+  Progress,
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=83-252",
+  {
+    props: {
+      value: figma.enum("Value", {
+        "0": 0,
+        "25": 25,
+        "50": 50,
+        "75": 75,
+        "100": 100,
+      }),
     },
-  example: ({ value }) => <Progress value={value} />
-});
+    example: (props) => <Progress value={props.value} />,
+  },
+);

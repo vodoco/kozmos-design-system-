@@ -1,13 +1,65 @@
-import figma from '@figma/code-connect';
-import { Card } from './Card';
+import figma from "@figma/code-connect";
+import { Button } from "../Button/Button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./Card";
 
-/**
- * Figma Code Connect: Card
- * @url https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD
- * 
- * TODO: Replace node-id=TBD with the exact Figma component node ID.
- */
-figma.connect(Card, "https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD", {
-    props: { children: figma.children('*') },
-  example: (props) => <Card {...props} />
+const cardUrl =
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=87-2536";
+
+figma.connect(Card, cardUrl, {
+  variant: { Content: "Basic" },
+  props: {
+    body: figma.string("Body Text"),
+  },
+  example: ({ body }) => (
+    <Card>
+      <CardContent className="p-6">{body}</CardContent>
+    </Card>
+  ),
+});
+
+figma.connect(Card, cardUrl, {
+  variant: { Content: "Header" },
+  props: {
+    title: figma.string("Title Text"),
+    description: figma.string("Description Text"),
+    body: figma.string("Body Text"),
+  },
+  example: ({ body, description, title }) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>{body}</CardContent>
+    </Card>
+  ),
+});
+
+figma.connect(Card, cardUrl, {
+  variant: { Content: "Full" },
+  props: {
+    title: figma.string("Title Text"),
+    description: figma.string("Description Text"),
+    body: figma.string("Body Text"),
+  },
+  example: ({ body, description, title }) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>{body}</CardContent>
+      <CardFooter className="justify-end gap-2">
+        <Button variant="outline">Cancel</Button>
+        <Button>Save</Button>
+      </CardFooter>
+    </Card>
+  ),
 });

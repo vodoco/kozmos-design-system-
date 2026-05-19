@@ -1,0 +1,18 @@
+{
+  "codeConnect": {
+    "parser": "swift",
+    "label": "SwiftUI",
+    "language": "swift",
+    "swiftPackagePath": "Package.swift",
+    "include": [
+      "Sources/Components/Dialog/Dialog.figma.swift",
+      "Sources/Components/Dialog/Dialog.swift",
+      "Sources/Components/Popover/Popover.figma.swift",
+      "Sources/Components/Popover/Popover.swift",
+      "Sources/Components/Menu/Menu.figma.swift",
+      "Sources/Components/Menu/Menu.swift",
+      "Sources/Components/Toast/Toast.figma.swift",
+      "Sources/Components/Toast/Toast.swift"
+    ]
+  }
+}

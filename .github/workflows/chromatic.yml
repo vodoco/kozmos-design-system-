@@ -1,4 +1,4 @@
-name: 'Visual Regression Testing'
+name: "Visual Regression Testing"
 
 on:
   push:
@@ -26,13 +26,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        run: pnpm build --filter=!@kozmos/docs # Build everything except docs/storybook to save time, Chromatic will build storybook
+        run: pnpm --filter '!@kozmos/docs' build # Build everything except docs/storybook to save time; Chromatic will build Storybook.
 
       - name: Publish to Chromatic
         uses: chromaui/action@latest

@@ -1,13 +1,22 @@
-import figma from '@figma/code-connect';
-import { Spinner } from './Spinner';
+import figma from "@figma/code-connect";
+import { Spinner } from "./Spinner";
 
 /**
  * Figma Code Connect: Spinner
- * @url https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD
- * 
- * TODO: Replace node-id=TBD with the exact Figma component node ID.
+ * @url https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=83-261
  */
-figma.connect(Spinner, "https://figma.com/design/zWCU9TdNWH8GPL04tWr7p3?node-id=TBD", {
-    props: { size: figma.enum('Size', { 'Small': 'sm', 'Medium': 'md', 'Large': 'lg', 'XLarge': 'xl' }) },
-  example: (props) => <Spinner {...props} />
-});
+figma.connect(
+  Spinner,
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=83-261",
+  {
+    props: {
+      size: figma.enum("Size", {
+        Small: "sm",
+        Medium: "md",
+        Large: "lg",
+        XLarge: "xl",
+      }),
+    },
+    example: (props) => <Spinner {...props} />,
+  },
+);
