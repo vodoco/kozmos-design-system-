@@ -59,14 +59,14 @@ jobs:
           pnpm figma:publish:linked:dry
 
       - name: Install Playwright
-        run: pnpm --filter @kozmos/react exec playwright install --with-deps chromium
+        run: pnpm --filter @kozmos/react exec playwright install --with-deps chromium webkit
 
       - name: Core Pipeline - Storybook E2E & A11y Verification
         run: |
           # Chromatic is the required visual-regression gate. Keep local screenshot baselines manual until repaired.
           pnpm --filter @kozmos/docs exec concurrently -k -s first -n "SB,TEST" \
             "pnpm --filter @kozmos/docs storybook:react -- --ci --host 127.0.0.1" \
-            "bash -lc 'until curl -sf http://127.0.0.1:6006 >/dev/null; do sleep 2; done; pnpm -w --filter @kozmos/react exec playwright test && pnpm -w exec tsx scripts/skills/check-a11y.ts'"
+            "bash -lc 'until curl -sf http://127.0.0.1:6006 >/dev/null; do sleep 2; done; pnpm --filter @kozmos/react exec playwright test && pnpm -w exec tsx scripts/skills/check-a11y.ts'"
 
       - name: Enforce SDK Assembly & Accessibility Governance
         run: |
