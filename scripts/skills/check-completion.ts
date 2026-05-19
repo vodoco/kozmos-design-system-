@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import prettier from "prettier";
 
 /**
  * Scans component implementation status across Web, iOS, and Android.
@@ -177,7 +178,7 @@ async function runCheck() {
 
   printTable(statuses);
 
-  const markdown = generateMarkdown(statuses);
+  const markdown = await formatMarkdown(generateMarkdown(statuses));
 
   if (args.has("--check")) {
     const current = fs.existsSync(STATUS_PATH)
@@ -298,6 +299,15 @@ function generateMarkdown(statuses: ComponentStatus[]): string {
   md += "\n";
 
   return md;
+}
+
+async function formatMarkdown(markdown: string): Promise<string> {
+  const config = (await prettier.resolveConfig(STATUS_PATH)) ?? {};
+
+  return prettier.format(markdown, {
+    ...config,
+    parser: "markdown",
+  });
 }
 
 function printSummary(statuses: ComponentStatus[]) {

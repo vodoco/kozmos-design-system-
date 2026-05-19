@@ -12,33 +12,43 @@ jobs:
   chromatic:
     name: Run Chromatic
     runs-on: ubuntu-latest
+    env:
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Chromatic requires full git history
 
+      - name: Skip Chromatic when project token is not configured
+        if: ${{ env.CHROMATIC_PROJECT_TOKEN == '' }}
+        run: echo "::notice title=Chromatic skipped::Add CHROMATIC_PROJECT_TOKEN as a repository secret to enable visual regression publishing."
+
       - name: Install pnpm
+        if: ${{ env.CHROMATIC_PROJECT_TOKEN != '' }}
         uses: pnpm/action-setup@v3
         with:
           version: 9
 
       - name: Setup Node
+        if: ${{ env.CHROMATIC_PROJECT_TOKEN != '' }}
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "pnpm"
 
       - name: Install dependencies
+        if: ${{ env.CHROMATIC_PROJECT_TOKEN != '' }}
         run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
+        if: ${{ env.CHROMATIC_PROJECT_TOKEN != '' }}
         run: pnpm --filter '!@kozmos/docs' build # Build everything except docs/storybook to save time; Chromatic will build Storybook.
 
       - name: Publish to Chromatic
+        if: ${{ env.CHROMATIC_PROJECT_TOKEN != '' }}
         uses: chromaui/action@latest
         with:
-          # 👇 Chromatic token is required. Ensure you add it to GitHub Secrets.
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          projectToken: ${{ env.CHROMATIC_PROJECT_TOKEN }}
           # The storybook is located in apps/docs
           workingDir: apps/docs
           buildScriptName: build-storybook
