@@ -15,6 +15,8 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Release Packages
     runs-on: ubuntu-latest
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     permissions:
       contents: write
       pull-requests: write
@@ -55,7 +57,26 @@ jobs:
       - name: Build Packages
         run: pnpm turbo run build
 
+      - name: Verify NPM publish token
+        id: npm-auth
+        env:
+          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "can_publish=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping npm release because NPM_TOKEN is not configured."
+            exit 0
+          fi
+
+          if npm whoami --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "can_publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "can_publish=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Skipping npm release because NPM_TOKEN is invalid or lacks npm registry access."
+          fi
+
       - name: Create Release Pull Request or Publish to NPM
+        if: steps.npm-auth.outputs.can_publish == 'true'
         id: changesets
         uses: changesets/action@v1
         with:
@@ -64,5 +85,5 @@ jobs:
           title: "ci(changesets): version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ env.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
