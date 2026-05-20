@@ -115,6 +115,7 @@ const files = {
   reactBox: "packages/react/src/components/Box/Box.tsx",
   reactStack: "packages/react/src/components/Stack/Stack.tsx",
   reactContainer: "packages/react/src/components/Container/Container.tsx",
+  reactBreadcrumb: "packages/react/src/components/Breadcrumb/Breadcrumb.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -1156,6 +1157,72 @@ assertContains(
   source.reactContainer,
   "max-w-7xl",
   "React Container max width",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Breadcrumb / v1",
+  "Breadcrumb component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const BREADCRUMB_CONTENT =",
+  "Breadcrumb content axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildBreadcrumbComponent()",
+  "Breadcrumb build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateBreadcrumbComponent()",
+  "Breadcrumb update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Breadcrumb / v1"',
+  "Breadcrumb documentation metadata",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `name: "Breadcrumb/gap"`,
+  "Breadcrumb gap component token",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="breadcrumb">Breadcrumb / v1</option>',
+  "Breadcrumb UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-breadcrumb"',
+  "Breadcrumb UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Breadcrumb / v1**",
+  "Breadcrumb importer documentation",
+);
+assertContains(
+  files.reactBreadcrumb,
+  source.reactBreadcrumb,
+  "aria-current=\"page\"",
+  "React Breadcrumb current page semantics",
+);
+assertContains(
+  files.reactBreadcrumb,
+  source.reactBreadcrumb,
+  "BreadcrumbEllipsis",
+  "React Breadcrumb ellipsis primitive",
 );
 assertContains(
   files.figma,

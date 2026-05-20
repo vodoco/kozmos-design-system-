@@ -31,6 +31,7 @@ const BOX_SURFACES = ["Transparent", "Surface", "Outlined"];
 const STACK_DIRECTIONS = ["Column", "Row"];
 const STACK_GAPS = ["2", "4", "6"];
 const CONTAINER_CENTERED = ["True", "False"];
+const BREADCRUMB_CONTENT = ["Basic", "Ellipsis"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -113,6 +114,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Box / v1": 360,
   "Stack / v1": 520,
   "Container / v1": 360,
+  "Breadcrumb / v1": 260,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -142,6 +144,7 @@ const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Box / v1",
   "Stack / v1",
   "Container / v1",
+  "Breadcrumb / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -509,6 +512,34 @@ const COMPONENT_DOCS = [
       "Container is non-interactive unless composed around interactive children.",
       "Gutters and max-width should support readable line length without hiding content.",
       "Child controls must preserve their own semantic labels and focus states.",
+    ],
+  },
+  {
+    componentName: "Breadcrumb",
+    componentSetName: "Breadcrumb / v1",
+    category: "Navigation",
+    summary:
+      "Breadcrumb shows the user's current location inside a navigable hierarchy.",
+    usage: [
+      "Use Basic for short trails where every parent can remain visible.",
+      "Use Ellipsis when middle ancestors need to collapse in constrained layouts.",
+      "Keep the current page as plain text, not a link to itself.",
+    ],
+    api: [
+      "Content maps to composed BreadcrumbList examples.",
+      "Item text properties map to BreadcrumbLink or BreadcrumbPage children.",
+      "Separators and ellipsis remain composition primitives in product code.",
+    ],
+    properties: [
+      "Content: Basic, Ellipsis",
+      "Item 1 Text",
+      "Item 2 Text",
+      "Current Page Text",
+    ],
+    accessibility: [
+      "Breadcrumb uses a nav landmark with aria-label in product code.",
+      "Current Page maps to BreadcrumbPage with aria-current page.",
+      "Separators and ellipsis are presentational and hidden from assistive tech.",
     ],
   },
   {
@@ -2872,6 +2903,42 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Text/line-height/sm",
     scopes: ["LINE_HEIGHT"],
   },
+  { name: "Breadcrumb/width/basic", value: 360, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Breadcrumb/width/ellipsis",
+    value: 284,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  { name: "Breadcrumb/height", value: 44, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Breadcrumb/gap",
+    value: 8,
+    alias: "Layout/spacing/100",
+    scopes: ["GAP"],
+  },
+  {
+    name: "Breadcrumb/item-gap",
+    value: 6,
+    alias: "Layout/spacing/75",
+    scopes: ["GAP"],
+  },
+  {
+    name: "Breadcrumb/ellipsis/size",
+    value: 36,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "Breadcrumb/font-size",
+    value: 14,
+    alias: "Text/font-size/sm",
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "Breadcrumb/line-height",
+    value: 20,
+    alias: "Text/line-height/sm",
+    scopes: ["LINE_HEIGHT"],
+  },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -3051,6 +3118,24 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "rebuild-container") {
       const result = await rebuildContainerComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "build-breadcrumb") {
+      const result = await buildBreadcrumbComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-breadcrumb") {
+      const result = await updateBreadcrumbComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-breadcrumb") {
+      const result = await rebuildBreadcrumbComponent();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -5172,6 +5257,7 @@ function unexpectedTopLevelNodesForPage(page) {
     "Box / v1",
     "Stack / v1",
     "Container / v1",
+    "Breadcrumb / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5872,6 +5958,23 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
+  if (record.name === "Breadcrumb / v1") {
+    for (const baseName of [
+      "Item 1 Text",
+      "Item 2 Text",
+      "Current Page Text",
+    ]) {
+      const textProperty = Object.values(textProperties).find(
+        (property) => property.baseName === baseName,
+      );
+      if (!textProperty || textProperty.boundTextNodes === 0) {
+        record.warnings.push(
+          `${baseName} component property is missing or not bound to generated Breadcrumb text nodes.`,
+        );
+      }
+    }
+  }
+
   if (compositionIntegrity.issueCount > 0) {
     record.warnings.push(
       `${compositionIntegrity.issueCount} composite component integrity issue(s) found. Composite components must use live nested instances with valid auto-layout sizing.`,
@@ -5992,6 +6095,7 @@ function shouldAuditLayoutBindings(name) {
       "Box / v1",
       "Stack / v1",
       "Container / v1",
+      "Breadcrumb / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -6024,6 +6128,7 @@ function shouldAuditTypographyBindings(name) {
       "Label / v1",
       "Box / v1",
       "Container / v1",
+      "Breadcrumb / v1",
       "Button / v1",
       "Counter / v1",
       "Badge / v1",
@@ -6158,6 +6263,12 @@ function expectedVariantAxesForComponentSetName(name) {
   if (name === "Container / v1") {
     return {
       Centered: CONTAINER_CENTERED,
+    };
+  }
+
+  if (name === "Breadcrumb / v1") {
+    return {
+      Content: BREADCRUMB_CONTENT,
     };
   }
 
@@ -12808,6 +12919,46 @@ async function updateContainerComponent() {
   });
 }
 
+async function buildBreadcrumbComponent() {
+  return buildSingleAxisComponent({
+    componentName: "Breadcrumb",
+    componentSetName: "Breadcrumb / v1",
+    axisName: "Content",
+    values: BREADCRUMB_CONTENT,
+    x: 80,
+    y: 11780,
+    xStep: 440,
+    createVariant: createBreadcrumbVariant,
+    configureProperties: configureBreadcrumbProperties,
+    description: [
+      "Kozmos Breadcrumb component set generated from React Breadcrumb anatomy.",
+      "Content maps to composed BreadcrumbList examples.",
+      "Item text properties map to BreadcrumbLink and BreadcrumbPage children.",
+      "Separators and ellipsis remain product-code composition primitives.",
+    ],
+  });
+}
+
+async function updateBreadcrumbComponent() {
+  return updateSingleAxisComponent({
+    componentName: "Breadcrumb",
+    componentSetName: "Breadcrumb / v1",
+    axisName: "Content",
+    values: BREADCRUMB_CONTENT,
+    xStep: 440,
+    createVariant: createBreadcrumbVariant,
+    updateVariant: updateBreadcrumbVariant,
+    parseVariantName: parseBreadcrumbVariantName,
+    configureProperties: configureBreadcrumbProperties,
+    description: [
+      "Kozmos Breadcrumb component set generated from React Breadcrumb anatomy.",
+      "Content maps to composed BreadcrumbList examples.",
+      "Item text properties map to BreadcrumbLink and BreadcrumbPage children.",
+      "Updated in place to preserve the Code Connect node ID.",
+    ],
+  });
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -14289,6 +14440,14 @@ async function rebuildContainerComponent() {
   });
 }
 
+async function rebuildBreadcrumbComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Breadcrumb",
+    componentSetName: "Breadcrumb / v1",
+    build: buildBreadcrumbComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -15317,6 +15476,30 @@ function configureContainerProperties(componentSet, stats) {
     "Container Text",
     "Container Text",
     "Container content",
+    stats,
+  );
+}
+
+function configureBreadcrumbProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Item 1 Text",
+    "Item 1 Text",
+    "Home",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Item 2 Text",
+    "Item 2 Text",
+    "Components",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Current Page Text",
+    "Current Page Text",
+    "Breadcrumb",
     stats,
   );
 }
@@ -17237,6 +17420,231 @@ async function updateContainerVariant(
   );
   content.appendChild(text);
   component.appendChild(content);
+}
+
+async function createBreadcrumbVariant({
+  value,
+  variableByName,
+  fonts,
+  stats,
+}) {
+  const component = figma.createComponent();
+  await updateBreadcrumbVariant(component, {
+    value,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+function parseBreadcrumbVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (BREADCRUMB_CONTENT.indexOf(values.Content) === -1) return null;
+
+  return {
+    value: values.Content,
+    content: values.Content,
+  };
+}
+
+async function updateBreadcrumbVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const isEllipsis = value === "Ellipsis";
+  component.name = `Content=${value}`;
+  component.layoutMode = "HORIZONTAL";
+  component.primaryAxisSizingMode = "FIXED";
+  component.counterAxisSizingMode = "FIXED";
+  component.primaryAxisAlignItems = "MIN";
+  component.counterAxisAlignItems = "CENTER";
+  component.itemSpacing = 8;
+  component.paddingLeft = 0;
+  component.paddingRight = 0;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.resizeWithoutConstraints(isEllipsis ? 284 : 360, 44);
+  component.fills = [];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Breadcrumb");
+
+  bindSizeVariables(
+    component,
+    isEllipsis ? "Breadcrumb/width/ellipsis" : "Breadcrumb/width/basic",
+    "Breadcrumb/height",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    component,
+    "itemSpacing",
+    "Breadcrumb/gap",
+    variableByName,
+    stats,
+  );
+
+  const oldChildren = [];
+  for (const child of component.children || []) {
+    oldChildren.push(child);
+  }
+  for (const child of oldChildren) {
+    child.remove();
+  }
+
+  appendBreadcrumbText({
+    parent: component,
+    name: "Item 1 Text",
+    characters: "Home",
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendBreadcrumbSeparator(
+    component,
+    "Separator 1",
+    fonts,
+    variableByName,
+    stats,
+  );
+
+  if (isEllipsis) {
+    appendBreadcrumbEllipsis(component, fonts, variableByName, stats);
+  } else {
+    appendBreadcrumbText({
+      parent: component,
+      name: "Item 2 Text",
+      characters: "Components",
+      colorToken: "Colors/foreground/500",
+      colorFallback: "#747B8B",
+      fonts,
+      variableByName,
+      stats,
+    });
+  }
+
+  appendBreadcrumbSeparator(
+    component,
+    "Separator 2",
+    fonts,
+    variableByName,
+    stats,
+  );
+  appendBreadcrumbText({
+    parent: component,
+    name: "Current Page Text",
+    characters: "Breadcrumb",
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    fonts,
+    variableByName,
+    stats,
+  });
+}
+
+function appendBreadcrumbText({
+  parent,
+  name,
+  characters,
+  colorToken,
+  colorFallback,
+  fonts,
+  variableByName,
+  stats,
+}) {
+  const text = figma.createText();
+  text.name = name;
+  text.fontName = fonts.regular;
+  text.fontSize = 14;
+  text.lineHeight = { unit: "PIXELS", value: 20 };
+  text.characters = characters;
+  text.fills = [
+    paintFromVariable(colorToken, colorFallback, variableByName, stats),
+  ];
+  setTextAutoResize(text, "WIDTH_AND_HEIGHT");
+  bindFloatVariable(
+    text,
+    "fontSize",
+    "Breadcrumb/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    text,
+    "lineHeight",
+    "Breadcrumb/line-height",
+    variableByName,
+    stats,
+  );
+  parent.appendChild(text);
+  setHugChildSizing(text);
+  return text;
+}
+
+function appendBreadcrumbSeparator(parent, name, fonts, variableByName, stats) {
+  appendBreadcrumbText({
+    parent,
+    name,
+    characters: ">",
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    fonts,
+    variableByName,
+    stats,
+  });
+}
+
+function appendBreadcrumbEllipsis(parent, fonts, variableByName, stats) {
+  const frame = figma.createFrame();
+  frame.name = "Breadcrumb Ellipsis";
+  frame.layoutMode = "HORIZONTAL";
+  frame.primaryAxisSizingMode = "FIXED";
+  frame.counterAxisSizingMode = "FIXED";
+  frame.primaryAxisAlignItems = "CENTER";
+  frame.counterAxisAlignItems = "CENTER";
+  frame.itemSpacing = 0;
+  frame.paddingLeft = 0;
+  frame.paddingRight = 0;
+  frame.paddingTop = 0;
+  frame.paddingBottom = 0;
+  frame.resizeWithoutConstraints(36, 36);
+  frame.fills = [];
+  frame.strokes = [];
+  frame.strokeWeight = 0;
+  frame.clipsContent = false;
+  bindSizeVariables(
+    frame,
+    "Breadcrumb/ellipsis/size",
+    "Breadcrumb/ellipsis/size",
+    variableByName,
+    stats,
+  );
+  appendBreadcrumbText({
+    parent: frame,
+    name: "Item 2 Text",
+    characters: ". . .",
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    fonts,
+    variableByName,
+    stats,
+  });
+  parent.appendChild(frame);
 }
 
 function parseCounterVariantName(name) {
