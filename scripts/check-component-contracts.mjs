@@ -1791,6 +1791,21 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
+  `function configureLinkProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Link Text",
+    "Link Text",
+    "Open link",
+    stats,
+  );
+  configureFocusVisibleProperty(componentSet, stats);
+}`,
+  "Link Focus Visible component property binding",
+);
+assertContains(
+  files.figma,
+  source.figma,
   `name: "Link/height/default"`,
   "Link height component token",
 );
@@ -3310,8 +3325,14 @@ if (
 assertContains(
   files.figma,
   source.figma,
+  "removeGeneratedNodesForRebuild",
+  "Figma corrupted component removal before rebuild",
+);
+assertNotContains(
+  files.figma,
+  source.figma,
   "archiveGeneratedNodesForRebuild",
-  "Figma corrupted component archive before rebuild",
+  "Figma component archive before rebuild",
 );
 assertContains(
   files.figma,

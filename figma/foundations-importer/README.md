@@ -23,7 +23,7 @@ After importing foundations, use the **Components** picker to select a builder, 
 
 Typography primitives such as Text, Heading, and Label are published as local Figma text styles rather than component sets. Use **Apply Text Styles** after component updates to create or refresh those styles and attach them to generated component text layers. The React package still exposes `Text`, `Heading`, and `Label` primitives for semantic code composition.
 
-Select **Link** and click **Build** after text styles are available. It creates Default/Subtle visual variants with Default/Focus states and editable `Link Text`, using the accessible brand and muted foreground tokens from the Core v1 contrast pass.
+Select **Link** and click **Build** after text styles are available. It creates Default/Subtle visual variants with Default/Focus states, editable `Link Text`, and a `Focus Visible` ring binding using the accessible brand and muted foreground tokens from the Core v1 contrast pass.
 
 Select **Separator** and click **Build** for the layout boundary primitive. It creates Horizontal and Vertical orientation variants with variable-bound length/thickness and the same foreground boundary color used by the contrast-safe Core v1 controls.
 

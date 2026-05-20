@@ -310,11 +310,12 @@ const COMPONENT_DOCS = [
       "Variant maps to Link.variant.",
       "State maps to focus-visible examples in Code Connect.",
       "Link Text maps to children in Code Connect.",
+      "Focus Visible controls the generated focus ring.",
     ],
     properties: [
       "Variant: Default, Subtle",
       "State: Default, Focus",
-      "Link Text",
+      "Link Text, Focus Visible",
     ],
     accessibility: [
       "Link text contrast passes in Light and Dark modes.",
@@ -6262,6 +6263,7 @@ function shouldAuditTypographyBindings(name) {
 function shouldAuditFocusBindings(name) {
   return (
     [
+      "Link",
       "Button",
       "IconButton",
       "Checkbox",
@@ -13091,6 +13093,7 @@ async function buildLinkComponent() {
     "Variant maps to Link.variant.",
     "State provides focus-visible examples.",
     "Link Text maps to children in Code Connect.",
+    "Focus Visible controls the generated focus ring.",
   ]);
   clearComponentSetContainerFill(componentSet);
 
@@ -13141,6 +13144,7 @@ async function updateLinkComponent() {
     "Variant maps to Link.variant.",
     "State provides focus-visible examples.",
     "Link Text maps to children in Code Connect.",
+    "Focus Visible controls the generated focus ring.",
     "Updated in place to preserve the Code Connect node ID.",
   ]);
   clearComponentSetContainerFill(existing);
@@ -16123,6 +16127,7 @@ function configureLinkProperties(componentSet, stats) {
     "Open link",
     stats,
   );
+  configureFocusVisibleProperty(componentSet, stats);
 }
 
 function configureLabelProperties(componentSet, stats) {
@@ -16463,17 +16468,16 @@ async function rebuildToastComponent() {
 async function rebuildGeneratedComponentSet(config) {
   const rebuildStats = {
     rebuilt: false,
-    archived: [],
+    removed: [],
     warnings: [],
   };
 
   const page = await ensurePage("Components");
   await figma.setCurrentPageAsync(page);
   await page.loadAsync();
-  await archiveGeneratedNodesForRebuild(
+  await removeGeneratedNodesForRebuild(
     page,
     config.componentSetName,
-    config.componentName,
     rebuildStats,
   );
 
@@ -16481,12 +16485,7 @@ async function rebuildGeneratedComponentSet(config) {
   return mergeRebuildResult(rebuildStats, buildResult, config);
 }
 
-async function archiveGeneratedNodesForRebuild(
-  page,
-  componentSetName,
-  componentName,
-  stats,
-) {
+async function removeGeneratedNodesForRebuild(page, componentSetName, stats) {
   const nodes = [];
   for (const child of page.children.slice()) {
     if (componentSetNameMatches(child.name, componentSetName)) {
@@ -16501,60 +16500,20 @@ async function archiveGeneratedNodesForRebuild(
     return;
   }
 
-  const archivePage = await ensurePage("Archive / Legacy Reference");
-  const timestamp = archiveTimestamp();
-  let index = 0;
-
   for (const node of nodes) {
     const oldName = node.name;
     const oldId = node.id;
-    const archivedName = archivedComponentNodeName(
-      componentName,
-      node.type,
-      oldId,
-      timestamp,
-      index,
-    );
+    const oldType = node.type;
 
-    node.name = archivedName;
-    if (node.setSharedPluginData) {
-      node.setSharedPluginData(RUN_NAMESPACE, "kind", "archived-component");
-      node.setSharedPluginData(RUN_NAMESPACE, "component", componentName);
-      node.setSharedPluginData(RUN_NAMESPACE, "archivedFromName", oldName);
-      node.setSharedPluginData(RUN_NAMESPACE, "archivedFromId", oldId);
-      node.setSharedPluginData(RUN_NAMESPACE, "archivedAt", timestamp);
-    }
-
-    archivePage.appendChild(node);
-    node.x = 80;
-    node.y = 80 + index * 120;
-
-    stats.archived.push({
+    stats.removed.push({
       id: oldId,
       urlNodeId: nodeIdForUrl(oldId),
       oldName,
-      newName: archivedName,
-      type: node.type,
+      type: oldType,
     });
-    index += 1;
+
+    node.remove();
   }
-}
-
-function archiveTimestamp() {
-  return new Date().toISOString().replace(/[-:]/g, "").replace(/\..+$/, "Z");
-}
-
-function archivedComponentNodeName(
-  componentName,
-  nodeType,
-  oldId,
-  timestamp,
-  index,
-) {
-  const typeLabel =
-    nodeType === "COMPONENT_SET" ? "component set" : nodeType.toLowerCase();
-  const suffix = index > 0 ? ` ${index + 1}` : "";
-  return `Archived ${componentName} v1 ${typeLabel} ${timestamp} ${nodeIdForUrl(oldId)}${suffix}`;
 }
 
 function mergeRebuildResult(rebuildStats, buildResult, config) {
@@ -16564,7 +16523,7 @@ function mergeRebuildResult(rebuildStats, buildResult, config) {
   }
 
   merged.rebuilt = buildResult.created === true;
-  merged.archived = rebuildStats.archived;
+  merged.removed = rebuildStats.removed;
 
   const warnings = [];
   for (const warning of rebuildStats.warnings) warnings.push(warning);
@@ -16574,10 +16533,10 @@ function mergeRebuildResult(rebuildStats, buildResult, config) {
   merged.warnings = warnings;
 
   if (buildResult.created) {
-    const archivedCount = rebuildStats.archived.length;
+    const removedCount = rebuildStats.removed.length;
     merged.message =
       `${config.componentSetName} was rebuilt with fresh node-id=${buildResult.urlNodeId}. ` +
-      `${archivedCount} old top-level node(s) were moved to Archive / Legacy Reference.`;
+      `${removedCount} old top-level node(s) were removed.`;
   } else if (buildResult.existing) {
     merged.message = `Could not rebuild ${config.componentSetName}; another node with that name still exists on the Components page.`;
   }
