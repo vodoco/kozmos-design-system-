@@ -109,6 +109,7 @@ const files = {
   reactText: "packages/react/src/components/Text/Text.tsx",
   reactHeading: "packages/react/src/components/Heading/Heading.tsx",
   reactLink: "packages/react/src/components/Link/Link.tsx",
+  reactLabel: "packages/react/src/components/Label/Label.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -988,6 +989,72 @@ assertContains(
   source.figma,
   "Link / v1",
   "Link component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Label / v1",
+  "Label component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const LABEL_STATES =",
+  "Label state axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildLabelComponent()",
+  "Label build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateLabelComponent()",
+  "Label update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Label / v1"',
+  "Label documentation metadata",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `name: "Label/font-size"`,
+  "Label font-size component token",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="label">Label / v1</option>',
+  "Label UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-label"',
+  "Label UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Label / v1**",
+  "Label importer documentation",
+);
+assertContains(
+  files.reactLabel,
+  source.reactLabel,
+  "@radix-ui/react-label",
+  "React Label Radix primitive",
+);
+assertContains(
+  files.reactLabel,
+  source.reactLabel,
+  "text-sm font-medium",
+  "React Label typography",
 );
 assertContains(
   files.figma,

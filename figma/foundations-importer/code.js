@@ -24,6 +24,7 @@ const TEXT_TONES = ["Default", "Muted", "Primary", "Destructive"];
 const HEADING_LEVELS = ["H1", "H2", "H3", "H4", "H5", "H6"];
 const LINK_VARIANTS = ["Default", "Subtle"];
 const LINK_STATES = ["Default", "Focus"];
+const LABEL_STATES = ["Default", "Disabled"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -100,6 +101,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Text / v1": 980,
   "Heading / v1": 360,
   "Link / v1": 260,
+  "Label / v1": 260,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -123,6 +125,7 @@ const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Text / v1",
   "Heading / v1",
   "Link / v1",
+  "Label / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -352,6 +355,29 @@ const COMPONENT_DOCS = [
       "Link text contrast passes in Light and Dark modes.",
       "The Focus state shows the generated keyboard focus ring.",
       "Product code should preserve native link semantics or accessible button semantics.",
+    ],
+  },
+  {
+    componentName: "Label",
+    componentSetName: "Label / v1",
+    category: "Forms",
+    summary:
+      "Label names a form control or setting with the same text treatment as product inputs.",
+    usage: [
+      "Use Label when the text belongs to an input, selection control, or field group.",
+      "Use Disabled only when the associated control is unavailable.",
+      "Keep labels concise and adjacent to their control.",
+    ],
+    api: [
+      "State maps to disabled examples in Code Connect.",
+      "Label Text maps to children in Code Connect.",
+      "Typography aligns with the shared form label scale.",
+    ],
+    properties: ["State: Default, Disabled", "Label Text"],
+    accessibility: [
+      "Product code should associate labels with controls through htmlFor or Radix Label composition.",
+      "Text contrast passes in Light and Dark modes.",
+      "Label is non-interactive unless composed inside another control.",
     ],
   },
   {
@@ -2554,6 +2580,24 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Button/label/line-height",
     scopes: ["LINE_HEIGHT"],
   },
+  {
+    name: "Label/font-size",
+    value: 14,
+    alias: "Link/font-size",
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "Label/line-height",
+    value: 20,
+    alias: "Link/line-height",
+    scopes: ["LINE_HEIGHT"],
+  },
+  {
+    name: "Label/height/default",
+    value: 44,
+    alias: "Button/height/default",
+    scopes: ["WIDTH_HEIGHT"],
+  },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -2625,6 +2669,24 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "rebuild-link") {
       const result = await rebuildLinkComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "build-label") {
+      const result = await buildLabelComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-label") {
+      const result = await updateLabelComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-label") {
+      const result = await rebuildLabelComponent();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -4740,6 +4802,7 @@ function unexpectedTopLevelNodesForPage(page) {
     "Text / v1",
     "Heading / v1",
     "Link / v1",
+    "Label / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5312,6 +5375,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
 
   if (
     record.name === "Button / v1" ||
+    record.name === "Label / v1" ||
     record.name === "Badge / v1" ||
     record.name === "Checkbox / v1" ||
     record.name === "Radio / v1" ||
@@ -5531,6 +5595,7 @@ function shouldAuditLayoutBindings(name) {
       "Text / v1",
       "Heading / v1",
       "Link / v1",
+      "Label / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -5560,6 +5625,7 @@ function shouldAuditTypographyBindings(name) {
       "Text / v1",
       "Heading / v1",
       "Link / v1",
+      "Label / v1",
       "Button / v1",
       "Counter / v1",
       "Badge / v1",
@@ -5657,6 +5723,12 @@ function expectedVariantAxesForComponentSetName(name) {
     return {
       Variant: LINK_VARIANTS,
       State: LINK_STATES,
+    };
+  }
+
+  if (name === "Label / v1") {
+    return {
+      State: LABEL_STATES,
     };
   }
 
@@ -6957,6 +7029,8 @@ function auditComponentContrastForMode(
     const props =
       parseTextVariantName(component.name) ||
       parseHeadingVariantName(component.name) ||
+      parseLinkVariantName(component.name) ||
+      parseLabelVariantName(component.name) ||
       parseButtonVariantName(component.name) ||
       parseIconButtonVariantName(component.name) ||
       parseCounterVariantName(component.name) ||
@@ -11951,6 +12025,47 @@ async function updateLinkComponent() {
   return stats;
 }
 
+async function buildLabelComponent() {
+  return buildSingleAxisComponent({
+    componentName: "Label",
+    componentSetName: "Label / v1",
+    axisName: "State",
+    values: LABEL_STATES,
+    x: 80,
+    y: 9420,
+    xStep: 220,
+    createVariant: createLabelVariant,
+    configureProperties: configureLabelProperties,
+    description: [
+      "Kozmos Label component set generated from React Label API.",
+      "State maps to disabled examples.",
+      "Label Text maps to children in Code Connect.",
+      "Typography aligns to the shared form label scale.",
+    ],
+  });
+}
+
+async function updateLabelComponent() {
+  return updateSingleAxisComponent({
+    componentName: "Label",
+    componentSetName: "Label / v1",
+    axisName: "State",
+    values: LABEL_STATES,
+    xStep: 220,
+    createVariant: createLabelVariant,
+    updateVariant: updateLabelVariant,
+    parseVariantName: parseLabelVariantName,
+    configureProperties: configureLabelProperties,
+    description: [
+      "Kozmos Label component set generated from React Label API.",
+      "State maps to disabled examples.",
+      "Label Text maps to children in Code Connect.",
+      "Typography aligns to the shared form label scale.",
+      "Updated in place to preserve the Code Connect node ID.",
+    ],
+  });
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -13384,6 +13499,14 @@ async function rebuildLinkComponent() {
   });
 }
 
+async function rebuildLabelComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Label",
+    componentSetName: "Label / v1",
+    build: buildLabelComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -14357,6 +14480,16 @@ function configureLinkProperties(componentSet, stats) {
     "Link Text",
     "Link Text",
     "Open link",
+    stats,
+  );
+}
+
+function configureLabelProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Label Text",
+    "Label Text",
+    "Label",
     stats,
   );
 }
@@ -15592,6 +15725,101 @@ async function updateLinkVariant(
   });
   const ring = directChildNamed(component, "Focus Ring");
   if (ring) ring.visible = state === "Focus";
+}
+
+async function createLabelVariant({ value, variableByName, fonts, stats }) {
+  const component = figma.createComponent();
+  await updateLabelVariant(component, {
+    value,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+function parseLabelVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (LABEL_STATES.indexOf(values.State) === -1) return null;
+
+  return { value: values.State, state: values.State };
+}
+
+async function updateLabelVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const disabled = value === "Disabled";
+
+  component.name = `State=${value}`;
+  component.layoutMode = "HORIZONTAL";
+  component.primaryAxisSizingMode = "AUTO";
+  component.counterAxisSizingMode = "FIXED";
+  component.primaryAxisAlignItems = "MIN";
+  component.counterAxisAlignItems = "CENTER";
+  component.itemSpacing = 0;
+  component.paddingLeft = 0;
+  component.paddingRight = 0;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.resizeWithoutConstraints(96, 44);
+  component.fills = [];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Label");
+  bindFloatVariable(
+    component,
+    "height",
+    "Label/height/default",
+    variableByName,
+    stats,
+  );
+
+  let text = directChildNamed(component, "Label Text");
+  if (text && text.type !== "TEXT") {
+    text.remove();
+    text = null;
+  }
+
+  if (!text || text.type !== "TEXT") {
+    text = figma.createText();
+    text.name = "Label Text";
+  }
+
+  text.fontName = fonts.medium;
+  text.fontSize = 14;
+  text.lineHeight = { unit: "PIXELS", value: 20 };
+  text.textAutoResize = "WIDTH_AND_HEIGHT";
+  bindFloatVariable(text, "fontSize", "Label/font-size", variableByName, stats);
+  bindFloatVariable(
+    text,
+    "lineHeight",
+    "Label/line-height",
+    variableByName,
+    stats,
+  );
+  text.characters = disabled ? "Disabled label" : "Label";
+  text.fills = [
+    paintFromVariable(
+      disabled ? "Colors/foreground/500" : "Colors/foreground/0",
+      disabled ? "#747B8B" : "#000000",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.appendChild(text);
 }
 
 function parseCounterVariantName(name) {
