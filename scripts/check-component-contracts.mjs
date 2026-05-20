@@ -55,7 +55,12 @@ function assertJsonPathEquals(filePath, value, segments, expected, label) {
   }
 }
 
-function assertFigmaPayloadDarkValue(filePath, payload, canonicalName, expected) {
+function assertFigmaPayloadDarkValue(
+  filePath,
+  payload,
+  canonicalName,
+  expected,
+) {
   const variable = payload.variables.find(
     (entry) => entry.canonicalName === canonicalName,
   );
@@ -107,17 +112,32 @@ const files = {
   figmaReadme: "figma/foundations-importer/README.md",
   figmaLinked: "figma.linked.config.json",
   reactText: "packages/react/src/components/Text/Text.tsx",
+  reactTextFigma: "packages/react/src/components/Text/Text.figma.tsx",
   reactHeading: "packages/react/src/components/Heading/Heading.tsx",
+  reactHeadingFigma: "packages/react/src/components/Heading/Heading.figma.tsx",
   reactLink: "packages/react/src/components/Link/Link.tsx",
+  reactLinkFigma: "packages/react/src/components/Link/Link.figma.tsx",
   reactLabel: "packages/react/src/components/Label/Label.tsx",
+  reactLabelFigma: "packages/react/src/components/Label/Label.figma.tsx",
   reactSeparator: "packages/react/src/components/Separator/Separator.tsx",
+  reactSeparatorFigma:
+    "packages/react/src/components/Separator/Separator.figma.tsx",
   reactSkeleton: "packages/react/src/components/Skeleton/Skeleton.tsx",
+  reactSkeletonFigma:
+    "packages/react/src/components/Skeleton/Skeleton.figma.tsx",
   reactBox: "packages/react/src/components/Box/Box.tsx",
+  reactBoxFigma: "packages/react/src/components/Box/Box.figma.tsx",
   reactStack: "packages/react/src/components/Stack/Stack.tsx",
   reactStackFigma: "packages/react/src/components/Stack/Stack.figma.tsx",
   reactContainer: "packages/react/src/components/Container/Container.tsx",
+  reactContainerFigma:
+    "packages/react/src/components/Container/Container.figma.tsx",
   reactBreadcrumb: "packages/react/src/components/Breadcrumb/Breadcrumb.tsx",
+  reactBreadcrumbFigma:
+    "packages/react/src/components/Breadcrumb/Breadcrumb.figma.tsx",
   reactAccordion: "packages/react/src/components/Accordion/Accordion.tsx",
+  reactAccordionFigma:
+    "packages/react/src/components/Accordion/Accordion.figma.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -155,7 +175,8 @@ const files = {
   iosButton: "packages/ios/Sources/Components/Button/Button.swift",
   iosIconButton: "packages/ios/Sources/Components/IconButton/IconButton.swift",
   iosCounter: "packages/ios/Sources/Components/Counter/Counter.swift",
-  iosCounterFigma: "packages/ios/Sources/Components/Counter/Counter.figma.swift",
+  iosCounterFigma:
+    "packages/ios/Sources/Components/Counter/Counter.figma.swift",
   iosBadge: "packages/ios/Sources/Components/Badge/Badge.swift",
   iosBadgeFigma: "packages/ios/Sources/Components/Badge/Badge.figma.swift",
   iosCheckbox: "packages/ios/Sources/Components/Checkbox/Checkbox.swift",
@@ -682,6 +703,210 @@ assertContains(
   "Alert Code Connect description composition",
 );
 assertContains(
+  files.reactTextFigma,
+  source.reactTextFigma,
+  "node-id=170-1361",
+  "Text Code Connect node ID",
+);
+assertContains(
+  files.reactTextFigma,
+  source.reactTextFigma,
+  'size: figma.enum("Size"',
+  "Text Code Connect size mapping",
+);
+assertContains(
+  files.reactTextFigma,
+  source.reactTextFigma,
+  'weight: figma.enum("Weight"',
+  "Text Code Connect weight mapping",
+);
+assertContains(
+  files.reactTextFigma,
+  source.reactTextFigma,
+  'color: figma.enum("Tone"',
+  "Text Code Connect tone mapping",
+);
+assertContains(
+  files.reactTextFigma,
+  source.reactTextFigma,
+  'children: figma.string("Text")',
+  "Text Code Connect text mapping",
+);
+assertContains(
+  files.reactHeadingFigma,
+  source.reactHeadingFigma,
+  "node-id=170-1374",
+  "Heading Code Connect node ID",
+);
+assertContains(
+  files.reactHeadingFigma,
+  source.reactHeadingFigma,
+  'level: figma.enum("Level"',
+  "Heading Code Connect level mapping",
+);
+assertContains(
+  files.reactHeadingFigma,
+  source.reactHeadingFigma,
+  'children: figma.string("Heading Text")',
+  "Heading Code Connect text mapping",
+);
+assertContains(
+  files.reactLinkFigma,
+  source.reactLinkFigma,
+  "node-id=170-1385",
+  "Link Code Connect node ID",
+);
+assertContains(
+  files.reactLinkFigma,
+  source.reactLinkFigma,
+  'variant: figma.enum("Variant"',
+  "Link Code Connect variant mapping",
+);
+assertContains(
+  files.reactLinkFigma,
+  source.reactLinkFigma,
+  'children: figma.string("Link Text")',
+  "Link Code Connect text mapping",
+);
+assertContains(
+  files.reactLinkFigma,
+  source.reactLinkFigma,
+  '<Link href="#" variant={variant}>',
+  "Link Code Connect href composition",
+);
+assertContains(
+  files.reactLabelFigma,
+  source.reactLabelFigma,
+  "node-id=170-1390",
+  "Label Code Connect node ID",
+);
+assertContains(
+  files.reactLabelFigma,
+  source.reactLabelFigma,
+  'children: figma.string("Label Text")',
+  "Label Code Connect text mapping",
+);
+assertContains(
+  files.reactLabelFigma,
+  source.reactLabelFigma,
+  '<Label htmlFor="field">',
+  "Label Code Connect htmlFor composition",
+);
+assertContains(
+  files.reactSeparatorFigma,
+  source.reactSeparatorFigma,
+  "node-id=170-1393",
+  "Separator Code Connect node ID",
+);
+assertContains(
+  files.reactSeparatorFigma,
+  source.reactSeparatorFigma,
+  'orientation: figma.enum("Orientation"',
+  "Separator Code Connect orientation mapping",
+);
+assertContains(
+  files.reactSkeletonFigma,
+  source.reactSkeletonFigma,
+  "node-id=170-1062",
+  "Skeleton Code Connect node ID",
+);
+assertContains(
+  files.reactSkeletonFigma,
+  source.reactSkeletonFigma,
+  'className: figma.enum("Shape"',
+  "Skeleton Code Connect shape mapping",
+);
+assertContains(
+  files.reactSkeletonFigma,
+  source.reactSkeletonFigma,
+  'Circle: "h-10 w-10 rounded-full"',
+  "Skeleton Code Connect circle composition",
+);
+assertContains(
+  files.reactBoxFigma,
+  source.reactBoxFigma,
+  "node-id=170-1002",
+  "Box Code Connect node ID",
+);
+assertContains(
+  files.reactBoxFigma,
+  source.reactBoxFigma,
+  'className: figma.enum("Surface"',
+  "Box Code Connect surface mapping",
+);
+assertContains(
+  files.reactBoxFigma,
+  source.reactBoxFigma,
+  'children: figma.string("Box Text")',
+  "Box Code Connect text mapping",
+);
+assertContains(
+  files.reactContainerFigma,
+  source.reactContainerFigma,
+  "node-id=170-1034",
+  "Container Code Connect node ID",
+);
+assertContains(
+  files.reactContainerFigma,
+  source.reactContainerFigma,
+  'centered: figma.enum("Centered"',
+  "Container Code Connect centered mapping",
+);
+assertContains(
+  files.reactContainerFigma,
+  source.reactContainerFigma,
+  'children: figma.string("Container Text")',
+  "Container Code Connect text mapping",
+);
+assertContains(
+  files.reactBreadcrumbFigma,
+  source.reactBreadcrumbFigma,
+  "node-id=170-1048",
+  "Breadcrumb Code Connect node ID",
+);
+assertContains(
+  files.reactBreadcrumbFigma,
+  source.reactBreadcrumbFigma,
+  'variant: { Content: "Basic" }',
+  "Breadcrumb Code Connect Basic variant filter",
+);
+assertContains(
+  files.reactBreadcrumbFigma,
+  source.reactBreadcrumbFigma,
+  'variant: { Content: "Ellipsis" }',
+  "Breadcrumb Code Connect Ellipsis variant filter",
+);
+assertContains(
+  files.reactBreadcrumbFigma,
+  source.reactBreadcrumbFigma,
+  "<BreadcrumbEllipsis />",
+  "Breadcrumb Code Connect ellipsis composition",
+);
+assertContains(
+  files.reactAccordionFigma,
+  source.reactAccordionFigma,
+  "node-id=170-977",
+  "Accordion Code Connect node ID",
+);
+assertContains(
+  files.reactAccordionFigma,
+  source.reactAccordionFigma,
+  'variant: { State: "Closed" }',
+  "Accordion Code Connect Closed variant filter",
+);
+assertContains(
+  files.reactAccordionFigma,
+  source.reactAccordionFigma,
+  'variant: { State: "Open" }',
+  "Accordion Code Connect Open variant filter",
+);
+assertContains(
+  files.reactAccordionFigma,
+  source.reactAccordionFigma,
+  'defaultValue="item-1"',
+  "Accordion Code Connect open default value",
+);
+assertContains(
   files.reactCardFigma,
   source.reactCardFigma,
   'variant: { Content: "Basic" }',
@@ -897,6 +1122,67 @@ assertContains(
   "src/components/Tooltip/Tooltip.tsx",
   "Linked Code Connect includes Tooltip source",
 );
+for (const [templatePath, sourcePath, label] of [
+  [
+    "src/components/Text/Text.figma.tsx",
+    "src/components/Text/Text.tsx",
+    "Text",
+  ],
+  [
+    "src/components/Heading/Heading.figma.tsx",
+    "src/components/Heading/Heading.tsx",
+    "Heading",
+  ],
+  [
+    "src/components/Link/Link.figma.tsx",
+    "src/components/Link/Link.tsx",
+    "Link",
+  ],
+  [
+    "src/components/Label/Label.figma.tsx",
+    "src/components/Label/Label.tsx",
+    "Label",
+  ],
+  [
+    "src/components/Separator/Separator.figma.tsx",
+    "src/components/Separator/Separator.tsx",
+    "Separator",
+  ],
+  [
+    "src/components/Skeleton/Skeleton.figma.tsx",
+    "src/components/Skeleton/Skeleton.tsx",
+    "Skeleton",
+  ],
+  ["src/components/Box/Box.figma.tsx", "src/components/Box/Box.tsx", "Box"],
+  [
+    "src/components/Container/Container.figma.tsx",
+    "src/components/Container/Container.tsx",
+    "Container",
+  ],
+  [
+    "src/components/Breadcrumb/Breadcrumb.figma.tsx",
+    "src/components/Breadcrumb/Breadcrumb.tsx",
+    "Breadcrumb",
+  ],
+  [
+    "src/components/Accordion/Accordion.figma.tsx",
+    "src/components/Accordion/Accordion.tsx",
+    "Accordion",
+  ],
+]) {
+  assertContains(
+    files.figmaLinked,
+    source.figmaLinked,
+    templatePath,
+    `Linked Code Connect includes ${label} template`,
+  );
+  assertContains(
+    files.figmaLinked,
+    source.figmaLinked,
+    sourcePath,
+    `Linked Code Connect includes ${label} source`,
+  );
+}
 assertContains(
   files.vueIndex,
   source.vueIndex,
@@ -1247,7 +1533,7 @@ assertContains(
 assertContains(
   files.reactBreadcrumb,
   source.reactBreadcrumb,
-  "aria-current=\"page\"",
+  'aria-current="page"',
   "React Breadcrumb current page semantics",
 );
 assertContains(
@@ -3638,9 +3924,7 @@ assertAllVariants(
   counter.tones,
   (tone) => {
     const name =
-      tone === "brand"
-        ? "Brand"
-        : tone[0].toUpperCase() + tone.slice(1);
+      tone === "brand" ? "Brand" : tone[0].toUpperCase() + tone.slice(1);
     return name;
   },
   "Android Counter",
