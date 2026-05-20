@@ -19,6 +19,16 @@
         --surface-gap: 12px;
       }
 
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        overflow-x: hidden;
+      }
+
       body {
         margin: 0;
         background: var(--figma-color-bg);
@@ -29,6 +39,7 @@
         display: flex;
         flex-direction: column;
         gap: var(--surface-gap);
+        max-width: 100%;
         padding: 16px;
       }
 
@@ -163,10 +174,29 @@
         align-items: flex-start;
       }
 
+      .log-header {
+        flex-wrap: wrap;
+      }
+
+      .log-header .actions {
+        min-width: 0;
+        flex: 0 1 auto;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .log-header .actions button {
+        flex: 0 0 auto;
+      }
+
       .section-heading > div,
       .component-card > div,
       .log-header > div {
         min-width: 0;
+      }
+
+      #activitySummary {
+        overflow-wrap: anywhere;
       }
 
       .upload-box {
@@ -440,6 +470,7 @@
         z-index: 10;
         box-sizing: border-box;
         width: min(320px, calc(100vw - 32px));
+        max-width: calc(100vw - 32px);
         border: 1px solid var(--figma-color-border);
         border-radius: var(--radius);
         padding: 9px 10px;
@@ -448,6 +479,7 @@
         font-size: 11px;
         font-weight: 500;
         line-height: 16px;
+        overflow-wrap: anywhere;
         text-align: left;
         white-space: pre-line;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);

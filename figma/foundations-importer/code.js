@@ -6116,7 +6116,11 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (accessibility.hasStateAxis && !accessibility.hasDisabledState) {
+  if (
+    shouldRequireDisabledState(record.name) &&
+    accessibility.hasStateAxis &&
+    !accessibility.hasDisabledState
+  ) {
     record.warnings.push("State axis exists but Disabled state is missing.");
   }
 
@@ -6181,8 +6185,6 @@ function auditComponentSet(componentSet, pageName, variableContext) {
 function shouldAuditLayoutBindings(name) {
   return (
     [
-      "Text / v1",
-      "Heading / v1",
       "Link / v1",
       "Label / v1",
       "Separator / v1",
@@ -6211,6 +6213,23 @@ function shouldAuditLayoutBindings(name) {
       "Spinner / v1",
       "Avatar / v1",
       "Alert / v1",
+    ].indexOf(name) !== -1
+  );
+}
+
+function shouldRequireDisabledState(name) {
+  return (
+    [
+      "Button / v1",
+      "IconButton / v1",
+      "Checkbox / v1",
+      "Radio / v1",
+      "Switch / v1",
+      "Input / v1",
+      "Textarea / v1",
+      "Search / v1",
+      "Select / v1",
+      "Slider / v1",
     ].indexOf(name) !== -1
   );
 }
@@ -17677,8 +17696,8 @@ async function updateBreadcrumbVariant(
     parent: component,
     name: "Item 1 Text",
     characters: "Home",
-    colorToken: "Colors/foreground/500",
-    colorFallback: "#747B8B",
+    colorToken: "Colors/foreground/400",
+    colorFallback: "#5D626F",
     fonts,
     variableByName,
     stats,
@@ -17698,8 +17717,8 @@ async function updateBreadcrumbVariant(
       parent: component,
       name: "Item 2 Text",
       characters: "Components",
-      colorToken: "Colors/foreground/500",
-      colorFallback: "#747B8B",
+      colorToken: "Colors/foreground/400",
+      colorFallback: "#5D626F",
       fonts,
       variableByName,
       stats,
@@ -17769,8 +17788,8 @@ function appendBreadcrumbSeparator(parent, name, fonts, variableByName, stats) {
     parent,
     name,
     characters: ">",
-    colorToken: "Colors/foreground/500",
-    colorFallback: "#747B8B",
+    colorToken: "Colors/foreground/400",
+    colorFallback: "#5D626F",
     fonts,
     variableByName,
     stats,
@@ -17806,8 +17825,8 @@ function appendBreadcrumbEllipsis(parent, fonts, variableByName, stats) {
     parent: frame,
     name: "Item 2 Text",
     characters: ". . .",
-    colorToken: "Colors/foreground/500",
-    colorFallback: "#747B8B",
+    colorToken: "Colors/foreground/400",
+    colorFallback: "#5D626F",
     fonts,
     variableByName,
     stats,
@@ -17929,8 +17948,8 @@ async function updateAccordionVariant(
     characters: isOpen ? "^" : "v",
     fontToken: "Accordion/trigger/font-size",
     lineHeightToken: "Accordion/trigger/line-height",
-    colorToken: "Colors/foreground/500",
-    colorFallback: "#747B8B",
+    colorToken: "Colors/foreground/400",
+    colorFallback: "#5D626F",
     fonts,
     variableByName,
     stats,
@@ -17975,8 +17994,8 @@ async function updateAccordionVariant(
       characters: "Yes. It follows the WAI-ARIA disclosure pattern.",
       fontToken: "Accordion/content/font-size",
       lineHeightToken: "Accordion/content/line-height",
-      colorToken: "Colors/foreground/500",
-      colorFallback: "#747B8B",
+      colorToken: "Colors/foreground/400",
+      colorFallback: "#5D626F",
       fonts,
       variableByName,
       stats,
@@ -25021,8 +25040,8 @@ function textToneConfig(tone) {
       foregroundFallback: "#000000",
     },
     Muted: {
-      foreground: "Colors/foreground/500",
-      foregroundFallback: "#747B8B",
+      foreground: "Colors/foreground/400",
+      foregroundFallback: "#5D626F",
     },
     Primary: {
       foreground: "Colors/theme/600",
@@ -25040,8 +25059,8 @@ function textToneConfig(tone) {
 function linkConfig(variant) {
   if (variant === "Subtle") {
     return {
-      foreground: "Colors/foreground/500",
-      foregroundFallback: "#747B8B",
+      foreground: "Colors/foreground/400",
+      foregroundFallback: "#5D626F",
     };
   }
 
