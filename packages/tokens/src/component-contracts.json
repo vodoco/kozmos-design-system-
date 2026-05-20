@@ -82,6 +82,8 @@
       "content": {
         "labelFontSize": 14,
         "labelLineHeight": 20,
+        "gap": 4,
+        "iconSize": 16,
         "radius": 8,
         "strokeWidth": 1
       }

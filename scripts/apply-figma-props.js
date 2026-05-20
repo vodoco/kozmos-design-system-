@@ -27,7 +27,8 @@ const blockE = {
     "  props: { checked: figma.boolean('Checked'), disabled: figma.boolean('Disabled') }",
   Switch:
     "  props: { checked: figma.boolean('Checked'), disabled: figma.boolean('Disabled') }",
-  Badge: "  props: { variant: figma.enum('Variant') }",
+  Badge:
+    "  props: { variant: figma.enum('Variant'), size: figma.enum('Size'), children: figma.string('Label Text'), icon: figma.instance('Icon'), showCounter: figma.boolean('Show Counter'), counter: figma.boolean('Show Counter', { true: figma.string('Counter Text'), false: undefined }) }",
   Avatar:
     "  props: { src: figma.string('Image') } /* Connect to AvatarImage */",
   Card: "  props: { children: figma.children('*') }",

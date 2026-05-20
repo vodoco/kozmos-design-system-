@@ -35,7 +35,7 @@ Button icon-size variants expose a single `Icon` instance-swap slot. If the cura
 
 Select **IconButton / v1** and click **Build** after Button is stable. It creates `IconButton / v1` with `Variant`, `Size`, and `State` axes plus the same `Icon` instance-swap slot. Use **Update** after token or slot changes to preserve the Code Connect node ID.
 
-Select **Badge / v1** and click **Build** after Button/IconButton are stable. It creates `Badge / v1` with `Variant` and `Size` axes from the React Badge API. Use **Update** after token or visual changes to preserve the Code Connect node ID. Badge is generated as a text/content component; the React API owns arbitrary children, so the Figma build exposes `Label Text` rather than a dedicated icon prop.
+Select **Badge / v1** and click **Build** after Button/IconButton are stable. It creates `Badge / v1` with `Variant` and `Size` axes from the React Badge API. Use **Update** after token or visual changes to preserve the Code Connect node ID. Badge exposes `Label Text`, an `Icon` instance-swap slot for icon-sized badges, and an opt-in `Show Counter` / `Counter Text` pair for labels such as `New (2)`.
 
 Select **Card / v1** and click **Build** after the core content/status primitives are stable. It creates `Card / v1` with `Content` variants for Basic, Header, and Full card anatomy plus editable title, description, and body text. Full cards compose live `Button / v1` instances for footer actions instead of hand-drawn button frames. Use **Update** after token or documentation changes to preserve the Code Connect node ID.
 

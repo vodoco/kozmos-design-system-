@@ -275,12 +275,14 @@ const COMPONENT_DOCS = [
       "Variant maps to Badge.variant.",
       "Size maps to Badge.size.",
       "Label Text maps to Badge children in Code Connect.",
+      "Icon maps to Badge.icon for icon-sized badges.",
+      "Counter Text and Show Counter map to Badge.counter and Badge.showCounter.",
       "Badge can inherit focus-visible classes when composed inside interactive elements.",
     ],
     properties: [
       "Variant: Default, Destructive, Outline, Secondary, Ghost, Link",
       "Size: Default, Small, Large, Icon",
-      "Label Text",
+      "Label Text, Icon, Counter Text, Show Counter",
     ],
     accessibility: [
       "Badge is treated as static content unless wrapped by an interactive component.",
@@ -1252,7 +1254,13 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Button/padding/y",
     scopes: ["GAP"],
   },
-  { name: "Badge/gap", value: 0, alias: "Button/gap/icon", scopes: ["GAP"] },
+  { name: "Badge/gap", value: 4, alias: "Layout/spacing/50", scopes: ["GAP"] },
+  {
+    name: "Badge/icon/size",
+    value: 16,
+    alias: "Layout/sizing/200",
+    scopes: ["WIDTH_HEIGHT"],
+  },
   {
     name: "Badge/radius",
     value: 8,
@@ -4639,6 +4647,10 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     childComponents,
   );
   const compositionIntegrity = auditCompositionIntegrity(componentSet);
+  const badgeContentIntegrity = auditBadgeContentIntegrity(
+    componentSet,
+    childComponents,
+  );
   const boundVariableFields = auditBoundVariableFields(componentSet);
   const record = {
     id: componentSet.id,
@@ -4656,6 +4668,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     iconSlotIntegrity,
     tooltipTipIntegrity,
     compositionIntegrity,
+    badgeContentIntegrity,
     boundVariableCount: boundVariableIds.length,
     boundVariableFields,
     width: Math.round(componentSet.width),
@@ -4775,6 +4788,47 @@ function auditComponentSet(componentSet, pageName, variableContext) {
           );
         }
       }
+    }
+  }
+
+  if (record.name === "Badge / v1") {
+    const counterTextProperty = Object.values(textProperties).find(
+      (property) => property.baseName === "Counter Text",
+    );
+    if (!counterTextProperty || counterTextProperty.boundTextNodes === 0) {
+      record.warnings.push(
+        "Counter Text component property is missing or not bound to generated Badge counter text nodes.",
+      );
+    }
+
+    const hasShowCounterProperty = Object.keys(propertyDefinitions).some(
+      (propertyName) => {
+        const definition = propertyDefinitions[propertyName];
+        return (
+          propertyName.split("#")[0] === "Show Counter" &&
+          definition.type === "BOOLEAN"
+        );
+      },
+    );
+    if (!hasShowCounterProperty) {
+      record.warnings.push(
+        "Show Counter boolean property is missing; Badge counters should be hidden by default and opt-in per instance.",
+      );
+    }
+
+    const iconSlot = Object.values(instanceSwapSlots).find(
+      (property) => property.baseName === "Icon",
+    );
+    if (!iconSlot || iconSlot.boundInstances === 0) {
+      record.warnings.push(
+        "Icon instance-swap property is missing or not bound to Badge icon-size variants.",
+      );
+    }
+
+    if (badgeContentIntegrity.issueCount > 0) {
+      record.warnings.push(
+        `${badgeContentIntegrity.issueCount} Badge content integrity issue(s) found. Run the Badge updater so icon-size variants use Icon slots and label variants keep hidden counter slots.`,
+      );
     }
   }
 
@@ -5539,6 +5593,113 @@ function auditCompositionIntegrity(componentSet) {
   };
 }
 
+function auditBadgeContentIntegrity(componentSet, childComponents) {
+  const issues = [];
+
+  if (componentSet.name !== "Badge / v1") {
+    return {
+      issueCount: 0,
+      issues,
+    };
+  }
+
+  function pushIssue(component, kind, node, expected) {
+    issues.push({
+      kind,
+      variant: component.name,
+      node: node ? node.name : null,
+      nodeType: node ? node.type : null,
+      nodeId: node ? node.id : component.id,
+      urlNodeId: node ? nodeIdForUrl(node.id) : nodeIdForUrl(component.id),
+      expected,
+    });
+  }
+
+  for (const component of childComponents) {
+    const props = parseBadgeVariantName(component.name);
+    if (!props) continue;
+
+    const icon = directChildNamed(component, "Icon");
+    const label = directChildNamed(component, "Label Text");
+    const counter = directChildNamed(component, "Counter Text");
+
+    if (props.size === "Icon") {
+      if (label) {
+        pushIssue(
+          component,
+          "badge-icon-size-label-text",
+          label,
+          "Icon-size Badge variants should not include Label Text.",
+        );
+      }
+
+      if (counter) {
+        pushIssue(
+          component,
+          "badge-icon-size-counter-text",
+          counter,
+          "Icon-size Badge variants should not include Counter Text.",
+        );
+      }
+
+      if (
+        !icon ||
+        icon.type !== "INSTANCE" ||
+        !icon.getSharedPluginData ||
+        icon.getSharedPluginData(RUN_NAMESPACE, "kind") !== "icon-slot-instance"
+      ) {
+        pushIssue(
+          component,
+          "badge-icon-size-icon-slot",
+          icon,
+          "Icon-size Badge variants should include a direct generated Icon instance-swap slot.",
+        );
+      }
+
+      continue;
+    }
+
+    if (!label || label.type !== "TEXT") {
+      pushIssue(
+        component,
+        "badge-label-text-missing",
+        label,
+        "Non-icon Badge variants should include editable Label Text.",
+      );
+    }
+
+    if (!counter || counter.type !== "TEXT") {
+      pushIssue(
+        component,
+        "badge-counter-text-missing",
+        counter,
+        "Non-icon Badge variants should include editable Counter Text.",
+      );
+    } else if (counter.visible !== false) {
+      pushIssue(
+        component,
+        "badge-counter-visible-by-default",
+        counter,
+        "Counter Text should be hidden by default and shown through Show Counter.",
+      );
+    }
+
+    if (icon) {
+      pushIssue(
+        component,
+        "badge-label-size-icon-slot",
+        icon,
+        "Non-icon Badge variants should not include the icon-size Icon slot.",
+      );
+    }
+  }
+
+  return {
+    issueCount: issues.length,
+    issues,
+  };
+}
+
 function auditDialogAutoLayoutIntegrity(componentSet, issues) {
   const components = componentSet.children || [];
 
@@ -5546,91 +5707,190 @@ function auditDialogAutoLayoutIntegrity(componentSet, issues) {
     if (component.type !== "COMPONENT") continue;
 
     const props = parseDialogVariantName(component.name);
-    if (!props || props.value !== "Form") continue;
+    if (!props) continue;
 
-    const body = directChildNamed(component, "Dialog Body");
-    if (!body || body.type !== "FRAME") {
-      issues.push({
-        kind: "dialog-form-body-missing",
-        variant: component.name,
-        nodeId: component.id,
-        urlNodeId: nodeIdForUrl(component.id),
-      });
-      continue;
-    }
-
-    if (body.layoutMode !== "VERTICAL") {
-      issues.push({
-        kind: "dialog-form-body-layout-mode",
-        variant: component.name,
-        node: body.name,
-        nodeId: body.id,
-        urlNodeId: nodeIdForUrl(body.id),
-        expected: "VERTICAL",
-        actual: body.layoutMode || null,
-      });
-    }
-
-    if (body.primaryAxisSizingMode !== "AUTO") {
-      issues.push({
-        kind: "dialog-form-body-height-sizing",
-        variant: component.name,
-        node: body.name,
-        nodeId: body.id,
-        urlNodeId: nodeIdForUrl(body.id),
-        expected: "AUTO",
-        actual: body.primaryAxisSizingMode || null,
-      });
-    }
-
-    for (const nodeName of ["Name Input", "Username Input"]) {
-      const input = directChildNamed(body, nodeName);
-      if (!input) {
+    if (props.value === "Form") {
+      const body = directChildNamed(component, "Dialog Body");
+      if (!body || body.type !== "FRAME") {
         issues.push({
-          kind: "dialog-form-input-missing",
+          kind: "dialog-form-body-missing",
           variant: component.name,
-          node: nodeName,
-          nodeId: body.id,
-          urlNodeId: nodeIdForUrl(body.id),
+          nodeId: component.id,
+          urlNodeId: nodeIdForUrl(component.id),
         });
         continue;
       }
 
-      auditAutoLayoutSizing({
-        node: input,
-        issues,
-        kind: "dialog-form-input-horizontal-sizing",
-        field: "layoutSizingHorizontal",
-        expected: "FILL",
-        actual: input.layoutSizingHorizontal,
-        variant: component.name,
-      });
-      auditAutoLayoutSizing({
-        node: input,
-        issues,
-        kind: "dialog-form-input-vertical-sizing",
-        field: "layoutSizingVertical",
-        expected: "HUG",
-        actual: input.layoutSizingVertical,
-        variant: component.name,
-      });
-
-      if (typeof input.layoutGrow === "number" && input.layoutGrow !== 0) {
+      if (body.layoutMode !== "VERTICAL") {
         issues.push({
-          kind: "dialog-form-input-primary-axis-fill",
+          kind: "dialog-form-body-layout-mode",
           variant: component.name,
-          node: input.name,
-          nodeType: input.type,
-          nodeId: input.id,
-          urlNodeId: nodeIdForUrl(input.id),
-          field: "layoutGrow",
-          expected: 0,
-          actual: input.layoutGrow,
+          node: body.name,
+          nodeId: body.id,
+          urlNodeId: nodeIdForUrl(body.id),
+          expected: "VERTICAL",
+          actual: body.layoutMode || null,
         });
       }
 
-      auditVisualOverflow(component.name, input, issues);
+      if (body.primaryAxisSizingMode !== "AUTO") {
+        issues.push({
+          kind: "dialog-form-body-height-sizing",
+          variant: component.name,
+          node: body.name,
+          nodeId: body.id,
+          urlNodeId: nodeIdForUrl(body.id),
+          expected: "AUTO",
+          actual: body.primaryAxisSizingMode || null,
+        });
+      }
+
+      for (const nodeName of ["Name Input", "Username Input"]) {
+        const input = directChildNamed(body, nodeName);
+        if (!input) {
+          issues.push({
+            kind: "dialog-form-input-missing",
+            variant: component.name,
+            node: nodeName,
+            nodeId: body.id,
+            urlNodeId: nodeIdForUrl(body.id),
+          });
+          continue;
+        }
+
+        auditAutoLayoutSizing({
+          node: input,
+          issues,
+          kind: "dialog-form-input-horizontal-sizing",
+          field: "layoutSizingHorizontal",
+          expected: "FILL",
+          actual: input.layoutSizingHorizontal,
+          variant: component.name,
+        });
+        auditAutoLayoutSizing({
+          node: input,
+          issues,
+          kind: "dialog-form-input-vertical-sizing",
+          field: "layoutSizingVertical",
+          expected: "HUG",
+          actual: input.layoutSizingVertical,
+          variant: component.name,
+        });
+
+        if (typeof input.layoutGrow === "number" && input.layoutGrow !== 0) {
+          issues.push({
+            kind: "dialog-form-input-primary-axis-fill",
+            variant: component.name,
+            node: input.name,
+            nodeType: input.type,
+            nodeId: input.id,
+            urlNodeId: nodeIdForUrl(input.id),
+            field: "layoutGrow",
+            expected: 0,
+            actual: input.layoutGrow,
+          });
+        }
+
+        auditVisualOverflow(component.name, input, issues);
+      }
     }
+
+    if (props.value === "Form" || props.value === "Footer") {
+      auditDialogFooterActionSizing(component, issues);
+    }
+  }
+}
+
+function auditDialogFooterActionSizing(component, issues) {
+  const footer = directChildNamed(component, "Dialog Footer");
+  if (!footer || footer.type !== "FRAME") {
+    issues.push({
+      kind: "dialog-footer-missing",
+      variant: component.name,
+      nodeId: component.id,
+      urlNodeId: nodeIdForUrl(component.id),
+    });
+    return;
+  }
+
+  if (footer.layoutMode !== "HORIZONTAL") {
+    issues.push({
+      kind: "dialog-footer-layout-mode",
+      variant: component.name,
+      node: footer.name,
+      nodeId: footer.id,
+      urlNodeId: nodeIdForUrl(footer.id),
+      expected: "HORIZONTAL",
+      actual: footer.layoutMode || null,
+    });
+  }
+
+  for (const nodeName of ["Secondary Action", "Primary Action"]) {
+    const action = directChildNamed(footer, nodeName);
+    if (!action) {
+      issues.push({
+        kind: "dialog-footer-action-missing",
+        variant: component.name,
+        node: nodeName,
+        nodeId: footer.id,
+        urlNodeId: nodeIdForUrl(footer.id),
+      });
+      continue;
+    }
+
+    auditAutoLayoutSizing({
+      node: action,
+      issues,
+      kind: "dialog-footer-action-horizontal-sizing",
+      field: "layoutSizingHorizontal",
+      expected: "HUG",
+      actual: action.layoutSizingHorizontal,
+      variant: component.name,
+    });
+    auditAutoLayoutSizing({
+      node: action,
+      issues,
+      kind: "dialog-footer-action-vertical-sizing",
+      field: "layoutSizingVertical",
+      expected: "HUG",
+      actual: action.layoutSizingVertical,
+      variant: component.name,
+    });
+
+    if (typeof action.layoutGrow === "number" && action.layoutGrow !== 0) {
+      issues.push({
+        kind: "dialog-footer-action-primary-axis-fill",
+        variant: component.name,
+        node: action.name,
+        nodeType: action.type,
+        nodeId: action.id,
+        urlNodeId: nodeIdForUrl(action.id),
+        field: "layoutGrow",
+        expected: 0,
+        actual: action.layoutGrow,
+      });
+    }
+
+    if (action.layoutAlign && action.layoutAlign !== "CENTER") {
+      issues.push({
+        kind: "dialog-footer-action-cross-axis-align",
+        variant: component.name,
+        node: action.name,
+        nodeType: action.type,
+        nodeId: action.id,
+        urlNodeId: nodeIdForUrl(action.id),
+        field: "layoutAlign",
+        expected: "CENTER",
+        actual: action.layoutAlign,
+      });
+    }
+
+    auditVisualOverflow(
+      component.name,
+      action,
+      issues,
+      "dialog-footer-action-visual-overflow",
+    );
   }
 }
 
@@ -5655,7 +5915,12 @@ function issuesPushAutoLayoutSizing(options) {
   });
 }
 
-function auditVisualOverflow(variant, node, issues) {
+function auditVisualOverflow(
+  variant,
+  node,
+  issues,
+  kind = "dialog-form-input-visual-overflow",
+) {
   const ownBounds = node.absoluteBoundingBox;
   if (!ownBounds || !node.children) return;
 
@@ -5698,7 +5963,7 @@ function auditVisualOverflow(variant, node, issues) {
   if (childBounds.y2 <= ownBottom + tolerance) return;
 
   issues.push({
-    kind: "dialog-form-input-visual-overflow",
+    kind,
     variant,
     node: node.name,
     nodeType: node.type,
@@ -10539,6 +10804,10 @@ async function buildBadgeComponent() {
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
+  const iconComponent = await resolveDefaultIconSourceComponent(
+    variableByName,
+    stats,
+  );
   const components = [];
 
   let index = 0;
@@ -10548,6 +10817,7 @@ async function buildBadgeComponent() {
         variant,
         size,
         variableByName,
+        iconComponent,
         fonts,
         stats,
       });
@@ -10570,6 +10840,8 @@ async function buildBadgeComponent() {
     "Variant maps to Badge.variant.",
     "Size maps to Badge.size.",
     "Label Text maps to Badge children in Code Connect.",
+    "Icon maps to Badge.icon for icon-sized badges.",
+    "Counter Text and Show Counter map to Badge.counter and Badge.showCounter.",
     "Badge is non-interactive by default; React includes focus-visible classes for composed interactive usage.",
   ]);
   clearComponentSetContainerFill(componentSet);
@@ -10584,6 +10856,20 @@ async function buildBadgeComponent() {
     stats,
   );
   configureLabelTextProperty(componentSet, "Badge", stats);
+  configureNamedTextProperty(
+    componentSet,
+    "Counter Text",
+    "Counter Text",
+    "(2)",
+    stats,
+  );
+  configureBadgeCounterVisibilityProperty(componentSet, stats);
+  await configureBadgeIconSlot(
+    componentSet,
+    iconComponent,
+    variableByName,
+    stats,
+  );
   return stats;
 }
 
@@ -10611,6 +10897,10 @@ async function updateBadgeComponent() {
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
+  const iconComponent = await resolveDefaultIconSourceComponent(
+    variableByName,
+    stats,
+  );
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
@@ -10620,6 +10910,8 @@ async function updateBadgeComponent() {
     "Variant maps to Badge.variant.",
     "Size maps to Badge.size.",
     "Label Text maps to Badge children in Code Connect.",
+    "Icon maps to Badge.icon for icon-sized badges.",
+    "Counter Text and Show Counter map to Badge.counter and Badge.showCounter.",
     "Badge is non-interactive by default; React includes focus-visible classes for composed interactive usage.",
   ]);
   clearComponentSetContainerFill(existing);
@@ -10640,6 +10932,7 @@ async function updateBadgeComponent() {
       variant: props.variant,
       size: props.size,
       variableByName,
+      iconComponent,
       fonts,
       stats,
     });
@@ -10665,6 +10958,15 @@ async function updateBadgeComponent() {
     stats,
   );
   configureLabelTextProperty(existing, "Badge", stats);
+  configureNamedTextProperty(
+    existing,
+    "Counter Text",
+    "Counter Text",
+    "(2)",
+    stats,
+  );
+  configureBadgeCounterVisibilityProperty(existing, stats);
+  await configureBadgeIconSlot(existing, iconComponent, variableByName, stats);
   return stats;
 }
 
@@ -13478,6 +13780,7 @@ async function createBadgeVariant({
   variant,
   size,
   variableByName,
+  iconComponent,
   fonts,
   stats,
 }) {
@@ -13486,6 +13789,7 @@ async function createBadgeVariant({
     variant,
     size,
     variableByName,
+    iconComponent,
     fonts,
     stats,
   });
@@ -13519,7 +13823,7 @@ function parseBadgeVariantName(name) {
 
 async function updateBadgeVariant(
   component,
-  { variant, size, variableByName, fonts, stats },
+  { variant, size, variableByName, iconComponent, fonts, stats },
 ) {
   const config = badgeConfig(variant);
   const metrics = badgeMetrics(size);
@@ -13530,7 +13834,7 @@ async function updateBadgeVariant(
   component.counterAxisSizingMode = "FIXED";
   component.primaryAxisAlignItems = "CENTER";
   component.counterAxisAlignItems = "CENTER";
-  component.itemSpacing = 0;
+  component.itemSpacing = size === "Icon" ? 0 : 4;
   component.paddingLeft = metrics.paddingX;
   component.paddingRight = metrics.paddingX;
   component.paddingTop = 0;
@@ -13575,6 +13879,7 @@ async function updateBadgeVariant(
     size,
     config,
     variableByName,
+    iconComponent,
     fonts,
     stats,
   });
@@ -15088,11 +15393,45 @@ async function syncBadgeVariantChildren({
   size,
   config,
   variableByName,
+  iconComponent,
   fonts,
   stats,
 }) {
   removeGeneratedButtonChild(component, "Loading Indicator", true);
-  removeGeneratedButtonChild(component, "Icon", true);
+  removeGeneratedButtonChild(component, "Icon", size !== "Icon");
+  removeGeneratedButtonChild(component, "Label Text", size === "Icon");
+  removeGeneratedButtonChild(component, "Counter Text", size === "Icon");
+
+  if (size === "Icon") {
+    let icon = directChildNamed(component, "Icon");
+    if (icon && icon.type === "INSTANCE" && !isGeneratedIconSlotWrapper(icon)) {
+      syncIconSlotInstance(
+        icon,
+        config,
+        variableByName,
+        stats,
+        16,
+        "Badge/icon/size",
+      );
+    } else if (iconComponent) {
+      if (icon) icon.remove();
+      icon = createIconSlotInstance(
+        iconComponent,
+        config.foreground,
+        config.foregroundFallback,
+        variableByName,
+        stats,
+        16,
+        "Badge/icon/size",
+      );
+    }
+
+    if (icon) {
+      component.appendChild(icon);
+      setHugChildSizing(icon);
+    }
+    return;
+  }
 
   let label = directChildNamed(component, "Label Text");
   if (label && label.type !== "TEXT") {
@@ -15119,6 +15458,35 @@ async function syncBadgeVariantChildren({
   label.textAlignHorizontal = "CENTER";
   label.textAlignVertical = "CENTER";
   component.appendChild(label);
+  setHugChildSizing(label);
+
+  let counter = directChildNamed(component, "Counter Text");
+  if (counter && counter.type !== "TEXT") {
+    counter.remove();
+    counter = null;
+  }
+
+  if (!counter || counter.type !== "TEXT") {
+    counter = figma.createText();
+    counter.name = "Counter Text";
+  }
+
+  applyBadgeLabelTypography(counter, fonts, variableByName, stats);
+  counter.characters = "(2)";
+  counter.fills = [
+    paintFromVariable(
+      config.foreground,
+      config.foregroundFallback,
+      variableByName,
+      stats,
+    ),
+  ];
+  counter.textDecoration = variant === "Link" ? "UNDERLINE" : "NONE";
+  counter.textAlignHorizontal = "CENTER";
+  counter.textAlignVertical = "CENTER";
+  counter.visible = false;
+  component.appendChild(counter);
+  setHugChildSizing(counter);
 }
 
 async function syncCardVariantChildren({
@@ -18438,6 +18806,12 @@ function setHugChildSizing(node) {
   setLayoutSizingVertical(node, "HUG");
 
   try {
+    node.layoutAlign = "CENTER";
+  } catch (_error) {
+    // layoutAlign is unavailable on older plugin runtimes.
+  }
+
+  try {
     node.layoutGrow = 0;
   } catch (_error) {
     // layoutGrow is unavailable on older plugin runtimes.
@@ -18837,7 +19211,7 @@ async function applyCuratedIconSourcesToSlots(stats) {
   if (!componentsPage) return;
 
   await componentsPage.loadAsync();
-  const targetNames = ["Button / v1", "IconButton / v1"];
+  const targetNames = ["Button / v1", "IconButton / v1", "Badge / v1"];
 
   for (const targetName of targetNames) {
     const componentSet = componentsPage.findOne(
@@ -18867,6 +19241,7 @@ async function refreshComponentIconSlotsAfterIconSync(stats) {
 
   await refreshButtonSlotsIfPresent(componentsPage, variableByName, stats);
   await refreshIconButtonSlotsIfPresent(componentsPage, variableByName, stats);
+  await refreshBadgeSlotsIfPresent(componentsPage, variableByName, stats);
 }
 
 async function configureButtonIconSlot(componentSet, variableByName, stats) {
@@ -18931,6 +19306,62 @@ async function configureButtonIconSlot(componentSet, variableByName, stats) {
     child.appendChild(icon);
     bindInstanceSwapProperty(icon, propertyName, stats);
     stats.iconSlotsBound += 1;
+  }
+}
+
+async function configureBadgeIconSlot(
+  componentSet,
+  iconComponent,
+  variableByName,
+  stats,
+) {
+  if (!iconComponent) return;
+
+  const iconSourceComponents = await findKozmosIconSourceComponents();
+  const preferredValues = iconPreferredValues(iconSourceComponents);
+  const propertyName = ensureInstanceSwapProperty(
+    componentSet,
+    BUTTON_ICON_PROPERTY,
+    iconComponent.id,
+    stats,
+    preferredValues,
+  );
+
+  if (!propertyName) return;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+
+    const props = parseBadgeVariantName(child.name);
+    if (!props || props.size !== "Icon") continue;
+
+    const config = badgeConfig(props.variant);
+    let icon = directChildNamed(child, "Icon");
+    if (icon && icon.type === "INSTANCE" && !isGeneratedIconSlotWrapper(icon)) {
+      syncIconSlotInstance(
+        icon,
+        config,
+        variableByName,
+        stats,
+        16,
+        "Badge/icon/size",
+      );
+    } else {
+      if (icon) icon.remove();
+      icon = createIconSlotInstance(
+        iconComponent,
+        config.foreground,
+        config.foregroundFallback,
+        variableByName,
+        stats,
+        16,
+        "Badge/icon/size",
+      );
+    }
+    child.appendChild(icon);
+    setHugChildSizing(icon);
+    bindInstanceSwapProperty(icon, propertyName, stats);
+    stats.iconSlotsBound = (stats.iconSlotsBound || 0) + 1;
   }
 }
 
@@ -19001,6 +19432,20 @@ async function refreshIconButtonSlotsIfPresent(page, variableByName, stats) {
     stats,
   );
   await configureIconButtonSlot(existing, iconComponent, variableByName, stats);
+  stats.relatedIconSlotsRefreshed = (stats.relatedIconSlotsRefreshed || 0) + 1;
+}
+
+async function refreshBadgeSlotsIfPresent(page, variableByName, stats) {
+  const existing = page.findOne(
+    (node) => node.name === "Badge / v1" && node.type === "COMPONENT_SET",
+  );
+  if (!existing) return;
+
+  const iconComponent = await resolveDefaultIconSourceComponent(
+    variableByName,
+    stats,
+  );
+  await configureBadgeIconSlot(existing, iconComponent, variableByName, stats);
   stats.relatedIconSlotsRefreshed = (stats.relatedIconSlotsRefreshed || 0) + 1;
 }
 
@@ -19314,6 +19759,32 @@ function configureHelperVisibilityProperty(componentSet, stats) {
 
   walk(componentSet);
   stats.helperVisibilityBindings = boundCount;
+}
+
+function configureBadgeCounterVisibilityProperty(componentSet, stats) {
+  const propertyName = ensureBooleanProperty(
+    componentSet,
+    "Show Counter",
+    false,
+    stats,
+  );
+  if (!propertyName) return;
+
+  let boundCount = 0;
+
+  function walk(node) {
+    if (node.type === "TEXT" && node.name === "Counter Text") {
+      bindVisibilityProperty(node, propertyName, stats);
+      boundCount += 1;
+    }
+
+    if (node.children) {
+      for (const child of node.children) walk(child);
+    }
+  }
+
+  walk(componentSet);
+  stats.badgeCounterVisibilityBindings = boundCount;
 }
 
 function configureFocusVisibleProperty(componentSet, stats) {
@@ -19909,9 +20380,11 @@ function badgeMetrics(size) {
       width: 44,
       height: 44,
       paddingX: 0,
+      iconSize: 16,
       widthToken: "Badge/width/icon",
       heightToken: "Badge/height/icon",
       paddingXToken: "Badge/padding/x/icon",
+      iconSizeToken: "Badge/icon/size",
     };
   }
 

@@ -123,7 +123,7 @@ It does not create missing Button variants yet. Missing variants are reported so
 
 `Build IconButton` and `Update IconButton` follow the same pattern. `Build IconButton` creates `IconButton / v1`; `Update IconButton` should be used after that to preserve `node-id=77-1203`.
 
-`Build Icons` and `Update Icons` create or refresh the curated local icon source set. They import Pointr components by component key, preserve existing local `Icon / ...` node IDs, and apply those icons as preferred values on Button and IconButton `Icon` instance-swap properties. Each nested `Pointr Source` is stretched to the local 24px icon bounds so resized consuming slots scale the source artwork instead of clipping a fixed 24px child. The slots are direct icon instances; consuming components apply foreground tokens through normal Figma fill/stroke overrides.
+`Build Icons` and `Update Icons` create or refresh the curated local icon source set. They import Pointr components by component key, preserve existing local `Icon / ...` node IDs, and apply those icons as preferred values on Button, IconButton, and Badge `Icon` instance-swap properties. Each nested `Pointr Source` is stretched to the local 24px icon bounds so resized consuming slots scale the source artwork instead of clipping a fixed 24px child. The slots are direct icon instances; consuming components apply foreground tokens through normal Figma fill/stroke overrides.
 
 `Build IconButton` and `Update IconButton` also ensure component-level float variables for IconButton sizes, icon sizes, spinner sizes, radius, and stroke width. These variables now keep every generated IconButton root at a 44px minimum target while preserving size differentiation through icon/spinner scale, and alias to shared primitives for 16px, full radius, and 1px stroke width where exact matches exist.
 
@@ -136,8 +136,10 @@ Badge maps:
 - `Variant`: `Default`, `Destructive`, `Outline`, `Secondary`, `Ghost`, `Link`
 - `Size`: `Default`, `Small`, `Large`, `Icon`
 - `Label Text`: maps to Badge children in Code Connect
+- `Icon`: maps to Badge icon-size variants through a curated instance-swap slot
+- `Show Counter` / `Counter Text`: keeps counters hidden by default and supports labels like `New (2)`
 
-Badge intentionally does not expose an `Icon` instance-swap property yet. The React Badge API accepts arbitrary `children`; it does not have a first-class icon prop like Button/IconButton. If product usage later needs icon badges, that should become an explicit API/design decision rather than silently baking an icon contract into Figma first.
+Badge icon-size variants now use an icon slot instead of text so visual examples match the intended compact metadata pattern.
 
 Important token note: Button radius is currently bound to a component-level `Button/radius` value of 8px to preserve the accepted Figma visuals. The code-level primitive `Radius/Button` currently resolves through `Radius/md` and may be larger. That should be reconciled deliberately rather than silently changing every accepted Button shape in Figma.
 

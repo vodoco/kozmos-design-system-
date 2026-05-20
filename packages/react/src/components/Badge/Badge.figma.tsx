@@ -21,9 +21,21 @@ figma.connect(
         Icon: "icon",
       }),
       children: figma.string("Label Text"),
+      icon: figma.instance("Icon"),
+      showCounter: figma.boolean("Show Counter"),
+      counter: figma.boolean("Show Counter", {
+        true: figma.string("Counter Text"),
+        false: undefined,
+      }),
     },
-    example: ({ variant, size, children }) => (
-      <Badge variant={variant} size={size}>
+    example: ({ variant, size, children, counter, icon, showCounter }) => (
+      <Badge
+        variant={variant}
+        size={size}
+        counter={counter}
+        icon={icon}
+        showCounter={showCounter}
+      >
         {children}
       </Badge>
     ),

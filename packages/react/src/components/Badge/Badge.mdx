@@ -13,6 +13,14 @@ Displays a badge or a component that looks like a badge.
   <Story of={BadgeStories.Default} />
 </Canvas>
 
+<Canvas>
+  <Story of={BadgeStories.WithCounter} />
+</Canvas>
+
+<Canvas>
+  <Story of={BadgeStories.Icon} />
+</Canvas>
+
 <Controls />
 
 ## Implementation
@@ -24,6 +32,7 @@ Displays a badge or a component that looks like a badge.
 import { Badge } from "@kozmos/react"
 
 <Badge variant="outline">Badge</Badge>
+<Badge variant="secondary" counter={2} showCounter>New</Badge>
     `}
     vue={`
 <script setup>

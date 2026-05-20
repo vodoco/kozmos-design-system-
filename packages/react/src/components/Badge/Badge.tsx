@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -37,16 +37,71 @@ export interface BadgeProps
     React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {
   asChild?: boolean;
+  counter?: React.ReactNode;
+  icon?: React.ReactNode;
+  showCounter?: boolean;
+}
+
+function formatBadgeCounter(counter: React.ReactNode) {
+  if (typeof counter !== "string" && typeof counter !== "number") {
+    return counter;
+  }
+
+  const value = String(counter);
+  if (value.startsWith("(") && value.endsWith(")")) {
+    return value;
+  }
+
+  return `(${value})`;
 }
 
 export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ className, variant, size, ...props }, ref) => {
+  (
+    {
+      asChild: _asChild,
+      children,
+      className,
+      counter,
+      icon,
+      showCounter = false,
+      size,
+      variant,
+      ...props
+    },
+    ref,
+  ) => {
+    const isIconOnly = size === "icon";
+    const hasCounter =
+      !isIconOnly &&
+      showCounter &&
+      counter !== undefined &&
+      counter !== null &&
+      counter !== false;
+
     return (
       <div
         ref={ref}
         className={cn(badgeVariants({ variant, size, className }))}
         {...props}
-      />
+      >
+        {icon ? (
+          <span
+            aria-hidden="true"
+            className="inline-flex h-4 w-4 shrink-0 items-center justify-center [&_svg]:h-4 [&_svg]:w-4"
+            data-slot="badge-icon"
+          >
+            {icon}
+          </span>
+        ) : isIconOnly ? (
+          children
+        ) : null}
+        {!isIconOnly ? children : null}
+        {hasCounter ? (
+          <span className="tabular-nums" data-slot="badge-counter">
+            {formatBadgeCounter(counter)}
+          </span>
+        ) : null}
+      </div>
     );
   },
 );

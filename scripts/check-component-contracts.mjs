@@ -817,6 +817,18 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
+  tokenValuePattern("Badge/gap", badge.content.gap),
+  "Badge gap token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Badge/icon/size", badge.content.iconSize),
+  "Badge icon size token",
+);
+assertContains(
+  files.figma,
+  source.figma,
   tokenValuePattern("Checkbox/control/size", checkbox.size.controlSize),
   "Checkbox visual control token",
 );
@@ -1293,6 +1305,18 @@ assertContains(
   source.figma,
   'configureLabelTextProperty(componentSet, "Badge", stats)',
   "Badge Label Text component property binding",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "configureBadgeCounterVisibilityProperty",
+  "Badge Show Counter component property binding",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "configureBadgeIconSlot",
+  "Badge Icon instance-swap binding",
 );
 assertContains(
   files.figma,
