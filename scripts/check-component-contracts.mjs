@@ -1548,6 +1548,12 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
+  "isGeneratedNestedComponentInstance(node)",
+  "Composite audit treats nested component instances as ownership boundaries",
+);
+assertContains(
+  files.figma,
+  source.figma,
   "auditCompositionIntegrity",
   "Composite component clone-frame audit",
 );
@@ -1872,8 +1878,8 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  "Boolean(componentSet.findOne((node) => /focus/i.test(node.name)))",
-  "Figma focus audit uses real focus nodes",
+  "hasOwnedFocusNode(componentSet)",
+  "Figma focus audit uses owned focus nodes",
 );
 if (
   source.figma.includes(

@@ -3879,13 +3879,19 @@ function createMissingNestedComponentNode(name, message, stats) {
   return frame;
 }
 
-function isNestedComponentInstance(node, componentSetName) {
+function isGeneratedNestedComponentInstance(node) {
   return (
     node &&
     node.type === "INSTANCE" &&
     node.getSharedPluginData &&
     node.getSharedPluginData(RUN_NAMESPACE, "kind") ===
-      "nested-component-instance" &&
+      "nested-component-instance"
+  );
+}
+
+function isNestedComponentInstance(node, componentSetName) {
+  return (
+    isGeneratedNestedComponentInstance(node) &&
     node.getSharedPluginData(RUN_NAMESPACE, "sourceComponentSet") ===
       componentSetName
   );
@@ -5243,6 +5249,8 @@ function auditInstanceSwapSlots(componentSet, propertyDefinitions) {
   }
 
   function walk(node) {
+    if (isGeneratedNestedComponentInstance(node)) return;
+
     if (
       node.type === "INSTANCE" &&
       node.componentPropertyReferences &&
@@ -5277,6 +5285,8 @@ function auditTextProperties(componentSet, propertyDefinitions) {
   }
 
   function walk(node) {
+    if (isGeneratedNestedComponentInstance(node)) return;
+
     if (
       node.type === "TEXT" &&
       node.componentPropertyReferences &&
@@ -5324,6 +5334,8 @@ function auditFocusVisibleProperty(componentSet, propertyDefinitions) {
   }
 
   function walk(node, parent) {
+    if (isGeneratedNestedComponentInstance(node)) return;
+
     if (
       result.propertyName &&
       node.name === "Focus Ring" &&
@@ -5402,6 +5414,8 @@ function auditGeneratedIconSlotIntegrity(componentSet) {
   };
 
   function walk(node) {
+    if (isGeneratedNestedComponentInstance(node)) return;
+
     if (
       node &&
       node.name === "Icon" &&
@@ -5445,6 +5459,8 @@ function auditTooltipTipIntegrity(componentSet, childComponents) {
   }
 
   function walk(node) {
+    if (isGeneratedNestedComponentInstance(node)) return;
+
     if (
       node &&
       node.name === "Tip" &&
@@ -5599,7 +5615,7 @@ function auditComponentAccessibility(
   const hasFocusState =
     stateValues.indexOf("Focus") !== -1 ||
     stateValues.indexOf("Focused") !== -1 ||
-    Boolean(componentSet.findOne((node) => /focus/i.test(node.name)));
+    hasOwnedFocusNode(componentSet);
 
   for (const component of childComponents) {
     minWidth = Math.min(minWidth, component.width);
@@ -5629,6 +5645,20 @@ function auditComponentAccessibility(
     recommendedTouchTarget: 44,
     minimumTouchTargetPass: minimumInteractiveSize >= 44,
   };
+}
+
+function hasOwnedFocusNode(node) {
+  if (!node) return false;
+  if (isGeneratedNestedComponentInstance(node)) return false;
+  if (/focus/i.test(node.name)) return true;
+
+  if (node.children) {
+    for (const child of node.children) {
+      if (hasOwnedFocusNode(child)) return true;
+    }
+  }
+
+  return false;
 }
 
 function auditComponentContrast(
@@ -5812,6 +5842,7 @@ function auditNodeContrast(
   modeName,
 ) {
   if (node && node.visible === false) return;
+  if (isGeneratedNestedComponentInstance(node)) return;
 
   if (isGeneratedDirectIconSlot(node)) {
     auditActualIconSlotPaints(
@@ -6823,6 +6854,8 @@ function collectBoundVariableIds(root) {
   }
 
   function walk(node) {
+    if (isGeneratedNestedComponentInstance(node)) return;
+
     scanValue(node.boundVariables);
     scanValue(node.fills);
     scanValue(node.strokes);
@@ -6952,6 +6985,8 @@ function auditBoundVariableFields(root) {
   }
 
   function walk(node) {
+    if (isGeneratedNestedComponentInstance(node)) return;
+
     scanBoundVariables(node.boundVariables, "");
     scanPaints(node.fills, "fill.color");
     scanPaints(node.strokes, "stroke.color");
