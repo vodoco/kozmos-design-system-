@@ -55,7 +55,7 @@ figma.connect(DialogContent, dialogUrl, {
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="flex flex-col gap-4 py-4">
           <p>{body}</p>
           {fields}
         </div>

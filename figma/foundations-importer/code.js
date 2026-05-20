@@ -4793,7 +4793,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
 
   if (compositionIntegrity.issueCount > 0) {
     record.warnings.push(
-      `${compositionIntegrity.issueCount} cloned subcomponent frame(s) found. Composite components must use live nested instances or slots, not hand-drawn Button/Input copies.`,
+      `${compositionIntegrity.issueCount} composite component integrity issue(s) found. Composite components must use live nested instances with valid auto-layout sizing.`,
     );
   }
 
@@ -5530,12 +5530,183 @@ function auditCompositionIntegrity(componentSet) {
     );
     auditLegacyFrameClone(componentSet, issues, "Name Field", "Input / v1");
     auditLegacyFrameClone(componentSet, issues, "Username Field", "Input / v1");
+    auditDialogAutoLayoutIntegrity(componentSet, issues);
   }
 
   return {
     issueCount: issues.length,
     issues,
   };
+}
+
+function auditDialogAutoLayoutIntegrity(componentSet, issues) {
+  const components = componentSet.children || [];
+
+  for (const component of components) {
+    if (component.type !== "COMPONENT") continue;
+
+    const props = parseDialogVariantName(component.name);
+    if (!props || props.value !== "Form") continue;
+
+    const body = directChildNamed(component, "Dialog Body");
+    if (!body || body.type !== "FRAME") {
+      issues.push({
+        kind: "dialog-form-body-missing",
+        variant: component.name,
+        nodeId: component.id,
+        urlNodeId: nodeIdForUrl(component.id),
+      });
+      continue;
+    }
+
+    if (body.layoutMode !== "VERTICAL") {
+      issues.push({
+        kind: "dialog-form-body-layout-mode",
+        variant: component.name,
+        node: body.name,
+        nodeId: body.id,
+        urlNodeId: nodeIdForUrl(body.id),
+        expected: "VERTICAL",
+        actual: body.layoutMode || null,
+      });
+    }
+
+    if (body.primaryAxisSizingMode !== "AUTO") {
+      issues.push({
+        kind: "dialog-form-body-height-sizing",
+        variant: component.name,
+        node: body.name,
+        nodeId: body.id,
+        urlNodeId: nodeIdForUrl(body.id),
+        expected: "AUTO",
+        actual: body.primaryAxisSizingMode || null,
+      });
+    }
+
+    for (const nodeName of ["Name Input", "Username Input"]) {
+      const input = directChildNamed(body, nodeName);
+      if (!input) {
+        issues.push({
+          kind: "dialog-form-input-missing",
+          variant: component.name,
+          node: nodeName,
+          nodeId: body.id,
+          urlNodeId: nodeIdForUrl(body.id),
+        });
+        continue;
+      }
+
+      auditAutoLayoutSizing({
+        node: input,
+        issues,
+        kind: "dialog-form-input-horizontal-sizing",
+        field: "layoutSizingHorizontal",
+        expected: "FILL",
+        actual: input.layoutSizingHorizontal,
+        variant: component.name,
+      });
+      auditAutoLayoutSizing({
+        node: input,
+        issues,
+        kind: "dialog-form-input-vertical-sizing",
+        field: "layoutSizingVertical",
+        expected: "HUG",
+        actual: input.layoutSizingVertical,
+        variant: component.name,
+      });
+
+      if (typeof input.layoutGrow === "number" && input.layoutGrow !== 0) {
+        issues.push({
+          kind: "dialog-form-input-primary-axis-fill",
+          variant: component.name,
+          node: input.name,
+          nodeType: input.type,
+          nodeId: input.id,
+          urlNodeId: nodeIdForUrl(input.id),
+          field: "layoutGrow",
+          expected: 0,
+          actual: input.layoutGrow,
+        });
+      }
+
+      auditVisualOverflow(component.name, input, issues);
+    }
+  }
+}
+
+function auditAutoLayoutSizing(options) {
+  if (typeof options.actual === "undefined") return;
+  if (options.actual === options.expected) return;
+
+  issuesPushAutoLayoutSizing(options);
+}
+
+function issuesPushAutoLayoutSizing(options) {
+  options.issues.push({
+    kind: options.kind,
+    variant: options.variant,
+    node: options.node.name,
+    nodeType: options.node.type,
+    nodeId: options.node.id,
+    urlNodeId: nodeIdForUrl(options.node.id),
+    field: options.field,
+    expected: options.expected,
+    actual: options.actual || null,
+  });
+}
+
+function auditVisualOverflow(variant, node, issues) {
+  const ownBounds = node.absoluteBoundingBox;
+  if (!ownBounds || !node.children) return;
+
+  let childBounds = null;
+
+  function mergeBounds(bounds) {
+    if (!bounds) return;
+    const next = {
+      x1: bounds.x,
+      y1: bounds.y,
+      x2: bounds.x + bounds.width,
+      y2: bounds.y + bounds.height,
+    };
+
+    if (!childBounds) {
+      childBounds = next;
+      return;
+    }
+
+    childBounds.x1 = Math.min(childBounds.x1, next.x1);
+    childBounds.y1 = Math.min(childBounds.y1, next.y1);
+    childBounds.x2 = Math.max(childBounds.x2, next.x2);
+    childBounds.y2 = Math.max(childBounds.y2, next.y2);
+  }
+
+  function walk(current) {
+    if (current.visible === false) return;
+    mergeBounds(current.absoluteBoundingBox);
+
+    if (current.children) {
+      for (const child of current.children) walk(child);
+    }
+  }
+
+  for (const child of node.children) walk(child);
+  if (!childBounds) return;
+
+  const tolerance = 1;
+  const ownBottom = ownBounds.y + ownBounds.height;
+  if (childBounds.y2 <= ownBottom + tolerance) return;
+
+  issues.push({
+    kind: "dialog-form-input-visual-overflow",
+    variant,
+    node: node.name,
+    nodeType: node.type,
+    nodeId: node.id,
+    urlNodeId: nodeIdForUrl(node.id),
+    expectedMaxBottom: Math.round(ownBottom),
+    actualContentBottom: Math.round(childBounds.y2),
+  });
 }
 
 function auditExpectedNestedInstance(
@@ -15711,8 +15882,14 @@ async function syncDialogVariantChildren({
   setTextAutoResize(description, "HEIGHT");
 
   headerContent.appendChild(title);
+  setLayoutSizingHorizontal(title, "FILL");
+  setLayoutSizingVertical(title, "HUG");
   headerContent.appendChild(description);
+  setLayoutSizingHorizontal(description, "FILL");
+  setLayoutSizingVertical(description, "HUG");
   header.appendChild(headerContent);
+  setLayoutSizingHorizontal(headerContent, "FILL");
+  setLayoutSizingVertical(headerContent, "HUG");
 
   const close = await syncInlineCloseButton({
     parent: header,
@@ -15726,6 +15903,7 @@ async function syncDialogVariantChildren({
   });
 
   component.appendChild(header);
+  setVerticalStackChildSizing(header);
 
   let body = directChildNamed(component, "Dialog Body");
   if (body && body.type !== "FRAME") {
@@ -15770,6 +15948,8 @@ async function syncDialogVariantChildren({
   setLayoutSizingHorizontal(bodyText, "FILL");
   setTextAutoResize(bodyText, "HEIGHT");
   body.appendChild(bodyText);
+  setLayoutSizingHorizontal(bodyText, "FILL");
+  setLayoutSizingVertical(bodyText, "HUG");
 
   if (value === "Form") {
     removeGeneratedButtonChild(body, "Name Field", true);
@@ -15796,6 +15976,7 @@ async function syncDialogVariantChildren({
   }
 
   component.appendChild(body);
+  setVerticalStackChildSizing(body);
 
   let footer = directChildNamed(component, "Dialog Footer");
   if (footer && footer.type !== "FRAME") {
@@ -15840,6 +16021,7 @@ async function syncDialogVariantChildren({
       stats,
     });
     component.appendChild(footer);
+    setVerticalStackChildSizing(footer);
   } else if (footer) {
     footer.remove();
     footer = null;
@@ -15914,15 +16096,10 @@ async function syncDialogInput({ body, name, label, placeholder, stats }) {
       false,
       stats,
     );
-    setLayoutSizingHorizontal(input, "FILL");
-    try {
-      input.layoutGrow = 1;
-    } catch (_error) {
-      // layoutGrow is unavailable on older plugin runtimes.
-    }
   }
 
   body.appendChild(input);
+  setVerticalStackChildSizing(input);
 }
 
 async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
@@ -15978,8 +16155,8 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
     "role",
     primary ? "primary" : "secondary",
   );
-  setLayoutSizingHorizontal(action, "HUG");
   footer.appendChild(action);
+  setHugChildSizing(action);
 }
 
 async function syncPopoverVariantChildren({
@@ -18226,6 +18403,44 @@ function setLayoutSizingHorizontal(node, value) {
     node.layoutSizingHorizontal = value;
   } catch (_error) {
     // Older Figma runtimes may not expose layout sizing on every node type.
+  }
+}
+
+function setLayoutSizingVertical(node, value) {
+  if (!node) return;
+
+  try {
+    node.layoutSizingVertical = value;
+  } catch (_error) {
+    // Older Figma runtimes may not expose layout sizing on every node type.
+  }
+}
+
+function setVerticalStackChildSizing(node) {
+  setLayoutSizingHorizontal(node, "FILL");
+  setLayoutSizingVertical(node, "HUG");
+
+  try {
+    node.layoutAlign = "STRETCH";
+  } catch (_error) {
+    // layoutAlign is the older Plugin API equivalent for cross-axis fill.
+  }
+
+  try {
+    node.layoutGrow = 0;
+  } catch (_error) {
+    // layoutGrow is unavailable on older plugin runtimes.
+  }
+}
+
+function setHugChildSizing(node) {
+  setLayoutSizingHorizontal(node, "HUG");
+  setLayoutSizingVertical(node, "HUG");
+
+  try {
+    node.layoutGrow = 0;
+  } catch (_error) {
+    // layoutGrow is unavailable on older plugin runtimes.
   }
 }
 
