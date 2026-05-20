@@ -753,6 +753,7 @@
         </details>
         <div class="maintenance-grid">
           <button id="documentComponents">Document Components</button>
+          <button id="applyTextStyles">Apply Text Styles</button>
           <button id="surfaceQa">Build Surface QA</button>
           <button id="reorganizeComponents">Reorganize Components</button>
         </div>
@@ -824,6 +825,7 @@
       const documentComponentsButton =
         document.getElementById("documentComponents");
       const surfaceQaButton = document.getElementById("surfaceQa");
+      const applyTextStylesButton = document.getElementById("applyTextStyles");
       const reorganizeComponentsButton = document.getElementById(
         "reorganizeComponents",
       );
@@ -1195,7 +1197,8 @@
           action: "document",
           label: "Component documentation",
           messageType: "document-components",
-          progress: "Creating docs pages and refreshing component descriptions.",
+          progress:
+            "Creating docs pages and refreshing component descriptions.",
         });
       });
 
@@ -1208,12 +1211,23 @@
         });
       });
 
+      applyTextStylesButton.addEventListener("click", () => {
+        runComponentMessage({
+          action: "apply text styles",
+          label: "Component typography",
+          messageType: "apply-text-styles",
+          progress:
+            "Creating local text styles and applying them to component text layers.",
+        });
+      });
+
       reorganizeComponentsButton.addEventListener("click", () => {
         runComponentMessage({
           action: "reorganize",
           label: "Components page",
           messageType: "reorganize-components",
-          progress: "Moving existing component sets into a non-overlapping layout.",
+          progress:
+            "Moving existing component sets into a non-overlapping layout.",
         });
       });
 
@@ -1340,7 +1354,9 @@
           : "Auditing variables, icons, components, and QA pages...";
 
         setActivity(message);
-        setLogContent(startup ? "Running initial library audit..." : "Auditing library...");
+        setLogContent(
+          startup ? "Running initial library audit..." : "Auditing library...",
+        );
         setBusy(true, "audit");
         parent.postMessage({ pluginMessage: { type: "audit-library" } }, "*");
       }
@@ -1359,7 +1375,10 @@
 
         if (result && result.message) {
           componentHint.textContent = `${label}: ${result.message}`;
-          setActivity(result.message, result.warnings && result.warnings.length ? "warn" : "ok");
+          setActivity(
+            result.message,
+            result.warnings && result.warnings.length ? "warn" : "ok",
+          );
           return;
         }
 
@@ -1457,13 +1476,9 @@
             ? summary.componentSetCount
             : libraryState.componentSetCount;
         libraryState.warningCount =
-          typeof summary.warningCount === "number"
-            ? summary.warningCount
-            : 0;
+          typeof summary.warningCount === "number" ? summary.warningCount : 0;
         libraryState.advisoryCount =
-          typeof summary.advisoryCount === "number"
-            ? summary.advisoryCount
-            : 0;
+          typeof summary.advisoryCount === "number" ? summary.advisoryCount : 0;
         libraryState.warnings = Array.isArray(result.warnings)
           ? result.warnings
           : [];
@@ -1493,7 +1508,12 @@
         if (!action || !action.key || !result) return;
 
         const existingStatus = libraryState.components[action.key] || {};
-        if (result.componentSetId || result.urlNodeId || result.created || result.updated) {
+        if (
+          result.componentSetId ||
+          result.urlNodeId ||
+          result.created ||
+          result.updated
+        ) {
           libraryState.components[action.key] = {
             ...existingStatus,
             exists: true,
@@ -1639,12 +1659,7 @@
 
       function renderWorkflow() {
         const setup = setupFoundationState();
-        setStage(
-          stageSetupCard,
-          stageSetup,
-          setup.stageText,
-          setup.stageTone,
-        );
+        setStage(stageSetupCard, stageSetup, setup.stageText, setup.stageTone);
         setStage(
           stageStatusCard,
           stageStatus,
@@ -1669,7 +1684,11 @@
           libraryState.componentSetCount === null
             ? "Unknown"
             : `${libraryState.componentSetCount} sets`,
-          libraryState.warningCount > 0 ? "warn" : libraryState.audited ? "ok" : "",
+          libraryState.warningCount > 0
+            ? "warn"
+            : libraryState.audited
+              ? "ok"
+              : "",
         );
       }
 
@@ -1697,7 +1716,9 @@
           return {
             badge: "Payload ready",
             badgeClass: "pill ok",
-            status: payloadStatus.textContent || "Payload loaded and ready to import.",
+            status:
+              payloadStatus.textContent ||
+              "Payload loaded and ready to import.",
             statusClass: "status ok",
             stageText: "Ready",
             stageTone: "ok",
@@ -1708,7 +1729,8 @@
           return {
             badge: "Imported",
             badgeClass: "pill ok",
-            status: "Foundations were imported in this plugin session. Audit again if you need fresh component recommendations.",
+            status:
+              "Foundations were imported in this plugin session. Audit again if you need fresh component recommendations.",
             statusClass: "status ok",
             stageText: "Imported",
             stageTone: "ok",
@@ -1730,7 +1752,8 @@
           return {
             badge: "Missing",
             badgeClass: "pill warn",
-            status: "No foundations payload is loaded, and the current file does not yet show imported foundations.",
+            status:
+              "No foundations payload is loaded, and the current file does not yet show imported foundations.",
             statusClass: "status warn",
             stageText: "Missing",
             stageTone: "warn",
@@ -1740,7 +1763,8 @@
         return {
           badge: "Audit first",
           badgeClass: "pill",
-          status: "Initial audit will check whether foundations already exist before you import anything.",
+          status:
+            "Initial audit will check whether foundations already exist before you import anything.",
           statusClass: "status",
           stageText: "Unknown",
           stageTone: "",
@@ -1783,7 +1807,8 @@
           libraryState.variableCount > 0,
         );
         metricIconsCard.className = metricCardClass(
-          libraryState.iconIssueCount === 0 && libraryState.iconFoundCount !== null,
+          libraryState.iconIssueCount === 0 &&
+            libraryState.iconFoundCount !== null,
           libraryState.iconIssueCount > 0,
         );
         metricComponentsCard.className = metricCardClass(
@@ -1798,8 +1823,8 @@
           ? libraryState.auditStale
             ? "Refresh needed"
             : libraryState.warningCount > 0
-            ? "Needs attention"
-            : "Clean"
+              ? "Needs attention"
+              : "Clean"
           : libraryState.inspected
             ? "Inspected"
             : "Not checked";
@@ -1834,8 +1859,19 @@
         if (libraryState.auditStale) {
           return "Next: run Audit Again to refresh the status after the last component change.";
         }
-        if (libraryState.warnings.some((warning) => warning.includes("Badge / v1"))) {
+        if (
+          libraryState.warnings.some((warning) =>
+            warning.includes("Badge / v1"),
+          )
+        ) {
           return "Next: select Badge / v1 and run the recommended update to clear the counter composition warning.";
+        }
+        if (
+          libraryState.warnings.some((warning) =>
+            warning.includes("missing Figma text styles"),
+          )
+        ) {
+          return "Next: run Apply Text Styles, then audit again to confirm component typography is attached.";
         }
         if (libraryState.warningCount > 0) {
           return "Next: review the warning list in the activity details and update the affected component set.";
@@ -2048,7 +2084,9 @@
 
       function setLogContent(content, tone, expand) {
         log.textContent =
-          typeof content === "string" ? content : JSON.stringify(content, null, 2);
+          typeof content === "string"
+            ? content
+            : JSON.stringify(content, null, 2);
         log.className = tone || "";
         if (expand) setLogExpanded(true);
       }
@@ -2056,7 +2094,9 @@
       function setLogExpanded(expanded) {
         logExpanded = expanded;
         log.hidden = !expanded;
-        toggleLogButton.textContent = expanded ? "Hide Details" : "Show Details";
+        toggleLogButton.textContent = expanded
+          ? "Hide Details"
+          : "Show Details";
       }
 
       function requestInitialAudit() {

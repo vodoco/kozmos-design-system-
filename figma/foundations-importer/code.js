@@ -1478,7 +1478,11 @@ const KOSMOS_ICON_DEFINITIONS = [
   },
 ];
 const COMPONENT_COLLECTION_NAME = "Kozmos Components";
+const TEXT_STYLE_GROUP_TEXT = "Text";
+const TEXT_STYLE_GROUP_HEADING = "Heading";
 const BUTTON_LABEL_TEXT_STYLE_NAME = "Button / Label";
+let activeTextStyleByKey = {};
+let activeTextStylesEnsured = false;
 const COMPONENT_FLOAT_TOKENS = [
   { name: "Button/width/small", value: 96, scopes: ["WIDTH_HEIGHT"] },
   { name: "Button/width/default", value: 112, scopes: ["WIDTH_HEIGHT"] },
@@ -3655,6 +3659,12 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "build-surface-qa") {
       const result = await buildSurfaceQaPage();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "apply-text-styles") {
+      const result = await applyTextStylesToComponentLibrary();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -5885,11 +5895,20 @@ function auditComponentSet(componentSet, pageName, variableContext) {
 
   if (
     shouldAuditTypographyBindings(record.name) &&
-    boundVariableFields.textNodesWithoutTextStyle > 0 &&
+    boundVariableFields.textNodesWithoutTextStyle > 0
+  ) {
+    record.warnings.push(
+      `${boundVariableFields.textNodesWithoutTextStyle} text node(s) are missing Figma text styles. Run Apply Text Styles or the component updater to attach the shared typography styles.`,
+    );
+  }
+
+  if (
+    shouldAuditTypographyBindings(record.name) &&
+    boundVariableFields.textNodes > 0 &&
     boundVariableFields.typographyFieldCount === 0
   ) {
     record.warnings.push(
-      `${boundVariableFields.textNodesWithoutTextStyle} label text node(s) are missing typography token bindings.`,
+      `${boundVariableFields.textNodes} text node(s) are missing typography token bindings.`,
     );
   }
 
@@ -6201,6 +6220,10 @@ function shouldAuditLayoutBindings(name) {
       "Card / v1",
       "Tabs / v1",
       "Tooltip / v1",
+      "Dialog / v1",
+      "Popover / v1",
+      "Menu / v1",
+      "Toast / v1",
       "Checkbox / v1",
       "Radio / v1",
       "Switch / v1",
@@ -9593,46 +9616,6 @@ function cssVariableForComponentToken(name) {
     .replace(/^-|-$/g, "")}`;
 }
 
-async function ensureButtonLabelTextStyle(fonts, stats) {
-  const styles = await getLocalTextStylesSafe();
-  let style = styles.find(
-    (candidate) => candidate.name === BUTTON_LABEL_TEXT_STYLE_NAME,
-  );
-
-  if (!style) {
-    if (!figma.createTextStyle) {
-      stats.warnings.push(
-        "This Figma runtime does not expose createTextStyle; Button labels will use direct typography values.",
-      );
-      return null;
-    }
-
-    style = figma.createTextStyle();
-    style.name = BUTTON_LABEL_TEXT_STYLE_NAME;
-    incrementStat(stats, "textStylesCreated");
-  } else {
-    incrementStat(stats, "textStylesExisting");
-  }
-
-  try {
-    style.description =
-      "Typography contract for Kozmos Button labels. Font family and weight are represented by this text style; size and line height also have component variables.";
-    style.fontName = fonts.medium;
-    style.fontSize = 14;
-    style.lineHeight = { unit: "PIXELS", value: 20 };
-    style.letterSpacing = { unit: "PERCENT", value: 0 };
-    style.paragraphSpacing = 0;
-    incrementStat(stats, "textStylesUpdated");
-  } catch (error) {
-    stats.warnings.push(
-      `${BUTTON_LABEL_TEXT_STYLE_NAME}: could not update text style (${messageFor(error)})`,
-    );
-    return null;
-  }
-
-  return style;
-}
-
 async function getLocalTextStylesSafe() {
   if (figma.getLocalTextStylesAsync) {
     return figma.getLocalTextStylesAsync();
@@ -9643,6 +9626,498 @@ async function getLocalTextStylesSafe() {
   }
 
   return [];
+}
+
+async function ensureButtonLabelTextStyle(fonts, stats) {
+  const styles = await ensureKozmosTextStyles(fonts, stats);
+  return styles.buttonLabel || null;
+}
+
+async function ensureKozmosTextStyles(fonts, stats) {
+  if (activeTextStylesEnsured) return activeTextStyleByKey;
+
+  activeTextStyleByKey = {};
+
+  if (!figma.createTextStyle) {
+    pushUniqueWarning(
+      stats,
+      "missing-create-text-style",
+      "This Figma runtime does not expose createTextStyle; component text will use direct typography values.",
+    );
+    activeTextStylesEnsured = true;
+    return activeTextStyleByKey;
+  }
+
+  const existingStyles = await getLocalTextStylesSafe();
+  const styleByName = {};
+  for (const style of existingStyles) {
+    styleByName[style.name] = style;
+  }
+
+  const specs = kozmosTextStyleSpecs(fonts);
+  for (const spec of specs) {
+    let style = styleByName[spec.name];
+    if (!style) {
+      style = figma.createTextStyle();
+      style.name = spec.name;
+      incrementStat(stats, "textStylesCreated");
+    } else {
+      incrementStat(stats, "textStylesExisting");
+    }
+
+    try {
+      style.description = spec.description;
+      style.fontName = spec.fontName;
+      style.fontSize = spec.fontSize;
+      style.lineHeight = { unit: "PIXELS", value: spec.lineHeight };
+      style.letterSpacing = { unit: "PERCENT", value: 0 };
+      style.paragraphSpacing = 0;
+      if (spec.textDecoration) {
+        style.textDecoration = spec.textDecoration;
+      } else if ("textDecoration" in style) {
+        style.textDecoration = "NONE";
+      }
+      activeTextStyleByKey[spec.key] = style;
+      incrementStat(stats, "textStylesUpdated");
+    } catch (error) {
+      pushUniqueWarning(
+        stats,
+        `text-style-update:${spec.name}`,
+        `${spec.name}: could not update text style (${messageFor(error)})`,
+      );
+    }
+  }
+
+  activeTextStylesEnsured = true;
+  return activeTextStyleByKey;
+}
+
+function kozmosTextStyleSpecs(fonts) {
+  const specs = [];
+
+  for (const size of TEXT_SIZES) {
+    const metrics = textMetrics(size);
+    for (const weight of TEXT_WEIGHTS) {
+      specs.push({
+        key: textStyleKeyForText(size, weight),
+        name: `${TEXT_STYLE_GROUP_TEXT} / ${size} / ${weight}`,
+        fontName: textFontForWeight(weight, fonts),
+        fontSize: metrics.fontSize,
+        lineHeight: metrics.lineHeight,
+        description:
+          "Kozmos text typography style. Apply color separately through semantic foreground variables.",
+      });
+    }
+  }
+
+  for (const level of HEADING_LEVELS) {
+    const metrics = headingMetrics(level);
+    specs.push({
+      key: textStyleKeyForHeading(level),
+      name: `${TEXT_STYLE_GROUP_HEADING} / ${level}`,
+      fontName: fonts.bold || fonts.medium || fonts.regular,
+      fontSize: metrics.fontSize,
+      lineHeight: metrics.lineHeight,
+      description:
+        "Kozmos heading typography style. Heading level semantics are handled by code; this style controls visual type only.",
+    });
+  }
+
+  addComponentTextStyleSpecs(specs, fonts);
+  return specs;
+}
+
+function addComponentTextStyleSpecs(specs, fonts) {
+  addTextStyleSpec(
+    specs,
+    "buttonLabel",
+    BUTTON_LABEL_TEXT_STYLE_NAME,
+    fonts.medium,
+    14,
+    20,
+    "Typography contract for Kozmos Button labels.",
+  );
+  addTextStyleSpec(
+    specs,
+    "badgeLabel",
+    "Badge / Label",
+    fonts.medium,
+    14,
+    20,
+    "Typography contract for Kozmos Badge labels.",
+  );
+  addTextStyleSpec(
+    specs,
+    "counterSmall",
+    "Counter / Small",
+    fonts.medium,
+    11,
+    14,
+    "Typography contract for small Kozmos counters.",
+  );
+  addTextStyleSpec(
+    specs,
+    "counterDefault",
+    "Counter / Default",
+    fonts.medium,
+    12,
+    16,
+    "Typography contract for default Kozmos counters.",
+  );
+  addTextStyleSpec(specs, "cardTitle", "Card / Title", fonts.medium, 24, 24);
+  addTextStyleSpec(
+    specs,
+    "cardDescription",
+    "Card / Description",
+    fonts.regular,
+    14,
+    20,
+  );
+  addTextStyleSpec(specs, "cardBody", "Card / Body", fonts.regular, 14, 22);
+  addTextStyleSpec(
+    specs,
+    "tabsTrigger",
+    "Tabs / Trigger",
+    fonts.medium,
+    14,
+    20,
+  );
+  addTextStyleSpec(
+    specs,
+    "tooltipContent",
+    "Tooltip / Content",
+    fonts.regular,
+    14,
+    20,
+  );
+  addTextStyleSpec(
+    specs,
+    "dialogTitle",
+    "Dialog / Title",
+    fonts.medium,
+    18,
+    24,
+  );
+  addTextStyleSpec(
+    specs,
+    "dialogDescription",
+    "Dialog / Description",
+    fonts.regular,
+    14,
+    20,
+  );
+  addTextStyleSpec(specs, "dialogBody", "Dialog / Body", fonts.regular, 14, 20);
+  addTextStyleSpec(
+    specs,
+    "popoverTitle",
+    "Popover / Title",
+    fonts.medium,
+    14,
+    20,
+  );
+  addTextStyleSpec(
+    specs,
+    "popoverDescription",
+    "Popover / Description",
+    fonts.regular,
+    14,
+    20,
+  );
+  addTextStyleSpec(specs, "menuItem", "Menu / Item", fonts.regular, 14, 20);
+  addTextStyleSpec(
+    specs,
+    "menuItemStrong",
+    "Menu / Item Strong",
+    fonts.medium,
+    14,
+    20,
+  );
+  addTextStyleSpec(
+    specs,
+    "menuShortcut",
+    "Menu / Shortcut",
+    fonts.medium,
+    12,
+    16,
+  );
+  addTextStyleSpec(specs, "toastTitle", "Toast / Title", fonts.medium, 14, 20);
+  addTextStyleSpec(
+    specs,
+    "toastDescription",
+    "Toast / Description",
+    fonts.regular,
+    14,
+    20,
+  );
+  addTextStyleSpec(
+    specs,
+    "controlLabel",
+    "Control / Label",
+    fonts.medium,
+    14,
+    20,
+  );
+  addTextStyleSpec(specs, "fieldLabel", "Field / Label", fonts.medium, 14, 20);
+  addTextStyleSpec(specs, "fieldText", "Field / Text", fonts.regular, 14, 20);
+  addTextStyleSpec(
+    specs,
+    "avatarFallback",
+    "Avatar / Fallback",
+    fonts.medium,
+    14,
+    20,
+  );
+  addTextStyleSpec(specs, "alertTitle", "Alert / Title", fonts.medium, 14, 20);
+  addTextStyleSpec(
+    specs,
+    "alertDescription",
+    "Alert / Description",
+    fonts.regular,
+    14,
+    20,
+  );
+  addTextStyleSpec(
+    specs,
+    "linkText",
+    "Link / Text",
+    fonts.medium,
+    14,
+    20,
+    "Typography contract for Kozmos Link labels.",
+    "UNDERLINE",
+  );
+  addTextStyleSpec(specs, "labelText", "Label / Text", fonts.medium, 14, 20);
+  addTextStyleSpec(specs, "boxText", "Box / Text", fonts.regular, 14, 20);
+  addTextStyleSpec(
+    specs,
+    "containerText",
+    "Container / Text",
+    fonts.regular,
+    14,
+    20,
+  );
+  addTextStyleSpec(
+    specs,
+    "breadcrumbItem",
+    "Breadcrumb / Item",
+    fonts.regular,
+    14,
+    20,
+  );
+  addTextStyleSpec(
+    specs,
+    "accordionTrigger",
+    "Accordion / Trigger",
+    fonts.regular,
+    14,
+    20,
+  );
+  addTextStyleSpec(
+    specs,
+    "accordionContent",
+    "Accordion / Content",
+    fonts.regular,
+    14,
+    20,
+  );
+}
+
+function addTextStyleSpec(
+  specs,
+  key,
+  name,
+  fontName,
+  fontSize,
+  lineHeight,
+  description,
+  textDecoration,
+) {
+  specs.push({
+    key,
+    name,
+    fontName,
+    fontSize,
+    lineHeight,
+    description:
+      description ||
+      "Kozmos component typography style. Apply color separately through semantic foreground variables.",
+    textDecoration,
+  });
+}
+
+function textStyleKeyForText(size, weight) {
+  return `text.${size}.${weight}`;
+}
+
+function textStyleKeyForHeading(level) {
+  return `heading.${level}`;
+}
+
+function applyTextStyleToNode(text, key, stats) {
+  const style = activeTextStyleByKey[key];
+  if (!style || !style.id) return false;
+
+  try {
+    text.textStyleId = style.id;
+    incrementStat(stats, "textStyleBindingsApplied");
+    return true;
+  } catch (error) {
+    pushUniqueWarning(
+      stats,
+      `text-style-bind:${key}`,
+      `Could not apply text style "${style.name}" (${messageFor(error)}).`,
+    );
+    return false;
+  }
+}
+
+async function applyTextStylesToComponentLibrary() {
+  const stats = {
+    updated: false,
+    componentSetsVisited: 0,
+    textNodesVisited: 0,
+    textNodesStyled: 0,
+    textNodesSkippedInInstances: 0,
+    textNodesUnmatched: 0,
+    warnings: [],
+  };
+
+  await loadButtonFonts(stats);
+
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  const componentSets = page.findAll((node) => node.type === "COMPONENT_SET");
+
+  for (const componentSet of componentSets) {
+    stats.componentSetsVisited += 1;
+    const textNodes = componentSet.findAll((node) => node.type === "TEXT");
+
+    for (const text of textNodes) {
+      stats.textNodesVisited += 1;
+
+      if (hasAncestorTypeBefore(text, "INSTANCE", componentSet)) {
+        stats.textNodesSkippedInInstances += 1;
+        continue;
+      }
+
+      const key = inferTextStyleKeyForComponentText(text, componentSet);
+      if (key && applyTextStyleToNode(text, key, stats)) {
+        stats.textNodesStyled += 1;
+      } else {
+        stats.textNodesUnmatched += 1;
+      }
+    }
+  }
+
+  stats.updated = true;
+  stats.message = `Applied text styles to ${stats.textNodesStyled} component text node(s).`;
+  return stats;
+}
+
+function hasAncestorTypeBefore(node, type, boundary) {
+  let parent = node.parent;
+  while (parent && parent !== boundary) {
+    if (parent.type === type) return true;
+    parent = parent.parent;
+  }
+  return false;
+}
+
+function nearestAncestorOfTypeBefore(node, type, boundary) {
+  let parent = node.parent;
+  while (parent && parent !== boundary) {
+    if (parent.type === type) return parent;
+    parent = parent.parent;
+  }
+  return null;
+}
+
+function inferTextStyleKeyForComponentText(text, componentSet) {
+  const component = nearestAncestorOfTypeBefore(
+    text,
+    "COMPONENT",
+    componentSet,
+  );
+  const setName = componentSet.name;
+  const textName = text.name;
+
+  if (setName === "Text / v1" && component) {
+    const textProps = parseTextVariantName(component.name);
+    if (textProps) return textStyleKeyForText(textProps.size, textProps.weight);
+  }
+
+  if (setName === "Heading / v1" && component) {
+    const headingProps = parseHeadingVariantName(component.name);
+    if (headingProps) return textStyleKeyForHeading(headingProps.value);
+  }
+
+  if (setName === "Counter / v1" && component) {
+    const counterProps = parseCounterVariantName(component.name);
+    if (counterProps && counterProps.size === "Small") return "counterSmall";
+    if (counterProps) return "counterDefault";
+  }
+
+  if (setName === "Button / v1") return "buttonLabel";
+  if (setName === "Badge / v1") return "badgeLabel";
+  if (setName === "Link / v1") return "linkText";
+  if (setName === "Label / v1") return "labelText";
+  if (setName === "Box / v1") return "boxText";
+  if (setName === "Container / v1") return "containerText";
+  if (setName === "Breadcrumb / v1") return "breadcrumbItem";
+  if (setName === "Accordion / v1") {
+    return textName === "Trigger Text"
+      ? "accordionTrigger"
+      : "accordionContent";
+  }
+  if (setName === "Tabs / v1") return "tabsTrigger";
+  if (setName === "Tooltip / v1") return "tooltipContent";
+  if (setName === "Avatar / v1") return "avatarFallback";
+  if (setName === "Alert / v1") {
+    return textName === "Title" ? "alertTitle" : "alertDescription";
+  }
+  if (setName === "Card / v1") {
+    if (textName === "Title Text") return "cardTitle";
+    if (textName === "Description Text") return "cardDescription";
+    return "cardBody";
+  }
+  if (setName === "Dialog / v1") {
+    if (textName === "Title Text") return "dialogTitle";
+    if (textName === "Description Text") return "dialogDescription";
+    return "dialogBody";
+  }
+  if (setName === "Popover / v1") {
+    if (textName === "Title Text") return "popoverTitle";
+    return "popoverDescription";
+  }
+  if (setName === "Menu / v1") {
+    if (textName === "Shortcut Text") return "menuShortcut";
+    if (textName === "Label Text") return "menuItemStrong";
+    return "menuItem";
+  }
+  if (setName === "Toast / v1") {
+    if (textName === "Description Text") return "toastDescription";
+    return "toastTitle";
+  }
+  if (
+    setName === "Checkbox / v1" ||
+    setName === "Radio / v1" ||
+    setName === "Switch / v1"
+  ) {
+    return "controlLabel";
+  }
+  if (
+    setName === "Input / v1" ||
+    setName === "Textarea / v1" ||
+    setName === "Search / v1" ||
+    setName === "Select / v1" ||
+    setName === "Slider / v1"
+  ) {
+    return textName === "Label Text" ? "fieldLabel" : "fieldText";
+  }
+
+  return null;
 }
 
 async function applyButtonLabelTypography(
@@ -9694,6 +10169,7 @@ function applyTextTypography(text, size, weight, fonts, variableByName, stats) {
   text.fontSize = metrics.fontSize;
   text.lineHeight = { unit: "PIXELS", value: metrics.lineHeight };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, textStyleKeyForText(size, weight), stats);
 
   bindFloatVariable(
     text,
@@ -9716,6 +10192,7 @@ function applyBadgeLabelTypography(label, fonts, variableByName, stats) {
   label.fontSize = 14;
   label.lineHeight = { unit: "PIXELS", value: 20 };
   label.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(label, "badgeLabel", stats);
 
   bindFloatVariable(
     label,
@@ -9739,6 +10216,11 @@ function applyCounterTypography(label, size, fonts, variableByName, stats) {
   label.fontSize = metrics.fontSize;
   label.lineHeight = { unit: "PIXELS", value: metrics.lineHeight };
   label.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(
+    label,
+    size === "Small" ? "counterSmall" : "counterDefault",
+    stats,
+  );
 
   bindFloatVariable(
     label,
@@ -9761,6 +10243,7 @@ function applyCardTitleTypography(text, fonts, variableByName, stats) {
   text.fontSize = 24;
   text.lineHeight = { unit: "PIXELS", value: 24 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "cardTitle", stats);
 
   bindFloatVariable(
     text,
@@ -9783,6 +10266,7 @@ function applyCardDescriptionTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "cardDescription", stats);
 
   bindFloatVariable(
     text,
@@ -9805,6 +10289,7 @@ function applyCardBodyTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 22 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "cardBody", stats);
 
   bindFloatVariable(
     text,
@@ -9827,6 +10312,7 @@ function applyTabsTriggerTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "tabsTrigger", stats);
 
   bindFloatVariable(
     text,
@@ -9849,6 +10335,7 @@ function applyTooltipContentTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "tooltipContent", stats);
 
   bindFloatVariable(
     text,
@@ -9871,6 +10358,7 @@ function applyDialogTitleTypography(text, fonts, variableByName, stats) {
   text.fontSize = 18;
   text.lineHeight = { unit: "PIXELS", value: 24 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "dialogTitle", stats);
 
   bindFloatVariable(
     text,
@@ -9893,6 +10381,7 @@ function applyDialogDescriptionTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "dialogDescription", stats);
 
   bindFloatVariable(
     text,
@@ -9915,6 +10404,7 @@ function applyDialogBodyTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "dialogBody", stats);
 
   bindFloatVariable(
     text,
@@ -9937,6 +10427,7 @@ function applyPopoverTitleTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "popoverTitle", stats);
 
   bindFloatVariable(
     text,
@@ -9959,6 +10450,7 @@ function applyPopoverDescriptionTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "popoverDescription", stats);
 
   bindFloatVariable(
     text,
@@ -9981,6 +10473,7 @@ function applyMenuItemTypography(text, fonts, variableByName, stats, strong) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, strong ? "menuItemStrong" : "menuItem", stats);
 
   bindFloatVariable(
     text,
@@ -10003,6 +10496,7 @@ function applyMenuShortcutTypography(text, fonts, variableByName, stats) {
   text.fontSize = 12;
   text.lineHeight = { unit: "PIXELS", value: 16 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "menuShortcut", stats);
 
   bindFloatVariable(
     text,
@@ -10025,6 +10519,7 @@ function applyToastTitleTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "toastTitle", stats);
 
   bindFloatVariable(
     text,
@@ -10047,6 +10542,7 @@ function applyToastDescriptionTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "HEIGHT";
+  applyTextStyleToNode(text, "toastDescription", stats);
 
   bindFloatVariable(
     text,
@@ -10069,6 +10565,7 @@ function applyCheckboxLabelTypography(label, fonts, variableByName, stats) {
   label.fontSize = 14;
   label.lineHeight = { unit: "PIXELS", value: 20 };
   label.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(label, "controlLabel", stats);
 
   bindFloatVariable(
     label,
@@ -10091,6 +10588,7 @@ function applyRadioLabelTypography(label, fonts, variableByName, stats) {
   label.fontSize = 14;
   label.lineHeight = { unit: "PIXELS", value: 20 };
   label.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(label, "controlLabel", stats);
 
   bindFloatVariable(
     label,
@@ -10113,6 +10611,7 @@ function applySwitchLabelTypography(label, fonts, variableByName, stats) {
   label.fontSize = 14;
   label.lineHeight = { unit: "PIXELS", value: 20 };
   label.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(label, "controlLabel", stats);
 
   bindFloatVariable(
     label,
@@ -10135,6 +10634,7 @@ function applyInputLabelTypography(label, fonts, variableByName, stats) {
   label.fontSize = 14;
   label.lineHeight = { unit: "PIXELS", value: 20 };
   label.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(label, "fieldLabel", stats);
 
   bindFloatVariable(
     label,
@@ -10157,6 +10657,7 @@ function applyInputTextTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "fieldText", stats);
 
   bindFloatVariable(
     text,
@@ -10185,6 +10686,7 @@ function applyFieldLabelTypography(
   label.fontSize = 14;
   label.lineHeight = { unit: "PIXELS", value: 20 };
   label.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(label, "fieldLabel", stats);
 
   bindFloatVariable(
     label,
@@ -10213,6 +10715,7 @@ function applyFieldTextTypography(
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "fieldText", stats);
 
   bindFloatVariable(
     text,
@@ -10235,6 +10738,7 @@ function applyAvatarFallbackTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "avatarFallback", stats);
 
   bindFloatVariable(
     text,
@@ -10257,6 +10761,7 @@ function applyAlertTitleTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "alertTitle", stats);
 
   bindFloatVariable(
     text,
@@ -10279,6 +10784,7 @@ function applyAlertDescriptionTypography(text, fonts, variableByName, stats) {
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "alertDescription", stats);
 
   bindFloatVariable(
     text,
@@ -16166,7 +16672,9 @@ async function loadButtonFonts(stats) {
     );
   }
 
-  return { regular, medium, bold };
+  const fonts = { regular, medium, bold };
+  await ensureKozmosTextStyles(fonts, stats);
+  return fonts;
 }
 
 async function loadFirstAvailableFont(fonts) {
@@ -16778,6 +17286,7 @@ async function updateHeadingVariant(
   text.fontSize = metrics.fontSize;
   text.lineHeight = { unit: "PIXELS", value: metrics.lineHeight };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, textStyleKeyForHeading(value), stats);
   bindFloatVariable(
     text,
     "fontSize",
@@ -16890,6 +17399,7 @@ async function updateLinkVariant(
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "linkText", stats);
   text.textDecoration = "UNDERLINE";
   bindFloatVariable(text, "fontSize", "Link/font-size", variableByName, stats);
   bindFloatVariable(
@@ -16999,6 +17509,7 @@ async function updateLabelVariant(
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "labelText", stats);
   bindFloatVariable(text, "fontSize", "Label/font-size", variableByName, stats);
   bindFloatVariable(
     text,
@@ -17280,6 +17791,7 @@ async function updateBoxVariant(
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
+  applyTextStyleToNode(text, "boxText", stats);
   bindFloatVariable(
     text,
     "fontSize",
@@ -17586,6 +18098,7 @@ async function updateContainerVariant(
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.characters = centered ? "Centered container" : "Fluid container";
+  applyTextStyleToNode(text, "containerText", stats);
   text.fills = [
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
@@ -17747,6 +18260,7 @@ function appendBreadcrumbText({
   text.fontName = fonts.regular;
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
+  applyTextStyleToNode(text, "breadcrumbItem", stats);
   text.characters = characters;
   text.fills = [
     paintFromVariable(colorToken, colorFallback, variableByName, stats),
@@ -18033,6 +18547,11 @@ function appendAccordionText({
   text.fontName = fonts.regular;
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
+  applyTextStyleToNode(
+    text,
+    name === "Trigger Text" ? "accordionTrigger" : "accordionContent",
+    stats,
+  );
   text.characters = characters;
   text.fills = [
     paintFromVariable(colorToken, colorFallback, variableByName, stats),
@@ -21514,6 +22033,7 @@ async function syncToastVariantChildren({
     actionText.fontSize = 14;
     actionText.lineHeight = { unit: "PIXELS", value: 20 };
     actionText.textAutoResize = "WIDTH_AND_HEIGHT";
+    applyTextStyleToNode(actionText, "toastTitle", stats);
     bindFloatVariable(
       actionText,
       "fontSize",
