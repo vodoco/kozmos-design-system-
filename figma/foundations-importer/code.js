@@ -17702,16 +17702,10 @@ async function updateBreadcrumbVariant(
     variableByName,
     stats,
   });
-  appendBreadcrumbSeparator(
-    component,
-    "Separator 1",
-    fonts,
-    variableByName,
-    stats,
-  );
+  await appendBreadcrumbSeparator(component, variableByName, stats);
 
   if (isEllipsis) {
-    appendBreadcrumbEllipsis(component, fonts, variableByName, stats);
+    appendBreadcrumbEllipsis(component, variableByName, stats);
   } else {
     appendBreadcrumbText({
       parent: component,
@@ -17725,13 +17719,7 @@ async function updateBreadcrumbVariant(
     });
   }
 
-  appendBreadcrumbSeparator(
-    component,
-    "Separator 2",
-    fonts,
-    variableByName,
-    stats,
-  );
+  await appendBreadcrumbSeparator(component, variableByName, stats);
   appendBreadcrumbText({
     parent: component,
     name: "Current Page Text",
@@ -17783,20 +17771,21 @@ function appendBreadcrumbText({
   return text;
 }
 
-function appendBreadcrumbSeparator(parent, name, fonts, variableByName, stats) {
-  appendBreadcrumbText({
-    parent,
-    name,
-    characters: ">",
-    colorToken: "Colors/foreground/400",
-    colorFallback: "#5D626F",
-    fonts,
+async function appendBreadcrumbSeparator(parent, variableByName, stats) {
+  const icon = await createFixedIconInstance(
+    "chevron-right",
+    "Colors/foreground/400",
+    "#5D626F",
     variableByName,
     stats,
-  });
+    14,
+  );
+  parent.appendChild(icon);
+  setHugChildSizing(icon);
+  return icon;
 }
 
-function appendBreadcrumbEllipsis(parent, fonts, variableByName, stats) {
+function appendBreadcrumbEllipsis(parent, variableByName, stats) {
   const frame = figma.createFrame();
   frame.name = "Breadcrumb Ellipsis";
   frame.layoutMode = "HORIZONTAL";
@@ -17804,7 +17793,7 @@ function appendBreadcrumbEllipsis(parent, fonts, variableByName, stats) {
   frame.counterAxisSizingMode = "FIXED";
   frame.primaryAxisAlignItems = "CENTER";
   frame.counterAxisAlignItems = "CENTER";
-  frame.itemSpacing = 0;
+  frame.itemSpacing = 3;
   frame.paddingLeft = 0;
   frame.paddingRight = 0;
   frame.paddingTop = 0;
@@ -17821,16 +17810,24 @@ function appendBreadcrumbEllipsis(parent, fonts, variableByName, stats) {
     variableByName,
     stats,
   );
-  appendBreadcrumbText({
-    parent: frame,
-    name: "Item 2 Text",
-    characters: ". . .",
-    colorToken: "Colors/foreground/400",
-    colorFallback: "#5D626F",
-    fonts,
-    variableByName,
-    stats,
-  });
+
+  for (let index = 0; index < 3; index += 1) {
+    const dot = figma.createEllipse();
+    dot.name = "Ellipsis Dot";
+    dot.resizeWithoutConstraints(4, 4);
+    dot.fills = [
+      paintFromVariable(
+        "Colors/foreground/400",
+        "#5D626F",
+        variableByName,
+        stats,
+      ),
+    ];
+    dot.strokes = [];
+    frame.appendChild(dot);
+    setHugChildSizing(dot);
+  }
+
   parent.appendChild(frame);
 }
 
@@ -17942,15 +17939,9 @@ async function updateAccordionVariant(
     variableByName,
     stats,
   });
-  appendAccordionText({
+  await appendAccordionChevron({
     parent: trigger,
-    name: "Chevron",
-    characters: isOpen ? "^" : "v",
-    fontToken: "Accordion/trigger/font-size",
-    lineHeightToken: "Accordion/trigger/line-height",
-    colorToken: "Colors/foreground/400",
-    colorFallback: "#5D626F",
-    fonts,
+    isOpen,
     variableByName,
     stats,
   });
@@ -18052,6 +18043,25 @@ function appendAccordionText({
   parent.appendChild(text);
   setHugChildSizing(text);
   return text;
+}
+
+async function appendAccordionChevron({
+  parent,
+  isOpen,
+  variableByName,
+  stats,
+}) {
+  const icon = await createFixedIconInstance(
+    isOpen ? "chevron-up" : "chevron-down",
+    "Colors/foreground/400",
+    "#5D626F",
+    variableByName,
+    stats,
+    16,
+  );
+  parent.appendChild(icon);
+  setHugChildSizing(icon);
+  return icon;
 }
 
 function parseCounterVariantName(name) {

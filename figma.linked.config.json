@@ -38,6 +38,8 @@
       "src/components/Avatar/Avatar.tsx",
       "src/components/Alert/Alert.figma.tsx",
       "src/components/Alert/Alert.tsx",
+      "src/components/Stack/Stack.figma.tsx",
+      "src/components/Stack/Stack.tsx",
       "src/components/Tooltip/Tooltip.figma.tsx",
       "src/components/Tooltip/Tooltip.tsx",
       "src/components/Dialog/Dialog.figma.tsx",

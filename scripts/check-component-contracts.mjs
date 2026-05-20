@@ -114,6 +114,7 @@ const files = {
   reactSkeleton: "packages/react/src/components/Skeleton/Skeleton.tsx",
   reactBox: "packages/react/src/components/Box/Box.tsx",
   reactStack: "packages/react/src/components/Stack/Stack.tsx",
+  reactStackFigma: "packages/react/src/components/Stack/Stack.figma.tsx",
   reactContainer: "packages/react/src/components/Container/Container.tsx",
   reactBreadcrumb: "packages/react/src/components/Breadcrumb/Breadcrumb.tsx",
   reactAccordion: "packages/react/src/components/Accordion/Accordion.tsx",
@@ -1094,6 +1095,36 @@ assertContains(
   "React Stack gap variants",
 );
 assertContains(
+  files.reactStackFigma,
+  source.reactStackFigma,
+  "node-id=170-1027",
+  "Stack Code Connect node id",
+);
+assertContains(
+  files.reactStackFigma,
+  source.reactStackFigma,
+  'Row: "row"',
+  "Stack Code Connect row direction mapping",
+);
+assertContains(
+  files.reactStackFigma,
+  source.reactStackFigma,
+  '"2": 2',
+  "Stack Code Connect gap mapping",
+);
+assertContains(
+  files.figmaLinked,
+  source.figmaLinked,
+  "src/components/Stack/Stack.figma.tsx",
+  "Stack Code Connect parser include",
+);
+assertNotContains(
+  files.reactStackFigma,
+  source.reactStackFigma,
+  "node-id=TBD",
+  "placeholder Stack Code Connect node id",
+);
+assertContains(
   files.figma,
   source.figma,
   "Container / v1",
@@ -1226,6 +1257,48 @@ assertContains(
   "React Breadcrumb ellipsis primitive",
 );
 assertContains(
+  files.reactBreadcrumb,
+  source.reactBreadcrumb,
+  "MoreHorizontal",
+  "React Breadcrumb visible ellipsis icon",
+);
+assertContains(
+  files.reactBreadcrumb,
+  source.reactBreadcrumb,
+  "@radix-ui/react-slot",
+  "React Breadcrumb asChild slot primitive",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function appendBreadcrumbSeparator",
+  "Breadcrumb icon separator generator",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  '"chevron-right"',
+  "Breadcrumb separator icon",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "figma.createEllipse()",
+  "Breadcrumb vector ellipsis dots",
+);
+assertNotContains(
+  files.figma,
+  source.figma,
+  'characters: ">"',
+  "text breadcrumb separator",
+);
+assertNotContains(
+  files.figma,
+  source.figma,
+  'characters: ". . ."',
+  "text breadcrumb ellipsis",
+);
+assertContains(
   files.figma,
   source.figma,
   "Accordion / v1",
@@ -1290,6 +1363,18 @@ assertContains(
   source.reactAccordion,
   "AccordionTrigger",
   "React Accordion trigger primitive",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function appendAccordionChevron",
+  "Accordion icon chevron generator",
+);
+assertNotContains(
+  files.figma,
+  source.figma,
+  'characters: isOpen ? "^" : "v"',
+  "text accordion chevron",
 );
 assertContains(
   files.figma,
