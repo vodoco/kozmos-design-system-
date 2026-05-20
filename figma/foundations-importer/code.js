@@ -9971,6 +9971,28 @@ function applyTextStyleToNode(text, key, stats) {
   }
 }
 
+async function applyTextStyleToNodeAsync(text, key, stats) {
+  const style = activeTextStyleByKey[key];
+  if (!style || !style.id) return false;
+
+  try {
+    if (text.setTextStyleIdAsync) {
+      await text.setTextStyleIdAsync(style.id);
+    } else {
+      text.textStyleId = style.id;
+    }
+    incrementStat(stats, "textStyleBindingsApplied");
+    return true;
+  } catch (error) {
+    pushUniqueWarning(
+      stats,
+      `text-style-bind:${key}`,
+      `Could not apply text style "${style.name}" (${messageFor(error)}).`,
+    );
+    return false;
+  }
+}
+
 async function applyTextStylesToComponentLibrary() {
   const stats = {
     updated: false,
@@ -10003,7 +10025,7 @@ async function applyTextStylesToComponentLibrary() {
       }
 
       const key = inferTextStyleKeyForComponentText(text, componentSet);
-      if (key && applyTextStyleToNode(text, key, stats)) {
+      if (key && (await applyTextStyleToNodeAsync(text, key, stats))) {
         stats.textNodesStyled += 1;
       } else {
         stats.textNodesUnmatched += 1;

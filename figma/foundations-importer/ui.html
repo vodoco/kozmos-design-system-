@@ -1505,7 +1505,12 @@
 
       function syncComponentResult(result) {
         const action = activeComponentAction;
-        if (!action || !action.key || !result) return;
+        if (!action || !result) return;
+
+        if (!action.key) {
+          libraryState.auditStale = libraryState.audited;
+          return;
+        }
 
         const existingStatus = libraryState.components[action.key] || {};
         if (
@@ -1861,17 +1866,18 @@
         }
         if (
           libraryState.warnings.some((warning) =>
-            warning.includes("Badge / v1"),
-          )
-        ) {
-          return "Next: select Badge / v1 and run the recommended update to clear the counter composition warning.";
-        }
-        if (
-          libraryState.warnings.some((warning) =>
             warning.includes("missing Figma text styles"),
           )
         ) {
           return "Next: run Apply Text Styles, then audit again to confirm component typography is attached.";
+        }
+        if (
+          libraryState.warnings.some((warning) =>
+            warning.includes("Badge / v1") &&
+            (warning.includes("composition") || warning.includes("Counter")),
+          )
+        ) {
+          return "Next: select Badge / v1 and run the recommended update to clear the counter composition warning.";
         }
         if (libraryState.warningCount > 0) {
           return "Next: review the warning list in the activity details and update the affected component set.";
@@ -2049,6 +2055,8 @@
         documentComponentsButton.disabled =
           busy || !libraryState.audited || knownNoComponents;
         surfaceQaButton.disabled =
+          busy || !libraryState.audited || knownNoComponents;
+        applyTextStylesButton.disabled =
           busy || !libraryState.audited || knownNoComponents;
         reorganizeComponentsButton.disabled =
           busy || !libraryState.audited || knownNoComponents;
