@@ -25,6 +25,7 @@ const HEADING_LEVELS = ["H1", "H2", "H3", "H4", "H5", "H6"];
 const LINK_VARIANTS = ["Default", "Subtle"];
 const LINK_STATES = ["Default", "Focus"];
 const LABEL_STATES = ["Default", "Disabled"];
+const SEPARATOR_ORIENTATIONS = ["Horizontal", "Vertical"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -102,6 +103,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Heading / v1": 360,
   "Link / v1": 260,
   "Label / v1": 260,
+  "Separator / v1": 260,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -126,6 +128,7 @@ const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Heading / v1",
   "Link / v1",
   "Label / v1",
+  "Separator / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -378,6 +381,29 @@ const COMPONENT_DOCS = [
       "Product code should associate labels with controls through htmlFor or Radix Label composition.",
       "Text contrast passes in Light and Dark modes.",
       "Label is non-interactive unless composed inside another control.",
+    ],
+  },
+  {
+    componentName: "Separator",
+    componentSetName: "Separator / v1",
+    category: "Layout",
+    summary:
+      "Separator visually divides related content with horizontal or vertical orientation.",
+    usage: [
+      "Use Horizontal between stacked sections or menu groups.",
+      "Use Vertical inside toolbars and dense inline control groups.",
+      "Avoid using Separator as decoration when spacing alone can clarify hierarchy.",
+    ],
+    api: [
+      "Orientation maps to Separator.orientation.",
+      "Decorative behavior remains a runtime accessibility concern.",
+      "Sizing uses component float variables for consistent thickness.",
+    ],
+    properties: ["Orientation: Horizontal, Vertical"],
+    accessibility: [
+      "Separator uses a foreground boundary token with non-text contrast headroom.",
+      "Product code should mark purely visual separators as decorative.",
+      "Separator is non-interactive.",
     ],
   },
   {
@@ -2598,6 +2624,14 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Button/height/default",
     scopes: ["WIDTH_HEIGHT"],
   },
+  { name: "Separator/length/default", value: 320, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Separator/thickness", value: 1, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Separator/height/vertical",
+    value: 44,
+    alias: "Button/height/default",
+    scopes: ["WIDTH_HEIGHT"],
+  },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -2687,6 +2721,24 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "rebuild-label") {
       const result = await rebuildLabelComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "build-separator") {
+      const result = await buildSeparatorComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-separator") {
+      const result = await updateSeparatorComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-separator") {
+      const result = await rebuildSeparatorComponent();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -4803,6 +4855,7 @@ function unexpectedTopLevelNodesForPage(page) {
     "Heading / v1",
     "Link / v1",
     "Label / v1",
+    "Separator / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5596,6 +5649,7 @@ function shouldAuditLayoutBindings(name) {
       "Heading / v1",
       "Link / v1",
       "Label / v1",
+      "Separator / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -5729,6 +5783,12 @@ function expectedVariantAxesForComponentSetName(name) {
   if (name === "Label / v1") {
     return {
       State: LABEL_STATES,
+    };
+  }
+
+  if (name === "Separator / v1") {
+    return {
+      Orientation: SEPARATOR_ORIENTATIONS,
     };
   }
 
@@ -12066,6 +12126,46 @@ async function updateLabelComponent() {
   });
 }
 
+async function buildSeparatorComponent() {
+  return buildSingleAxisComponent({
+    componentName: "Separator",
+    componentSetName: "Separator / v1",
+    axisName: "Orientation",
+    values: SEPARATOR_ORIENTATIONS,
+    x: 80,
+    y: 9740,
+    xStep: 360,
+    createVariant: createSeparatorVariant,
+    configureProperties: configureSeparatorProperties,
+    description: [
+      "Kozmos Separator component set generated from React Separator API.",
+      "Orientation maps to Separator.orientation.",
+      "Sizing uses component float variables.",
+      "Separator is non-interactive and decorative unless product code says otherwise.",
+    ],
+  });
+}
+
+async function updateSeparatorComponent() {
+  return updateSingleAxisComponent({
+    componentName: "Separator",
+    componentSetName: "Separator / v1",
+    axisName: "Orientation",
+    values: SEPARATOR_ORIENTATIONS,
+    xStep: 360,
+    createVariant: createSeparatorVariant,
+    updateVariant: updateSeparatorVariant,
+    parseVariantName: parseSeparatorVariantName,
+    configureProperties: configureSeparatorProperties,
+    description: [
+      "Kozmos Separator component set generated from React Separator API.",
+      "Orientation maps to Separator.orientation.",
+      "Sizing uses component float variables.",
+      "Updated in place to preserve the Code Connect node ID.",
+    ],
+  });
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -13507,6 +13607,14 @@ async function rebuildLabelComponent() {
   });
 }
 
+async function rebuildSeparatorComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Separator",
+    componentSetName: "Separator / v1",
+    build: buildSeparatorComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -14493,6 +14601,8 @@ function configureLabelProperties(componentSet, stats) {
     stats,
   );
 }
+
+function configureSeparatorProperties(_componentSet, _stats) {}
 
 function configureAlertProperties(componentSet, stats) {
   configureNamedTextProperty(componentSet, "Title", "Title", "Heads up", stats);
@@ -15820,6 +15930,66 @@ async function updateLabelVariant(
     ),
   ];
   component.appendChild(text);
+}
+
+async function createSeparatorVariant({ value, variableByName, stats }) {
+  const component = figma.createComponent();
+  await updateSeparatorVariant(component, {
+    value,
+    variableByName,
+    stats,
+  });
+  return component;
+}
+
+function parseSeparatorVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (SEPARATOR_ORIENTATIONS.indexOf(values.Orientation) === -1) return null;
+
+  return {
+    value: values.Orientation,
+    orientation: values.Orientation,
+  };
+}
+
+async function updateSeparatorVariant(
+  component,
+  { value, variableByName, stats },
+) {
+  const horizontal = value === "Horizontal";
+  component.name = `Orientation=${value}`;
+  component.layoutMode = "NONE";
+  component.resizeWithoutConstraints(horizontal ? 320 : 1, horizontal ? 1 : 44);
+  component.fills = [
+    paintFromVariable(
+      "Colors/foreground/500",
+      "#747B8B",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Separator");
+  bindSizeVariables(
+    component,
+    horizontal ? "Separator/length/default" : "Separator/thickness",
+    horizontal ? "Separator/thickness" : "Separator/height/vertical",
+    variableByName,
+    stats,
+  );
 }
 
 function parseCounterVariantName(name) {

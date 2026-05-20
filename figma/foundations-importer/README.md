@@ -29,6 +29,8 @@ Select **Link / v1** and click **Build** after Text. It creates Default/Subtle v
 
 Select **Label / v1** and click **Build** before adding more field-like components. It creates Default and Disabled state examples with editable `Label Text`, aligned to the form label typography scale.
 
+Select **Separator / v1** and click **Build** for the layout boundary primitive. It creates Horizontal and Vertical orientation variants with variable-bound length/thickness and the same foreground boundary color used by the contrast-safe Core v1 controls.
+
 Select **Curated Icons** and click **Build** to create the curated Kozmos icon source set on the `Icons` page. The first pass imports the 38 icons from `@kozmos/icons` / `docs/figma-pointr-icon-catalog.json` by Pointr component key, then applies them as preferred values for Button and IconButton `Icon` instance-swap slots.
 
 Select **Curated Icons** and click **Update** when the curated registry or Pointr source components change. It updates icon source components in place, preserves their node IDs, and keeps each nested `Pointr Source` stretched to the 24px icon bounds so resized Button/IconButton slots do not clip or overflow the source artwork.

@@ -110,6 +110,7 @@ const files = {
   reactHeading: "packages/react/src/components/Heading/Heading.tsx",
   reactLink: "packages/react/src/components/Link/Link.tsx",
   reactLabel: "packages/react/src/components/Label/Label.tsx",
+  reactSeparator: "packages/react/src/components/Separator/Separator.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -995,6 +996,72 @@ assertContains(
   source.figma,
   "Label / v1",
   "Label component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Separator / v1",
+  "Separator component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const SEPARATOR_ORIENTATIONS =",
+  "Separator orientation axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildSeparatorComponent()",
+  "Separator build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateSeparatorComponent()",
+  "Separator update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Separator / v1"',
+  "Separator documentation metadata",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `name: "Separator/thickness"`,
+  "Separator thickness component token",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="separator">Separator / v1</option>',
+  "Separator UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-separator"',
+  "Separator UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Separator / v1**",
+  "Separator importer documentation",
+);
+assertContains(
+  files.reactSeparator,
+  source.reactSeparator,
+  "@radix-ui/react-separator",
+  "React Separator Radix primitive",
+);
+assertContains(
+  files.reactSeparator,
+  source.reactSeparator,
+  "orientation = 'horizontal'",
+  "React Separator horizontal default",
 );
 assertContains(
   files.figma,
