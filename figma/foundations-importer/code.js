@@ -22,6 +22,8 @@ const TEXT_SIZES = [
 const TEXT_WEIGHTS = ["Normal", "Medium", "Semibold", "Bold"];
 const TEXT_TONES = ["Default", "Muted", "Primary", "Destructive"];
 const HEADING_LEVELS = ["H1", "H2", "H3", "H4", "H5", "H6"];
+const LINK_VARIANTS = ["Default", "Subtle"];
+const LINK_STATES = ["Default", "Focus"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -97,6 +99,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT = 260;
 const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Text / v1": 980,
   "Heading / v1": 360,
+  "Link / v1": 260,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -119,6 +122,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
 const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Text / v1",
   "Heading / v1",
+  "Link / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -321,6 +325,33 @@ const COMPONENT_DOCS = [
       "Heading levels should preserve document and screen-reader structure in product code.",
       "Text contrast passes in Light and Dark modes.",
       "Heading is non-interactive unless composed inside another control.",
+    ],
+  },
+  {
+    componentName: "Link",
+    componentSetName: "Link / v1",
+    category: "Typography",
+    summary:
+      "Link presents navigational or inline text actions with a visible focus state.",
+    usage: [
+      "Use Default when the link should read as an action.",
+      "Use Subtle for secondary inline navigation inside dense content.",
+      "Use Button when the action commits a product task rather than navigating.",
+    ],
+    api: [
+      "Variant maps to Link.variant.",
+      "State maps to focus-visible examples in Code Connect.",
+      "Link Text maps to children in Code Connect.",
+    ],
+    properties: [
+      "Variant: Default, Subtle",
+      "State: Default, Focus",
+      "Link Text",
+    ],
+    accessibility: [
+      "Link text contrast passes in Light and Dark modes.",
+      "The Focus state shows the generated keyboard focus ring.",
+      "Product code should preserve native link semantics or accessible button semantics.",
     ],
   },
   {
@@ -2504,6 +2535,25 @@ const COMPONENT_FLOAT_TOKENS = [
   { name: "Text/line-height/3xl", value: 36, scopes: ["LINE_HEIGHT"] },
   { name: "Text/font-size/4xl", value: 36, scopes: ["FONT_SIZE"] },
   { name: "Text/line-height/4xl", value: 40, scopes: ["LINE_HEIGHT"] },
+  { name: "Link/width/default", value: 128, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Link/height/default",
+    value: 44,
+    alias: "Button/height/default",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "Link/font-size",
+    value: 14,
+    alias: "Button/label/font-size",
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "Link/line-height",
+    value: 20,
+    alias: "Button/label/line-height",
+    scopes: ["LINE_HEIGHT"],
+  },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -2557,6 +2607,24 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "rebuild-heading") {
       const result = await rebuildHeadingComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "build-link") {
+      const result = await buildLinkComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-link") {
+      const result = await updateLinkComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-link") {
+      const result = await rebuildLinkComponent();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -4671,6 +4739,7 @@ function unexpectedTopLevelNodesForPage(page) {
   const expectedComponentSets = new Set([
     "Text / v1",
     "Heading / v1",
+    "Link / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5461,6 +5530,7 @@ function shouldAuditLayoutBindings(name) {
     [
       "Text / v1",
       "Heading / v1",
+      "Link / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -5489,6 +5559,7 @@ function shouldAuditTypographyBindings(name) {
     [
       "Text / v1",
       "Heading / v1",
+      "Link / v1",
       "Button / v1",
       "Counter / v1",
       "Badge / v1",
@@ -5579,6 +5650,13 @@ function expectedVariantAxesForComponentSetName(name) {
   if (name === "Heading / v1") {
     return {
       Level: HEADING_LEVELS,
+    };
+  }
+
+  if (name === "Link / v1") {
+    return {
+      Variant: LINK_VARIANTS,
+      State: LINK_STATES,
     };
   }
 
@@ -11720,6 +11798,159 @@ async function updateHeadingComponent() {
   });
 }
 
+async function buildLinkComponent() {
+  const stats = {
+    created: false,
+    componentSetId: null,
+    urlNodeId: null,
+    variants: 0,
+    warnings: [],
+  };
+
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  removeStaleGeneratedComponentArtifacts(page, "Link", stats);
+
+  const existing = page.findOne((node) => node.name === "Link / v1");
+  if (existing) {
+    stats.existing = true;
+    stats.componentSetId = existing.id;
+    stats.urlNodeId = nodeIdForUrl(existing.id);
+    stats.message =
+      "Link / v1 already exists. Use Update Link to preserve its node ID.";
+    return stats;
+  }
+
+  const fonts = await loadButtonFonts(stats);
+  const variableByName = await ensureComponentRuntimeVariables(stats);
+  const components = [];
+
+  let index = 0;
+  for (const variant of LINK_VARIANTS) {
+    for (const state of LINK_STATES) {
+      const component = await createLinkVariant({
+        variant,
+        state,
+        variableByName,
+        fonts,
+        stats,
+      });
+      component.x = index * 160;
+      component.y = 0;
+      page.appendChild(component);
+      components.push(component);
+      index += 1;
+    }
+  }
+
+  const componentSet = figma.combineAsVariants(components, page);
+  componentSet.name = "Link / v1";
+  componentSet.x = 80;
+  componentSet.y = 9100;
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Link");
+  applyComponentSetDescription(componentSet, "Link / v1", false, [
+    "Kozmos Link component set generated from React Link API.",
+    "Variant maps to Link.variant.",
+    "State provides focus-visible examples.",
+    "Link Text maps to children in Code Connect.",
+  ]);
+  clearComponentSetContainerFill(componentSet);
+
+  stats.created = true;
+  stats.componentSetId = componentSet.id;
+  stats.urlNodeId = nodeIdForUrl(componentSet.id);
+  stats.variants = components.length;
+  normalizeComponentSetVariantProperties(
+    componentSet,
+    expectedVariantAxesForComponentSetName(componentSet.name),
+    stats,
+  );
+  configureLinkProperties(componentSet, stats);
+  return stats;
+}
+
+async function updateLinkComponent() {
+  const stats = {
+    updated: false,
+    componentSetId: null,
+    urlNodeId: null,
+    variantsUpdated: 0,
+    variantsMissing: 0,
+    warnings: [],
+  };
+
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  removeStaleGeneratedComponentArtifacts(page, "Link", stats);
+
+  const existing = page.findOne((node) => node.name === "Link / v1");
+  if (!existing || existing.type !== "COMPONENT_SET") {
+    stats.message = "Link / v1 was not found. Run Build Link first.";
+    return stats;
+  }
+
+  const fonts = await loadButtonFonts(stats);
+  const variableByName = await ensureComponentRuntimeVariables(stats);
+  const seenKeys = {};
+
+  existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "component", "Link");
+  applyComponentSetDescription(existing, "Link / v1", true, [
+    "Kozmos Link component set generated from React Link API.",
+    "Variant maps to Link.variant.",
+    "State provides focus-visible examples.",
+    "Link Text maps to children in Code Connect.",
+    "Updated in place to preserve the Code Connect node ID.",
+  ]);
+  clearComponentSetContainerFill(existing);
+
+  for (const child of existing.children) {
+    if (child.type !== "COMPONENT") continue;
+
+    const props = parseLinkVariantName(child.name);
+    if (!props) {
+      stats.warnings.push(`Skipped unrecognized Link variant "${child.name}".`);
+      continue;
+    }
+
+    seenKeys[`${props.variant}/${props.state}`] = true;
+    await updateLinkVariant(child, {
+      variant: props.variant,
+      state: props.state,
+      variableByName,
+      fonts,
+      stats,
+    });
+    stats.variantsUpdated += 1;
+  }
+
+  for (const variant of LINK_VARIANTS) {
+    for (const state of LINK_STATES) {
+      const key = `${variant}/${state}`;
+      if (!seenKeys[key]) {
+        stats.variantsMissing += 1;
+        stats.warnings.push(`Missing Link variant ${key}.`);
+      }
+    }
+  }
+
+  stats.updated = true;
+  stats.componentSetId = existing.id;
+  stats.urlNodeId = nodeIdForUrl(existing.id);
+  normalizeComponentSetVariantProperties(
+    existing,
+    expectedVariantAxesForComponentSetName(existing.name),
+    stats,
+  );
+  configureLinkProperties(existing, stats);
+  return stats;
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -13145,6 +13376,14 @@ async function rebuildHeadingComponent() {
   });
 }
 
+async function rebuildLinkComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Link",
+    componentSetName: "Link / v1",
+    build: buildLinkComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -14108,6 +14347,16 @@ function configureHeadingProperties(componentSet, stats) {
     "Heading Text",
     "Heading Text",
     "Heading",
+    stats,
+  );
+}
+
+function configureLinkProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Link Text",
+    "Link Text",
+    "Open link",
     stats,
   );
 }
@@ -15218,6 +15467,131 @@ async function updateHeadingVariant(
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   component.appendChild(text);
+}
+
+async function createLinkVariant({
+  variant,
+  state,
+  variableByName,
+  fonts,
+  stats,
+}) {
+  const component = figma.createComponent();
+  await updateLinkVariant(component, {
+    variant,
+    state,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+function parseLinkVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (
+    LINK_VARIANTS.indexOf(values.Variant) === -1 ||
+    LINK_STATES.indexOf(values.State) === -1
+  ) {
+    return null;
+  }
+
+  return {
+    variant: values.Variant,
+    state: values.State,
+  };
+}
+
+async function updateLinkVariant(
+  component,
+  { variant, state, variableByName, fonts, stats },
+) {
+  const config = linkConfig(variant);
+
+  component.name = `Variant=${variant}, State=${state}`;
+  component.layoutMode = "HORIZONTAL";
+  component.primaryAxisSizingMode = "FIXED";
+  component.counterAxisSizingMode = "FIXED";
+  component.primaryAxisAlignItems = "CENTER";
+  component.counterAxisAlignItems = "CENTER";
+  component.itemSpacing = 0;
+  component.paddingLeft = 0;
+  component.paddingRight = 0;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.resizeWithoutConstraints(128, 44);
+  component.fills = [];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Link");
+
+  bindSizeVariables(
+    component,
+    "Link/width/default",
+    "Link/height/default",
+    variableByName,
+    stats,
+  );
+
+  let text = directChildNamed(component, "Link Text");
+  if (text && text.type !== "TEXT") {
+    text.remove();
+    text = null;
+  }
+
+  if (!text || text.type !== "TEXT") {
+    text = figma.createText();
+    text.name = "Link Text";
+  }
+
+  text.fontName = fonts.medium;
+  text.fontSize = 14;
+  text.lineHeight = { unit: "PIXELS", value: 20 };
+  text.textAutoResize = "WIDTH_AND_HEIGHT";
+  text.textDecoration = "UNDERLINE";
+  bindFloatVariable(text, "fontSize", "Link/font-size", variableByName, stats);
+  bindFloatVariable(
+    text,
+    "lineHeight",
+    "Link/line-height",
+    variableByName,
+    stats,
+  );
+  text.characters = variant === "Subtle" ? "Learn more" : "Open link";
+  text.fills = [
+    paintFromVariable(
+      config.foreground,
+      config.foregroundFallback,
+      variableByName,
+      stats,
+    ),
+  ];
+  component.appendChild(text);
+
+  syncFocusRing(component, {
+    enabled: state === "Focus",
+    width: 128,
+    height: 44,
+    radius: 6,
+    variableName: "Colors/theme/600",
+    fallback: "#1051E8",
+    variableByName,
+    stats,
+  });
+  const ring = directChildNamed(component, "Focus Ring");
+  if (ring) ring.visible = state === "Focus";
 }
 
 function parseCounterVariantName(name) {
@@ -22204,6 +22578,20 @@ function textToneConfig(tone) {
   };
 
   return configs[tone] || configs.Default;
+}
+
+function linkConfig(variant) {
+  if (variant === "Subtle") {
+    return {
+      foreground: "Colors/foreground/500",
+      foregroundFallback: "#747B8B",
+    };
+  }
+
+  return {
+    foreground: "Colors/theme/600",
+    foregroundFallback: "#1051E8",
+  };
 }
 
 function textSampleForSize(size) {

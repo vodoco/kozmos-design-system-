@@ -108,6 +108,7 @@ const files = {
   figmaLinked: "figma.linked.config.json",
   reactText: "packages/react/src/components/Text/Text.tsx",
   reactHeading: "packages/react/src/components/Heading/Heading.tsx",
+  reactLink: "packages/react/src/components/Link/Link.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -981,6 +982,84 @@ assertContains(
   source.figma,
   "Heading / v1",
   "Heading component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Link / v1",
+  "Link component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const LINK_VARIANTS =",
+  "Link variant axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const LINK_STATES =",
+  "Link state axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildLinkComponent()",
+  "Link build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateLinkComponent()",
+  "Link update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Link / v1"',
+  "Link documentation metadata",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `name: "Link/height/default"`,
+  "Link height component token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'foreground: "Colors/theme/600"',
+  "Link default uses accessible brand foreground",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="link">Link / v1</option>',
+  "Link UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-link"',
+  "Link UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Link / v1**",
+  "Link importer documentation",
+);
+assertContains(
+  files.reactLink,
+  source.reactLink,
+  "variant?: 'default' | 'subtle'",
+  "React Link variant prop",
+);
+assertContains(
+  files.reactLink,
+  source.reactLink,
+  "variant === 'subtle'",
+  "React Link subtle variant",
 );
 assertContains(
   files.figma,

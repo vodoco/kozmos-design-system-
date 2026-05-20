@@ -25,6 +25,8 @@ Select **Text / v1** and click **Build** to create the Wave 2 typography primiti
 
 Select **Heading / v1** and click **Build** after Text. It creates semantic `Level` variants from H1 through H6 with editable `Heading Text`, reusing the Text typography variable scale so heading and body copy stay aligned.
 
+Select **Link / v1** and click **Build** after Text. It creates Default/Subtle visual variants with Default/Focus states and editable `Link Text`, using the accessible brand and muted foreground tokens from the Core v1 contrast pass.
+
 Select **Curated Icons** and click **Build** to create the curated Kozmos icon source set on the `Icons` page. The first pass imports the 38 icons from `@kozmos/icons` / `docs/figma-pointr-icon-catalog.json` by Pointr component key, then applies them as preferred values for Button and IconButton `Icon` instance-swap slots.
 
 Select **Curated Icons** and click **Update** when the curated registry or Pointr source components change. It updates icon source components in place, preserves their node IDs, and keeps each nested `Pointr Source` stretched to the 24px icon bounds so resized Button/IconButton slots do not clip or overflow the source artwork.
