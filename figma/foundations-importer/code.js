@@ -27,6 +27,7 @@ const LINK_STATES = ["Default", "Focus"];
 const LABEL_STATES = ["Default", "Disabled"];
 const SEPARATOR_ORIENTATIONS = ["Horizontal", "Vertical"];
 const SKELETON_SHAPES = ["Line", "Block", "Circle"];
+const BOX_SURFACES = ["Transparent", "Surface", "Outlined"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -106,6 +107,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Label / v1": 260,
   "Separator / v1": 260,
   "Skeleton / v1": 260,
+  "Box / v1": 360,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -132,6 +134,7 @@ const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Label / v1",
   "Separator / v1",
   "Skeleton / v1",
+  "Box / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -430,6 +433,29 @@ const COMPONENT_DOCS = [
       "Skeleton is non-interactive and should not receive focus.",
       "Product code should expose loading status when the wait is meaningful.",
       "Placeholder contrast is visual only and does not communicate state by itself.",
+    ],
+  },
+  {
+    componentName: "Box",
+    componentSetName: "Box / v1",
+    category: "Layout",
+    summary:
+      "Box provides a simple composition surface for arbitrary child content.",
+    usage: [
+      "Use Transparent when Box only owns spacing or semantic structure.",
+      "Use Surface or Outlined when the child content needs a visible boundary.",
+      "Prefer Card when the content has a title, description, and actions.",
+    ],
+    api: [
+      "Surface maps to common Box composition examples.",
+      "Box Text represents children in the generated Figma example.",
+      "Runtime Box remains a lightweight polymorphic wrapper.",
+    ],
+    properties: ["Surface: Transparent, Surface, Outlined", "Box Text"],
+    accessibility: [
+      "Box is non-interactive unless composed around an interactive child.",
+      "Placeholder text contrast passes in Light and Dark modes.",
+      "Visible surfaces use shared radius, padding, and boundary variables.",
     ],
   },
   {
@@ -2680,6 +2706,38 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Radius/full",
     scopes: ["CORNER_RADIUS"],
   },
+  { name: "Box/width/default", value: 320, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Box/min-height/default", value: 120, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Box/padding/default",
+    value: 16,
+    alias: "Layout/spacing/200",
+    scopes: ["GAP"],
+  },
+  {
+    name: "Box/radius",
+    value: 8,
+    alias: "Radius/DEFAULT",
+    scopes: ["CORNER_RADIUS"],
+  },
+  {
+    name: "Box/stroke/width",
+    value: 1,
+    alias: "Border Width/sm",
+    scopes: ["STROKE_FLOAT"],
+  },
+  {
+    name: "Box/text/font-size",
+    value: 14,
+    alias: "Text/font-size/sm",
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "Box/text/line-height",
+    value: 20,
+    alias: "Text/line-height/sm",
+    scopes: ["LINE_HEIGHT"],
+  },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -2805,6 +2863,24 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "rebuild-skeleton") {
       const result = await rebuildSkeletonComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "build-box") {
+      const result = await buildBoxComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-box") {
+      const result = await updateBoxComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-box") {
+      const result = await rebuildBoxComponent();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -4923,6 +4999,7 @@ function unexpectedTopLevelNodesForPage(page) {
     "Label / v1",
     "Separator / v1",
     "Skeleton / v1",
+    "Box / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5601,6 +5678,17 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
+  if (record.name === "Box / v1") {
+    const textProperty = Object.values(textProperties).find(
+      (property) => property.baseName === "Box Text",
+    );
+    if (!textProperty || textProperty.boundTextNodes === 0) {
+      record.warnings.push(
+        "Box Text component property is missing or not bound to generated Box text nodes.",
+      );
+    }
+  }
+
   if (compositionIntegrity.issueCount > 0) {
     record.warnings.push(
       `${compositionIntegrity.issueCount} composite component integrity issue(s) found. Composite components must use live nested instances with valid auto-layout sizing.`,
@@ -5718,6 +5806,7 @@ function shouldAuditLayoutBindings(name) {
       "Label / v1",
       "Separator / v1",
       "Skeleton / v1",
+      "Box / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -5748,6 +5837,7 @@ function shouldAuditTypographyBindings(name) {
       "Heading / v1",
       "Link / v1",
       "Label / v1",
+      "Box / v1",
       "Button / v1",
       "Counter / v1",
       "Badge / v1",
@@ -5863,6 +5953,12 @@ function expectedVariantAxesForComponentSetName(name) {
   if (name === "Skeleton / v1") {
     return {
       Shape: SKELETON_SHAPES,
+    };
+  }
+
+  if (name === "Box / v1") {
+    return {
+      Surface: BOX_SURFACES,
     };
   }
 
@@ -7165,6 +7261,7 @@ function auditComponentContrastForMode(
       parseHeadingVariantName(component.name) ||
       parseLinkVariantName(component.name) ||
       parseLabelVariantName(component.name) ||
+      parseBoxVariantName(component.name) ||
       parseButtonVariantName(component.name) ||
       parseIconButtonVariantName(component.name) ||
       parseCounterVariantName(component.name) ||
@@ -12280,6 +12377,46 @@ async function updateSkeletonComponent() {
   });
 }
 
+async function buildBoxComponent() {
+  return buildSingleAxisComponent({
+    componentName: "Box",
+    componentSetName: "Box / v1",
+    axisName: "Surface",
+    values: BOX_SURFACES,
+    x: 80,
+    y: 10380,
+    xStep: 360,
+    createVariant: createBoxVariant,
+    configureProperties: configureBoxProperties,
+    description: [
+      "Kozmos Box component set generated from React Box API.",
+      "Surface maps to common composition examples.",
+      "Box Text maps to children in Code Connect.",
+      "Runtime Box remains a lightweight polymorphic wrapper.",
+    ],
+  });
+}
+
+async function updateBoxComponent() {
+  return updateSingleAxisComponent({
+    componentName: "Box",
+    componentSetName: "Box / v1",
+    axisName: "Surface",
+    values: BOX_SURFACES,
+    xStep: 360,
+    createVariant: createBoxVariant,
+    updateVariant: updateBoxVariant,
+    parseVariantName: parseBoxVariantName,
+    configureProperties: configureBoxProperties,
+    description: [
+      "Kozmos Box component set generated from React Box API.",
+      "Surface maps to common composition examples.",
+      "Box Text maps to children in Code Connect.",
+      "Updated in place to preserve the Code Connect node ID.",
+    ],
+  });
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -13737,6 +13874,14 @@ async function rebuildSkeletonComponent() {
   });
 }
 
+async function rebuildBoxComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Box",
+    componentSetName: "Box / v1",
+    build: buildBoxComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -14727,6 +14872,16 @@ function configureLabelProperties(componentSet, stats) {
 function configureSeparatorProperties(_componentSet, _stats) {}
 
 function configureSkeletonProperties(_componentSet, _stats) {}
+
+function configureBoxProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Box Text",
+    "Box Text",
+    "Content slot",
+    stats,
+  );
+}
 
 function configureAlertProperties(componentSet, stats) {
   configureNamedTextProperty(componentSet, "Title", "Title", "Heads up", stats);
@@ -16183,6 +16338,159 @@ async function updateSkeletonVariant(
     variableByName,
     stats,
   );
+}
+
+async function createBoxVariant({ value, variableByName, fonts, stats }) {
+  const component = figma.createComponent();
+  await updateBoxVariant(component, {
+    value,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+function parseBoxVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (BOX_SURFACES.indexOf(values.Surface) === -1) return null;
+
+  return {
+    value: values.Surface,
+    surface: values.Surface,
+  };
+}
+
+async function updateBoxVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const config = boxSurfaceConfig(value);
+  component.name = `Surface=${value}`;
+  component.layoutMode = "VERTICAL";
+  component.primaryAxisSizingMode = "FIXED";
+  component.counterAxisSizingMode = "FIXED";
+  component.primaryAxisAlignItems = "CENTER";
+  component.counterAxisAlignItems = "CENTER";
+  component.itemSpacing = 0;
+  component.paddingLeft = 16;
+  component.paddingRight = 16;
+  component.paddingTop = 16;
+  component.paddingBottom = 16;
+  component.resizeWithoutConstraints(320, 120);
+  component.cornerRadius = 8;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Box");
+
+  component.fills = config.background
+    ? [
+        paintFromVariable(
+          config.background,
+          config.backgroundFallback,
+          variableByName,
+          stats,
+        ),
+      ]
+    : [];
+
+  if (config.stroke) {
+    component.strokes = [
+      paintFromVariable(
+        config.stroke,
+        config.strokeFallback,
+        variableByName,
+        stats,
+      ),
+    ];
+    component.strokeWeight = 1;
+  } else {
+    component.strokes = [];
+    component.strokeWeight = 0;
+  }
+
+  bindSizeVariables(
+    component,
+    "Box/width/default",
+    "Box/min-height/default",
+    variableByName,
+    stats,
+  );
+  for (const field of [
+    "paddingLeft",
+    "paddingRight",
+    "paddingTop",
+    "paddingBottom",
+  ]) {
+    bindFloatVariable(
+      component,
+      field,
+      "Box/padding/default",
+      variableByName,
+      stats,
+    );
+  }
+  bindFloatVariable(
+    component,
+    "cornerRadius",
+    "Box/radius",
+    variableByName,
+    stats,
+  );
+  if (config.stroke) {
+    bindFloatVariable(
+      component,
+      "strokeWeight",
+      "Box/stroke/width",
+      variableByName,
+      stats,
+    );
+  }
+
+  let text = directChildNamed(component, "Box Text");
+  if (text && text.type !== "TEXT") {
+    text.remove();
+    text = null;
+  }
+
+  if (!text || text.type !== "TEXT") {
+    text = figma.createText();
+    text.name = "Box Text";
+  }
+
+  text.fontName = fonts.regular;
+  text.fontSize = 14;
+  text.lineHeight = { unit: "PIXELS", value: 20 };
+  text.textAutoResize = "WIDTH_AND_HEIGHT";
+  bindFloatVariable(
+    text,
+    "fontSize",
+    "Box/text/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    text,
+    "lineHeight",
+    "Box/text/line-height",
+    variableByName,
+    stats,
+  );
+  text.characters = value === "Transparent" ? "Content slot" : `${value} box`;
+  text.fills = [
+    paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
+  ];
+  component.appendChild(text);
 }
 
 function parseCounterVariantName(name) {
@@ -23240,6 +23548,26 @@ function skeletonMetrics(shape) {
     heightToken: "Skeleton/height/line",
     radiusToken: "Skeleton/radius/default",
   };
+}
+
+function boxSurfaceConfig(surface) {
+  if (surface === "Surface") {
+    return {
+      background: "Colors/background/100",
+      backgroundFallback: "#E4E6EA",
+    };
+  }
+
+  if (surface === "Outlined") {
+    return {
+      background: "Surface/0",
+      stroke: "Colors/background/200",
+      backgroundFallback: "#FFFFFF",
+      strokeFallback: "#C7CAD1",
+    };
+  }
+
+  return {};
 }
 
 function tabsWidthForCount(count) {

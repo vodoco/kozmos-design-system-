@@ -112,6 +112,7 @@ const files = {
   reactLabel: "packages/react/src/components/Label/Label.tsx",
   reactSeparator: "packages/react/src/components/Separator/Separator.tsx",
   reactSkeleton: "packages/react/src/components/Skeleton/Skeleton.tsx",
+  reactBox: "packages/react/src/components/Box/Box.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -1009,6 +1010,72 @@ assertContains(
   source.figma,
   "Skeleton / v1",
   "Skeleton component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Box / v1",
+  "Box component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const BOX_SURFACES =",
+  "Box surface axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildBoxComponent()",
+  "Box build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateBoxComponent()",
+  "Box update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Box / v1"',
+  "Box documentation metadata",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `name: "Box/padding/default"`,
+  "Box padding component token",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="box">Box / v1</option>',
+  "Box UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-box"',
+  "Box UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Box / v1**",
+  "Box importer documentation",
+);
+assertContains(
+  files.reactBox,
+  source.reactBox,
+  "asChild?: boolean",
+  "React Box asChild support",
+);
+assertContains(
+  files.reactBox,
+  source.reactBox,
+  "Slot",
+  "React Box Slot composition",
 );
 assertContains(
   files.figma,
