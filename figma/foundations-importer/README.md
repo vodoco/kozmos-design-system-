@@ -23,6 +23,8 @@ After importing foundations, use the **Components** picker to select a builder, 
 
 Select **Text / v1** and click **Build** to create the Wave 2 typography primitive. It generates `Size`, `Weight`, and `Tone` axes with editable `Text` content. White/inverse text stays out of v1 until inverse-surface QA is defined, so the generated tones can pass the standard Light/Dark contrast audit.
 
+Select **Heading / v1** and click **Build** after Text. It creates semantic `Level` variants from H1 through H6 with editable `Heading Text`, reusing the Text typography variable scale so heading and body copy stay aligned.
+
 Select **Curated Icons** and click **Build** to create the curated Kozmos icon source set on the `Icons` page. The first pass imports the 38 icons from `@kozmos/icons` / `docs/figma-pointr-icon-catalog.json` by Pointr component key, then applies them as preferred values for Button and IconButton `Icon` instance-swap slots.
 
 Select **Curated Icons** and click **Update** when the curated registry or Pointr source components change. It updates icon source components in place, preserves their node IDs, and keeps each nested `Pointr Source` stretched to the 24px icon bounds so resized Button/IconButton slots do not clip or overflow the source artwork.

@@ -633,6 +633,7 @@
             <select id="componentSelect" aria-label="Component">
               <optgroup label="Typography">
                 <option value="text">Text / v1</option>
+                <option value="heading">Heading / v1</option>
               </optgroup>
               <optgroup label="Actions">
                 <option value="button">Button / v1</option>
@@ -820,6 +821,13 @@
           update: "update-text",
           rebuild: "rebuild-text",
           hint: "Build creates Text / v1 with Size, Weight, and Tone axes plus editable Text content. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        heading: {
+          label: "Heading / v1",
+          build: "build-heading",
+          update: "update-heading",
+          rebuild: "rebuild-heading",
+          hint: "Build creates Heading / v1 with semantic Level variants and editable Heading Text. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         button: {
           label: "Button / v1",

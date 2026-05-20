@@ -107,6 +107,7 @@ const files = {
   figmaReadme: "figma/foundations-importer/README.md",
   figmaLinked: "figma.linked.config.json",
   reactText: "packages/react/src/components/Text/Text.tsx",
+  reactHeading: "packages/react/src/components/Heading/Heading.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -974,6 +975,72 @@ assertContains(
   source.figma,
   "Text / v1",
   "Text component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Heading / v1",
+  "Heading component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const HEADING_LEVELS =",
+  "Heading level axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildHeadingComponent()",
+  "Heading build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateHeadingComponent()",
+  "Heading update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Heading / v1"',
+  "Heading documentation metadata",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="heading">Heading / v1</option>',
+  "Heading UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-heading"',
+  "Heading UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Heading / v1**",
+  "Heading importer documentation",
+);
+assertContains(
+  files.reactHeading,
+  source.reactHeading,
+  "level: {",
+  "React Heading level variants",
+);
+assertContains(
+  files.reactHeading,
+  source.reactHeading,
+  "cva('font-bold'",
+  "React Heading uses bold base typography",
+);
+assertContains(
+  files.reactHeading,
+  source.reactHeading,
+  "1: 'text-4xl'",
+  "React Heading H1 maps to 4xl",
 );
 for (const tokenName of [
   "Text/font-size/xs",

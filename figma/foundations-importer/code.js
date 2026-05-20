@@ -21,6 +21,7 @@ const TEXT_SIZES = [
 ];
 const TEXT_WEIGHTS = ["Normal", "Medium", "Semibold", "Bold"];
 const TEXT_TONES = ["Default", "Muted", "Primary", "Destructive"];
+const HEADING_LEVELS = ["H1", "H2", "H3", "H4", "H5", "H6"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -95,6 +96,7 @@ const COMPONENT_PAGE_LAYOUT_ROW_GAP = 420;
 const COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT = 260;
 const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Text / v1": 980,
+  "Heading / v1": 360,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -116,6 +118,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
 };
 const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Text / v1",
+  "Heading / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -295,6 +298,29 @@ const COMPONENT_DOCS = [
       "Text contrast passes in Light and Dark modes for every included tone.",
       "White/inverse text is intentionally not part of v1 until inverse surface QA is defined.",
       "Text is non-interactive unless composed inside another control.",
+    ],
+  },
+  {
+    componentName: "Heading",
+    componentSetName: "Heading / v1",
+    category: "Typography",
+    summary:
+      "Heading presents section titles with semantic levels that match the React Heading API.",
+    usage: [
+      "Use one H1 per composed screen or major panel.",
+      "Use H2 through H4 for nested content structure.",
+      "Avoid choosing heading levels only for size; keep hierarchy meaningful.",
+    ],
+    api: [
+      "Level maps to Heading.level.",
+      "Heading Text maps to children in Code Connect.",
+      "Font size and line height reuse the Text typography token scale.",
+    ],
+    properties: ["Level: H1, H2, H3, H4, H5, H6", "Heading Text"],
+    accessibility: [
+      "Heading levels should preserve document and screen-reader structure in product code.",
+      "Text contrast passes in Light and Dark modes.",
+      "Heading is non-interactive unless composed inside another control.",
     ],
   },
   {
@@ -2517,6 +2543,24 @@ figma.ui.onmessage = async (message) => {
       return;
     }
 
+    if (message.type === "build-heading") {
+      const result = await buildHeadingComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-heading") {
+      const result = await updateHeadingComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-heading") {
+      const result = await rebuildHeadingComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
     if (message.type === "build-button") {
       const result = await buildButtonComponent();
       figma.ui.postMessage({ type: "component-result", result });
@@ -4626,6 +4670,7 @@ function unexpectedTopLevelNodesForPage(page) {
 
   const expectedComponentSets = new Set([
     "Text / v1",
+    "Heading / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5415,6 +5460,7 @@ function shouldAuditLayoutBindings(name) {
   return (
     [
       "Text / v1",
+      "Heading / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -5442,6 +5488,7 @@ function shouldAuditTypographyBindings(name) {
   return (
     [
       "Text / v1",
+      "Heading / v1",
       "Button / v1",
       "Counter / v1",
       "Badge / v1",
@@ -5526,6 +5573,12 @@ function expectedVariantAxesForComponentSetName(name) {
       Size: TEXT_SIZES,
       Weight: TEXT_WEIGHTS,
       Tone: TEXT_TONES,
+    };
+  }
+
+  if (name === "Heading / v1") {
+    return {
+      Level: HEADING_LEVELS,
     };
   }
 
@@ -6825,6 +6878,7 @@ function auditComponentContrastForMode(
   for (const component of childComponents) {
     const props =
       parseTextVariantName(component.name) ||
+      parseHeadingVariantName(component.name) ||
       parseButtonVariantName(component.name) ||
       parseIconButtonVariantName(component.name) ||
       parseCounterVariantName(component.name) ||
@@ -11625,6 +11679,47 @@ async function updateTextComponent() {
   return stats;
 }
 
+async function buildHeadingComponent() {
+  return buildSingleAxisComponent({
+    componentName: "Heading",
+    componentSetName: "Heading / v1",
+    axisName: "Level",
+    values: HEADING_LEVELS,
+    x: 80,
+    y: 8660,
+    xStep: 260,
+    createVariant: createHeadingVariant,
+    configureProperties: configureHeadingProperties,
+    description: [
+      "Kozmos Heading component set generated from React Heading API.",
+      "Level maps to Heading.level.",
+      "Heading Text maps to children in Code Connect.",
+      "Heading typography reuses Text scale variables.",
+    ],
+  });
+}
+
+async function updateHeadingComponent() {
+  return updateSingleAxisComponent({
+    componentName: "Heading",
+    componentSetName: "Heading / v1",
+    axisName: "Level",
+    values: HEADING_LEVELS,
+    xStep: 260,
+    createVariant: createHeadingVariant,
+    updateVariant: updateHeadingVariant,
+    parseVariantName: parseHeadingVariantName,
+    configureProperties: configureHeadingProperties,
+    description: [
+      "Kozmos Heading component set generated from React Heading API.",
+      "Level maps to Heading.level.",
+      "Heading Text maps to children in Code Connect.",
+      "Heading typography reuses Text scale variables.",
+      "Updated in place to preserve the Code Connect node ID.",
+    ],
+  });
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -13042,6 +13137,14 @@ async function rebuildTextComponent() {
   });
 }
 
+async function rebuildHeadingComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Heading",
+    componentSetName: "Heading / v1",
+    build: buildHeadingComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -13995,6 +14098,16 @@ function configureTextProperties(componentSet, stats) {
     "Text",
     "Text",
     "Kozmos text",
+    stats,
+  );
+}
+
+function configureHeadingProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Heading Text",
+    "Heading Text",
+    "Heading",
     stats,
   );
 }
@@ -15016,6 +15129,94 @@ async function updateTextVariant(
     ),
   ];
   setTextAutoResize(text, "WIDTH_AND_HEIGHT");
+  component.appendChild(text);
+}
+
+async function createHeadingVariant({ value, variableByName, fonts, stats }) {
+  const component = figma.createComponent();
+  await updateHeadingVariant(component, {
+    value,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+function parseHeadingVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (HEADING_LEVELS.indexOf(values.Level) === -1) return null;
+
+  return { value: values.Level, level: values.Level };
+}
+
+async function updateHeadingVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const metrics = headingMetrics(value);
+
+  component.name = `Level=${value}`;
+  component.layoutMode = "HORIZONTAL";
+  component.primaryAxisSizingMode = "AUTO";
+  component.counterAxisSizingMode = "AUTO";
+  component.primaryAxisAlignItems = "MIN";
+  component.counterAxisAlignItems = "CENTER";
+  component.itemSpacing = 0;
+  component.paddingLeft = 0;
+  component.paddingRight = 0;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.fills = [];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Heading");
+
+  let text = directChildNamed(component, "Heading Text");
+  if (text && text.type !== "TEXT") {
+    text.remove();
+    text = null;
+  }
+
+  if (!text || text.type !== "TEXT") {
+    text = figma.createText();
+    text.name = "Heading Text";
+  }
+
+  text.fontName = fonts.bold || fonts.medium;
+  text.fontSize = metrics.fontSize;
+  text.lineHeight = { unit: "PIXELS", value: metrics.lineHeight };
+  text.textAutoResize = "WIDTH_AND_HEIGHT";
+  bindFloatVariable(
+    text,
+    "fontSize",
+    `Text/font-size/${metrics.token}`,
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    text,
+    "lineHeight",
+    `Text/line-height/${metrics.token}`,
+    variableByName,
+    stats,
+  );
+  text.characters = headingSampleForLevel(value);
+  text.fills = [
+    paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
+  ];
   component.appendChild(text);
 }
 
@@ -22009,6 +22210,24 @@ function textSampleForSize(size) {
   if (size === "XS" || size === "Small") return "Kozmos label";
   if (size === "3XLarge" || size === "4XLarge") return "Kozmos";
   return "Kozmos text";
+}
+
+function headingMetrics(level) {
+  const metrics = {
+    H1: { fontSize: 36, lineHeight: 40, token: "4xl" },
+    H2: { fontSize: 30, lineHeight: 36, token: "3xl" },
+    H3: { fontSize: 24, lineHeight: 32, token: "2xl" },
+    H4: { fontSize: 20, lineHeight: 28, token: "xl" },
+    H5: { fontSize: 18, lineHeight: 28, token: "lg" },
+    H6: { fontSize: 16, lineHeight: 24, token: "base" },
+  };
+
+  return metrics[level] || metrics.H2;
+}
+
+function headingSampleForLevel(level) {
+  if (level === "H1" || level === "H2") return "Kozmos";
+  return `${level} Heading`;
 }
 
 function tabsWidthForCount(count) {
