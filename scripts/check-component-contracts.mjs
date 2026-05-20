@@ -111,6 +111,7 @@ const files = {
   reactLink: "packages/react/src/components/Link/Link.tsx",
   reactLabel: "packages/react/src/components/Label/Label.tsx",
   reactSeparator: "packages/react/src/components/Separator/Separator.tsx",
+  reactSkeleton: "packages/react/src/components/Skeleton/Skeleton.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -1002,6 +1003,72 @@ assertContains(
   source.figma,
   "Separator / v1",
   "Separator component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Skeleton / v1",
+  "Skeleton component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const SKELETON_SHAPES =",
+  "Skeleton shape axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildSkeletonComponent()",
+  "Skeleton build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateSkeletonComponent()",
+  "Skeleton update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Skeleton / v1"',
+  "Skeleton documentation metadata",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `name: "Skeleton/height/block"`,
+  "Skeleton block height component token",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="skeleton">Skeleton / v1</option>',
+  "Skeleton UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-skeleton"',
+  "Skeleton UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Skeleton / v1**",
+  "Skeleton importer documentation",
+);
+assertContains(
+  files.reactSkeleton,
+  source.reactSkeleton,
+  "animate-pulse",
+  "React Skeleton loading animation",
+);
+assertContains(
+  files.reactSkeleton,
+  source.reactSkeleton,
+  "bg-muted",
+  "React Skeleton muted surface",
 );
 assertContains(
   files.figma,

@@ -26,6 +26,7 @@ const LINK_VARIANTS = ["Default", "Subtle"];
 const LINK_STATES = ["Default", "Focus"];
 const LABEL_STATES = ["Default", "Disabled"];
 const SEPARATOR_ORIENTATIONS = ["Horizontal", "Vertical"];
+const SKELETON_SHAPES = ["Line", "Block", "Circle"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -104,6 +105,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Link / v1": 260,
   "Label / v1": 260,
   "Separator / v1": 260,
+  "Skeleton / v1": 260,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -129,6 +131,7 @@ const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Link / v1",
   "Label / v1",
   "Separator / v1",
+  "Skeleton / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -404,6 +407,29 @@ const COMPONENT_DOCS = [
       "Separator uses a foreground boundary token with non-text contrast headroom.",
       "Product code should mark purely visual separators as decorative.",
       "Separator is non-interactive.",
+    ],
+  },
+  {
+    componentName: "Skeleton",
+    componentSetName: "Skeleton / v1",
+    category: "Feedback",
+    summary:
+      "Skeleton reserves space while content is loading, using non-interactive placeholder shapes.",
+    usage: [
+      "Use Line for text rows and metadata placeholders.",
+      "Use Block for cards, media, and larger content regions.",
+      "Use Circle for avatar or icon placeholders.",
+    ],
+    api: [
+      "Shape maps to common Skeleton composition examples.",
+      "Animation remains a runtime concern in React.",
+      "Sizing uses component float variables for stable placeholders.",
+    ],
+    properties: ["Shape: Line, Block, Circle"],
+    accessibility: [
+      "Skeleton is non-interactive and should not receive focus.",
+      "Product code should expose loading status when the wait is meaningful.",
+      "Placeholder contrast is visual only and does not communicate state by itself.",
     ],
   },
   {
@@ -2632,6 +2658,28 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Button/height/default",
     scopes: ["WIDTH_HEIGHT"],
   },
+  { name: "Skeleton/width/line", value: 240, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Skeleton/height/line", value: 16, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Skeleton/width/block", value: 320, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Skeleton/height/block", value: 80, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Skeleton/size/circle",
+    value: 40,
+    alias: "Avatar/size/default",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "Skeleton/radius/default",
+    value: 8,
+    alias: "Radius/DEFAULT",
+    scopes: ["CORNER_RADIUS"],
+  },
+  {
+    name: "Skeleton/radius/circle",
+    value: 9999,
+    alias: "Radius/full",
+    scopes: ["CORNER_RADIUS"],
+  },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -2739,6 +2787,24 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "rebuild-separator") {
       const result = await rebuildSeparatorComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "build-skeleton") {
+      const result = await buildSkeletonComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-skeleton") {
+      const result = await updateSkeletonComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-skeleton") {
+      const result = await rebuildSkeletonComponent();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -4856,6 +4922,7 @@ function unexpectedTopLevelNodesForPage(page) {
     "Link / v1",
     "Label / v1",
     "Separator / v1",
+    "Skeleton / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5650,6 +5717,7 @@ function shouldAuditLayoutBindings(name) {
       "Link / v1",
       "Label / v1",
       "Separator / v1",
+      "Skeleton / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -5789,6 +5857,12 @@ function expectedVariantAxesForComponentSetName(name) {
   if (name === "Separator / v1") {
     return {
       Orientation: SEPARATOR_ORIENTATIONS,
+    };
+  }
+
+  if (name === "Skeleton / v1") {
+    return {
+      Shape: SKELETON_SHAPES,
     };
   }
 
@@ -12166,6 +12240,46 @@ async function updateSeparatorComponent() {
   });
 }
 
+async function buildSkeletonComponent() {
+  return buildSingleAxisComponent({
+    componentName: "Skeleton",
+    componentSetName: "Skeleton / v1",
+    axisName: "Shape",
+    values: SKELETON_SHAPES,
+    x: 80,
+    y: 10060,
+    xStep: 360,
+    createVariant: createSkeletonVariant,
+    configureProperties: configureSkeletonProperties,
+    description: [
+      "Kozmos Skeleton component set generated from React Skeleton API.",
+      "Shape maps to common placeholder compositions.",
+      "Animation remains a runtime concern.",
+      "Sizing uses component float variables.",
+    ],
+  });
+}
+
+async function updateSkeletonComponent() {
+  return updateSingleAxisComponent({
+    componentName: "Skeleton",
+    componentSetName: "Skeleton / v1",
+    axisName: "Shape",
+    values: SKELETON_SHAPES,
+    xStep: 360,
+    createVariant: createSkeletonVariant,
+    updateVariant: updateSkeletonVariant,
+    parseVariantName: parseSkeletonVariantName,
+    configureProperties: configureSkeletonProperties,
+    description: [
+      "Kozmos Skeleton component set generated from React Skeleton API.",
+      "Shape maps to common placeholder compositions.",
+      "Animation remains a runtime concern.",
+      "Updated in place to preserve the Code Connect node ID.",
+    ],
+  });
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -13615,6 +13729,14 @@ async function rebuildSeparatorComponent() {
   });
 }
 
+async function rebuildSkeletonComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Skeleton",
+    componentSetName: "Skeleton / v1",
+    build: buildSkeletonComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -14603,6 +14725,8 @@ function configureLabelProperties(componentSet, stats) {
 }
 
 function configureSeparatorProperties(_componentSet, _stats) {}
+
+function configureSkeletonProperties(_componentSet, _stats) {}
 
 function configureAlertProperties(componentSet, stats) {
   configureNamedTextProperty(componentSet, "Title", "Title", "Heads up", stats);
@@ -15987,6 +16111,75 @@ async function updateSeparatorVariant(
     component,
     horizontal ? "Separator/length/default" : "Separator/thickness",
     horizontal ? "Separator/thickness" : "Separator/height/vertical",
+    variableByName,
+    stats,
+  );
+}
+
+async function createSkeletonVariant({ value, variableByName, stats }) {
+  const component = figma.createComponent();
+  await updateSkeletonVariant(component, {
+    value,
+    variableByName,
+    stats,
+  });
+  return component;
+}
+
+function parseSkeletonVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (SKELETON_SHAPES.indexOf(values.Shape) === -1) return null;
+
+  return {
+    value: values.Shape,
+    shape: values.Shape,
+  };
+}
+
+async function updateSkeletonVariant(
+  component,
+  { value, variableByName, stats },
+) {
+  const metrics = skeletonMetrics(value);
+  component.name = `Shape=${value}`;
+  component.layoutMode = "NONE";
+  component.resizeWithoutConstraints(metrics.width, metrics.height);
+  component.cornerRadius = metrics.radius;
+  component.fills = [
+    paintFromVariable(
+      "Colors/background/200",
+      "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Skeleton");
+
+  bindSizeVariables(
+    component,
+    metrics.widthToken,
+    metrics.heightToken,
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    component,
+    "cornerRadius",
+    metrics.radiusToken,
     variableByName,
     stats,
   );
@@ -23014,6 +23207,39 @@ function headingMetrics(level) {
 function headingSampleForLevel(level) {
   if (level === "H1" || level === "H2") return "Kozmos";
   return `${level} Heading`;
+}
+
+function skeletonMetrics(shape) {
+  if (shape === "Circle") {
+    return {
+      width: 40,
+      height: 40,
+      radius: 9999,
+      widthToken: "Skeleton/size/circle",
+      heightToken: "Skeleton/size/circle",
+      radiusToken: "Skeleton/radius/circle",
+    };
+  }
+
+  if (shape === "Block") {
+    return {
+      width: 320,
+      height: 80,
+      radius: 8,
+      widthToken: "Skeleton/width/block",
+      heightToken: "Skeleton/height/block",
+      radiusToken: "Skeleton/radius/default",
+    };
+  }
+
+  return {
+    width: 240,
+    height: 16,
+    radius: 8,
+    widthToken: "Skeleton/width/line",
+    heightToken: "Skeleton/height/line",
+    radiusToken: "Skeleton/radius/default",
+  };
 }
 
 function tabsWidthForCount(count) {
