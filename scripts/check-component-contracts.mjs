@@ -112,13 +112,10 @@ const files = {
   figmaReadme: "figma/foundations-importer/README.md",
   figmaLinked: "figma.linked.config.json",
   reactText: "packages/react/src/components/Text/Text.tsx",
-  reactTextFigma: "packages/react/src/components/Text/Text.figma.tsx",
   reactHeading: "packages/react/src/components/Heading/Heading.tsx",
-  reactHeadingFigma: "packages/react/src/components/Heading/Heading.figma.tsx",
   reactLink: "packages/react/src/components/Link/Link.tsx",
   reactLinkFigma: "packages/react/src/components/Link/Link.figma.tsx",
   reactLabel: "packages/react/src/components/Label/Label.tsx",
-  reactLabelFigma: "packages/react/src/components/Label/Label.figma.tsx",
   reactSeparator: "packages/react/src/components/Separator/Separator.tsx",
   reactSeparatorFigma:
     "packages/react/src/components/Separator/Separator.figma.tsx",
@@ -703,54 +700,6 @@ assertContains(
   "Alert Code Connect description composition",
 );
 assertContains(
-  files.reactTextFigma,
-  source.reactTextFigma,
-  "node-id=170-1361",
-  "Text Code Connect node ID",
-);
-assertContains(
-  files.reactTextFigma,
-  source.reactTextFigma,
-  'size: figma.enum("Size"',
-  "Text Code Connect size mapping",
-);
-assertContains(
-  files.reactTextFigma,
-  source.reactTextFigma,
-  'weight: figma.enum("Weight"',
-  "Text Code Connect weight mapping",
-);
-assertContains(
-  files.reactTextFigma,
-  source.reactTextFigma,
-  'color: figma.enum("Tone"',
-  "Text Code Connect tone mapping",
-);
-assertContains(
-  files.reactTextFigma,
-  source.reactTextFigma,
-  'children: figma.string("Text")',
-  "Text Code Connect text mapping",
-);
-assertContains(
-  files.reactHeadingFigma,
-  source.reactHeadingFigma,
-  "node-id=170-1374",
-  "Heading Code Connect node ID",
-);
-assertContains(
-  files.reactHeadingFigma,
-  source.reactHeadingFigma,
-  'level: figma.enum("Level"',
-  "Heading Code Connect level mapping",
-);
-assertContains(
-  files.reactHeadingFigma,
-  source.reactHeadingFigma,
-  'children: figma.string("Heading Text")',
-  "Heading Code Connect text mapping",
-);
-assertContains(
   files.reactLinkFigma,
   source.reactLinkFigma,
   "node-id=170-1385",
@@ -773,24 +722,6 @@ assertContains(
   source.reactLinkFigma,
   '<Link href="#" variant={variant}>',
   "Link Code Connect href composition",
-);
-assertContains(
-  files.reactLabelFigma,
-  source.reactLabelFigma,
-  "node-id=170-1390",
-  "Label Code Connect node ID",
-);
-assertContains(
-  files.reactLabelFigma,
-  source.reactLabelFigma,
-  'children: figma.string("Label Text")',
-  "Label Code Connect text mapping",
-);
-assertContains(
-  files.reactLabelFigma,
-  source.reactLabelFigma,
-  '<Label htmlFor="field">',
-  "Label Code Connect htmlFor composition",
 );
 assertContains(
   files.reactSeparatorFigma,
@@ -1124,24 +1055,9 @@ assertContains(
 );
 for (const [templatePath, sourcePath, label] of [
   [
-    "src/components/Text/Text.figma.tsx",
-    "src/components/Text/Text.tsx",
-    "Text",
-  ],
-  [
-    "src/components/Heading/Heading.figma.tsx",
-    "src/components/Heading/Heading.tsx",
-    "Heading",
-  ],
-  [
     "src/components/Link/Link.figma.tsx",
     "src/components/Link/Link.tsx",
     "Link",
-  ],
-  [
-    "src/components/Label/Label.figma.tsx",
-    "src/components/Label/Label.tsx",
-    "Label",
   ],
   [
     "src/components/Separator/Separator.figma.tsx",
@@ -1269,26 +1185,8 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  "Text / v1",
-  "Text component set generation",
-);
-assertContains(
-  files.figma,
-  source.figma,
-  "Heading / v1",
-  "Heading component set generation",
-);
-assertContains(
-  files.figma,
-  source.figma,
   "Link / v1",
   "Link component set generation",
-);
-assertContains(
-  files.figma,
-  source.figma,
-  "Label / v1",
-  "Label component set generation",
 );
 assertContains(
   files.figma,
@@ -1842,53 +1740,11 @@ assertContains(
   "orientation = 'horizontal'",
   "React Separator horizontal default",
 );
-assertContains(
-  files.figma,
-  source.figma,
-  "const LABEL_STATES =",
-  "Label state axis registry",
-);
-assertContains(
-  files.figma,
-  source.figma,
-  "async function buildLabelComponent()",
-  "Label build handler",
-);
-assertContains(
-  files.figma,
-  source.figma,
-  "async function updateLabelComponent()",
-  "Label update handler",
-);
-assertContains(
-  files.figma,
-  source.figma,
-  'componentSetName: "Label / v1"',
-  "Label documentation metadata",
-);
-assertContains(
-  files.figma,
-  source.figma,
-  `name: "Label/font-size"`,
-  "Label font-size component token",
-);
-assertContains(
+assertNotContains(
   files.figmaUi,
   source.figmaUi,
   '<option value="label">Label / v1</option>',
-  "Label UI picker option",
-);
-assertContains(
-  files.figmaUi,
-  source.figmaUi,
-  'build: "build-label"',
-  "Label UI build action",
-);
-assertContains(
-  files.figmaReadme,
-  source.figmaReadme,
-  "Select **Label / v1**",
-  "Label importer documentation",
+  "Label component picker option after typography demotion",
 );
 assertContains(
   files.reactLabel,
@@ -1978,43 +1834,13 @@ assertContains(
   files.figma,
   source.figma,
   "const HEADING_LEVELS =",
-  "Heading level axis registry",
+  "Heading style scale registry",
 );
-assertContains(
-  files.figma,
-  source.figma,
-  "async function buildHeadingComponent()",
-  "Heading build handler",
-);
-assertContains(
-  files.figma,
-  source.figma,
-  "async function updateHeadingComponent()",
-  "Heading update handler",
-);
-assertContains(
-  files.figma,
-  source.figma,
-  'componentSetName: "Heading / v1"',
-  "Heading documentation metadata",
-);
-assertContains(
+assertNotContains(
   files.figmaUi,
   source.figmaUi,
   '<option value="heading">Heading / v1</option>',
-  "Heading UI picker option",
-);
-assertContains(
-  files.figmaUi,
-  source.figmaUi,
-  'build: "build-heading"',
-  "Heading UI build action",
-);
-assertContains(
-  files.figmaReadme,
-  source.figmaReadme,
-  "Select **Heading / v1**",
-  "Heading importer documentation",
+  "Heading component picker option after typography demotion",
 );
 assertContains(
   files.reactHeading,
@@ -2070,38 +1896,14 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  "async function buildTextComponent()",
-  "Text build handler",
+  "TEXT_STYLE_GROUP_TEXT",
+  "Text style group registry",
 );
-assertContains(
-  files.figma,
-  source.figma,
-  "async function updateTextComponent()",
-  "Text update handler",
-);
-assertContains(
-  files.figma,
-  source.figma,
-  'componentSetName: "Text / v1"',
-  "Text documentation metadata",
-);
-assertContains(
+assertNotContains(
   files.figmaUi,
   source.figmaUi,
   '<option value="text">Text / v1</option>',
-  "Text UI picker option",
-);
-assertContains(
-  files.figmaUi,
-  source.figmaUi,
-  'build: "build-text"',
-  "Text UI build action",
-);
-assertContains(
-  files.figmaReadme,
-  source.figmaReadme,
-  "Select **Text / v1**",
-  "Text importer documentation",
+  "Text component picker option after typography demotion",
 );
 assertContains(
   files.reactText,

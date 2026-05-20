@@ -21,13 +21,9 @@ The plugin creates the planned library pages and local variables with Light/Dark
 
 After importing foundations, use the **Components** picker to select a builder, then click **Build** or **Update**. Build is for the first creation pass. Update patches an existing component in place so Code Connect node IDs stay stable. The status row above the log shows which selected action is running and whether it finished.
 
-Select **Text / v1** and click **Build** to create the Wave 2 typography primitive. It generates `Size`, `Weight`, and `Tone` axes with editable `Text` content. White/inverse text stays out of v1 until inverse-surface QA is defined, so the generated tones can pass the standard Light/Dark contrast audit.
+Typography primitives such as Text, Heading, and Label are published as local Figma text styles rather than component sets. Use **Apply Text Styles** after component updates to create or refresh those styles and attach them to generated component text layers. The React package still exposes `Text`, `Heading`, and `Label` primitives for semantic code composition.
 
-Select **Heading / v1** and click **Build** after Text. It creates semantic `Level` variants from H1 through H6 with editable `Heading Text`, reusing the Text typography variable scale so heading and body copy stay aligned.
-
-Select **Link / v1** and click **Build** after Text. It creates Default/Subtle visual variants with Default/Focus states and editable `Link Text`, using the accessible brand and muted foreground tokens from the Core v1 contrast pass.
-
-Select **Label / v1** and click **Build** before adding more field-like components. It creates Default and Disabled state examples with editable `Label Text`, aligned to the form label typography scale.
+Select **Link / v1** and click **Build** after text styles are available. It creates Default/Subtle visual variants with Default/Focus states and editable `Link Text`, using the accessible brand and muted foreground tokens from the Core v1 contrast pass.
 
 Select **Separator / v1** and click **Build** for the layout boundary primitive. It creates Horizontal and Vertical orientation variants with variable-bound length/thickness and the same foreground boundary color used by the contrast-safe Core v1 controls.
 

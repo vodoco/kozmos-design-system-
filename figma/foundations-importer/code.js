@@ -106,10 +106,7 @@ const COMPONENT_PAGE_LAYOUT_Y = 80;
 const COMPONENT_PAGE_LAYOUT_ROW_GAP = 420;
 const COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT = 260;
 const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
-  "Text / v1": 980,
-  "Heading / v1": 360,
   "Link / v1": 260,
-  "Label / v1": 260,
   "Separator / v1": 260,
   "Skeleton / v1": 260,
   "Box / v1": 360,
@@ -137,10 +134,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Avatar / v1": 260,
 };
 const COMPONENT_PAGE_LAYOUT_ORDER = [
-  "Text / v1",
-  "Heading / v1",
   "Link / v1",
-  "Label / v1",
   "Separator / v1",
   "Skeleton / v1",
   "Box / v1",
@@ -301,58 +295,6 @@ const SURFACE_QA_COMPONENT_GROUPS = [
 ];
 const COMPONENT_DOCS = [
   {
-    componentName: "Text",
-    componentSetName: "Text / v1",
-    category: "Typography",
-    summary:
-      "Text presents body copy and compact labels with controlled size, weight, and semantic tone.",
-    usage: [
-      "Use Base Default Normal for standard body copy.",
-      "Use Muted for secondary metadata or helper copy.",
-      "Use Primary or Destructive only when the text carries semantic emphasis.",
-    ],
-    api: [
-      "Size maps to Text.size.",
-      "Weight maps to Text.weight.",
-      "Tone maps to Text.color in Code Connect.",
-      "Text maps to children in Code Connect.",
-    ],
-    properties: [
-      "Size: XS, Small, Base, Large, XLarge, 2XLarge, 3XLarge, 4XLarge",
-      "Weight: Normal, Medium, Semibold, Bold",
-      "Tone: Default, Muted, Primary, Destructive",
-      "Text",
-    ],
-    accessibility: [
-      "Text contrast passes in Light and Dark modes for every included tone.",
-      "White/inverse text is intentionally not part of v1 until inverse surface QA is defined.",
-      "Text is non-interactive unless composed inside another control.",
-    ],
-  },
-  {
-    componentName: "Heading",
-    componentSetName: "Heading / v1",
-    category: "Typography",
-    summary:
-      "Heading presents section titles with semantic levels that match the React Heading API.",
-    usage: [
-      "Use one H1 per composed screen or major panel.",
-      "Use H2 through H4 for nested content structure.",
-      "Avoid choosing heading levels only for size; keep hierarchy meaningful.",
-    ],
-    api: [
-      "Level maps to Heading.level.",
-      "Heading Text maps to children in Code Connect.",
-      "Font size and line height reuse the Text typography token scale.",
-    ],
-    properties: ["Level: H1, H2, H3, H4, H5, H6", "Heading Text"],
-    accessibility: [
-      "Heading levels should preserve document and screen-reader structure in product code.",
-      "Text contrast passes in Light and Dark modes.",
-      "Heading is non-interactive unless composed inside another control.",
-    ],
-  },
-  {
     componentName: "Link",
     componentSetName: "Link / v1",
     category: "Typography",
@@ -377,29 +319,6 @@ const COMPONENT_DOCS = [
       "Link text contrast passes in Light and Dark modes.",
       "The Focus state shows the generated keyboard focus ring.",
       "Product code should preserve native link semantics or accessible button semantics.",
-    ],
-  },
-  {
-    componentName: "Label",
-    componentSetName: "Label / v1",
-    category: "Forms",
-    summary:
-      "Label names a form control or setting with the same text treatment as product inputs.",
-    usage: [
-      "Use Label when the text belongs to an input, selection control, or field group.",
-      "Use Disabled only when the associated control is unavailable.",
-      "Keep labels concise and adjacent to their control.",
-    ],
-    api: [
-      "State maps to disabled examples in Code Connect.",
-      "Label Text maps to children in Code Connect.",
-      "Typography aligns with the shared form label scale.",
-    ],
-    properties: ["State: Default, Disabled", "Label Text"],
-    accessibility: [
-      "Product code should associate labels with controls through htmlFor or Radix Label composition.",
-      "Text contrast passes in Light and Dark modes.",
-      "Label is non-interactive unless composed inside another control.",
     ],
   },
   {
@@ -5339,10 +5258,7 @@ function unexpectedTopLevelNodesForPage(page) {
   if (page.name !== "Components") return [];
 
   const expectedComponentSets = new Set([
-    "Text / v1",
-    "Heading / v1",
     "Link / v1",
-    "Label / v1",
     "Separator / v1",
     "Skeleton / v1",
     "Box / v1",
@@ -5932,7 +5848,6 @@ function auditComponentSet(componentSet, pageName, variableContext) {
 
   if (
     record.name === "Button / v1" ||
-    record.name === "Label / v1" ||
     record.name === "Badge / v1" ||
     record.name === "Checkbox / v1" ||
     record.name === "Radio / v1" ||
@@ -6206,7 +6121,6 @@ function shouldAuditLayoutBindings(name) {
   return (
     [
       "Link / v1",
-      "Label / v1",
       "Separator / v1",
       "Skeleton / v1",
       "Box / v1",
@@ -6261,10 +6175,7 @@ function shouldRequireDisabledState(name) {
 function shouldAuditTypographyBindings(name) {
   return (
     [
-      "Text / v1",
-      "Heading / v1",
       "Link / v1",
-      "Label / v1",
       "Box / v1",
       "Container / v1",
       "Breadcrumb / v1",

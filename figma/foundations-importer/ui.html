@@ -149,6 +149,30 @@
         padding: 9px 10px;
       }
 
+      .stage-card {
+        cursor: pointer;
+        outline: 1px solid transparent;
+        outline-offset: -1px;
+      }
+
+      .stage-card.active {
+        outline-color: var(
+          --figma-color-border-selected,
+          var(--figma-color-border)
+        );
+        background: var(
+          --figma-color-bg-selected-secondary,
+          var(--figma-color-bg-secondary)
+        );
+      }
+
+      .stage-card:focus-visible {
+        outline-color: var(
+          --figma-color-border-selected-strong,
+          var(--figma-color-border-selected, var(--figma-color-border))
+        );
+      }
+
       .stage-card span,
       .metric-card span,
       .field-label,
@@ -534,21 +558,39 @@
       </header>
 
       <section class="stage-grid" aria-label="Workflow status">
-        <div id="stageSetupCard" class="stage-card">
+        <div
+          id="stageSetupCard"
+          class="stage-card"
+          role="button"
+          tabindex="0"
+          data-stage-target="setup"
+        >
           <span>1. Setup</span>
           <strong id="stageSetup">Waiting</strong>
         </div>
-        <div id="stageStatusCard" class="stage-card">
+        <div
+          id="stageStatusCard"
+          class="stage-card"
+          role="button"
+          tabindex="0"
+          data-stage-target="status"
+        >
           <span>2. Status</span>
           <strong id="stageStatus">Not checked</strong>
         </div>
-        <div id="stageComponentsCard" class="stage-card">
+        <div
+          id="stageComponentsCard"
+          class="stage-card"
+          role="button"
+          tabindex="0"
+          data-stage-target="components"
+        >
           <span>3. Components</span>
           <strong id="stageComponents">Unknown</strong>
         </div>
       </section>
 
-      <section class="panel stack">
+      <section id="setupPanel" class="panel stack" data-stage-panel="setup">
         <div class="section-heading">
           <div>
             <h2>1. Setup Foundations</h2>
@@ -595,7 +637,7 @@
         </div>
       </section>
 
-      <section class="panel stack">
+      <section id="statusPanel" class="panel stack" data-stage-panel="status">
         <div class="section-heading">
           <div>
             <h2>2. Library Status</h2>
@@ -648,7 +690,11 @@
         </div>
       </section>
 
-      <section class="panel stack">
+      <section
+        id="componentsPanel"
+        class="panel stack"
+        data-stage-panel="components"
+      >
         <div class="section-heading">
           <div>
             <h2>3. Components</h2>
@@ -664,10 +710,7 @@
             <span class="field-label">Component</span>
             <select id="componentSelect" aria-label="Component">
               <optgroup label="Typography">
-                <option value="text">Text / v1</option>
-                <option value="heading">Heading / v1</option>
                 <option value="link">Link / v1</option>
-                <option value="label">Label / v1</option>
                 <option value="separator">Separator / v1</option>
               </optgroup>
               <optgroup label="Actions">
@@ -788,6 +831,16 @@
       const stageComponentsCard = document.getElementById(
         "stageComponentsCard",
       );
+      const workflowPanels = {
+        setup: document.getElementById("setupPanel"),
+        status: document.getElementById("statusPanel"),
+        components: document.getElementById("componentsPanel"),
+      };
+      const workflowCards = {
+        setup: stageSetupCard,
+        status: stageStatusCard,
+        components: stageComponentsCard,
+      };
       const stageSetup = document.getElementById("stageSetup");
       const stageStatus = document.getElementById("stageStatus");
       const stageComponents = document.getElementById("stageComponents");
@@ -842,6 +895,8 @@
       let busyMode = null;
       let logExpanded = false;
       let initialAuditRequested = false;
+      let activeStage = "setup";
+      let activeStageTouched = false;
       const libraryState = {
         imported: false,
         inspected: false,
@@ -860,33 +915,12 @@
       };
 
       const componentActions = {
-        text: {
-          label: "Text / v1",
-          build: "build-text",
-          update: "update-text",
-          rebuild: "rebuild-text",
-          hint: "Build creates Text / v1 with Size, Weight, and Tone axes plus editable Text content. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
-        },
-        heading: {
-          label: "Heading / v1",
-          build: "build-heading",
-          update: "update-heading",
-          rebuild: "rebuild-heading",
-          hint: "Build creates Heading / v1 with semantic Level variants and editable Heading Text. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
-        },
         link: {
           label: "Link / v1",
           build: "build-link",
           update: "update-link",
           rebuild: "rebuild-link",
           hint: "Build creates Link / v1 with Default/Subtle variants, Default/Focus states, and editable Link Text. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
-        },
-        label: {
-          label: "Label / v1",
-          build: "build-label",
-          update: "update-label",
-          rebuild: "rebuild-label",
-          hint: "Build creates Label / v1 with Default and Disabled states plus editable Label Text. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         separator: {
           label: "Separator / v1",
@@ -1114,6 +1148,15 @@
         ]),
       );
 
+      for (const [stage, card] of Object.entries(workflowCards)) {
+        card.addEventListener("click", () => activateStage(stage, true));
+        card.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          activateStage(stage, true);
+        });
+      }
+
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
@@ -1126,6 +1169,7 @@
       payloadInput.addEventListener("input", parsePayload);
 
       inspectButton.addEventListener("click", () => {
+        activateStage("status", false);
         setActivity("Inspecting the current file...");
         setLogContent("Inspecting file...");
         setBusy(true, "inspect");
@@ -1329,6 +1373,7 @@
       }
 
       function runComponentMessage(options) {
+        activateStage("components", false);
         activeComponentAction = {
           action: options.action,
           label: options.label,
@@ -1348,6 +1393,7 @@
       }
 
       function runAudit(source) {
+        activateStage("status", false);
         const startup = source === "startup";
         const message = startup
           ? "Running initial audit so component recommendations use real file state..."
@@ -1656,10 +1702,43 @@
       function renderAll() {
         renderSetupState();
         renderWorkflow();
+        renderWorkflowVisibility();
         renderStatusDashboard();
         renderComponentOptions();
         renderSelectedComponent();
         renderControls();
+      }
+
+      function activateStage(stage, touched) {
+        if (!workflowPanels[stage]) return;
+        activeStage = stage;
+        if (touched) activeStageTouched = true;
+        renderWorkflowVisibility();
+      }
+
+      function recommendedActiveStage() {
+        if (!foundationsInFile()) return "setup";
+        if (libraryState.audited && libraryState.componentSetCount > 0) {
+          return "components";
+        }
+        if (libraryState.inspected || libraryState.audited) return "status";
+        return "setup";
+      }
+
+      function renderWorkflowVisibility() {
+        if (!activeStageTouched) {
+          activeStage = recommendedActiveStage();
+        }
+
+        for (const [stage, panel] of Object.entries(workflowPanels)) {
+          panel.hidden = stage !== activeStage;
+        }
+
+        for (const [stage, card] of Object.entries(workflowCards)) {
+          const isActive = stage === activeStage;
+          card.classList.toggle("active", isActive);
+          card.setAttribute("aria-pressed", isActive ? "true" : "false");
+        }
       }
 
       function renderWorkflow() {
