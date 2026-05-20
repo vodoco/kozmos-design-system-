@@ -9642,11 +9642,6 @@ async function ensureKozmosTextStyles(fonts, stats) {
       style.lineHeight = { unit: "PIXELS", value: spec.lineHeight };
       style.letterSpacing = { unit: "PERCENT", value: 0 };
       style.paragraphSpacing = 0;
-      if (spec.textDecoration) {
-        style.textDecoration = spec.textDecoration;
-      } else if ("textDecoration" in style) {
-        style.textDecoration = "NONE";
-      }
       activeTextStyleByKey[spec.key] = style;
       incrementStat(stats, "textStylesUpdated");
     } catch (error) {
@@ -9655,6 +9650,18 @@ async function ensureKozmosTextStyles(fonts, stats) {
         `text-style-update:${spec.name}`,
         `${spec.name}: could not update text style (${messageFor(error)})`,
       );
+    }
+
+    if (activeTextStyleByKey[spec.key] && "textDecoration" in style) {
+      try {
+        style.textDecoration = spec.textDecoration || "NONE";
+      } catch (error) {
+        pushUniqueWarning(
+          stats,
+          `text-style-decoration:${spec.name}`,
+          `${spec.name}: could not update text decoration (${messageFor(error)}).`,
+        );
+      }
     }
   }
 
@@ -17366,8 +17373,8 @@ async function updateLinkVariant(
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "WIDTH_AND_HEIGHT";
-  applyTextStyleToNode(text, "linkText", stats);
   text.textDecoration = "UNDERLINE";
+  await applyTextStyleToNodeAsync(text, "linkText", stats);
   bindFloatVariable(text, "fontSize", "Link/font-size", variableByName, stats);
   bindFloatVariable(
     text,
