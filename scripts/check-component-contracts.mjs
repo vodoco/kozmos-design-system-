@@ -116,6 +116,7 @@ const files = {
   reactStack: "packages/react/src/components/Stack/Stack.tsx",
   reactContainer: "packages/react/src/components/Container/Container.tsx",
   reactBreadcrumb: "packages/react/src/components/Breadcrumb/Breadcrumb.tsx",
+  reactAccordion: "packages/react/src/components/Accordion/Accordion.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -1223,6 +1224,72 @@ assertContains(
   source.reactBreadcrumb,
   "BreadcrumbEllipsis",
   "React Breadcrumb ellipsis primitive",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Accordion / v1",
+  "Accordion component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const ACCORDION_STATES =",
+  "Accordion state axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildAccordionComponent()",
+  "Accordion build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateAccordionComponent()",
+  "Accordion update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Accordion / v1"',
+  "Accordion documentation metadata",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `name: "Accordion/trigger/height"`,
+  "Accordion trigger height component token",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="accordion">Accordion / v1</option>',
+  "Accordion UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-accordion"',
+  "Accordion UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Accordion / v1**",
+  "Accordion importer documentation",
+);
+assertContains(
+  files.reactAccordion,
+  source.reactAccordion,
+  "@radix-ui/react-accordion",
+  "React Accordion Radix primitive",
+);
+assertContains(
+  files.reactAccordion,
+  source.reactAccordion,
+  "AccordionTrigger",
+  "React Accordion trigger primitive",
 );
 assertContains(
   files.figma,

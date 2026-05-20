@@ -32,6 +32,7 @@ const STACK_DIRECTIONS = ["Column", "Row"];
 const STACK_GAPS = ["2", "4", "6"];
 const CONTAINER_CENTERED = ["True", "False"];
 const BREADCRUMB_CONTENT = ["Basic", "Ellipsis"];
+const ACCORDION_STATES = ["Closed", "Open"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -115,6 +116,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Stack / v1": 520,
   "Container / v1": 360,
   "Breadcrumb / v1": 260,
+  "Accordion / v1": 320,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -145,6 +147,7 @@ const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Stack / v1",
   "Container / v1",
   "Breadcrumb / v1",
+  "Accordion / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -540,6 +543,30 @@ const COMPONENT_DOCS = [
       "Breadcrumb uses a nav landmark with aria-label in product code.",
       "Current Page maps to BreadcrumbPage with aria-current page.",
       "Separators and ellipsis are presentational and hidden from assistive tech.",
+    ],
+  },
+  {
+    componentName: "Accordion",
+    componentSetName: "Accordion / v1",
+    category: "Disclosure",
+    summary:
+      "Accordion reveals or hides related content inside a compact disclosure group.",
+    usage: [
+      "Use Closed for the default collapsed row.",
+      "Use Open when the item content is visible and belongs under the trigger.",
+      "Keep accordions for related, scannable content rather than primary navigation.",
+    ],
+    api: [
+      "State maps to the visual data-state examples for AccordionTrigger and AccordionContent.",
+      "Trigger Text maps to AccordionTrigger children.",
+      "Content Text maps to AccordionContent children.",
+      "Root type, collapsible behavior, and animation remain product-code concerns.",
+    ],
+    properties: ["State: Closed, Open", "Trigger Text", "Content Text"],
+    accessibility: [
+      "Product code uses Radix Accordion for keyboard and ARIA behavior.",
+      "Trigger rows keep a 44px-or-larger visual target.",
+      "Open content remains adjacent to the trigger so context is preserved.",
     ],
   },
   {
@@ -2939,6 +2966,42 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Text/line-height/sm",
     scopes: ["LINE_HEIGHT"],
   },
+  { name: "Accordion/width/default", value: 360, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Accordion/height/closed", value: 53, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Accordion/height/open", value: 128, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Accordion/trigger/height", value: 52, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Accordion/content/height", value: 75, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Accordion/divider/height", value: 1, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Accordion/trigger/font-size",
+    value: 14,
+    alias: "Text/font-size/sm",
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "Accordion/trigger/line-height",
+    value: 20,
+    alias: "Text/line-height/sm",
+    scopes: ["LINE_HEIGHT"],
+  },
+  {
+    name: "Accordion/content/font-size",
+    value: 14,
+    alias: "Text/font-size/sm",
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "Accordion/content/line-height",
+    value: 20,
+    alias: "Text/line-height/sm",
+    scopes: ["LINE_HEIGHT"],
+  },
+  {
+    name: "Accordion/content/padding-bottom",
+    value: 16,
+    alias: "Layout/spacing/200",
+    scopes: ["GAP"],
+  },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -3136,6 +3199,24 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "rebuild-breadcrumb") {
       const result = await rebuildBreadcrumbComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "build-accordion") {
+      const result = await buildAccordionComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-accordion") {
+      const result = await updateAccordionComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-accordion") {
+      const result = await rebuildAccordionComponent();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -5258,6 +5339,7 @@ function unexpectedTopLevelNodesForPage(page) {
     "Stack / v1",
     "Container / v1",
     "Breadcrumb / v1",
+    "Accordion / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5975,6 +6057,19 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
+  if (record.name === "Accordion / v1") {
+    for (const baseName of ["Trigger Text", "Content Text"]) {
+      const textProperty = Object.values(textProperties).find(
+        (property) => property.baseName === baseName,
+      );
+      if (!textProperty || textProperty.boundTextNodes === 0) {
+        record.warnings.push(
+          `${baseName} component property is missing or not bound to generated Accordion text nodes.`,
+        );
+      }
+    }
+  }
+
   if (compositionIntegrity.issueCount > 0) {
     record.warnings.push(
       `${compositionIntegrity.issueCount} composite component integrity issue(s) found. Composite components must use live nested instances with valid auto-layout sizing.`,
@@ -6096,6 +6191,7 @@ function shouldAuditLayoutBindings(name) {
       "Stack / v1",
       "Container / v1",
       "Breadcrumb / v1",
+      "Accordion / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -6129,6 +6225,7 @@ function shouldAuditTypographyBindings(name) {
       "Box / v1",
       "Container / v1",
       "Breadcrumb / v1",
+      "Accordion / v1",
       "Button / v1",
       "Counter / v1",
       "Badge / v1",
@@ -6269,6 +6366,12 @@ function expectedVariantAxesForComponentSetName(name) {
   if (name === "Breadcrumb / v1") {
     return {
       Content: BREADCRUMB_CONTENT,
+    };
+  }
+
+  if (name === "Accordion / v1") {
+    return {
+      State: ACCORDION_STATES,
     };
   }
 
@@ -12959,6 +13062,46 @@ async function updateBreadcrumbComponent() {
   });
 }
 
+async function buildAccordionComponent() {
+  return buildSingleAxisComponent({
+    componentName: "Accordion",
+    componentSetName: "Accordion / v1",
+    axisName: "State",
+    values: ACCORDION_STATES,
+    x: 80,
+    y: 12100,
+    xStep: 440,
+    createVariant: createAccordionVariant,
+    configureProperties: configureAccordionProperties,
+    description: [
+      "Kozmos Accordion component set generated from React Accordion anatomy.",
+      "State maps to closed and open data-state examples.",
+      "Trigger Text maps to AccordionTrigger children.",
+      "Content Text maps to AccordionContent children when open.",
+    ],
+  });
+}
+
+async function updateAccordionComponent() {
+  return updateSingleAxisComponent({
+    componentName: "Accordion",
+    componentSetName: "Accordion / v1",
+    axisName: "State",
+    values: ACCORDION_STATES,
+    xStep: 440,
+    createVariant: createAccordionVariant,
+    updateVariant: updateAccordionVariant,
+    parseVariantName: parseAccordionVariantName,
+    configureProperties: configureAccordionProperties,
+    description: [
+      "Kozmos Accordion component set generated from React Accordion anatomy.",
+      "State maps to closed and open data-state examples.",
+      "Trigger Text maps to AccordionTrigger children.",
+      "Updated in place to preserve the Code Connect node ID.",
+    ],
+  });
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -14448,6 +14591,14 @@ async function rebuildBreadcrumbComponent() {
   });
 }
 
+async function rebuildAccordionComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Accordion",
+    componentSetName: "Accordion / v1",
+    build: buildAccordionComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -15500,6 +15651,23 @@ function configureBreadcrumbProperties(componentSet, stats) {
     "Current Page Text",
     "Current Page Text",
     "Breadcrumb",
+    stats,
+  );
+}
+
+function configureAccordionProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Trigger Text",
+    "Trigger Text",
+    "Is it accessible?",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Content Text",
+    "Content Text",
+    "Yes. It follows the WAI-ARIA disclosure pattern.",
     stats,
   );
 }
@@ -17645,6 +17813,226 @@ function appendBreadcrumbEllipsis(parent, fonts, variableByName, stats) {
     stats,
   });
   parent.appendChild(frame);
+}
+
+async function createAccordionVariant({ value, variableByName, fonts, stats }) {
+  const component = figma.createComponent();
+  await updateAccordionVariant(component, {
+    value,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+function parseAccordionVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (ACCORDION_STATES.indexOf(values.State) === -1) return null;
+
+  return {
+    value: values.State,
+    state: values.State,
+  };
+}
+
+async function updateAccordionVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const isOpen = value === "Open";
+  component.name = `State=${value}`;
+  component.layoutMode = "VERTICAL";
+  component.primaryAxisSizingMode = "FIXED";
+  component.counterAxisSizingMode = "FIXED";
+  component.primaryAxisAlignItems = "MIN";
+  component.counterAxisAlignItems = "MIN";
+  component.itemSpacing = 0;
+  component.paddingLeft = 0;
+  component.paddingRight = 0;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.resizeWithoutConstraints(360, isOpen ? 128 : 53);
+  component.fills = [];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Accordion");
+
+  bindSizeVariables(
+    component,
+    "Accordion/width/default",
+    isOpen ? "Accordion/height/open" : "Accordion/height/closed",
+    variableByName,
+    stats,
+  );
+
+  const oldChildren = [];
+  for (const child of component.children || []) {
+    oldChildren.push(child);
+  }
+  for (const child of oldChildren) {
+    child.remove();
+  }
+
+  const trigger = figma.createFrame();
+  trigger.name = "Accordion Trigger";
+  trigger.layoutMode = "HORIZONTAL";
+  trigger.primaryAxisSizingMode = "FIXED";
+  trigger.counterAxisSizingMode = "FIXED";
+  trigger.primaryAxisAlignItems = "SPACE_BETWEEN";
+  trigger.counterAxisAlignItems = "CENTER";
+  trigger.itemSpacing = 16;
+  trigger.paddingLeft = 0;
+  trigger.paddingRight = 0;
+  trigger.paddingTop = 0;
+  trigger.paddingBottom = 0;
+  trigger.resizeWithoutConstraints(360, 52);
+  trigger.fills = [];
+  trigger.strokes = [];
+  trigger.strokeWeight = 0;
+  trigger.clipsContent = false;
+  bindSizeVariables(
+    trigger,
+    "Accordion/width/default",
+    "Accordion/trigger/height",
+    variableByName,
+    stats,
+  );
+
+  appendAccordionText({
+    parent: trigger,
+    name: "Trigger Text",
+    characters: "Is it accessible?",
+    fontToken: "Accordion/trigger/font-size",
+    lineHeightToken: "Accordion/trigger/line-height",
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendAccordionText({
+    parent: trigger,
+    name: "Chevron",
+    characters: isOpen ? "^" : "v",
+    fontToken: "Accordion/trigger/font-size",
+    lineHeightToken: "Accordion/trigger/line-height",
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    fonts,
+    variableByName,
+    stats,
+  });
+  component.appendChild(trigger);
+
+  if (isOpen) {
+    const content = figma.createFrame();
+    content.name = "Accordion Content";
+    content.layoutMode = "VERTICAL";
+    content.primaryAxisSizingMode = "FIXED";
+    content.counterAxisSizingMode = "FIXED";
+    content.primaryAxisAlignItems = "MIN";
+    content.counterAxisAlignItems = "MIN";
+    content.itemSpacing = 0;
+    content.paddingLeft = 0;
+    content.paddingRight = 0;
+    content.paddingTop = 0;
+    content.paddingBottom = 16;
+    content.resizeWithoutConstraints(360, 75);
+    content.fills = [];
+    content.strokes = [];
+    content.strokeWeight = 0;
+    content.clipsContent = false;
+    bindSizeVariables(
+      content,
+      "Accordion/width/default",
+      "Accordion/content/height",
+      variableByName,
+      stats,
+    );
+    bindFloatVariable(
+      content,
+      "paddingBottom",
+      "Accordion/content/padding-bottom",
+      variableByName,
+      stats,
+    );
+    appendAccordionText({
+      parent: content,
+      name: "Content Text",
+      characters: "Yes. It follows the WAI-ARIA disclosure pattern.",
+      fontToken: "Accordion/content/font-size",
+      lineHeightToken: "Accordion/content/line-height",
+      colorToken: "Colors/foreground/500",
+      colorFallback: "#747B8B",
+      fonts,
+      variableByName,
+      stats,
+    });
+    component.appendChild(content);
+  }
+
+  const divider = figma.createRectangle();
+  divider.name = "Accordion Divider";
+  divider.resizeWithoutConstraints(360, 1);
+  divider.fills = [
+    paintFromVariable(
+      "Colors/background/200",
+      "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  divider.strokes = [];
+  bindSizeVariables(
+    divider,
+    "Accordion/width/default",
+    "Accordion/divider/height",
+    variableByName,
+    stats,
+  );
+  component.appendChild(divider);
+}
+
+function appendAccordionText({
+  parent,
+  name,
+  characters,
+  fontToken,
+  lineHeightToken,
+  colorToken,
+  colorFallback,
+  fonts,
+  variableByName,
+  stats,
+}) {
+  const text = figma.createText();
+  text.name = name;
+  text.fontName = fonts.regular;
+  text.fontSize = 14;
+  text.lineHeight = { unit: "PIXELS", value: 20 };
+  text.characters = characters;
+  text.fills = [
+    paintFromVariable(colorToken, colorFallback, variableByName, stats),
+  ];
+  setTextAutoResize(text, "WIDTH_AND_HEIGHT");
+  bindFloatVariable(text, "fontSize", fontToken, variableByName, stats);
+  bindFloatVariable(text, "lineHeight", lineHeightToken, variableByName, stats);
+  parent.appendChild(text);
+  setHugChildSizing(text);
+  return text;
 }
 
 function parseCounterVariantName(name) {

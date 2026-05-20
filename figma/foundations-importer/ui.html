@@ -656,6 +656,9 @@
                 <option value="breadcrumb">Breadcrumb / v1</option>
                 <option value="tabs">Tabs / v1</option>
               </optgroup>
+              <optgroup label="Disclosure">
+                <option value="accordion">Accordion / v1</option>
+              </optgroup>
               <optgroup label="Overlay">
                 <option value="tooltip">Tooltip / v1</option>
                 <option value="dialog">Dialog / v1</option>
@@ -892,6 +895,13 @@
           update: "update-breadcrumb",
           rebuild: "rebuild-breadcrumb",
           hint: "Build creates Breadcrumb / v1 with Basic and Ellipsis trails plus editable item text. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        accordion: {
+          label: "Accordion / v1",
+          build: "build-accordion",
+          update: "update-accordion",
+          rebuild: "rebuild-accordion",
+          hint: "Build creates Accordion / v1 with Closed and Open disclosure examples plus editable trigger/content text. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         button: {
           label: "Button / v1",

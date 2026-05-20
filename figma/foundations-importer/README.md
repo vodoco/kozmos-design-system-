@@ -41,6 +41,8 @@ Select **Container / v1** and click **Build** after Stack. It creates centered a
 
 Select **Breadcrumb / v1** and click **Build** for navigation trails. It creates Basic and Ellipsis examples with editable item text while keeping separators and the ellipsis as composition primitives.
 
+Select **Accordion / v1** and click **Build** for disclosure groups. It creates Closed and Open examples with editable trigger/content text while leaving Radix interaction behavior, collapsibility, and animation in product code.
+
 Select **Curated Icons** and click **Build** to create the curated Kozmos icon source set on the `Icons` page. The first pass imports the 38 icons from `@kozmos/icons` / `docs/figma-pointr-icon-catalog.json` by Pointr component key, then applies them as preferred values for Button and IconButton `Icon` instance-swap slots.
 
 Select **Curated Icons** and click **Update** when the curated registry or Pointr source components change. It updates icon source components in place, preserves their node IDs, and keeps each nested `Pointr Source` stretched to the 24px icon bounds so resized Button/IconButton slots do not clip or overflow the source artwork.
