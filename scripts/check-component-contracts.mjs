@@ -1179,37 +1179,37 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  "Counter / v1",
+  "Counter",
   "Counter component set generation",
 );
 assertContains(
   files.figma,
   source.figma,
-  "Link / v1",
+  "Link",
   "Link component set generation",
 );
 assertContains(
   files.figma,
   source.figma,
-  "Separator / v1",
+  "Separator",
   "Separator component set generation",
 );
 assertContains(
   files.figma,
   source.figma,
-  "Skeleton / v1",
+  "Skeleton",
   "Skeleton component set generation",
 );
 assertContains(
   files.figma,
   source.figma,
-  "Box / v1",
+  "Box",
   "Box component set generation",
 );
 assertContains(
   files.figma,
   source.figma,
-  "Stack / v1",
+  "Stack",
   "Stack component set generation",
 );
 assertContains(
@@ -1239,7 +1239,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'componentSetName: "Stack / v1"',
+  'componentSetName: "Stack"',
   "Stack documentation metadata",
 );
 assertContains(
@@ -1251,7 +1251,7 @@ assertContains(
 assertContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="stack">Stack / v1</option>',
+  '<option value="stack">Stack</option>',
   "Stack UI picker option",
 );
 assertContains(
@@ -1263,7 +1263,7 @@ assertContains(
 assertContains(
   files.figmaReadme,
   source.figmaReadme,
-  "Select **Stack / v1**",
+  "Select **Stack**",
   "Stack importer documentation",
 );
 assertContains(
@@ -1311,7 +1311,7 @@ assertNotContains(
 assertContains(
   files.figma,
   source.figma,
-  "Container / v1",
+  "Container",
   "Container component set generation",
 );
 assertContains(
@@ -1335,7 +1335,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'componentSetName: "Container / v1"',
+  'componentSetName: "Container"',
   "Container documentation metadata",
 );
 assertContains(
@@ -1347,7 +1347,7 @@ assertContains(
 assertContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="container">Container / v1</option>',
+  '<option value="container">Container</option>',
   "Container UI picker option",
 );
 assertContains(
@@ -1359,7 +1359,7 @@ assertContains(
 assertContains(
   files.figmaReadme,
   source.figmaReadme,
-  "Select **Container / v1**",
+  "Select **Container**",
   "Container importer documentation",
 );
 assertContains(
@@ -1377,7 +1377,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  "Breadcrumb / v1",
+  "Breadcrumb",
   "Breadcrumb component set generation",
 );
 assertContains(
@@ -1401,7 +1401,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'componentSetName: "Breadcrumb / v1"',
+  'componentSetName: "Breadcrumb"',
   "Breadcrumb documentation metadata",
 );
 assertContains(
@@ -1413,7 +1413,7 @@ assertContains(
 assertContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="breadcrumb">Breadcrumb / v1</option>',
+  '<option value="breadcrumb">Breadcrumb</option>',
   "Breadcrumb UI picker option",
 );
 assertContains(
@@ -1425,7 +1425,7 @@ assertContains(
 assertContains(
   files.figmaReadme,
   source.figmaReadme,
-  "Select **Breadcrumb / v1**",
+  "Select **Breadcrumb**",
   "Breadcrumb importer documentation",
 );
 assertContains(
@@ -1485,7 +1485,7 @@ assertNotContains(
 assertContains(
   files.figma,
   source.figma,
-  "Accordion / v1",
+  "Accordion",
   "Accordion component set generation",
 );
 assertContains(
@@ -1509,7 +1509,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'componentSetName: "Accordion / v1"',
+  'componentSetName: "Accordion"',
   "Accordion documentation metadata",
 );
 assertContains(
@@ -1521,7 +1521,7 @@ assertContains(
 assertContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="accordion">Accordion / v1</option>',
+  '<option value="accordion">Accordion</option>',
   "Accordion UI picker option",
 );
 assertContains(
@@ -1533,7 +1533,7 @@ assertContains(
 assertContains(
   files.figmaReadme,
   source.figmaReadme,
-  "Select **Accordion / v1**",
+  "Select **Accordion**",
   "Accordion importer documentation",
 );
 assertContains(
@@ -1581,7 +1581,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'componentSetName: "Box / v1"',
+  'componentSetName: "Box"',
   "Box documentation metadata",
 );
 assertContains(
@@ -1593,7 +1593,7 @@ assertContains(
 assertContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="box">Box / v1</option>',
+  '<option value="box">Box</option>',
   "Box UI picker option",
 );
 assertContains(
@@ -1605,7 +1605,7 @@ assertContains(
 assertContains(
   files.figmaReadme,
   source.figmaReadme,
-  "Select **Box / v1**",
+  "Select **Box**",
   "Box importer documentation",
 );
 assertContains(
@@ -1641,7 +1641,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'componentSetName: "Skeleton / v1"',
+  'componentSetName: "Skeleton"',
   "Skeleton documentation metadata",
 );
 assertContains(
@@ -1653,7 +1653,7 @@ assertContains(
 assertContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="skeleton">Skeleton / v1</option>',
+  '<option value="skeleton">Skeleton</option>',
   "Skeleton UI picker option",
 );
 assertContains(
@@ -1665,7 +1665,7 @@ assertContains(
 assertContains(
   files.figmaReadme,
   source.figmaReadme,
-  "Select **Skeleton / v1**",
+  "Select **Skeleton**",
   "Skeleton importer documentation",
 );
 assertContains(
@@ -1701,7 +1701,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'componentSetName: "Separator / v1"',
+  'componentSetName: "Separator"',
   "Separator documentation metadata",
 );
 assertContains(
@@ -1713,7 +1713,7 @@ assertContains(
 assertContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="separator">Separator / v1</option>',
+  '<option value="separator">Separator</option>',
   "Separator UI picker option",
 );
 assertContains(
@@ -1725,7 +1725,7 @@ assertContains(
 assertContains(
   files.figmaReadme,
   source.figmaReadme,
-  "Select **Separator / v1**",
+  "Select **Separator**",
   "Separator importer documentation",
 );
 assertContains(
@@ -1743,7 +1743,7 @@ assertContains(
 assertNotContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="label">Label / v1</option>',
+  '<option value="label">Label</option>',
   "Label component picker option after typography demotion",
 );
 assertContains(
@@ -1785,7 +1785,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'componentSetName: "Link / v1"',
+  'componentSetName: "Link"',
   "Link documentation metadata",
 );
 assertContains(
@@ -1803,7 +1803,7 @@ assertContains(
 assertContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="link">Link / v1</option>',
+  '<option value="link">Link</option>',
   "Link UI picker option",
 );
 assertContains(
@@ -1815,7 +1815,7 @@ assertContains(
 assertContains(
   files.figmaReadme,
   source.figmaReadme,
-  "Select **Link / v1**",
+  "Select **Link**",
   "Link importer documentation",
 );
 assertContains(
@@ -1839,7 +1839,7 @@ assertContains(
 assertNotContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="heading">Heading / v1</option>',
+  '<option value="heading">Heading</option>',
   "Heading component picker option after typography demotion",
 );
 assertContains(
@@ -1902,7 +1902,7 @@ assertContains(
 assertNotContains(
   files.figmaUi,
   source.figmaUi,
-  '<option value="text">Text / v1</option>',
+  '<option value="text">Text</option>',
   "Text component picker option after typography demotion",
 );
 assertContains(
@@ -2246,6 +2246,30 @@ assertContains(
   source.figma,
   "async function reorganizeComponentsPage()",
   "Components page reorganize action",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'COMPONENT_SET_LEGACY_SUFFIX = " / v1"',
+  "Components keep legacy / v1 lookup compatibility",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "canonicalComponentSetName",
+  "Components normalize legacy names to canonical names",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "findComponentSetOnPage",
+  "Components lookup accepts canonical and legacy names",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "normalizeComponentSetNodeName",
+  "Components rename legacy sets in place",
 );
 assertContains(
   files.figma,
@@ -2604,7 +2628,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  /createNestedComponentInstance\(\{\s*componentSetName:\s*"Counter \/ v1"/,
+  /createNestedComponentInstance\(\{\s*componentSetName:\s*"Counter"/,
   "Badge composes nested Counter instance",
 );
 assertContains(

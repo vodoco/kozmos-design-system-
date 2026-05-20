@@ -2,7 +2,7 @@ import figma from "@figma/code-connect";
 import { IconButton } from "./IconButton";
 
 /**
- * Code Connect: Kozmos DS Core Library / IconButton / v1
+ * Code Connect: Kozmos DS Core Library / IconButton
  *
  * @url https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=77-1203
  */

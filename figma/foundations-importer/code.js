@@ -100,71 +100,72 @@ const TABS_ACTIVE_TO_INDEX = {
   Three: 2,
   Four: 3,
 };
+const COMPONENT_SET_LEGACY_SUFFIX = " / v1";
 const COMPONENTS_PAGE_NAME = "Components";
 const COMPONENT_PAGE_LAYOUT_X = 80;
 const COMPONENT_PAGE_LAYOUT_Y = 80;
 const COMPONENT_PAGE_LAYOUT_ROW_GAP = 420;
 const COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT = 260;
 const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
-  "Link / v1": 260,
-  "Separator / v1": 260,
-  "Skeleton / v1": 260,
-  "Box / v1": 360,
-  "Stack / v1": 520,
-  "Container / v1": 360,
-  "Breadcrumb / v1": 260,
-  "Accordion / v1": 320,
-  "Button / v1": 900,
-  "IconButton / v1": 820,
-  "Card / v1": 420,
-  "Tabs / v1": 620,
-  "Tooltip / v1": 360,
-  "Dialog / v1": 760,
-  "Popover / v1": 360,
-  "Menu / v1": 420,
-  "Input / v1": 720,
-  "Textarea / v1": 760,
-  "Search / v1": 620,
-  "Select / v1": 420,
-  "Slider / v1": 500,
-  "Progress / v1": 260,
-  "Spinner / v1": 260,
-  "Alert / v1": 260,
-  "Toast / v1": 260,
-  "Avatar / v1": 260,
+  Link: 260,
+  Separator: 260,
+  Skeleton: 260,
+  Box: 360,
+  Stack: 520,
+  Container: 360,
+  Breadcrumb: 260,
+  Accordion: 320,
+  Button: 900,
+  IconButton: 820,
+  Card: 420,
+  Tabs: 620,
+  Tooltip: 360,
+  Dialog: 760,
+  Popover: 360,
+  Menu: 420,
+  Input: 720,
+  Textarea: 760,
+  Search: 620,
+  Select: 420,
+  Slider: 500,
+  Progress: 260,
+  Spinner: 260,
+  Alert: 260,
+  Toast: 260,
+  Avatar: 260,
 };
 const COMPONENT_PAGE_LAYOUT_ORDER = [
-  "Link / v1",
-  "Separator / v1",
-  "Skeleton / v1",
-  "Box / v1",
-  "Stack / v1",
-  "Container / v1",
-  "Breadcrumb / v1",
-  "Accordion / v1",
-  "Button / v1",
-  "IconButton / v1",
-  "Counter / v1",
-  "Badge / v1",
-  "Card / v1",
-  "Tabs / v1",
-  "Tooltip / v1",
-  "Dialog / v1",
-  "Popover / v1",
-  "Menu / v1",
-  "Checkbox / v1",
-  "Radio / v1",
-  "Switch / v1",
-  "Input / v1",
-  "Textarea / v1",
-  "Search / v1",
-  "Select / v1",
-  "Slider / v1",
-  "Progress / v1",
-  "Spinner / v1",
-  "Alert / v1",
-  "Toast / v1",
-  "Avatar / v1",
+  "Link",
+  "Separator",
+  "Skeleton",
+  "Box",
+  "Stack",
+  "Container",
+  "Breadcrumb",
+  "Accordion",
+  "Button",
+  "IconButton",
+  "Counter",
+  "Badge",
+  "Card",
+  "Tabs",
+  "Tooltip",
+  "Dialog",
+  "Popover",
+  "Menu",
+  "Checkbox",
+  "Radio",
+  "Switch",
+  "Input",
+  "Textarea",
+  "Search",
+  "Select",
+  "Slider",
+  "Progress",
+  "Spinner",
+  "Alert",
+  "Toast",
+  "Avatar",
 ];
 const COMPONENT_DOCS_PAGE_NAME = "Docs";
 const COMPONENT_DOC_SPLIT_PAGE_PREFIX = "Docs / ";
@@ -191,30 +192,30 @@ const SURFACE_QA_COMPONENT_GROUPS = [
     rows: [
       [
         {
-          componentSetName: "Button / v1",
+          componentSetName: "Button",
           variantName: "Variant=Ghost, Size=Default, State=Default",
           text: { "Label Text": "Add to library" },
         },
         {
-          componentSetName: "Button / v1",
+          componentSetName: "Button",
           variantName: "Variant=Link, Size=Default, State=Default",
           text: { "Label Text": "View details" },
         },
         {
-          componentSetName: "Button / v1",
+          componentSetName: "Button",
           variantName: "Variant=Glass, Size=Default, State=Default",
           text: { "Label Text": "Navigate" },
         },
         {
-          componentSetName: "IconButton / v1",
+          componentSetName: "IconButton",
           variantName: "Variant=Ghost, Size=Default, State=Default",
         },
         {
-          componentSetName: "IconButton / v1",
+          componentSetName: "IconButton",
           variantName: "Variant=Glass, Size=Default, State=Default",
         },
         {
-          componentSetName: "Badge / v1",
+          componentSetName: "Badge",
           variantName: "Variant=Ghost, Size=Default",
           text: { "Label Text": "Indoor" },
         },
@@ -226,31 +227,31 @@ const SURFACE_QA_COMPONENT_GROUPS = [
     rows: [
       [
         {
-          componentSetName: "Input / v1",
+          componentSetName: "Input",
           variantName: "State=Default, Status=Default",
           text: { "Label Text": "Level", "Placeholder Text": "Choose level" },
         },
         {
-          componentSetName: "Search / v1",
+          componentSetName: "Search",
           variantName: "State=Default, Status=Default",
           text: { "Label Text": "Search", "Placeholder Text": "Search venue" },
         },
       ],
       [
         {
-          componentSetName: "Select / v1",
+          componentSetName: "Select",
           variantName: "State=Default, Status=Default",
           text: { "Placeholder Text": "Destination" },
         },
         {
-          componentSetName: "Slider / v1",
+          componentSetName: "Slider",
           variantName: "State=Default, Status=Default",
           text: { "Label Text": "Zoom" },
         },
       ],
       [
         {
-          componentSetName: "Textarea / v1",
+          componentSetName: "Textarea",
           variantName: "State=Default, Status=Default",
           text: {
             "Label Text": "Notes",
@@ -265,28 +266,28 @@ const SURFACE_QA_COMPONENT_GROUPS = [
     rows: [
       [
         {
-          componentSetName: "Checkbox / v1",
+          componentSetName: "Checkbox",
           variantName: "Checked=Unchecked, State=Default",
           text: { "Label Text": "Accessible route" },
         },
         {
-          componentSetName: "Radio / v1",
+          componentSetName: "Radio",
           variantName: "Checked=Checked, State=Default",
           text: { "Label Text": "Fastest" },
         },
         {
-          componentSetName: "Switch / v1",
+          componentSetName: "Switch",
           variantName: "Checked=Checked, State=Default",
           text: { "Label Text": "Live updates" },
         },
       ],
       [
         {
-          componentSetName: "Progress / v1",
+          componentSetName: "Progress",
           variantName: "Value=50",
         },
         {
-          componentSetName: "Spinner / v1",
+          componentSetName: "Spinner",
           variantName: "Size=Medium",
         },
       ],
@@ -296,7 +297,7 @@ const SURFACE_QA_COMPONENT_GROUPS = [
 const COMPONENT_DOCS = [
   {
     componentName: "Link",
-    componentSetName: "Link / v1",
+    componentSetName: "Link",
     category: "Typography",
     summary:
       "Link presents navigational or inline text actions with a visible focus state.",
@@ -323,7 +324,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Separator",
-    componentSetName: "Separator / v1",
+    componentSetName: "Separator",
     category: "Layout",
     summary:
       "Separator visually divides related content with horizontal or vertical orientation.",
@@ -346,7 +347,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Skeleton",
-    componentSetName: "Skeleton / v1",
+    componentSetName: "Skeleton",
     category: "Feedback",
     summary:
       "Skeleton reserves space while content is loading, using non-interactive placeholder shapes.",
@@ -369,7 +370,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Box",
-    componentSetName: "Box / v1",
+    componentSetName: "Box",
     category: "Layout",
     summary:
       "Box provides a simple composition surface for arbitrary child content.",
@@ -392,7 +393,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Stack",
-    componentSetName: "Stack / v1",
+    componentSetName: "Stack",
     category: "Layout",
     summary:
       "Stack arranges child content in a row or column with consistent spacing.",
@@ -415,7 +416,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Container",
-    componentSetName: "Container / v1",
+    componentSetName: "Container",
     category: "Layout",
     summary:
       "Container provides responsive page gutters and optional centered max-width composition.",
@@ -438,7 +439,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Breadcrumb",
-    componentSetName: "Breadcrumb / v1",
+    componentSetName: "Breadcrumb",
     category: "Navigation",
     summary:
       "Breadcrumb shows the user's current location inside a navigable hierarchy.",
@@ -466,7 +467,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Accordion",
-    componentSetName: "Accordion / v1",
+    componentSetName: "Accordion",
     category: "Disclosure",
     summary:
       "Accordion reveals or hides related content inside a compact disclosure group.",
@@ -490,7 +491,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Button",
-    componentSetName: "Button / v1",
+    componentSetName: "Button",
     category: "Actions",
     summary:
       "Buttons trigger intentional product actions. Use them for committed actions in forms, dialogs, toolbars, and focused task flows.",
@@ -519,7 +520,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "IconButton",
-    componentSetName: "IconButton / v1",
+    componentSetName: "IconButton",
     category: "Actions",
     summary:
       "IconButton presents a compact action when the icon is sufficient or an accessible label is supplied in code.",
@@ -548,7 +549,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Counter",
-    componentSetName: "Counter / v1",
+    componentSetName: "Counter",
     category: "Status",
     summary:
       "Counter presents a compact numeric value, such as counts, unread items, or applied filters.",
@@ -576,7 +577,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Badge",
-    componentSetName: "Badge / v1",
+    componentSetName: "Badge",
     category: "Status",
     summary:
       "Badge labels compact metadata, status, or categorization. It is non-interactive by default.",
@@ -607,7 +608,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Card",
-    componentSetName: "Card / v1",
+    componentSetName: "Card",
     category: "Layout",
     summary:
       "Card groups related content and actions on a contained surface with consistent padding, border, radius, and elevation.",
@@ -635,7 +636,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Tabs",
-    componentSetName: "Tabs / v1",
+    componentSetName: "Tabs",
     category: "Navigation",
     summary:
       "Tabs switch between related panels while keeping the current context visible.",
@@ -664,7 +665,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Tooltip",
-    componentSetName: "Tooltip / v1",
+    componentSetName: "Tooltip",
     category: "Overlay",
     summary:
       "Tooltip presents brief contextual help when a control is hovered or receives keyboard focus.",
@@ -694,7 +695,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Dialog",
-    componentSetName: "Dialog / v1",
+    componentSetName: "Dialog",
     category: "Overlay",
     summary:
       "Dialog presents focused task content above the page with a scrim, surface, close affordance, and optional footer action.",
@@ -724,7 +725,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Popover",
-    componentSetName: "Popover / v1",
+    componentSetName: "Popover",
     category: "Overlay",
     summary:
       "Popover presents dismissible contextual content anchored to a trigger without blocking the whole page.",
@@ -751,7 +752,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Menu",
-    componentSetName: "Menu / v1",
+    componentSetName: "Menu",
     category: "Overlay",
     summary:
       "Menu presents a compact list of actions or choices from a trigger.",
@@ -778,7 +779,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Toast",
-    componentSetName: "Toast / v1",
+    componentSetName: "Toast",
     category: "Feedback",
     summary:
       "Toast presents transient feedback with title, description, optional action, and close affordance.",
@@ -805,7 +806,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Checkbox",
-    componentSetName: "Checkbox / v1",
+    componentSetName: "Checkbox",
     category: "Selection",
     summary:
       "Checkbox lets users select one or more independent options, with clear checked, disabled, and error states.",
@@ -833,7 +834,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Radio",
-    componentSetName: "Radio / v1",
+    componentSetName: "Radio",
     category: "Selection",
     summary:
       "Radio represents one choice inside a mutually exclusive option group.",
@@ -861,7 +862,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Switch",
-    componentSetName: "Switch / v1",
+    componentSetName: "Switch",
     category: "Selection",
     summary: "Switch toggles an immediate binary setting on or off.",
     usage: [
@@ -888,7 +889,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Input",
-    componentSetName: "Input / v1",
+    componentSetName: "Input",
     category: "Forms",
     summary:
       "Input captures a single line of user text with label, placeholder, optional helper text, and validation status.",
@@ -916,7 +917,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Textarea",
-    componentSetName: "Textarea / v1",
+    componentSetName: "Textarea",
     category: "Forms",
     summary:
       "Textarea captures longer freeform text with label, placeholder, interaction state, and error status.",
@@ -944,7 +945,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Search",
-    componentSetName: "Search / v1",
+    componentSetName: "Search",
     category: "Forms",
     summary:
       "Search captures query text with a leading search icon and the same interaction model as Input.",
@@ -972,7 +973,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Select",
-    componentSetName: "Select / v1",
+    componentSetName: "Select",
     category: "Forms",
     summary:
       "SelectTrigger opens a menu of options and displays the selected value or placeholder.",
@@ -1000,7 +1001,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Slider",
-    componentSetName: "Slider / v1",
+    componentSetName: "Slider",
     category: "Input",
     summary:
       "Slider lets users adjust a bounded numeric value on a visual range.",
@@ -1028,7 +1029,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Progress",
-    componentSetName: "Progress / v1",
+    componentSetName: "Progress",
     category: "Feedback",
     summary:
       "Progress communicates completion for determinate loading or task state.",
@@ -1051,7 +1052,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Spinner",
-    componentSetName: "Spinner / v1",
+    componentSetName: "Spinner",
     category: "Feedback",
     summary:
       "Spinner communicates indeterminate loading when duration or completion cannot be predicted.",
@@ -1074,7 +1075,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Avatar",
-    componentSetName: "Avatar / v1",
+    componentSetName: "Avatar",
     category: "Identity",
     summary:
       "Avatar represents a person, account, or entity with image content or fallback initials.",
@@ -1098,7 +1099,7 @@ const COMPONENT_DOCS = [
   },
   {
     componentName: "Alert",
-    componentSetName: "Alert / v1",
+    componentSetName: "Alert",
     category: "Feedback",
     summary:
       "Alert presents contextual status content with title, description, tone, and icon.",
@@ -3832,6 +3833,7 @@ async function reorganizeComponentsPage() {
     page: COMPONENTS_PAGE_NAME,
     preservedNodeIds: true,
     movedComponentSets: 0,
+    renamedComponentSets: 0,
     skippedComponentSets: [],
     positions: [],
     warnings: [],
@@ -3851,11 +3853,10 @@ async function reorganizeComponentsPage() {
 
   const nodes = [];
   for (const name of COMPONENT_PAGE_LAYOUT_ORDER) {
-    const node = page.findOne(
-      (child) => child.name === name && child.type === "COMPONENT_SET",
-    );
+    const node = findComponentSetOnPage(page, name);
 
     if (node) {
+      normalizeComponentSetNodeName(node, name, stats);
       nodes.push(node);
     } else {
       stats.skippedComponentSets.push(name);
@@ -3873,7 +3874,8 @@ async function reorganizeComponentsPage() {
     const bounds = measureComponentSetLayoutBounds(node);
     const footprintHeight = Math.max(
       bounds.height,
-      COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS[node.name] || 0,
+      COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS[canonicalComponentSetName(node.name)] ||
+        0,
       COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT,
     );
 
@@ -3902,7 +3904,13 @@ async function reorganizeComponentsPage() {
     );
   }
 
-  stats.message = `Reorganized ${stats.movedComponentSets} component set(s) on the Components page in one generous measured column; node IDs were preserved.`;
+  const renameSummary =
+    stats.renamedComponentSets > 0
+      ? ` Renamed ${stats.renamedComponentSets} legacy / v1 set(s) in place.`
+      : "";
+  stats.message =
+    `Reorganized ${stats.movedComponentSets} component set(s) on the Components page in one generous measured column; node IDs were preserved.` +
+    renameSummary;
   return stats;
 }
 
@@ -4356,20 +4364,71 @@ function pushUnique(values, value) {
   if (values.indexOf(value) === -1) values.push(value);
 }
 
+function canonicalComponentSetName(name) {
+  if (!name) return name;
+  return name.endsWith(COMPONENT_SET_LEGACY_SUFFIX)
+    ? name.slice(0, -COMPONENT_SET_LEGACY_SUFFIX.length)
+    : name;
+}
+
+function componentSetNameMatches(actualName, expectedName) {
+  return (
+    canonicalComponentSetName(actualName) ===
+    canonicalComponentSetName(expectedName)
+  );
+}
+
+function findComponentSetOnPage(page, name) {
+  if (!page || !page.children) return null;
+
+  const canonicalName = canonicalComponentSetName(name);
+  let legacyMatch = null;
+  for (const child of page.children) {
+    if (child.type !== "COMPONENT_SET") continue;
+    if (child.name === canonicalName) return child;
+    if (!legacyMatch && componentSetNameMatches(child.name, canonicalName)) {
+      legacyMatch = child;
+    }
+  }
+
+  return legacyMatch;
+}
+
+function normalizeComponentSetNodeName(node, canonicalName, stats) {
+  if (!node || node.name === canonicalName) return false;
+
+  const oldName = node.name;
+  node.name = canonicalName;
+  if (stats) {
+    incrementStat(stats, "renamedComponentSets");
+    if (!stats.renamed) stats.renamed = [];
+    stats.renamed.push({
+      id: node.id,
+      urlNodeId: nodeIdForUrl(node.id),
+      oldName,
+      newName: canonicalName,
+    });
+  }
+  return true;
+}
+
 async function findComponentSetsByName(docs) {
   const requested = {};
   const found = {};
 
   for (const doc of docs) {
-    requested[doc.componentSetName] = true;
+    requested[canonicalComponentSetName(doc.componentSetName)] = true;
   }
 
   for (const page of figma.root.children) {
     await page.loadAsync();
     for (const child of page.children) {
       if (child.type !== "COMPONENT_SET") continue;
-      if (!requested[child.name]) continue;
-      found[child.name] = child;
+      const canonicalName = canonicalComponentSetName(child.name);
+      if (!requested[canonicalName]) continue;
+      if (!found[canonicalName] || child.name === canonicalName) {
+        found[canonicalName] = child;
+      }
     }
   }
 
@@ -4804,9 +4863,7 @@ function componentPropertyNameByBaseName(componentSet, baseName, type) {
 async function findLocalComponentSetByName(name) {
   for (const page of figma.root.children) {
     await page.loadAsync();
-    const match = page.findOne(
-      (node) => node.type === "COMPONENT_SET" && node.name === name,
-    );
+    const match = findComponentSetOnPage(page, name);
     if (match && match.type === "COMPONENT_SET") return match;
   }
 
@@ -4947,7 +5004,7 @@ function isNestedComponentInstance(node, componentSetName) {
   return (
     node &&
     node.type === "INSTANCE" &&
-    nodeSourceComponentSet(node) === componentSetName
+    componentSetNameMatches(nodeSourceComponentSet(node), componentSetName)
   );
 }
 
@@ -4973,7 +5030,7 @@ function isBadgeCounterNode(node) {
   return (
     node.getSharedPluginData(RUN_NAMESPACE, "role") === "badge-counter" ||
     node.getSharedPluginData(RUN_NAMESPACE, "kind") === "badge-counter" ||
-    isNestedComponentInstance(node, "Counter / v1")
+    isNestedComponentInstance(node, "Counter")
   );
 }
 
@@ -5112,8 +5169,9 @@ function applyComponentSetDescription(
 }
 
 function componentDocForComponentSetName(componentSetName) {
+  const canonicalName = canonicalComponentSetName(componentSetName);
   for (const doc of COMPONENT_DOCS) {
-    if (doc.componentSetName === componentSetName) return doc;
+    if (doc.componentSetName === canonicalName) return doc;
   }
 
   return null;
@@ -5258,37 +5316,37 @@ function unexpectedTopLevelNodesForPage(page) {
   if (page.name !== "Components") return [];
 
   const expectedComponentSets = new Set([
-    "Link / v1",
-    "Separator / v1",
-    "Skeleton / v1",
-    "Box / v1",
-    "Stack / v1",
-    "Container / v1",
-    "Breadcrumb / v1",
-    "Accordion / v1",
-    "Button / v1",
-    "IconButton / v1",
-    "Counter / v1",
-    "Badge / v1",
-    "Card / v1",
-    "Tabs / v1",
-    "Tooltip / v1",
-    "Dialog / v1",
-    "Popover / v1",
-    "Menu / v1",
-    "Checkbox / v1",
-    "Radio / v1",
-    "Switch / v1",
-    "Input / v1",
-    "Textarea / v1",
-    "Search / v1",
-    "Select / v1",
-    "Slider / v1",
-    "Progress / v1",
-    "Spinner / v1",
-    "Avatar / v1",
-    "Alert / v1",
-    "Toast / v1",
+    "Link",
+    "Separator",
+    "Skeleton",
+    "Box",
+    "Stack",
+    "Container",
+    "Breadcrumb",
+    "Accordion",
+    "Button",
+    "IconButton",
+    "Counter",
+    "Badge",
+    "Card",
+    "Tabs",
+    "Tooltip",
+    "Dialog",
+    "Popover",
+    "Menu",
+    "Checkbox",
+    "Radio",
+    "Switch",
+    "Input",
+    "Textarea",
+    "Search",
+    "Select",
+    "Slider",
+    "Progress",
+    "Spinner",
+    "Avatar",
+    "Alert",
+    "Toast",
   ]);
 
   const unexpected = [];
@@ -5299,7 +5357,8 @@ function unexpectedTopLevelNodesForPage(page) {
       node.getSharedPluginData(RUN_NAMESPACE, "kind") === "component-set";
     if (
       isGeneratedComponentSet ||
-      (node.type === "COMPONENT_SET" && expectedComponentSets.has(node.name))
+      (node.type === "COMPONENT_SET" &&
+        expectedComponentSets.has(canonicalComponentSetName(node.name)))
     ) {
       continue;
     }
@@ -5847,15 +5906,15 @@ function auditComponentSet(componentSet, pageName, variableContext) {
   }
 
   if (
-    record.name === "Button / v1" ||
-    record.name === "Badge / v1" ||
-    record.name === "Checkbox / v1" ||
-    record.name === "Radio / v1" ||
-    record.name === "Switch / v1" ||
-    record.name === "Input / v1" ||
-    record.name === "Textarea / v1" ||
-    record.name === "Search / v1" ||
-    record.name === "Slider / v1"
+    record.name === "Button" ||
+    record.name === "Badge" ||
+    record.name === "Checkbox" ||
+    record.name === "Radio" ||
+    record.name === "Switch" ||
+    record.name === "Input" ||
+    record.name === "Textarea" ||
+    record.name === "Search" ||
+    record.name === "Slider"
   ) {
     const labelTextProperty = Object.values(textProperties).find(
       (property) => property.baseName === "Label Text",
@@ -5867,10 +5926,10 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
 
     if (
-      record.name === "Input / v1" ||
-      record.name === "Textarea / v1" ||
-      record.name === "Search / v1" ||
-      record.name === "Select / v1"
+      record.name === "Input" ||
+      record.name === "Textarea" ||
+      record.name === "Search" ||
+      record.name === "Select"
     ) {
       const placeholderTextProperty = Object.values(textProperties).find(
         (property) => property.baseName === "Placeholder Text",
@@ -5884,7 +5943,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
         );
       }
 
-      if (record.name === "Input / v1") {
+      if (record.name === "Input") {
         const helperTextProperty = Object.values(textProperties).find(
           (property) => property.baseName === "Helper Text",
         );
@@ -5897,7 +5956,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (record.name === "Counter / v1") {
+  if (record.name === "Counter") {
     const counterTextProperty = Object.values(textProperties).find(
       (property) => property.baseName === "Counter Text",
     );
@@ -5908,7 +5967,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (record.name === "Badge / v1") {
+  if (record.name === "Badge") {
     const hasShowCounterProperty = Object.keys(propertyDefinitions).some(
       (propertyName) => {
         const definition = propertyDefinitions[propertyName];
@@ -5940,7 +5999,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (record.name === "Card / v1") {
+  if (record.name === "Card") {
     for (const baseName of ["Title Text", "Description Text", "Body Text"]) {
       const textProperty = Object.values(textProperties).find(
         (property) => property.baseName === baseName,
@@ -5953,7 +6012,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (record.name === "Box / v1") {
+  if (record.name === "Box") {
     const textProperty = Object.values(textProperties).find(
       (property) => property.baseName === "Box Text",
     );
@@ -5964,7 +6023,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (record.name === "Container / v1") {
+  if (record.name === "Container") {
     const textProperty = Object.values(textProperties).find(
       (property) => property.baseName === "Container Text",
     );
@@ -5975,7 +6034,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (record.name === "Breadcrumb / v1") {
+  if (record.name === "Breadcrumb") {
     for (const baseName of [
       "Item 1 Text",
       "Item 2 Text",
@@ -5992,7 +6051,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (record.name === "Accordion / v1") {
+  if (record.name === "Accordion") {
     for (const baseName of ["Trigger Text", "Content Text"]) {
       const textProperty = Object.values(textProperties).find(
         (property) => property.baseName === baseName,
@@ -6011,7 +6070,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     );
   }
 
-  if (record.name === "Tabs / v1") {
+  if (record.name === "Tabs") {
     for (const baseName of [
       "Tab 1 Text",
       "Tab 2 Text",
@@ -6029,7 +6088,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (record.name === "Tooltip / v1") {
+  if (record.name === "Tooltip") {
     const textProperty = Object.values(textProperties).find(
       (property) => property.baseName === "Content Text",
     );
@@ -6120,37 +6179,37 @@ function auditComponentSet(componentSet, pageName, variableContext) {
 function shouldAuditLayoutBindings(name) {
   return (
     [
-      "Link / v1",
-      "Separator / v1",
-      "Skeleton / v1",
-      "Box / v1",
-      "Stack / v1",
-      "Container / v1",
-      "Breadcrumb / v1",
-      "Accordion / v1",
-      "Button / v1",
-      "IconButton / v1",
-      "Counter / v1",
-      "Badge / v1",
-      "Card / v1",
-      "Tabs / v1",
-      "Tooltip / v1",
-      "Dialog / v1",
-      "Popover / v1",
-      "Menu / v1",
-      "Toast / v1",
-      "Checkbox / v1",
-      "Radio / v1",
-      "Switch / v1",
-      "Input / v1",
-      "Textarea / v1",
-      "Search / v1",
-      "Select / v1",
-      "Slider / v1",
-      "Progress / v1",
-      "Spinner / v1",
-      "Avatar / v1",
-      "Alert / v1",
+      "Link",
+      "Separator",
+      "Skeleton",
+      "Box",
+      "Stack",
+      "Container",
+      "Breadcrumb",
+      "Accordion",
+      "Button",
+      "IconButton",
+      "Counter",
+      "Badge",
+      "Card",
+      "Tabs",
+      "Tooltip",
+      "Dialog",
+      "Popover",
+      "Menu",
+      "Toast",
+      "Checkbox",
+      "Radio",
+      "Switch",
+      "Input",
+      "Textarea",
+      "Search",
+      "Select",
+      "Slider",
+      "Progress",
+      "Spinner",
+      "Avatar",
+      "Alert",
     ].indexOf(name) !== -1
   );
 }
@@ -6158,16 +6217,16 @@ function shouldAuditLayoutBindings(name) {
 function shouldRequireDisabledState(name) {
   return (
     [
-      "Button / v1",
-      "IconButton / v1",
-      "Checkbox / v1",
-      "Radio / v1",
-      "Switch / v1",
-      "Input / v1",
-      "Textarea / v1",
-      "Search / v1",
-      "Select / v1",
-      "Slider / v1",
+      "Button",
+      "IconButton",
+      "Checkbox",
+      "Radio",
+      "Switch",
+      "Input",
+      "Textarea",
+      "Search",
+      "Select",
+      "Slider",
     ].indexOf(name) !== -1
   );
 }
@@ -6175,27 +6234,27 @@ function shouldRequireDisabledState(name) {
 function shouldAuditTypographyBindings(name) {
   return (
     [
-      "Link / v1",
-      "Box / v1",
-      "Container / v1",
-      "Breadcrumb / v1",
-      "Accordion / v1",
-      "Button / v1",
-      "Counter / v1",
-      "Badge / v1",
-      "Card / v1",
-      "Tabs / v1",
-      "Tooltip / v1",
-      "Checkbox / v1",
-      "Radio / v1",
-      "Switch / v1",
-      "Input / v1",
-      "Textarea / v1",
-      "Search / v1",
-      "Select / v1",
-      "Slider / v1",
-      "Avatar / v1",
-      "Alert / v1",
+      "Link",
+      "Box",
+      "Container",
+      "Breadcrumb",
+      "Accordion",
+      "Button",
+      "Counter",
+      "Badge",
+      "Card",
+      "Tabs",
+      "Tooltip",
+      "Checkbox",
+      "Radio",
+      "Switch",
+      "Input",
+      "Textarea",
+      "Search",
+      "Select",
+      "Slider",
+      "Avatar",
+      "Alert",
     ].indexOf(name) !== -1
   );
 }
@@ -6203,17 +6262,17 @@ function shouldAuditTypographyBindings(name) {
 function shouldAuditFocusBindings(name) {
   return (
     [
-      "Button / v1",
-      "IconButton / v1",
-      "Checkbox / v1",
-      "Radio / v1",
-      "Switch / v1",
-      "Tabs / v1",
-      "Input / v1",
-      "Textarea / v1",
-      "Search / v1",
-      "Select / v1",
-      "Slider / v1",
+      "Button",
+      "IconButton",
+      "Checkbox",
+      "Radio",
+      "Switch",
+      "Tabs",
+      "Input",
+      "Textarea",
+      "Search",
+      "Select",
+      "Slider",
     ].indexOf(name) !== -1
   );
 }
@@ -6221,18 +6280,18 @@ function shouldAuditFocusBindings(name) {
 function shouldAuditTouchTarget(name) {
   return (
     [
-      "Button / v1",
-      "IconButton / v1",
-      "Badge / v1",
-      "Tabs / v1",
-      "Checkbox / v1",
-      "Radio / v1",
-      "Switch / v1",
-      "Input / v1",
-      "Textarea / v1",
-      "Search / v1",
-      "Select / v1",
-      "Slider / v1",
+      "Button",
+      "IconButton",
+      "Badge",
+      "Tabs",
+      "Checkbox",
+      "Radio",
+      "Switch",
+      "Input",
+      "Textarea",
+      "Search",
+      "Select",
+      "Slider",
     ].indexOf(name) !== -1
   );
 }
@@ -6259,7 +6318,9 @@ function extractVariantAxes(childComponents) {
 }
 
 function expectedVariantAxesForComponentSetName(name) {
-  if (name === "Text / v1") {
+  const canonicalName = canonicalComponentSetName(name);
+
+  if (canonicalName === "Text") {
     return {
       Size: TEXT_SIZES,
       Weight: TEXT_WEIGHTS,
@@ -6267,69 +6328,69 @@ function expectedVariantAxesForComponentSetName(name) {
     };
   }
 
-  if (name === "Heading / v1") {
+  if (canonicalName === "Heading") {
     return {
       Level: HEADING_LEVELS,
     };
   }
 
-  if (name === "Link / v1") {
+  if (canonicalName === "Link") {
     return {
       Variant: LINK_VARIANTS,
       State: LINK_STATES,
     };
   }
 
-  if (name === "Label / v1") {
+  if (canonicalName === "Label") {
     return {
       State: LABEL_STATES,
     };
   }
 
-  if (name === "Separator / v1") {
+  if (canonicalName === "Separator") {
     return {
       Orientation: SEPARATOR_ORIENTATIONS,
     };
   }
 
-  if (name === "Skeleton / v1") {
+  if (canonicalName === "Skeleton") {
     return {
       Shape: SKELETON_SHAPES,
     };
   }
 
-  if (name === "Box / v1") {
+  if (canonicalName === "Box") {
     return {
       Surface: BOX_SURFACES,
     };
   }
 
-  if (name === "Stack / v1") {
+  if (canonicalName === "Stack") {
     return {
       Direction: STACK_DIRECTIONS,
       Gap: STACK_GAPS,
     };
   }
 
-  if (name === "Container / v1") {
+  if (canonicalName === "Container") {
     return {
       Centered: CONTAINER_CENTERED,
     };
   }
 
-  if (name === "Breadcrumb / v1") {
+  if (canonicalName === "Breadcrumb") {
     return {
       Content: BREADCRUMB_CONTENT,
     };
   }
 
-  if (name === "Accordion / v1") {
+  if (canonicalName === "Accordion") {
     return {
       State: ACCORDION_STATES,
     };
   }
 
-  if (name === "Button / v1") {
+  if (canonicalName === "Button") {
     return {
       Variant: BUTTON_VARIANTS,
       Size: BUTTON_SIZES,
@@ -6337,7 +6398,7 @@ function expectedVariantAxesForComponentSetName(name) {
     };
   }
 
-  if (name === "IconButton / v1") {
+  if (canonicalName === "IconButton") {
     return {
       Variant: BUTTON_VARIANTS,
       Size: ICON_BUTTON_SIZES,
@@ -6345,27 +6406,27 @@ function expectedVariantAxesForComponentSetName(name) {
     };
   }
 
-  if (name === "Counter / v1") {
+  if (canonicalName === "Counter") {
     return {
       Tone: COUNTER_TONES,
       Size: COUNTER_SIZES,
     };
   }
 
-  if (name === "Badge / v1") {
+  if (canonicalName === "Badge") {
     return {
       Variant: BADGE_VARIANTS,
       Size: BADGE_SIZES,
     };
   }
 
-  if (name === "Card / v1") {
+  if (canonicalName === "Card") {
     return {
       Content: CARD_CONTENT,
     };
   }
 
-  if (name === "Tabs / v1") {
+  if (canonicalName === "Tabs") {
     return {
       Count: TABS_COUNTS,
       Active: TABS_ACTIVE,
@@ -6373,111 +6434,111 @@ function expectedVariantAxesForComponentSetName(name) {
     };
   }
 
-  if (name === "Tooltip / v1") {
+  if (canonicalName === "Tooltip") {
     return {
       Side: TOOLTIP_SIDES,
     };
   }
 
-  if (name === "Dialog / v1") {
+  if (canonicalName === "Dialog") {
     return {
       Content: DIALOG_CONTENT,
     };
   }
 
-  if (name === "Popover / v1") {
+  if (canonicalName === "Popover") {
     return {
       Side: POPOVER_SIDES,
     };
   }
 
-  if (name === "Menu / v1") {
+  if (canonicalName === "Menu") {
     return {
       Content: MENU_CONTENT,
     };
   }
 
-  if (name === "Toast / v1") {
+  if (canonicalName === "Toast") {
     return {
       Content: TOAST_CONTENT,
     };
   }
 
-  if (name === "Checkbox / v1") {
+  if (canonicalName === "Checkbox") {
     return {
       Checked: CHECKBOX_CHECKED,
       State: CHECKBOX_STATES,
     };
   }
 
-  if (name === "Radio / v1") {
+  if (canonicalName === "Radio") {
     return {
       Checked: RADIO_CHECKED,
       State: RADIO_STATES,
     };
   }
 
-  if (name === "Switch / v1") {
+  if (canonicalName === "Switch") {
     return {
       Checked: SWITCH_CHECKED,
       State: SWITCH_STATES,
     };
   }
 
-  if (name === "Input / v1") {
+  if (canonicalName === "Input") {
     return {
       State: INPUT_STATES,
       Status: INPUT_STATUSES,
     };
   }
 
-  if (name === "Textarea / v1") {
+  if (canonicalName === "Textarea") {
     return {
       State: TEXTAREA_STATES,
       Status: TEXTAREA_STATUSES,
     };
   }
 
-  if (name === "Search / v1") {
+  if (canonicalName === "Search") {
     return {
       State: SEARCH_STATES,
       Status: SEARCH_STATUSES,
     };
   }
 
-  if (name === "Select / v1") {
+  if (canonicalName === "Select") {
     return {
       State: SELECT_STATES,
       Status: SELECT_STATUSES,
     };
   }
 
-  if (name === "Slider / v1") {
+  if (canonicalName === "Slider") {
     return {
       State: SLIDER_STATES,
       Status: SLIDER_STATUSES,
     };
   }
 
-  if (name === "Progress / v1") {
+  if (canonicalName === "Progress") {
     return {
       Value: PROGRESS_VALUES,
     };
   }
 
-  if (name === "Spinner / v1") {
+  if (canonicalName === "Spinner") {
     return {
       Size: SPINNER_SIZES,
     };
   }
 
-  if (name === "Avatar / v1") {
+  if (canonicalName === "Avatar") {
     return {
       Content: AVATAR_CONTENT,
     };
   }
 
-  if (name === "Alert / v1") {
+  if (canonicalName === "Alert") {
     return {
       Variant: ALERT_VARIANTS,
     };
@@ -6779,13 +6840,13 @@ function auditGeneratedIconSlotIntegrity(componentSet) {
 function auditTooltipTipIntegrity(componentSet, childComponents) {
   const result = {
     expectedTipNodes:
-      componentSet.name === "Tooltip / v1" ? childComponents.length : 0,
+      componentSet.name === "Tooltip" ? childComponents.length : 0,
     tipNodes: 0,
     absoluteTipNodes: 0,
     triangleTipNodes: 0,
   };
 
-  if (componentSet.name !== "Tooltip / v1") {
+  if (componentSet.name !== "Tooltip") {
     return result;
   }
 
@@ -6819,48 +6880,43 @@ function auditTooltipTipIntegrity(componentSet, childComponents) {
 function auditCompositionIntegrity(componentSet) {
   const issues = [];
 
-  if (componentSet.name === "Card / v1") {
+  if (componentSet.name === "Card") {
     auditExpectedNestedInstance(
       componentSet,
       issues,
       "Secondary Action",
-      "Button / v1",
+      "Button",
     );
     auditExpectedNestedInstance(
       componentSet,
       issues,
       "Primary Action",
-      "Button / v1",
+      "Button",
     );
   }
 
-  if (componentSet.name === "Dialog / v1") {
+  if (componentSet.name === "Dialog") {
     auditExpectedNestedInstance(
       componentSet,
       issues,
       "Secondary Action",
-      "Button / v1",
+      "Button",
     );
     auditExpectedNestedInstance(
       componentSet,
       issues,
       "Primary Action",
-      "Button / v1",
+      "Button",
     );
-    auditExpectedNestedInstance(
-      componentSet,
-      issues,
-      "Name Input",
-      "Input / v1",
-    );
+    auditExpectedNestedInstance(componentSet, issues, "Name Input", "Input");
     auditExpectedNestedInstance(
       componentSet,
       issues,
       "Username Input",
-      "Input / v1",
+      "Input",
     );
-    auditLegacyFrameClone(componentSet, issues, "Name Field", "Input / v1");
-    auditLegacyFrameClone(componentSet, issues, "Username Field", "Input / v1");
+    auditLegacyFrameClone(componentSet, issues, "Name Field", "Input");
+    auditLegacyFrameClone(componentSet, issues, "Username Field", "Input");
     auditDialogAutoLayoutIntegrity(componentSet, issues);
   }
 
@@ -6891,7 +6947,7 @@ function instanceHasComponentProperty(instance, baseName, type) {
 function auditBadgeContentIntegrity(componentSet, childComponents) {
   const issues = [];
 
-  if (componentSet.name !== "Badge / v1") {
+  if (componentSet.name !== "Badge") {
     return {
       issueCount: 0,
       issues,
@@ -6970,7 +7026,7 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
         component,
         "badge-legacy-counter-text",
         legacyCounterText,
-        "Non-icon Badge variants should expose count text through nested Counter / v1.",
+        "Non-icon Badge variants should expose count text through nested Counter.",
       );
     }
 
@@ -6983,12 +7039,12 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
       );
     }
 
-    if (!counter || !isNestedComponentInstance(counter, "Counter / v1")) {
+    if (!counter || !isNestedComponentInstance(counter, "Counter")) {
       pushIssue(
         component,
         "badge-counter-missing",
         counter,
-        "Non-icon Badge variants should include a hidden nested Counter / v1 instance.",
+        "Non-icon Badge variants should include a hidden nested Counter instance.",
       );
     } else if (counter.visible !== false) {
       pushIssue(
@@ -9977,76 +10033,72 @@ function inferTextStyleKeyForComponentText(text, componentSet) {
   const setName = componentSet.name;
   const textName = text.name;
 
-  if (setName === "Text / v1" && component) {
+  if (setName === "Text" && component) {
     const textProps = parseTextVariantName(component.name);
     if (textProps) return textStyleKeyForText(textProps.size, textProps.weight);
   }
 
-  if (setName === "Heading / v1" && component) {
+  if (setName === "Heading" && component) {
     const headingProps = parseHeadingVariantName(component.name);
     if (headingProps) return textStyleKeyForHeading(headingProps.value);
   }
 
-  if (setName === "Counter / v1" && component) {
+  if (setName === "Counter" && component) {
     const counterProps = parseCounterVariantName(component.name);
     if (counterProps && counterProps.size === "Small") return "counterSmall";
     if (counterProps) return "counterDefault";
   }
 
-  if (setName === "Button / v1") return "buttonLabel";
-  if (setName === "Badge / v1") return "badgeLabel";
-  if (setName === "Link / v1") return "linkText";
-  if (setName === "Label / v1") return "labelText";
-  if (setName === "Box / v1") return "boxText";
-  if (setName === "Container / v1") return "containerText";
-  if (setName === "Breadcrumb / v1") return "breadcrumbItem";
-  if (setName === "Accordion / v1") {
+  if (setName === "Button") return "buttonLabel";
+  if (setName === "Badge") return "badgeLabel";
+  if (setName === "Link") return "linkText";
+  if (setName === "Label") return "labelText";
+  if (setName === "Box") return "boxText";
+  if (setName === "Container") return "containerText";
+  if (setName === "Breadcrumb") return "breadcrumbItem";
+  if (setName === "Accordion") {
     return textName === "Trigger Text"
       ? "accordionTrigger"
       : "accordionContent";
   }
-  if (setName === "Tabs / v1") return "tabsTrigger";
-  if (setName === "Tooltip / v1") return "tooltipContent";
-  if (setName === "Avatar / v1") return "avatarFallback";
-  if (setName === "Alert / v1") {
+  if (setName === "Tabs") return "tabsTrigger";
+  if (setName === "Tooltip") return "tooltipContent";
+  if (setName === "Avatar") return "avatarFallback";
+  if (setName === "Alert") {
     return textName === "Title" ? "alertTitle" : "alertDescription";
   }
-  if (setName === "Card / v1") {
+  if (setName === "Card") {
     if (textName === "Title Text") return "cardTitle";
     if (textName === "Description Text") return "cardDescription";
     return "cardBody";
   }
-  if (setName === "Dialog / v1") {
+  if (setName === "Dialog") {
     if (textName === "Title Text") return "dialogTitle";
     if (textName === "Description Text") return "dialogDescription";
     return "dialogBody";
   }
-  if (setName === "Popover / v1") {
+  if (setName === "Popover") {
     if (textName === "Title Text") return "popoverTitle";
     return "popoverDescription";
   }
-  if (setName === "Menu / v1") {
+  if (setName === "Menu") {
     if (textName === "Shortcut Text") return "menuShortcut";
     if (textName === "Label Text") return "menuItemStrong";
     return "menuItem";
   }
-  if (setName === "Toast / v1") {
+  if (setName === "Toast") {
     if (textName === "Description Text") return "toastDescription";
     return "toastTitle";
   }
-  if (
-    setName === "Checkbox / v1" ||
-    setName === "Radio / v1" ||
-    setName === "Switch / v1"
-  ) {
+  if (setName === "Checkbox" || setName === "Radio" || setName === "Switch") {
     return "controlLabel";
   }
   if (
-    setName === "Input / v1" ||
-    setName === "Textarea / v1" ||
-    setName === "Search / v1" ||
-    setName === "Select / v1" ||
-    setName === "Slider / v1"
+    setName === "Input" ||
+    setName === "Textarea" ||
+    setName === "Search" ||
+    setName === "Select" ||
+    setName === "Slider"
   ) {
     return textName === "Label Text" ? "fieldLabel" : "fieldText";
   }
@@ -12440,13 +12492,14 @@ async function buildButtonComponent() {
   await figma.setCurrentPageAsync(page);
   await page.loadAsync();
 
-  const existing = page.findOne((node) => node.name === "Button / v1");
+  const existing = findComponentSetOnPage(page, "Button");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Button", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Button / v1 already exists. Delete or rename it before rebuilding.";
+      "Button already exists. Delete or rename it before rebuilding.";
     return stats;
   }
 
@@ -12478,12 +12531,12 @@ async function buildButtonComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Button / v1";
+  componentSet.name = "Button";
   componentSet.x = 80;
   componentSet.y = 80;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Button");
-  applyComponentSetDescription(componentSet, "Button / v1", false, [
+  applyComponentSetDescription(componentSet, "Button", false, [
     "Kozmos Button component set generated from React Button API.",
     "Variant maps to Button.variant.",
     "Size maps to Button.size.",
@@ -12522,11 +12575,12 @@ async function updateButtonComponent() {
   await figma.setCurrentPageAsync(page);
   await page.loadAsync();
 
-  const existing = page.findOne((node) => node.name === "Button / v1");
+  const existing = findComponentSetOnPage(page, "Button");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Button / v1 was not found. Run Build Button first.";
+    stats.message = "Button was not found. Run Build Button first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Button", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -12535,7 +12589,7 @@ async function updateButtonComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Button");
-  applyComponentSetDescription(existing, "Button / v1", true, [
+  applyComponentSetDescription(existing, "Button", true, [
     "Kozmos Button component set generated from React Button API.",
     "Variant maps to Button.variant.",
     "Size maps to Button.size.",
@@ -12610,13 +12664,14 @@ async function buildIconButtonComponent() {
   await figma.setCurrentPageAsync(page);
   await page.loadAsync();
 
-  const existing = page.findOne((node) => node.name === "IconButton / v1");
+  const existing = findComponentSetOnPage(page, "IconButton");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "IconButton", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "IconButton / v1 already exists. Use Update IconButton to preserve its node ID.";
+      "IconButton already exists. Use Update IconButton to preserve its node ID.";
     return stats;
   }
 
@@ -12649,12 +12704,12 @@ async function buildIconButtonComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "IconButton / v1";
+  componentSet.name = "IconButton";
   componentSet.x = 80;
   componentSet.y = 780;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "IconButton");
-  applyComponentSetDescription(componentSet, "IconButton / v1", false, [
+  applyComponentSetDescription(componentSet, "IconButton", false, [
     "Kozmos IconButton component set generated from React IconButton API.",
     "Variant maps to IconButton.variant.",
     "Size maps to IconButton.size: Default maps to icon, Small maps to sm, Large maps to lg.",
@@ -12698,12 +12753,12 @@ async function updateIconButtonComponent() {
   await figma.setCurrentPageAsync(page);
   await page.loadAsync();
 
-  const existing = page.findOne((node) => node.name === "IconButton / v1");
+  const existing = findComponentSetOnPage(page, "IconButton");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message =
-      "IconButton / v1 was not found. Run Build IconButton first.";
+    stats.message = "IconButton was not found. Run Build IconButton first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "IconButton", stats);
 
   const variableByName = await ensureComponentRuntimeVariables(stats);
   const iconComponent = await resolveDefaultIconSourceComponent(
@@ -12715,7 +12770,7 @@ async function updateIconButtonComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "IconButton");
-  applyComponentSetDescription(existing, "IconButton / v1", true, [
+  applyComponentSetDescription(existing, "IconButton", true, [
     "Kozmos IconButton component set generated from React IconButton API.",
     "Variant maps to IconButton.variant.",
     "Size maps to IconButton.size: Default maps to icon, Small maps to sm, Large maps to lg.",
@@ -12789,13 +12844,14 @@ async function buildTextComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Text", stats);
 
-  const existing = page.findOne((node) => node.name === "Text / v1");
+  const existing = findComponentSetOnPage(page, "Text");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Text", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Text / v1 already exists. Use Update Text to preserve its node ID.";
+      "Text already exists. Use Update Text to preserve its node ID.";
     return stats;
   }
 
@@ -12817,12 +12873,12 @@ async function buildTextComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Text / v1";
+  componentSet.name = "Text";
   componentSet.x = 80;
   componentSet.y = 7600;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Text");
-  applyComponentSetDescription(componentSet, "Text / v1", false, [
+  applyComponentSetDescription(componentSet, "Text", false, [
     "Kozmos Text component set generated from React Text API.",
     "Size maps to Text.size.",
     "Weight maps to Text.weight.",
@@ -12861,11 +12917,12 @@ async function updateTextComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Text", stats);
 
-  const existing = page.findOne((node) => node.name === "Text / v1");
+  const existing = findComponentSetOnPage(page, "Text");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Text / v1 was not found. Run Build Text first.";
+    stats.message = "Text was not found. Run Build Text first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Text", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -12873,7 +12930,7 @@ async function updateTextComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Text");
-  applyComponentSetDescription(existing, "Text / v1", true, [
+  applyComponentSetDescription(existing, "Text", true, [
     "Kozmos Text component set generated from React Text API.",
     "Size maps to Text.size.",
     "Weight maps to Text.weight.",
@@ -12937,7 +12994,7 @@ async function updateTextComponent() {
 async function buildHeadingComponent() {
   return buildSingleAxisComponent({
     componentName: "Heading",
-    componentSetName: "Heading / v1",
+    componentSetName: "Heading",
     axisName: "Level",
     values: HEADING_LEVELS,
     x: 80,
@@ -12957,7 +13014,7 @@ async function buildHeadingComponent() {
 async function updateHeadingComponent() {
   return updateSingleAxisComponent({
     componentName: "Heading",
-    componentSetName: "Heading / v1",
+    componentSetName: "Heading",
     axisName: "Level",
     values: HEADING_LEVELS,
     xStep: 260,
@@ -12990,13 +13047,14 @@ async function buildLinkComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Link", stats);
 
-  const existing = page.findOne((node) => node.name === "Link / v1");
+  const existing = findComponentSetOnPage(page, "Link");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Link", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Link / v1 already exists. Use Update Link to preserve its node ID.";
+      "Link already exists. Use Update Link to preserve its node ID.";
     return stats;
   }
 
@@ -13023,12 +13081,12 @@ async function buildLinkComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Link / v1";
+  componentSet.name = "Link";
   componentSet.x = 80;
   componentSet.y = 9100;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Link");
-  applyComponentSetDescription(componentSet, "Link / v1", false, [
+  applyComponentSetDescription(componentSet, "Link", false, [
     "Kozmos Link component set generated from React Link API.",
     "Variant maps to Link.variant.",
     "State provides focus-visible examples.",
@@ -13065,11 +13123,12 @@ async function updateLinkComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Link", stats);
 
-  const existing = page.findOne((node) => node.name === "Link / v1");
+  const existing = findComponentSetOnPage(page, "Link");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Link / v1 was not found. Run Build Link first.";
+    stats.message = "Link was not found. Run Build Link first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Link", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -13077,7 +13136,7 @@ async function updateLinkComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Link");
-  applyComponentSetDescription(existing, "Link / v1", true, [
+  applyComponentSetDescription(existing, "Link", true, [
     "Kozmos Link component set generated from React Link API.",
     "Variant maps to Link.variant.",
     "State provides focus-visible examples.",
@@ -13131,7 +13190,7 @@ async function updateLinkComponent() {
 async function buildLabelComponent() {
   return buildSingleAxisComponent({
     componentName: "Label",
-    componentSetName: "Label / v1",
+    componentSetName: "Label",
     axisName: "State",
     values: LABEL_STATES,
     x: 80,
@@ -13151,7 +13210,7 @@ async function buildLabelComponent() {
 async function updateLabelComponent() {
   return updateSingleAxisComponent({
     componentName: "Label",
-    componentSetName: "Label / v1",
+    componentSetName: "Label",
     axisName: "State",
     values: LABEL_STATES,
     xStep: 220,
@@ -13172,7 +13231,7 @@ async function updateLabelComponent() {
 async function buildSeparatorComponent() {
   return buildSingleAxisComponent({
     componentName: "Separator",
-    componentSetName: "Separator / v1",
+    componentSetName: "Separator",
     axisName: "Orientation",
     values: SEPARATOR_ORIENTATIONS,
     x: 80,
@@ -13192,7 +13251,7 @@ async function buildSeparatorComponent() {
 async function updateSeparatorComponent() {
   return updateSingleAxisComponent({
     componentName: "Separator",
-    componentSetName: "Separator / v1",
+    componentSetName: "Separator",
     axisName: "Orientation",
     values: SEPARATOR_ORIENTATIONS,
     xStep: 360,
@@ -13212,7 +13271,7 @@ async function updateSeparatorComponent() {
 async function buildSkeletonComponent() {
   return buildSingleAxisComponent({
     componentName: "Skeleton",
-    componentSetName: "Skeleton / v1",
+    componentSetName: "Skeleton",
     axisName: "Shape",
     values: SKELETON_SHAPES,
     x: 80,
@@ -13232,7 +13291,7 @@ async function buildSkeletonComponent() {
 async function updateSkeletonComponent() {
   return updateSingleAxisComponent({
     componentName: "Skeleton",
-    componentSetName: "Skeleton / v1",
+    componentSetName: "Skeleton",
     axisName: "Shape",
     values: SKELETON_SHAPES,
     xStep: 360,
@@ -13252,7 +13311,7 @@ async function updateSkeletonComponent() {
 async function buildBoxComponent() {
   return buildSingleAxisComponent({
     componentName: "Box",
-    componentSetName: "Box / v1",
+    componentSetName: "Box",
     axisName: "Surface",
     values: BOX_SURFACES,
     x: 80,
@@ -13272,7 +13331,7 @@ async function buildBoxComponent() {
 async function updateBoxComponent() {
   return updateSingleAxisComponent({
     componentName: "Box",
-    componentSetName: "Box / v1",
+    componentSetName: "Box",
     axisName: "Surface",
     values: BOX_SURFACES,
     xStep: 360,
@@ -13304,13 +13363,14 @@ async function buildStackComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Stack", stats);
 
-  const existing = page.findOne((node) => node.name === "Stack / v1");
+  const existing = findComponentSetOnPage(page, "Stack");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Stack", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Stack / v1 already exists. Use Update Stack to preserve its node ID.";
+      "Stack already exists. Use Update Stack to preserve its node ID.";
     return stats;
   }
 
@@ -13329,12 +13389,12 @@ async function buildStackComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Stack / v1";
+  componentSet.name = "Stack";
   componentSet.x = 80;
   componentSet.y = 10820;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Stack");
-  applyComponentSetDescription(componentSet, "Stack / v1", false, [
+  applyComponentSetDescription(componentSet, "Stack", false, [
     "Kozmos Stack component set generated from React Stack API.",
     "Direction maps to Stack.direction.",
     "Gap maps to Stack.gap.",
@@ -13372,18 +13432,19 @@ async function updateStackComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Stack", stats);
 
-  const existing = page.findOne((node) => node.name === "Stack / v1");
+  const existing = findComponentSetOnPage(page, "Stack");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Stack / v1 was not found. Run Build Stack first.";
+    stats.message = "Stack was not found. Run Build Stack first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Stack", stats);
 
   const variableByName = await ensureComponentRuntimeVariables(stats);
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Stack");
-  applyComponentSetDescription(existing, "Stack / v1", true, [
+  applyComponentSetDescription(existing, "Stack", true, [
     "Kozmos Stack component set generated from React Stack API.",
     "Direction maps to Stack.direction.",
     "Gap maps to Stack.gap.",
@@ -13444,7 +13505,7 @@ async function updateStackComponent() {
 async function buildContainerComponent() {
   return buildSingleAxisComponent({
     componentName: "Container",
-    componentSetName: "Container / v1",
+    componentSetName: "Container",
     axisName: "Centered",
     values: CONTAINER_CENTERED,
     x: 80,
@@ -13464,7 +13525,7 @@ async function buildContainerComponent() {
 async function updateContainerComponent() {
   return updateSingleAxisComponent({
     componentName: "Container",
-    componentSetName: "Container / v1",
+    componentSetName: "Container",
     axisName: "Centered",
     values: CONTAINER_CENTERED,
     xStep: 560,
@@ -13484,7 +13545,7 @@ async function updateContainerComponent() {
 async function buildBreadcrumbComponent() {
   return buildSingleAxisComponent({
     componentName: "Breadcrumb",
-    componentSetName: "Breadcrumb / v1",
+    componentSetName: "Breadcrumb",
     axisName: "Content",
     values: BREADCRUMB_CONTENT,
     x: 80,
@@ -13504,7 +13565,7 @@ async function buildBreadcrumbComponent() {
 async function updateBreadcrumbComponent() {
   return updateSingleAxisComponent({
     componentName: "Breadcrumb",
-    componentSetName: "Breadcrumb / v1",
+    componentSetName: "Breadcrumb",
     axisName: "Content",
     values: BREADCRUMB_CONTENT,
     xStep: 440,
@@ -13524,7 +13585,7 @@ async function updateBreadcrumbComponent() {
 async function buildAccordionComponent() {
   return buildSingleAxisComponent({
     componentName: "Accordion",
-    componentSetName: "Accordion / v1",
+    componentSetName: "Accordion",
     axisName: "State",
     values: ACCORDION_STATES,
     x: 80,
@@ -13544,7 +13605,7 @@ async function buildAccordionComponent() {
 async function updateAccordionComponent() {
   return updateSingleAxisComponent({
     componentName: "Accordion",
-    componentSetName: "Accordion / v1",
+    componentSetName: "Accordion",
     axisName: "State",
     values: ACCORDION_STATES,
     xStep: 440,
@@ -13576,13 +13637,14 @@ async function buildCounterComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Counter", stats);
 
-  const existing = page.findOne((node) => node.name === "Counter / v1");
+  const existing = findComponentSetOnPage(page, "Counter");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Counter", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Counter / v1 already exists. Use Update Counter to preserve its node ID.";
+      "Counter already exists. Use Update Counter to preserve its node ID.";
     return stats;
   }
 
@@ -13609,12 +13671,12 @@ async function buildCounterComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Counter / v1";
+  componentSet.name = "Counter";
   componentSet.x = 80;
   componentSet.y = 1280;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
-  applyComponentSetDescription(componentSet, "Counter / v1", false, [
+  applyComponentSetDescription(componentSet, "Counter", false, [
     "Kozmos Counter component set generated from React Counter API.",
     "Tone maps to Counter.tone.",
     "Size maps to Counter.size.",
@@ -13658,11 +13720,12 @@ async function updateCounterComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Counter", stats);
 
-  const existing = page.findOne((node) => node.name === "Counter / v1");
+  const existing = findComponentSetOnPage(page, "Counter");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Counter / v1 was not found. Run Build Counter first.";
+    stats.message = "Counter was not found. Run Build Counter first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Counter", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -13670,7 +13733,7 @@ async function updateCounterComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
-  applyComponentSetDescription(existing, "Counter / v1", true, [
+  applyComponentSetDescription(existing, "Counter", true, [
     "Kozmos Counter component set generated from React Counter API.",
     "Tone maps to Counter.tone.",
     "Size maps to Counter.size.",
@@ -13744,13 +13807,14 @@ async function buildBadgeComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Badge", stats);
 
-  const existing = page.findOne((node) => node.name === "Badge / v1");
+  const existing = findComponentSetOnPage(page, "Badge");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Badge", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Badge / v1 already exists. Use Update Badge to preserve its node ID.";
+      "Badge already exists. Use Update Badge to preserve its node ID.";
     return stats;
   }
 
@@ -13783,18 +13847,18 @@ async function buildBadgeComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Badge / v1";
+  componentSet.name = "Badge";
   componentSet.x = 80;
   componentSet.y = 1440;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Badge");
-  applyComponentSetDescription(componentSet, "Badge / v1", false, [
+  applyComponentSetDescription(componentSet, "Badge", false, [
     "Kozmos Badge component set generated from React Badge API.",
     "Variant maps to Badge.variant.",
     "Size maps to Badge.size.",
     "Label Text maps to Badge children in Code Connect.",
     "Icon maps to Badge.icon for icon-sized badges.",
-    "Show Counter toggles a hidden nested Counter / v1 instance for opt-in count display.",
+    "Show Counter toggles a hidden nested Counter instance for opt-in count display.",
     "Counter text is edited on the exposed nested Counter instance.",
     "Badge is non-interactive by default; React includes focus-visible classes for composed interactive usage.",
   ]);
@@ -13842,11 +13906,12 @@ async function updateBadgeComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Badge", stats);
 
-  const existing = page.findOne((node) => node.name === "Badge / v1");
+  const existing = findComponentSetOnPage(page, "Badge");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Badge / v1 was not found. Run Build Badge first.";
+    stats.message = "Badge was not found. Run Build Badge first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Badge", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -13859,13 +13924,13 @@ async function updateBadgeComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Badge");
-  applyComponentSetDescription(existing, "Badge / v1", true, [
+  applyComponentSetDescription(existing, "Badge", true, [
     "Kozmos Badge component set generated from React Badge API.",
     "Variant maps to Badge.variant.",
     "Size maps to Badge.size.",
     "Label Text maps to Badge children in Code Connect.",
     "Icon maps to Badge.icon for icon-sized badges.",
-    "Show Counter toggles a hidden nested Counter / v1 instance for opt-in count display.",
+    "Show Counter toggles a hidden nested Counter instance for opt-in count display.",
     "Counter text is edited on the exposed nested Counter instance.",
     "Badge is non-interactive by default; React includes focus-visible classes for composed interactive usage.",
   ]);
@@ -13925,20 +13990,20 @@ async function updateBadgeComponent() {
 }
 
 async function ensureCounterComponentForBadge(stats) {
-  const existing = await findLocalComponentSetByName("Counter / v1");
+  const existing = await findLocalComponentSetByName("Counter");
   if (existing) return existing;
 
   const result = await buildCounterComponent();
   if (result.warnings) {
     for (const warning of result.warnings) {
-      stats.warnings.push(`Counter / v1: ${warning}`);
+      stats.warnings.push(`Counter: ${warning}`);
     }
   }
 
-  const created = await findLocalComponentSetByName("Counter / v1");
+  const created = await findLocalComponentSetByName("Counter");
   if (!created) {
     stats.warnings.push(
-      "Counter / v1 is missing; Badge counters will use placeholder nodes until Counter is built.",
+      "Counter is missing; Badge counters will use placeholder nodes until Counter is built.",
     );
   } else {
     stats.counterComponentCreated = true;
@@ -13950,7 +14015,7 @@ async function ensureCounterComponentForBadge(stats) {
 async function buildCardComponent() {
   return buildSingleAxisComponent({
     componentName: "Card",
-    componentSetName: "Card / v1",
+    componentSetName: "Card",
     axisName: "Content",
     values: CARD_CONTENT,
     x: 80,
@@ -13971,7 +14036,7 @@ async function buildCardComponent() {
 async function updateCardComponent() {
   return updateSingleAxisComponent({
     componentName: "Card",
-    componentSetName: "Card / v1",
+    componentSetName: "Card",
     axisName: "Content",
     values: CARD_CONTENT,
     xStep: 420,
@@ -14006,13 +14071,14 @@ async function buildTabsComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Tabs", stats);
 
-  const existing = page.findOne((node) => node.name === "Tabs / v1");
+  const existing = findComponentSetOnPage(page, "Tabs");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Tabs", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Tabs / v1 already exists. Use Update Tabs to preserve its node ID.";
+      "Tabs already exists. Use Update Tabs to preserve its node ID.";
     return stats;
   }
 
@@ -14035,12 +14101,12 @@ async function buildTabsComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Tabs / v1";
+  componentSet.name = "Tabs";
   componentSet.x = 80;
   componentSet.y = 4620;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Tabs");
-  applyComponentSetDescription(componentSet, "Tabs / v1", false, [
+  applyComponentSetDescription(componentSet, "Tabs", false, [
     "Kozmos Tabs component set generated from React Tabs API.",
     "Count maps to the number of TabsTrigger examples.",
     "Active maps to Tabs.defaultValue.",
@@ -14079,11 +14145,12 @@ async function updateTabsComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Tabs", stats);
 
-  const existing = page.findOne((node) => node.name === "Tabs / v1");
+  const existing = findComponentSetOnPage(page, "Tabs");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Tabs / v1 was not found. Run Build Tabs first.";
+    stats.message = "Tabs was not found. Run Build Tabs first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Tabs", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -14091,7 +14158,7 @@ async function updateTabsComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Tabs");
-  applyComponentSetDescription(existing, "Tabs / v1", true, [
+  applyComponentSetDescription(existing, "Tabs", true, [
     "Kozmos Tabs component set generated from React Tabs API.",
     "Count maps to the number of TabsTrigger examples.",
     "Active maps to Tabs.defaultValue.",
@@ -14146,7 +14213,7 @@ async function updateTabsComponent() {
 async function buildTooltipComponent() {
   return buildSingleAxisComponent({
     componentName: "Tooltip",
-    componentSetName: "Tooltip / v1",
+    componentSetName: "Tooltip",
     axisName: "Side",
     values: TOOLTIP_SIDES,
     x: 80,
@@ -14167,7 +14234,7 @@ async function buildTooltipComponent() {
 async function updateTooltipComponent() {
   return updateSingleAxisComponent({
     componentName: "Tooltip",
-    componentSetName: "Tooltip / v1",
+    componentSetName: "Tooltip",
     axisName: "Side",
     values: TOOLTIP_SIDES,
     xStep: 220,
@@ -14189,7 +14256,7 @@ async function updateTooltipComponent() {
 async function buildDialogComponent() {
   return buildSingleAxisComponent({
     componentName: "Dialog",
-    componentSetName: "Dialog / v1",
+    componentSetName: "Dialog",
     axisName: "Content",
     values: DIALOG_CONTENT,
     x: 80,
@@ -14211,7 +14278,7 @@ async function buildDialogComponent() {
 async function updateDialogComponent() {
   return updateSingleAxisComponent({
     componentName: "Dialog",
-    componentSetName: "Dialog / v1",
+    componentSetName: "Dialog",
     axisName: "Content",
     values: DIALOG_CONTENT,
     xStep: 560,
@@ -14234,7 +14301,7 @@ async function updateDialogComponent() {
 async function buildPopoverComponent() {
   return buildSingleAxisComponent({
     componentName: "Popover",
-    componentSetName: "Popover / v1",
+    componentSetName: "Popover",
     axisName: "Side",
     values: POPOVER_SIDES,
     x: 80,
@@ -14254,7 +14321,7 @@ async function buildPopoverComponent() {
 async function updatePopoverComponent() {
   return updateSingleAxisComponent({
     componentName: "Popover",
-    componentSetName: "Popover / v1",
+    componentSetName: "Popover",
     axisName: "Side",
     values: POPOVER_SIDES,
     xStep: 340,
@@ -14275,7 +14342,7 @@ async function updatePopoverComponent() {
 async function buildMenuComponent() {
   return buildSingleAxisComponent({
     componentName: "Menu",
-    componentSetName: "Menu / v1",
+    componentSetName: "Menu",
     axisName: "Content",
     values: MENU_CONTENT,
     x: 80,
@@ -14295,7 +14362,7 @@ async function buildMenuComponent() {
 async function updateMenuComponent() {
   return updateSingleAxisComponent({
     componentName: "Menu",
-    componentSetName: "Menu / v1",
+    componentSetName: "Menu",
     axisName: "Content",
     values: MENU_CONTENT,
     xStep: 240,
@@ -14328,13 +14395,14 @@ async function buildCheckboxComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Checkbox", stats);
 
-  const existing = page.findOne((node) => node.name === "Checkbox / v1");
+  const existing = findComponentSetOnPage(page, "Checkbox");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Checkbox", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Checkbox / v1 already exists. Use Update Checkbox to preserve its node ID.";
+      "Checkbox already exists. Use Update Checkbox to preserve its node ID.";
     return stats;
   }
 
@@ -14361,12 +14429,12 @@ async function buildCheckboxComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Checkbox / v1";
+  componentSet.name = "Checkbox";
   componentSet.x = 80;
   componentSet.y = 1740;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Checkbox");
-  applyComponentSetDescription(componentSet, "Checkbox / v1", false, [
+  applyComponentSetDescription(componentSet, "Checkbox", false, [
     "Kozmos Checkbox component set generated from React Checkbox API.",
     "Checked maps to Checkbox.checked.",
     "State maps to disabled/error props in Code Connect.",
@@ -14405,11 +14473,12 @@ async function updateCheckboxComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Checkbox", stats);
 
-  const existing = page.findOne((node) => node.name === "Checkbox / v1");
+  const existing = findComponentSetOnPage(page, "Checkbox");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Checkbox / v1 was not found. Run Build Checkbox first.";
+    stats.message = "Checkbox was not found. Run Build Checkbox first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Checkbox", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -14417,7 +14486,7 @@ async function updateCheckboxComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Checkbox");
-  applyComponentSetDescription(existing, "Checkbox / v1", true, [
+  applyComponentSetDescription(existing, "Checkbox", true, [
     "Kozmos Checkbox component set generated from React Checkbox API.",
     "Checked maps to Checkbox.checked.",
     "State maps to disabled/error props in Code Connect.",
@@ -14486,13 +14555,14 @@ async function buildRadioComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Radio", stats);
 
-  const existing = page.findOne((node) => node.name === "Radio / v1");
+  const existing = findComponentSetOnPage(page, "Radio");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Radio", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Radio / v1 already exists. Use Update Radio to preserve its node ID.";
+      "Radio already exists. Use Update Radio to preserve its node ID.";
     return stats;
   }
 
@@ -14519,12 +14589,12 @@ async function buildRadioComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Radio / v1";
+  componentSet.name = "Radio";
   componentSet.x = 80;
   componentSet.y = 1900;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Radio");
-  applyComponentSetDescription(componentSet, "Radio / v1", false, [
+  applyComponentSetDescription(componentSet, "Radio", false, [
     "Kozmos Radio component set generated from React RadioGroupItem API.",
     "Checked maps to whether RadioGroup.defaultValue matches RadioGroupItem.value.",
     "State maps to disabled/error props in Code Connect.",
@@ -14563,11 +14633,12 @@ async function updateRadioComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Radio", stats);
 
-  const existing = page.findOne((node) => node.name === "Radio / v1");
+  const existing = findComponentSetOnPage(page, "Radio");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Radio / v1 was not found. Run Build Radio first.";
+    stats.message = "Radio was not found. Run Build Radio first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Radio", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -14575,7 +14646,7 @@ async function updateRadioComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Radio");
-  applyComponentSetDescription(existing, "Radio / v1", true, [
+  applyComponentSetDescription(existing, "Radio", true, [
     "Kozmos Radio component set generated from React RadioGroupItem API.",
     "Checked maps to whether RadioGroup.defaultValue matches RadioGroupItem.value.",
     "State maps to disabled/error props in Code Connect.",
@@ -14644,13 +14715,14 @@ async function buildSwitchComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Switch", stats);
 
-  const existing = page.findOne((node) => node.name === "Switch / v1");
+  const existing = findComponentSetOnPage(page, "Switch");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Switch", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Switch / v1 already exists. Use Update Switch to preserve its node ID.";
+      "Switch already exists. Use Update Switch to preserve its node ID.";
     return stats;
   }
 
@@ -14677,12 +14749,12 @@ async function buildSwitchComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Switch / v1";
+  componentSet.name = "Switch";
   componentSet.x = 80;
   componentSet.y = 2060;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Switch");
-  applyComponentSetDescription(componentSet, "Switch / v1", false, [
+  applyComponentSetDescription(componentSet, "Switch", false, [
     "Kozmos Switch component set generated from React Switch API.",
     "Checked maps to Switch.checked.",
     "State maps to disabled/error props in Code Connect.",
@@ -14721,11 +14793,12 @@ async function updateSwitchComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Switch", stats);
 
-  const existing = page.findOne((node) => node.name === "Switch / v1");
+  const existing = findComponentSetOnPage(page, "Switch");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Switch / v1 was not found. Run Build Switch first.";
+    stats.message = "Switch was not found. Run Build Switch first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Switch", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -14733,7 +14806,7 @@ async function updateSwitchComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Switch");
-  applyComponentSetDescription(existing, "Switch / v1", true, [
+  applyComponentSetDescription(existing, "Switch", true, [
     "Kozmos Switch component set generated from React Switch API.",
     "Checked maps to Switch.checked.",
     "State maps to disabled/error props in Code Connect.",
@@ -14802,13 +14875,14 @@ async function buildInputComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Input", stats);
 
-  const existing = page.findOne((node) => node.name === "Input / v1");
+  const existing = findComponentSetOnPage(page, "Input");
   if (existing) {
+    normalizeComponentSetNodeName(existing, "Input", stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
     stats.message =
-      "Input / v1 already exists. Use Update Input to preserve its node ID.";
+      "Input already exists. Use Update Input to preserve its node ID.";
     return stats;
   }
 
@@ -14839,12 +14913,12 @@ async function buildInputComponent() {
   }
 
   const componentSet = figma.combineAsVariants(components, page);
-  componentSet.name = "Input / v1";
+  componentSet.name = "Input";
   componentSet.x = 80;
   componentSet.y = 2220;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Input");
-  applyComponentSetDescription(componentSet, "Input / v1", false, [
+  applyComponentSetDescription(componentSet, "Input", false, [
     "Kozmos Input component set generated from React Input API.",
     "State maps to focus, disabled, and readOnly props in Code Connect.",
     "Status maps to validation tone: default, error, warning, and success.",
@@ -14889,11 +14963,12 @@ async function updateInputComponent() {
 
   removeStaleGeneratedComponentArtifacts(page, "Input", stats);
 
-  const existing = page.findOne((node) => node.name === "Input / v1");
+  const existing = findComponentSetOnPage(page, "Input");
   if (!existing || existing.type !== "COMPONENT_SET") {
-    stats.message = "Input / v1 was not found. Run Build Input first.";
+    stats.message = "Input was not found. Run Build Input first.";
     return stats;
   }
+  normalizeComponentSetNodeName(existing, "Input", stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -14901,7 +14976,7 @@ async function updateInputComponent() {
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Input");
-  applyComponentSetDescription(existing, "Input / v1", true, [
+  applyComponentSetDescription(existing, "Input", true, [
     "Kozmos Input component set generated from React Input API.",
     "State maps to focus, disabled, and readOnly props in Code Connect.",
     "Status maps to validation tone: default, error, warning, and success.",
@@ -14973,7 +15048,7 @@ async function updateInputComponent() {
 async function rebuildTextComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Text",
-    componentSetName: "Text / v1",
+    componentSetName: "Text",
     build: buildTextComponent,
   });
 }
@@ -14981,7 +15056,7 @@ async function rebuildTextComponent() {
 async function rebuildHeadingComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Heading",
-    componentSetName: "Heading / v1",
+    componentSetName: "Heading",
     build: buildHeadingComponent,
   });
 }
@@ -14989,7 +15064,7 @@ async function rebuildHeadingComponent() {
 async function rebuildLinkComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Link",
-    componentSetName: "Link / v1",
+    componentSetName: "Link",
     build: buildLinkComponent,
   });
 }
@@ -14997,7 +15072,7 @@ async function rebuildLinkComponent() {
 async function rebuildLabelComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Label",
-    componentSetName: "Label / v1",
+    componentSetName: "Label",
     build: buildLabelComponent,
   });
 }
@@ -15005,7 +15080,7 @@ async function rebuildLabelComponent() {
 async function rebuildSeparatorComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Separator",
-    componentSetName: "Separator / v1",
+    componentSetName: "Separator",
     build: buildSeparatorComponent,
   });
 }
@@ -15013,7 +15088,7 @@ async function rebuildSeparatorComponent() {
 async function rebuildSkeletonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Skeleton",
-    componentSetName: "Skeleton / v1",
+    componentSetName: "Skeleton",
     build: buildSkeletonComponent,
   });
 }
@@ -15021,7 +15096,7 @@ async function rebuildSkeletonComponent() {
 async function rebuildBoxComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Box",
-    componentSetName: "Box / v1",
+    componentSetName: "Box",
     build: buildBoxComponent,
   });
 }
@@ -15029,7 +15104,7 @@ async function rebuildBoxComponent() {
 async function rebuildStackComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Stack",
-    componentSetName: "Stack / v1",
+    componentSetName: "Stack",
     build: buildStackComponent,
   });
 }
@@ -15037,7 +15112,7 @@ async function rebuildStackComponent() {
 async function rebuildContainerComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Container",
-    componentSetName: "Container / v1",
+    componentSetName: "Container",
     build: buildContainerComponent,
   });
 }
@@ -15045,7 +15120,7 @@ async function rebuildContainerComponent() {
 async function rebuildBreadcrumbComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Breadcrumb",
-    componentSetName: "Breadcrumb / v1",
+    componentSetName: "Breadcrumb",
     build: buildBreadcrumbComponent,
   });
 }
@@ -15053,7 +15128,7 @@ async function rebuildBreadcrumbComponent() {
 async function rebuildAccordionComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Accordion",
-    componentSetName: "Accordion / v1",
+    componentSetName: "Accordion",
     build: buildAccordionComponent,
   });
 }
@@ -15061,7 +15136,7 @@ async function rebuildAccordionComponent() {
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
-    componentSetName: "Button / v1",
+    componentSetName: "Button",
     build: buildButtonComponent,
   });
 }
@@ -15069,7 +15144,7 @@ async function rebuildButtonComponent() {
 async function rebuildIconButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "IconButton",
-    componentSetName: "IconButton / v1",
+    componentSetName: "IconButton",
     build: buildIconButtonComponent,
   });
 }
@@ -15077,7 +15152,7 @@ async function rebuildIconButtonComponent() {
 async function rebuildCounterComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Counter",
-    componentSetName: "Counter / v1",
+    componentSetName: "Counter",
     build: buildCounterComponent,
   });
 }
@@ -15085,7 +15160,7 @@ async function rebuildCounterComponent() {
 async function rebuildBadgeComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Badge",
-    componentSetName: "Badge / v1",
+    componentSetName: "Badge",
     build: buildBadgeComponent,
   });
 }
@@ -15093,7 +15168,7 @@ async function rebuildBadgeComponent() {
 async function rebuildCheckboxComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Checkbox",
-    componentSetName: "Checkbox / v1",
+    componentSetName: "Checkbox",
     build: buildCheckboxComponent,
   });
 }
@@ -15101,7 +15176,7 @@ async function rebuildCheckboxComponent() {
 async function rebuildRadioComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Radio",
-    componentSetName: "Radio / v1",
+    componentSetName: "Radio",
     build: buildRadioComponent,
   });
 }
@@ -15109,7 +15184,7 @@ async function rebuildRadioComponent() {
 async function rebuildSwitchComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Switch",
-    componentSetName: "Switch / v1",
+    componentSetName: "Switch",
     build: buildSwitchComponent,
   });
 }
@@ -15117,7 +15192,7 @@ async function rebuildSwitchComponent() {
 async function rebuildInputComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Input",
-    componentSetName: "Input / v1",
+    componentSetName: "Input",
     build: buildInputComponent,
   });
 }
@@ -15125,7 +15200,7 @@ async function rebuildInputComponent() {
 async function buildTextareaComponent() {
   return buildStateStatusComponent({
     componentName: "Textarea",
-    componentSetName: "Textarea / v1",
+    componentSetName: "Textarea",
     states: TEXTAREA_STATES,
     statuses: TEXTAREA_STATUSES,
     x: 1520,
@@ -15148,7 +15223,7 @@ async function buildTextareaComponent() {
 async function updateTextareaComponent() {
   return updateStateStatusComponent({
     componentName: "Textarea",
-    componentSetName: "Textarea / v1",
+    componentSetName: "Textarea",
     states: TEXTAREA_STATES,
     statuses: TEXTAREA_STATUSES,
     xStep: 360,
@@ -15172,7 +15247,7 @@ async function updateTextareaComponent() {
 async function buildSearchComponent() {
   return buildStateStatusComponent({
     componentName: "Search",
-    componentSetName: "Search / v1",
+    componentSetName: "Search",
     states: SEARCH_STATES,
     statuses: SEARCH_STATUSES,
     x: 80,
@@ -15195,7 +15270,7 @@ async function buildSearchComponent() {
 async function updateSearchComponent() {
   return updateStateStatusComponent({
     componentName: "Search",
-    componentSetName: "Search / v1",
+    componentSetName: "Search",
     states: SEARCH_STATES,
     statuses: SEARCH_STATUSES,
     xStep: 360,
@@ -15219,7 +15294,7 @@ async function updateSearchComponent() {
 async function buildSelectComponent() {
   return buildStateStatusComponent({
     componentName: "Select",
-    componentSetName: "Select / v1",
+    componentSetName: "Select",
     states: SELECT_STATES,
     statuses: SELECT_STATUSES,
     x: 80,
@@ -15241,7 +15316,7 @@ async function buildSelectComponent() {
 async function updateSelectComponent() {
   return updateStateStatusComponent({
     componentName: "Select",
-    componentSetName: "Select / v1",
+    componentSetName: "Select",
     states: SELECT_STATES,
     statuses: SELECT_STATUSES,
     xStep: 360,
@@ -15264,7 +15339,7 @@ async function updateSelectComponent() {
 async function buildSliderComponent() {
   return buildStateStatusComponent({
     componentName: "Slider",
-    componentSetName: "Slider / v1",
+    componentSetName: "Slider",
     states: SLIDER_STATES,
     statuses: SLIDER_STATUSES,
     x: 1160,
@@ -15286,7 +15361,7 @@ async function buildSliderComponent() {
 async function updateSliderComponent() {
   return updateStateStatusComponent({
     componentName: "Slider",
-    componentSetName: "Slider / v1",
+    componentSetName: "Slider",
     states: SLIDER_STATES,
     statuses: SLIDER_STATUSES,
     xStep: 360,
@@ -15321,10 +15396,9 @@ async function buildStateStatusComponent(config) {
 
   removeStaleGeneratedComponentArtifacts(page, config.componentName, stats);
 
-  const existing = page.findOne(
-    (node) => node.name === config.componentSetName,
-  );
+  const existing = findComponentSetOnPage(page, config.componentSetName);
   if (existing) {
+    normalizeComponentSetNodeName(existing, config.componentSetName, stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
@@ -15406,13 +15480,12 @@ async function updateStateStatusComponent(config) {
 
   removeStaleGeneratedComponentArtifacts(page, config.componentName, stats);
 
-  const existing = page.findOne(
-    (node) => node.name === config.componentSetName,
-  );
+  const existing = findComponentSetOnPage(page, config.componentSetName);
   if (!existing || existing.type !== "COMPONENT_SET") {
     stats.message = `${config.componentSetName} was not found. Run Build ${config.componentName} first.`;
     return stats;
   }
+  normalizeComponentSetNodeName(existing, config.componentSetName, stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -15527,7 +15600,7 @@ function configureSliderProperties(componentSet, stats) {
 async function rebuildTextareaComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Textarea",
-    componentSetName: "Textarea / v1",
+    componentSetName: "Textarea",
     build: buildTextareaComponent,
   });
 }
@@ -15535,7 +15608,7 @@ async function rebuildTextareaComponent() {
 async function rebuildSearchComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Search",
-    componentSetName: "Search / v1",
+    componentSetName: "Search",
     build: buildSearchComponent,
   });
 }
@@ -15543,7 +15616,7 @@ async function rebuildSearchComponent() {
 async function rebuildSelectComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Select",
-    componentSetName: "Select / v1",
+    componentSetName: "Select",
     build: buildSelectComponent,
   });
 }
@@ -15551,7 +15624,7 @@ async function rebuildSelectComponent() {
 async function rebuildSliderComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Slider",
-    componentSetName: "Slider / v1",
+    componentSetName: "Slider",
     build: buildSliderComponent,
   });
 }
@@ -15559,7 +15632,7 @@ async function rebuildSliderComponent() {
 async function buildProgressComponent() {
   return buildSingleAxisComponent({
     componentName: "Progress",
-    componentSetName: "Progress / v1",
+    componentSetName: "Progress",
     axisName: "Value",
     values: PROGRESS_VALUES,
     x: 80,
@@ -15578,7 +15651,7 @@ async function buildProgressComponent() {
 async function updateProgressComponent() {
   return updateSingleAxisComponent({
     componentName: "Progress",
-    componentSetName: "Progress / v1",
+    componentSetName: "Progress",
     axisName: "Value",
     values: PROGRESS_VALUES,
     xStep: 360,
@@ -15598,7 +15671,7 @@ async function updateProgressComponent() {
 async function buildSpinnerComponent() {
   return buildSingleAxisComponent({
     componentName: "Spinner",
-    componentSetName: "Spinner / v1",
+    componentSetName: "Spinner",
     axisName: "Size",
     values: SPINNER_SIZES,
     x: 80,
@@ -15617,7 +15690,7 @@ async function buildSpinnerComponent() {
 async function updateSpinnerComponent() {
   return updateSingleAxisComponent({
     componentName: "Spinner",
-    componentSetName: "Spinner / v1",
+    componentSetName: "Spinner",
     axisName: "Size",
     values: SPINNER_SIZES,
     xStep: 96,
@@ -15637,7 +15710,7 @@ async function updateSpinnerComponent() {
 async function buildAvatarComponent() {
   return buildSingleAxisComponent({
     componentName: "Avatar",
-    componentSetName: "Avatar / v1",
+    componentSetName: "Avatar",
     axisName: "Content",
     values: AVATAR_CONTENT,
     x: 80,
@@ -15658,7 +15731,7 @@ async function buildAvatarComponent() {
 async function updateAvatarComponent() {
   return updateSingleAxisComponent({
     componentName: "Avatar",
-    componentSetName: "Avatar / v1",
+    componentSetName: "Avatar",
     axisName: "Content",
     values: AVATAR_CONTENT,
     xStep: 120,
@@ -15680,7 +15753,7 @@ async function updateAvatarComponent() {
 async function buildAlertComponent() {
   return buildSingleAxisComponent({
     componentName: "Alert",
-    componentSetName: "Alert / v1",
+    componentSetName: "Alert",
     axisName: "Variant",
     values: ALERT_VARIANTS,
     x: 80,
@@ -15701,7 +15774,7 @@ async function buildAlertComponent() {
 async function updateAlertComponent() {
   return updateSingleAxisComponent({
     componentName: "Alert",
-    componentSetName: "Alert / v1",
+    componentSetName: "Alert",
     axisName: "Variant",
     values: ALERT_VARIANTS,
     xStep: 400,
@@ -15723,7 +15796,7 @@ async function updateAlertComponent() {
 async function buildToastComponent() {
   return buildSingleAxisComponent({
     componentName: "Toast",
-    componentSetName: "Toast / v1",
+    componentSetName: "Toast",
     axisName: "Content",
     values: TOAST_CONTENT,
     x: 80,
@@ -15744,7 +15817,7 @@ async function buildToastComponent() {
 async function updateToastComponent() {
   return updateSingleAxisComponent({
     componentName: "Toast",
-    componentSetName: "Toast / v1",
+    componentSetName: "Toast",
     axisName: "Content",
     values: TOAST_CONTENT,
     xStep: 480,
@@ -15778,10 +15851,9 @@ async function buildSingleAxisComponent(config) {
 
   removeStaleGeneratedComponentArtifacts(page, config.componentName, stats);
 
-  const existing = page.findOne(
-    (node) => node.name === config.componentSetName,
-  );
+  const existing = findComponentSetOnPage(page, config.componentSetName);
   if (existing) {
+    normalizeComponentSetNodeName(existing, config.componentSetName, stats);
     stats.existing = true;
     stats.componentSetId = existing.id;
     stats.urlNodeId = nodeIdForUrl(existing.id);
@@ -15855,13 +15927,12 @@ async function updateSingleAxisComponent(config) {
 
   removeStaleGeneratedComponentArtifacts(page, config.componentName, stats);
 
-  const existing = page.findOne(
-    (node) => node.name === config.componentSetName,
-  );
+  const existing = findComponentSetOnPage(page, config.componentSetName);
   if (!existing || existing.type !== "COMPONENT_SET") {
     stats.message = `${config.componentSetName} was not found. Run Build ${config.componentName} first.`;
     return stats;
   }
+  normalizeComponentSetNodeName(existing, config.componentSetName, stats);
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
@@ -16304,7 +16375,7 @@ function configureToastProperties(componentSet, stats) {
 async function rebuildCardComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Card",
-    componentSetName: "Card / v1",
+    componentSetName: "Card",
     build: buildCardComponent,
   });
 }
@@ -16312,7 +16383,7 @@ async function rebuildCardComponent() {
 async function rebuildTabsComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Tabs",
-    componentSetName: "Tabs / v1",
+    componentSetName: "Tabs",
     build: buildTabsComponent,
   });
 }
@@ -16320,7 +16391,7 @@ async function rebuildTabsComponent() {
 async function rebuildTooltipComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Tooltip",
-    componentSetName: "Tooltip / v1",
+    componentSetName: "Tooltip",
     build: buildTooltipComponent,
   });
 }
@@ -16328,7 +16399,7 @@ async function rebuildTooltipComponent() {
 async function rebuildDialogComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Dialog",
-    componentSetName: "Dialog / v1",
+    componentSetName: "Dialog",
     build: buildDialogComponent,
   });
 }
@@ -16336,7 +16407,7 @@ async function rebuildDialogComponent() {
 async function rebuildPopoverComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Popover",
-    componentSetName: "Popover / v1",
+    componentSetName: "Popover",
     build: buildPopoverComponent,
   });
 }
@@ -16344,7 +16415,7 @@ async function rebuildPopoverComponent() {
 async function rebuildMenuComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Menu",
-    componentSetName: "Menu / v1",
+    componentSetName: "Menu",
     build: buildMenuComponent,
   });
 }
@@ -16352,7 +16423,7 @@ async function rebuildMenuComponent() {
 async function rebuildProgressComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Progress",
-    componentSetName: "Progress / v1",
+    componentSetName: "Progress",
     build: buildProgressComponent,
   });
 }
@@ -16360,7 +16431,7 @@ async function rebuildProgressComponent() {
 async function rebuildSpinnerComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Spinner",
-    componentSetName: "Spinner / v1",
+    componentSetName: "Spinner",
     build: buildSpinnerComponent,
   });
 }
@@ -16368,7 +16439,7 @@ async function rebuildSpinnerComponent() {
 async function rebuildAvatarComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Avatar",
-    componentSetName: "Avatar / v1",
+    componentSetName: "Avatar",
     build: buildAvatarComponent,
   });
 }
@@ -16376,7 +16447,7 @@ async function rebuildAvatarComponent() {
 async function rebuildAlertComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Alert",
-    componentSetName: "Alert / v1",
+    componentSetName: "Alert",
     build: buildAlertComponent,
   });
 }
@@ -16384,7 +16455,7 @@ async function rebuildAlertComponent() {
 async function rebuildToastComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Toast",
-    componentSetName: "Toast / v1",
+    componentSetName: "Toast",
     build: buildToastComponent,
   });
 }
@@ -16418,7 +16489,7 @@ async function archiveGeneratedNodesForRebuild(
 ) {
   const nodes = [];
   for (const child of page.children.slice()) {
-    if (child.name === componentSetName) {
+    if (componentSetNameMatches(child.name, componentSetName)) {
       nodes.push(child);
     }
   }
@@ -16516,7 +16587,7 @@ function mergeRebuildResult(rebuildStats, buildResult, config) {
 
 function removeStaleGeneratedComponentArtifacts(page, componentName, stats) {
   const stale = [];
-  const componentSetName = `${componentName} / v1`;
+  const componentSetName = componentName;
 
   for (const child of page.children) {
     if (
@@ -16528,7 +16599,10 @@ function removeStaleGeneratedComponentArtifacts(page, componentName, stats) {
       continue;
     }
 
-    if (child.type === "INSTANCE" && child.name === componentSetName) {
+    if (
+      child.type === "INSTANCE" &&
+      componentSetNameMatches(child.name, componentSetName)
+    ) {
       stale.push(child);
       continue;
     }
@@ -20299,7 +20373,7 @@ async function syncBadgeVariantChildren({
   setHugChildSizing(label);
 
   let counter = directChildNamed(component, "Counter");
-  if (counter && !isNestedComponentInstance(counter, "Counter / v1")) {
+  if (counter && !isNestedComponentInstance(counter, "Counter")) {
     counter.remove();
     counter = null;
   }
@@ -20308,7 +20382,7 @@ async function syncBadgeVariantChildren({
   const counterTone = counterToneForBadgeVariant(variant);
   if (!counter) {
     const created = await createNestedComponentInstance({
-      componentSetName: "Counter / v1",
+      componentSetName: "Counter",
       variantProperties: {
         Tone: counterTone,
         Size: "Default",
@@ -20319,7 +20393,7 @@ async function syncBadgeVariantChildren({
     if (!created) {
       counter = createMissingNestedComponentNode(
         "Counter",
-        "Build Counter / v1 before updating Badge.",
+        "Build Counter before updating Badge.",
         stats,
       );
     } else {
@@ -20327,7 +20401,7 @@ async function syncBadgeVariantChildren({
       counterSet = created.componentSet;
     }
   } else {
-    counterSet = await findLocalComponentSetByName("Counter / v1");
+    counterSet = await findLocalComponentSetByName("Counter");
   }
 
   if (counter.type === "INSTANCE" && counterSet) {
@@ -20342,7 +20416,7 @@ async function syncBadgeVariantChildren({
       );
     }
     setInstanceTextProperty(counter, counterSet, "Counter Text", "2", stats);
-    markNestedComponentInstance(counter, "Counter / v1", "badge-counter");
+    markNestedComponentInstance(counter, "Counter", "badge-counter");
   }
 
   if (counter.setSharedPluginData) {
@@ -20564,7 +20638,7 @@ async function syncCardVariantChildren({
 
 async function syncCardFooterAction({ footer, name, label, primary, stats }) {
   let action = directChildNamed(footer, name);
-  if (action && !isNestedComponentInstance(action, "Button / v1")) {
+  if (action && !isNestedComponentInstance(action, "Button")) {
     action.remove();
     action = null;
   }
@@ -20572,7 +20646,7 @@ async function syncCardFooterAction({ footer, name, label, primary, stats }) {
   let buttonSet = null;
   if (!action) {
     const created = await createNestedComponentInstance({
-      componentSetName: "Button / v1",
+      componentSetName: "Button",
       variantProperties: {
         Variant: primary ? "Default" : "Outline",
         Size: "Default",
@@ -20584,7 +20658,7 @@ async function syncCardFooterAction({ footer, name, label, primary, stats }) {
     if (!created) {
       action = createMissingNestedComponentNode(
         name,
-        "Build Button / v1 before updating Card.",
+        "Build Button before updating Card.",
         stats,
       );
     } else {
@@ -20592,7 +20666,7 @@ async function syncCardFooterAction({ footer, name, label, primary, stats }) {
       buttonSet = created.componentSet;
     }
   } else {
-    buttonSet = await findLocalComponentSetByName("Button / v1");
+    buttonSet = await findLocalComponentSetByName("Button");
   }
 
   if (action.type === "INSTANCE" && buttonSet) {
@@ -21275,7 +21349,7 @@ async function syncDialogVariantChildren({
 
 async function syncDialogInput({ body, name, label, placeholder, stats }) {
   let input = directChildNamed(body, name);
-  if (input && !isNestedComponentInstance(input, "Input / v1")) {
+  if (input && !isNestedComponentInstance(input, "Input")) {
     input.remove();
     input = null;
   }
@@ -21283,7 +21357,7 @@ async function syncDialogInput({ body, name, label, placeholder, stats }) {
   let inputSet = null;
   if (!input) {
     const created = await createNestedComponentInstance({
-      componentSetName: "Input / v1",
+      componentSetName: "Input",
       variantProperties: {
         State: "Default",
         Status: "Default",
@@ -21294,7 +21368,7 @@ async function syncDialogInput({ body, name, label, placeholder, stats }) {
     if (!created) {
       input = createMissingNestedComponentNode(
         name,
-        "Build Input / v1 before updating Dialog.",
+        "Build Input before updating Dialog.",
         stats,
       );
     } else {
@@ -21302,7 +21376,7 @@ async function syncDialogInput({ body, name, label, placeholder, stats }) {
       inputSet = created.componentSet;
     }
   } else {
-    inputSet = await findLocalComponentSetByName("Input / v1");
+    inputSet = await findLocalComponentSetByName("Input");
   }
 
   if (input.type === "INSTANCE" && inputSet) {
@@ -21340,7 +21414,7 @@ async function syncDialogInput({ body, name, label, placeholder, stats }) {
 async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
   const size = primary ? "Large" : "Default";
   let action = directChildNamed(footer, name);
-  if (action && !isNestedComponentInstance(action, "Button / v1")) {
+  if (action && !isNestedComponentInstance(action, "Button")) {
     action.remove();
     action = null;
   }
@@ -21348,7 +21422,7 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
   let buttonSet = null;
   if (!action) {
     const created = await createNestedComponentInstance({
-      componentSetName: "Button / v1",
+      componentSetName: "Button",
       variantProperties: {
         Variant: primary ? "Default" : "Outline",
         Size: size,
@@ -21360,7 +21434,7 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
     if (!created) {
       action = createMissingNestedComponentNode(
         name,
-        "Build Button / v1 before updating Dialog.",
+        "Build Button before updating Dialog.",
         stats,
       );
     } else {
@@ -21368,7 +21442,7 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
       buttonSet = created.componentSet;
     }
   } else {
-    buttonSet = await findLocalComponentSetByName("Button / v1");
+    buttonSet = await findLocalComponentSetByName("Button");
   }
 
   if (action.type === "INSTANCE" && buttonSet) {
@@ -24153,12 +24227,10 @@ async function applyCuratedIconSourcesToSlots(stats) {
   if (!componentsPage) return;
 
   await componentsPage.loadAsync();
-  const targetNames = ["Button / v1", "IconButton / v1", "Badge / v1"];
+  const targetNames = ["Button", "IconButton", "Badge"];
 
   for (const targetName of targetNames) {
-    const componentSet = componentsPage.findOne(
-      (node) => node.type === "COMPONENT_SET" && node.name === targetName,
-    );
+    const componentSet = findComponentSetOnPage(componentsPage, targetName);
     if (!componentSet) continue;
 
     const propertyName = ensureInstanceSwapProperty(
@@ -24364,9 +24436,7 @@ async function configureIconButtonSlot(
 }
 
 async function refreshIconButtonSlotsIfPresent(page, variableByName, stats) {
-  const existing = page.findOne(
-    (node) => node.name === "IconButton / v1" && node.type === "COMPONENT_SET",
-  );
+  const existing = findComponentSetOnPage(page, "IconButton");
   if (!existing) return;
 
   const iconComponent = await resolveDefaultIconSourceComponent(
@@ -24378,9 +24448,7 @@ async function refreshIconButtonSlotsIfPresent(page, variableByName, stats) {
 }
 
 async function refreshBadgeSlotsIfPresent(page, variableByName, stats) {
-  const existing = page.findOne(
-    (node) => node.name === "Badge / v1" && node.type === "COMPONENT_SET",
-  );
+  const existing = findComponentSetOnPage(page, "Badge");
   if (!existing) return;
 
   const iconComponent = await resolveDefaultIconSourceComponent(
@@ -24392,9 +24460,7 @@ async function refreshBadgeSlotsIfPresent(page, variableByName, stats) {
 }
 
 async function refreshButtonSlotsIfPresent(page, variableByName, stats) {
-  const existing = page.findOne(
-    (node) => node.name === "Button / v1" && node.type === "COMPONENT_SET",
-  );
+  const existing = findComponentSetOnPage(page, "Button");
   if (!existing) return;
 
   await configureButtonIconSlot(existing, variableByName, stats);

@@ -2,7 +2,7 @@ import figma from "@figma/code-connect";
 import { Button } from "./Button";
 
 /**
- * Code Connect: Kozmos DS Core Library / Button / v1
+ * Code Connect: Kozmos DS Core Library / Button
  */
 figma.connect(
   Button,
