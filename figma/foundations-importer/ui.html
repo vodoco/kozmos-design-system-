@@ -1879,6 +1879,14 @@
         ) {
           return "Next: select Badge / v1 and run the recommended update to clear the counter composition warning.";
         }
+        if (
+          libraryState.warnings.some((warning) =>
+            warning.includes("Dialog / v1") &&
+            warning.includes("composite component integrity"),
+          )
+        ) {
+          return "Next: select Dialog / v1 and run Fix to refresh nested instance sizing.";
+        }
         if (libraryState.warningCount > 0) {
           return "Next: review the warning list in the activity details and update the affected component set.";
         }

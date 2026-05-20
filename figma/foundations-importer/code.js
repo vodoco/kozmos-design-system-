@@ -5905,10 +5905,11 @@ function auditComponentSet(componentSet, pageName, variableContext) {
   if (
     shouldAuditTypographyBindings(record.name) &&
     boundVariableFields.textNodes > 0 &&
-    boundVariableFields.typographyFieldCount === 0
+    boundVariableFields.typographyFieldCount === 0 &&
+    boundVariableFields.textStyleNodes < boundVariableFields.textNodes
   ) {
     record.warnings.push(
-      `${boundVariableFields.textNodes} text node(s) are missing typography token bindings.`,
+      `${boundVariableFields.textNodes - boundVariableFields.textStyleNodes} text node(s) are missing typography token bindings or Figma text styles.`,
     );
   }
 
