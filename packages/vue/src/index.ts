@@ -9,6 +9,7 @@ import {
   Container,
   Icon,
   Button as ReactButton,
+  Counter as ReactCounter,
   Badge as ReactBadge,
   Label,
   Input as ReactInput,
@@ -191,6 +192,7 @@ export const KozmosHeading = createVueWrapper(Heading);
 export const KozmosContainer = createVueWrapper(Container);
 export const KozmosIcon = createVueWrapper(Icon);
 export const KozmosButton = createVueWrapper(ReactButton);
+export const KozmosCounter = createVueWrapper(ReactCounter);
 export const KozmosBadge = createVueWrapper(ReactBadge);
 export const KozmosLabel = createVueWrapper(Label);
 export const KozmosCard = createVueWrapper(Card);

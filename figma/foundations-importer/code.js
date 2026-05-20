@@ -34,6 +34,8 @@ const BADGE_VARIANTS = [
   "Link",
 ];
 const BADGE_SIZES = ["Default", "Small", "Large", "Icon"];
+const COUNTER_TONES = ["Neutral", "Brand", "Destructive", "Inverse"];
+const COUNTER_SIZES = ["Small", "Default"];
 const CHECKBOX_CHECKED = ["Unchecked", "Checked"];
 const CHECKBOX_STATES = ["Default", "Disabled", "Error"];
 const RADIO_CHECKED = ["Unchecked", "Checked"];
@@ -74,6 +76,56 @@ const TABS_ACTIVE_TO_INDEX = {
   Three: 2,
   Four: 3,
 };
+const COMPONENTS_PAGE_NAME = "Components";
+const COMPONENT_PAGE_LAYOUT_X = 80;
+const COMPONENT_PAGE_LAYOUT_Y = 80;
+const COMPONENT_PAGE_LAYOUT_ROW_GAP = 420;
+const COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT = 260;
+const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
+  "Button / v1": 900,
+  "IconButton / v1": 820,
+  "Card / v1": 420,
+  "Tabs / v1": 620,
+  "Tooltip / v1": 360,
+  "Dialog / v1": 760,
+  "Popover / v1": 360,
+  "Menu / v1": 420,
+  "Input / v1": 720,
+  "Textarea / v1": 760,
+  "Search / v1": 620,
+  "Select / v1": 420,
+  "Slider / v1": 500,
+  "Progress / v1": 260,
+  "Spinner / v1": 260,
+  "Alert / v1": 260,
+  "Toast / v1": 260,
+  "Avatar / v1": 260,
+};
+const COMPONENT_PAGE_LAYOUT_ORDER = [
+  "Button / v1",
+  "IconButton / v1",
+  "Counter / v1",
+  "Badge / v1",
+  "Card / v1",
+  "Tabs / v1",
+  "Tooltip / v1",
+  "Dialog / v1",
+  "Popover / v1",
+  "Menu / v1",
+  "Checkbox / v1",
+  "Radio / v1",
+  "Switch / v1",
+  "Input / v1",
+  "Textarea / v1",
+  "Search / v1",
+  "Select / v1",
+  "Slider / v1",
+  "Progress / v1",
+  "Spinner / v1",
+  "Alert / v1",
+  "Toast / v1",
+  "Avatar / v1",
+];
 const COMPONENT_DOCS_PAGE_NAME = "Docs";
 const COMPONENT_DOC_SPLIT_PAGE_PREFIX = "Docs / ";
 const DOCS_CANVAS_X = 80;
@@ -261,6 +313,34 @@ const COMPONENT_DOCS = [
     ],
   },
   {
+    componentName: "Counter",
+    componentSetName: "Counter / v1",
+    category: "Status",
+    summary:
+      "Counter presents a compact numeric value, such as counts, unread items, or applied filters.",
+    usage: [
+      "Use for short numeric values that need a stronger shape than plain text.",
+      "Use inside Badge when the count belongs to a label.",
+      "Keep Counter non-interactive; wrap it in another control only when the whole control is actionable.",
+    ],
+    api: [
+      "Tone maps to Counter.tone.",
+      "Size maps to Counter.size.",
+      "Counter Text maps to Counter children in Code Connect.",
+      "Badge composes Counter as a hidden nested instance for opt-in count display.",
+    ],
+    properties: [
+      "Tone: Neutral, Brand, Destructive, Inverse",
+      "Size: Small, Default",
+      "Counter Text",
+    ],
+    accessibility: [
+      "Counter is static status content unless wrapped by an interactive component.",
+      "Text contrast passes in Light and Dark modes.",
+      "Short numeric text uses tabular sizing to keep repeated counts stable.",
+    ],
+  },
+  {
     componentName: "Badge",
     componentSetName: "Badge / v1",
     category: "Status",
@@ -276,13 +356,14 @@ const COMPONENT_DOCS = [
       "Size maps to Badge.size.",
       "Label Text maps to Badge children in Code Connect.",
       "Icon maps to Badge.icon for icon-sized badges.",
-      "Counter Text and Show Counter map to Badge.counter and Badge.showCounter.",
+      "Show Counter maps to Badge.showCounter.",
+      "Badge count content comes from the exposed nested Counter instance.",
       "Badge can inherit focus-visible classes when composed inside interactive elements.",
     ],
     properties: [
       "Variant: Default, Destructive, Outline, Secondary, Ghost, Link",
       "Size: Default, Small, Large, Icon",
-      "Label Text, Icon, Counter Text, Show Counter",
+      "Label Text, Icon, Show Counter, nested Counter",
     ],
     accessibility: [
       "Badge is treated as static content unless wrapped by an interactive component.",
@@ -1194,6 +1275,32 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Border Width/sm",
     scopes: ["STROKE_FLOAT"],
   },
+  { name: "Counter/height/small", value: 18, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Counter/height/default", value: 20, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Counter/min-width/small", value: 18, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Counter/min-width/default", value: 20, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Counter/padding/x/small",
+    value: 5,
+    alias: "Layout/spacing/50",
+    scopes: ["GAP"],
+  },
+  {
+    name: "Counter/padding/x/default",
+    value: 6,
+    alias: "Layout/spacing/75",
+    scopes: ["GAP"],
+  },
+  {
+    name: "Counter/radius",
+    value: 9999,
+    alias: "Radius/full",
+    scopes: ["CORNER_RADIUS"],
+  },
+  { name: "Counter/font-size/small", value: 11, scopes: ["FONT_SIZE"] },
+  { name: "Counter/font-size/default", value: 12, scopes: ["FONT_SIZE"] },
+  { name: "Counter/line-height/small", value: 14, scopes: ["LINE_HEIGHT"] },
+  { name: "Counter/line-height/default", value: 16, scopes: ["LINE_HEIGHT"] },
   {
     name: "Badge/height/small",
     value: 44,
@@ -1261,21 +1368,36 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Layout/sizing/200",
     scopes: ["WIDTH_HEIGHT"],
   },
-  { name: "Badge/counter/height", value: 20, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Badge/counter/height",
+    value: 20,
+    alias: "Counter/height/default",
+    scopes: ["WIDTH_HEIGHT"],
+  },
   {
     name: "Badge/counter/padding/x",
     value: 6,
-    alias: "Layout/spacing/75",
+    alias: "Counter/padding/x/default",
     scopes: ["GAP"],
   },
   {
     name: "Badge/counter/radius",
     value: 9999,
-    alias: "Radius/full",
+    alias: "Counter/radius",
     scopes: ["CORNER_RADIUS"],
   },
-  { name: "Badge/counter/font-size", value: 12, scopes: ["FONT_SIZE"] },
-  { name: "Badge/counter/line-height", value: 16, scopes: ["LINE_HEIGHT"] },
+  {
+    name: "Badge/counter/font-size",
+    value: 12,
+    alias: "Counter/font-size/default",
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "Badge/counter/line-height",
+    value: 16,
+    alias: "Counter/line-height/default",
+    scopes: ["LINE_HEIGHT"],
+  },
   {
     name: "Badge/radius",
     value: 8,
@@ -2329,6 +2451,24 @@ figma.ui.onmessage = async (message) => {
       return;
     }
 
+    if (message.type === "build-counter") {
+      const result = await buildCounterComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-counter") {
+      const result = await updateCounterComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-counter") {
+      const result = await rebuildCounterComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
     if (message.type === "build-badge") {
       const result = await buildBadgeComponent();
       figma.ui.postMessage({ type: "component-result", result });
@@ -2701,6 +2841,12 @@ figma.ui.onmessage = async (message) => {
       return;
     }
 
+    if (message.type === "reorganize-components") {
+      const result = await reorganizeComponentsPage();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
     if (message.type === "build-surface-qa") {
       const result = await buildSurfaceQaPage();
       figma.ui.postMessage({ type: "component-result", result });
@@ -2944,6 +3090,130 @@ function surfaceQaComponentDocs() {
   return Object.keys(requested).map((componentSetName) => ({
     componentSetName,
   }));
+}
+
+async function reorganizeComponentsPage() {
+  const stats = {
+    page: COMPONENTS_PAGE_NAME,
+    preservedNodeIds: true,
+    movedComponentSets: 0,
+    skippedComponentSets: [],
+    positions: [],
+    warnings: [],
+  };
+  const page = figma.root.children.find(
+    (child) => child.name === COMPONENTS_PAGE_NAME,
+  );
+
+  if (!page) {
+    stats.message =
+      "Components page was not found. Build at least one component set first.";
+    return stats;
+  }
+
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  const nodes = [];
+  for (const name of COMPONENT_PAGE_LAYOUT_ORDER) {
+    const node = page.findOne(
+      (child) => child.name === name && child.type === "COMPONENT_SET",
+    );
+
+    if (node) {
+      nodes.push(node);
+    } else {
+      stats.skippedComponentSets.push(name);
+    }
+  }
+
+  if (nodes.length === 0) {
+    stats.message = "No known component sets were found to reorganize.";
+    return stats;
+  }
+
+  let y = COMPONENT_PAGE_LAYOUT_Y;
+
+  for (const node of nodes) {
+    const bounds = measureComponentSetLayoutBounds(node);
+    const footprintHeight = Math.max(
+      bounds.height,
+      COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS[node.name] || 0,
+      COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT,
+    );
+
+    node.x = COMPONENT_PAGE_LAYOUT_X - bounds.minX;
+    node.y = y - bounds.minY;
+    stats.movedComponentSets += 1;
+    stats.positions.push({
+      name: node.name,
+      id: node.id,
+      urlNodeId: nodeIdForUrl(node.id),
+      x: node.x,
+      y: node.y,
+      visualX: COMPONENT_PAGE_LAYOUT_X,
+      visualY: y,
+      width: bounds.width,
+      height: bounds.height,
+      footprintHeight,
+    });
+
+    y += footprintHeight + COMPONENT_PAGE_LAYOUT_ROW_GAP;
+  }
+
+  if (stats.skippedComponentSets.length > 0) {
+    stats.warnings.push(
+      `${stats.skippedComponentSets.length} known component set(s) were not present on the Components page.`,
+    );
+  }
+
+  stats.message = `Reorganized ${stats.movedComponentSets} component set(s) on the Components page in one generous measured column; node IDs were preserved.`;
+  return stats;
+}
+
+function measureComponentSetLayoutBounds(node) {
+  const bounds = {
+    minX: 0,
+    minY: 0,
+    maxX: Math.ceil(node.width || 0),
+    maxY: Math.ceil(node.height || 0),
+  };
+
+  measureVisibleChildBounds(node, 0, 0, bounds);
+
+  const minX = Math.floor(bounds.minX);
+  const minY = Math.floor(bounds.minY);
+  const maxX = Math.ceil(bounds.maxX);
+  const maxY = Math.ceil(bounds.maxY);
+
+  return {
+    minX,
+    minY,
+    maxX,
+    maxY,
+    width: maxX - minX,
+    height: maxY - minY,
+  };
+}
+
+function measureVisibleChildBounds(parent, offsetX, offsetY, bounds) {
+  if (!parent || !("children" in parent)) return;
+
+  for (const child of parent.children) {
+    if (child.visible === false) continue;
+
+    const childX = offsetX + (child.x || 0);
+    const childY = offsetY + (child.y || 0);
+    const childWidth = child.width || 0;
+    const childHeight = child.height || 0;
+
+    bounds.minX = Math.min(bounds.minX, childX);
+    bounds.minY = Math.min(bounds.minY, childY);
+    bounds.maxX = Math.max(bounds.maxX, childX + childWidth);
+    bounds.maxY = Math.max(bounds.maxY, childY + childHeight);
+
+    measureVisibleChildBounds(child, childX, childY, bounds);
+  }
 }
 
 function removeGeneratedSurfaceQa(page) {
@@ -3866,16 +4136,7 @@ async function createNestedComponentInstance(config) {
 
   const instance = variant.createInstance();
   instance.name = config.name;
-  instance.setSharedPluginData(
-    RUN_NAMESPACE,
-    "kind",
-    "nested-component-instance",
-  );
-  instance.setSharedPluginData(
-    RUN_NAMESPACE,
-    "sourceComponentSet",
-    config.componentSetName,
-  );
+  markNestedComponentInstance(instance, config.componentSetName, config.role);
 
   return {
     componentSet,
@@ -3918,11 +4179,66 @@ function isGeneratedNestedComponentInstance(node) {
   );
 }
 
+function nodeSourceComponentSet(node) {
+  if (!node || node.type !== "INSTANCE" || !node.getSharedPluginData) {
+    return null;
+  }
+
+  const generatedSource = node.getSharedPluginData(
+    RUN_NAMESPACE,
+    "sourceComponentSet",
+  );
+  if (generatedSource) return generatedSource;
+
+  let mainComponent = null;
+  try {
+    mainComponent = node.mainComponent;
+  } catch (_error) {
+    mainComponent = null;
+  }
+
+  if (
+    mainComponent &&
+    mainComponent.parent &&
+    mainComponent.parent.type === "COMPONENT_SET"
+  ) {
+    return mainComponent.parent.name;
+  }
+
+  return null;
+}
+
 function isNestedComponentInstance(node, componentSetName) {
   return (
-    isGeneratedNestedComponentInstance(node) &&
-    node.getSharedPluginData(RUN_NAMESPACE, "sourceComponentSet") ===
-      componentSetName
+    node &&
+    node.type === "INSTANCE" &&
+    nodeSourceComponentSet(node) === componentSetName
+  );
+}
+
+function markNestedComponentInstance(node, componentSetName, role) {
+  if (!node || node.type !== "INSTANCE" || !node.setSharedPluginData) return;
+
+  node.setSharedPluginData(RUN_NAMESPACE, "kind", "nested-component-instance");
+  node.setSharedPluginData(
+    RUN_NAMESPACE,
+    "sourceComponentSet",
+    componentSetName,
+  );
+  if (role) {
+    node.setSharedPluginData(RUN_NAMESPACE, "role", role);
+  }
+}
+
+function isBadgeCounterNode(node) {
+  if (!node || node.name !== "Counter" || !node.getSharedPluginData) {
+    return false;
+  }
+
+  return (
+    node.getSharedPluginData(RUN_NAMESPACE, "role") === "badge-counter" ||
+    node.getSharedPluginData(RUN_NAMESPACE, "kind") === "badge-counter" ||
+    isNestedComponentInstance(node, "Counter / v1")
   );
 }
 
@@ -4134,7 +4450,7 @@ async function auditLibrary() {
 
   if (surfaceQa.issueCount > 0) {
     audit.warnings.push(
-      `${surfaceQa.issueCount} transparent surface QA issue(s) found. Run Build Surface QA to refresh the generated page.`,
+      `${surfaceQa.issueCount} transparent surface QA issue(s) found. Fix the affected component contrast, then run Build Surface QA to refresh the generated page.`,
     );
   }
 
@@ -4162,7 +4478,7 @@ async function auditLibrary() {
     if (unexpectedTopLevel.length > 0) {
       pageRecord.unexpectedTopLevel = unexpectedTopLevel;
       audit.warnings.push(
-        `${page.name}: ${unexpectedTopLevel.length} unexpected top-level node(s) found.`,
+        `${page.name}: ${unexpectedTopLevel.length} unexpected top-level node(s) found: ${formatUnexpectedTopLevelNodes(unexpectedTopLevel)}.`,
       );
     }
 
@@ -4209,10 +4525,14 @@ function unexpectedTopLevelNodesForPage(page) {
   const expectedComponentSets = new Set([
     "Button / v1",
     "IconButton / v1",
+    "Counter / v1",
     "Badge / v1",
     "Card / v1",
     "Tabs / v1",
     "Tooltip / v1",
+    "Dialog / v1",
+    "Popover / v1",
+    "Menu / v1",
     "Checkbox / v1",
     "Radio / v1",
     "Switch / v1",
@@ -4225,6 +4545,7 @@ function unexpectedTopLevelNodesForPage(page) {
     "Spinner / v1",
     "Avatar / v1",
     "Alert / v1",
+    "Toast / v1",
   ]);
 
   const unexpected = [];
@@ -4249,6 +4570,17 @@ function unexpectedTopLevelNodesForPage(page) {
   }
 
   return unexpected;
+}
+
+function formatUnexpectedTopLevelNodes(nodes) {
+  const visible = nodes.slice(0, 4).map((node) => {
+    return `${node.name} (${node.type}, node-id=${node.urlNodeId})`;
+  });
+  const remaining = nodes.length - visible.length;
+  if (remaining > 0) {
+    visible.push(`${remaining} more`);
+  }
+  return visible.join("; ");
 }
 
 function auditVariables(collections, variables) {
@@ -4812,16 +5144,18 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
-  if (record.name === "Badge / v1") {
+  if (record.name === "Counter / v1") {
     const counterTextProperty = Object.values(textProperties).find(
       (property) => property.baseName === "Counter Text",
     );
     if (!counterTextProperty || counterTextProperty.boundTextNodes === 0) {
       record.warnings.push(
-        "Counter Text component property is missing or not bound to generated Badge counter text nodes.",
+        "Counter Text component property is missing or not bound to generated Counter text nodes.",
       );
     }
+  }
 
+  if (record.name === "Badge / v1") {
     const hasShowCounterProperty = Object.keys(propertyDefinitions).some(
       (propertyName) => {
         const definition = propertyDefinitions[propertyName];
@@ -4979,6 +5313,7 @@ function shouldAuditLayoutBindings(name) {
     [
       "Button / v1",
       "IconButton / v1",
+      "Counter / v1",
       "Badge / v1",
       "Card / v1",
       "Tabs / v1",
@@ -5003,6 +5338,7 @@ function shouldAuditTypographyBindings(name) {
   return (
     [
       "Button / v1",
+      "Counter / v1",
       "Badge / v1",
       "Card / v1",
       "Tabs / v1",
@@ -5093,6 +5429,13 @@ function expectedVariantAxesForComponentSetName(name) {
       Variant: BUTTON_VARIANTS,
       Size: ICON_BUTTON_SIZES,
       State: BUTTON_STATES,
+    };
+  }
+
+  if (name === "Counter / v1") {
+    return {
+      Tone: COUNTER_TONES,
+      Size: COUNTER_SIZES,
     };
   }
 
@@ -5614,6 +5957,24 @@ function auditCompositionIntegrity(componentSet) {
   };
 }
 
+function counterTextNodeFor(counter) {
+  if (!counter || !counter.children) return null;
+  return directChildNamed(counter, "Counter Text");
+}
+
+function instanceHasComponentProperty(instance, baseName, type) {
+  if (!instance || !instance.componentProperties) return false;
+
+  for (const propertyName of Object.keys(instance.componentProperties)) {
+    const property = instance.componentProperties[propertyName];
+    if (propertyName.split("#")[0] !== baseName) continue;
+    if (type && property.type !== type) continue;
+    return true;
+  }
+
+  return false;
+}
+
 function auditBadgeContentIntegrity(componentSet, childComponents) {
   const issues = [];
 
@@ -5644,10 +6005,7 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
     const label = directChildNamed(component, "Label Text");
     const legacyCounterText = directChildNamed(component, "Counter Text");
     const counter = directChildNamed(component, "Counter");
-    const counterText =
-      counter && counter.children
-        ? directChildNamed(counter, "Counter Text")
-        : null;
+    const counterText = counterTextNodeFor(counter);
 
     if (props.size === "Icon") {
       if (label) {
@@ -5699,7 +6057,7 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
         component,
         "badge-legacy-counter-text",
         legacyCounterText,
-        "Non-icon Badge variants should wrap Counter Text inside a hidden Counter capsule.",
+        "Non-icon Badge variants should expose count text through nested Counter / v1.",
       );
     }
 
@@ -5712,12 +6070,12 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
       );
     }
 
-    if (!counter || counter.type !== "FRAME") {
+    if (!counter || !isNestedComponentInstance(counter, "Counter / v1")) {
       pushIssue(
         component,
         "badge-counter-missing",
         counter,
-        "Non-icon Badge variants should include a hidden Counter capsule.",
+        "Non-icon Badge variants should include a hidden nested Counter / v1 instance.",
       );
     } else if (counter.visible !== false) {
       pushIssue(
@@ -5726,14 +6084,24 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
         counter,
         "Counter should be hidden by default and shown through Show Counter.",
       );
+    } else if (counter.isExposedInstance !== true) {
+      pushIssue(
+        component,
+        "badge-counter-not-exposed",
+        counter,
+        "Nested Counter should be exposed so its Counter Text property remains editable.",
+      );
     }
 
-    if (!counterText || counterText.type !== "TEXT") {
+    if (
+      !counterText &&
+      !instanceHasComponentProperty(counter, "Counter Text", "TEXT")
+    ) {
       pushIssue(
         component,
         "badge-counter-text-missing",
         counterText,
-        "Counter capsule should include editable Counter Text.",
+        "Nested Counter should expose editable Counter Text.",
       );
     }
 
@@ -6345,6 +6713,7 @@ function auditComponentContrastForMode(
     const props =
       parseButtonVariantName(component.name) ||
       parseIconButtonVariantName(component.name) ||
+      parseCounterVariantName(component.name) ||
       parseBadgeVariantName(component.name) ||
       parseCardVariantName(component.name) ||
       parseTabsVariantName(component.name) ||
@@ -8293,7 +8662,7 @@ async function getLocalTextStylesSafe() {
   return [];
 }
 
-function applyButtonLabelTypography(
+async function applyButtonLabelTypography(
   label,
   fonts,
   textStyle,
@@ -8307,7 +8676,11 @@ function applyButtonLabelTypography(
 
   if (textStyle && textStyle.id) {
     try {
-      label.textStyleId = textStyle.id;
+      if (label.setTextStyleIdAsync) {
+        await label.setTextStyleIdAsync(textStyle.id);
+      } else {
+        label.textStyleId = textStyle.id;
+      }
       incrementStat(stats, "textStyleBindingsApplied");
     } catch (error) {
       stats.warnings.push(
@@ -8354,23 +8727,24 @@ function applyBadgeLabelTypography(label, fonts, variableByName, stats) {
   );
 }
 
-function applyBadgeCounterTypography(label, fonts, variableByName, stats) {
+function applyCounterTypography(label, size, fonts, variableByName, stats) {
+  const metrics = counterMetrics(size);
   label.fontName = fonts.medium;
-  label.fontSize = 12;
-  label.lineHeight = { unit: "PIXELS", value: 16 };
+  label.fontSize = metrics.fontSize;
+  label.lineHeight = { unit: "PIXELS", value: metrics.lineHeight };
   label.textAutoResize = "WIDTH_AND_HEIGHT";
 
   bindFloatVariable(
     label,
     "fontSize",
-    "Badge/counter/font-size",
+    metrics.fontSizeToken,
     variableByName,
     stats,
   );
   bindFloatVariable(
     label,
     "lineHeight",
-    "Badge/counter/line-height",
+    metrics.lineHeightToken,
     variableByName,
     stats,
   );
@@ -9183,32 +9557,32 @@ function bindBadgeGeometryVariables(
   }
 }
 
-function bindBadgeCounterGeometryVariables(counter, variableByName, stats) {
+function bindCounterGeometryVariables(counter, metrics, variableByName, stats) {
   bindFloatVariable(
     counter,
     "height",
-    "Badge/counter/height",
+    metrics.heightToken,
     variableByName,
     stats,
   );
   bindFloatVariable(
     counter,
     "paddingLeft",
-    "Badge/counter/padding/x",
+    metrics.paddingXToken,
     variableByName,
     stats,
   );
   bindFloatVariable(
     counter,
     "paddingRight",
-    "Badge/counter/padding/x",
+    metrics.paddingXToken,
     variableByName,
     stats,
   );
   bindFloatVariable(
     counter,
     "cornerRadius",
-    "Badge/counter/radius",
+    "Counter/radius",
     variableByName,
     stats,
   );
@@ -10954,6 +11328,174 @@ async function updateIconButtonComponent() {
   return stats;
 }
 
+async function buildCounterComponent() {
+  const stats = {
+    created: false,
+    componentSetId: null,
+    urlNodeId: null,
+    variants: 0,
+    warnings: [],
+  };
+
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  removeStaleGeneratedComponentArtifacts(page, "Counter", stats);
+
+  const existing = page.findOne((node) => node.name === "Counter / v1");
+  if (existing) {
+    stats.existing = true;
+    stats.componentSetId = existing.id;
+    stats.urlNodeId = nodeIdForUrl(existing.id);
+    stats.message =
+      "Counter / v1 already exists. Use Update Counter to preserve its node ID.";
+    return stats;
+  }
+
+  const fonts = await loadButtonFonts(stats);
+  const variableByName = await ensureComponentRuntimeVariables(stats);
+  const components = [];
+
+  let index = 0;
+  for (const tone of COUNTER_TONES) {
+    for (const size of COUNTER_SIZES) {
+      const component = await createCounterVariant({
+        tone,
+        size,
+        variableByName,
+        fonts,
+        stats,
+      });
+      component.x = (index % 4) * 112;
+      component.y = Math.floor(index / 4) * 72;
+      page.appendChild(component);
+      components.push(component);
+      index += 1;
+    }
+  }
+
+  const componentSet = figma.combineAsVariants(components, page);
+  componentSet.name = "Counter / v1";
+  componentSet.x = 80;
+  componentSet.y = 1280;
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
+  applyComponentSetDescription(componentSet, "Counter / v1", false, [
+    "Kozmos Counter component set generated from React Counter API.",
+    "Tone maps to Counter.tone.",
+    "Size maps to Counter.size.",
+    "Counter Text maps to Counter children in Code Connect.",
+    "Badge composes Counter as a hidden nested instance for opt-in count display.",
+  ]);
+  clearComponentSetContainerFill(componentSet);
+
+  stats.created = true;
+  stats.componentSetId = componentSet.id;
+  stats.urlNodeId = nodeIdForUrl(componentSet.id);
+  stats.variants = components.length;
+  normalizeComponentSetVariantProperties(
+    componentSet,
+    expectedVariantAxesForComponentSetName(componentSet.name),
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Counter Text",
+    "Counter Text",
+    "2",
+    stats,
+  );
+  return stats;
+}
+
+async function updateCounterComponent() {
+  const stats = {
+    updated: false,
+    componentSetId: null,
+    urlNodeId: null,
+    variantsUpdated: 0,
+    variantsMissing: 0,
+    warnings: [],
+  };
+
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  removeStaleGeneratedComponentArtifacts(page, "Counter", stats);
+
+  const existing = page.findOne((node) => node.name === "Counter / v1");
+  if (!existing || existing.type !== "COMPONENT_SET") {
+    stats.message = "Counter / v1 was not found. Run Build Counter first.";
+    return stats;
+  }
+
+  const fonts = await loadButtonFonts(stats);
+  const variableByName = await ensureComponentRuntimeVariables(stats);
+  const seenKeys = {};
+
+  existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
+  applyComponentSetDescription(existing, "Counter / v1", true, [
+    "Kozmos Counter component set generated from React Counter API.",
+    "Tone maps to Counter.tone.",
+    "Size maps to Counter.size.",
+    "Counter Text maps to Counter children in Code Connect.",
+    "Badge composes Counter as a hidden nested instance for opt-in count display.",
+  ]);
+  clearComponentSetContainerFill(existing);
+
+  for (const child of existing.children) {
+    if (child.type !== "COMPONENT") continue;
+
+    const props = parseCounterVariantName(child.name);
+    if (!props) {
+      stats.warnings.push(
+        `Skipped unrecognized Counter variant "${child.name}".`,
+      );
+      continue;
+    }
+
+    seenKeys[`${props.tone}/${props.size}`] = true;
+    await updateCounterVariant(child, {
+      tone: props.tone,
+      size: props.size,
+      variableByName,
+      fonts,
+      stats,
+    });
+    stats.variantsUpdated += 1;
+  }
+
+  for (const tone of COUNTER_TONES) {
+    for (const size of COUNTER_SIZES) {
+      const key = `${tone}/${size}`;
+      if (!seenKeys[key]) {
+        stats.variantsMissing += 1;
+        stats.warnings.push(`Missing Counter variant ${key}.`);
+      }
+    }
+  }
+
+  stats.updated = true;
+  stats.componentSetId = existing.id;
+  stats.urlNodeId = nodeIdForUrl(existing.id);
+  normalizeComponentSetVariantProperties(
+    existing,
+    expectedVariantAxesForComponentSetName(existing.name),
+    stats,
+  );
+  configureNamedTextProperty(
+    existing,
+    "Counter Text",
+    "Counter Text",
+    "2",
+    stats,
+  );
+  return stats;
+}
+
 async function buildBadgeComponent() {
   const stats = {
     created: false,
@@ -10981,6 +11523,7 @@ async function buildBadgeComponent() {
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
+  await ensureCounterComponentForBadge(stats);
   const iconComponent = await resolveDefaultIconSourceComponent(
     variableByName,
     stats,
@@ -11018,7 +11561,8 @@ async function buildBadgeComponent() {
     "Size maps to Badge.size.",
     "Label Text maps to Badge children in Code Connect.",
     "Icon maps to Badge.icon for icon-sized badges.",
-    "Counter Text and Show Counter map to Badge.counter and Badge.showCounter.",
+    "Show Counter toggles a hidden nested Counter / v1 instance for opt-in count display.",
+    "Counter text is edited on the exposed nested Counter instance.",
     "Badge is non-interactive by default; React includes focus-visible classes for composed interactive usage.",
   ]);
   clearComponentSetContainerFill(componentSet);
@@ -11033,11 +11577,10 @@ async function buildBadgeComponent() {
     stats,
   );
   configureLabelTextProperty(componentSet, "Badge", stats);
-  configureNamedTextProperty(
+  deleteComponentPropertiesByBaseName(
     componentSet,
-    "Counter Text",
-    "Counter Text",
-    "(2)",
+    ["Counter Text"],
+    ["TEXT"],
     stats,
   );
   configureBadgeCounterVisibilityProperty(componentSet, stats);
@@ -11074,6 +11617,7 @@ async function updateBadgeComponent() {
 
   const fonts = await loadButtonFonts(stats);
   const variableByName = await ensureComponentRuntimeVariables(stats);
+  await ensureCounterComponentForBadge(stats);
   const iconComponent = await resolveDefaultIconSourceComponent(
     variableByName,
     stats,
@@ -11088,7 +11632,8 @@ async function updateBadgeComponent() {
     "Size maps to Badge.size.",
     "Label Text maps to Badge children in Code Connect.",
     "Icon maps to Badge.icon for icon-sized badges.",
-    "Counter Text and Show Counter map to Badge.counter and Badge.showCounter.",
+    "Show Counter toggles a hidden nested Counter / v1 instance for opt-in count display.",
+    "Counter text is edited on the exposed nested Counter instance.",
     "Badge is non-interactive by default; React includes focus-visible classes for composed interactive usage.",
   ]);
   clearComponentSetContainerFill(existing);
@@ -11135,16 +11680,38 @@ async function updateBadgeComponent() {
     stats,
   );
   configureLabelTextProperty(existing, "Badge", stats);
-  configureNamedTextProperty(
+  deleteComponentPropertiesByBaseName(
     existing,
-    "Counter Text",
-    "Counter Text",
-    "(2)",
+    ["Counter Text"],
+    ["TEXT"],
     stats,
   );
   configureBadgeCounterVisibilityProperty(existing, stats);
   await configureBadgeIconSlot(existing, iconComponent, variableByName, stats);
   return stats;
+}
+
+async function ensureCounterComponentForBadge(stats) {
+  const existing = await findLocalComponentSetByName("Counter / v1");
+  if (existing) return existing;
+
+  const result = await buildCounterComponent();
+  if (result.warnings) {
+    for (const warning of result.warnings) {
+      stats.warnings.push(`Counter / v1: ${warning}`);
+    }
+  }
+
+  const created = await findLocalComponentSetByName("Counter / v1");
+  if (!created) {
+    stats.warnings.push(
+      "Counter / v1 is missing; Badge counters will use placeholder nodes until Counter is built.",
+    );
+  } else {
+    stats.counterComponentCreated = true;
+  }
+
+  return created;
 }
 
 async function buildCardComponent() {
@@ -12183,6 +12750,14 @@ async function rebuildIconButtonComponent() {
     componentName: "IconButton",
     componentSetName: "IconButton / v1",
     build: buildIconButtonComponent,
+  });
+}
+
+async function rebuildCounterComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Counter",
+    componentSetName: "Counter / v1",
+    build: buildCounterComponent,
   });
 }
 
@@ -13659,7 +14234,13 @@ async function createButtonVariant({
   if (size !== "Icon") {
     const label = figma.createText();
     label.name = "Label Text";
-    applyButtonLabelTypography(label, fonts, textStyle, variableByName, stats);
+    await applyButtonLabelTypography(
+      label,
+      fonts,
+      textStyle,
+      variableByName,
+      stats,
+    );
     label.characters = state === "Loading" ? "Loading" : variant;
     label.fills = [
       paintFromVariable(
@@ -13971,6 +14552,97 @@ async function createBadgeVariant({
     stats,
   });
   return component;
+}
+
+async function createCounterVariant({
+  tone,
+  size,
+  variableByName,
+  fonts,
+  stats,
+}) {
+  const component = figma.createComponent();
+  await updateCounterVariant(component, {
+    tone,
+    size,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+function parseCounterVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (
+    COUNTER_TONES.indexOf(values.Tone) === -1 ||
+    COUNTER_SIZES.indexOf(values.Size) === -1
+  ) {
+    return null;
+  }
+
+  return {
+    tone: values.Tone,
+    size: values.Size,
+  };
+}
+
+async function updateCounterVariant(
+  component,
+  { tone, size, variableByName, fonts, stats },
+) {
+  const config = counterConfig(tone);
+  const metrics = counterMetrics(size);
+
+  component.name = `Tone=${tone}, Size=${size}`;
+  component.layoutMode = "HORIZONTAL";
+  component.primaryAxisSizingMode = "AUTO";
+  component.counterAxisSizingMode = "FIXED";
+  component.primaryAxisAlignItems = "CENTER";
+  component.counterAxisAlignItems = "CENTER";
+  component.itemSpacing = 0;
+  component.paddingLeft = metrics.paddingX;
+  component.paddingRight = metrics.paddingX;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.resizeWithoutConstraints(metrics.minWidth, metrics.height);
+  component.cornerRadius = 9999;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
+
+  component.fills = [
+    paintFromVariable(
+      config.background,
+      config.backgroundFallback,
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokes = [];
+  component.strokeWeight = 0;
+
+  bindCounterGeometryVariables(component, metrics, variableByName, stats);
+
+  await syncCounterVariantChildren({
+    component,
+    tone,
+    size,
+    config,
+    variableByName,
+    fonts,
+    stats,
+  });
 }
 
 function parseBadgeVariantName(name) {
@@ -15549,7 +16221,13 @@ async function syncButtonVariantChildren({
       label.name = "Label Text";
     }
 
-    applyButtonLabelTypography(label, fonts, textStyle, variableByName, stats);
+    await applyButtonLabelTypography(
+      label,
+      fonts,
+      textStyle,
+      variableByName,
+      stats,
+    );
     label.characters = state === "Loading" ? "Loading" : variant;
     label.fills = [
       paintFromVariable(
@@ -15562,6 +16240,43 @@ async function syncButtonVariantChildren({
     label.textDecoration = variant === "Link" ? "UNDERLINE" : "NONE";
     component.appendChild(label);
   }
+}
+
+async function syncCounterVariantChildren({
+  component,
+  tone,
+  size,
+  config,
+  variableByName,
+  fonts,
+  stats,
+}) {
+  let text = directChildNamed(component, "Counter Text");
+  if (text && text.type !== "TEXT") {
+    text.remove();
+    text = null;
+  }
+
+  if (!text || text.type !== "TEXT") {
+    text = figma.createText();
+    text.name = "Counter Text";
+  }
+
+  applyCounterTypography(text, size, fonts, variableByName, stats);
+  text.characters = tone === "Brand" ? "12" : "2";
+  text.fills = [
+    paintFromVariable(
+      config.foreground,
+      config.foregroundFallback,
+      variableByName,
+      stats,
+    ),
+  ];
+  text.textDecoration = "NONE";
+  text.textAlignHorizontal = "CENTER";
+  text.textAlignVertical = "CENTER";
+  component.appendChild(text);
+  setHugChildSizing(text);
 }
 
 async function syncBadgeVariantChildren({
@@ -15639,71 +16354,62 @@ async function syncBadgeVariantChildren({
   setHugChildSizing(label);
 
   let counter = directChildNamed(component, "Counter");
-  if (counter && counter.type !== "FRAME") {
+  if (counter && !isNestedComponentInstance(counter, "Counter / v1")) {
     counter.remove();
     counter = null;
   }
 
-  if (!counter || counter.type !== "FRAME") {
-    counter = figma.createFrame();
-    counter.name = "Counter";
-  }
-
-  counter.layoutMode = "HORIZONTAL";
-  counter.primaryAxisSizingMode = "AUTO";
-  counter.counterAxisSizingMode = "FIXED";
-  counter.primaryAxisAlignItems = "CENTER";
-  counter.counterAxisAlignItems = "CENTER";
-  counter.itemSpacing = 0;
-  counter.paddingLeft = 6;
-  counter.paddingRight = 6;
-  counter.paddingTop = 0;
-  counter.paddingBottom = 0;
-  counter.resizeWithoutConstraints(20, 20);
-  counter.cornerRadius = 9999;
-  counter.fills = [
-    paintFromVariableWithOpacity(
-      config.foreground,
-      config.foregroundFallback,
-      0.14,
-      variableByName,
+  let counterSet = null;
+  const counterTone = counterToneForBadgeVariant(variant);
+  if (!counter) {
+    const created = await createNestedComponentInstance({
+      componentSetName: "Counter / v1",
+      variantProperties: {
+        Tone: counterTone,
+        Size: "Default",
+      },
+      name: "Counter",
       stats,
-    ),
-  ];
-  counter.strokes = [];
-  counter.clipsContent = false;
-  counter.setSharedPluginData(RUN_NAMESPACE, "kind", "badge-counter");
-  bindBadgeCounterGeometryVariables(counter, variableByName, stats);
-
-  let counterText = directChildNamed(counter, "Counter Text");
-  if (counterText && counterText.type !== "TEXT") {
-    counterText.remove();
-    counterText = null;
+    });
+    if (!created) {
+      counter = createMissingNestedComponentNode(
+        "Counter",
+        "Build Counter / v1 before updating Badge.",
+        stats,
+      );
+    } else {
+      counter = created.instance;
+      counterSet = created.componentSet;
+    }
+  } else {
+    counterSet = await findLocalComponentSetByName("Counter / v1");
   }
 
-  if (!counterText || counterText.type !== "TEXT") {
-    counterText = figma.createText();
-    counterText.name = "Counter Text";
+  if (counter.type === "INSTANCE" && counterSet) {
+    try {
+      counter.setProperties({
+        Tone: counterTone,
+        Size: "Default",
+      });
+    } catch (error) {
+      stats.warnings.push(
+        `Badge Counter: could not set Counter variant properties (${messageFor(error)}).`,
+      );
+    }
+    setInstanceTextProperty(counter, counterSet, "Counter Text", "2", stats);
+    markNestedComponentInstance(counter, "Counter / v1", "badge-counter");
   }
 
-  applyBadgeCounterTypography(counterText, fonts, variableByName, stats);
-  counterText.characters = "2";
-  counterText.fills = [
-    paintFromVariable(
-      config.foreground,
-      config.foregroundFallback,
-      variableByName,
-      stats,
-    ),
-  ];
-  counterText.textDecoration = "NONE";
-  counterText.textAlignHorizontal = "CENTER";
-  counterText.textAlignVertical = "CENTER";
-  counter.appendChild(counterText);
-  setHugChildSizing(counterText);
+  if (counter.setSharedPluginData) {
+    counter.setSharedPluginData(RUN_NAMESPACE, "role", "badge-counter");
+  }
   counter.visible = false;
   component.appendChild(counter);
   setHugChildSizing(counter);
+
+  if (counter.type === "INSTANCE" && counterSet) {
+    exposeNestedCounterInstance(counter, stats);
+  }
 }
 
 async function syncCardVariantChildren({
@@ -20063,11 +20769,7 @@ function configureBadgeCounterVisibilityProperty(componentSet, stats) {
   let boundCount = 0;
 
   function walk(node) {
-    if (
-      node.name === "Counter" &&
-      node.getSharedPluginData &&
-      node.getSharedPluginData(RUN_NAMESPACE, "kind") === "badge-counter"
-    ) {
+    if (isBadgeCounterNode(node)) {
       bindVisibilityProperty(node, propertyName, stats);
       boundCount += 1;
     }
@@ -20079,6 +20781,40 @@ function configureBadgeCounterVisibilityProperty(componentSet, stats) {
 
   walk(componentSet);
   stats.badgeCounterVisibilityBindings = boundCount;
+}
+
+function exposeNestedCounterInstance(instance, stats) {
+  if (!instance || instance.type !== "INSTANCE") return;
+  if (!nodeHasComponentAncestor(instance)) {
+    if (stats && stats.warnings) {
+      stats.warnings.push(
+        "Could not expose nested Counter instance because it is not inside a component yet.",
+      );
+    }
+    return;
+  }
+
+  try {
+    instance.isExposedInstance = true;
+  } catch (error) {
+    if (stats && stats.warnings) {
+      stats.warnings.push(
+        `Could not expose nested Counter instance (${messageFor(error)}).`,
+      );
+    }
+  }
+}
+
+function nodeHasComponentAncestor(node) {
+  let current = node ? node.parent : null;
+  while (current) {
+    if (current.type === "COMPONENT" || current.type === "COMPONENT_SET") {
+      return true;
+    }
+    current = current.parent;
+  }
+
+  return false;
 }
 
 function configureFocusVisibleProperty(componentSet, stats) {
@@ -20691,10 +21427,45 @@ function badgeMetrics(size) {
   };
 }
 
+function counterMetrics(size) {
+  if (size === "Small") {
+    return {
+      minWidth: 18,
+      height: 18,
+      paddingX: 5,
+      fontSize: 11,
+      lineHeight: 14,
+      minWidthToken: "Counter/min-width/small",
+      heightToken: "Counter/height/small",
+      paddingXToken: "Counter/padding/x/small",
+      fontSizeToken: "Counter/font-size/small",
+      lineHeightToken: "Counter/line-height/small",
+    };
+  }
+
+  return {
+    minWidth: 20,
+    height: 20,
+    paddingX: 6,
+    fontSize: 12,
+    lineHeight: 16,
+    minWidthToken: "Counter/min-width/default",
+    heightToken: "Counter/height/default",
+    paddingXToken: "Counter/padding/x/default",
+    fontSizeToken: "Counter/font-size/default",
+    lineHeightToken: "Counter/line-height/default",
+  };
+}
+
 function badgeLabelText(variant, size) {
   if (size === "Icon") return "1";
   if (variant === "Default") return "Badge";
   return variant;
+}
+
+function counterToneForBadgeVariant(variant) {
+  if (variant === "Default" || variant === "Destructive") return "Inverse";
+  return "Neutral";
 }
 
 function cardTitleText(_content) {
@@ -20823,9 +21594,9 @@ function buttonConfig(variant, state) {
 function badgeConfig(variant) {
   const configs = {
     Default: {
-      background: "Colors/theme/500",
+      background: "Colors/theme/600",
       foreground: "Colors/foreground/1000",
-      backgroundFallback: "#135BEC",
+      backgroundFallback: "#1051E8",
       foregroundFallback: "#FFFFFF",
     },
     Destructive: {
@@ -20853,12 +21624,43 @@ function badgeConfig(variant) {
       foregroundFallback: "#000000",
     },
     Link: {
-      foreground: "Colors/theme/500",
-      foregroundFallback: "#135BEC",
+      foreground: "Colors/theme/600",
+      foregroundFallback: "#1051E8",
     },
   };
 
   return configs[variant] || configs.Default;
+}
+
+function counterConfig(tone) {
+  const configs = {
+    Neutral: {
+      background: "Colors/background/200",
+      foreground: "Colors/foreground/0",
+      backgroundFallback: "#C7CAD1",
+      foregroundFallback: "#000000",
+    },
+    Brand: {
+      background: "Colors/theme/600",
+      foreground: "Colors/foreground/1000",
+      backgroundFallback: "#1051E8",
+      foregroundFallback: "#FFFFFF",
+    },
+    Destructive: {
+      background: "Colors/emotional/danger/600",
+      foreground: "Colors/foreground/1000",
+      backgroundFallback: "#D41C42",
+      foregroundFallback: "#FFFFFF",
+    },
+    Inverse: {
+      background: "Surface/0",
+      foreground: "Colors/foreground/0",
+      backgroundFallback: "#FFFFFF",
+      foregroundFallback: "#000000",
+    },
+  };
+
+  return configs[tone] || configs.Neutral;
 }
 
 function checkboxConfig(checked, state) {
@@ -21086,15 +21888,15 @@ function sliderConfig(state, status) {
   return {
     trackFill: "Colors/background/200",
     trackStroke: "Colors/foreground/500",
-    rangeFill: "Colors/theme/500",
+    rangeFill: "Colors/theme/600",
     thumbFill: "Colors/background/0",
-    thumbStroke: "Colors/theme/500",
+    thumbStroke: "Colors/theme/600",
     label: "Colors/foreground/0",
     trackFillFallback: "#C7CAD1",
     trackStrokeFallback: "#747B8B",
-    rangeFillFallback: "#135BEC",
+    rangeFillFallback: "#1051E8",
     thumbFillFallback: "#FFFFFF",
-    thumbStrokeFallback: "#135BEC",
+    thumbStrokeFallback: "#1051E8",
     labelFallback: "#000000",
   };
 }
@@ -21103,10 +21905,10 @@ function progressConfig(_value) {
   return {
     trackFill: "Colors/background/200",
     trackStroke: "Colors/foreground/500",
-    rangeFill: "Colors/theme/500",
+    rangeFill: "Colors/theme/600",
     trackFillFallback: "#C7CAD1",
     trackStrokeFallback: "#747B8B",
-    rangeFillFallback: "#135BEC",
+    rangeFillFallback: "#1051E8",
   };
 }
 
@@ -21141,9 +21943,9 @@ function spinnerMetrics(size) {
 function avatarConfig(content) {
   if (content === "Image") {
     return {
-      background: "Colors/theme/500",
+      background: "Colors/theme/600",
       foreground: "Colors/foreground/1000",
-      backgroundFallback: "#135BEC",
+      backgroundFallback: "#1051E8",
       foregroundFallback: "#FFFFFF",
     };
   }
@@ -21197,11 +21999,11 @@ function alertConfig(variant) {
     Info: {
       icon: "info-circle",
       background: "Surface/0",
-      stroke: "Colors/theme/500",
-      foreground: "Colors/theme/500",
+      stroke: "Colors/theme/600",
+      foreground: "Colors/theme/600",
       backgroundFallback: "#FFFFFF",
-      strokeFallback: "#135BEC",
-      foregroundFallback: "#135BEC",
+      strokeFallback: "#1051E8",
+      foregroundFallback: "#1051E8",
     },
   };
 

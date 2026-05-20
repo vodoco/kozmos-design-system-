@@ -4,6 +4,8 @@ public struct KozmosBadge: View {
     let text: String
     let variant: KozmosBadgeVariant
     let size: KozmosBadgeSize
+    let counter: String?
+    let showCounter: Bool
     
     public enum KozmosBadgeVariant {
         case `default`
@@ -13,16 +15,6 @@ public struct KozmosBadge: View {
         case ghost
         case link
         case success
-        
-        var color: Color {
-            switch self {
-            case .default: return KozmosColors.primitivesColorsTheme500
-            case .secondary: return KozmosColors.primitivesColorsForeground500
-            case .destructive: return KozmosColors.semanticsDataRed
-            case .outline, .ghost, .link: return KozmosColors.primitivesColorsTheme500
-            case .success: return KozmosColors.semanticsDataTeal
-            }
-        }
     }
 
     public enum KozmosBadgeSize {
@@ -35,27 +27,37 @@ public struct KozmosBadge: View {
     public init(
         _ text: String,
         variant: KozmosBadgeVariant = .default,
-        size: KozmosBadgeSize = .default
+        size: KozmosBadgeSize = .default,
+        counter: String? = nil,
+        showCounter: Bool = false
     ) {
         self.text = text
         self.variant = variant
         self.size = size
+        self.counter = counter
+        self.showCounter = showCounter
     }
     
     public var body: some View {
-        Text(text)
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .underline(variant == .link)
+        HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
+            Text(text)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .underline(variant == .link)
+
+            if hasCounter, let counter {
+                KozmosCounter(counter, tone: counterTone)
+            }
+        }
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, 0)
             .frame(minWidth: size == .icon ? 44 : nil, minHeight: 44)
             .background(backgroundColor)
-            .foregroundColor(variant.color)
+            .foregroundColor(foregroundColor)
             .cornerRadius(KozmosDimensions.primitivesLayoutRadius50)
             .overlay(
                 RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius50)
-                    .stroke(variant == .outline ? variant.color.opacity(0.3) : Color.clear, lineWidth: variant == .outline ? 1 : 0)
+                    .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
             )
     }
 
@@ -70,8 +72,48 @@ public struct KozmosBadge: View {
 
     private var backgroundColor: Color {
         switch variant {
-        case .outline, .ghost, .link: return Color.clear
-        default: return variant.color.opacity(0.15)
+        case .default:
+            return KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle
+        case .secondary:
+            return KozmosColors.componentsPrimaryButtonsNeutralButtonBackgroundIdle
+        case .destructive:
+            return KozmosColors.componentsPrimaryButtonsDangerButtonBackgroundIdle
+        case .success:
+            return KozmosColors.semanticsDataTeal
+        case .outline, .ghost, .link:
+            return Color.clear
+        }
+    }
+
+    private var foregroundColor: Color {
+        switch variant {
+        case .default:
+            return KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
+        case .secondary:
+            return KozmosColors.componentsPrimaryButtonsNeutralButtonForegroundContentIdle
+        case .destructive:
+            return KozmosColors.componentsPrimaryButtonsDangerButtonForegroundContentIdle
+        case .success:
+            return KozmosColors.primitivesColorsForeground1000
+        case .outline, .ghost, .link:
+            return KozmosColors.componentsSecondaryButtonsThemedButtonForegroundContentIdle
+        }
+    }
+
+    private var borderColor: Color {
+        variant == .outline ? KozmosColors.componentsSecondaryButtonsThemedButtonForegroundContentIdle : Color.clear
+    }
+
+    private var hasCounter: Bool {
+        size != .icon && showCounter && counter != nil
+    }
+
+    private var counterTone: KozmosCounterTone {
+        switch variant {
+        case .default, .destructive, .success:
+            return .inverse
+        case .secondary, .outline, .ghost, .link:
+            return .neutral
         }
     }
 }

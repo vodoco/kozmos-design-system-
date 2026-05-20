@@ -12,6 +12,10 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
+function getJsonPath(value, segments) {
+  return segments.reduce((current, segment) => current?.[segment], value);
+}
+
 function fail(message) {
   throw new Error(message);
 }
@@ -39,6 +43,31 @@ function assertNotContains(filePath, content, pattern, label) {
 function assertMissing(filePath, label) {
   if (fs.existsSync(path.join(root, filePath))) {
     fail(`${filePath}: unexpected ${label}`);
+  }
+}
+
+function assertJsonPathEquals(filePath, value, segments, expected, label) {
+  const actual = getJsonPath(value, segments);
+  if (actual !== expected) {
+    fail(
+      `${filePath}: expected ${label} to be ${expected}, received ${String(actual)}`,
+    );
+  }
+}
+
+function assertFigmaPayloadDarkValue(filePath, payload, canonicalName, expected) {
+  const variable = payload.variables.find(
+    (entry) => entry.canonicalName === canonicalName,
+  );
+  if (!variable) {
+    fail(`${filePath}: missing variable ${canonicalName}`);
+  }
+
+  const actual = variable.values?.dark?.value;
+  if (actual !== expected) {
+    fail(
+      `${filePath}: expected ${canonicalName} dark value to be ${expected}, received ${String(actual)}`,
+    );
   }
 }
 
@@ -79,7 +108,10 @@ const files = {
   figmaLinked: "figma.linked.config.json",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
+  reactCounter: "packages/react/src/components/Counter/Counter.tsx",
+  reactCounterFigma: "packages/react/src/components/Counter/Counter.figma.tsx",
   reactBadge: "packages/react/src/components/Badge/Badge.tsx",
+  reactBadgeFigma: "packages/react/src/components/Badge/Badge.figma.tsx",
   reactCardFigma: "packages/react/src/components/Card/Card.figma.tsx",
   reactTabsFigma: "packages/react/src/components/Tabs/Tabs.figma.tsx",
   reactCheckbox: "packages/react/src/components/Checkbox/Checkbox.tsx",
@@ -99,6 +131,7 @@ const files = {
   reactSpinnerFigma: "packages/react/src/components/Spinner/Spinner.figma.tsx",
   reactAvatarFigma: "packages/react/src/components/Avatar/Avatar.figma.tsx",
   reactAlertFigma: "packages/react/src/components/Alert/Alert.figma.tsx",
+  reactTailwindConfig: "packages/react/tailwind.config.js",
   reactTooltip: "packages/react/src/components/Tooltip/Tooltip.tsx",
   reactTooltipFigma: "packages/react/src/components/Tooltip/Tooltip.figma.tsx",
   reactIndex: "packages/react/src/index.ts",
@@ -106,9 +139,13 @@ const files = {
   figmaManifest: "docs/figma-library-manifest.json",
   figmaManifestScript: "scripts/figma-build-manifest.mjs",
   nativeStubGenerator: "scripts/skills/generate-native-stubs.js",
+  iosFigmaLinked: "packages/ios/figma.linked.config.json",
   iosButton: "packages/ios/Sources/Components/Button/Button.swift",
   iosIconButton: "packages/ios/Sources/Components/IconButton/IconButton.swift",
+  iosCounter: "packages/ios/Sources/Components/Counter/Counter.swift",
+  iosCounterFigma: "packages/ios/Sources/Components/Counter/Counter.figma.swift",
   iosBadge: "packages/ios/Sources/Components/Badge/Badge.swift",
+  iosBadgeFigma: "packages/ios/Sources/Components/Badge/Badge.figma.swift",
   iosCheckbox: "packages/ios/Sources/Components/Checkbox/Checkbox.swift",
   iosRadio: "packages/ios/Sources/Components/Radio/Radio.swift",
   iosSwitch: "packages/ios/Sources/Components/Switch/Switch.swift",
@@ -116,10 +153,17 @@ const files = {
   iosTooltip: "packages/ios/Sources/Components/Tooltip/Tooltip.swift",
   androidButton:
     "packages/android/src/main/java/com/kozmos/components/Button/Button.kt",
+  androidFigmaLinked: "packages/android/figma.linked.config.json",
   androidIconButton:
     "packages/android/src/main/java/com/kozmos/components/IconButton/IconButton.kt",
+  androidCounter:
+    "packages/android/src/main/java/com/kozmos/components/Counter/Counter.kt",
+  androidCounterFigma:
+    "packages/android/src/main/java/com/kozmos/components/Counter/Counter.figma.kt",
   androidBadge:
     "packages/android/src/main/java/com/kozmos/components/Badge/Badge.kt",
+  androidBadgeFigma:
+    "packages/android/src/main/java/com/kozmos/components/Badge/Badge.figma.kt",
   androidCheckbox:
     "packages/android/src/main/java/com/kozmos/components/Checkbox/Checkbox.kt",
   androidRadio:
@@ -134,15 +178,23 @@ const files = {
     "packages/android/src/main/java/com/kozmos/tokens/KozmosThemeTokens.kt",
   androidThemeProvider:
     "packages/android/src/main/java/com/kozmos/components/ThemeProvider/ThemeProvider.kt",
+  tokensDark: "packages/tokens/src/tokens-dark.json",
+  figmaFoundationsPayload: "docs/figma-foundations-payload.json",
+  iosColors: "packages/ios/Sources/KozmosColors.swift",
+  androidColorsDark:
+    "packages/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt",
 };
 
 const source = Object.fromEntries(
   Object.entries(files).map(([key, filePath]) => [key, read(filePath)]),
 );
+const tokensDark = JSON.parse(source.tokensDark);
+const figmaFoundationsPayload = JSON.parse(source.figmaFoundationsPayload);
 
 const {
   button,
   iconButton,
+  counter,
   badge,
   checkbox,
   radio,
@@ -228,6 +280,48 @@ assertContains(
   "44px IconButton root class",
 );
 assertContains(
+  files.reactCounter,
+  source.reactCounter,
+  "h-5 min-w-5 px-1.5 text-xs",
+  "React Counter default size class",
+);
+assertContains(
+  files.reactCounter,
+  source.reactCounter,
+  "h-[18px] min-w-[18px] px-[5px] text-[11px]",
+  "React Counter small size class",
+);
+assertContains(
+  files.reactCounter,
+  source.reactCounter,
+  "formatCounterValue",
+  "React Counter normalizes legacy wrapped values",
+);
+assertContains(
+  files.reactCounterFigma,
+  source.reactCounterFigma,
+  'figma.enum("Tone"',
+  "Counter Code Connect tone mapping",
+);
+assertContains(
+  files.reactCounterFigma,
+  source.reactCounterFigma,
+  'figma.enum("Size"',
+  "Counter Code Connect size mapping",
+);
+assertContains(
+  files.reactCounterFigma,
+  source.reactCounterFigma,
+  'figma.string("Counter Text")',
+  "Counter Code Connect text mapping",
+);
+assertContains(
+  files.reactCounterFigma,
+  source.reactCounterFigma,
+  "node-id=149-13430",
+  "Counter Code Connect node ID",
+);
+assertContains(
   files.reactBadge,
   source.reactBadge,
   /default:\s*["']h-11 px-4 py-2["']/,
@@ -244,6 +338,18 @@ assertContains(
   source.reactBadge,
   /icon:\s*["']h-11 w-11["']/,
   "44px icon Badge class",
+);
+assertContains(
+  files.reactBadge,
+  source.reactBadge,
+  "Counter",
+  "React Badge composes Counter",
+);
+assertContains(
+  files.reactBadge,
+  source.reactBadge,
+  "gap-1 rounded-md",
+  "React Badge uses 4px content gap",
 );
 assertContains(
   files.reactCheckbox,
@@ -376,6 +482,18 @@ assertContains(
   source.reactInputFigma,
   "false: undefined",
   "Input Code Connect hides helper text by default",
+);
+assertContains(
+  files.reactBadgeFigma,
+  source.reactBadgeFigma,
+  'counterProps: figma.boolean("Show Counter"',
+  "Badge Code Connect counter visibility mapping",
+);
+assertContains(
+  files.reactBadgeFigma,
+  source.reactBadgeFigma,
+  'figma.nestedProps("Counter"',
+  "Badge Code Connect nested Counter mapping",
 );
 assertContains(
   files.reactTextareaFigma,
@@ -722,6 +840,18 @@ assertContains(
 assertContains(
   files.figmaLinked,
   source.figmaLinked,
+  "src/components/Counter/Counter.figma.tsx",
+  "Linked Code Connect includes Counter template",
+);
+assertContains(
+  files.figmaLinked,
+  source.figmaLinked,
+  "src/components/Counter/Counter.tsx",
+  "Linked Code Connect includes Counter source",
+);
+assertContains(
+  files.figmaLinked,
+  source.figmaLinked,
   "src/components/Card/Card.figma.tsx",
   "Linked Code Connect includes Card template",
 );
@@ -760,6 +890,12 @@ assertContains(
   source.vueIndex,
   "KozmosButton = createVueWrapper(ReactButton)",
   "Vue Button wraps React Button",
+);
+assertContains(
+  files.vueIndex,
+  source.vueIndex,
+  "KozmosCounter = createVueWrapper(ReactCounter)",
+  "Vue Counter wraps React Counter",
 );
 assertContains(
   files.vueIndex,
@@ -825,6 +961,93 @@ assertContains(
   source.figma,
   tokenValuePattern("Badge/icon/size", badge.content.iconSize),
   "Badge icon size token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Counter / v1",
+  "Counter component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Counter/height/small", counter.sizes.small.height),
+  "Counter small height token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Counter/height/default", counter.sizes.default.height),
+  "Counter default height token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Counter/min-width/small", counter.sizes.small.minWidth),
+  "Counter small min-width token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern(
+    "Counter/min-width/default",
+    counter.sizes.default.minWidth,
+  ),
+  "Counter default min-width token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Counter/padding/x/small", counter.sizes.small.paddingX),
+  "Counter small horizontal padding token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern(
+    "Counter/padding/x/default",
+    counter.sizes.default.paddingX,
+  ),
+  "Counter default horizontal padding token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Counter/radius", counter.content.radius),
+  "Counter radius token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Counter/font-size/small", counter.content.fontSizeSmall),
+  "Counter small font size token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern(
+    "Counter/font-size/default",
+    counter.content.fontSizeDefault,
+  ),
+  "Counter default font size token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern(
+    "Counter/line-height/small",
+    counter.content.lineHeightSmall,
+  ),
+  "Counter small line height token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern(
+    "Counter/line-height/default",
+    counter.content.lineHeightDefault,
+  ),
+  "Counter default line height token",
 );
 assertContains(
   files.figma,
@@ -1072,6 +1295,30 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
+  "async function reorganizeComponentsPage()",
+  "Components page reorganize action",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "COMPONENT_PAGE_LAYOUT_ORDER",
+  "Components page measured layout order",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "measureComponentSetLayoutBounds",
+  "Components page layout measures visible child bounds",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS",
+  "Components page layout uses safety footprints",
+);
+assertContains(
+  files.figma,
+  source.figma,
   "setExplicitVariableModeForCollection",
   "Surface QA applies explicit Light/Dark variable modes",
 );
@@ -1112,6 +1359,42 @@ assertContains(
   "Glass Button foreground follows mode-aware text-foreground token",
 );
 assertContains(
+  files.figma,
+  source.figma,
+  'background: "Colors/theme/600"',
+  "Figma filled brand surfaces use accessible brand token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'rangeFill: "Colors/theme/600"',
+  "Figma range fills use accessible brand token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'foreground: "Colors/theme/600"',
+  "Figma text-only brand content uses accessible brand token",
+);
+assertContains(
+  files.reactTailwindConfig,
+  source.reactTailwindConfig,
+  "DEFAULT: 'var(--primitives-colors-theme-600)'",
+  "React primary color uses accessible brand token",
+);
+assertContains(
+  files.reactTailwindConfig,
+  source.reactTailwindConfig,
+  "foreground: 'var(--primitives-colors-foreground-1000)'",
+  "React filled tone foregrounds are mode-aware",
+);
+assertContains(
+  files.reactTailwindConfig,
+  source.reactTailwindConfig,
+  "ring: 'var(--primitives-colors-theme-600)'",
+  "React focus ring uses accessible brand token",
+);
+assertContains(
   files.figmaUi,
   source.figmaUi,
   "Build Surface QA",
@@ -1122,6 +1405,18 @@ assertContains(
   source.figmaUi,
   "build-surface-qa",
   "Surface QA UI posts plugin message",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  "Reorganize Components",
+  "Components page reorganize plugin action",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  "reorganize-components",
+  "Components page reorganize UI posts plugin message",
 );
 assertContains(
   files.figmaReadme,
@@ -1200,6 +1495,18 @@ assertContains(
   source.figma,
   'const ALERT_VARIANTS = ["Default", "Destructive", "Success", "Warning", "Info"]',
   "Alert variant axis",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'const COUNTER_TONES = ["Neutral", "Brand", "Destructive", "Inverse"]',
+  "Counter tone axis",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'const COUNTER_SIZES = ["Small", "Default"]',
+  "Counter size axis",
 );
 assertContains(
   files.figma,
@@ -1338,6 +1645,18 @@ assertContains(
   source.figma,
   'configureLabelTextProperty(componentSet, "Badge", stats)',
   "Badge Label Text component property binding",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  /configureNamedTextProperty\(\s*componentSet,\s*"Counter Text"/,
+  "Counter Text component property binding",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  /createNestedComponentInstance\(\{\s*componentSetName:\s*"Counter \/ v1"/,
+  "Badge composes nested Counter instance",
 );
 assertContains(
   files.figma,
@@ -2076,6 +2395,86 @@ assertContains(
 );
 
 assertAllVariants(
+  files.iosCounter,
+  source.iosCounter,
+  counter.tones,
+  (tone) => `case ${tone}`,
+  "iOS Counter",
+);
+assertContains(
+  files.iosCounter,
+  source.iosCounter,
+  "public struct KozmosCounter",
+  "iOS Counter public view",
+);
+assertContains(
+  files.iosCounter,
+  source.iosCounter,
+  "public enum KozmosCounterSize",
+  "iOS Counter size API",
+);
+assertContains(
+  files.iosCounter,
+  source.iosCounter,
+  "size == .sm ? 18 : 20",
+  "iOS Counter 18px/20px dimensions",
+);
+assertContains(
+  files.iosCounter,
+  source.iosCounter,
+  "size == .sm ? 5 : KozmosDimensions.primitivesLayoutSpacing75",
+  "iOS Counter 5px/6px horizontal padding",
+);
+assertContains(
+  files.iosCounter,
+  source.iosCounter,
+  "size == .sm ? 11 : 12",
+  "iOS Counter 11px/12px font sizes",
+);
+assertContains(
+  files.iosCounter,
+  source.iosCounter,
+  ".monospacedDigit()",
+  "iOS Counter tabular numeric rendering",
+);
+assertContains(
+  files.iosCounter,
+  source.iosCounter,
+  "normalizedText",
+  "iOS Counter normalizes legacy wrapped values",
+);
+assertContains(
+  files.iosCounterFigma,
+  source.iosCounterFigma,
+  "node-id=149-13430",
+  "iOS Counter Code Connect node ID",
+);
+assertContains(
+  files.iosCounterFigma,
+  source.iosCounterFigma,
+  '@FigmaString("Counter Text")',
+  "iOS Counter Code Connect text mapping",
+);
+assertContains(
+  files.iosCounterFigma,
+  source.iosCounterFigma,
+  '@FigmaEnum(\n        "Tone"',
+  "iOS Counter Code Connect tone mapping",
+);
+assertContains(
+  files.iosCounterFigma,
+  source.iosCounterFigma,
+  '@FigmaEnum(\n        "Size"',
+  "iOS Counter Code Connect size mapping",
+);
+assertContains(
+  files.iosFigmaLinked,
+  source.iosFigmaLinked,
+  "Sources/Components/Counter/Counter.figma.swift",
+  "iOS linked Code Connect includes Counter",
+);
+
+assertAllVariants(
   files.iosBadge,
   source.iosBadge,
   badge.variants,
@@ -2101,6 +2500,60 @@ assertContains(
   source.iosBadge,
   "minWidth: size == .icon ? 44 : nil",
   "iOS Badge icon 44px minimum width",
+);
+assertContains(
+  files.iosBadge,
+  source.iosBadge,
+  "counter: String? = nil",
+  "iOS Badge counter API",
+);
+assertContains(
+  files.iosBadge,
+  source.iosBadge,
+  "showCounter: Bool = false",
+  "iOS Badge counter visibility API",
+);
+assertContains(
+  files.iosBadge,
+  source.iosBadge,
+  "KozmosCounter(counter, tone: counterTone)",
+  "iOS Badge composes Counter",
+);
+assertContains(
+  files.iosBadge,
+  source.iosBadge,
+  "HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50)",
+  "iOS Badge uses 4px content gap",
+);
+assertContains(
+  files.iosBadge,
+  source.iosBadge,
+  "size != .icon && showCounter && counter != nil",
+  "iOS Badge hides Counter for icon-only variants",
+);
+assertContains(
+  files.iosBadgeFigma,
+  source.iosBadgeFigma,
+  "node-id=78-246",
+  "iOS Badge Code Connect node ID",
+);
+assertContains(
+  files.iosBadgeFigma,
+  source.iosBadgeFigma,
+  '@FigmaString("Label Text")',
+  "iOS Badge Code Connect label mapping",
+);
+assertContains(
+  files.iosBadgeFigma,
+  source.iosBadgeFigma,
+  '@FigmaBoolean("Show Counter")',
+  "iOS Badge Code Connect counter visibility mapping",
+);
+assertContains(
+  files.iosFigmaLinked,
+  source.iosFigmaLinked,
+  "Sources/Components/Badge/Badge.figma.swift",
+  "iOS linked Code Connect includes Badge",
 );
 
 assertContains(
@@ -2319,6 +2772,92 @@ assertContains(
 );
 
 assertAllVariants(
+  files.androidCounter,
+  source.androidCounter,
+  counter.tones,
+  (tone) => {
+    const name =
+      tone === "brand"
+        ? "Brand"
+        : tone[0].toUpperCase() + tone.slice(1);
+    return name;
+  },
+  "Android Counter",
+);
+assertContains(
+  files.androidCounter,
+  source.androidCounter,
+  "enum class CounterSize",
+  "Android Counter size API",
+);
+assertContains(
+  files.androidCounter,
+  source.androidCounter,
+  "fun KozmosCounter",
+  "Android Counter composable",
+);
+assertContains(
+  files.androidCounter,
+  source.androidCounter,
+  "if (size == CounterSize.Sm) 18.dp else 20.dp",
+  "Android Counter 18dp/20dp dimensions",
+);
+assertContains(
+  files.androidCounter,
+  source.androidCounter,
+  "if (size == CounterSize.Sm) 5.dp else KozmosDimensions.primitivesLayoutSpacing75",
+  "Android Counter 5dp/6dp horizontal padding",
+);
+assertContains(
+  files.androidCounter,
+  source.androidCounter,
+  "if (size == CounterSize.Sm) 11.sp else 12.sp",
+  "Android Counter 11sp/12sp font sizes",
+);
+assertContains(
+  files.androidCounter,
+  source.androidCounter,
+  ".widthIn(min = minWidth)",
+  "Android Counter minimum width",
+);
+assertContains(
+  files.androidCounter,
+  source.androidCounter,
+  "normalizeCounterText",
+  "Android Counter normalizes legacy wrapped values",
+);
+assertContains(
+  files.androidCounterFigma,
+  source.androidCounterFigma,
+  "node-id=149-13430",
+  "Android Counter Code Connect node ID",
+);
+assertContains(
+  files.androidCounterFigma,
+  source.androidCounterFigma,
+  '@FigmaProperty(FigmaType.Text, "Counter Text")',
+  "Android Counter Code Connect text mapping",
+);
+assertContains(
+  files.androidCounterFigma,
+  source.androidCounterFigma,
+  '@FigmaProperty(FigmaType.Enum, "Tone")',
+  "Android Counter Code Connect tone mapping",
+);
+assertContains(
+  files.androidCounterFigma,
+  source.androidCounterFigma,
+  '@FigmaProperty(FigmaType.Enum, "Size")',
+  "Android Counter Code Connect size mapping",
+);
+assertContains(
+  files.androidFigmaLinked,
+  source.androidFigmaLinked,
+  "src/main/java/com/kozmos/components/Counter/Counter.figma.kt",
+  "Android linked Code Connect includes Counter",
+);
+
+assertAllVariants(
   files.androidBadge,
   source.androidBadge,
   badge.variants,
@@ -2348,6 +2887,60 @@ assertContains(
   source.androidBadge,
   "KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle",
   "Android Badge themed runtime token",
+);
+assertContains(
+  files.androidBadge,
+  source.androidBadge,
+  "counter: String? = null",
+  "Android Badge counter API",
+);
+assertContains(
+  files.androidBadge,
+  source.androidBadge,
+  "showCounter: Boolean = false",
+  "Android Badge counter visibility API",
+);
+assertContains(
+  files.androidBadge,
+  source.androidBadge,
+  "KozmosCounter(",
+  "Android Badge composes Counter",
+);
+assertContains(
+  files.androidBadge,
+  source.androidBadge,
+  "Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing50)",
+  "Android Badge uses 4px content gap",
+);
+assertContains(
+  files.androidBadge,
+  source.androidBadge,
+  "size != BadgeSize.Icon && showCounter && counter != null",
+  "Android Badge hides Counter for icon-only variants",
+);
+assertContains(
+  files.androidBadgeFigma,
+  source.androidBadgeFigma,
+  "node-id=78-246",
+  "Android Badge Code Connect node ID",
+);
+assertContains(
+  files.androidBadgeFigma,
+  source.androidBadgeFigma,
+  '@FigmaProperty(FigmaType.Text, "Label Text")',
+  "Android Badge Code Connect label mapping",
+);
+assertContains(
+  files.androidBadgeFigma,
+  source.androidBadgeFigma,
+  '@FigmaProperty(FigmaType.Boolean, "Show Counter")',
+  "Android Badge Code Connect counter visibility mapping",
+);
+assertContains(
+  files.androidFigmaLinked,
+  source.androidFigmaLinked,
+  "src/main/java/com/kozmos/components/Badge/Badge.figma.kt",
+  "Android linked Code Connect includes Badge",
 );
 assertContains(
   files.androidCheckbox,
@@ -2570,6 +3163,134 @@ assertContains(
   source.androidThemeProvider,
   "LocalKozmosUseDarkTokens provides useDarkTheme",
   "Android ThemeProvider dark token binding",
+);
+
+assertJsonPathEquals(
+  files.tokensDark,
+  tokensDark,
+  [
+    "Components",
+    "Primary Buttons",
+    "themed",
+    "button",
+    "background",
+    "idle",
+    "$value",
+  ],
+  "#7EA2F6",
+  "dark themed primary button background",
+);
+assertJsonPathEquals(
+  files.tokensDark,
+  tokensDark,
+  [
+    "Components",
+    "Primary Buttons",
+    "danger",
+    "button",
+    "background",
+    "idle",
+    "$value",
+  ],
+  "#EE7E95",
+  "dark destructive primary button background",
+);
+assertJsonPathEquals(
+  files.tokensDark,
+  tokensDark,
+  [
+    "Components",
+    "Secondary Buttons",
+    "themed",
+    "button",
+    "foreground",
+    "content",
+    "idle",
+    "$value",
+  ],
+  "#7EA2F6",
+  "dark secondary button themed foreground",
+);
+assertJsonPathEquals(
+  files.tokensDark,
+  tokensDark,
+  ["Semantics", "Data", "Blue", "$value"],
+  "#60A5FA",
+  "dark semantic data blue",
+);
+assertJsonPathEquals(
+  files.tokensDark,
+  tokensDark,
+  ["Semantics", "Data", "Red", "$value"],
+  "#F87171",
+  "dark semantic data red",
+);
+assertJsonPathEquals(
+  files.tokensDark,
+  tokensDark,
+  ["Semantics", "Data", "Yellow", "$value"],
+  "#FBBF24",
+  "dark semantic data yellow",
+);
+assertFigmaPayloadDarkValue(
+  files.figmaFoundationsPayload,
+  figmaFoundationsPayload,
+  "Components/Primary Buttons/themed/button/background/idle",
+  "#7EA2F6",
+);
+assertFigmaPayloadDarkValue(
+  files.figmaFoundationsPayload,
+  figmaFoundationsPayload,
+  "Components/Primary Buttons/danger/button/background/idle",
+  "#EE7E95",
+);
+assertFigmaPayloadDarkValue(
+  files.figmaFoundationsPayload,
+  figmaFoundationsPayload,
+  "Components/Secondary Buttons/themed/button/foreground/content/idle",
+  "#7EA2F6",
+);
+assertFigmaPayloadDarkValue(
+  files.figmaFoundationsPayload,
+  figmaFoundationsPayload,
+  "Semantics/Data/Blue",
+  "#60A5FA",
+);
+assertFigmaPayloadDarkValue(
+  files.figmaFoundationsPayload,
+  figmaFoundationsPayload,
+  "Semantics/Data/Red",
+  "#F87171",
+);
+assertFigmaPayloadDarkValue(
+  files.figmaFoundationsPayload,
+  figmaFoundationsPayload,
+  "Semantics/Data/Yellow",
+  "#FBBF24",
+);
+assertContains(
+  files.iosColors,
+  source.iosColors,
+  'UIColor(hex: "#7EA2F6") : UIColor(hex: "#0D44C2")',
+  "iOS dark themed primary button background stays blue",
+);
+assertContains(
+  files.iosColors,
+  source.iosColors,
+  'UIColor(hex: "#EE7E95") : UIColor(hex: "#B01736")',
+  "iOS dark destructive primary button background stays red",
+);
+assertContains(
+  files.androidColorsDark,
+  source.androidColorsDark,
+  "val componentsPrimaryButtonsThemedButtonBackgroundIdle = Color(0xff7ea2f6)",
+  "Android dark themed primary button background stays blue",
+);
+assertContains(
+  files.androidColorsDark,
+  source.androidColorsDark,
+  "val componentsPrimaryButtonsDangerButtonBackgroundIdle = Color(0xffee7e95)",
+  "Android dark destructive primary button background stays red",
 );
 
 console.log("Component contract parity ok");

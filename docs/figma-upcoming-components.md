@@ -8,12 +8,41 @@ Generated context:
 - Code inventory source: `packages/react/src/components`
 - Current Core Figma v1 component sets: Button, IconButton, Badge, Card, Tabs,
   Tooltip, Dialog, Popover, Menu, Toast, Checkbox, Radio, Switch, Input,
-  Textarea, Search, Select, Slider, Progress, Spinner, Avatar, Alert
+  Textarea, Search, Select, Slider, Progress, Spinner, Avatar, Alert, Counter
 - Icon source components already exist on the Figma `Icons` page, so `Icon` is
   treated separately from this component-set backlog.
 - React placeholder Code Connect files already exist for Drawer,
   FloatingActionButton, Grid, SplitButton, Stack, and ToggleButton, but they
   still use `node-id=TBD` until matching Figma component sets are built.
+
+## Core v1 Freeze
+
+Core v1 is treated as frozen after the 2026-05-20 audit with zero warnings,
+zero transparent-surface QA issues, and no contrast failures. Future work should
+preserve existing component set names and node IDs in place unless an explicit
+archive/migration is requested.
+
+User note: the library should still receive fine-tuning and polish passes after
+new components land. Recommendations are welcome, especially for component
+proportions, naming, docs clarity, and visual fidelity, but every added or tuned
+component must pass the relevant importer, contract, parsing, build, and visual
+QA checks before being considered done.
+
+## Wave 2 Scope
+
+Wave 2 starts with low-risk primitives and composition helpers:
+
+- Text
+- Heading
+- Link
+- Label
+- Separator
+- Skeleton
+- Box
+- Stack
+- Container
+- Breadcrumb
+- Accordion
 
 ## Composition Dependencies
 
@@ -100,7 +129,6 @@ not part of the public NPM or Figma component roadmap.
 
 ## Next Recommendation
 
-Build `Label`, `Text`, `Heading`, `Separator`, `Box`, `Stack`, `Container`, and
-`FieldWrapper` first. They reduce clone pressure in every composite component
-and let Card/Dialog/Menu/Form examples become real composition instead of local
-frames.
+Build Wave 2 in the order above, then evaluate `FieldWrapper` and `Grid` before
+starting heavier product/navigation components. This gives the library reusable
+text, spacing, boundary, and disclosure primitives before composite work resumes.

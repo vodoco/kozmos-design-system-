@@ -4,6 +4,10 @@
     "label": "Compose",
     "language": "kotlin",
     "include": [
+      "src/main/java/com/kozmos/components/Counter/Counter.figma.kt",
+      "src/main/java/com/kozmos/components/Counter/Counter.kt",
+      "src/main/java/com/kozmos/components/Badge/Badge.figma.kt",
+      "src/main/java/com/kozmos/components/Badge/Badge.kt",
       "src/main/java/com/kozmos/components/Dialog/Dialog.figma.kt",
       "src/main/java/com/kozmos/components/Dialog/Dialog.kt",
       "src/main/java/com/kozmos/components/Popover/Popover.figma.kt",

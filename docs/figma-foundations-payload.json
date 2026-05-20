@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-17T19:36:16.776Z",
+  "generatedAt": "2026-05-20T15:01:51.655Z",
   "target": {
     "fileKey": "Yj4O8p6Y9h2Sa9zJVoAiVY",
     "fileName": "Kozmos DS - Core Library",
@@ -1088,7 +1088,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0e0a01"
+          "value": "#051C4F"
         }
       }
     },
@@ -1112,7 +1112,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#352603"
+          "value": "#082975"
         }
       }
     },
@@ -1136,7 +1136,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#5b4106"
+          "value": "#0B369C"
         }
       }
     },
@@ -1160,7 +1160,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#815d09"
+          "value": "#0D44C2"
         }
       }
     },
@@ -1184,7 +1184,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#a7780c"
+          "value": "#1051E8"
         }
       }
     },
@@ -1208,7 +1208,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#eca413"
+          "value": "#135BEC"
         }
       }
     },
@@ -1232,7 +1232,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -1256,7 +1256,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f2bb3d"
+          "value": "#7EA2F6"
         }
       }
     },
@@ -1280,7 +1280,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f4c963"
+          "value": "#A4BEF9"
         }
       }
     },
@@ -1304,7 +1304,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f7d68a"
+          "value": "#CAD9FC"
         }
       }
     },
@@ -1328,7 +1328,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#fae3b0"
+          "value": "#F1F5FE"
         }
       }
     },
@@ -1352,7 +1352,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0e0e01"
+          "value": "#0A054F"
         }
       }
     },
@@ -1376,7 +1376,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#313503"
+          "value": "#0F0875"
         }
       }
     },
@@ -1400,7 +1400,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#555b06"
+          "value": "#140B9C"
         }
       }
     },
@@ -1424,7 +1424,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#798109"
+          "value": "#190DC2"
         }
       }
     },
@@ -1448,7 +1448,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#9da70c"
+          "value": "#1E10E8"
         }
       }
     },
@@ -1472,7 +1472,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#becb0e"
+          "value": "#4134F1"
         }
       }
     },
@@ -1496,7 +1496,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e1ef17"
+          "value": "#6258F3"
         }
       }
     },
@@ -1520,7 +1520,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e6f23d"
+          "value": "#867EF6"
         }
       }
     },
@@ -1544,7 +1544,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#ebf463"
+          "value": "#AAA4F9"
         }
       }
     },
@@ -1568,7 +1568,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f0f78a"
+          "value": "#CECAFC"
         }
       }
     },
@@ -1592,7 +1592,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f5fab0"
+          "value": "#F1F1FE"
         }
       }
     },
@@ -1616,7 +1616,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#090e01"
+          "value": "#23054F"
         }
       }
     },
@@ -1640,7 +1640,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#213503"
+          "value": "#340875"
         }
       }
     },
@@ -1664,7 +1664,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#395b06"
+          "value": "#450B9C"
         }
       }
     },
@@ -1688,7 +1688,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#518109"
+          "value": "#550DC2"
         }
       }
     },
@@ -1712,7 +1712,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#69a70c"
+          "value": "#6610E8"
         }
       }
     },
@@ -1736,7 +1736,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#7fcb0e"
+          "value": "#8034F1"
         }
       }
     },
@@ -1760,7 +1760,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#99ef17"
+          "value": "#9658F3"
         }
       }
     },
@@ -1784,7 +1784,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#aaf23d"
+          "value": "#AE7EF6"
         }
       }
     },
@@ -1808,7 +1808,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#baf463"
+          "value": "#C6A4F9"
         }
       }
     },
@@ -1832,7 +1832,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#cbf78a"
+          "value": "#DECAFC"
         }
       }
     },
@@ -1856,7 +1856,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dcfab0"
+          "value": "#F6F1FE"
         }
       }
     },
@@ -1880,7 +1880,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#090206"
+          "value": "#0F4C2D"
         }
       }
     },
@@ -1904,7 +1904,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#340a1f"
+          "value": "#14653D"
         }
       }
     },
@@ -1928,7 +1928,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#5f1339"
+          "value": "#197F4C"
         }
       }
     },
@@ -1952,7 +1952,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#891b52"
+          "value": "#1E995B"
         }
       }
     },
@@ -1976,7 +1976,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#b4236c"
+          "value": "#23B26B"
         }
       }
     },
@@ -2000,7 +2000,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d73385"
+          "value": "#28CC7A"
         }
       }
     },
@@ -2024,7 +2024,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -2048,7 +2048,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e166a4"
+          "value": "#76E4AD"
         }
       }
     },
@@ -2072,7 +2072,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e680b3"
+          "value": "#A0ECC6"
         }
       }
     },
@@ -2096,7 +2096,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#eb9ac2"
+          "value": "#CBF5E0"
         }
       }
     },
@@ -2120,7 +2120,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f0b3d2"
+          "value": "#F6FDF9"
         }
       }
     },
@@ -2144,7 +2144,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#031511"
+          "value": "#430915"
         }
       }
     },
@@ -2168,7 +2168,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#07392f"
+          "value": "#670E20"
         }
       }
     },
@@ -2192,7 +2192,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0c5d4c"
+          "value": "#8C132B"
         }
       }
     },
@@ -2216,7 +2216,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#11816a"
+          "value": "#B01736"
         }
       }
     },
@@ -2240,7 +2240,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#16a588"
+          "value": "#D41C42"
         }
       }
     },
@@ -2264,7 +2264,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#1bcba7"
+          "value": "#E43458"
         }
       }
     },
@@ -2288,7 +2288,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -2312,7 +2312,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#4fe8c9"
+          "value": "#EE7E95"
         }
       }
     },
@@ -2336,7 +2336,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#73ecd4"
+          "value": "#F3A2B3"
         }
       }
     },
@@ -2360,7 +2360,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#98f1df"
+          "value": "#F8C6D0"
         }
       }
     },
@@ -2384,7 +2384,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#bcf6ea"
+          "value": "#FCEAEE"
         }
       }
     },
@@ -2408,7 +2408,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#000307"
+          "value": "#472F02"
         }
       }
     },
@@ -2432,7 +2432,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#01112f"
+          "value": "#744D03"
         }
       }
     },
@@ -2456,7 +2456,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#021f57"
+          "value": "#A06B04"
         }
       }
     },
@@ -2480,7 +2480,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#032d7e"
+          "value": "#CD8905"
         }
       }
     },
@@ -2504,7 +2504,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#043ba6"
+          "value": "#F9A707"
         }
       }
     },
@@ -2528,7 +2528,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0548ca"
+          "value": "#FAB735"
         }
       }
     },
@@ -2552,7 +2552,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -2576,7 +2576,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#3276fa"
+          "value": "#FCD281"
         }
       }
     },
@@ -2600,7 +2600,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#5f94fb"
+          "value": "#FDE0A8"
         }
       }
     },
@@ -2624,7 +2624,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#8bb2fc"
+          "value": "#FEEED0"
         }
       }
     },
@@ -2648,7 +2648,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#b8d0fd"
+          "value": "#FFFCF8"
         }
       }
     },
@@ -2672,7 +2672,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#130904"
+          "value": "#0E2E3F"
         }
       }
     },
@@ -2696,7 +2696,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#35190c"
+          "value": "#154761"
         }
       }
     },
@@ -2720,7 +2720,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#562913"
+          "value": "#1C6082"
         }
       }
     },
@@ -2744,7 +2744,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#78391a"
+          "value": "#2379A4"
         }
       }
     },
@@ -2768,7 +2768,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#9a4921"
+          "value": "#2A92C6"
         }
       }
     },
@@ -2792,7 +2792,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#bd5a28"
+          "value": "#42A5D7"
         }
       }
     },
@@ -2816,7 +2816,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -2840,7 +2840,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc865b"
+          "value": "#87C6E5"
         }
       }
     },
@@ -2864,7 +2864,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e39f7d"
+          "value": "#A9D6EC"
         }
       }
     },
@@ -2888,7 +2888,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#eab89e"
+          "value": "#CAE6F3"
         }
       }
     },
@@ -2912,7 +2912,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f1d1c0"
+          "value": "#ECF6FB"
         }
       }
     },
@@ -6440,7 +6440,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#da9c14"
+          "value": "#60A5FA"
         }
       }
     },
@@ -6464,7 +6464,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#6ccc15"
+          "value": "#C084FC"
         }
       }
     },
@@ -6488,7 +6488,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f26b77"
+          "value": "#2DD4BF"
         }
       }
     },
@@ -6512,7 +6512,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#15a7f3"
+          "value": "#FB923C"
         }
       }
     },
@@ -6536,7 +6536,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#23d9d9"
+          "value": "#F87171"
         }
       }
     },
@@ -6560,7 +6560,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2688f9"
+          "value": "#FBBF24"
         }
       }
     },
@@ -7016,7 +7016,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f2bb3d"
+          "value": "#7EA2F6"
         }
       }
     },
@@ -7064,7 +7064,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -7088,7 +7088,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f4c963"
+          "value": "#A4BEF9"
         }
       }
     },
@@ -7112,7 +7112,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -7136,7 +7136,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#352603"
+          "value": "#082975"
         }
       }
     },
@@ -7184,7 +7184,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#352603"
+          "value": "#082975"
         }
       }
     },
@@ -7208,7 +7208,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#352603"
+          "value": "#082975"
         }
       }
     },
@@ -7232,7 +7232,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#352603"
+          "value": "#082975"
         }
       }
     },
@@ -7256,7 +7256,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e166a4"
+          "value": "#76E4AD"
         }
       }
     },
@@ -7304,7 +7304,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -7328,7 +7328,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e680b3"
+          "value": "#A0ECC6"
         }
       }
     },
@@ -7352,7 +7352,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -7496,7 +7496,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#340a1f"
+          "value": "#14653D"
         }
       }
     },
@@ -7544,7 +7544,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#340a1f"
+          "value": "#14653D"
         }
       }
     },
@@ -7568,7 +7568,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#340a1f"
+          "value": "#14653D"
         }
       }
     },
@@ -7592,7 +7592,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#340a1f"
+          "value": "#14653D"
         }
       }
     },
@@ -7616,7 +7616,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#3276fa"
+          "value": "#FCD281"
         }
       }
     },
@@ -7664,7 +7664,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -7688,7 +7688,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#5f94fb"
+          "value": "#FDE0A8"
         }
       }
     },
@@ -7712,7 +7712,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -7856,7 +7856,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#01112f"
+          "value": "#744D03"
         }
       }
     },
@@ -7904,7 +7904,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#01112f"
+          "value": "#744D03"
         }
       }
     },
@@ -7928,7 +7928,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#01112f"
+          "value": "#744D03"
         }
       }
     },
@@ -7952,7 +7952,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#01112f"
+          "value": "#744D03"
         }
       }
     },
@@ -7976,7 +7976,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#4fe8c9"
+          "value": "#EE7E95"
         }
       }
     },
@@ -8024,7 +8024,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -8048,7 +8048,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#73ecd4"
+          "value": "#F3A2B3"
         }
       }
     },
@@ -8072,7 +8072,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -8216,7 +8216,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#031511"
+          "value": "#430915"
         }
       }
     },
@@ -8264,7 +8264,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#031511"
+          "value": "#430915"
         }
       }
     },
@@ -8288,7 +8288,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#031511"
+          "value": "#430915"
         }
       }
     },
@@ -8312,7 +8312,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#031511"
+          "value": "#430915"
         }
       }
     },
@@ -8336,7 +8336,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc865b"
+          "value": "#87C6E5"
         }
       }
     },
@@ -8384,7 +8384,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -8408,7 +8408,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e39f7d"
+          "value": "#A9D6EC"
         }
       }
     },
@@ -8432,7 +8432,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -8576,7 +8576,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#35190c"
+          "value": "#154761"
         }
       }
     },
@@ -8624,7 +8624,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#35190c"
+          "value": "#154761"
         }
       }
     },
@@ -8648,7 +8648,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#35190c"
+          "value": "#154761"
         }
       }
     },
@@ -8672,7 +8672,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#35190c"
+          "value": "#154761"
         }
       }
     },
@@ -9056,7 +9056,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f2bb3d"
+          "value": "#7EA2F6"
         }
       }
     },
@@ -9104,7 +9104,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -9128,7 +9128,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f4c963"
+          "value": "#A4BEF9"
         }
       }
     },
@@ -9152,7 +9152,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -9176,7 +9176,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f2bb3d"
+          "value": "#7EA2F6"
         }
       }
     },
@@ -9224,7 +9224,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -9248,7 +9248,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f4c963"
+          "value": "#A4BEF9"
         }
       }
     },
@@ -9272,7 +9272,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -9296,7 +9296,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -9344,7 +9344,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#eca413"
+          "value": "#135BEC"
         }
       }
     },
@@ -9368,7 +9368,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f2bb3d"
+          "value": "#7EA2F6"
         }
       }
     },
@@ -9392,7 +9392,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#eca413"
+          "value": "#135BEC"
         }
       }
     },
@@ -9416,7 +9416,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e166a4"
+          "value": "#76E4AD"
         }
       }
     },
@@ -9464,7 +9464,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -9488,7 +9488,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e680b3"
+          "value": "#A0ECC6"
         }
       }
     },
@@ -9512,7 +9512,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -9536,7 +9536,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e166a4"
+          "value": "#76E4AD"
         }
       }
     },
@@ -9584,7 +9584,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -9608,7 +9608,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e680b3"
+          "value": "#A0ECC6"
         }
       }
     },
@@ -9632,7 +9632,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -9656,7 +9656,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -9704,7 +9704,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d73385"
+          "value": "#28CC7A"
         }
       }
     },
@@ -9728,7 +9728,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e166a4"
+          "value": "#76E4AD"
         }
       }
     },
@@ -9752,7 +9752,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d73385"
+          "value": "#28CC7A"
         }
       }
     },
@@ -9776,7 +9776,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#4fe8c9"
+          "value": "#EE7E95"
         }
       }
     },
@@ -9824,7 +9824,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -9848,7 +9848,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#73ecd4"
+          "value": "#F3A2B3"
         }
       }
     },
@@ -9872,7 +9872,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -9896,7 +9896,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#4fe8c9"
+          "value": "#EE7E95"
         }
       }
     },
@@ -9944,7 +9944,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -9968,7 +9968,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#73ecd4"
+          "value": "#F3A2B3"
         }
       }
     },
@@ -9992,7 +9992,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -10016,7 +10016,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -10064,7 +10064,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#1bcba7"
+          "value": "#E43458"
         }
       }
     },
@@ -10088,7 +10088,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#4fe8c9"
+          "value": "#EE7E95"
         }
       }
     },
@@ -10112,7 +10112,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#1bcba7"
+          "value": "#E43458"
         }
       }
     },
@@ -10136,7 +10136,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#3276fa"
+          "value": "#FCD281"
         }
       }
     },
@@ -10184,7 +10184,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -10208,7 +10208,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#5f94fb"
+          "value": "#FDE0A8"
         }
       }
     },
@@ -10232,7 +10232,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -10256,7 +10256,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#3276fa"
+          "value": "#FCD281"
         }
       }
     },
@@ -10304,7 +10304,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -10328,7 +10328,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#5f94fb"
+          "value": "#FDE0A8"
         }
       }
     },
@@ -10352,7 +10352,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -10376,7 +10376,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -10424,7 +10424,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0548ca"
+          "value": "#FAB735"
         }
       }
     },
@@ -10448,7 +10448,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#3276fa"
+          "value": "#FCD281"
         }
       }
     },
@@ -10472,7 +10472,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0548ca"
+          "value": "#FAB735"
         }
       }
     },
@@ -10496,7 +10496,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc865b"
+          "value": "#87C6E5"
         }
       }
     },
@@ -10544,7 +10544,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -10568,7 +10568,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e39f7d"
+          "value": "#A9D6EC"
         }
       }
     },
@@ -10592,7 +10592,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -10616,7 +10616,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc865b"
+          "value": "#87C6E5"
         }
       }
     },
@@ -10664,7 +10664,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -10688,7 +10688,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e39f7d"
+          "value": "#A9D6EC"
         }
       }
     },
@@ -10712,7 +10712,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -10736,7 +10736,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -10784,7 +10784,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#bd5a28"
+          "value": "#42A5D7"
         }
       }
     },
@@ -10808,7 +10808,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc865b"
+          "value": "#87C6E5"
         }
       }
     },
@@ -10832,7 +10832,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#bd5a28"
+          "value": "#42A5D7"
         }
       }
     },
@@ -11216,7 +11216,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f2bb3d"
+          "value": "#7EA2F6"
         }
       }
     },
@@ -11264,7 +11264,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -11288,7 +11288,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f4c963"
+          "value": "#A4BEF9"
         }
       }
     },
@@ -11312,7 +11312,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -11336,7 +11336,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f2bb3d"
+          "value": "#7EA2F6"
         }
       }
     },
@@ -11384,7 +11384,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -11408,7 +11408,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f4c963"
+          "value": "#A4BEF9"
         }
       }
     },
@@ -11432,7 +11432,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -11456,7 +11456,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#efae17"
+          "value": "#5887F3"
         }
       }
     },
@@ -11504,7 +11504,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#eca413"
+          "value": "#135BEC"
         }
       }
     },
@@ -11528,7 +11528,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#f2bb3d"
+          "value": "#7EA2F6"
         }
       }
     },
@@ -11552,7 +11552,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#eca413"
+          "value": "#135BEC"
         }
       }
     },
@@ -11576,7 +11576,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e166a4"
+          "value": "#76E4AD"
         }
       }
     },
@@ -11624,7 +11624,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -11648,7 +11648,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e680b3"
+          "value": "#A0ECC6"
         }
       }
     },
@@ -11672,7 +11672,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -11696,7 +11696,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e166a4"
+          "value": "#76E4AD"
         }
       }
     },
@@ -11744,7 +11744,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -11768,7 +11768,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e680b3"
+          "value": "#A0ECC6"
         }
       }
     },
@@ -11792,7 +11792,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -11816,7 +11816,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc4d94"
+          "value": "#4BDC93"
         }
       }
     },
@@ -11864,7 +11864,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d73385"
+          "value": "#28CC7A"
         }
       }
     },
@@ -11888,7 +11888,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e166a4"
+          "value": "#76E4AD"
         }
       }
     },
@@ -11912,7 +11912,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d73385"
+          "value": "#28CC7A"
         }
       }
     },
@@ -11936,7 +11936,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#4fe8c9"
+          "value": "#EE7E95"
         }
       }
     },
@@ -11984,7 +11984,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -12008,7 +12008,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#73ecd4"
+          "value": "#F3A2B3"
         }
       }
     },
@@ -12032,7 +12032,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -12056,7 +12056,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#4fe8c9"
+          "value": "#EE7E95"
         }
       }
     },
@@ -12104,7 +12104,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -12128,7 +12128,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#73ecd4"
+          "value": "#F3A2B3"
         }
       }
     },
@@ -12152,7 +12152,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -12176,7 +12176,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#2be3bd"
+          "value": "#E95A77"
         }
       }
     },
@@ -12224,7 +12224,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#1bcba7"
+          "value": "#E43458"
         }
       }
     },
@@ -12248,7 +12248,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#4fe8c9"
+          "value": "#EE7E95"
         }
       }
     },
@@ -12272,7 +12272,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#1bcba7"
+          "value": "#E43458"
         }
       }
     },
@@ -12296,7 +12296,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#3276fa"
+          "value": "#FCD281"
         }
       }
     },
@@ -12344,7 +12344,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -12368,7 +12368,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#5f94fb"
+          "value": "#FDE0A8"
         }
       }
     },
@@ -12392,7 +12392,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#0658f8"
+          "value": "#FBC459"
         }
       }
     },
@@ -12536,7 +12536,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#01112f"
+          "value": "#744D03"
         }
       }
     },
@@ -12584,7 +12584,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#01112f"
+          "value": "#744D03"
         }
       }
     },
@@ -12608,7 +12608,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#01112f"
+          "value": "#744D03"
         }
       }
     },
@@ -12632,7 +12632,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#01112f"
+          "value": "#744D03"
         }
       }
     },
@@ -12656,7 +12656,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc865b"
+          "value": "#87C6E5"
         }
       }
     },
@@ -12704,7 +12704,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -12728,7 +12728,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e39f7d"
+          "value": "#A9D6EC"
         }
       }
     },
@@ -12752,7 +12752,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -12776,7 +12776,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc865b"
+          "value": "#87C6E5"
         }
       }
     },
@@ -12824,7 +12824,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -12848,7 +12848,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#e39f7d"
+          "value": "#A9D6EC"
         }
       }
     },
@@ -12872,7 +12872,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -12896,7 +12896,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#d56d39"
+          "value": "#65B6DE"
         }
       }
     },
@@ -12944,7 +12944,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#bd5a28"
+          "value": "#42A5D7"
         }
       }
     },
@@ -12968,7 +12968,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#dc865b"
+          "value": "#87C6E5"
         }
       }
     },
@@ -12992,7 +12992,7 @@
         },
         "dark": {
           "kind": "raw",
-          "value": "#bd5a28"
+          "value": "#42A5D7"
         }
       }
     },

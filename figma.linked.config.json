@@ -6,6 +6,8 @@
       "src/components/Button/Button.tsx",
       "src/components/IconButton/IconButton.figma.tsx",
       "src/components/IconButton/IconButton.tsx",
+      "src/components/Counter/Counter.figma.tsx",
+      "src/components/Counter/Counter.tsx",
       "src/components/Badge/Badge.figma.tsx",
       "src/components/Badge/Badge.tsx",
       "src/components/Card/Card.figma.tsx",

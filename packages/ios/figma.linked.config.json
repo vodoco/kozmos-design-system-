@@ -5,6 +5,10 @@
     "language": "swift",
     "swiftPackagePath": "Package.swift",
     "include": [
+      "Sources/Components/Counter/Counter.figma.swift",
+      "Sources/Components/Counter/Counter.swift",
+      "Sources/Components/Badge/Badge.figma.swift",
+      "Sources/Components/Badge/Badge.swift",
       "Sources/Components/Dialog/Dialog.figma.swift",
       "Sources/Components/Dialog/Dialog.swift",
       "Sources/Components/Popover/Popover.figma.swift",

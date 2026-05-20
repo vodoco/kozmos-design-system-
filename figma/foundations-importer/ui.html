@@ -15,6 +15,8 @@
           "Segoe UI",
           sans-serif;
         font-size: 12px;
+        --radius: 8px;
+        --surface-gap: 12px;
       }
 
       body {
@@ -26,19 +28,20 @@
       main {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: var(--surface-gap);
         padding: 16px;
       }
 
       h1,
       h2,
+      h3,
       p {
         margin: 0;
       }
 
       h1 {
-        font-size: 16px;
-        line-height: 22px;
+        font-size: 14px;
+        line-height: 20px;
       }
 
       h2 {
@@ -46,15 +49,60 @@
         line-height: 18px;
       }
 
+      h3 {
+        font-size: 11px;
+        line-height: 16px;
+      }
+
       p {
         color: var(--figma-color-text-secondary);
         line-height: 18px;
       }
 
+      .app-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        margin: -16px -16px 0;
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--figma-color-border);
+        background: var(--figma-color-bg);
+      }
+
+      .brand-row,
+      .section-heading,
+      .metric,
+      .component-card,
+      .log-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .brand-row {
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 7px;
+        background: var(--figma-color-bg-inverse, #111111);
+        color: var(--figma-color-text-oninverse, #ffffff);
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
       .panel {
         border: 1px solid var(--figma-color-border);
-        border-radius: 8px;
+        border-radius: var(--radius);
         padding: 12px;
+        background: var(--figma-color-bg);
       }
 
       .stack {
@@ -63,10 +111,79 @@
         gap: 10px;
       }
 
+      .stage-grid,
+      .metric-grid,
+      .maintenance-grid,
+      .manual-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .stage-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .stage-card,
+      .metric-card,
+      .upload-box,
+      .component-card,
+      .status {
+        border-radius: var(--radius);
+        background: var(--figma-color-bg-secondary);
+      }
+
+      .stage-card,
+      .metric-card {
+        min-width: 0;
+        padding: 9px 10px;
+      }
+
+      .stage-card span,
+      .metric-card span,
+      .field-label,
+      .microcopy {
+        color: var(--figma-color-text-secondary);
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .stage-card strong,
+      .metric-card strong {
+        display: block;
+        overflow: hidden;
+        margin-top: 2px;
+        color: var(--figma-color-text);
+        font-size: 13px;
+        line-height: 18px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .section-heading {
+        align-items: flex-start;
+      }
+
+      .section-heading > div,
+      .component-card > div,
+      .log-header > div {
+        min-width: 0;
+      }
+
+      .upload-box {
+        padding: 10px;
+      }
+
       label {
         display: flex;
         align-items: center;
         gap: 8px;
+      }
+
+      .field {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 6px;
       }
 
       input[type="file"] {
@@ -85,6 +202,24 @@
         font: inherit;
       }
 
+      details {
+        border: 1px solid var(--figma-color-border);
+        border-radius: var(--radius);
+        background: var(--figma-color-bg);
+      }
+
+      summary {
+        cursor: default;
+        padding: 9px 10px;
+        color: var(--figma-color-text);
+        font-weight: 600;
+        line-height: 16px;
+      }
+
+      details > .details-body {
+        padding: 0 10px 10px;
+      }
+
       textarea {
         box-sizing: border-box;
         width: 100%;
@@ -101,6 +236,7 @@
       }
 
       button {
+        box-sizing: border-box;
         height: 32px;
         border: 1px solid var(--figma-color-border);
         border-radius: 6px;
@@ -108,12 +244,21 @@
         background: var(--figma-color-bg-secondary);
         color: var(--figma-color-text);
         font: inherit;
+        white-space: nowrap;
       }
 
       button.primary {
         border-color: var(--figma-color-bg-brand);
         background: var(--figma-color-bg-brand);
         color: var(--figma-color-text-onbrand);
+      }
+
+      button.danger {
+        border-color: var(
+          --figma-color-border-danger,
+          var(--figma-color-border)
+        );
+        color: var(--figma-color-text-danger);
       }
 
       button:disabled {
@@ -125,17 +270,187 @@
         gap: 8px;
       }
 
-      .component-row {
+      .actions.wrap {
+        flex-wrap: wrap;
+      }
+
+      .actions.right {
+        justify-content: flex-end;
+      }
+
+      .component-controls {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto auto auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 8px;
         align-items: center;
       }
 
+      .metric-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .maintenance-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .maintenance-grid button,
+      .manual-grid button,
+      #smartComponentAction {
+        width: 100%;
+      }
+
+      .manual-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .component-card {
+        align-items: center;
+        padding: 10px;
+      }
+
+      .component-card strong {
+        display: block;
+        margin-bottom: 2px;
+        line-height: 18px;
+      }
+
+      .audit-progress {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border: 1px solid var(--figma-color-bg-brand, #0d99ff);
+        border-radius: var(--radius);
+        padding: 10px;
+        background: var(--figma-color-bg-brand, #0d99ff);
+        color: var(--figma-color-text-onbrand, #ffffff);
+      }
+
+      .audit-progress-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .audit-progress strong {
+        display: block;
+        color: var(--figma-color-text-onbrand, #ffffff);
+        line-height: 18px;
+      }
+
+      .audit-progress p {
+        color: var(--figma-color-text-onbrand, #ffffff);
+        font-size: 11px;
+        line-height: 16px;
+        opacity: 0.9;
+      }
+
+      .spinner {
+        display: block;
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        border: 2px solid var(--figma-color-text-onbrand, #ffffff);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 720ms linear infinite;
+      }
+
+      .progress-track {
+        position: relative;
+        overflow: hidden;
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.35);
+      }
+
+      .progress-track span {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -35%;
+        width: 35%;
+        border-radius: inherit;
+        background: var(--figma-color-text-onbrand, #ffffff);
+        animation: progressSweep 1.1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes progressSweep {
+        0% {
+          left: -35%;
+        }
+
+        100% {
+          left: 100%;
+        }
+      }
+
       .status {
-        border-radius: 6px;
         padding: 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        border: 1px solid var(--figma-color-border);
+        border-radius: 999px;
+        padding: 0 8px;
         background: var(--figma-color-bg-secondary);
+        color: var(--figma-color-text-secondary);
+        font-size: 11px;
+        line-height: 16px;
+        white-space: nowrap;
+      }
+
+      .pill.ok,
+      .stage-card.ok strong,
+      .metric-card.ok strong {
+        color: var(--figma-color-text-success);
+      }
+
+      .pill.warn,
+      .stage-card.warn strong,
+      .metric-card.warn strong {
+        color: var(--figma-color-text-warning);
+      }
+
+      .pill.danger,
+      .stage-card.danger strong,
+      .metric-card.danger strong {
+        color: var(--figma-color-text-danger);
+      }
+
+      .has-tooltip {
+        position: relative;
+        cursor: help;
+      }
+
+      .has-tooltip[data-tooltip]:not([data-tooltip=""]):hover::after,
+      .has-tooltip[data-tooltip]:not([data-tooltip=""]):focus-visible::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 10;
+        box-sizing: border-box;
+        width: min(320px, calc(100vw - 32px));
+        border: 1px solid var(--figma-color-border);
+        border-radius: var(--radius);
+        padding: 9px 10px;
+        background: var(--figma-color-bg-inverse, #111111);
+        color: var(--figma-color-text-oninverse, #ffffff);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 16px;
+        text-align: left;
+        white-space: pre-line;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
       }
 
       pre {
@@ -154,8 +469,16 @@
         line-height: 16px;
       }
 
+      [hidden] {
+        display: none !important;
+      }
+
       .ok {
         color: var(--figma-color-text-success);
+      }
+
+      .warn {
+        color: var(--figma-color-text-warning);
       }
 
       .error {
@@ -165,142 +488,327 @@
   </head>
   <body>
     <main>
-      <section class="stack">
-        <h1>Kozmos DS Foundations Importer</h1>
-        <p>
-          Import pages and local variables from the generated foundations
-          payload.
-        </p>
-      </section>
-
-      <section class="panel stack">
-        <h2>Payload</h2>
-        <input id="file" type="file" accept="application/json,.json" />
-        <textarea
-          id="payload"
-          spellcheck="false"
-          placeholder="Or paste docs/figma-foundations-payload.json here"
-        ></textarea>
-        <p id="payloadStatus">No payload loaded.</p>
-      </section>
-
-      <section class="panel stack">
-        <h2>Options</h2>
-        <label
-          ><input id="createPages" type="checkbox" checked /> Create
-          pages</label
-        >
-        <label
-          ><input id="createVariables" type="checkbox" checked /> Create
-          variables and modes</label
-        >
-        <label
-          ><input id="createDocs" type="checkbox" checked /> Create foundations
-          overview frame</label
-        >
-      </section>
-
-      <section class="actions">
-        <button id="inspect">Inspect File</button>
-        <button id="audit">Audit Library</button>
-        <button id="import" class="primary" disabled>Import Foundations</button>
-      </section>
-
-      <section class="panel stack">
-        <h2>Components</h2>
-        <p>
-          Build code-aligned component sets after the foundations import has
-          completed, or update existing sets in place to preserve Code Connect
-          node IDs.
-        </p>
-        <div class="component-row">
-          <select id="componentSelect" aria-label="Component">
-            <optgroup label="Actions">
-              <option value="button">Button / v1</option>
-              <option value="iconButton">IconButton / v1</option>
-            </optgroup>
-            <optgroup label="Status">
-              <option value="badge">Badge / v1</option>
-            </optgroup>
-            <optgroup label="Layout">
-              <option value="card">Card / v1</option>
-            </optgroup>
-            <optgroup label="Navigation">
-              <option value="tabs">Tabs / v1</option>
-            </optgroup>
-            <optgroup label="Overlay">
-              <option value="tooltip">Tooltip / v1</option>
-              <option value="dialog">Dialog / v1</option>
-              <option value="popover">Popover / v1</option>
-              <option value="menu">Menu / v1</option>
-            </optgroup>
-            <optgroup label="Selection">
-              <option value="checkbox">Checkbox / v1</option>
-              <option value="radio">Radio / v1</option>
-              <option value="switch">Switch / v1</option>
-            </optgroup>
-            <optgroup label="Inputs">
-              <option value="input">Input / v1</option>
-              <option value="textarea">Textarea / v1</option>
-              <option value="search">Search / v1</option>
-              <option value="select">Select / v1</option>
-              <option value="slider">Slider / v1</option>
-            </optgroup>
-            <optgroup label="Feedback">
-              <option value="progress">Progress / v1</option>
-              <option value="spinner">Spinner / v1</option>
-              <option value="alert">Alert / v1</option>
-              <option value="toast">Toast / v1</option>
-            </optgroup>
-            <optgroup label="Media">
-              <option value="avatar">Avatar / v1</option>
-            </optgroup>
-            <optgroup label="Utilities">
-              <option value="icons">Curated Icons</option>
-            </optgroup>
-          </select>
-          <button id="buildComponent">Build</button>
-          <button id="updateComponent">Update</button>
-          <button id="rebuildComponent">Rebuild</button>
+      <header class="app-header">
+        <div class="brand-row">
+          <span class="brand-mark">DS</span>
+          <div>
+            <h1>Kozmos DS Control Panel</h1>
+            <p>
+              Import foundations, audit readiness, and maintain generated
+              components.
+            </p>
+          </div>
         </div>
-        <div class="component-row">
-          <button id="documentComponents" class="primary">
-            Document Components
+      </header>
+
+      <section class="stage-grid" aria-label="Workflow status">
+        <div id="stageSetupCard" class="stage-card">
+          <span>1. Setup</span>
+          <strong id="stageSetup">Waiting</strong>
+        </div>
+        <div id="stageStatusCard" class="stage-card">
+          <span>2. Status</span>
+          <strong id="stageStatus">Not checked</strong>
+        </div>
+        <div id="stageComponentsCard" class="stage-card">
+          <span>3. Components</span>
+          <strong id="stageComponents">Unknown</strong>
+        </div>
+      </section>
+
+      <section class="panel stack">
+        <div class="section-heading">
+          <div>
+            <h2>1. Setup Foundations</h2>
+            <p>Load the generated payload, then import pages and variables.</p>
+          </div>
+          <span id="payloadBadge" class="pill">Missing</span>
+        </div>
+        <div class="upload-box stack">
+          <span class="field-label">Payload file</span>
+          <input id="file" type="file" accept="application/json,.json" />
+        </div>
+        <details>
+          <summary>Paste JSON payload instead</summary>
+          <div class="details-body stack">
+            <textarea
+              id="payload"
+              spellcheck="false"
+              placeholder="Paste docs/figma-foundations-payload.json here"
+            ></textarea>
+          </div>
+        </details>
+        <p id="payloadStatus" class="status">No payload loaded.</p>
+        <details>
+          <summary>Import options</summary>
+          <div class="details-body stack">
+            <label
+              ><input id="createPages" type="checkbox" checked /> Create
+              pages</label
+            >
+            <label
+              ><input id="createVariables" type="checkbox" checked /> Create
+              variables and modes</label
+            >
+            <label
+              ><input id="createDocs" type="checkbox" checked /> Create
+              foundations overview frame</label
+            >
+          </div>
+        </details>
+        <div class="actions right">
+          <button id="import" class="primary" disabled>
+            Import Foundations
           </button>
         </div>
-        <div class="component-row">
-          <button id="surfaceQa" class="primary">Build Surface QA</button>
+      </section>
+
+      <section class="panel stack">
+        <div class="section-heading">
+          <div>
+            <h2>2. Library Status</h2>
+            <p>Inspect the file quickly, or run the full audit for guidance.</p>
+          </div>
+          <span id="auditBadge" class="pill">Not checked</span>
         </div>
-        <p id="componentHint" class="status"></p>
+        <div
+          id="auditProgress"
+          class="audit-progress"
+          role="status"
+          aria-live="polite"
+          hidden
+        >
+          <div class="audit-progress-row">
+            <span class="spinner" aria-hidden="true"></span>
+            <div>
+              <strong id="auditProgressTitle">Analysing design system</strong>
+              <p id="auditProgressDetail">
+                Checking foundations, icons, components, and QA surfaces.
+              </p>
+            </div>
+          </div>
+          <div class="progress-track" aria-hidden="true"><span></span></div>
+        </div>
+        <div class="metric-grid">
+          <div id="metricVariablesCard" class="metric-card">
+            <span>Variables</span>
+            <strong id="metricVariables">--</strong>
+          </div>
+          <div id="metricIconsCard" class="metric-card">
+            <span>Icons</span>
+            <strong id="metricIcons">--</strong>
+          </div>
+          <div id="metricComponentsCard" class="metric-card">
+            <span>Components</span>
+            <strong id="metricComponents">--</strong>
+          </div>
+          <div id="metricWarningsCard" class="metric-card">
+            <span>Warnings</span>
+            <strong id="metricWarnings">--</strong>
+          </div>
+        </div>
+        <p id="nextAction" class="status">
+          Run Audit Library to get the next recommended action.
+        </p>
+        <div class="actions wrap">
+          <button id="inspect">Inspect File</button>
+          <button id="audit" class="primary">Audit Library</button>
+        </div>
       </section>
 
-      <section class="actions">
-        <button id="copyLog">Copy Log</button>
+      <section class="panel stack">
+        <div class="section-heading">
+          <div>
+            <h2>3. Components</h2>
+            <p>
+              Use the recommended action first. Manual actions are available
+              when you need them.
+            </p>
+          </div>
+          <span id="componentStatusPill" class="pill">Unknown</span>
+        </div>
+        <div class="component-controls">
+          <div class="field">
+            <span class="field-label">Component</span>
+            <select id="componentSelect" aria-label="Component">
+              <optgroup label="Actions">
+                <option value="button">Button / v1</option>
+                <option value="iconButton">IconButton / v1</option>
+              </optgroup>
+              <optgroup label="Status">
+                <option value="counter">Counter / v1</option>
+                <option value="badge">Badge / v1</option>
+              </optgroup>
+              <optgroup label="Layout">
+                <option value="card">Card / v1</option>
+              </optgroup>
+              <optgroup label="Navigation">
+                <option value="tabs">Tabs / v1</option>
+              </optgroup>
+              <optgroup label="Overlay">
+                <option value="tooltip">Tooltip / v1</option>
+                <option value="dialog">Dialog / v1</option>
+                <option value="popover">Popover / v1</option>
+                <option value="menu">Menu / v1</option>
+              </optgroup>
+              <optgroup label="Selection">
+                <option value="checkbox">Checkbox / v1</option>
+                <option value="radio">Radio / v1</option>
+                <option value="switch">Switch / v1</option>
+              </optgroup>
+              <optgroup label="Inputs">
+                <option value="input">Input / v1</option>
+                <option value="textarea">Textarea / v1</option>
+                <option value="search">Search / v1</option>
+                <option value="select">Select / v1</option>
+                <option value="slider">Slider / v1</option>
+              </optgroup>
+              <optgroup label="Feedback">
+                <option value="progress">Progress / v1</option>
+                <option value="spinner">Spinner / v1</option>
+                <option value="alert">Alert / v1</option>
+                <option value="toast">Toast / v1</option>
+              </optgroup>
+              <optgroup label="Media">
+                <option value="avatar">Avatar / v1</option>
+              </optgroup>
+              <optgroup label="Utilities">
+                <option value="icons">Curated Icons</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+        <div class="component-card">
+          <div>
+            <strong id="selectedComponentTitle">Button / v1</strong>
+            <p id="componentHint">
+              Run Audit Library to see whether this component exists and if it
+              needs attention.
+            </p>
+          </div>
+          <button id="smartComponentAction" class="primary">
+            Build Button / v1
+          </button>
+        </div>
+        <details>
+          <summary>Manual component actions</summary>
+          <div class="details-body stack">
+            <div class="manual-grid">
+              <button id="buildComponent">Build</button>
+              <button id="updateComponent">Update</button>
+              <button id="rebuildComponent" class="danger">Rebuild</button>
+            </div>
+            <p class="microcopy">
+              Rebuild archives the existing component set and creates a fresh
+              node ID. Prefer Update when preserving Code Connect anchors.
+            </p>
+          </div>
+        </details>
+        <div class="maintenance-grid">
+          <button id="documentComponents">Document Components</button>
+          <button id="surfaceQa">Build Surface QA</button>
+          <button id="reorganizeComponents">Reorganize Components</button>
+        </div>
       </section>
 
-      <pre id="log">Ready.</pre>
+      <section class="panel stack">
+        <div class="log-header">
+          <div>
+            <h2>Activity</h2>
+            <p id="activitySummary">Ready.</p>
+          </div>
+          <div class="actions">
+            <button id="toggleLog">Show Details</button>
+            <button id="copyLog">Copy Log</button>
+          </div>
+        </div>
+        <pre id="log" hidden>Ready.</pre>
+      </section>
     </main>
 
     <script>
       const fileInput = document.getElementById("file");
       const payloadInput = document.getElementById("payload");
       const payloadStatus = document.getElementById("payloadStatus");
+      const payloadBadge = document.getElementById("payloadBadge");
       const importButton = document.getElementById("import");
       const inspectButton = document.getElementById("inspect");
       const auditButton = document.getElementById("audit");
+      const auditBadge = document.getElementById("auditBadge");
+      const stageSetupCard = document.getElementById("stageSetupCard");
+      const stageStatusCard = document.getElementById("stageStatusCard");
+      const stageComponentsCard = document.getElementById(
+        "stageComponentsCard",
+      );
+      const stageSetup = document.getElementById("stageSetup");
+      const stageStatus = document.getElementById("stageStatus");
+      const stageComponents = document.getElementById("stageComponents");
+      const metricVariablesCard = document.getElementById(
+        "metricVariablesCard",
+      );
+      const metricIconsCard = document.getElementById("metricIconsCard");
+      const metricComponentsCard = document.getElementById(
+        "metricComponentsCard",
+      );
+      const metricWarningsCard = document.getElementById("metricWarningsCard");
+      const metricVariables = document.getElementById("metricVariables");
+      const metricIcons = document.getElementById("metricIcons");
+      const metricComponents = document.getElementById("metricComponents");
+      const metricWarnings = document.getElementById("metricWarnings");
+      const auditProgress = document.getElementById("auditProgress");
+      const auditProgressTitle = document.getElementById("auditProgressTitle");
+      const auditProgressDetail = document.getElementById(
+        "auditProgressDetail",
+      );
+      const nextAction = document.getElementById("nextAction");
       const componentSelect = document.getElementById("componentSelect");
+      const componentStatusPill = document.getElementById(
+        "componentStatusPill",
+      );
+      const selectedComponentTitle = document.getElementById(
+        "selectedComponentTitle",
+      );
+      const smartComponentAction = document.getElementById(
+        "smartComponentAction",
+      );
       const buildComponent = document.getElementById("buildComponent");
       const updateComponent = document.getElementById("updateComponent");
       const rebuildComponent = document.getElementById("rebuildComponent");
       const documentComponentsButton =
         document.getElementById("documentComponents");
       const surfaceQaButton = document.getElementById("surfaceQa");
+      const reorganizeComponentsButton = document.getElementById(
+        "reorganizeComponents",
+      );
       const componentHint = document.getElementById("componentHint");
+      const activitySummary = document.getElementById("activitySummary");
+      const toggleLogButton = document.getElementById("toggleLog");
       const copyLogButton = document.getElementById("copyLog");
       const log = document.getElementById("log");
 
       let parsedPayload = null;
+      let payloadError = null;
       let activeComponentAction = null;
+      let busy = false;
+      let busyMode = null;
+      let logExpanded = false;
+      let initialAuditRequested = false;
+      const libraryState = {
+        imported: false,
+        inspected: false,
+        audited: false,
+        auditStale: false,
+        variableCount: null,
+        pageCount: null,
+        iconFoundCount: null,
+        iconExpectedCount: null,
+        iconIssueCount: null,
+        componentSetCount: null,
+        warningCount: null,
+        advisoryCount: null,
+        warnings: [],
+        components: {},
+      };
 
       const componentActions = {
         button: {
@@ -308,186 +816,177 @@
           build: "build-button",
           update: "update-button",
           rebuild: "rebuild-button",
-          hint:
-            "Build creates Button / v1 once. Update patches it in place to preserve the current Code Connect node ID. Rebuild archives the current set and creates a fresh node ID.",
+          hint: "Build creates Button / v1 once. Update patches it in place to preserve the current Code Connect node ID. Rebuild archives the current set and creates a fresh node ID.",
         },
         iconButton: {
           label: "IconButton / v1",
           build: "build-icon-button",
           update: "update-icon-button",
           rebuild: "rebuild-icon-button",
-          hint:
-            "Build creates IconButton / v1 once. Update preserves node-id=19-757 and refreshes icon slots. Rebuild archives the current set and creates a fresh node ID.",
+          hint: "Build creates IconButton / v1 once. Update preserves node-id=19-757 and refreshes icon slots. Rebuild archives the current set and creates a fresh node ID.",
+        },
+        counter: {
+          label: "Counter / v1",
+          build: "build-counter",
+          update: "update-counter",
+          rebuild: "rebuild-counter",
+          hint: "Build creates standalone Counter / v1 for compact counts. Badge composes it as a hidden nested instance; Update preserves the Counter node ID.",
         },
         badge: {
           label: "Badge / v1",
           build: "build-badge",
           update: "update-badge",
           rebuild: "rebuild-badge",
-          hint:
-            "Build creates Badge / v1 with label, icon-size slot, and hidden counter properties. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Badge / v1 with label, icon-size slot, and a hidden nested Counter / v1 instance. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         card: {
           label: "Card / v1",
           build: "build-card",
           update: "update-card",
           rebuild: "rebuild-card",
-          hint:
-            "Build creates Card / v1 with Basic, Header, and Full content variants plus editable text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Card / v1 with Basic, Header, and Full content variants plus editable text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         tabs: {
           label: "Tabs / v1",
           build: "build-tabs",
           update: "update-tabs",
           rebuild: "rebuild-tabs",
-          hint:
-            "Build creates Tabs / v1 with Count, Active, and State axes plus editable tab labels. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Tabs / v1 with Count, Active, and State axes plus editable tab labels. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         tooltip: {
           label: "Tooltip / v1",
           build: "build-tooltip",
           update: "update-tooltip",
           rebuild: "rebuild-tooltip",
-          hint:
-            "Build creates Tooltip / v1 with Side variants plus editable content text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Tooltip / v1 with Side variants plus editable content text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         dialog: {
           label: "Dialog / v1",
           build: "build-dialog",
           update: "update-dialog",
           rebuild: "rebuild-dialog",
-          hint:
-            "Build creates Dialog / v1 with Basic, Form, and Footer content variants plus editable title, description, body, and action text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Dialog / v1 with Basic, Form, and Footer content variants plus editable title, description, body, and action text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         popover: {
           label: "Popover / v1",
           build: "build-popover",
           update: "update-popover",
           rebuild: "rebuild-popover",
-          hint:
-            "Build creates Popover / v1 with Side variants plus editable title and description text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Popover / v1 with Side variants plus editable title and description text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         menu: {
           label: "Menu / v1",
           build: "build-menu",
           update: "update-menu",
           rebuild: "rebuild-menu",
-          hint:
-            "Build creates Menu / v1 with Basic, Checkbox, Radio, and Submenu content variants plus editable labels/items. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Menu / v1 with Basic, Checkbox, Radio, and Submenu content variants plus editable labels/items. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         checkbox: {
           label: "Checkbox / v1",
           build: "build-checkbox",
           update: "update-checkbox",
           rebuild: "rebuild-checkbox",
-          hint:
-            "Build creates Checkbox / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Checkbox / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         radio: {
           label: "Radio / v1",
           build: "build-radio",
           update: "update-radio",
           rebuild: "rebuild-radio",
-          hint:
-            "Build creates Radio / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Radio / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         switch: {
           label: "Switch / v1",
           build: "build-switch",
           update: "update-switch",
           rebuild: "rebuild-switch",
-          hint:
-            "Build creates Switch / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Switch / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         input: {
           label: "Input / v1",
           build: "build-input",
           update: "update-input",
           rebuild: "rebuild-input",
-          hint:
-            "Build creates Input / v1 with a State axis plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Input / v1 with a State axis plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         textarea: {
           label: "Textarea / v1",
           build: "build-textarea",
           update: "update-textarea",
           rebuild: "rebuild-textarea",
-          hint:
-            "Build creates Textarea / v1 with State and Status axes plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Textarea / v1 with State and Status axes plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         search: {
           label: "Search / v1",
           build: "build-search",
           update: "update-search",
           rebuild: "rebuild-search",
-          hint:
-            "Build creates Search / v1 with State and Status axes, search icon, and editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Search / v1 with State and Status axes, search icon, and editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         select: {
           label: "Select / v1",
           build: "build-select",
           update: "update-select",
           rebuild: "rebuild-select",
-          hint:
-            "Build creates Select / v1 for SelectTrigger with State and Status axes plus editable Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Select / v1 for SelectTrigger with State and Status axes plus editable Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         slider: {
           label: "Slider / v1",
           build: "build-slider",
           update: "update-slider",
           rebuild: "rebuild-slider",
-          hint:
-            "Build creates Slider / v1 with State and Status axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Slider / v1 with State and Status axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         progress: {
           label: "Progress / v1",
           build: "build-progress",
           update: "update-progress",
           rebuild: "rebuild-progress",
-          hint:
-            "Build creates Progress / v1 with a Value axis. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Progress / v1 with a Value axis. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         spinner: {
           label: "Spinner / v1",
           build: "build-spinner",
           update: "update-spinner",
           rebuild: "rebuild-spinner",
-          hint:
-            "Build creates Spinner / v1 with a Size axis. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Spinner / v1 with a Size axis. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         avatar: {
           label: "Avatar / v1",
           build: "build-avatar",
           update: "update-avatar",
           rebuild: "rebuild-avatar",
-          hint:
-            "Build creates Avatar / v1 with Content variants plus editable Image URL, Alt Text, and Fallback. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Avatar / v1 with Content variants plus editable Image URL, Alt Text, and Fallback. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         alert: {
           label: "Alert / v1",
           build: "build-alert",
           update: "update-alert",
           rebuild: "rebuild-alert",
-          hint:
-            "Build creates Alert / v1 with Variant axis plus editable Title and Description text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Alert / v1 with Variant axis plus editable Title and Description text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         toast: {
           label: "Toast / v1",
           build: "build-toast",
           update: "update-toast",
           rebuild: "rebuild-toast",
-          hint:
-            "Build creates Toast / v1 with Basic and Action content variants plus editable title, description, and action text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Toast / v1 with Basic and Action content variants plus editable title, description, and action text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         icons: {
           label: "Curated Icons",
           build: "build-icons",
           update: "update-icons",
           rebuild: "update-icons",
-          hint:
-            "Build or update the 38 local Icon / ... sources and preferred icon swap values.",
+          hint: "Build or update the 38 local Icon / ... sources and preferred icon swap values.",
         },
       };
+
+      const componentKeyByName = Object.fromEntries(
+        Object.entries(componentActions).map(([key, config]) => [
+          config.label,
+          key,
+        ]),
+      );
 
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files && fileInput.files[0];
@@ -501,22 +1000,23 @@
       payloadInput.addEventListener("input", parsePayload);
 
       inspectButton.addEventListener("click", () => {
-        log.textContent = "Inspecting file...";
+        setActivity("Inspecting the current file...");
+        setLogContent("Inspecting file...");
+        setBusy(true, "inspect");
         parent.postMessage({ pluginMessage: { type: "inspect" } }, "*");
       });
 
       auditButton.addEventListener("click", () => {
-        log.textContent = "Auditing library...";
-        auditButton.disabled = true;
-        parent.postMessage({ pluginMessage: { type: "audit-library" } }, "*");
+        runAudit("manual");
       });
 
       importButton.addEventListener("click", () => {
         parsePayload();
         if (!parsedPayload) return;
 
-        log.textContent = "Importing foundations...";
-        importButton.disabled = true;
+        setActivity("Importing foundations...");
+        setLogContent("Importing foundations...");
+        setBusy(true, "import");
         parent.postMessage(
           {
             pluginMessage: {
@@ -534,7 +1034,25 @@
         );
       });
 
-      componentSelect.addEventListener("change", updateComponentHint);
+      componentSelect.addEventListener("change", renderAll);
+
+      smartComponentAction.addEventListener("click", () => {
+        const recommendation = selectedRecommendation();
+        if (!recommendation || !recommendation.messageType) return;
+        if (recommendation.action === "audit") {
+          runAudit("component");
+          return;
+        }
+        if (recommendation.targetKey) {
+          componentSelect.value = recommendation.targetKey;
+        }
+        runComponentMessage({
+          action: recommendation.action,
+          label: recommendation.label,
+          key: recommendation.targetKey || componentSelect.value,
+          messageType: recommendation.messageType,
+        });
+      });
 
       buildComponent.addEventListener("click", () => {
         runSelectedComponentAction("build");
@@ -549,37 +1067,34 @@
       });
 
       documentComponentsButton.addEventListener("click", () => {
-        activeComponentAction = {
+        runComponentMessage({
           action: "document",
           label: "Component documentation",
-        };
-        log.className = "";
-        log.textContent = "Documenting component library...";
-        componentHint.textContent =
-          "Creating docs pages and refreshing component descriptions.";
-        componentHint.className = "status";
-        setComponentControlsDisabled(true);
-        parent.postMessage(
-          { pluginMessage: { type: "document-components" } },
-          "*",
-        );
+          messageType: "document-components",
+          progress: "Creating docs pages and refreshing component descriptions.",
+        });
       });
 
       surfaceQaButton.addEventListener("click", () => {
-        activeComponentAction = {
+        runComponentMessage({
           action: "surface QA",
           label: "Transparent surface QA",
-        };
-        log.className = "";
-        log.textContent = "Building transparent surface QA...";
-        componentHint.textContent =
-          "Creating Light/Dark Surface/0 and product-map QA panels.";
-        componentHint.className = "status";
-        setComponentControlsDisabled(true);
-        parent.postMessage(
-          { pluginMessage: { type: "build-surface-qa" } },
-          "*",
-        );
+          messageType: "build-surface-qa",
+          progress: "Creating Light/Dark Surface/0 and product-map QA panels.",
+        });
+      });
+
+      reorganizeComponentsButton.addEventListener("click", () => {
+        runComponentMessage({
+          action: "reorganize",
+          label: "Components page",
+          messageType: "reorganize-components",
+          progress: "Moving existing component sets into a non-overlapping layout.",
+        });
+      });
+
+      toggleLogButton.addEventListener("click", () => {
+        setLogExpanded(!logExpanded);
       });
 
       copyLogButton.addEventListener("click", async () => {
@@ -610,63 +1125,100 @@
         if (!message) return;
 
         if (message.type === "inspect-result") {
-          log.textContent = JSON.stringify(message.result, null, 2);
+          setBusy(false);
+          syncInspectResult(message.result);
+          setActivity("File inspection complete.", "ok");
+          setLogContent(message.result);
+          renderAll();
           return;
         }
 
         if (message.type === "import-result") {
-          importButton.disabled = !parsedPayload;
-          log.textContent = JSON.stringify(message.result, null, 2);
+          setBusy(false);
+          syncImportResult(message.result);
+          setActivity("Foundations import complete.", "ok");
+          setLogContent(message.result);
+          renderAll();
           return;
         }
 
         if (message.type === "audit-result") {
-          auditButton.disabled = false;
-          log.textContent = JSON.stringify(message.result, null, 2);
+          setBusy(false);
+          syncAuditResult(message.result);
+          setActivity("Library audit complete.", "ok");
+          setLogContent(message.result);
+          renderAll();
           return;
         }
 
         if (message.type === "component-result") {
-          setComponentControlsDisabled(false);
+          setBusy(false);
+          syncComponentResult(message.result);
+          renderAll();
           showComponentDone(message.result);
-          log.textContent = JSON.stringify(message.result, null, 2);
+          setLogContent(message.result);
           return;
         }
 
         if (message.type === "error") {
-          importButton.disabled = !parsedPayload;
-          auditButton.disabled = false;
-          setComponentControlsDisabled(false);
-          componentHint.textContent = "Action failed. See log below.";
-          componentHint.className = "status error";
-          log.textContent = message.message;
-          log.className = "error";
+          setBusy(false);
+          setActivity("Action failed. See details below.", "error");
+          componentHint.textContent = "Action failed. Review the activity log.";
+          setLogContent(message.stack || message.message, "error", true);
+          renderAll();
         }
       };
 
       function selectedComponentAction() {
-        return componentActions[componentSelect.value] || componentActions.button;
-      }
-
-      function updateComponentHint() {
-        const selected = selectedComponentAction();
-        componentHint.textContent = selected.hint;
-        componentHint.className = "status";
+        return (
+          componentActions[componentSelect.value] || componentActions.button
+        );
       }
 
       function runSelectedComponentAction(action) {
+        if (!libraryState.audited) {
+          runAudit("component");
+          return;
+        }
+
         const selected = selectedComponentAction();
-        const messageType = selected[action];
-        activeComponentAction = {
+        runComponentMessage({
           action,
           label: selected.label,
+          key: componentSelect.value,
+          messageType: selected[action],
+        });
+      }
+
+      function runComponentMessage(options) {
+        activeComponentAction = {
+          action: options.action,
+          label: options.label,
+          key: options.key || null,
         };
-        log.className = "";
-        log.textContent = `${progressVerb(action)} ${selected.label}...`;
-        componentHint.textContent = `${progressVerb(action)} ${selected.label}. Waiting for Figma to finish...`;
-        componentHint.className = "status";
-        setComponentControlsDisabled(true);
-        parent.postMessage({ pluginMessage: { type: messageType } }, "*");
+        const progress =
+          options.progress ||
+          `${progressVerb(options.action)} ${options.label}. Waiting for Figma to finish...`;
+        setActivity(progress);
+        setLogContent(`${progressVerb(options.action)} ${options.label}...`);
+        componentHint.textContent = progress;
+        setBusy(true, "component");
+        parent.postMessage(
+          { pluginMessage: { type: options.messageType } },
+          "*",
+        );
+      }
+
+      function runAudit(source) {
+        const startup = source === "startup";
+        const message = startup
+          ? "Running initial audit so component recommendations use real file state..."
+          : "Auditing variables, icons, components, and QA pages...";
+
+        setActivity(message);
+        setLogContent(startup ? "Running initial library audit..." : "Auditing library...");
+        setBusy(true, "audit");
+        parent.postMessage({ pluginMessage: { type: "audit-library" } }, "*");
       }
 
       function showComponentDone(result) {
@@ -678,27 +1230,25 @@
             : result && result.page
               ? result.page
               : "Selected component";
-        const verb = action && action.action ? capitalize(action.action) : "Action";
+        const verb =
+          action && action.action ? capitalize(action.action) : "Action";
 
         if (result && result.message) {
           componentHint.textContent = `${label}: ${result.message}`;
-          componentHint.className = "status";
+          setActivity(result.message, result.warnings && result.warnings.length ? "warn" : "ok");
           return;
         }
 
         const nodeId =
           result && result.urlNodeId ? ` node-id=${result.urlNodeId}` : "";
         componentHint.textContent = `${pastVerb(verb)} finished for ${label}.${nodeId}`;
-        componentHint.className = "status ok";
+        setActivity(`${pastVerb(verb)} finished for ${label}.${nodeId}`, "ok");
       }
 
-      function setComponentControlsDisabled(disabled) {
-        componentSelect.disabled = disabled;
-        buildComponent.disabled = disabled;
-        updateComponent.disabled = disabled;
-        rebuildComponent.disabled = disabled;
-        documentComponentsButton.disabled = disabled;
-        surfaceQaButton.disabled = disabled;
+      function setBusy(value, mode) {
+        busy = value;
+        busyMode = value ? mode || null : null;
+        renderControls();
       }
 
       function capitalize(value) {
@@ -721,27 +1271,678 @@
         try {
           const text = payloadInput.value.trim();
           parsedPayload = text ? JSON.parse(text) : null;
-          importButton.disabled = !parsedPayload;
-          log.className = "";
+          payloadError = null;
 
           if (!parsedPayload) {
-            payloadStatus.textContent = "No payload loaded.";
-            payloadStatus.className = "";
+            renderAll();
             return;
           }
 
           const summary = parsedPayload.summary || {};
-          payloadStatus.textContent = `Loaded ${summary.totalTokens || parsedPayload.variables.length} tokens for ${parsedPayload.target && parsedPayload.target.fileName ? parsedPayload.target.fileName : "current file"}.`;
-          payloadStatus.className = "ok";
+          const tokenCount =
+            summary.totalTokens ||
+            summary.variableTokens ||
+            (Array.isArray(parsedPayload.variables)
+              ? parsedPayload.variables.length
+              : 0);
+          const targetName =
+            parsedPayload.target && parsedPayload.target.fileName
+              ? parsedPayload.target.fileName
+              : "current file";
+          payloadStatus.textContent = `Loaded ${tokenCount} token candidate(s) for ${targetName}.`;
+          payloadStatus.className = "status ok";
         } catch (error) {
           parsedPayload = null;
-          importButton.disabled = true;
-          payloadStatus.textContent = error.message;
-          payloadStatus.className = "error";
+          payloadError = error.message;
+        }
+
+        renderAll();
+      }
+
+      function syncInspectResult(result) {
+        libraryState.inspected = true;
+        libraryState.pageCount = Array.isArray(result.pages)
+          ? result.pages.length
+          : libraryState.pageCount;
+        libraryState.variableCount =
+          typeof result.variables === "number"
+            ? result.variables
+            : libraryState.variableCount;
+      }
+
+      function syncImportResult(result) {
+        libraryState.imported = true;
+        libraryState.auditStale = false;
+        if (result && result.file) syncInspectResult(result.file);
+      }
+
+      function syncAuditResult(result) {
+        const summary = (result && result.summary) || {};
+        libraryState.audited = true;
+        libraryState.auditStale = false;
+        libraryState.pageCount =
+          typeof summary.pageCount === "number"
+            ? summary.pageCount
+            : libraryState.pageCount;
+        libraryState.variableCount =
+          typeof summary.variableCount === "number"
+            ? summary.variableCount
+            : libraryState.variableCount;
+        libraryState.componentSetCount =
+          typeof summary.componentSetCount === "number"
+            ? summary.componentSetCount
+            : libraryState.componentSetCount;
+        libraryState.warningCount =
+          typeof summary.warningCount === "number"
+            ? summary.warningCount
+            : 0;
+        libraryState.advisoryCount =
+          typeof summary.advisoryCount === "number"
+            ? summary.advisoryCount
+            : 0;
+        libraryState.warnings = Array.isArray(result.warnings)
+          ? result.warnings
+          : [];
+
+        const icons = result.icons || {};
+        libraryState.iconFoundCount =
+          typeof icons.foundCount === "number"
+            ? icons.foundCount
+            : libraryState.iconFoundCount;
+        libraryState.iconExpectedCount =
+          typeof icons.expectedCount === "number"
+            ? icons.expectedCount
+            : libraryState.iconExpectedCount;
+        libraryState.iconIssueCount =
+          typeof icons.issueCount === "number" ? icons.issueCount : 0;
+
+        libraryState.components = {};
+        for (const record of result.componentSets || []) {
+          const key = componentKeyByName[record.name];
+          if (!key) continue;
+          libraryState.components[key] = componentStatusFromAudit(record);
         }
       }
 
-      updateComponentHint();
+      function syncComponentResult(result) {
+        const action = activeComponentAction;
+        if (!action || !action.key || !result) return;
+
+        const existingStatus = libraryState.components[action.key] || {};
+        if (result.componentSetId || result.urlNodeId || result.created || result.updated) {
+          libraryState.components[action.key] = {
+            ...existingStatus,
+            exists: true,
+            known: true,
+            urlNodeId: result.urlNodeId || existingStatus.urlNodeId || null,
+            warnings: Array.isArray(result.warnings) ? result.warnings : [],
+            issueCount: 0,
+            variantCount:
+              result.variants ||
+              result.variantsUpdated ||
+              existingStatus.variantCount ||
+              null,
+          };
+          libraryState.auditStale = libraryState.audited;
+        }
+      }
+
+      function componentStatusFromAudit(record) {
+        const issueCount =
+          issueCountFor(record.compositionIntegrity) +
+          issueCountFor(record.badgeContentIntegrity) +
+          issueCountFor(record.focusVisibleProperty);
+        const warnings = Array.isArray(record.warnings) ? record.warnings : [];
+        return {
+          exists: true,
+          known: true,
+          urlNodeId: record.urlNodeId || null,
+          variantCount: record.variantCount || null,
+          warnings,
+          issueCount,
+        };
+      }
+
+      function issueCountFor(value) {
+        return value && typeof value.issueCount === "number"
+          ? value.issueCount
+          : 0;
+      }
+
+      function selectedStatus() {
+        return componentStatusForKey(componentSelect.value);
+      }
+
+      function componentStatusForKey(key) {
+        if (key === "icons") {
+          if (!libraryState.audited && libraryState.iconFoundCount === null) {
+            return { known: false, exists: false, warnings: [], issueCount: 0 };
+          }
+          const missing =
+            typeof libraryState.iconExpectedCount === "number" &&
+            typeof libraryState.iconFoundCount === "number" &&
+            libraryState.iconFoundCount < libraryState.iconExpectedCount;
+          return {
+            known: true,
+            exists: !missing,
+            warnings: missing ? ["Some curated icons are missing."] : [],
+            issueCount: libraryState.iconIssueCount || 0,
+          };
+        }
+
+        const status = libraryState.components[key];
+        if (status) return status;
+        return {
+          known: libraryState.audited,
+          exists: false,
+          warnings: [],
+          issueCount: 0,
+        };
+      }
+
+      function selectedRecommendation() {
+        const key = componentSelect.value;
+        const selected = selectedComponentAction();
+        const status = selectedStatus();
+
+        if (!libraryState.audited) {
+          return {
+            action: "audit",
+            label: "Library audit",
+            messageType: "audit-library",
+            buttonLabel: "Audit first",
+            reason:
+              "Run one audit first so component actions use real file state and preserve existing node IDs.",
+          };
+        }
+
+        if (
+          key === "badge" &&
+          libraryState.audited &&
+          !libraryState.components.counter
+        ) {
+          return {
+            action: "build",
+            label: "Counter / v1",
+            targetKey: "counter",
+            messageType: componentActions.counter.build,
+            buttonLabel: "Build Counter first",
+            reason:
+              "Badge now composes Counter. Build Counter before updating Badge.",
+          };
+        }
+
+        if (key === "icons") {
+          return {
+            action: status.exists ? "update" : "build",
+            label: selected.label,
+            messageType: status.exists ? selected.update : selected.build,
+            buttonLabel: status.exists ? "Update" : "Build",
+            reason: selected.hint,
+          };
+        }
+
+        if (!status.known || !status.exists) {
+          return {
+            action: "build",
+            label: selected.label,
+            messageType: selected.build,
+            buttonLabel: "Build",
+            reason: selected.hint,
+          };
+        }
+
+        return {
+          action: "update",
+          label: selected.label,
+          messageType: selected.update,
+          buttonLabel:
+            status.issueCount > 0 || status.warnings.length > 0
+              ? "Fix"
+              : "Update",
+          reason: selected.hint,
+        };
+      }
+
+      function renderAll() {
+        renderSetupState();
+        renderWorkflow();
+        renderStatusDashboard();
+        renderComponentOptions();
+        renderSelectedComponent();
+        renderControls();
+      }
+
+      function renderWorkflow() {
+        const setup = setupFoundationState();
+        setStage(
+          stageSetupCard,
+          stageSetup,
+          setup.stageText,
+          setup.stageTone,
+        );
+        setStage(
+          stageStatusCard,
+          stageStatus,
+          libraryState.audited
+            ? libraryState.auditStale
+              ? "Changed"
+              : "Audited"
+            : libraryState.inspected
+              ? "Inspected"
+              : "Not checked",
+          libraryState.audited
+            ? libraryState.auditStale
+              ? "warn"
+              : "ok"
+            : libraryState.inspected
+              ? "warn"
+              : "",
+        );
+        setStage(
+          stageComponentsCard,
+          stageComponents,
+          libraryState.componentSetCount === null
+            ? "Unknown"
+            : `${libraryState.componentSetCount} sets`,
+          libraryState.warningCount > 0 ? "warn" : libraryState.audited ? "ok" : "",
+        );
+      }
+
+      function renderSetupState() {
+        const setup = setupFoundationState();
+        payloadBadge.textContent = setup.badge;
+        payloadBadge.className = setup.badgeClass;
+        payloadStatus.textContent = setup.status;
+        payloadStatus.className = setup.statusClass;
+      }
+
+      function setupFoundationState() {
+        if (payloadError) {
+          return {
+            badge: "Invalid",
+            badgeClass: "pill danger",
+            status: payloadError,
+            statusClass: "status error",
+            stageText: "Invalid",
+            stageTone: "warn",
+          };
+        }
+
+        if (parsedPayload) {
+          return {
+            badge: "Payload ready",
+            badgeClass: "pill ok",
+            status: payloadStatus.textContent || "Payload loaded and ready to import.",
+            statusClass: "status ok",
+            stageText: "Ready",
+            stageTone: "ok",
+          };
+        }
+
+        if (libraryState.imported) {
+          return {
+            badge: "Imported",
+            badgeClass: "pill ok",
+            status: "Foundations were imported in this plugin session. Audit again if you need fresh component recommendations.",
+            statusClass: "status ok",
+            stageText: "Imported",
+            stageTone: "ok",
+          };
+        }
+
+        if (foundationsInFile()) {
+          return {
+            badge: "In file",
+            badgeClass: "pill ok",
+            status: `Current file already has ${libraryState.variableCount} variables across ${libraryState.pageCount} pages. Import is only needed for a new payload.`,
+            statusClass: "status ok",
+            stageText: "Found",
+            stageTone: "ok",
+          };
+        }
+
+        if (libraryState.audited || libraryState.inspected) {
+          return {
+            badge: "Missing",
+            badgeClass: "pill warn",
+            status: "No foundations payload is loaded, and the current file does not yet show imported foundations.",
+            statusClass: "status warn",
+            stageText: "Missing",
+            stageTone: "warn",
+          };
+        }
+
+        return {
+          badge: "Audit first",
+          badgeClass: "pill",
+          status: "Initial audit will check whether foundations already exist before you import anything.",
+          statusClass: "status",
+          stageText: "Unknown",
+          stageTone: "",
+        };
+      }
+
+      function foundationsInFile() {
+        return (
+          typeof libraryState.variableCount === "number" &&
+          libraryState.variableCount > 0 &&
+          typeof libraryState.pageCount === "number" &&
+          libraryState.pageCount > 0
+        );
+      }
+
+      function setStage(card, valueNode, text, tone) {
+        valueNode.textContent = text;
+        card.className = tone ? `stage-card ${tone}` : "stage-card";
+      }
+
+      function renderStatusDashboard() {
+        metricVariables.textContent =
+          libraryState.variableCount === null
+            ? "--"
+            : String(libraryState.variableCount);
+        metricComponents.textContent =
+          libraryState.componentSetCount === null
+            ? "--"
+            : String(libraryState.componentSetCount);
+        metricWarnings.textContent =
+          libraryState.warningCount === null
+            ? "--"
+            : String(libraryState.warningCount);
+        metricIcons.textContent =
+          libraryState.iconFoundCount === null
+            ? "--"
+            : `${libraryState.iconFoundCount}/${libraryState.iconExpectedCount || libraryState.iconFoundCount}`;
+
+        metricVariablesCard.className = metricCardClass(
+          libraryState.variableCount > 0,
+        );
+        metricIconsCard.className = metricCardClass(
+          libraryState.iconIssueCount === 0 && libraryState.iconFoundCount !== null,
+          libraryState.iconIssueCount > 0,
+        );
+        metricComponentsCard.className = metricCardClass(
+          libraryState.componentSetCount > 0,
+        );
+        metricWarningsCard.className = metricCardClass(
+          libraryState.warningCount === 0 && libraryState.audited,
+          libraryState.warningCount > 0,
+        );
+
+        auditBadge.textContent = libraryState.audited
+          ? libraryState.auditStale
+            ? "Refresh needed"
+            : libraryState.warningCount > 0
+            ? "Needs attention"
+            : "Clean"
+          : libraryState.inspected
+            ? "Inspected"
+            : "Not checked";
+        auditBadge.className = libraryState.audited
+          ? libraryState.auditStale || libraryState.warningCount > 0
+            ? "pill warn"
+            : "pill ok"
+          : libraryState.inspected
+            ? "pill warn"
+            : "pill";
+
+        const attentionTooltip = attentionTooltipText();
+        setTooltip(auditBadge, attentionTooltip);
+        setTooltip(metricWarningsCard, attentionTooltip);
+
+        nextAction.textContent = recommendedNextActionText();
+      }
+
+      function metricCardClass(ok, warn) {
+        if (warn) return "metric-card warn";
+        if (ok) return "metric-card ok";
+        return "metric-card";
+      }
+
+      function recommendedNextActionText() {
+        if (!libraryState.audited) {
+          if (parsedPayload && !libraryState.imported) {
+            return "Next: import the validated payload, then audit the generated library.";
+          }
+          return "Next: run Audit Library so component recommendations can use real file state.";
+        }
+        if (libraryState.auditStale) {
+          return "Next: run Audit Again to refresh the status after the last component change.";
+        }
+        if (libraryState.warnings.some((warning) => warning.includes("Badge / v1"))) {
+          return "Next: select Badge / v1 and run the recommended update to clear the counter composition warning.";
+        }
+        if (libraryState.warningCount > 0) {
+          return "Next: review the warning list in the activity details and update the affected component set.";
+        }
+        return "Library audit is clean. Maintenance actions are available when you need docs, QA, or layout refreshes.";
+      }
+
+      function renderSelectedComponent() {
+        const selected = selectedComponentAction();
+        const status = selectedStatus();
+        const recommendation = selectedRecommendation();
+        selectedComponentTitle.textContent = selected.label;
+        smartComponentAction.textContent = recommendation.buttonLabel;
+        componentHint.textContent = recommendation.reason;
+
+        const hasIssues = status.issueCount > 0 || status.warnings.length > 0;
+        if (!status.known) {
+          componentStatusPill.textContent = "Unknown";
+          componentStatusPill.className = "pill";
+          setTooltip(componentStatusPill, "");
+        } else if (!status.exists) {
+          componentStatusPill.textContent = "Missing";
+          componentStatusPill.className = "pill warn";
+          setTooltip(
+            componentStatusPill,
+            `${selected.label} was not found in the last audit.`,
+          );
+        } else if (hasIssues) {
+          componentStatusPill.textContent = "Needs update";
+          componentStatusPill.className = "pill warn";
+          setTooltip(
+            componentStatusPill,
+            componentAttentionTooltip(selected.label, status),
+          );
+        } else {
+          componentStatusPill.textContent = "Ready";
+          componentStatusPill.className = "pill ok";
+          setTooltip(componentStatusPill, "");
+        }
+      }
+
+      function renderComponentOptions() {
+        for (const option of componentSelect.options) {
+          const config = componentActions[option.value];
+          if (!config) continue;
+
+          const status = componentStatusForKey(option.value);
+          const needsAttention =
+            status.known &&
+            status.exists &&
+            (status.issueCount > 0 || status.warnings.length > 0);
+          option.textContent = needsAttention
+            ? `⚠ ${config.label}`
+            : config.label;
+          option.title = needsAttention
+            ? componentAttentionTooltip(config.label, status)
+            : "";
+        }
+      }
+
+      function attentionTooltipText() {
+        if (!libraryState.audited || libraryState.warningCount === 0) {
+          return "";
+        }
+
+        const items = [];
+        for (const warning of libraryState.warnings) {
+          if (typeof warning === "string" && warning.trim()) {
+            items.push(cleanTooltipLine(warning));
+          }
+        }
+
+        for (const key of Object.keys(libraryState.components)) {
+          const status = libraryState.components[key];
+          if (!status) continue;
+          const label =
+            componentActions[key] && componentActions[key].label
+              ? componentActions[key].label
+              : key;
+          const alreadyCovered = items.some((item) => item.includes(label));
+          if (!alreadyCovered && status.issueCount > 0) {
+            items.push(`${label}: ${status.issueCount} audit issue(s).`);
+          }
+          if (!alreadyCovered && status.warnings && status.warnings.length) {
+            items.push(`${label}: ${cleanTooltipLine(status.warnings[0])}`);
+          }
+        }
+
+        if (items.length === 0) {
+          items.push(`${libraryState.warningCount} warning(s) need review.`);
+        }
+
+        const visibleItems = items.slice(0, 6);
+        const overflow = items.length - visibleItems.length;
+        return [
+          "Needs attention:",
+          ...visibleItems.map((item) => `- ${item}`),
+          overflow > 0 ? `- ${overflow} more item(s)` : "",
+        ]
+          .filter(Boolean)
+          .join("\n");
+      }
+
+      function componentAttentionTooltip(label, status) {
+        const items = [];
+        if (status.issueCount > 0) {
+          items.push(`${status.issueCount} audit issue(s).`);
+        }
+        for (const warning of status.warnings || []) {
+          if (typeof warning === "string" && warning.trim()) {
+            items.push(cleanTooltipLine(warning));
+          }
+        }
+        if (items.length === 0) return "";
+
+        return [
+          `${label} needs attention:`,
+          ...items.slice(0, 5).map((item) => `- ${item}`),
+        ].join("\n");
+      }
+
+      function cleanTooltipLine(value) {
+        return value.replace(/\s+/g, " ").trim();
+      }
+
+      function setTooltip(node, text) {
+        if (!node) return;
+
+        if (text) {
+          node.classList.add("has-tooltip");
+          node.setAttribute("data-tooltip", text);
+          node.setAttribute("title", text);
+          node.tabIndex = 0;
+          return;
+        }
+
+        node.classList.remove("has-tooltip");
+        node.removeAttribute("data-tooltip");
+        node.removeAttribute("title");
+        node.removeAttribute("tabindex");
+      }
+
+      function renderControls() {
+        renderAuditProgress();
+
+        importButton.disabled = busy || !parsedPayload;
+        inspectButton.disabled = busy;
+        auditButton.disabled = busy;
+        auditButton.textContent = busy
+          ? busyMode === "audit"
+            ? "Analysing..."
+            : "Working..."
+          : libraryState.audited
+            ? "Audit Again"
+            : "Audit Library";
+        componentSelect.disabled = busy;
+
+        const status = selectedStatus();
+        const selected = selectedComponentAction();
+        const recommendation = selectedRecommendation();
+        smartComponentAction.disabled = busy || !recommendation.messageType;
+        buildComponent.disabled =
+          busy ||
+          !libraryState.audited ||
+          (status.known && status.exists && componentSelect.value !== "icons");
+        updateComponent.disabled =
+          busy ||
+          !libraryState.audited ||
+          (status.known && !status.exists && componentSelect.value !== "icons");
+        rebuildComponent.disabled =
+          busy || !libraryState.audited || componentSelect.value === "icons";
+
+        const knownNoComponents =
+          libraryState.audited && libraryState.componentSetCount === 0;
+        documentComponentsButton.disabled =
+          busy || !libraryState.audited || knownNoComponents;
+        surfaceQaButton.disabled =
+          busy || !libraryState.audited || knownNoComponents;
+        reorganizeComponentsButton.disabled =
+          busy || !libraryState.audited || knownNoComponents;
+
+        if (componentSelect.value === "icons") {
+          buildComponent.textContent = "Build";
+          updateComponent.textContent = "Update";
+        } else {
+          buildComponent.textContent = "Build";
+          updateComponent.textContent = "Update";
+        }
+        rebuildComponent.title =
+          selected.rebuild === selected.update
+            ? "This component uses update for rebuild."
+            : "Archives the current component set and creates a fresh node ID.";
+      }
+
+      function renderAuditProgress() {
+        const analysing = busy && busyMode === "audit";
+        auditProgress.hidden = !analysing;
+        if (!analysing) return;
+
+        auditProgressTitle.textContent = "Analysing design system";
+        auditProgressDetail.textContent = libraryState.audited
+          ? "Refreshing foundations, icons, components, and QA surfaces."
+          : "Checking foundations, icons, components, and QA surfaces.";
+      }
+
+      function setActivity(message, tone) {
+        activitySummary.textContent = message;
+        activitySummary.className = tone || "";
+      }
+
+      function setLogContent(content, tone, expand) {
+        log.textContent =
+          typeof content === "string" ? content : JSON.stringify(content, null, 2);
+        log.className = tone || "";
+        if (expand) setLogExpanded(true);
+      }
+
+      function setLogExpanded(expanded) {
+        logExpanded = expanded;
+        log.hidden = !expanded;
+        toggleLogButton.textContent = expanded ? "Hide Details" : "Show Details";
+      }
+
+      function requestInitialAudit() {
+        if (initialAuditRequested) return;
+        initialAuditRequested = true;
+        runAudit("startup");
+      }
+
+      renderAll();
+      requestInitialAudit();
 
       function copyTextFallback(text) {
         const textarea = document.createElement("textarea");

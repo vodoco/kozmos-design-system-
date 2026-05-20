@@ -1,56 +1,156 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "node:fs";
+import path from "node:path";
 
-function invertHex(hex) {
-    if (hex.indexOf('#') === 0) hex = hex.slice(1);
-    if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-    if (hex.length !== 6) return '#' + hex;
+const root = process.cwd();
+const darkPath = path.join(root, "packages/tokens/src/tokens-dark.json");
+const lightPath = path.join(root, "packages/tokens/src/tokens-light.json");
 
-    let r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16);
-    let g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16);
-    let b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+const hueRampRoots = [
+  ["Primitives", "Colors", "theme"],
+  ["Primitives", "Colors", "theme", "variant", "1"],
+  ["Primitives", "Colors", "theme", "variant", "2"],
+  ["Primitives", "Colors", "emotional", "success"],
+  ["Primitives", "Colors", "emotional", "danger"],
+  ["Primitives", "Colors", "emotional", "alert"],
+  ["Primitives", "Colors", "emotional", "info"],
+];
 
-    // Padding
-    r = r.length === 1 ? '0' + r : r;
-    g = g.length === 1 ? '0' + g : g;
-    b = b.length === 1 ? '0' + b : b;
+const semanticDataDarkValues = new Map([
+  ["Blue", "#60A5FA"],
+  ["Purple", "#C084FC"],
+  ["Teal", "#2DD4BF"],
+  ["Orange", "#FB923C"],
+  ["Red", "#F87171"],
+  ["Yellow", "#FBBF24"],
+]);
 
-    return '#' + r + g + b;
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function traverse(darkObj, lightObj) {
-    for (const key in darkObj) {
-        if (typeof darkObj[key] === 'object' && darkObj[key] !== null) {
-            const valDark = darkObj[key].value || darkObj[key].$value;
-            const valLight = lightObj[key]?.value || lightObj[key]?.$value;
-            const typeDark = darkObj[key].type || darkObj[key].$type;
+function getPath(value, segments) {
+  return segments.reduce((current, segment) => current?.[segment], value);
+}
 
-            if (valDark !== undefined && valLight !== undefined) {
-                if (
-                    typeof valDark === 'string' &&
-                    valDark.startsWith('#') &&
-                    valDark === valLight &&
-                    typeDark === 'color'
-                ) {
-                    const inverted = invertHex(valDark);
-                    if (darkObj[key].hasOwnProperty('$value')) darkObj[key].$value = inverted;
-                    else darkObj[key].value = inverted;
-                    console.log(`Inverted static color for ${key}`);
-                }
-            } else {
-                traverse(darkObj[key], lightObj[key] || {});
-            }
-        }
+function getTokenValue(token) {
+  return token?.$value ?? token?.value;
+}
+
+function getTokenType(token) {
+  return token?.$type ?? token?.type;
+}
+
+function setTokenValue(token, value) {
+  if (Object.prototype.hasOwnProperty.call(token, "$value")) {
+    token.$value = value;
+  } else {
+    token.value = value;
+  }
+}
+
+function isColorToken(token) {
+  return (
+    token &&
+    typeof token === "object" &&
+    getTokenType(token) === "color" &&
+    typeof getTokenValue(token) === "string" &&
+    getTokenValue(token).startsWith("#")
+  );
+}
+
+function sortedColorStops(ramp) {
+  return Object.keys(ramp)
+    .filter((key) => isColorToken(ramp[key]))
+    .sort((a, b) => Number(a) - Number(b));
+}
+
+function walkTokens(darkNode, lightNode, segments, visit) {
+  if (!darkNode || typeof darkNode !== "object") return;
+
+  if (isColorToken(darkNode)) {
+    visit(darkNode, lightNode, segments);
+    return;
+  }
+
+  for (const [key, child] of Object.entries(darkNode)) {
+    walkTokens(child, lightNode?.[key], [...segments, key], visit);
+  }
+}
+
+function syncHueRamps(darkJson, lightJson) {
+  const lightToDark = new Map();
+  let changed = 0;
+
+  for (const rootSegments of hueRampRoots) {
+    const lightRamp = getPath(lightJson, rootSegments);
+    const darkRamp = getPath(darkJson, rootSegments);
+    if (!lightRamp || !darkRamp) continue;
+
+    const stops = sortedColorStops(lightRamp);
+    const reversed = [...stops].reverse();
+
+    stops.forEach((stop, index) => {
+      const lightToken = lightRamp[stop];
+      const darkToken = darkRamp[stop];
+      const nextValue = getTokenValue(lightRamp[reversed[index]]);
+
+      lightToDark.set(getTokenValue(lightToken).toLowerCase(), nextValue);
+
+      if (isColorToken(darkToken) && getTokenValue(darkToken) !== nextValue) {
+        setTokenValue(darkToken, nextValue);
+        changed += 1;
+      }
+    });
+  }
+
+  return { changed, lightToDark };
+}
+
+function syncComponentHues(darkJson, lightJson, lightToDark) {
+  let changed = 0;
+
+  walkTokens(darkJson.Components, lightJson.Components, ["Components"], (darkToken, lightToken) => {
+    const lightValue = getTokenValue(lightToken);
+    if (typeof lightValue !== "string") return;
+
+    const nextValue = lightToDark.get(lightValue.toLowerCase());
+    if (nextValue && getTokenValue(darkToken) !== nextValue) {
+      setTokenValue(darkToken, nextValue);
+      changed += 1;
     }
+  });
+
+  return changed;
 }
 
-const darkPath = path.resolve(process.cwd(), 'packages/tokens/src/tokens-dark.json');
-const lightPath = path.resolve(process.cwd(), 'packages/tokens/src/tokens-light.json');
+function syncSemanticDataColors(darkJson) {
+  const data = darkJson.Semantics?.Data;
+  if (!data) return 0;
 
-const darkJson = JSON.parse(fs.readFileSync(darkPath, 'utf8'));
-const lightJson = JSON.parse(fs.readFileSync(lightPath, 'utf8'));
+  let changed = 0;
+  for (const [name, nextValue] of semanticDataDarkValues) {
+    const token = data[name];
+    if (isColorToken(token) && getTokenValue(token) !== nextValue) {
+      setTokenValue(token, nextValue);
+      changed += 1;
+    }
+  }
 
-traverse(darkJson, lightJson);
+  return changed;
+}
 
-fs.writeFileSync(darkPath, JSON.stringify(darkJson, null, 2), 'utf8');
-console.log('Mathematical Dark Mode Token Sync Complete.');
+const darkJson = readJson(darkPath);
+const lightJson = readJson(lightPath);
+
+const hueRampResult = syncHueRamps(darkJson, lightJson);
+const componentChanges = syncComponentHues(
+  darkJson,
+  lightJson,
+  hueRampResult.lightToDark,
+);
+const semanticDataChanges = syncSemanticDataColors(darkJson);
+const changed =
+  hueRampResult.changed + componentChanges + semanticDataChanges;
+
+fs.writeFileSync(darkPath, `${JSON.stringify(darkJson, null, 2)}\n`, "utf8");
+console.log(`Hue-preserving dark token sync complete. Updated ${changed} values.`);

@@ -1,0 +1,45 @@
+import { Canvas, Meta, Story, Controls, Source } from "@storybook/blocks";
+import * as CounterStories from "./Counter.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={CounterStories} />
+
+# Counter
+
+Displays a compact count for badges, filters, unread items, and status summaries.
+
+<Canvas>
+  <Story of={CounterStories.Default} />
+</Canvas>
+
+<Canvas>
+  <Story of={CounterStories.Brand} />
+</Canvas>
+
+<Canvas>
+  <Story of={CounterStories.Small} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Counter } from "@kozmos/react"
+
+<Counter>2</Counter>
+<Counter tone="brand">12</Counter>
+    `}
+    vue={`
+<script setup>
+import { KozmosCounter } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosCounter>2</KozmosCounter>
+</template>
+    `}
+/>
