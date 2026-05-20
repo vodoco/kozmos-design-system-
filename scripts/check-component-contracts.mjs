@@ -2751,6 +2751,24 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
+  "await applyTextStyleToNodeAsync(text, \"dialogTitle\", stats)",
+  "Dialog title async text style binding",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "await applyTextStyleToNodeAsync(text, \"dialogDescription\", stats)",
+  "Dialog description async text style binding",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "await applyTextStyleToNodeAsync(text, \"dialogBody\", stats)",
+  "Dialog body async text style binding",
+);
+assertContains(
+  files.figma,
+  source.figma,
   'markNestedComponentInstance(input, "Input")',
   "Dialog Input instance provenance stamping",
 );

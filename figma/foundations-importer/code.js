@@ -10348,12 +10348,12 @@ function applyTooltipContentTypography(text, fonts, variableByName, stats) {
   );
 }
 
-function applyDialogTitleTypography(text, fonts, variableByName, stats) {
+async function applyDialogTitleTypography(text, fonts, variableByName, stats) {
   text.fontName = fonts.medium;
   text.fontSize = 18;
   text.lineHeight = { unit: "PIXELS", value: 24 };
   text.textAutoResize = "HEIGHT";
-  applyTextStyleToNode(text, "dialogTitle", stats);
+  await applyTextStyleToNodeAsync(text, "dialogTitle", stats);
 
   bindFloatVariable(
     text,
@@ -10371,12 +10371,17 @@ function applyDialogTitleTypography(text, fonts, variableByName, stats) {
   );
 }
 
-function applyDialogDescriptionTypography(text, fonts, variableByName, stats) {
+async function applyDialogDescriptionTypography(
+  text,
+  fonts,
+  variableByName,
+  stats,
+) {
   text.fontName = fonts.regular;
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "HEIGHT";
-  applyTextStyleToNode(text, "dialogDescription", stats);
+  await applyTextStyleToNodeAsync(text, "dialogDescription", stats);
 
   bindFloatVariable(
     text,
@@ -10394,12 +10399,12 @@ function applyDialogDescriptionTypography(text, fonts, variableByName, stats) {
   );
 }
 
-function applyDialogBodyTypography(text, fonts, variableByName, stats) {
+async function applyDialogBodyTypography(text, fonts, variableByName, stats) {
   text.fontName = fonts.regular;
   text.fontSize = 14;
   text.lineHeight = { unit: "PIXELS", value: 20 };
   text.textAutoResize = "HEIGHT";
-  applyTextStyleToNode(text, "dialogBody", stats);
+  await applyTextStyleToNodeAsync(text, "dialogBody", stats);
 
   bindFloatVariable(
     text,
@@ -21123,7 +21128,7 @@ async function syncDialogVariantChildren({
     title = figma.createText();
     title.name = "Title Text";
   }
-  applyDialogTitleTypography(title, fonts, variableByName, stats);
+  await applyDialogTitleTypography(title, fonts, variableByName, stats);
   title.characters = dialogTitleText(value);
   title.fills = [
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
@@ -21143,7 +21148,12 @@ async function syncDialogVariantChildren({
     description = figma.createText();
     description.name = "Description Text";
   }
-  applyDialogDescriptionTypography(description, fonts, variableByName, stats);
+  await applyDialogDescriptionTypography(
+    description,
+    fonts,
+    variableByName,
+    stats,
+  );
   description.characters = dialogDescriptionText(value);
   description.fills = [
     paintFromVariable(
@@ -21215,7 +21225,7 @@ async function syncDialogVariantChildren({
     bodyText = figma.createText();
     bodyText.name = "Body Text";
   }
-  applyDialogBodyTypography(bodyText, fonts, variableByName, stats);
+  await applyDialogBodyTypography(bodyText, fonts, variableByName, stats);
   bodyText.characters = dialogBodyText(value);
   bodyText.fills = [
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
