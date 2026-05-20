@@ -47,12 +47,12 @@ function formatBadgeCounter(counter: React.ReactNode) {
     return counter;
   }
 
-  const value = String(counter);
+  const value = String(counter).trim();
   if (value.startsWith("(") && value.endsWith(")")) {
-    return value;
+    return value.slice(1, -1).trim();
   }
 
-  return `(${value})`;
+  return value;
 }
 
 export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
@@ -97,7 +97,10 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
         ) : null}
         {!isIconOnly ? children : null}
         {hasCounter ? (
-          <span className="tabular-nums" data-slot="badge-counter">
+          <span
+            className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[color:color-mix(in_srgb,currentColor_14%,transparent)] px-1.5 text-xs font-semibold leading-none tabular-nums"
+            data-slot="badge-counter"
+          >
             {formatBadgeCounter(counter)}
           </span>
         ) : null}

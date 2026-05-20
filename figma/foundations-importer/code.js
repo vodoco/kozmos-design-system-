@@ -1261,6 +1261,21 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Layout/sizing/200",
     scopes: ["WIDTH_HEIGHT"],
   },
+  { name: "Badge/counter/height", value: 20, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Badge/counter/padding/x",
+    value: 6,
+    alias: "Layout/spacing/75",
+    scopes: ["GAP"],
+  },
+  {
+    name: "Badge/counter/radius",
+    value: 9999,
+    alias: "Radius/full",
+    scopes: ["CORNER_RADIUS"],
+  },
+  { name: "Badge/counter/font-size", value: 12, scopes: ["FONT_SIZE"] },
+  { name: "Badge/counter/line-height", value: 16, scopes: ["LINE_HEIGHT"] },
   {
     name: "Badge/radius",
     value: 8,
@@ -4827,7 +4842,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
 
     if (badgeContentIntegrity.issueCount > 0) {
       record.warnings.push(
-        `${badgeContentIntegrity.issueCount} Badge content integrity issue(s) found. Run the Badge updater so icon-size variants use Icon slots and label variants keep hidden counter slots.`,
+        `${badgeContentIntegrity.issueCount} Badge content integrity issue(s) found. Run the Badge updater so icon-size variants use Icon slots and label variants keep hidden counter capsules.`,
       );
     }
   }
@@ -5621,7 +5636,12 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
 
     const icon = directChildNamed(component, "Icon");
     const label = directChildNamed(component, "Label Text");
-    const counter = directChildNamed(component, "Counter Text");
+    const legacyCounterText = directChildNamed(component, "Counter Text");
+    const counter = directChildNamed(component, "Counter");
+    const counterText =
+      counter && counter.children
+        ? directChildNamed(counter, "Counter Text")
+        : null;
 
     if (props.size === "Icon") {
       if (label) {
@@ -5636,9 +5656,18 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
       if (counter) {
         pushIssue(
           component,
-          "badge-icon-size-counter-text",
+          "badge-icon-size-counter",
           counter,
-          "Icon-size Badge variants should not include Counter Text.",
+          "Icon-size Badge variants should not include Counter.",
+        );
+      }
+
+      if (legacyCounterText) {
+        pushIssue(
+          component,
+          "badge-icon-size-legacy-counter-text",
+          legacyCounterText,
+          "Icon-size Badge variants should not include legacy direct Counter Text.",
         );
       }
 
@@ -5659,6 +5688,15 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
       continue;
     }
 
+    if (legacyCounterText) {
+      pushIssue(
+        component,
+        "badge-legacy-counter-text",
+        legacyCounterText,
+        "Non-icon Badge variants should wrap Counter Text inside a hidden Counter capsule.",
+      );
+    }
+
     if (!label || label.type !== "TEXT") {
       pushIssue(
         component,
@@ -5668,19 +5706,28 @@ function auditBadgeContentIntegrity(componentSet, childComponents) {
       );
     }
 
-    if (!counter || counter.type !== "TEXT") {
+    if (!counter || counter.type !== "FRAME") {
       pushIssue(
         component,
-        "badge-counter-text-missing",
+        "badge-counter-missing",
         counter,
-        "Non-icon Badge variants should include editable Counter Text.",
+        "Non-icon Badge variants should include a hidden Counter capsule.",
       );
     } else if (counter.visible !== false) {
       pushIssue(
         component,
         "badge-counter-visible-by-default",
         counter,
-        "Counter Text should be hidden by default and shown through Show Counter.",
+        "Counter should be hidden by default and shown through Show Counter.",
+      );
+    }
+
+    if (!counterText || counterText.type !== "TEXT") {
+      pushIssue(
+        component,
+        "badge-counter-text-missing",
+        counterText,
+        "Counter capsule should include editable Counter Text.",
       );
     }
 
@@ -5825,6 +5872,18 @@ function auditDialogFooterActionSizing(component, issues) {
     });
   }
 
+  if (typeof footer.height === "number" && footer.height < 44) {
+    issues.push({
+      kind: "dialog-footer-min-height",
+      variant: component.name,
+      node: footer.name,
+      nodeId: footer.id,
+      urlNodeId: nodeIdForUrl(footer.id),
+      expected: ">= 44",
+      actual: footer.height,
+    });
+  }
+
   for (const nodeName of ["Secondary Action", "Primary Action"]) {
     const action = directChildNamed(footer, nodeName);
     if (!action) {
@@ -5871,7 +5930,14 @@ function auditDialogFooterActionSizing(component, issues) {
       });
     }
 
-    if (action.layoutAlign && action.layoutAlign !== "CENTER") {
+    const inheritsCentered =
+      action.layoutAlign === "INHERIT" &&
+      footer.counterAxisAlignItems === "CENTER";
+    if (
+      action.layoutAlign &&
+      action.layoutAlign !== "CENTER" &&
+      !inheritsCentered
+    ) {
       issues.push({
         kind: "dialog-footer-action-cross-axis-align",
         variant: component.name,
@@ -5882,6 +5948,39 @@ function auditDialogFooterActionSizing(component, issues) {
         field: "layoutAlign",
         expected: "CENTER",
         actual: action.layoutAlign,
+      });
+    }
+
+    const expectedSize = nodeName === "Primary Action" ? "Large" : "Default";
+    const metrics = buttonMetrics(expectedSize);
+    const minWidth = expectedDialogFooterActionWidth(
+      nodeName === "Primary Action" ? "Save changes" : "Cancel",
+      expectedSize,
+    );
+
+    if (typeof action.width === "number" && action.width < minWidth) {
+      issues.push({
+        kind: "dialog-footer-action-min-width",
+        variant: component.name,
+        node: action.name,
+        nodeType: action.type,
+        nodeId: action.id,
+        urlNodeId: nodeIdForUrl(action.id),
+        expected: `>= ${minWidth}`,
+        actual: action.width,
+      });
+    }
+
+    if (typeof action.height === "number" && action.height < metrics.height) {
+      issues.push({
+        kind: "dialog-footer-action-min-height",
+        variant: component.name,
+        node: action.name,
+        nodeType: action.type,
+        nodeId: action.id,
+        urlNodeId: nodeIdForUrl(action.id),
+        expected: `>= ${metrics.height}`,
+        actual: action.height,
       });
     }
 
@@ -8230,6 +8329,28 @@ function applyBadgeLabelTypography(label, fonts, variableByName, stats) {
   );
 }
 
+function applyBadgeCounterTypography(label, fonts, variableByName, stats) {
+  label.fontName = fonts.medium;
+  label.fontSize = 12;
+  label.lineHeight = { unit: "PIXELS", value: 16 };
+  label.textAutoResize = "WIDTH_AND_HEIGHT";
+
+  bindFloatVariable(
+    label,
+    "fontSize",
+    "Badge/counter/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    label,
+    "lineHeight",
+    "Badge/counter/line-height",
+    variableByName,
+    stats,
+  );
+}
+
 function applyCardTitleTypography(text, fonts, variableByName, stats) {
   text.fontName = fonts.medium;
   text.fontSize = 24;
@@ -9035,6 +9156,37 @@ function bindBadgeGeometryVariables(
       stats,
     );
   }
+}
+
+function bindBadgeCounterGeometryVariables(counter, variableByName, stats) {
+  bindFloatVariable(
+    counter,
+    "height",
+    "Badge/counter/height",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    counter,
+    "paddingLeft",
+    "Badge/counter/padding/x",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    counter,
+    "paddingRight",
+    "Badge/counter/padding/x",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    counter,
+    "cornerRadius",
+    "Badge/counter/radius",
+    variableByName,
+    stats,
+  );
 }
 
 function bindCardGeometryVariables(
@@ -15400,7 +15552,8 @@ async function syncBadgeVariantChildren({
   removeGeneratedButtonChild(component, "Loading Indicator", true);
   removeGeneratedButtonChild(component, "Icon", size !== "Icon");
   removeGeneratedButtonChild(component, "Label Text", size === "Icon");
-  removeGeneratedButtonChild(component, "Counter Text", size === "Icon");
+  removeGeneratedButtonChild(component, "Counter", size === "Icon");
+  removeGeneratedButtonChild(component, "Counter Text", true);
 
   if (size === "Icon") {
     let icon = directChildNamed(component, "Icon");
@@ -15460,20 +15613,57 @@ async function syncBadgeVariantChildren({
   component.appendChild(label);
   setHugChildSizing(label);
 
-  let counter = directChildNamed(component, "Counter Text");
-  if (counter && counter.type !== "TEXT") {
+  let counter = directChildNamed(component, "Counter");
+  if (counter && counter.type !== "FRAME") {
     counter.remove();
     counter = null;
   }
 
-  if (!counter || counter.type !== "TEXT") {
-    counter = figma.createText();
-    counter.name = "Counter Text";
+  if (!counter || counter.type !== "FRAME") {
+    counter = figma.createFrame();
+    counter.name = "Counter";
   }
 
-  applyBadgeLabelTypography(counter, fonts, variableByName, stats);
-  counter.characters = "(2)";
+  counter.layoutMode = "HORIZONTAL";
+  counter.primaryAxisSizingMode = "AUTO";
+  counter.counterAxisSizingMode = "FIXED";
+  counter.primaryAxisAlignItems = "CENTER";
+  counter.counterAxisAlignItems = "CENTER";
+  counter.itemSpacing = 0;
+  counter.paddingLeft = 6;
+  counter.paddingRight = 6;
+  counter.paddingTop = 0;
+  counter.paddingBottom = 0;
+  counter.resizeWithoutConstraints(20, 20);
+  counter.cornerRadius = 9999;
   counter.fills = [
+    paintFromVariableWithOpacity(
+      config.foreground,
+      config.foregroundFallback,
+      0.14,
+      variableByName,
+      stats,
+    ),
+  ];
+  counter.strokes = [];
+  counter.clipsContent = false;
+  counter.setSharedPluginData(RUN_NAMESPACE, "kind", "badge-counter");
+  bindBadgeCounterGeometryVariables(counter, variableByName, stats);
+
+  let counterText = directChildNamed(counter, "Counter Text");
+  if (counterText && counterText.type !== "TEXT") {
+    counterText.remove();
+    counterText = null;
+  }
+
+  if (!counterText || counterText.type !== "TEXT") {
+    counterText = figma.createText();
+    counterText.name = "Counter Text";
+  }
+
+  applyBadgeCounterTypography(counterText, fonts, variableByName, stats);
+  counterText.characters = "2";
+  counterText.fills = [
     paintFromVariable(
       config.foreground,
       config.foregroundFallback,
@@ -15481,9 +15671,11 @@ async function syncBadgeVariantChildren({
       stats,
     ),
   ];
-  counter.textDecoration = variant === "Link" ? "UNDERLINE" : "NONE";
-  counter.textAlignHorizontal = "CENTER";
-  counter.textAlignVertical = "CENTER";
+  counterText.textDecoration = "NONE";
+  counterText.textAlignHorizontal = "CENTER";
+  counterText.textAlignVertical = "CENTER";
+  counter.appendChild(counterText);
+  setHugChildSizing(counterText);
   counter.visible = false;
   component.appendChild(counter);
   setHugChildSizing(counter);
@@ -16471,6 +16663,7 @@ async function syncDialogInput({ body, name, label, placeholder, stats }) {
 }
 
 async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
+  const size = primary ? "Large" : "Default";
   let action = directChildNamed(footer, name);
   if (action && !isNestedComponentInstance(action, "Button / v1")) {
     action.remove();
@@ -16483,7 +16676,7 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
       componentSetName: "Button / v1",
       variantProperties: {
         Variant: primary ? "Default" : "Outline",
-        Size: primary ? "Large" : "Default",
+        Size: size,
         State: "Default",
       },
       name,
@@ -16507,7 +16700,7 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
     try {
       action.setProperties({
         Variant: primary ? "Default" : "Outline",
-        Size: primary ? "Large" : "Default",
+        Size: size,
         State: "Default",
       });
     } catch (error) {
@@ -16518,6 +16711,7 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
     setInstanceTextProperty(action, buttonSet, "Label Text", label, stats);
   }
 
+  normalizeDialogFooterActionSize(action, label, size);
   action.setSharedPluginData(
     RUN_NAMESPACE,
     "role",
@@ -16525,6 +16719,36 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
   );
   footer.appendChild(action);
   setHugChildSizing(action);
+}
+
+function normalizeDialogFooterActionSize(action, label, size) {
+  if (!action || !action.resizeWithoutConstraints) return;
+
+  const metrics = buttonMetrics(size);
+  const minWidth = expectedDialogFooterActionWidth(label, size);
+  const currentWidth = typeof action.width === "number" ? action.width : 0;
+  const currentHeight = typeof action.height === "number" ? action.height : 0;
+  const width = Math.max(currentWidth, minWidth);
+  const height = Math.max(currentHeight, metrics.height);
+
+  if (width === currentWidth && height === currentHeight) return;
+
+  try {
+    action.resizeWithoutConstraints(width, height);
+  } catch (_error) {
+    try {
+      action.resize(width, height);
+    } catch (_innerError) {
+      // Some instance types cannot be resized in older Figma runtimes.
+    }
+  }
+}
+
+function expectedDialogFooterActionWidth(label, size) {
+  const metrics = buttonMetrics(size);
+  const text = String(label || "");
+  const estimatedLabelWidth = Math.ceil(text.length * 7.5);
+  return Math.max(metrics.width, estimatedLabelWidth + metrics.paddingX * 2);
 }
 
 async function syncPopoverVariantChildren({
@@ -19773,7 +19997,11 @@ function configureBadgeCounterVisibilityProperty(componentSet, stats) {
   let boundCount = 0;
 
   function walk(node) {
-    if (node.type === "TEXT" && node.name === "Counter Text") {
+    if (
+      node.name === "Counter" &&
+      node.getSharedPluginData &&
+      node.getSharedPluginData(RUN_NAMESPACE, "kind") === "badge-counter"
+    ) {
       bindVisibilityProperty(node, propertyName, stats);
       boundCount += 1;
     }
@@ -20982,6 +21210,19 @@ function paintFromVariable(name, fallback, variableByName, stats) {
   }
 
   return paint;
+}
+
+function paintFromVariableWithOpacity(
+  name,
+  fallback,
+  opacity,
+  variableByName,
+  stats,
+) {
+  const paint = paintFromVariable(name, fallback, variableByName, stats);
+  const tinted = clonePaint(paint);
+  tinted.opacity = opacity;
+  return tinted;
 }
 
 function nodeIdForUrl(id) {

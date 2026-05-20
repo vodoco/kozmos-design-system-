@@ -11,7 +11,7 @@ describe("Badge", () => {
   it("hides the counter by default", () => {
     render(<Badge counter={2}>New</Badge>);
     expect(screen.getByText("New")).toBeInTheDocument();
-    expect(screen.queryByText("(2)")).not.toBeInTheDocument();
+    expect(screen.queryByText("2")).not.toBeInTheDocument();
   });
 
   it("renders an opt-in counter", () => {
@@ -22,7 +22,18 @@ describe("Badge", () => {
     );
 
     expect(screen.getByText("New")).toBeInTheDocument();
-    expect(screen.getByText("(2)")).toBeInTheDocument();
+    expect(screen.getByText("2")).toHaveAttribute("data-slot", "badge-counter");
+  });
+
+  it("normalizes legacy parenthesized counters", () => {
+    render(
+      <Badge counter="(2)" showCounter>
+        New
+      </Badge>,
+    );
+
+    expect(screen.getByText("2")).toHaveAttribute("data-slot", "badge-counter");
+    expect(screen.queryByText("(2)")).not.toBeInTheDocument();
   });
 
   it("renders icon-sized badges from the icon slot", () => {

@@ -84,6 +84,12 @@
         "labelLineHeight": 20,
         "gap": 4,
         "iconSize": 16,
+        "counterHeight": 20,
+        "counterMinWidth": 20,
+        "counterPaddingX": 6,
+        "counterRadius": 9999,
+        "counterFontSize": 12,
+        "counterLineHeight": 16,
         "radius": 8,
         "strokeWidth": 1
       }

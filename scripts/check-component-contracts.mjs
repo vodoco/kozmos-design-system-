@@ -829,6 +829,39 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
+  tokenValuePattern("Badge/counter/height", badge.content.counterHeight),
+  "Badge counter height token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Badge/counter/padding/x", badge.content.counterPaddingX),
+  "Badge counter horizontal padding token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Badge/counter/radius", badge.content.counterRadius),
+  "Badge counter radius token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern("Badge/counter/font-size", badge.content.counterFontSize),
+  "Badge counter font size token",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenValuePattern(
+    "Badge/counter/line-height",
+    badge.content.counterLineHeight,
+  ),
+  "Badge counter line height token",
+);
+assertContains(
+  files.figma,
+  source.figma,
   tokenValuePattern("Checkbox/control/size", checkbox.size.controlSize),
   "Checkbox visual control token",
 );
