@@ -9,6 +9,18 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
 const FONT_REGULAR = { family: "Inter", style: "Regular" };
 const FONT_BOLD = { family: "Inter", style: "Bold" };
 const VALID_VARIABLE_TYPES = new Set(["COLOR", "FLOAT", "STRING", "BOOLEAN"]);
+const TEXT_SIZES = [
+  "XS",
+  "Small",
+  "Base",
+  "Large",
+  "XLarge",
+  "2XLarge",
+  "3XLarge",
+  "4XLarge",
+];
+const TEXT_WEIGHTS = ["Normal", "Medium", "Semibold", "Bold"];
+const TEXT_TONES = ["Default", "Muted", "Primary", "Destructive"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -82,6 +94,7 @@ const COMPONENT_PAGE_LAYOUT_Y = 80;
 const COMPONENT_PAGE_LAYOUT_ROW_GAP = 420;
 const COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT = 260;
 const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
+  "Text / v1": 980,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -102,6 +115,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Avatar / v1": 260,
 };
 const COMPONENT_PAGE_LAYOUT_ORDER = [
+  "Text / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -254,6 +268,35 @@ const SURFACE_QA_COMPONENT_GROUPS = [
   },
 ];
 const COMPONENT_DOCS = [
+  {
+    componentName: "Text",
+    componentSetName: "Text / v1",
+    category: "Typography",
+    summary:
+      "Text presents body copy and compact labels with controlled size, weight, and semantic tone.",
+    usage: [
+      "Use Base Default Normal for standard body copy.",
+      "Use Muted for secondary metadata or helper copy.",
+      "Use Primary or Destructive only when the text carries semantic emphasis.",
+    ],
+    api: [
+      "Size maps to Text.size.",
+      "Weight maps to Text.weight.",
+      "Tone maps to Text.color in Code Connect.",
+      "Text maps to children in Code Connect.",
+    ],
+    properties: [
+      "Size: XS, Small, Base, Large, XLarge, 2XLarge, 3XLarge, 4XLarge",
+      "Weight: Normal, Medium, Semibold, Bold",
+      "Tone: Default, Muted, Primary, Destructive",
+      "Text",
+    ],
+    accessibility: [
+      "Text contrast passes in Light and Dark modes for every included tone.",
+      "White/inverse text is intentionally not part of v1 until inverse surface QA is defined.",
+      "Text is non-interactive unless composed inside another control.",
+    ],
+  },
   {
     componentName: "Button",
     componentSetName: "Button / v1",
@@ -2394,6 +2437,47 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Input/text/line-height",
     scopes: ["LINE_HEIGHT"],
   },
+  { name: "Text/font-size/xs", value: 12, scopes: ["FONT_SIZE"] },
+  { name: "Text/line-height/xs", value: 16, scopes: ["LINE_HEIGHT"] },
+  {
+    name: "Text/font-size/sm",
+    value: 14,
+    alias: "Button/label/font-size",
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "Text/line-height/sm",
+    value: 20,
+    alias: "Button/label/line-height",
+    scopes: ["LINE_HEIGHT"],
+  },
+  {
+    name: "Text/font-size/base",
+    value: 16,
+    alias: "Input/label/font-size",
+    scopes: ["FONT_SIZE"],
+  },
+  { name: "Text/line-height/base", value: 24, scopes: ["LINE_HEIGHT"] },
+  { name: "Text/font-size/lg", value: 18, scopes: ["FONT_SIZE"] },
+  { name: "Text/line-height/lg", value: 28, scopes: ["LINE_HEIGHT"] },
+  {
+    name: "Text/font-size/xl",
+    value: 20,
+    alias: "Card/title/font-size",
+    scopes: ["FONT_SIZE"],
+  },
+  { name: "Text/line-height/xl", value: 28, scopes: ["LINE_HEIGHT"] },
+  {
+    name: "Text/font-size/2xl",
+    value: 24,
+    alias: "Dialog/title/font-size",
+    scopes: ["FONT_SIZE"],
+  },
+  { name: "Text/line-height/2xl", value: 32, scopes: ["LINE_HEIGHT"] },
+  { name: "Text/font-size/3xl", value: 30, scopes: ["FONT_SIZE"] },
+  { name: "Text/line-height/3xl", value: 36, scopes: ["LINE_HEIGHT"] },
+  { name: "Text/font-size/4xl", value: 36, scopes: ["FONT_SIZE"] },
+  { name: "Text/line-height/4xl", value: 40, scopes: ["LINE_HEIGHT"] },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -2412,6 +2496,24 @@ figma.ui.onmessage = async (message) => {
         message.options || {},
       );
       figma.ui.postMessage({ type: "import-result", result });
+      return;
+    }
+
+    if (message.type === "build-text") {
+      const result = await buildTextComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-text") {
+      const result = await updateTextComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-text") {
+      const result = await rebuildTextComponent();
+      figma.ui.postMessage({ type: "component-result", result });
       return;
     }
 
@@ -4523,6 +4625,7 @@ function unexpectedTopLevelNodesForPage(page) {
   if (page.name !== "Components") return [];
 
   const expectedComponentSets = new Set([
+    "Text / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5311,6 +5414,7 @@ function auditComponentSet(componentSet, pageName, variableContext) {
 function shouldAuditLayoutBindings(name) {
   return (
     [
+      "Text / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -5337,6 +5441,7 @@ function shouldAuditLayoutBindings(name) {
 function shouldAuditTypographyBindings(name) {
   return (
     [
+      "Text / v1",
       "Button / v1",
       "Counter / v1",
       "Badge / v1",
@@ -5416,6 +5521,14 @@ function extractVariantAxes(childComponents) {
 }
 
 function expectedVariantAxesForComponentSetName(name) {
+  if (name === "Text / v1") {
+    return {
+      Size: TEXT_SIZES,
+      Weight: TEXT_WEIGHTS,
+      Tone: TEXT_TONES,
+    };
+  }
+
   if (name === "Button / v1") {
     return {
       Variant: BUTTON_VARIANTS,
@@ -6711,6 +6824,7 @@ function auditComponentContrastForMode(
 
   for (const component of childComponents) {
     const props =
+      parseTextVariantName(component.name) ||
       parseButtonVariantName(component.name) ||
       parseIconButtonVariantName(component.name) ||
       parseCounterVariantName(component.name) ||
@@ -8700,6 +8814,29 @@ async function applyButtonLabelTypography(
     label,
     "lineHeight",
     "Button/label/line-height",
+    variableByName,
+    stats,
+  );
+}
+
+function applyTextTypography(text, size, weight, fonts, variableByName, stats) {
+  const metrics = textMetrics(size);
+  text.fontName = textFontForWeight(weight, fonts);
+  text.fontSize = metrics.fontSize;
+  text.lineHeight = { unit: "PIXELS", value: metrics.lineHeight };
+  text.textAutoResize = "WIDTH_AND_HEIGHT";
+
+  bindFloatVariable(
+    text,
+    "fontSize",
+    `Text/font-size/${metrics.token}`,
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    text,
+    "lineHeight",
+    `Text/line-height/${metrics.token}`,
     variableByName,
     stats,
   );
@@ -11328,6 +11465,166 @@ async function updateIconButtonComponent() {
   return stats;
 }
 
+async function buildTextComponent() {
+  const stats = {
+    created: false,
+    componentSetId: null,
+    urlNodeId: null,
+    variants: 0,
+    warnings: [],
+  };
+
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  removeStaleGeneratedComponentArtifacts(page, "Text", stats);
+
+  const existing = page.findOne((node) => node.name === "Text / v1");
+  if (existing) {
+    stats.existing = true;
+    stats.componentSetId = existing.id;
+    stats.urlNodeId = nodeIdForUrl(existing.id);
+    stats.message =
+      "Text / v1 already exists. Use Update Text to preserve its node ID.";
+    return stats;
+  }
+
+  const fonts = await loadButtonFonts(stats);
+  const variableByName = await ensureComponentRuntimeVariables(stats);
+  const components = [];
+
+  for (const combination of textVariantCombinations()) {
+    const component = await createTextVariant({
+      size: combination.size,
+      weight: combination.weight,
+      tone: combination.tone,
+      variableByName,
+      fonts,
+      stats,
+    });
+    page.appendChild(component);
+    components.push(component);
+  }
+
+  const componentSet = figma.combineAsVariants(components, page);
+  componentSet.name = "Text / v1";
+  componentSet.x = 80;
+  componentSet.y = 7600;
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Text");
+  applyComponentSetDescription(componentSet, "Text / v1", false, [
+    "Kozmos Text component set generated from React Text API.",
+    "Size maps to Text.size.",
+    "Weight maps to Text.weight.",
+    "Tone maps to Text.color in Code Connect.",
+    "Text maps to children in Code Connect.",
+  ]);
+  clearComponentSetContainerFill(componentSet);
+  layoutTextVariants(componentSet);
+
+  stats.created = true;
+  stats.componentSetId = componentSet.id;
+  stats.urlNodeId = nodeIdForUrl(componentSet.id);
+  stats.variants = components.length;
+  normalizeComponentSetVariantProperties(
+    componentSet,
+    expectedVariantAxesForComponentSetName(componentSet.name),
+    stats,
+  );
+  configureTextProperties(componentSet, stats);
+  return stats;
+}
+
+async function updateTextComponent() {
+  const stats = {
+    updated: false,
+    componentSetId: null,
+    urlNodeId: null,
+    variantsUpdated: 0,
+    variantsCreated: 0,
+    warnings: [],
+  };
+
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  removeStaleGeneratedComponentArtifacts(page, "Text", stats);
+
+  const existing = page.findOne((node) => node.name === "Text / v1");
+  if (!existing || existing.type !== "COMPONENT_SET") {
+    stats.message = "Text / v1 was not found. Run Build Text first.";
+    return stats;
+  }
+
+  const fonts = await loadButtonFonts(stats);
+  const variableByName = await ensureComponentRuntimeVariables(stats);
+  const seenKeys = {};
+
+  existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "component", "Text");
+  applyComponentSetDescription(existing, "Text / v1", true, [
+    "Kozmos Text component set generated from React Text API.",
+    "Size maps to Text.size.",
+    "Weight maps to Text.weight.",
+    "Tone maps to Text.color in Code Connect.",
+    "Text maps to children in Code Connect.",
+  ]);
+  clearComponentSetContainerFill(existing);
+
+  for (const child of existing.children) {
+    if (child.type !== "COMPONENT") continue;
+
+    const props = parseTextVariantName(child.name);
+    if (!props) {
+      stats.warnings.push(`Skipped unrecognized Text variant "${child.name}".`);
+      continue;
+    }
+
+    seenKeys[textVariantKey(props)] = true;
+    await updateTextVariant(child, {
+      size: props.size,
+      weight: props.weight,
+      tone: props.tone,
+      variableByName,
+      fonts,
+      stats,
+    });
+    stats.variantsUpdated += 1;
+  }
+
+  for (const combination of textVariantCombinations()) {
+    const key = textVariantKey(combination);
+    if (seenKeys[key]) continue;
+
+    const component = await createTextVariant({
+      size: combination.size,
+      weight: combination.weight,
+      tone: combination.tone,
+      variableByName,
+      fonts,
+      stats,
+    });
+    existing.appendChild(component);
+    seenKeys[key] = true;
+    stats.variantsCreated += 1;
+  }
+
+  layoutTextVariants(existing);
+
+  stats.updated = true;
+  stats.componentSetId = existing.id;
+  stats.urlNodeId = nodeIdForUrl(existing.id);
+  normalizeComponentSetVariantProperties(
+    existing,
+    expectedVariantAxesForComponentSetName(existing.name),
+    stats,
+  );
+  configureTextProperties(existing, stats);
+  return stats;
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -12737,6 +13034,14 @@ async function updateInputComponent() {
   return stats;
 }
 
+async function rebuildTextComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Text",
+    componentSetName: "Text / v1",
+    build: buildTextComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -13624,6 +13929,27 @@ function layoutSingleAxisVariants(componentSet, config) {
   }
 }
 
+function layoutTextVariants(componentSet) {
+  if (!componentSet || !componentSet.children) return;
+
+  const toneColumns = TEXT_TONES.length;
+  const columnWidth = 240;
+  const rowHeight = 86;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+
+    const props = parseTextVariantName(child.name);
+    if (!props) continue;
+
+    const sizeIndex = TEXT_SIZES.indexOf(props.size);
+    const weightIndex = TEXT_WEIGHTS.indexOf(props.weight);
+    const toneIndex = TEXT_TONES.indexOf(props.tone);
+    child.x = (weightIndex * toneColumns + toneIndex) * columnWidth;
+    child.y = sizeIndex * rowHeight;
+  }
+}
+
 function layoutTabsVariants(componentSet) {
   if (!componentSet || !componentSet.children) return;
 
@@ -13659,6 +13985,16 @@ function configureAvatarProperties(componentSet, stats) {
     "Alt Text",
     "Alt Text",
     "Avatar",
+    stats,
+  );
+}
+
+function configureTextProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Text",
+    "Text",
+    "Kozmos text",
     stats,
   );
 }
@@ -14111,6 +14447,14 @@ async function loadButtonFonts(stats) {
     { family: "Inter", style: "Bold" },
     regular,
   ]);
+  const bold = await loadFirstAvailableFont([
+    { family: "Readex Pro", style: "Bold" },
+    { family: "Readex Pro", style: "SemiBold" },
+    { family: "Readex Pro", style: "Medium" },
+    { family: "Inter", style: "Bold" },
+    { family: "Inter", style: "Semi Bold" },
+    medium,
+  ]);
 
   if (regular.family !== "Readex Pro") {
     stats.warnings.push(
@@ -14124,7 +14468,13 @@ async function loadButtonFonts(stats) {
     );
   }
 
-  return { regular, medium };
+  if (bold.family !== "Readex Pro") {
+    stats.warnings.push(
+      `Readex Pro Bold/SemiBold was unavailable; using ${bold.family} ${bold.style}.`,
+    );
+  }
+
+  return { regular, medium, bold };
 }
 
 async function loadFirstAvailableFont(fonts) {
@@ -14570,6 +14920,103 @@ async function createCounterVariant({
     stats,
   });
   return component;
+}
+
+async function createTextVariant({
+  size,
+  weight,
+  tone,
+  variableByName,
+  fonts,
+  stats,
+}) {
+  const component = figma.createComponent();
+  await updateTextVariant(component, {
+    size,
+    weight,
+    tone,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+function parseTextVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (
+    TEXT_SIZES.indexOf(values.Size) === -1 ||
+    TEXT_WEIGHTS.indexOf(values.Weight) === -1 ||
+    TEXT_TONES.indexOf(values.Tone) === -1
+  ) {
+    return null;
+  }
+
+  return {
+    size: values.Size,
+    weight: values.Weight,
+    tone: values.Tone,
+  };
+}
+
+async function updateTextVariant(
+  component,
+  { size, weight, tone, variableByName, fonts, stats },
+) {
+  const metrics = textMetrics(size);
+  const color = textToneConfig(tone);
+
+  component.name = `Size=${size}, Weight=${weight}, Tone=${tone}`;
+  component.layoutMode = "HORIZONTAL";
+  component.primaryAxisSizingMode = "AUTO";
+  component.counterAxisSizingMode = "AUTO";
+  component.primaryAxisAlignItems = "MIN";
+  component.counterAxisAlignItems = "CENTER";
+  component.itemSpacing = 0;
+  component.paddingLeft = 0;
+  component.paddingRight = 0;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.fills = [];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Text");
+
+  let text = directChildNamed(component, "Text");
+  if (text && text.type !== "TEXT") {
+    text.remove();
+    text = null;
+  }
+
+  if (!text || text.type !== "TEXT") {
+    text = figma.createText();
+    text.name = "Text";
+  }
+
+  applyTextTypography(text, size, weight, fonts, variableByName, stats);
+  text.characters = textSampleForSize(size);
+  text.fills = [
+    paintFromVariable(
+      color.foreground,
+      color.foregroundFallback,
+      variableByName,
+      stats,
+    ),
+  ];
+  setTextAutoResize(text, "WIDTH_AND_HEIGHT");
+  component.appendChild(text);
 }
 
 function parseCounterVariantName(name) {
@@ -21492,6 +21939,76 @@ function tabsDefaultLabel(index) {
   return (
     ["Overview", "Details", "Usage", "History"][index] || `Tab ${index + 1}`
   );
+}
+
+function textVariantCombinations() {
+  const combinations = [];
+
+  for (const size of TEXT_SIZES) {
+    for (const weight of TEXT_WEIGHTS) {
+      for (const tone of TEXT_TONES) {
+        combinations.push({ size, weight, tone });
+      }
+    }
+  }
+
+  return combinations;
+}
+
+function textVariantKey(props) {
+  return `${props.size}/${props.weight}/${props.tone}`;
+}
+
+function textMetrics(size) {
+  const metrics = {
+    XS: { fontSize: 12, lineHeight: 16, token: "xs" },
+    Small: { fontSize: 14, lineHeight: 20, token: "sm" },
+    Base: { fontSize: 16, lineHeight: 24, token: "base" },
+    Large: { fontSize: 18, lineHeight: 28, token: "lg" },
+    XLarge: { fontSize: 20, lineHeight: 28, token: "xl" },
+    "2XLarge": { fontSize: 24, lineHeight: 32, token: "2xl" },
+    "3XLarge": { fontSize: 30, lineHeight: 36, token: "3xl" },
+    "4XLarge": { fontSize: 36, lineHeight: 40, token: "4xl" },
+  };
+
+  return metrics[size] || metrics.Base;
+}
+
+function textFontForWeight(weight, fonts) {
+  if (weight === "Bold") return fonts.bold || fonts.medium || fonts.regular;
+  if (weight === "Semibold" || weight === "Medium") {
+    return fonts.medium || fonts.regular;
+  }
+  return fonts.regular;
+}
+
+function textToneConfig(tone) {
+  const configs = {
+    Default: {
+      foreground: "Colors/foreground/0",
+      foregroundFallback: "#000000",
+    },
+    Muted: {
+      foreground: "Colors/foreground/500",
+      foregroundFallback: "#747B8B",
+    },
+    Primary: {
+      foreground: "Colors/theme/600",
+      foregroundFallback: "#1051E8",
+    },
+    Destructive: {
+      foreground: "Colors/emotional/danger/600",
+      foregroundFallback: "#D41C42",
+    },
+  };
+
+  return configs[tone] || configs.Default;
+}
+
+function textSampleForSize(size) {
+  if (size === "XS" || size === "Small") return "Kozmos label";
+  if (size === "3XLarge" || size === "4XLarge") return "Kozmos";
+  return "Kozmos text";
 }
 
 function tabsWidthForCount(count) {

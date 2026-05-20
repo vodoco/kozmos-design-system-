@@ -106,6 +106,7 @@ const files = {
   figmaUi: "figma/foundations-importer/ui.html",
   figmaReadme: "figma/foundations-importer/README.md",
   figmaLinked: "figma.linked.config.json",
+  reactText: "packages/react/src/components/Text/Text.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -971,6 +972,93 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
+  "Text / v1",
+  "Text component set generation",
+);
+for (const tokenName of [
+  "Text/font-size/xs",
+  "Text/line-height/xs",
+  "Text/font-size/base",
+  "Text/line-height/base",
+  "Text/font-size/4xl",
+  "Text/line-height/4xl",
+]) {
+  assertContains(
+    files.figma,
+    source.figma,
+    `name: "${tokenName}"`,
+    `${tokenName} component typography token`,
+  );
+}
+assertContains(
+  files.figma,
+  source.figma,
+  "const TEXT_SIZES = [",
+  "Text size axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const TEXT_WEIGHTS =",
+  "Text weight axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const TEXT_TONES =",
+  "Text tone axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildTextComponent()",
+  "Text build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateTextComponent()",
+  "Text update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Text / v1"',
+  "Text documentation metadata",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="text">Text / v1</option>',
+  "Text UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-text"',
+  "Text UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Text / v1**",
+  "Text importer documentation",
+);
+assertContains(
+  files.reactText,
+  source.reactText,
+  "'4xl': 'text-4xl'",
+  "React Text 4xl size",
+);
+assertContains(
+  files.reactText,
+  source.reactText,
+  "destructive: 'text-destructive'",
+  "React Text destructive tone",
+);
+assertContains(
+  files.figma,
+  source.figma,
   tokenValuePattern("Counter/height/small", counter.sizes.small.height),
   "Counter small height token",
 );
@@ -1379,19 +1467,19 @@ assertContains(
 assertContains(
   files.reactTailwindConfig,
   source.reactTailwindConfig,
-  "DEFAULT: 'var(--primitives-colors-theme-600)'",
+  /DEFAULT:\s*["']var\(--primitives-colors-theme-600\)["']/,
   "React primary color uses accessible brand token",
 );
 assertContains(
   files.reactTailwindConfig,
   source.reactTailwindConfig,
-  "foreground: 'var(--primitives-colors-foreground-1000)'",
+  /foreground:\s*["']var\(--primitives-colors-foreground-1000\)["']/,
   "React filled tone foregrounds are mode-aware",
 );
 assertContains(
   files.reactTailwindConfig,
   source.reactTailwindConfig,
-  "ring: 'var(--primitives-colors-theme-600)'",
+  /ring:\s*["']var\(--primitives-colors-theme-600\)["']/,
   "React focus ring uses accessible brand token",
 );
 assertContains(

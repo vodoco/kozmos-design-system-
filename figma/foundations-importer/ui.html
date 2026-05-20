@@ -631,6 +631,9 @@
           <div class="field">
             <span class="field-label">Component</span>
             <select id="componentSelect" aria-label="Component">
+              <optgroup label="Typography">
+                <option value="text">Text / v1</option>
+              </optgroup>
               <optgroup label="Actions">
                 <option value="button">Button / v1</option>
                 <option value="iconButton">IconButton / v1</option>
@@ -811,6 +814,13 @@
       };
 
       const componentActions = {
+        text: {
+          label: "Text / v1",
+          build: "build-text",
+          update: "update-text",
+          rebuild: "rebuild-text",
+          hint: "Build creates Text / v1 with Size, Weight, and Tone axes plus editable Text content. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
         button: {
           label: "Button / v1",
           build: "build-button",
