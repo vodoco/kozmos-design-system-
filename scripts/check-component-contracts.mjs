@@ -26,6 +26,22 @@ function assertContains(filePath, content, pattern, label) {
   }
 }
 
+function assertNotContains(filePath, content, pattern, label) {
+  const ok =
+    pattern instanceof RegExp
+      ? !pattern.test(content)
+      : !content.includes(pattern);
+  if (!ok) {
+    fail(`${filePath}: unexpected ${label}`);
+  }
+}
+
+function assertMissing(filePath, label) {
+  if (fs.existsSync(path.join(root, filePath))) {
+    fail(`${filePath}: unexpected ${label}`);
+  }
+}
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -85,7 +101,11 @@ const files = {
   reactAlertFigma: "packages/react/src/components/Alert/Alert.figma.tsx",
   reactTooltip: "packages/react/src/components/Tooltip/Tooltip.tsx",
   reactTooltipFigma: "packages/react/src/components/Tooltip/Tooltip.figma.tsx",
+  reactIndex: "packages/react/src/index.ts",
   vueIndex: "packages/vue/src/index.ts",
+  figmaManifest: "docs/figma-library-manifest.json",
+  figmaManifestScript: "scripts/figma-build-manifest.mjs",
+  nativeStubGenerator: "scripts/skills/generate-native-stubs.js",
   iosButton: "packages/ios/Sources/Components/Button/Button.swift",
   iosIconButton: "packages/ios/Sources/Components/IconButton/IconButton.swift",
   iosBadge: "packages/ios/Sources/Components/Badge/Badge.swift",
@@ -135,6 +155,54 @@ if (target !== 44)
   fail("component contract must keep the current v1 target at 44px");
 
 // React and Vue parity.
+assertNotContains(
+  files.reactIndex,
+  source.reactIndex,
+  "GlassSettingsPanel",
+  "dev-only GlassSettingsPanel public React export",
+);
+assertNotContains(
+  files.vueIndex,
+  source.vueIndex,
+  "KozmosGlassSettingsPanel",
+  "dev-only GlassSettingsPanel public Vue wrapper",
+);
+assertNotContains(
+  files.figmaManifest,
+  source.figmaManifest,
+  "GlassSettingsPanel",
+  "dev-only GlassSettingsPanel Figma manifest entry",
+);
+assertContains(
+  files.figmaManifestScript,
+  source.figmaManifestScript,
+  "INTERNAL_COMPONENT_NAMES",
+  "internal component manifest exclusion list",
+);
+assertContains(
+  files.figmaManifestScript,
+  source.figmaManifestScript,
+  "GlassSettingsPanel",
+  "GlassSettingsPanel manifest exclusion",
+);
+assertNotContains(
+  files.nativeStubGenerator,
+  source.nativeStubGenerator,
+  "GlassSettingsPanel",
+  "dev-only GlassSettingsPanel native stub generation",
+);
+assertMissing(
+  "packages/react/src/components/GlassSettingsPanel/GlassSettingsPanel.tsx",
+  "dev-only GlassSettingsPanel React source",
+);
+assertMissing(
+  "packages/ios/Sources/Components/GlassSettingsPanel/KozmosGlassSettingsPanel.swift",
+  "dev-only GlassSettingsPanel iOS public stub",
+);
+assertMissing(
+  "packages/android/src/main/java/com/kozmos/components/GlassSettingsPanel/GlassSettingsPanel.kt",
+  "dev-only GlassSettingsPanel Android public stub",
+);
 assertContains(
   files.reactButton,
   source.reactButton,

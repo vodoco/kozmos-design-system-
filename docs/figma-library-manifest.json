@@ -12469,10 +12469,10 @@
   },
   "components": {
     "summary": {
-      "total": 79,
+      "total": 78,
       "stories": 69,
       "tests": 64,
-      "exported": 79,
+      "exported": 78,
       "codeConnectFiles": 29,
       "codeConnectScaffolds": 6,
       "codeConnectLinked": 23
@@ -12748,8 +12748,8 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["body", "description", "title"],
-          "unmappedProps": ["body", "description", "title"]
+          "mappedProps": ["actions", "body", "description", "title"],
+          "unmappedProps": ["actions", "body", "description", "title"]
         },
         "props": ["children"],
         "variants": {}
@@ -12865,20 +12865,8 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": [
-            "body",
-            "description",
-            "primaryAction",
-            "secondaryAction",
-            "title"
-          ],
-          "unmappedProps": [
-            "body",
-            "description",
-            "primaryAction",
-            "secondaryAction",
-            "title"
-          ]
+          "mappedProps": ["actions", "body", "description", "fields", "title"],
+          "unmappedProps": ["actions", "body", "description", "fields", "title"]
         },
         "props": ["children", "defaultOpen", "modal", "open"],
         "variants": {}
@@ -13101,25 +13089,6 @@
           "unmappedProps": []
         },
         "props": ["children", "floors", "selectedFloor"],
-        "variants": {}
-      },
-      {
-        "name": "GlassSettingsPanel",
-        "source": "packages/react/src/components/GlassSettingsPanel/GlassSettingsPanel.tsx",
-        "story": null,
-        "test": null,
-        "exported": true,
-        "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
-          "needsNodeId": false,
-          "status": "missing",
-          "issues": [],
-          "mappedProps": [],
-          "unmappedProps": []
-        },
-        "props": [],
         "variants": {}
       },
       {

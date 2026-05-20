@@ -93,8 +93,10 @@ components.
 
 - DynamicIsland
 - FeedbackCard
-- GlassSettingsPanel
 - ThemeProvider
+
+`GlassSettingsPanel` is treated as an internal/dev-only control surface and is
+not part of the public NPM or Figma component roadmap.
 
 ## Next Recommendation
 

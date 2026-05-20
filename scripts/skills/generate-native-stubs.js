@@ -1,28 +1,27 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 const missingComponents = [
-  'FeedbackCard',
-  'FieldWrapper',
-  'GlassSettingsPanel',
-  'Label',
-  'MapControlsGroup',
-  'NavigationAnnouncer',
-  'RouteSummary',
-  'RoutingInputGroup',
-  'SaveLocationCard',
-  'ScrollArea'
+  "FeedbackCard",
+  "FieldWrapper",
+  "Label",
+  "MapControlsGroup",
+  "NavigationAnnouncer",
+  "RouteSummary",
+  "RoutingInputGroup",
+  "SaveLocationCard",
+  "ScrollArea",
 ];
 
-const androidMissing = [...missingComponents, 'DynamicIsland'];
+const androidMissing = [...missingComponents, "DynamicIsland"];
 
 const root = process.cwd();
 
 // Generate iOS Stubs
-missingComponents.forEach(comp => {
-  const dir = path.join(root, 'packages/ios/Sources/Components', comp);
+missingComponents.forEach((comp) => {
+  const dir = path.join(root, "packages/ios/Sources/Components", comp);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  
+
   const swiftContent = `import SwiftUI
 
 public struct Kozmos${comp}: View {
@@ -41,10 +40,14 @@ public struct Kozmos${comp}: View {
 });
 
 // Generate Android Stubs
-androidMissing.forEach(comp => {
-  const dir = path.join(root, 'packages/android/src/main/java/com/kozmos/components', comp);
+androidMissing.forEach((comp) => {
+  const dir = path.join(
+    root,
+    "packages/android/src/main/java/com/kozmos/components",
+    comp,
+  );
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  
+
   const ktContent = `package com.kozmos.components.${comp}
 
 import androidx.compose.foundation.background
