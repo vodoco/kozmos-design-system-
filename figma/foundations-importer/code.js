@@ -1698,6 +1698,12 @@ const COMPONENT_FLOAT_TOKENS = [
     scopes: ["GAP"],
   },
   {
+    name: "Dialog/footer/height",
+    value: 44,
+    alias: "Button/height/default",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
     name: "Dialog/radius",
     value: 16,
     alias: "Radius/lg",
@@ -5872,6 +5878,25 @@ function auditDialogFooterActionSizing(component, issues) {
     });
   }
 
+  auditAutoLayoutSizing({
+    node: footer,
+    issues,
+    kind: "dialog-footer-horizontal-sizing",
+    field: "layoutSizingHorizontal",
+    expected: "FILL",
+    actual: footer.layoutSizingHorizontal,
+    variant: component.name,
+  });
+  auditAutoLayoutSizing({
+    node: footer,
+    issues,
+    kind: "dialog-footer-vertical-sizing",
+    field: "layoutSizingVertical",
+    expected: "FIXED",
+    actual: footer.layoutSizingVertical,
+    variant: component.name,
+  });
+
   if (typeof footer.height === "number" && footer.height < 44) {
     issues.push({
       kind: "dialog-footer-min-height",
@@ -5902,7 +5927,7 @@ function auditDialogFooterActionSizing(component, issues) {
       issues,
       kind: "dialog-footer-action-horizontal-sizing",
       field: "layoutSizingHorizontal",
-      expected: "HUG",
+      expected: "FIXED",
       actual: action.layoutSizingHorizontal,
       variant: component.name,
     });
@@ -5911,7 +5936,7 @@ function auditDialogFooterActionSizing(component, issues) {
       issues,
       kind: "dialog-footer-action-vertical-sizing",
       field: "layoutSizingVertical",
-      expected: "HUG",
+      expected: "FIXED",
       actual: action.layoutSizingVertical,
       variant: component.name,
     });
@@ -16564,7 +16589,6 @@ async function syncDialogVariantChildren({
     footer.fills = [];
     footer.strokes = [];
     footer.clipsContent = false;
-    setLayoutSizingHorizontal(footer, "FILL");
 
     await syncDialogFooterAction({
       footer,
@@ -16581,7 +16605,7 @@ async function syncDialogVariantChildren({
       stats,
     });
     component.appendChild(footer);
-    setVerticalStackChildSizing(footer);
+    setDialogFooterContainerSizing(footer, variableByName, stats);
   } else if (footer) {
     footer.remove();
     footer = null;
@@ -16711,36 +16735,61 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
     setInstanceTextProperty(action, buttonSet, "Label Text", label, stats);
   }
 
-  normalizeDialogFooterActionSize(action, label, size);
   action.setSharedPluginData(
     RUN_NAMESPACE,
     "role",
     primary ? "primary" : "secondary",
   );
   footer.appendChild(action);
-  setHugChildSizing(action);
+  setDialogFooterActionSizing(action, label, size);
 }
 
-function normalizeDialogFooterActionSize(action, label, size) {
-  if (!action || !action.resizeWithoutConstraints) return;
-
-  const metrics = buttonMetrics(size);
-  const minWidth = expectedDialogFooterActionWidth(label, size);
-  const currentWidth = typeof action.width === "number" ? action.width : 0;
-  const currentHeight = typeof action.height === "number" ? action.height : 0;
-  const width = Math.max(currentWidth, minWidth);
-  const height = Math.max(currentHeight, metrics.height);
-
-  if (width === currentWidth && height === currentHeight) return;
+function setDialogFooterContainerSizing(footer, variableByName, stats) {
+  resizeNodeWithoutConstraints(footer, footer.width || 464, 44);
+  setLayoutSizingHorizontal(footer, "FILL");
+  setLayoutSizingVertical(footer, "FIXED");
+  bindFloatVariable(
+    footer,
+    "height",
+    "Dialog/footer/height",
+    variableByName,
+    stats,
+  );
 
   try {
-    action.resizeWithoutConstraints(width, height);
+    footer.layoutAlign = "STRETCH";
   } catch (_error) {
-    try {
-      action.resize(width, height);
-    } catch (_innerError) {
-      // Some instance types cannot be resized in older Figma runtimes.
-    }
+    // layoutAlign is unavailable on older plugin runtimes.
+  }
+
+  try {
+    footer.layoutGrow = 0;
+  } catch (_error) {
+    // layoutGrow is unavailable on older plugin runtimes.
+  }
+}
+
+function setDialogFooterActionSizing(action, label, size) {
+  if (!action) return;
+
+  const metrics = buttonMetrics(size);
+  const width = expectedDialogFooterActionWidth(label, size);
+  const height = metrics.height;
+
+  setLayoutSizingHorizontal(action, "FIXED");
+  setLayoutSizingVertical(action, "FIXED");
+  resizeNodeWithoutConstraints(action, width, height);
+
+  try {
+    action.layoutAlign = "CENTER";
+  } catch (_error) {
+    // layoutAlign is unavailable on older plugin runtimes.
+  }
+
+  try {
+    action.layoutGrow = 0;
+  } catch (_error) {
+    // layoutGrow is unavailable on older plugin runtimes.
   }
 }
 
@@ -19005,6 +19054,23 @@ function setLayoutSizingVertical(node, value) {
     node.layoutSizingVertical = value;
   } catch (_error) {
     // Older Figma runtimes may not expose layout sizing on every node type.
+  }
+}
+
+function resizeNodeWithoutConstraints(node, width, height) {
+  if (!node) return;
+
+  try {
+    if (node.resizeWithoutConstraints) {
+      node.resizeWithoutConstraints(width, height);
+      return;
+    }
+
+    if (node.resize) {
+      node.resize(width, height);
+    }
+  } catch (_error) {
+    // Some instance types cannot be resized in older Figma runtimes.
   }
 }
 
