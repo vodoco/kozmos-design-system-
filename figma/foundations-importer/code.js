@@ -30,6 +30,7 @@ const SKELETON_SHAPES = ["Line", "Block", "Circle"];
 const BOX_SURFACES = ["Transparent", "Surface", "Outlined"];
 const STACK_DIRECTIONS = ["Column", "Row"];
 const STACK_GAPS = ["2", "4", "6"];
+const CONTAINER_CENTERED = ["True", "False"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -111,6 +112,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Skeleton / v1": 260,
   "Box / v1": 360,
   "Stack / v1": 520,
+  "Container / v1": 360,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -139,6 +141,7 @@ const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Skeleton / v1",
   "Box / v1",
   "Stack / v1",
+  "Container / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -483,6 +486,29 @@ const COMPONENT_DOCS = [
       "Stack is non-interactive unless composed around interactive children.",
       "Spacing does not communicate state by itself.",
       "Child controls must preserve their own labels, focus states, and touch targets.",
+    ],
+  },
+  {
+    componentName: "Container",
+    componentSetName: "Container / v1",
+    category: "Layout",
+    summary:
+      "Container provides responsive page gutters and optional centered max-width composition.",
+    usage: [
+      "Use Centered True for regular page sections and bounded reading layouts.",
+      "Use Centered False when the layout should fill the available width.",
+      "Keep Container focused on outer page structure; use Box or Card for local surfaces.",
+    ],
+    api: [
+      "Centered maps to Container.centered.",
+      "Container Text represents children in the generated Figma example.",
+      "Responsive breakpoints and max-width behavior remain runtime CSS concerns.",
+    ],
+    properties: ["Centered: True, False", "Container Text"],
+    accessibility: [
+      "Container is non-interactive unless composed around interactive children.",
+      "Gutters and max-width should support readable line length without hiding content.",
+      "Child controls must preserve their own semantic labels and focus states.",
     ],
   },
   {
@@ -2789,6 +2815,63 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Radius/DEFAULT",
     scopes: ["CORNER_RADIUS"],
   },
+  { name: "Container/width/default", value: 480, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Container/min-height/default",
+    value: 120,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "Container/padding/x",
+    value: 24,
+    alias: "Layout/spacing/300",
+    scopes: ["GAP"],
+  },
+  {
+    name: "Container/content-width/centered",
+    value: 320,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "Container/content-width/fluid",
+    value: 432,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "Container/content-height",
+    value: 64,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "Container/content-padding",
+    value: 16,
+    alias: "Layout/spacing/200",
+    scopes: ["GAP"],
+  },
+  {
+    name: "Container/content-radius",
+    value: 8,
+    alias: "Radius/DEFAULT",
+    scopes: ["CORNER_RADIUS"],
+  },
+  {
+    name: "Container/content-stroke/width",
+    value: 1,
+    alias: "Border Width/sm",
+    scopes: ["STROKE_FLOAT"],
+  },
+  {
+    name: "Container/text/font-size",
+    value: 14,
+    alias: "Text/font-size/sm",
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "Container/text/line-height",
+    value: 20,
+    alias: "Text/line-height/sm",
+    scopes: ["LINE_HEIGHT"],
+  },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -2950,6 +3033,24 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "rebuild-stack") {
       const result = await rebuildStackComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "build-container") {
+      const result = await buildContainerComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-container") {
+      const result = await updateContainerComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-container") {
+      const result = await rebuildContainerComponent();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -5070,6 +5171,7 @@ function unexpectedTopLevelNodesForPage(page) {
     "Skeleton / v1",
     "Box / v1",
     "Stack / v1",
+    "Container / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5759,6 +5861,17 @@ function auditComponentSet(componentSet, pageName, variableContext) {
     }
   }
 
+  if (record.name === "Container / v1") {
+    const textProperty = Object.values(textProperties).find(
+      (property) => property.baseName === "Container Text",
+    );
+    if (!textProperty || textProperty.boundTextNodes === 0) {
+      record.warnings.push(
+        "Container Text component property is missing or not bound to generated Container text nodes.",
+      );
+    }
+  }
+
   if (compositionIntegrity.issueCount > 0) {
     record.warnings.push(
       `${compositionIntegrity.issueCount} composite component integrity issue(s) found. Composite components must use live nested instances with valid auto-layout sizing.`,
@@ -5878,6 +5991,7 @@ function shouldAuditLayoutBindings(name) {
       "Skeleton / v1",
       "Box / v1",
       "Stack / v1",
+      "Container / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -5909,6 +6023,7 @@ function shouldAuditTypographyBindings(name) {
       "Link / v1",
       "Label / v1",
       "Box / v1",
+      "Container / v1",
       "Button / v1",
       "Counter / v1",
       "Badge / v1",
@@ -6037,6 +6152,12 @@ function expectedVariantAxesForComponentSetName(name) {
     return {
       Direction: STACK_DIRECTIONS,
       Gap: STACK_GAPS,
+    };
+  }
+
+  if (name === "Container / v1") {
+    return {
+      Centered: CONTAINER_CENTERED,
     };
   }
 
@@ -12647,6 +12768,46 @@ async function updateStackComponent() {
   return stats;
 }
 
+async function buildContainerComponent() {
+  return buildSingleAxisComponent({
+    componentName: "Container",
+    componentSetName: "Container / v1",
+    axisName: "Centered",
+    values: CONTAINER_CENTERED,
+    x: 80,
+    y: 11380,
+    xStep: 560,
+    createVariant: createContainerVariant,
+    configureProperties: configureContainerProperties,
+    description: [
+      "Kozmos Container component set generated from React Container API.",
+      "Centered maps to Container.centered.",
+      "Container Text maps to children in Code Connect.",
+      "Responsive padding and max-width behavior remain runtime CSS concerns.",
+    ],
+  });
+}
+
+async function updateContainerComponent() {
+  return updateSingleAxisComponent({
+    componentName: "Container",
+    componentSetName: "Container / v1",
+    axisName: "Centered",
+    values: CONTAINER_CENTERED,
+    xStep: 560,
+    createVariant: createContainerVariant,
+    updateVariant: updateContainerVariant,
+    parseVariantName: parseContainerVariantName,
+    configureProperties: configureContainerProperties,
+    description: [
+      "Kozmos Container component set generated from React Container API.",
+      "Centered maps to Container.centered.",
+      "Container Text maps to children in Code Connect.",
+      "Updated in place to preserve the Code Connect node ID.",
+    ],
+  });
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -14120,6 +14281,14 @@ async function rebuildStackComponent() {
   });
 }
 
+async function rebuildContainerComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Container",
+    componentSetName: "Container / v1",
+    build: buildContainerComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -15141,6 +15310,16 @@ function configureBoxProperties(componentSet, stats) {
 }
 
 function configureStackProperties(_componentSet, _stats) {}
+
+function configureContainerProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Container Text",
+    "Container Text",
+    "Container content",
+    stats,
+  );
+}
 
 function configureAlertProperties(componentSet, stats) {
   configureNamedTextProperty(componentSet, "Title", "Title", "Heads up", stats);
@@ -16862,6 +17041,202 @@ async function updateStackVariant(
     );
     component.appendChild(item);
   }
+}
+
+async function createContainerVariant({ value, variableByName, fonts, stats }) {
+  const component = figma.createComponent();
+  await updateContainerVariant(component, {
+    value,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+function parseContainerVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (CONTAINER_CENTERED.indexOf(values.Centered) === -1) return null;
+
+  return {
+    value: values.Centered,
+    centered: values.Centered,
+  };
+}
+
+async function updateContainerVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const centered = value === "True";
+  component.name = `Centered=${value}`;
+  component.layoutMode = "VERTICAL";
+  component.primaryAxisSizingMode = "FIXED";
+  component.counterAxisSizingMode = "FIXED";
+  component.primaryAxisAlignItems = "CENTER";
+  component.counterAxisAlignItems = centered ? "CENTER" : "MIN";
+  component.itemSpacing = 0;
+  component.paddingLeft = 24;
+  component.paddingRight = 24;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.resizeWithoutConstraints(480, 120);
+  component.fills = [];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Container");
+
+  bindSizeVariables(
+    component,
+    "Container/width/default",
+    "Container/min-height/default",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    component,
+    "paddingLeft",
+    "Container/padding/x",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    component,
+    "paddingRight",
+    "Container/padding/x",
+    variableByName,
+    stats,
+  );
+
+  let content = directChildNamed(component, "Container Content");
+  if (content && content.type !== "FRAME") {
+    content.remove();
+    content = null;
+  }
+
+  if (!content || content.type !== "FRAME") {
+    content = figma.createFrame();
+    content.name = "Container Content";
+  }
+
+  const contentWidth = centered ? 320 : 432;
+  content.layoutMode = "HORIZONTAL";
+  content.primaryAxisSizingMode = "FIXED";
+  content.counterAxisSizingMode = "FIXED";
+  content.primaryAxisAlignItems = "CENTER";
+  content.counterAxisAlignItems = "CENTER";
+  content.itemSpacing = 0;
+  content.paddingLeft = 16;
+  content.paddingRight = 16;
+  content.paddingTop = 16;
+  content.paddingBottom = 16;
+  content.resizeWithoutConstraints(contentWidth, 64);
+  content.cornerRadius = 8;
+  content.fills = [
+    paintFromVariable(
+      "Colors/background/100",
+      "#F4F5F7",
+      variableByName,
+      stats,
+    ),
+  ];
+  content.strokes = [
+    paintFromVariable(
+      "Colors/background/200",
+      "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  content.strokeWeight = 1;
+  content.clipsContent = false;
+
+  bindSizeVariables(
+    content,
+    centered
+      ? "Container/content-width/centered"
+      : "Container/content-width/fluid",
+    "Container/content-height",
+    variableByName,
+    stats,
+  );
+  for (const field of [
+    "paddingLeft",
+    "paddingRight",
+    "paddingTop",
+    "paddingBottom",
+  ]) {
+    bindFloatVariable(
+      content,
+      field,
+      "Container/content-padding",
+      variableByName,
+      stats,
+    );
+  }
+  bindFloatVariable(
+    content,
+    "cornerRadius",
+    "Container/content-radius",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    content,
+    "strokeWeight",
+    "Container/content-stroke/width",
+    variableByName,
+    stats,
+  );
+
+  let text = directChildNamed(content, "Container Text");
+  if (text && text.type !== "TEXT") {
+    text.remove();
+    text = null;
+  }
+
+  if (!text || text.type !== "TEXT") {
+    text = figma.createText();
+    text.name = "Container Text";
+  }
+
+  text.fontName = fonts.regular;
+  text.fontSize = 14;
+  text.lineHeight = { unit: "PIXELS", value: 20 };
+  text.characters = centered ? "Centered container" : "Fluid container";
+  text.fills = [
+    paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
+  ];
+  text.textAlignHorizontal = "CENTER";
+  setTextAutoResize(text, "WIDTH_AND_HEIGHT");
+  bindFloatVariable(
+    text,
+    "fontSize",
+    "Container/text/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    text,
+    "lineHeight",
+    "Container/text/line-height",
+    variableByName,
+    stats,
+  );
+  content.appendChild(text);
+  component.appendChild(content);
 }
 
 function parseCounterVariantName(name) {

@@ -649,6 +649,7 @@
               <optgroup label="Layout">
                 <option value="box">Box / v1</option>
                 <option value="stack">Stack / v1</option>
+                <option value="container">Container / v1</option>
                 <option value="card">Card / v1</option>
               </optgroup>
               <optgroup label="Navigation">
@@ -876,6 +877,13 @@
           update: "update-stack",
           rebuild: "rebuild-stack",
           hint: "Build creates Stack / v1 with Row/Column direction and Gap 2/4/6 examples. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        container: {
+          label: "Container / v1",
+          build: "build-container",
+          update: "update-container",
+          rebuild: "rebuild-container",
+          hint: "Build creates Container / v1 with centered and fluid examples plus editable Container Text. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         button: {
           label: "Button / v1",

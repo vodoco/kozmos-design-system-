@@ -114,6 +114,7 @@ const files = {
   reactSkeleton: "packages/react/src/components/Skeleton/Skeleton.tsx",
   reactBox: "packages/react/src/components/Box/Box.tsx",
   reactStack: "packages/react/src/components/Stack/Stack.tsx",
+  reactContainer: "packages/react/src/components/Container/Container.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -1089,6 +1090,72 @@ assertContains(
   source.reactStack,
   "gap: {",
   "React Stack gap variants",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Container / v1",
+  "Container component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const CONTAINER_CENTERED =",
+  "Container centered axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildContainerComponent()",
+  "Container build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateContainerComponent()",
+  "Container update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Container / v1"',
+  "Container documentation metadata",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `name: "Container/padding/x"`,
+  "Container padding component token",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="container">Container / v1</option>',
+  "Container UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-container"',
+  "Container UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Container / v1**",
+  "Container importer documentation",
+);
+assertContains(
+  files.reactContainer,
+  source.reactContainer,
+  "centered = true",
+  "React Container centered default",
+);
+assertContains(
+  files.reactContainer,
+  source.reactContainer,
+  "max-w-7xl",
+  "React Container max width",
 );
 assertContains(
   files.figma,
