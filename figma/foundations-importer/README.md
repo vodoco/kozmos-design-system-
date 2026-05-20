@@ -35,6 +35,8 @@ Select **Skeleton / v1** and click **Build** for loading placeholders. It create
 
 Select **Box / v1** and click **Build** before heavier composition work. It creates Transparent, Surface, and Outlined examples with editable `Box Text`, sharing the same radius, padding, and boundary tokens used by Core surfaces.
 
+Select **Stack / v1** and click **Build** after Box. It creates canonical Row and Column layout examples across Gap 2, 4, and 6; broader alignment, justification, and wrapping remain product-code choices for now to avoid variant explosion.
+
 Select **Curated Icons** and click **Build** to create the curated Kozmos icon source set on the `Icons` page. The first pass imports the 38 icons from `@kozmos/icons` / `docs/figma-pointr-icon-catalog.json` by Pointr component key, then applies them as preferred values for Button and IconButton `Icon` instance-swap slots.
 
 Select **Curated Icons** and click **Update** when the curated registry or Pointr source components change. It updates icon source components in place, preserves their node IDs, and keeps each nested `Pointr Source` stretched to the 24px icon bounds so resized Button/IconButton slots do not clip or overflow the source artwork.

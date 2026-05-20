@@ -648,6 +648,7 @@
               </optgroup>
               <optgroup label="Layout">
                 <option value="box">Box / v1</option>
+                <option value="stack">Stack / v1</option>
                 <option value="card">Card / v1</option>
               </optgroup>
               <optgroup label="Navigation">
@@ -868,6 +869,13 @@
           update: "update-box",
           rebuild: "rebuild-box",
           hint: "Build creates Box / v1 with Transparent, Surface, and Outlined examples plus editable Box Text. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+        },
+        stack: {
+          label: "Stack / v1",
+          build: "build-stack",
+          update: "update-stack",
+          rebuild: "rebuild-stack",
+          hint: "Build creates Stack / v1 with Row/Column direction and Gap 2/4/6 examples. Update preserves its future Code Connect node ID; Rebuild archives and creates a fresh node ID.",
         },
         button: {
           label: "Button / v1",

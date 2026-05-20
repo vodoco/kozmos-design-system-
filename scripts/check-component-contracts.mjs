@@ -113,6 +113,7 @@ const files = {
   reactSeparator: "packages/react/src/components/Separator/Separator.tsx",
   reactSkeleton: "packages/react/src/components/Skeleton/Skeleton.tsx",
   reactBox: "packages/react/src/components/Box/Box.tsx",
+  reactStack: "packages/react/src/components/Stack/Stack.tsx",
   reactButton: "packages/react/src/components/Button/Button.tsx",
   reactIconButton: "packages/react/src/components/IconButton/IconButton.tsx",
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
@@ -1016,6 +1017,78 @@ assertContains(
   source.figma,
   "Box / v1",
   "Box component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "Stack / v1",
+  "Stack component set generation",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const STACK_DIRECTIONS =",
+  "Stack direction axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "const STACK_GAPS =",
+  "Stack gap axis registry",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function buildStackComponent()",
+  "Stack build handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  "async function updateStackComponent()",
+  "Stack update handler",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'componentSetName: "Stack / v1"',
+  "Stack documentation metadata",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `name: "Stack/gap/4"`,
+  "Stack gap component token",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  '<option value="stack">Stack / v1</option>',
+  "Stack UI picker option",
+);
+assertContains(
+  files.figmaUi,
+  source.figmaUi,
+  'build: "build-stack"',
+  "Stack UI build action",
+);
+assertContains(
+  files.figmaReadme,
+  source.figmaReadme,
+  "Select **Stack / v1**",
+  "Stack importer documentation",
+);
+assertContains(
+  files.reactStack,
+  source.reactStack,
+  "direction: {",
+  "React Stack direction variants",
+);
+assertContains(
+  files.reactStack,
+  source.reactStack,
+  "gap: {",
+  "React Stack gap variants",
 );
 assertContains(
   files.figma,

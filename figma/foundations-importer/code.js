@@ -28,6 +28,8 @@ const LABEL_STATES = ["Default", "Disabled"];
 const SEPARATOR_ORIENTATIONS = ["Horizontal", "Vertical"];
 const SKELETON_SHAPES = ["Line", "Block", "Circle"];
 const BOX_SURFACES = ["Transparent", "Surface", "Outlined"];
+const STACK_DIRECTIONS = ["Column", "Row"];
+const STACK_GAPS = ["2", "4", "6"];
 const BUTTON_VARIANTS = [
   "Default",
   "Destructive",
@@ -108,6 +110,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   "Separator / v1": 260,
   "Skeleton / v1": 260,
   "Box / v1": 360,
+  "Stack / v1": 520,
   "Button / v1": 900,
   "IconButton / v1": 820,
   "Card / v1": 420,
@@ -135,6 +138,7 @@ const COMPONENT_PAGE_LAYOUT_ORDER = [
   "Separator / v1",
   "Skeleton / v1",
   "Box / v1",
+  "Stack / v1",
   "Button / v1",
   "IconButton / v1",
   "Counter / v1",
@@ -456,6 +460,29 @@ const COMPONENT_DOCS = [
       "Box is non-interactive unless composed around an interactive child.",
       "Placeholder text contrast passes in Light and Dark modes.",
       "Visible surfaces use shared radius, padding, and boundary variables.",
+    ],
+  },
+  {
+    componentName: "Stack",
+    componentSetName: "Stack / v1",
+    category: "Layout",
+    summary:
+      "Stack arranges child content in a row or column with consistent spacing.",
+    usage: [
+      "Use Column for vertical field groups, panels, and content blocks.",
+      "Use Row for inline control groups and compact metadata.",
+      "Use these Figma variants as canonical layout examples, not every possible flexbox combination.",
+    ],
+    api: [
+      "Direction maps to Stack.direction.",
+      "Gap maps to Stack.gap.",
+      "Alignment, justification, and wrapping remain product-code composition choices.",
+    ],
+    properties: ["Direction: Column, Row", "Gap: 2, 4, 6"],
+    accessibility: [
+      "Stack is non-interactive unless composed around interactive children.",
+      "Spacing does not communicate state by itself.",
+      "Child controls must preserve their own labels, focus states, and touch targets.",
     ],
   },
   {
@@ -2738,6 +2765,30 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Text/line-height/sm",
     scopes: ["LINE_HEIGHT"],
   },
+  { name: "Stack/width/default", value: 320, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Stack/height/column", value: 120, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Stack/height/row", value: 72, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Stack/gap/2",
+    value: 8,
+    alias: "Layout/spacing/100",
+    scopes: ["GAP"],
+  },
+  {
+    name: "Stack/gap/4",
+    value: 16,
+    alias: "Layout/spacing/200",
+    scopes: ["GAP"],
+  },
+  { name: "Stack/gap/6", value: 24, scopes: ["GAP"] },
+  { name: "Stack/item/width", value: 88, scopes: ["WIDTH_HEIGHT"] },
+  { name: "Stack/item/height", value: 32, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "Stack/item/radius",
+    value: 8,
+    alias: "Radius/DEFAULT",
+    scopes: ["CORNER_RADIUS"],
+  },
 ];
 
 figma.ui.onmessage = async (message) => {
@@ -2881,6 +2932,24 @@ figma.ui.onmessage = async (message) => {
 
     if (message.type === "rebuild-box") {
       const result = await rebuildBoxComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "build-stack") {
+      const result = await buildStackComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "update-stack") {
+      const result = await updateStackComponent();
+      figma.ui.postMessage({ type: "component-result", result });
+      return;
+    }
+
+    if (message.type === "rebuild-stack") {
+      const result = await rebuildStackComponent();
       figma.ui.postMessage({ type: "component-result", result });
       return;
     }
@@ -5000,6 +5069,7 @@ function unexpectedTopLevelNodesForPage(page) {
     "Separator / v1",
     "Skeleton / v1",
     "Box / v1",
+    "Stack / v1",
     "Button / v1",
     "IconButton / v1",
     "Counter / v1",
@@ -5807,6 +5877,7 @@ function shouldAuditLayoutBindings(name) {
       "Separator / v1",
       "Skeleton / v1",
       "Box / v1",
+      "Stack / v1",
       "Button / v1",
       "IconButton / v1",
       "Counter / v1",
@@ -5959,6 +6030,13 @@ function expectedVariantAxesForComponentSetName(name) {
   if (name === "Box / v1") {
     return {
       Surface: BOX_SURFACES,
+    };
+  }
+
+  if (name === "Stack / v1") {
+    return {
+      Direction: STACK_DIRECTIONS,
+      Gap: STACK_GAPS,
     };
   }
 
@@ -12417,6 +12495,158 @@ async function updateBoxComponent() {
   });
 }
 
+async function buildStackComponent() {
+  const stats = {
+    created: false,
+    componentSetId: null,
+    urlNodeId: null,
+    variants: 0,
+    warnings: [],
+  };
+
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  removeStaleGeneratedComponentArtifacts(page, "Stack", stats);
+
+  const existing = page.findOne((node) => node.name === "Stack / v1");
+  if (existing) {
+    stats.existing = true;
+    stats.componentSetId = existing.id;
+    stats.urlNodeId = nodeIdForUrl(existing.id);
+    stats.message =
+      "Stack / v1 already exists. Use Update Stack to preserve its node ID.";
+    return stats;
+  }
+
+  const variableByName = await ensureComponentRuntimeVariables(stats);
+  const components = [];
+
+  for (const combination of stackVariantCombinations()) {
+    const component = await createStackVariant({
+      direction: combination.direction,
+      gap: combination.gap,
+      variableByName,
+      stats,
+    });
+    page.appendChild(component);
+    components.push(component);
+  }
+
+  const componentSet = figma.combineAsVariants(components, page);
+  componentSet.name = "Stack / v1";
+  componentSet.x = 80;
+  componentSet.y = 10820;
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Stack");
+  applyComponentSetDescription(componentSet, "Stack / v1", false, [
+    "Kozmos Stack component set generated from React Stack API.",
+    "Direction maps to Stack.direction.",
+    "Gap maps to Stack.gap.",
+    "Alignment, justification, and wrapping remain product-code composition choices.",
+  ]);
+  clearComponentSetContainerFill(componentSet);
+  layoutStackVariants(componentSet);
+
+  stats.created = true;
+  stats.componentSetId = componentSet.id;
+  stats.urlNodeId = nodeIdForUrl(componentSet.id);
+  stats.variants = components.length;
+  normalizeComponentSetVariantProperties(
+    componentSet,
+    expectedVariantAxesForComponentSetName(componentSet.name),
+    stats,
+  );
+  configureStackProperties(componentSet, stats);
+  return stats;
+}
+
+async function updateStackComponent() {
+  const stats = {
+    updated: false,
+    componentSetId: null,
+    urlNodeId: null,
+    variantsUpdated: 0,
+    variantsCreated: 0,
+    warnings: [],
+  };
+
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+
+  removeStaleGeneratedComponentArtifacts(page, "Stack", stats);
+
+  const existing = page.findOne((node) => node.name === "Stack / v1");
+  if (!existing || existing.type !== "COMPONENT_SET") {
+    stats.message = "Stack / v1 was not found. Run Build Stack first.";
+    return stats;
+  }
+
+  const variableByName = await ensureComponentRuntimeVariables(stats);
+  const seenKeys = {};
+
+  existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "component", "Stack");
+  applyComponentSetDescription(existing, "Stack / v1", true, [
+    "Kozmos Stack component set generated from React Stack API.",
+    "Direction maps to Stack.direction.",
+    "Gap maps to Stack.gap.",
+    "Updated in place to preserve the Code Connect node ID.",
+  ]);
+  clearComponentSetContainerFill(existing);
+
+  for (const child of existing.children) {
+    if (child.type !== "COMPONENT") continue;
+
+    const props = parseStackVariantName(child.name);
+    if (!props) {
+      stats.warnings.push(
+        `Skipped unrecognized Stack variant "${child.name}".`,
+      );
+      continue;
+    }
+
+    seenKeys[stackVariantKey(props)] = true;
+    await updateStackVariant(child, {
+      direction: props.direction,
+      gap: props.gap,
+      variableByName,
+      stats,
+    });
+    stats.variantsUpdated += 1;
+  }
+
+  for (const combination of stackVariantCombinations()) {
+    const key = stackVariantKey(combination);
+    if (seenKeys[key]) continue;
+
+    const component = await createStackVariant({
+      direction: combination.direction,
+      gap: combination.gap,
+      variableByName,
+      stats,
+    });
+    existing.appendChild(component);
+    seenKeys[key] = true;
+    stats.variantsCreated += 1;
+  }
+
+  layoutStackVariants(existing);
+
+  stats.updated = true;
+  stats.componentSetId = existing.id;
+  stats.urlNodeId = nodeIdForUrl(existing.id);
+  normalizeComponentSetVariantProperties(
+    existing,
+    expectedVariantAxesForComponentSetName(existing.name),
+    stats,
+  );
+  configureStackProperties(existing, stats);
+  return stats;
+}
+
 async function buildCounterComponent() {
   const stats = {
     created: false,
@@ -13882,6 +14112,14 @@ async function rebuildBoxComponent() {
   });
 }
 
+async function rebuildStackComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "Stack",
+    componentSetName: "Stack / v1",
+    build: buildStackComponent,
+  });
+}
+
 async function rebuildButtonComponent() {
   return rebuildGeneratedComponentSet({
     componentName: "Button",
@@ -14790,6 +15028,25 @@ function layoutTextVariants(componentSet) {
   }
 }
 
+function layoutStackVariants(componentSet) {
+  if (!componentSet || !componentSet.children) return;
+
+  const columnWidth = 380;
+  const rowHeight = 160;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+
+    const props = parseStackVariantName(child.name);
+    if (!props) continue;
+
+    const directionIndex = STACK_DIRECTIONS.indexOf(props.direction);
+    const gapIndex = STACK_GAPS.indexOf(props.gap);
+    child.x = gapIndex * columnWidth;
+    child.y = directionIndex * rowHeight;
+  }
+}
+
 function layoutTabsVariants(componentSet) {
   if (!componentSet || !componentSet.children) return;
 
@@ -14882,6 +15139,8 @@ function configureBoxProperties(componentSet, stats) {
     stats,
   );
 }
+
+function configureStackProperties(_componentSet, _stats) {}
 
 function configureAlertProperties(componentSet, stats) {
   configureNamedTextProperty(componentSet, "Title", "Title", "Heads up", stats);
@@ -16491,6 +16750,118 @@ async function updateBoxVariant(
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   component.appendChild(text);
+}
+
+async function createStackVariant({ direction, gap, variableByName, stats }) {
+  const component = figma.createComponent();
+  await updateStackVariant(component, {
+    direction,
+    gap,
+    variableByName,
+    stats,
+  });
+  return component;
+}
+
+function parseStackVariantName(name) {
+  const values = {};
+  const parts = name.split(",");
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    values[key] = value;
+  }
+
+  if (
+    STACK_DIRECTIONS.indexOf(values.Direction) === -1 ||
+    STACK_GAPS.indexOf(values.Gap) === -1
+  ) {
+    return null;
+  }
+
+  return {
+    direction: values.Direction,
+    gap: values.Gap,
+  };
+}
+
+async function updateStackVariant(
+  component,
+  { direction, gap, variableByName, stats },
+) {
+  const horizontal = direction === "Row";
+  component.name = `Direction=${direction}, Gap=${gap}`;
+  component.layoutMode = horizontal ? "HORIZONTAL" : "VERTICAL";
+  component.primaryAxisSizingMode = "FIXED";
+  component.counterAxisSizingMode = "FIXED";
+  component.primaryAxisAlignItems = "CENTER";
+  component.counterAxisAlignItems = "CENTER";
+  component.itemSpacing = Number(gap) * 4;
+  component.paddingLeft = 0;
+  component.paddingRight = 0;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.resizeWithoutConstraints(320, horizontal ? 72 : 120);
+  component.fills = [];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.clipsContent = false;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "Stack");
+
+  bindSizeVariables(
+    component,
+    "Stack/width/default",
+    horizontal ? "Stack/height/row" : "Stack/height/column",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    component,
+    "itemSpacing",
+    `Stack/gap/${gap}`,
+    variableByName,
+    stats,
+  );
+
+  const existingItems = (component.children || []).filter((child) =>
+    /^Stack Item /.test(child.name),
+  );
+  for (const child of existingItems) child.remove();
+
+  for (let index = 0; index < 3; index += 1) {
+    const item = figma.createRectangle();
+    item.name = `Stack Item ${index + 1}`;
+    item.resizeWithoutConstraints(88, 32);
+    item.cornerRadius = 8;
+    item.fills = [
+      paintFromVariable(
+        "Colors/background/200",
+        "#C7CAD1",
+        variableByName,
+        stats,
+      ),
+    ];
+    item.strokes = [];
+    bindSizeVariables(
+      item,
+      "Stack/item/width",
+      "Stack/item/height",
+      variableByName,
+      stats,
+    );
+    bindFloatVariable(
+      item,
+      "cornerRadius",
+      "Stack/item/radius",
+      variableByName,
+      stats,
+    );
+    component.appendChild(item);
+  }
 }
 
 function parseCounterVariantName(name) {
@@ -23431,6 +23802,22 @@ function textVariantCombinations() {
 
 function textVariantKey(props) {
   return `${props.size}/${props.weight}/${props.tone}`;
+}
+
+function stackVariantCombinations() {
+  const combinations = [];
+
+  for (const direction of STACK_DIRECTIONS) {
+    for (const gap of STACK_GAPS) {
+      combinations.push({ direction, gap });
+    }
+  }
+
+  return combinations;
+}
+
+function stackVariantKey(props) {
+  return `${props.direction}/${props.gap}`;
 }
 
 function textMetrics(size) {
