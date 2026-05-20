@@ -2751,6 +2751,22 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
+  'markNestedComponentInstance(input, "Input")',
+  "Dialog Input instance provenance stamping",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  `markNestedComponentInstance(
+      action,
+      "Button",
+      primary ? "primary" : "secondary",
+    )`,
+  "Dialog Button instance provenance stamping",
+);
+assertContains(
+  files.figma,
+  source.figma,
   "configurePopoverProperties(componentSet, stats)",
   "Popover text component property binding",
 );

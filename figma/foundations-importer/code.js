@@ -21345,6 +21345,10 @@ async function syncDialogInput({ body, name, label, placeholder, stats }) {
     inputSet = await findLocalComponentSetByName("Input");
   }
 
+  if (input.type === "INSTANCE") {
+    markNestedComponentInstance(input, "Input");
+  }
+
   if (input.type === "INSTANCE" && inputSet) {
     try {
       input.setProperties({
@@ -21409,6 +21413,14 @@ async function syncDialogFooterAction({ footer, name, label, primary, stats }) {
     }
   } else {
     buttonSet = await findLocalComponentSetByName("Button");
+  }
+
+  if (action.type === "INSTANCE") {
+    markNestedComponentInstance(
+      action,
+      "Button",
+      primary ? "primary" : "secondary",
+    );
   }
 
   if (action.type === "INSTANCE" && buttonSet) {
