@@ -11,7 +11,7 @@ import {
 } from "./Dialog";
 
 const dialogUrl =
-  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8101";
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=143-13060";
 
 figma.connect(DialogContent, dialogUrl, {
   variant: { Content: "Basic" },
