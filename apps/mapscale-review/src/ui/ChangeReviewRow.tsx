@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { SegmentedControl, Tooltip, TooltipTrigger, TooltipContent } from "@kozmos/react";
 import {
   changeAccent,
@@ -83,6 +84,7 @@ export function ChangeReviewRow({
 }) {
   const accent = changeAccent(change);
   const warning = warningOf(change);
+  const [expanded, setExpanded] = useState(false);
   /** A user override's two states: kept, and kept but flagged to come back to. */
   const overrideItems = [
     {
@@ -219,13 +221,40 @@ export function ChangeReviewRow({
             </TooltipContent>
           </Tooltip>
         )}
-        {/* one line per attribute that moved, as the MapScale report words it */}
+        {/*
+          **Details are behind a toggle** (Olcay, 2026-08-11: *"maybe there could be a 'details'
+          button — when clicked the card expands and shows the details much more neatly"*).
+          Every bullet used to render inline, so a row with two of them grew tall enough to wrap
+          around the decision control and collide with it. Collapsed, a row is one line of summary
+          and its decision; the bullets are there when you want them.
+        */}
         {change.details?.length ? (
-          change.details.map((d) => (
-            <div key={d} style={{ fontSize: 12, color: "var(--review-muted)" }}>
-              • {d}
-            </div>
-          ))
+          <>
+            <div style={{ fontSize: 12.5, color: "var(--review-muted)" }}>{change.detail}</div>
+            <button
+              // stopPropagation: expanding is reading, not selecting — otherwise opening the
+              // details would also fly the map to this feature.
+              onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+              aria-expanded={expanded}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 3, marginTop: 3, padding: 0,
+                border: "none", background: "none", cursor: "pointer", fontSize: 11.5,
+                fontWeight: 600, color: "var(--primitives-colors-theme-700)",
+              }}
+            >
+              {expanded ? "Hide details" : "Details"}
+              <span style={{ fontSize: 9, lineHeight: 1 }}>{expanded ? "▲" : "▼"}</span>
+            </button>
+            {expanded && (
+              <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
+                {change.details.map((d) => (
+                  <div key={d} style={{ fontSize: 12, color: "var(--review-muted)", lineHeight: 1.4 }}>
+                    • {d}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           <div
             style={{
