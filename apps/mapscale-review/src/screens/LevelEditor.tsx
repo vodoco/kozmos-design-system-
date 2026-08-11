@@ -383,6 +383,8 @@ export function LevelEditor({
   const onBuildings = useCallback((b: MapBuilding[]) => setLiveBuildings(b), []);
   /** A file dropped on this pane's map, awaiting the confirmation overlay's answer. */
   const [dropped, setDropped] = useState<string | null>(null);
+  /** Upload-over-finished-work confirmation (Olcay, 2026-08-11) — see `restartsWork`. */
+  const [confirmUpload, setConfirmUpload] = useState(false);
   const onFileDrop = useCallback((f: { name: string }) => setDropped(f.name), []);
 
   /**
@@ -472,6 +474,24 @@ export function LevelEditor({
 
   /** Has anything in the metadata block been touched? Drives Done vs Update in the footer. */
   const [metaDirty, setMetaDirty] = useState(false);
+
+  /**
+   * Does uploading here throw away work? (Olcay, 2026-08-11: *"if the state is at Review maybe we
+   * should also ask for a confirmation — your floor-plan is at the final stage, uploading a new
+   * floor-plan would start the process over, do you really want to?"*)
+   *
+   * True once the current version has **reached or passed review** — it is awaiting your decision,
+   * carries a review you started or finished, or is live. A new upload starts the whole pipeline
+   * again (MapScale → the mapping team → your review), and because outcomes are **version-matched**
+   * the decisions on this version do not carry across.
+   *
+   * ⚠️ Deliberately **false for `rejected` and `failed`**. There, uploading a corrected file is the
+   * prescribed way out (decision 9 and cause C) — warning would argue with the app's own advice.
+   * It is also false under the expert hold, where Upload is locked outright rather than warned.
+   */
+  const restartsWork =
+    !!current &&
+    (["needs-review", "needs-decision", "published"].includes(current.state) || !!forThisVersion);
 
   const outcome = outcomeFor(run.pct, run.cause);
   const PHASE: Record<Exclude<Phase, "done">, { state: MapScaleState; note?: string; progress?: number; action?: string }> = {
@@ -904,7 +924,7 @@ export function LevelEditor({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => uploadNew()}
+                  onClick={() => (restartsWork ? setConfirmUpload(true) : uploadNew())}
                   disabled={!!uploadReason}
                   className="w-full"
                 >
@@ -997,6 +1017,38 @@ export function LevelEditor({
             onCancel={() => setDropped(null)}
           />
         )}
+
+        {/*
+          Uploading over a level that has already been through review restarts everything —
+          MapScale, the mapping team's pass, and your own review — and the decisions on this
+          version do not come with it, because outcomes are version-matched. That is worth a
+          sentence before it happens rather than an "oh" afterwards.
+
+          Same v9 overlay as every other confirmation in the app (§3), and it **warns without
+          refusing**: re-uploading is a legitimate thing to do, it just costs the work below.
+        */}
+        <ConfirmOverlay
+          open={confirmUpload}
+          tone="info"
+          title="Upload a new floor-plan and start over?"
+          confirmLabel="Upload new floor-plan"
+          onCancel={() => setConfirmUpload(false)}
+          onConfirm={() => {
+            setConfirmUpload(false);
+            uploadNew();
+          }}
+        >
+          {`This level is at its final stage — ${
+            current?.state === "published" ? "the current floor-plan is live" : "its review is waiting on you"
+          }. A new floor-plan runs the whole process again: MapScale maps it, Pointr's mapping team corrects it, and it comes back for review.`}
+          {forThisVersion && (
+            <div style={{ fontSize: 13, color: MUTED, marginTop: 8 }}>
+              {`Your ${Object.values(forThisVersion.decisions).filter(Boolean).length} decision${
+                Object.values(forThisVersion.decisions).filter(Boolean).length === 1 ? "" : "s"
+              } on Version ${forThisVersion.versionN} stay in its history, but they don't carry over to the new one.`}
+            </div>
+          )}
+        </ConfirmOverlay>
       </div>
     </div>
   );

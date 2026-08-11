@@ -121,11 +121,16 @@ export function ConfirmOverlay({
               fontSize: 20,
               fontWeight: 500,
               letterSpacing: "-0.2px",
-              lineHeight: "22px",
               color: "#000",
+              /**
+               * Titles **wrap** rather than truncate (2026-08-11). They were `nowrap` + ellipsis,
+               * which is right for a label in a row and wrong for the one sentence a confirmation
+               * exists to say — *"Complete review with 4 flagged c…"* cut off at the number that
+               * made it worth asking. A confirmation with a clipped question is worse than a tall
+               * one, and these are two lines at most.
+               */
               overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              lineHeight: 1.35,
             }}
           >
             {title}

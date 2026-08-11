@@ -308,6 +308,19 @@ export function ManualReview({
   ).length;
 
   /**
+   * How many changes you have flagged to come back to (Olcay, 2026-08-11: *"if there are flags we
+   * should warn user about these flags — you have flagged items to edit, do you still want to
+   * publish?"*).
+   *
+   * The warning is the honest half of §18a's ruling that **flags are annotations, not gates**.
+   * Because they don't block, completing takes them live exactly as detected — so the one moment
+   * that must say so is the moment before it happens. It warns; it never refuses.
+   */
+  const flaggedCount = changes.filter((c) => decisions[c.id] === "flag").length;
+  /** Does completing this review actually publish? Decision 5 — and only for an eligible band. */
+  const willPublish = fate !== "published" && !matchFailed && bandKind === "medium";
+
+  /**
    * Creation reviews one level at a time and **stays mounted while you step between them**, so
    * that decisions taken on a level survive going to another and coming back. That costs this
    * effect: `decisions` is seeded once, from whichever level was open first, so a level arriving
@@ -810,7 +823,7 @@ export function ManualReview({
         <ConfirmOverlay
           open={confirmOpen}
           tone="info"
-          title="Complete this review?"
+          title={flaggedCount ? `Complete review with ${flaggedCount} flagged change${flaggedCount === 1 ? "" : "s"}?` : "Complete this review?"}
           confirmLabel="Complete review"
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
@@ -819,12 +832,26 @@ export function ManualReview({
             onClose?.();
           }}
         >
-          {/* The undecided sentence is the honest part: completing doesn't require deciding
-              everything, so it has to say what silence means — and silence means they apply,
-              because that is exactly what the grace period would have done unattended. */}
+          {/*
+            Three sentences, each earning its place, in the order they matter.
+
+            1. **What completing does** — and it says *publishes* outright when it will, rather
+               than the old hedge "if this level is eligible", which left the reader to work out
+               whether it applied to them at the moment they most needed to know.
+            2. **The flags**, when there are any: they go live as they are. Flagging means "come
+               back to this later"; §18a settled that it does not hold anything back, so this is
+               the sentence that keeps that from being a nasty surprise.
+            3. **The undecided**, which apply as detected — exactly what the grace period would
+               have done unattended.
+          */}
           {(fate === "published"
             ? "This version is already live. Completing the review keeps your decisions on record."
-            : "Completing concludes the review. If this level is eligible, the site publishes automatically with your decisions applied.") +
+            : willPublish
+              ? "Completing concludes the review and publishes this level with your decisions applied."
+              : "Completing concludes the review. This level is not published automatically — use Publish now when you're ready.") +
+            (flaggedCount
+              ? ` ${flaggedCount} change${flaggedCount === 1 ? " is" : "s are"} flagged to edit later — flagging marks ${flaggedCount === 1 ? "it" : "them"} for a later dashboard edit, so ${flaggedCount === 1 ? "it goes" : "they go"} live as detected.`
+              : "") +
             (undecidedCount
               ? ` ${undecidedCount} change${undecidedCount === 1 ? "" : "s"} still ${undecidedCount === 1 ? "has" : "have"} no decision — ${undecidedCount === 1 ? "it will be applied" : "they will be applied"} as detected.`
               : "")}

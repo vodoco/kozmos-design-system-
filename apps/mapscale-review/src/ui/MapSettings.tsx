@@ -114,8 +114,15 @@ export function MapSettings({
                   src={b.src}
                   alt=""
                   style={{
+                    /**
+                     * **Square** (Olcay, 2026-08-11 — the same note as the floor-plan thumbs).
+                     * It was `height: 56` against a flexed width, so the tile's shape depended on
+                     * how wide the popover happened to be: a landscape box next to a square one
+                     * elsewhere in the same app. `aspectRatio` keeps it square at any width.
+                     */
                     width: "100%",
-                    height: 56,
+                    aspectRatio: "1 / 1",
+                    display: "block",
                     objectFit: "cover",
                     borderRadius: 8,
                     border: `2px solid ${selected ? "var(--review-ink)" : "#E7E9EE"}`,
