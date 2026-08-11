@@ -2544,6 +2544,44 @@
         }
       }
     },
+    "Diff": {
+      "New": {
+        "$value": "#4FD98D",
+        "$type": "color",
+        "$extensions": {
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ]
+        }
+      },
+      "Updated": {
+        "$value": "#6BA5FF",
+        "$type": "color",
+        "$extensions": {
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ]
+        }
+      },
+      "Deleted": {
+        "$value": "#FF6B6B",
+        "$type": "color",
+        "$extensions": {
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ]
+        }
+      },
+      "Override": {
+        "$value": "#B48CFF",
+        "$type": "color",
+        "$extensions": {
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ]
+        }
+      }
+    },
     "Data": {
       "Blue": {
         "$value": "#da9c14",

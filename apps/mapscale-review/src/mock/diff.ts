@@ -532,13 +532,31 @@ export const BAND: Record<
   },
 };
 
-/** Four colours, five types: geometry and metadata are both "updated" to the eye. */
+/**
+ * Four colours, five types: geometry and metadata are both "updated" to the eye.
+ *
+ * **These are DS tokens now** (Olcay, 2026-08-11 — "let's add semantic diff"). They used to be
+ * hardcoded hex with a note saying no published equivalent existed, which was true and was also
+ * the reason to add one rather than to bend them onto `--semantics-data-*` (charts — and its blue
+ * is a different blue). `Semantics/Diff/{New,Updated,Deleted,Override}` now ships in
+ * `@kozmos/tokens`, so the map's diff encoding is design-system law rather than five literals
+ * copied between files.
+ *
+ * It also makes them **theme-aware**: the app mounts a ThemeProvider and loads all the token
+ * variables, so every hardcoded hex was silently a dark-mode bug. The dark values keep the hue and
+ * lift the lightness — identity has to survive the theme, because this colour says what a feature
+ * *is*.
+ *
+ * ⚠️ `public/map/index.html` keeps its own literal copy of these four, and must: the iframe is a
+ * standalone page that never loads the DS stylesheet, so `var()` would resolve to nothing there.
+ * Change one, change both — see the note beside its `COLORS`.
+ */
 export const CHANGE_COLORS: Record<ChangeType, string> = {
-  new: "#2FBF71",
-  geometry: "#3B82F6",
-  metadata: "#3B82F6",
-  deleted: "#EF4444",
-  preserved: "#9C6EFF",
+  new: "var(--semantics-diff-new)",
+  geometry: "var(--semantics-diff-updated)",
+  metadata: "var(--semantics-diff-updated)",
+  deleted: "var(--semantics-diff-deleted)",
+  preserved: "var(--semantics-diff-override)",
 };
 
 /**
