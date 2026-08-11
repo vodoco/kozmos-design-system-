@@ -180,6 +180,12 @@ let SELECTED = null, HOVERED = null;
  * silently do nothing.
  */
 let PENDING_ACTIVE = null;
+/**
+ * Which change was pressed, and where. Captured on `pointerdown` (which always lands on a live
+ * path) and consumed by the SVG's delegated `click` — see the listener on the shapes for why a
+ * per-path `click` cannot be trusted.
+ */
+let PENDING_HIT = null, PENDING_AT = null;
 const shown = () => SELECTED || HOVERED;
 let RESOLVED = [];                 // [{ change, rings:[[lnglat,…]], centroid:[lng,lat] }]
 // Greyscale is the *review* mode — a level being edited or simply viewed stays in full colour.
@@ -573,7 +579,24 @@ function redraw() {
         ...(change.type==="deleted" ? { "stroke-dasharray":"9 6" } : {}) });
       path.addEventListener("mouseenter", () => hover(change));
       path.addEventListener("mouseleave", () => hover(null));
-      path.addEventListener("click", ev => { ev.stopPropagation(); select(change); });
+      /**
+       * **Not a `click` listener, deliberately.**
+       *
+       * `redraw()` wipes and rebuilds every path (see the top of this function) and runs on every
+       * render frame, because MapLibre renders continually for symbol fades. A real click is
+       * mousedown + mouseup on the *same* element — so if a frame lands between the press and the
+       * release, the path you pressed no longer exists and the browser dispatches `click` on the
+       * nearest common ancestor, the SVG, where a per-path listener can never see it. The shape
+       * simply didn't respond, intermittently and unreproducibly (Olcay: *"click still doesn't
+       * make a feature selected"*).
+       *
+       * `pointerdown` is a single event that always lands on a live path, so it records WHAT was
+       * pressed; the delegated handler on the SVG decides what to do with it.
+       */
+      path.addEventListener("pointerdown", ev => {
+        PENDING_HIT = change;
+        PENDING_AT = [ev.clientX, ev.clientY];
+      });
       svg.appendChild(path);
     });
     // action badge (skip for preserved / no decision)
@@ -1174,6 +1197,28 @@ function start() {
    * `#tip` and `#hl` are siblings of `#map`, so each needs its own listener: a `mousemove` on
    * `#map` fires only over *bare* map and never sees the card or the shapes.
    */
+  /**
+   * Selecting a shape, delegated to the SVG because the shapes themselves are transient.
+   *
+   * The SVG element is stable — `redraw()` empties it but never replaces it — so a click always
+   * reaches here, whether it landed on the original path, its replacement, or (when a frame fell
+   * between press and release) on the SVG itself. `PENDING_HIT` carries the identity from the
+   * pointerdown that started it.
+   *
+   * The distance check separates a click from a drag: the shapes sit over a pannable map, and
+   * pressing on a unit to drag the map should move the map, not select the unit.
+   */
+  document.getElementById("hl").addEventListener("click", ev => {
+    const hit = PENDING_HIT, at = PENDING_AT;
+    PENDING_HIT = null; PENDING_AT = null;
+    if (!hit) return;
+    if (at && Math.hypot(ev.clientX - at[0], ev.clientY - at[1]) > 4) return;   // that was a pan
+    ev.stopPropagation();
+    select(hit);
+  });
+  // a press that wandered off and released elsewhere shouldn't leave a live pending selection
+  window.addEventListener("pointerup", () => { setTimeout(() => { PENDING_HIT = null; PENDING_AT = null; }, 0); });
+
   const mapEl = document.getElementById("map");
   mapEl.addEventListener("mousemove", ev => endHoverUnless(ev.target));
   // leaving the map for the panel, the chrome, or another window — the case that used to strand
