@@ -142,9 +142,18 @@ export function ChangeReviewRow({
       data-change-row={change.id}
       onClick={onActivate}
       style={{
+        /**
+         * A COLUMN, not a row (Olcay, 2026-08-11: *"details should be full width — flags could
+         * align with what's above details"*). The card used to be one horizontal flex, so the
+         * bullets lived inside the left column and wrapped at roughly half the card's width while
+         * the empty right column held the decision control; and the control, centred against the
+         * whole card, drifted downward as the details expanded — away from the name it decides on.
+         *
+         * Now the top strip is [identity | control] and the details span the full width below it.
+         */
         display: "flex",
-        alignItems: "center",
-        gap: 12,
+        flexDirection: "column",
+        gap: 6,
         /**
          * The active row and the map's open tooltip are the same selection seen twice. The
          * treatment is deliberately NOT a colour: §3 reserves colour for what a feature *is* and
@@ -163,6 +172,8 @@ export function ChangeReviewRow({
         transition: "box-shadow .12s, background .12s",
       }}
     >
+      {/* top strip — the identity, and the decision that belongs to it, on one baseline */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%" }}>
       <div style={{ flex: "1 1 0", minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
           <span
@@ -228,46 +239,7 @@ export function ChangeReviewRow({
           around the decision control and collide with it. Collapsed, a row is one line of summary
           and its decision; the bullets are there when you want them.
         */}
-        {change.details?.length ? (
-          <>
-            <div style={{ fontSize: 12.5, color: "var(--review-muted)" }}>{change.detail}</div>
-            <button
-              // stopPropagation: expanding is reading, not selecting — otherwise opening the
-              // details would also fly the map to this feature.
-              onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-              aria-expanded={expanded}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 3, marginTop: 3, padding: 0,
-                border: "none", background: "none", cursor: "pointer", fontSize: 11.5,
-                fontWeight: 600, color: "var(--primitives-colors-theme-700)",
-              }}
-            >
-              {expanded ? "Hide details" : "Details"}
-              <span style={{ fontSize: 9, lineHeight: 1 }}>{expanded ? "▲" : "▼"}</span>
-            </button>
-            {expanded && (
-              <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
-                {change.details.map((d) => (
-                  <div key={d} style={{ fontSize: 12, color: "var(--review-muted)", lineHeight: 1.4 }}>
-                    • {d}
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <div
-            style={{
-              fontSize: 13,
-              color: "var(--review-muted)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {change.detail}
-          </div>
-        )}
+        <div style={{ fontSize: 12.5, color: "var(--review-muted)" }}>{change.detail}</div>
       </div>
       {/* Deciding is not selecting: without this, every ✓ would also fly the map to that feature,
           and working down the list would become a slideshow. */}
@@ -296,6 +268,57 @@ export function ChangeReviewRow({
           />
         )}
       </div>
+      </div>
+
+      {/*
+        The bullets use the FULL card width, and the toggle is a **full-width bottom cap**
+        (Olcay, 2026-08-11). Both come from the same observation: a bullet trapped in the identity
+        column wrapped at half the card, and a small inline link buried under the summary read as
+        part of the text rather than as the card's own control.
+
+        The cap breaks out of the card's padding with negative margins — hence the odd numbers,
+        which are exactly the padding above (`10px 12px 10px 14px`) — so it meets both edges and
+        rounds into the card's bottom corners.
+      */}
+      {change.details?.length ? (
+        <div style={{ width: "100%" }}>
+          {expanded && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 3, paddingBottom: 8 }}>
+              {change.details.map((d) => (
+                <div key={d} style={{ fontSize: 12, color: "var(--review-muted)", lineHeight: 1.45 }}>
+                  • {d}
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            // stopPropagation: expanding is reading, not selecting — otherwise opening the
+            // details would also fly the map to this feature.
+            onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+            aria-expanded={expanded}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+              width: "calc(100% + 26px)",
+              margin: "0 -12px -10px -14px",
+              padding: "6px 0",
+              border: "none",
+              borderTop: "1px solid var(--primitives-colors-background-100)",
+              borderRadius: "0 0 8px 8px",
+              background: "transparent",
+              cursor: "pointer",
+              fontSize: 11.5,
+              fontWeight: 600,
+              color: "var(--primitives-colors-theme-700)",
+            }}
+          >
+            {expanded ? "Hide details" : "Details"}
+            <span style={{ fontSize: 8, lineHeight: 1 }}>{expanded ? "▲" : "▼"}</span>
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
