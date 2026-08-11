@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { Button, Icon, Input, Popover, PopoverTrigger, PopoverContent, Text } from "@kozmos/react";
 import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
-import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, isUnderExpertReview, type Change } from "../mock/diff";
+import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, expertReviewEnabled, isUnderExpertReview, type Change } from "../mock/diff";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { LevelSelector } from "../ui/LevelSelector";
 import { UploadDropConfirm } from "../ui/UploadDropConfirm";
 import { getCreatedBuildings, subscribeCreatedBuildings } from "../mock/store";
+import { CONCOURSE_A_ID, SITE_SNAPSHOT, T3_ID } from "../mock/site";
 
 /**
  * S4 — Map Content (Figma node 2483:776). The dashboard's entry point: the buildings of the active
@@ -175,12 +176,18 @@ function Tag({ tag, onAction }: { tag: LevelTag; onAction?: () => void }) {
 
 /**
  * Where each level stands, shown in the tree so you don't have to open a level to find out.
- * Keyed by level index for the demo building; the real thing reads it from the job + version state.
+ * The real thing reads it from the job + version state.
  *
  * **Kept in step with `seedVersions()` in mock/diff.ts** — the editor seeds its status card from
- * the same index, so the tag you clicked and the screen you land on always agree. Change a band
- * here and the seed there, together. (Index-keyed means every building's matching index carries
- * the same story — a mock-wide convention, not a bug.)
+ * the same place, so the tag you clicked and the screen you land on always agree. Change a band
+ * here and the seed there, together.
+ *
+ * ⚠️ **This table is Terminal 3's**, and that is new (2026-08-11). It used to be keyed by level
+ * index alone, with a comment calling the resulting repetition "a mock-wide convention, not a
+ * bug" — defensible while you could only ever see one building expanded at a time. The
+ * notification feed flattens the whole site into one list, and it came out saying two buildings
+ * had a rejected floor-plan and three were under an expert hold. They weren't: the tags were.
+ * `levelTagsFor()` is the fix, and `seedVersions()` took the same building argument.
  */
 const LEVEL_TAGS: Record<number, LevelTag[]> = {
   [NEW_VERSION_LEVEL]: [
@@ -192,12 +199,6 @@ const LEVEL_TAGS: Record<number, LevelTag[]> = {
   3: [
     { kind: "rejected", label: "Rejected", tone: "large", title: "62% of floor area changed — a change this large is unrealistic, so the floor plan was rejected. Upload a corrected file, or contact our support team if this really is new construction" },
   ],
-  // Red cause B (US5): MapScale couldn't match the floor plan. Only Concourse A has a level 4,
-  // so Terminal 3's six demos stay untouched. (The old placeholder "4F" row that shared this
-  // index is gone — SITE_SNAPSHOT is a verbatim real-site capture now, §17.)
-  4: [
-    { kind: "needs-decision", label: "Needs decision", tone: "large", action: "review", title: "MapScale couldn't match the new floor plan to the published one — review it, then publish when you're ready" },
-  ],
   [-4]: [{ kind: "flagged", label: "2 flagged", tone: "neutral", title: "Two changes flagged for a later dashboard edit" }],
   0: [
     { kind: "auto-published", label: "Auto-published", tone: "minor", title: "Minor change (12% of floor area) — published automatically" },
@@ -205,8 +206,21 @@ const LEVEL_TAGS: Record<number, LevelTag[]> = {
     { kind: "new-version", label: "New version", tone: "info", action: "review" },
   ],
   1: [
-    // templated from GRACE_DAYS so the tag and the review screen's strip can't drift apart
-    { kind: "grace", label: `Publishes in ${GRACE_DAYS.demoLeft}d`, tone: "medium", title: `Grace period ends in ${GRACE_DAYS.demoLeft} days` },
+    // Templated from GRACE_DAYS so the tag and the review screen's strip can't drift apart —
+    // and read through GETTERS, because LEVEL_TAGS is a module constant and a plain template
+    // literal would have frozen at import, ignoring the grace period S5 now configures.
+    {
+      kind: "grace",
+      tone: "medium",
+      get label(): string {
+        return GRACE_DAYS.demoLeft === 0 ? "Publishes today" : `Publishes in ${GRACE_DAYS.demoLeft}d`;
+      },
+      get title(): string {
+        return GRACE_DAYS.demoLeft === 0
+          ? "The grace period ends today"
+          : `Grace period ends in ${GRACE_DAYS.demoLeft} days`;
+      },
+    },
     // Superseded by the countdown, which says the same thing and adds the deadline.
     { kind: "needs-review", label: "Needs review", tone: "medium" },
   ],
@@ -215,6 +229,28 @@ const LEVEL_TAGS: Record<number, LevelTag[]> = {
     { kind: "expert-review", label: "Expert Review", tone: "neutral", title: "Pointr's mapping team is checking this floor — changes you make may be overridden by their corrections" },
   ],
 };
+
+/**
+ * Red cause B (US5): MapScale couldn't match the floor plan. It lives on **Concourse A's level
+ * 4** because it needs an index Terminal 3 hasn't got, so it is the one demo state deliberately
+ * outside the demo building (handoff §17).
+ */
+const CONCOURSE_A_TAGS: Record<number, LevelTag[]> = {
+  4: [
+    { kind: "needs-decision", label: "Needs decision", tone: "large", action: "review", title: "MapScale couldn't match the new floor plan to the published one — review it, then publish when you're ready" },
+  ],
+};
+
+/** The building-aware lookup `seedVersions()` mirrors. Buildings with no demo state get none. */
+function levelTagsFor(buildingId: string, index: number): LevelTag[] | undefined {
+  if (buildingId === CONCOURSE_A_ID) return CONCOURSE_A_TAGS[index];
+  if (buildingId !== T3_ID) return undefined;
+  // The hold is a Settings flag now (S5), so the tag has to ask the same question the seed and
+  // every locked control already ask. Without this, turning Expert Review off left the tree
+  // advertising a hold that no longer existed anywhere else in the app.
+  if (index === EXPERT_REVIEW_LEVEL && !expertReviewEnabled()) return undefined;
+  return LEVEL_TAGS[index];
+}
 
 /**
  * The tree is built from the SDK's own buildings and levels (via the map), so the tree, the
@@ -229,53 +265,17 @@ function toBuildings(live: MapBuilding[]): Building[] {
       index: l.index,
       name: l.long,
       short: l.short,
-      tags: LEVEL_TAGS[l.index],
+      tags: levelTagsFor(b.id, l.index),
     })),
   }));
 }
 
 /**
- * The pre-boot placeholder is a verbatim snapshot of the live site (captured from the SDK's own
- * `siteBuildings()` on 2026-08-10), pushed through the SAME mapping the live data uses — so the
- * tree doesn't visibly change when the map finishes booting (Olcay). The old fictional
- * Terminal A/B/C is gone entirely. To refresh after the site changes: run `siteBuildings()` in
- * the map iframe and paste.
+ * The pre-boot placeholder is a verbatim snapshot of the live site, pushed through the SAME
+ * mapping the live data uses — so the tree doesn't visibly change when the map finishes booting
+ * (Olcay). The snapshot itself now lives in `mock/site.ts`, because the notification feed derives
+ * from it too (2026-08-11); the refresh recipe is documented there.
  */
-const T3_ID = "51dd37d1-c2bc-4d9e-8e22-2ea1a15a626c";
-
-const SITE_SNAPSHOT: MapBuilding[] = [
-  {
-    id: "c782c844-c9f0-4b02-884b-4cfa8ec9dab6", name: "Concourse A",
-    levels: [
-      { index: 4, short: "L4", long: "EK Business Class Lounge" },
-      { index: 3, short: "L3", long: "EK First Class Lounge" },
-      { index: 2, short: "L2", long: "Departures" },
-      { index: 1, short: "L1", long: "Arrivals" },
-      { index: 0, short: "L0", long: "Connection Floor" },
-      { index: -2, short: "B2", long: "Train Connections" },
-    ],
-  },
-  {
-    id: "420b008e-9ac9-4d66-bbc6-c2639c1e3f6d", name: "Concourse C",
-    levels: [
-      { index: 2, short: "L2", long: "Arrivals" },
-      { index: 1, short: "L1", long: "Departures" },
-      { index: 0, short: "L0", long: "Connection Floor" },
-    ],
-  },
-  {
-    id: T3_ID, name: "Terminal 3 and B Gates",
-    levels: [
-      { index: 3, short: "L3", long: "EK Lounges - Concourse B" },
-      { index: 2, short: "L2", long: "Departures - Concourse B" },
-      { index: 1, short: "L1", long: "Arrivals - Concourse B" },
-      { index: 0, short: "L0", long: "Connection Floor - Concourse B" },
-      { index: -2, short: "B2", long: "Departures - Terminal 3" },
-      { index: -4, short: "B4", long: "Arrivals - Terminal 3" },
-    ],
-  },
-];
-
 const BUILDINGS: Building[] = toBuildings(SITE_SNAPSHOT);
 
 function Count({ n }: { n: number }) {
@@ -408,8 +408,17 @@ function LevelRow({
   const [hover, setHover] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const ref: LevelRef = { building, buildingId, index: level.index, name: level.name, short: level.short };
-  const { shown: shownTags, hidden: hiddenTags } = resolveTags(level.tags);
-  const lockedByExperts = isUnderExpertReview(level.index);
+  /**
+   * Derived at render, not read off `level.tags`.
+   *
+   * The tree's `Building[]` is built once — the module-level placeholder at import, the live one
+   * when the map reports its buildings — so a tag baked in then can't answer a question that
+   * changes later. The grace tag survived that because its label is a getter on a shared object,
+   * but Expert Review has to be able to *disappear* when S5 turns the phase off, and no getter
+   * removes an array element. `levelTagsFor` is cheap and the row already re-renders.
+   */
+  const { shown: shownTags, hidden: hiddenTags } = resolveTags(levelTagsFor(buildingId, level.index));
+  const lockedByExperts = isUnderExpertReview(level.index, buildingId);
 
   return (
     <>

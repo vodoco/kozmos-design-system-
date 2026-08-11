@@ -21,25 +21,48 @@ const FG = "#2e3138";
 export const RAIL_WIDTH = 96;
 export const PANEL_WIDTH = 440;
 
-export function TopBar({ tools }: { tools?: React.ReactNode }) {
-  const tab = (label: string, active?: boolean) => (
-    <div
-      key={label}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        alignSelf: "stretch",
-        padding: "0 24px",
-        fontSize: 13,
-        lineHeight: "18px",
-        color: active ? LINK : FG,
-        background: active ? TINT : "transparent",
-        borderBottom: `2px solid ${active ? INK : "transparent"}`,
-      }}
-    >
-      {label}
-    </div>
-  );
+export function TopBar({
+  tools,
+  bell,
+  tab: current = "Maps",
+  onTab,
+}: {
+  tools?: React.ReactNode;
+  /** The notification bell (S7) — passed in so the chrome doesn't have to know the app's routing. */
+  bell?: React.ReactNode;
+  /** Which top-level tab is lit. Settings became reachable when S5 was built (2026-08-11). */
+  tab?: "Maps" | "Settings";
+  onTab?: (t: "Maps" | "Settings") => void;
+}) {
+  const tab = (label: string, opts?: { to?: "Maps" | "Settings" }) => {
+    const active = label === current;
+    const clickable = !!opts?.to && !!onTab;
+    return (
+      <button
+        key={label}
+        onClick={clickable ? () => onTab!(opts!.to!) : undefined}
+        disabled={!clickable}
+        title={clickable ? undefined : "Not part of this prototype"}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          alignSelf: "stretch",
+          padding: "0 24px",
+          fontSize: 13,
+          lineHeight: "18px",
+          border: "none",
+          borderBottom: `2px solid ${active ? INK : "transparent"}`,
+          color: active ? LINK : FG,
+          background: active ? TINT : "transparent",
+          cursor: clickable ? "pointer" : "default",
+          opacity: clickable ? 1 : 0.65,
+          fontFamily: "inherit",
+        }}
+      >
+        {label}
+      </button>
+    );
+  };
 
   return (
     <header
@@ -99,14 +122,17 @@ export function TopBar({ tools }: { tools?: React.ReactNode }) {
       </div>
 
       <nav style={{ display: "flex", alignSelf: "stretch" }}>
-        {tab("Maps", true)}
+        {tab("Maps", { to: "Maps" })}
         {tab("Analytics")}
-        {tab("Settings")}
+        {tab("Settings", { to: "Settings" })}
       </nav>
 
       {/* Prototype-only review tools, deliberately outside the design's chrome vocabulary — see
           ui/FeedbackLayer.tsx. Nothing here is part of the Pointr dashboard. */}
       {tools}
+
+      {/* S7 — the notification bell sits between the tools and the user menu, as in 2495:463 */}
+      {bell}
 
       {/* user menu — avatar + chevron only, per the design */}
       <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 12 }}>

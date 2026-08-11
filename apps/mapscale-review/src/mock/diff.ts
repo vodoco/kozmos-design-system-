@@ -2,6 +2,12 @@
 // Phase 1: mock (this file). Phase 2: replace `seedDiff` with a client-side diff of
 // published level features vs. the MapScale job-result GeoJSON (see MAP-566_build_plan.md §4).
 
+// S5's client-wide configuration. `settings.ts` deliberately imports nothing from here, so this
+// direction is the only one and there is no cycle.
+import { getSettings, graceDays } from "./settings";
+// Which building each demo state belongs to — see `seedVersions`.
+import { CONCOURSE_A_ID, T3_ID } from "./site";
+
 /**
  * The MapScale Update Report's taxonomy — Add Feature · Delete Feature · Modify Geometry ·
  * Metadata Update — plus `preserved` for a user override carried through untouched.
@@ -145,14 +151,30 @@ export const RED_CAUSE_COPY = {
 
 /**
  * The grace period (US4): Amber publishes itself after this many days unless someone intervenes.
- * Client-wide; S5 makes it configurable (0s–3 months, default 7, advise ≤1 week). `demoLeft` is
- * how far into the demo countdown the seeds are — the tree tag says the same 6.
+ * Client-wide (§6 decision 6).
+ *
+ * **Getters, not values** (2026-08-11, when S5 was built). These used to be the literals
+ * `{ default: 7, demoLeft: 6 }` with a comment promising that S5 would make them configurable.
+ * It does now — the numbers live in `mock/settings.ts` — and reading them through getters keeps
+ * every existing `GRACE_DAYS.demoLeft` call site working while making it react to the screen that
+ * sets it. A plain object here would have frozen at module-eval and quietly ignored Settings.
+ *
+ * `demoLeft` is how far into the countdown the seeds are: the demo is one day in, so a 7-day
+ * period shows 6 left. It floors at 0 rather than going negative for the sub-day options.
  */
-export const GRACE_DAYS = { default: 7, demoLeft: 6 };
+export const GRACE_DAYS = {
+  get default(): number {
+    return graceDays(getSettings().graceSeconds);
+  },
+  get demoLeft(): number {
+    return Math.max(0, graceDays(getSettings().graceSeconds) - 1);
+  },
+};
 
 /**
- * Does Pointr's mapping team check the result before the customer sees it? A **Settings** flag
- * (S5 / TODO 6 wires it to real config); this constant is the seam until then.
+ * Does Pointr's mapping team check the result before the customer sees it? A **Settings** flag —
+ * S5 built it (2026-08-11), so this reads the store rather than being the compile-time constant
+ * it was. A function, not a const, precisely because it can change while the app is running.
  *
  * Expert review runs **before** the customer's review (Olcay, 2026-08-09 — reversing the earlier
  * decision). The experts prune MapScale's over-reporting, so the modified-area ratio the customer
@@ -162,7 +184,9 @@ export const GRACE_DAYS = { default: 7, demoLeft: 6 };
  *
  * Turned off, the raw MapScale result goes straight to the customer and the % is the engine's own.
  */
-export const EXPERT_REVIEW_ENABLED = true;
+export function expertReviewEnabled(): boolean {
+  return getSettings().expertReview;
+}
 
 /* ── the expert-review hold (S2 — warn-but-allow, Olcay 2026-08-10) ───────── */
 
@@ -179,9 +203,12 @@ export const EXPERT_REVIEW_LEVEL = 2;
  * With experts running first (handoff §6 decision 4) most jobs land Green and publish unseen — so
  * this is not a waiting room on the way to review, it is the only screen many customers ever see
  * of an update. Every frame-changing control has to ask this question (see EXPERT_HOLD).
+ *
+ * Building-aware since 2026-08-11, for the same reason `seedVersions()` is: index alone put a
+ * hold on every building's L2, including ones whose seeded timeline says nothing of the sort.
  */
-export function isUnderExpertReview(levelIndex: number): boolean {
-  return EXPERT_REVIEW_ENABLED && levelIndex === EXPERT_REVIEW_LEVEL;
+export function isUnderExpertReview(levelIndex: number, buildingId: string = T3_ID): boolean {
+  return expertReviewEnabled() && buildingId === T3_ID && levelIndex === EXPERT_REVIEW_LEVEL;
 }
 
 /**
@@ -314,11 +341,21 @@ export interface LevelVersion {
 /**
  * Newest first, as the dashboard lists them. v1 created the level from already-mapped GeoJSON,
  * v2 is the floor-plan revision that is live today, and whether there is a v3 — and what state it
- * is in — depends on the level, **kept in step with `LEVEL_TAGS` in MapContent.tsx** (both are
- * keyed by level index): the tag you clicked in the tree and the status card you land on must
- * always tell the same story. The editor seeds its phase from `versions[0].state`.
+ * is in — depends on **which level of which building**, kept in step with `levelTagsFor()` in
+ * MapContent.tsx: the tag you clicked in the tree and the status card you land on must always tell
+ * the same story. The editor seeds its phase from `versions[0].state`.
+ *
+ * **`buildingId` was added 2026-08-11**, when the notification feed flattened the whole site into
+ * one list and three buildings each claimed the same 62% rejection. The seeds keyed on level index
+ * alone, so *every* building with an L3 was rejected and every building with an L2 was under an
+ * expert hold — wrong in the tree too, just easy to miss there, because you only ever have one
+ * building expanded. It defaults to the demo building so a caller without one still demos.
  */
-export function seedVersions(short: string, levelIndex: number): LevelVersion[] {
+export function seedVersions(
+  short: string,
+  levelIndex: number,
+  buildingId: string = T3_ID,
+): LevelVersion[] {
   const history: LevelVersion[] = [
     {
       n: 2, source: "dashboard", at: "10 Jul 2025 · 09:14", state: "published", changePct: 10,
@@ -335,20 +372,24 @@ export function seedVersions(short: string, levelIndex: number): LevelVersion[] 
     by: "Airport Ops (API)", input: { kind: "floor-plan", file: `${short}-departures-rev3.dwg` },
   });
 
-  // The same indices LEVEL_TAGS speaks for. Everything else has a quiet two-version history.
-  //
-  // The three traffic-light cases live on three Terminal 3 and B Gates levels (Olcay, 2026-08-10):
+  // Red cause B (cannot-match) is the one demo that deliberately lives OUTSIDE the demo building:
+  // it needs level 4, and Terminal 3 hasn't got one — only Concourse A has (handoff §17).
+  if (buildingId === CONCOURSE_A_ID && levelIndex === 4)
+    return [{ ...arrival("needs-decision"), redCause: "cannot-match" }, ...history];
+
+  // Everything else belongs to Terminal 3 and B Gates. Other buildings get the quiet two-version
+  // history — which is what the tree always meant to say about them.
+  if (buildingId !== T3_ID) return history;
+
+  // The three traffic-light cases live on three Terminal 3 levels (Olcay, 2026-08-10):
   //   Green  <20%  → level 0  (Connection Floor, 12% — auto-published, nothing to review)
   //   Amber 20–50% → level -2 (B2, 30% — the full review demo, its diff has real geometry)
-  //   Red   >50%   → level 3  (EK Lounges, 62% — never auto-published, cause A)
-  // Red's other two causes: B (cannot-match) lives on level 4 — only Concourse A has one, so
-  // Terminal 3's six demos are untouched; C (cannot-process) is the upload cycle's fourth step.
+  //   Red   >50%   → level 3  (EK Lounges, 62% — rejected outright, cause A)
+  // Cause C (cannot-process) isn't seeded anywhere — it is the upload cycle's fourth step.
   if (levelIndex === 3) return [{ ...arrival("rejected", 62), redCause: "large-change" }, ...history]; // Red — cause A, rejected
-  if (levelIndex === 4)
-    return [{ ...arrival("needs-decision"), redCause: "cannot-match" }, ...history]; // Red — cause B
   if (levelIndex === 0) return [arrival("published", 12), ...history]; // Green — auto-published
   if (levelIndex === 1) return [arrival("needs-review", 30), ...history]; // Amber — grace running
-  if (levelIndex === EXPERT_REVIEW_LEVEL && EXPERT_REVIEW_ENABLED)
+  if (levelIndex === EXPERT_REVIEW_LEVEL && expertReviewEnabled())
     return [arrival("expert-review"), ...history]; // the mapping team holds it (S2)
   if (levelIndex === -2) return [arrival("needs-review", 30), ...history]; // Amber — B2, the review demo
   return history;
@@ -476,7 +517,13 @@ export const BAND: Record<
   medium: {
     tint: "#FFF8EC", border: "#F5D08A", ink: "#8A5A00", solid: "#F5A623",
     title: "Ready for your review",
-    detail: `Publishes automatically in ${GRACE_DAYS.demoLeft} days unless you review it.`,
+    // a getter for the same reason GRACE_DAYS is one — a template literal here would bake in
+    // whatever the grace period was when the module first loaded
+    get detail(): string {
+      return GRACE_DAYS.demoLeft === 0
+        ? "Publishes automatically today unless you review it."
+        : `Publishes automatically in ${GRACE_DAYS.demoLeft} days unless you review it.`;
+    },
   },
   large: {
     tint: "#FEF2F2", border: "#F3B4B4", ink: "#B42318", solid: "#EF4444",

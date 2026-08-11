@@ -6,6 +6,8 @@ import { LevelEditor } from "./screens/LevelEditor";
 import { ManualReview } from "./screens/ManualReview";
 import { VersionHistory } from "./screens/VersionHistory";
 import { BuildingWizard } from "./screens/BuildingWizard";
+import { Settings } from "./screens/Settings";
+import { NotificationBell, type NotificationTarget } from "./ui/NotificationBell";
 import { seedVersions, type RedCause } from "./mock/diff";
 import { getCreatedBuildings, getLevelVersions, levelKey } from "./mock/store";
 import { FeedbackLayer } from "./ui/FeedbackLayer";
@@ -17,7 +19,7 @@ import type { TourScreen } from "./ui/Tour";
  *   → Editing Level (metadata + floor-plan) → upload a new CAD → MapScale → Expert Review
  *   → Manual Review of the detected changes → Apply.
  */
-type Screen = "mapContent" | "levelEditor" | "review" | "history" | "wizard";
+type Screen = "mapContent" | "levelEditor" | "review" | "history" | "wizard" | "settings";
 
 /** Terminal 3 and B Gates — the demo building the tour walks through (see §5). */
 const T3_BUILDING_ID = "51dd37d1-c2bc-4d9e-8e22-2ea1a15a626c";
@@ -65,7 +67,7 @@ export default function App() {
     // read the LIVE version (the store), not the seed — after an upload the tree's review path
     // used to carry the seeded %, disagreeing with the card the user just looked at
     const v = getLevelVersions(levelKey(l.buildingId, l.index), () =>
-      seedVersions(l.short, l.index),
+      seedVersions(l.short, l.index, l.buildingId),
     )[0];
     setReviewCtx({ pct: v?.changePct ?? null, cause: v?.redCause ?? null });
     setScreen("review");
@@ -108,6 +110,29 @@ export default function App() {
     <TooltipProvider delayDuration={0}>
       <div style={{ display: "flex", flexDirection: "column", height: "100vh", minHeight: 0 }}>
         <TopBar
+          tab={screen === "settings" ? "Settings" : "Maps"}
+          onTab={(t) => setScreen(t === "Settings" ? "settings" : "mapContent")}
+          bell={
+            <NotificationBell
+              /**
+               * A notification names a level, so acting on one is the same navigation the tree's
+               * tags do — same two destinations, same functions. `to` decides which: a rejection
+               * or a failed job sends you to the level (a corrected upload is the way out), and
+               * anything reviewable sends you to the review.
+               */
+              onGo={(t: NotificationTarget) => {
+                const ref: LevelRef = {
+                  building: t.buildingName,
+                  buildingId: t.buildingId,
+                  index: t.levelIndex,
+                  name: t.levelName,
+                  short: t.levelShort,
+                };
+                if (t.to === "review") openReview(ref);
+                else openLevel(ref);
+              }}
+            />
+          }
           tools={
             <FeedbackLayer
               screen={screen}
@@ -160,6 +185,7 @@ export default function App() {
               }}
             />
           )}
+          {screen === "settings" && <Settings />}
           {screen === "wizard" && (
             <BuildingWizard
               key={wizardInitial?.storeId ?? wizardInitial?.name ?? "new"}

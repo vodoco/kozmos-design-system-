@@ -29,7 +29,7 @@ import {
   versionBadge,
   BAND,
   EXPERT_HOLD,
-  EXPERT_REVIEW_ENABLED,
+  expertReviewEnabled,
   JOB_RUNNING,
   KIND_LABEL,
   RED_CAUSE_COPY,
@@ -533,13 +533,13 @@ export function LevelEditor({
       return;
     }
     schedule(() => setPhase("mapping"), 1900);
-    if (EXPERT_REVIEW_ENABLED) schedule(() => setPhase("expert"), 3400);
+    if (expertReviewEnabled()) schedule(() => setPhase("expert"), 3400);
     schedule(() => {
       setPhase("done");
       setVersions((vs) =>
         vs[0]?.n === n ? [{ ...vs[0], state: stateForBand(r.pct), changePct: r.pct }, ...vs.slice(1)] : vs,
       );
-    }, EXPERT_REVIEW_ENABLED ? 5200 : 3600);
+    }, expertReviewEnabled() ? 5200 : 3600);
   };
 
   /**

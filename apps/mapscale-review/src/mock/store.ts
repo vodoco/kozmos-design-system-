@@ -80,6 +80,23 @@ export function subscribeLevelVersions(fn: () => void): () => void {
   return () => versionListeners.delete(fn);
 }
 
+/**
+ * Drop every cached timeline so the next read re-seeds.
+ *
+ * Called when Settings flips Expert Review (S5), because that flag changes what `seedVersions()`
+ * *means*: with it on, the held level's newest version is `expert-review`; with it off that
+ * version was never held at all. Levels seeded before the toggle would otherwise keep contradicting
+ * the setting — the tree still showing a hold the settings screen says doesn't exist.
+ *
+ * It does discard uploads made earlier in the session, which is the honest trade: this is a demo
+ * seam, and a stale hold reads as a bug where a reset reads as a reset.
+ */
+export function clearLevelVersions() {
+  if (versionsByLevel.size === 0) return;
+  versionsByLevel.clear();
+  versionListeners.forEach((l) => l());
+}
+
 /** Stable reference between mutations — what useSyncExternalStore requires of a snapshot. */
 export function getCreatedBuildings(): StoredBuilding[] {
   return buildings;

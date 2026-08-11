@@ -26,8 +26,8 @@ export function useLevelVersions(level: {
 }): [LevelVersion[], (update: (prev: LevelVersion[]) => LevelVersion[]) => void] {
   const key = levelKey(level.buildingId, level.index);
   const seed = useCallback(
-    () => (level.isNew ? [] : seedVersions(level.short, level.index)),
-    [level.isNew, level.short, level.index],
+    () => (level.isNew ? [] : seedVersions(level.short, level.index, level.buildingId)),
+    [level.isNew, level.short, level.index, level.buildingId],
   );
   const versions = useSyncExternalStore(
     subscribeLevelVersions,
