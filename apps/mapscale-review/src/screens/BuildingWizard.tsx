@@ -23,21 +23,34 @@ import { AiMappingStatus, type MapScaleState } from "../ui/AiMappingStatus";
 import { FloorPlanThumb } from "../ui/FloorPlanThumb";
 import { dropKind } from "../ui/UploadDropConfirm";
 import { PanelHeader } from "../ui/PanelHeader";
+import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import { ManualReview } from "./ManualReview";
-import { addBuilding, updateBuilding } from "../mock/store";
-import type { Change } from "../mock/diff";
+import {
+  addBuilding,
+  getReviewOutcome,
+  levelKey,
+  setLevelVersions,
+  setReviewOutcome,
+  updateBuilding,
+} from "../mock/store";
+import type { Change, LevelVersion } from "../mock/diff";
 import {
   ALIGN_COPY,
   FINETUNE_COPY,
-  ISSUES_TOTAL,
   LEVEL_DROP_COPY,
-  PREVIEW_STATS,
+  PREVIEW_LABELS,
   WIZARD_STEPS,
+  buildingStats,
+  creationChangesFor,
+  levelIssueCount,
+  levelResult,
+  levelStateLabel,
   nameFromFile,
+  type LevelReviewState,
   type WizardStepKey,
 } from "../mock/wizard";
-import { creationChanges } from "../mock/wizard";
 import { PICKER_SECTORS, sectorKey } from "../mock/sectors";
+import { T3_ID } from "../mock/site";
 
 /** The wizard's default Level Type — the design's rows all read "Workplace" (2164:19545). */
 const WIZARD_SECTOR_KEY = sectorKey("Workplace", "Corporate Office");
@@ -50,9 +63,6 @@ function sectorLabel(key: string): string {
   }
   return key;
 }
-
-/** Stable identity — the review's rows are seeded once per module, not per render. */
-const CREATION_CHANGES = creationChanges();
 
 /**
  * The Building wizard (v9 section 10059:102926; entry: Map Content's "Add new" — Olcay,
@@ -77,7 +87,7 @@ const INK = "var(--primitives-colors-theme-900)";
 const MUTED = "var(--primitives-colors-background-600)";
 const NO_CHANGES: never[] = [];
 
-type Phase = "queued" | "validating" | "mapping" | "expert" | "ready";
+type Phase = "queued" | "validating" | "mapping" | "expert" | "ready" | "failed";
 
 interface WizLevel {
   id: number;
@@ -86,6 +96,15 @@ interface WizLevel {
   long: string;
   file: string;
   phase: Phase;
+  /**
+   * The level's position in the building's creation order — what `mock/wizard.ts` keys MapScale's
+   * per-level result off (area, duration, confidence, issue count).
+   *
+   * Creation order, **not** the sorted index: indices are editable in the Level Manager, and
+   * deriving the ordinal from them would silently re-roll a level's issues the moment somebody
+   * renumbered a floor.
+   */
+  ordinal: number;
   /** The sector list, same as the level editor's Level Type (Olcay: it IS the sector list). */
   sector: string;
   extId: string;
@@ -93,12 +112,28 @@ interface WizLevel {
   isDefault?: boolean;
 }
 
+/** The pipeline's own phases. What happens once it lands is the level's REVIEW state — see below. */
 const PHASE_CARD: Record<Phase, { state: MapScaleState; note?: string }> = {
   queued: { state: "in-queue" },
   validating: { state: "validating" },
   mapping: { state: "in-progress" },
   expert: { state: "expert-review" },
-  ready: { state: "completed", note: "Ready — review in Preview" },
+  // `ready` no longer speaks for itself: what a finished level says depends on whether MapScale
+  // left anything to confirm, which is `levelCardFor()`'s job. It used to read "Ready — review in
+  // Preview" on every finished level — actively misleading, since those guesses were unconfirmed
+  // and Preview didn't distinguish levels at all (§18).
+  ready: { state: "completed" },
+  failed: { state: "failed", note: "Couldn't process this floor-plan" },
+};
+
+/** How a finished level's state reaches the v9 AI-Mapping card. */
+const STATE_CARD: Record<LevelReviewState, MapScaleState> = {
+  mapping: "in-progress",
+  failed: "failed",
+  ready: "completed",
+  awaiting: "user-review",
+  "in-review": "user-review",
+  reviewed: "completed",
 };
 
 interface XYR {
@@ -211,6 +246,17 @@ function StepRow({
 /** The design's own words when a level row is left open (2007:17095). */
 const UNSAVED_TIP = "You have unsaved floor-plans. Confirm or cancel them before proceeding.";
 
+/**
+ * When a wizard-created level's first version arrived, formatted the way the seeds are.
+ *
+ * The mock has no clock and its fixtures are fixed strings — but a building created a moment ago
+ * genuinely happened at a time, and printing a 2025 date on it would be the fiction, not the fix.
+ */
+function stamp(): string {
+  const d = new Date();
+  return `${d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} · ${d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
 const SKIP_STYLE: React.CSSProperties = {
   border: "1px solid #f3a2b3",
   color: "var(--primitives-colors-emotional-danger-600)",
@@ -254,6 +300,7 @@ export function BuildingWizard({
       long: l.long,
       file: l.file,
       phase: "ready" as Phase,
+      ordinal: i,
       sector: WIZARD_SECTOR_KEY,
       extId: "",
     })),
@@ -278,6 +325,7 @@ export function BuildingWizard({
     const accepted = files.filter((f) => dropKind(f));
     if (!accepted.length) return;
     const top = levels.length ? Math.max(...levels.map((l) => l.index)) : -1;
+    const topOrdinal = levels.length ? Math.max(...levels.map((l) => l.ordinal)) : -1;
     const added: WizLevel[] = accepted.map((f, i) => {
       const index = top + 1 + i;
       return {
@@ -287,14 +335,22 @@ export function BuildingWizard({
         long: nameFromFile(f),
         file: f,
         phase: "queued" as Phase,
+        // never reused, even after a removal — a level's MapScale result is its own
+        ordinal: topOrdinal + 1 + i,
         sector: WIZARD_SECTOR_KEY,
         extId: "",
       };
     });
     setLevels((ls) => [...ls, ...added]);
-    // staggered pipeline per level — each walks queued → … → ready on its own clock
+    // staggered pipeline per level — each walks queued → … → ready on its own clock, except the
+    // one MapScale can't read, which dies in validation (cause C) and never reaches the experts
     added.forEach((l, i) => {
+      const doomed = levelResult(l.ordinal).failed;
       advance(l.id, "validating", 700 + i * 350);
+      if (doomed) {
+        advance(l.id, "failed", 1600 + i * 350);
+        return;
+      }
       advance(l.id, "mapping", 1600 + i * 350);
       advance(l.id, "expert", 2800 + i * 350);
       advance(l.id, "ready", 4200 + i * 350);
@@ -404,23 +460,51 @@ export function BuildingWizard({
     setAnchors(snap.a);
   };
 
-  /* — step 5: preview + issues (the review IS Manual Review — creation mode) — */
-  const [issuesOpen, setIssuesOpen] = useState(false);
+  /* — the per-level review (the review IS Manual Review — creation mode) — */
+
   /**
-   * The review's decisions live HERE, not inside ManualReview (fixed 2026-08-11): opening the
-   * review unmounts and remounts that screen, so decisions kept there were silently thrown away —
-   * confirm everything, go back, reopen, and every row was undecided again while the banner had
-   * already counted them. Holding the rows in the wizard makes reopening resume where you left
-   * off, and the count is simply how many carry a decision.
+   * Which level is open in the review, and what every level's review has come to.
+   *
+   * The decisions live HERE, not inside ManualReview (fixed 2026-08-11): opening the review
+   * unmounts and remounts that screen, so decisions kept there were silently thrown away — confirm
+   * everything, go back, reopen, and every row was undecided again while the banner had already
+   * counted them. Holding the rows in the wizard makes reopening resume where you left off.
+   *
+   * They are now **per level** (§18): one flat list could not say which floor an issue was on, and
+   * every seeded issue claimed the same one.
    */
-  const [issueRows, setIssueRows] = useState<Change[]>(() => CREATION_CHANGES);
-  const resolvedCount = issueRows.filter((c) => c.decision).length;
+  const [reviewingId, setReviewingId] = useState<number | null>(null);
+  const [reviews, setReviews] = useState<Record<number, { rows: Change[]; complete: boolean }>>(
+    () => {
+      /**
+       * Edit mode picks up where creation left off. A building's levels carry their concluded
+       * reviews in the store (that is how creation's flags reach the level editor at all — answer
+       * 4), so re-entering the wizard through the tree's *Edit building* reads them back rather
+       * than presenting every level as untouched. Version-matched like every other reader: a level
+       * whose floor-plan has been replaced since starts clean.
+       */
+      if (!initial?.storeId) return {};
+      const out: Record<number, { rows: Change[]; complete: boolean }> = {};
+      (initial.levels ?? []).forEach((l, i) => {
+        const saved = getReviewOutcome(levelKey(initial.storeId, l.index));
+        if (saved) out[i + 1] = { rows: saved.changes, complete: saved.complete };
+      });
+      return out;
+    },
+  );
+  /** Which level the Preview's list has selected — it drives the map beside it. */
+  const [previewLevelId, setPreviewLevelId] = useState<number | null>(null);
+  /** Save warns about unreviewed levels; it never blocks (Olcay's answer 1). */
+  const [saveWarnOpen, setSaveWarnOpen] = useState(false);
 
   /* — completion + gating — */
   const metadataDone = name.trim().length > 0;
   /** The design's gate: an open row means unsaved work, so the step can't be left. */
   const unsavedRow = editing !== null;
-  const levelsDone = levels.length > 0 && levels.every((l) => l.phase === "ready");
+  // A failed run is settled, not pending: the level reports the failure and the wizard moves on.
+  // Gating on `ready` alone would have left Continue disabled forever behind a file MapScale
+  // couldn't read, with nothing the user could do about it.
+  const levelsDone = levels.length > 0 && levels.every((l) => l.phase === "ready" || l.phase === "failed");
   const alignDone = alignSkipped || others.length === 0 || others.every((l) => aligned.has(l.id));
   const fineDone = fineSkipped || fineConfirmed;
   const complete: Record<WizardStepKey, boolean> = {
@@ -433,15 +517,122 @@ export function BuildingWizard({
   const order: WizardStepKey[] = ["metadata", "levels", "align", "finetune", "preview"];
   const canEnter = (k: WizardStepKey) => order.slice(0, order.indexOf(k)).every((p) => complete[p]);
 
-  const save = () => {
+  /* ── per-level review state ─────────────────────────────────────────────── */
+
+  /**
+   * A level's rows: its saved ones if it has been touched, otherwise MapScale's own guesses.
+   * Memoised because they feed `PointrMap` through the review, which re-posts to the iframe on any
+   * change of array identity.
+   */
+  const rowsByLevel = useMemo(() => {
+    const m: Record<number, Change[]> = {};
+    for (const l of levels) m[l.id] = reviews[l.id]?.rows ?? creationChangesFor(l, l.ordinal);
+    return m;
+  }, [levels, reviews]);
+
+  /**
+   * The five words, in the editor's own vocabulary (§18). Note what earns each: `ready` is now
+   * *zero issues found*, not "the pipeline finished" — the state this screen used to print on
+   * every completed level while its guesses sat unconfirmed.
+   */
+  const stateOf = (l: WizLevel): LevelReviewState => {
+    if (l.phase === "failed") return "failed";
+    if (l.phase !== "ready") return "mapping";
+    if (levelIssueCount(l.ordinal) === 0) return "ready";
+    const r = reviews[l.id];
+    if (!r) return "awaiting";
+    return r.complete ? "reviewed" : "in-review";
+  };
+  const flaggedOf = (l: WizLevel) => (reviews[l.id]?.rows ?? []).filter((c) => c.decision === "flag").length;
+  const levelCardFor = (l: WizLevel) => {
+    const s = stateOf(l);
+    if (s === "mapping") return PHASE_CARD[l.phase];
+    const card = { state: STATE_CARD[s], note: levelStateLabel(s, levelIssueCount(l.ordinal), flaggedOf(l)) };
+    // Zero-issue and failed levels get no way in: there is nothing to confirm on one, and nothing
+    // to confirm *from* on the other (§18 — both are excluded from the review count too).
+    if (s === "ready" || s === "failed") return card;
+    return { ...card, primary: s === "reviewed" ? "Reopen" : "Review", onPrimary: () => setReviewingId(l.id) };
+  };
+
+  /**
+   * Which levels the review is actually about. **Zero-issue levels are skipped** and not counted
+   * (Olcay's answer 2) — creation's equivalent of Green auto-publishing; so is a failed one, which
+   * would otherwise sit in the list as a task nobody can complete (§18's stated assumption).
+   */
+  const reviewable = levels.filter((l) => l.phase === "ready" && levelIssueCount(l.ordinal) > 0);
+  const reviewedCount = reviewable.filter((l) => reviews[l.id]?.complete).length;
+  const unreviewed = reviewable.filter((l) => !reviews[l.id]?.complete);
+  /** The building's three tiles — summed from the levels, not declared (§18). */
+  const stats = buildingStats(levels.map((l) => l.ordinal));
+
+  const sortedLevels = useMemo(() => [...levels].sort((a, b) => b.index - a.index), [levels]);
+  const previewLevel = levels.find((l) => l.id === previewLevelId) ?? null;
+  const reviewingLevel = levels.find((l) => l.id === reviewingId) ?? null;
+
+  /* ── save ───────────────────────────────────────────────────────────────── */
+
+  /**
+   * What the wizard leaves behind.
+   *
+   * **Creation flags flow into the created level's editor** (Olcay's answer 4): each level's
+   * decisions are written as the same `ReviewOutcome` the update flow writes, so a level flagged
+   * during creation opens with those flags on its map — same store, same shape, no second model.
+   *
+   * The version timeline is seeded at the same time, and that is a real fix rather than a
+   * convenience: without it a created level fell through to `seedVersions()`, which invents a
+   * two-version Pointr history dating from 2025 for a building that did not exist a minute ago —
+   * and whose newest version number would not have matched the outcome, so the flags would have
+   * been silently discarded as belonging to a superseded floor-plan.
+   *
+   * ⚠️ **Judgement call, open to veto:** the version's state is `published`. Nothing was published
+   * to anybody — Save creates the building, and the site-wide publish stays the platform's separate
+   * mechanism (decision 5). But `published` is this app's word for *the content that is current for
+   * this level*, and a created level's only version is current by definition; every other state
+   * would make the tree offer a review, a decision or a re-upload that creation has already
+   * settled. The alternative — `created` — reads "no floor plan yet", which is worse.
+   */
+  const createBuilding = () => {
+    const id = initial?.storeId ?? `created-${nextId.current}-${name.trim().toLowerCase().replace(/\W+/g, "-")}`;
     const data = {
       name: name.trim(),
       levels: levels.map((l) => ({ index: l.index, short: l.short, long: l.long, file: l.file })),
     };
     if (initial?.storeId) updateBuilding({ id: initial.storeId, ...data });
-    else if (!initial) addBuilding({ id: `created-${nextId.current}-${data.name.toLowerCase().replace(/\W+/g, "-")}`, ...data });
-    // an SDK building's edit has nowhere to persist in the mock (D3's limit) — Save just closes
+    else if (!initial) addBuilding({ id, ...data });
+    // an SDK building's edit has nowhere to persist in the mock (D3's limit) — its levels are
+    // skipped below for the same reason: there is no store row for them to hang off.
+    if (!initial || initial.storeId) {
+      for (const l of levels) {
+        if (l.phase === "failed") continue;
+        const key = levelKey(id, l.index);
+        const version: LevelVersion = {
+          n: 1,
+          source: "dashboard",
+          at: stamp(),
+          state: "published",
+          by: "You",
+          input: { kind: l.file.toLowerCase().endsWith(".geojson") ? "geojson" : "floor-plan", file: l.file },
+        };
+        setLevelVersions(key, [version]);
+        const r = reviews[l.id];
+        if (!r) continue;
+        setReviewOutcome(key, {
+          versionN: 1,
+          decisions: Object.fromEntries(r.rows.map((c) => [c.id, c.decision])),
+          changes: r.rows,
+          // Creation publishes nothing — the building is created, not live.
+          published: false,
+          complete: r.complete,
+        });
+      }
+    }
     onDone();
+  };
+
+  /** Save **warns** about unreviewed levels and never blocks — creation isn't publication. */
+  const save = () => {
+    if (unreviewed.length) setSaveWarnOpen(true);
+    else createBuilding();
   };
 
   /* ── drawer step bodies ─────────────────────────────────────────────────── */
@@ -450,18 +641,40 @@ export function BuildingWizard({
    * Memoised: `changes` feeds PointrMap, which re-posts to the iframe whenever the array's
    * identity changes — an inline object here rebuilt the whole change set on every wizard render.
    */
-  const creationCtx = useMemo(
-    () => ({
-      confidencePct: 92,
-      changes: issueRows,
-      onBack: () => setIssuesOpen(false),
-      onConfirm: (rows: Change[]) => {
-        setIssueRows(rows);
-        setIssuesOpen(false);
+  const creationCtx = useMemo(() => {
+    const l = levels.find((x) => x.id === reviewingId);
+    if (!l) return undefined;
+    return {
+      // the LEVEL's confidence, not the building's — the building tile is the area-weighted mean
+      confidencePct: levelResult(l.ordinal).confidencePct,
+      changes: rowsByLevel[l.id] ?? [],
+      onBack: () => setReviewingId(null),
+      onSave: (rows: Change[]) => {
+        setReviews((r) => ({ ...r, [l.id]: { rows, complete: false } }));
+        setReviewingId(null);
       },
-    }),
-    [issueRows],
-  );
+      onConfirm: (rows: Change[]) => {
+        setReviews((r) => ({ ...r, [l.id]: { rows, complete: true } }));
+        // **No auto-advance** (Olcay's answer 3): completing one level leaves the others exactly
+        // where they are, so somebody who wants to stop after one can. This is the single place
+        // the wizard deliberately does not copy step 3's alignment cycle, which does advance.
+        setReviewingId(null);
+      },
+      levels: {
+        currentId: l.id,
+        items: levels
+          .filter((x) => x.phase === "ready" && levelIssueCount(x.ordinal) > 0)
+          .sort((a, b) => b.index - a.index)
+          .map((x) => ({
+            id: x.id,
+            label: `${x.short} — ${x.long}`,
+            issues: levelIssueCount(x.ordinal),
+            done: !!reviews[x.id]?.complete,
+          })),
+        onPick: (id: number) => setReviewingId(id),
+      },
+    };
+  }, [levels, reviews, reviewingId, rowsByLevel]);
 
   const alignBody = (
     <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -563,13 +776,21 @@ export function BuildingWizard({
     </div>
   );
 
+  /**
+   * Preview = **the building's tiles + a level list** (Olcay's answer 5).
+   *
+   * The three tiles stay building-level and are now summed from the levels; the list beneath them
+   * is where per-level work happens. **"N of M reviewed" goes on the list header, not into a fourth
+   * tile**: the tiles describe the *building*, that number describes *your progress*, and mixing
+   * them makes the tiles mean less.
+   */
   const previewBody = (
     <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", gap: 8 }}>
         {[
-          [PREVIEW_STATS.surface + " " + PREVIEW_STATS.surfaceUnit, PREVIEW_STATS.surfaceLabel],
-          [PREVIEW_STATS.duration, PREVIEW_STATS.durationLabel],
-          [PREVIEW_STATS.confidence, PREVIEW_STATS.confidenceLabel],
+          [`${stats.surface} ${PREVIEW_LABELS.surfaceUnit}`, PREVIEW_LABELS.surfaceLabel],
+          [stats.duration, PREVIEW_LABELS.durationLabel],
+          [stats.confidence, PREVIEW_LABELS.confidenceLabel],
         ].map(([v, l]) => (
           <div key={l} style={{ flex: 1, border: `1px solid ${LINE}`, borderRadius: 8, padding: "8px 10px" }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--review-ink)" }}>{v}</div>
@@ -577,28 +798,88 @@ export function BuildingWizard({
           </div>
         ))}
       </div>
-      <div
-        style={{
-          border: "1px solid #fde0a8",
-          background: "var(--primitives-colors-emotional-alert-0)",
-          borderRadius: 8,
-          padding: "10px 12px",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-        }}
-      >
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--primitives-colors-emotional-alert-900)" }}>
-            {ISSUES_TOTAL - resolvedCount} Potential Issues Found
-          </div>
-          <div style={{ fontSize: 11.5, color: "var(--primitives-colors-emotional-alert-900)", lineHeight: 1.35 }}>
-            MapScale™ identified potential issues that require your attention.
-          </div>
-        </div>
-        <Button size="sm" variant="outline" onClick={() => setIssuesOpen(true)}>
-          View
-        </Button>
+
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 2 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--review-ink)" }}>Levels</span>
+        <span style={{ flex: 1 }} />
+        {reviewable.length > 0 && (
+          <span style={{ fontSize: 11, color: MUTED }}>
+            {reviewedCount} of {reviewable.length} reviewed
+          </span>
+        )}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {sortedLevels.map((l) => {
+          const s = stateOf(l);
+          const issues = levelIssueCount(l.ordinal);
+          const selected = previewLevelId === l.id;
+          return (
+            <div
+              key={l.id}
+              /* Selecting a level switches the map to it — the map shows one level at a time, and
+                 this is the same shared-selection pattern the changelog and map already use. */
+              onClick={() => setPreviewLevelId(l.id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                border: `1px solid ${selected ? "var(--primitives-colors-theme-500)" : LINE}`,
+                boxShadow: selected ? "0 0 0 3px var(--primitives-colors-theme-0)" : "none",
+                borderRadius: 8,
+                padding: "6px 8px",
+                cursor: "pointer",
+                background: "#fff",
+              }}
+            >
+              <span style={{ width: 18, textAlign: "right", fontSize: 12, fontWeight: 600, color: "var(--review-ink)", flex: "0 0 auto" }}>
+                {l.index}
+              </span>
+              {/* The thumb keeps its own tap-to-enlarge, and must not ALSO select the row — one
+                  press was opening the lightbox and switching the map underneath it. */}
+              <span onClick={(e) => e.stopPropagation()} style={{ display: "flex", flex: "0 0 auto" }}>
+                <FloorPlanThumb file={l.file} />
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, color: "var(--review-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {l.short} · {l.long}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10.5,
+                    lineHeight: 1.3,
+                    color:
+                      s === "failed"
+                        ? "var(--primitives-colors-emotional-danger-600)"
+                        : s === "awaiting" || s === "in-review"
+                          ? "var(--primitives-colors-emotional-alert-900)"
+                          : MUTED,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {levelStateLabel(s, issues, flaggedOf(l))}
+                </div>
+              </div>
+              {/* Zero-issue and failed levels offer no way in: there is nothing to confirm on one
+                  and nothing to confirm *from* on the other. */}
+              {(s === "awaiting" || s === "in-review" || s === "reviewed") && (
+                <Button
+                  size="sm"
+                  variant={s === "reviewed" ? "ghost" : "outline"}
+                  style={{ flex: "0 0 auto" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setReviewingId(l.id);
+                  }}
+                >
+                  {s === "reviewed" ? "Reopen" : "Review"}
+                </Button>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -847,8 +1128,16 @@ export function BuildingWizard({
               >
                 {sectorLabel(l.sector)}
               </span>
+              {/*
+                The Level Manager is a way IN to the review, not just a report of it (§18: both
+                surfaces, one screen) — and the way in is the status card's own `primary` slot,
+                which exists for exactly this ("the one state that needs a real button: review the
+                detected changes"). A standalone button beside the card cost the row 85px it hasn't
+                got: the level's long name is the only flexible column, so it was the one that paid,
+                and at 1280px it was crushed to nothing.
+              */}
               <div style={{ width: 288, flex: "0 0 auto" }}>
-                <AiMappingStatus state={PHASE_CARD[l.phase].state} note={PHASE_CARD[l.phase].note} />
+                <AiMappingStatus {...levelCardFor(l)} />
               </div>
               {/* the edit affordance the design puts at the end of every row */}
               <IconButton
@@ -1241,29 +1530,45 @@ export function BuildingWizard({
     </div>
   );
 
+  /**
+   * The Preview map follows the level list's selection — the map shows one level at a time, so a
+   * list beside it that doesn't move it is a list of names.
+   *
+   * ⚠️ **Honest limit:** a building that doesn't exist yet has no tiles of its own, so what
+   * actually switches is the demo site's floor of the same index — the same stand-in the align and
+   * fine-tune steps make with one floor-plan image. The correspondence is real; the geometry under
+   * it is borrowed until the API can serve a created building's own. A level whose index the demo
+   * building hasn't got is refused instantly by the map's `targetExists()`, not spun on.
+   */
+  const previewTarget = useMemo(
+    () => (previewLevel ? { building: T3_ID, level: previewLevel.index } : undefined),
+    [previewLevel?.index],
+  );
   const previewArea = (
     <div style={{ position: "absolute", inset: 0 }}>
-      <PointrMap changes={NO_CHANGES} />
+      <PointrMap changes={NO_CHANGES} target={previewTarget} />
     </div>
   );
 
   /* ── the wizard's review sequence = the Manual Review screen, creation mode ──
      (Olcay, 2026-08-11: "exactly the same as user review") — MapScale's guesses as rows with
-     the ✓/🚩/✗ decisions, the magnitude block carrying confidence, no fate strip, wizard exits. */
-  if (issuesOpen) {
+     the ✓/🚩/✗ decisions, the magnitude block carrying confidence, no fate strip, wizard exits.
+
+     It reviews ONE LEVEL at a time (§18) — the level named in the header is the level whose
+     guesses are listed, where it used to be the alignment *reference* level whatever you had
+     opened. Deliberately NOT keyed on the level: keeping one mounted instance is what lets
+     decisions taken on a level survive stepping away to another and back, since every row id
+     carries its own level. */
+  if (creationCtx && reviewingLevel) {
     return (
       <ManualReview
-        level={
-          reference
-            ? {
-                building: name.trim() || "New Building",
-                buildingId: "",
-                index: reference.index,
-                name: reference.long,
-                short: reference.short,
-              }
-            : null
-        }
+        level={{
+          building: name.trim() || "New Building",
+          buildingId: "",
+          index: reviewingLevel.index,
+          name: reviewingLevel.long,
+          short: reviewingLevel.short,
+        }}
         creation={creationCtx}
       />
     );
@@ -1346,6 +1651,32 @@ export function BuildingWizard({
         {step === "finetune" && fineArea}
         {step === "preview" && previewArea}
       </div>
+
+      {/*
+        Save **warns, never blocks** (Olcay's answer 1): creation isn't publication, so an
+        unreviewed level is a thing to come back to, not a gate. It says where to come back to it,
+        because after Save the wizard is gone and the level's own editor is the way in.
+      */}
+      <ConfirmOverlay
+        open={saveWarnOpen}
+        tone="info"
+        title={`Save with ${unreviewed.length} level${unreviewed.length === 1 ? "" : "s"} still to review?`}
+        confirmLabel="Save building"
+        onCancel={() => setSaveWarnOpen(false)}
+        onConfirm={() => {
+          setSaveWarnOpen(false);
+          createBuilding();
+        }}
+      >
+        {/*
+          Where "later" actually is, said precisely. It is NOT the level's own editor: that screen
+          reviews a floor-plan against a published one, and a level created a minute ago has no
+          such baseline — the creation guesses live in the wizard. Re-entering it through the tree
+          reads back what has been reviewed already, so the unreviewed levels are waiting exactly
+          as they were left.
+        */}
+        {`${unreviewed.map((l) => l.short).join(", ")} still ${unreviewed.length === 1 ? "has" : "have"} MapScale's guesses unconfirmed. The building is created either way — nothing publishes — and you can pick these up later from Map Content: the building's ⋯ menu → Edit building.`}
+      </ConfirmOverlay>
     </div>
   );
 }

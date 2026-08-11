@@ -1,10 +1,12 @@
 /**
  * The Building wizard's contract (v9 section 10059:102926 — the five steps: Metadata · Level
  * Manager · Floor-plan Alignment · Fine-tune Building Placement · Preview). Copy is lifted from
- * the frames; the creation-review data feeds the Resolve Potential Issues page (decision: the
- * wizard's review confirms MapScale's guesses — there is no published baseline to diff, so the
+ * the frames; the creation-review data feeds the per-level review (decision: the wizard's review
+ * confirms MapScale's guesses — there is no published baseline to diff, so the
  * changelog/traffic-light only arms from the second floor-plan onward).
  */
+
+import { SIMILARITY_WARN, type Change } from "./diff";
 
 export const WIZARD_STEPS = [
   { key: "metadata", n: 1, title: "Metadata", blurb: "Provide essential information about the building such as name and identifiers." },
@@ -46,68 +48,230 @@ export const FINETUNE_COPY = {
   skip: "Skip this step for now",
 };
 
-/** The Preview step's MapScale result (v9's numbers, verbatim from the frame). */
-export const PREVIEW_STATS = {
-  surface: "48,553",
+/** The Preview step's three tiles. The NUMBERS are derived per level — only the words live here. */
+export const PREVIEW_LABELS = {
   surfaceUnit: "m²",
   surfaceLabel: "Mapped Surface",
-  duration: "45 min",
   durationLabel: "Total Duration",
-  confidence: "92%",
   confidenceLabel: "Confidence Level",
 };
 
+/* ── what MapScale left on each level ─────────────────────────────────────── */
+
+/**
+ * **Issues belong to levels** (Olcay, 2026-08-11 — the one structural change §18 asked for).
+ *
+ * Every seeded issue used to carry the same hardcoded `where: "4F · Departures Level"`, which made
+ * the wizard's review a single flat list about a floor that may not even exist in the building
+ * being created. A `levelIndex` is what makes per-level counts, per-level state and derived
+ * building totals possible at all — everything else here falls out of it.
+ */
 export interface CreationIssue {
   id: string;
   group: "metadata" | "feature-type";
   name: string;
   category: string;
-  where: string;
-  resolved?: boolean;
+  levelIndex: number;
+  /**
+   * MapScale's own confidence in this guess, 0–1.
+   *
+   * **The threshold is already in the repo**: `SIMILARITY_WARN` (0.7) is what turns a low-confidence
+   * match into a warning in the *update* flow, and a guess below it is what becomes an issue here.
+   * So "high-confidence levels don't require review" and "a low-similarity change is a warning" are
+   * one rule with one knob, not two parallel inventions.
+   */
+  confidence: number;
 }
 
 /**
- * "Resolve Potential Issues" — MapScale's guesses awaiting confirmation (the wizard's review
- * sequence). The five metadata items are the frame's own; counts scale from here.
+ * The guesses MapScale makes — the frame's own five metadata items and two feature-type ones
+ * (10059:102926's "Resolve Potential Issues" page). A catalogue, not a list: levels draw from it,
+ * so no two levels in a building's first pass show the same name.
  */
-export const CREATION_ISSUES: CreationIssue[] = [
-  { id: "i1", group: "metadata", name: "Fast-Track Security Checkpoint Alpha", category: "Aviation Services", where: "4F · Departures Level" },
-  { id: "i2", group: "metadata", name: "Baggage Claim Assistance Desk B", category: "Aviation Services", where: "4F · Departures Level" },
-  { id: "i3", group: "metadata", name: "Passport Control Fast Lane - International Gates", category: "Customs And Immigration", where: "4F · Departures Level" },
-  { id: "i4", group: "metadata", name: "Airline Lounge Reception - Elite Members", category: "Aviation Services", where: "4F · Departures Level" },
-  { id: "i5", group: "metadata", name: "Starbucks", category: "Coffee Shops", where: "4F · Departures Level" },
-  { id: "i6", group: "feature-type", name: "Unlabeled polygon near Gate B14", category: "Unknown", where: "4F · Departures Level" },
-  { id: "i7", group: "feature-type", name: "Duplicate wall segment, north concourse", category: "Structure", where: "4F · Departures Level" },
+const ISSUE_CATALOGUE: { group: CreationIssue["group"]; name: string; category: string; confidence: number }[] = [
+  { group: "metadata", name: "Fast-Track Security Checkpoint Alpha", category: "Aviation Services", confidence: 0.52 },
+  { group: "metadata", name: "Baggage Claim Assistance Desk B", category: "Aviation Services", confidence: 0.61 },
+  { group: "metadata", name: "Passport Control Fast Lane - International Gates", category: "Customs And Immigration", confidence: 0.44 },
+  { group: "metadata", name: "Airline Lounge Reception - Elite Members", category: "Aviation Services", confidence: 0.58 },
+  { group: "metadata", name: "Starbucks", category: "Coffee Shops", confidence: 0.66 },
+  { group: "feature-type", name: "Unlabeled polygon near Gate B14", category: "Unknown", confidence: 0.31 },
+  { group: "feature-type", name: "Duplicate wall segment, north concourse", category: "Structure", confidence: 0.49 },
 ];
 
 /**
- * How many issues the creation review actually lists. The v9 frame's headline says 32 against a
- * visible page of 5 — fine in a static mock-up, wrong here: the wizard counts down as you decide
- * rows, so a hard-coded 32 meant the banner could never reach zero however many you confirmed
- * (fixed 2026-08-11). The list is the truth; the headline follows it.
+ * What a MapScale run leaves on one level, cycled by the level's **ordinal in the building**
+ * (bottom-up), not by its index — a building's levels can be numbered anything.
+ *
+ * The pattern is chosen so a five-level building reproduces the frame's three headline numbers
+ * exactly — 48,553 m², 45 min, 92% — with every one of them now *derived*: the surface is the sum,
+ * the duration is the sum, and the confidence is the **area-weighted** mean (§18's assumption: a
+ * 200 m² plant room must not drag down a 40,000 m² concourse). Change a level and all three move,
+ * which is the whole point of the change; they used to be three string constants.
+ *
+ * `issues` is how many of the level's guesses fall below `SIMILARITY_WARN`. The third entry is
+ * **zero on purpose** — a level with nothing to confirm is creation's equivalent of Green
+ * auto-publishing, and the demo needs one to show it being skipped rather than reviewed.
  */
-export const ISSUES_TOTAL = CREATION_ISSUES.length;
+const LEVEL_RESULTS = [
+  { areaSqm: 12400, confidencePct: 89, issues: 3 },
+  { areaSqm: 9850, confidencePct: 94, issues: 2 },
+  { areaSqm: 7600, confidencePct: 97, issues: 0 },
+  { areaSqm: 11200, confidencePct: 90, issues: 1 },
+  { areaSqm: 7503, confidencePct: 92, issues: 1 },
+];
 
 /**
- * The creation issues as CHANGES, so the wizard's review IS the Manual Review screen (Olcay,
- * 2026-08-11: "it should be what we've built as user review — exactly the same"). Metadata
- * guesses ride as `metadata` rows, feature-type ones as `geometry`; every row wears the
- * `low-confidence` warning — that is what a guess is. The names are MapScale's own output for a
- * NEW building, so none resolve on the demo map (same honest limit as reviewing a non-B2 level).
+ * The one level whose run fails (cause C — the engine couldn't read the file).
+ *
+ * A **demo seam, not a rule**: the real trigger is the job's own validation failing, which the mock
+ * has no way to know from a file name. It sits at the sixth level so the ordinary one-to-five-level
+ * demos never trip it, and a six-file drop demonstrates the failure path on purpose.
  */
-export function creationChanges(): import("./diff").Change[] {
-  return CREATION_ISSUES.map((i) => ({
-    id: `create-${i.id}`,
+const FAILING_ORDINAL = 5;
+
+export interface LevelResult {
+  areaSqm: number;
+  durationMin: number;
+  confidencePct: number;
+  /** True when MapScale couldn't process the file at all (red cause C). Nothing was mapped. */
+  failed: boolean;
+}
+
+/** MapScale's per-level output. Deterministic in the level's ordinal — no clock, no randomness. */
+export function levelResult(ordinal: number): LevelResult {
+  if (ordinal === FAILING_ORDINAL)
+    return { areaSqm: 0, durationMin: 0, confidencePct: 0, failed: true };
+  const r = LEVEL_RESULTS[ordinal % LEVEL_RESULTS.length];
+  return {
+    areaSqm: r.areaSqm,
+    // Bigger floors take longer — the divisor is tuned so the five-level case lands the frame's
+    // 45 min. Derived rather than declared, like the other two tiles.
+    durationMin: Math.max(1, Math.round(r.areaSqm / 1075)),
+    confidencePct: r.confidencePct,
+    failed: false,
+  };
+}
+
+/** How many issues this level's run left behind. Zero means the level is genuinely Ready. */
+export function levelIssueCount(ordinal: number): number {
+  if (ordinal === FAILING_ORDINAL) return 0;
+  return LEVEL_RESULTS[ordinal % LEVEL_RESULTS.length].issues;
+}
+
+/** Where this level's issues start in the catalogue, so a building's levels don't repeat names. */
+function catalogueOffset(ordinal: number): number {
+  let n = 0;
+  for (let i = 0; i < ordinal; i++) n += levelIssueCount(i);
+  return n;
+}
+
+/**
+ * One level's issues.
+ *
+ * Ids are keyed by **level index** (`create-{index}-{n}`), which is what makes a decision survive
+ * leaving the review and coming back — and, on Save, what lets the created level's editor find the
+ * flags again through the store. Renumbering a level in the Level Manager after reviewing it
+ * therefore resets that level's decisions: rare, and arguably right, since you have changed which
+ * floor they were about.
+ */
+export function creationIssuesFor(ordinal: number, levelIndex: number): CreationIssue[] {
+  const count = levelIssueCount(ordinal);
+  const from = catalogueOffset(ordinal);
+  return Array.from({ length: count }, (_, i) => {
+    const t = ISSUE_CATALOGUE[(from + i) % ISSUE_CATALOGUE.length];
+    return { id: `create-${levelIndex}-${i}`, levelIndex, ...t };
+  });
+}
+
+/**
+ * A level's issues as CHANGES, so the wizard's review IS the Manual Review screen (Olcay,
+ * 2026-08-11: "it should be what we've built as user review — exactly the same"). Metadata guesses
+ * ride as `metadata` rows, feature-type ones as `geometry`; every row wears the `low-confidence`
+ * warning — that is what a guess below the floor is.
+ *
+ * The names are MapScale's own output for a NEW building, so they don't resolve on the demo map
+ * (the same honest limit as reviewing a non-B2 level; `bindToFloor` re-points what it can).
+ */
+export function creationChangesFor(level: { index: number; short: string; long: string }, ordinal: number): Change[] {
+  return creationIssuesFor(ordinal, level.index).map((i) => ({
+    id: i.id,
     name: i.name,
     type: i.group === "metadata" ? ("metadata" as const) : ("geometry" as const),
     kind: i.category.toLowerCase().replace(/\s+/g, "-"),
-    detail: `${i.category} · ${i.where}`,
+    detail: `${i.category} · ${level.short} · ${level.long}`,
     details:
       i.group === "metadata"
-        ? [`MapScale guessed the name — confirm or correct it.`]
-        : [`MapScale couldn't classify this feature — confirm what it is.`],
+        ? [`MapScale guessed the name — confirm or correct it.`, `Confidence ${Math.round(i.confidence * 100)}% (below the ${Math.round(SIMILARITY_WARN * 100)}% floor).`]
+        : [`MapScale couldn't classify this feature — confirm what it is.`, `Confidence ${Math.round(i.confidence * 100)}% (below the ${Math.round(SIMILARITY_WARN * 100)}% floor).`],
     warning: "low-confidence" as const,
   }));
+}
+
+/* ── the building's own numbers, summed from its levels ───────────────────── */
+
+export interface BuildingStats {
+  surfaceSqm: number;
+  /** Formatted with thousands separators, the way the tile shows it. */
+  surface: string;
+  durationMin: number;
+  duration: string;
+  confidencePct: number;
+  confidence: string;
+}
+
+/**
+ * The three Preview tiles — **derived sums, not constants** (§18).
+ *
+ * Failed levels are excluded from all three: nothing was mapped, so counting a zero would drag the
+ * building's confidence down for a floor MapScale never read.
+ */
+export function buildingStats(ordinals: number[]): BuildingStats {
+  const rs = ordinals.map(levelResult).filter((r) => !r.failed);
+  const surfaceSqm = rs.reduce((n, r) => n + r.areaSqm, 0);
+  const durationMin = rs.reduce((n, r) => n + r.durationMin, 0);
+  const confidencePct = surfaceSqm
+    ? Math.round(rs.reduce((n, r) => n + r.areaSqm * r.confidencePct, 0) / surfaceSqm)
+    : 0;
+  return {
+    surfaceSqm,
+    surface: surfaceSqm.toLocaleString("en-US"),
+    durationMin,
+    duration: durationMin >= 60 ? `${Math.floor(durationMin / 60)} h ${durationMin % 60} min` : `${durationMin} min`,
+    confidencePct,
+    confidence: `${confidencePct}%`,
+  };
+}
+
+/* ── per-level review state ───────────────────────────────────────────────── */
+
+/**
+ * What a level is waiting for — **the editor's vocabulary, not a new one** (§18).
+ *
+ * `in-review` is deliberately the same word the update flow uses for a part-way save, and for the
+ * same reason: Olcay ruled it explicitly — *"similar to draft but we don't want to say draft"*.
+ * `ready` is kept but has to be **earned**: it now means genuinely zero issues, where it used to be
+ * printed on every finished level beside the note "Ready — review in Preview" — a level whose
+ * MapScale guesses nobody had confirmed, pointing at a Preview that didn't distinguish levels.
+ */
+export type LevelReviewState = "mapping" | "failed" | "ready" | "awaiting" | "in-review" | "reviewed";
+
+export function levelStateLabel(state: LevelReviewState, issues: number, flagged: number): string {
+  switch (state) {
+    case "mapping":
+      return "Mapping";
+    case "failed":
+      return "Couldn't process this floor-plan";
+    case "ready":
+      return "Ready — no issues found";
+    case "awaiting":
+      return `Awaiting your review · ${issues} issue${issues === 1 ? "" : "s"}`;
+    case "in-review":
+      return "In review";
+    case "reviewed":
+      return flagged
+        ? `Reviewed · ${flagged} flagged`
+        : "Reviewed";
+  }
 }
 
 /** Turn "L3-EK-lounges.dwg" into a presentable level name. */

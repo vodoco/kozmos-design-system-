@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Text, Button } from "@kozmos/react";
+import {
+  Text,
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@kozmos/react";
 import { ChangeGroupBlock } from "../ui/ChangeGroup";
 import { ChangeReviewRow } from "../ui/ChangeReviewRow";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
@@ -70,10 +78,32 @@ export function ManualReview({
     changes: Change[];
     onBack: () => void;
     /**
-     * Confirm Changes — hands the DECIDED ROWS back, not a count, so reopening the review resumes
-     * where the user left off (the wizard owns them; this screen is remounted each time).
+     * Save — hands the DECIDED ROWS back without concluding, so the level reads **In review** and
+     * the user can come back to it. Same intention, same word and same pair of buttons as the
+     * update flow (Olcay, 2026-08-11); creation's Save just has nothing to hold out of publishing,
+     * because nothing publishes here.
+     */
+    onSave: (rows: Change[]) => void;
+    /**
+     * Complete review — concludes this LEVEL. Hands the decided rows back, not a count, so
+     * reopening resumes where the user left off (the wizard owns them; this screen is remounted
+     * each time). No confirmation overlay: the update flow's asks first because completing may
+     * publish a site, and creation publishes nothing.
      */
     onConfirm: (rows: Change[]) => void;
+    /**
+     * The wizard reviews **one level at a time**, and moving between them is the wizard's own
+     * "Level to Align, N of M" idiom rather than the map's `LevelSelector` — you are inside the
+     * wizard, which taught that vocabulary two steps earlier (§18).
+     *
+     * Completing a level deliberately does **not** advance to the next one (Olcay's answer 3): the
+     * others stay exactly where they are, so a user who wants to stop after one can.
+     */
+    levels?: {
+      currentId: number;
+      items: { id: number; label: string; issues: number; done: boolean }[];
+      onPick: (id: number) => void;
+    };
   };
 }) {
   const pct = magnitudePct ?? 30;
@@ -278,6 +308,30 @@ export function ManualReview({
   ).length;
 
   /**
+   * Creation reviews one level at a time and **stays mounted while you step between them**, so
+   * that decisions taken on a level survive going to another and coming back. That costs this
+   * effect: `decisions` is seeded once, from whichever level was open first, so a level arriving
+   * later would show its own saved decisions as undecided — the rows carry them, the map didn't.
+   *
+   * It only ever fills gaps. Overwriting would undo a decision the user has just taken on the row
+   * in front of them, and row ids carry their level (`create-{index}-{n}`), so accumulating every
+   * level's decisions in one map is safe by construction.
+   */
+  useEffect(() => {
+    if (!creation) return;
+    setDecisions((p) => {
+      let changed = false;
+      const next = { ...p };
+      for (const c of initialChanges)
+        if (next[c.id] === undefined && c.decision !== undefined) {
+          next[c.id] = c.decision;
+          changed = true;
+        }
+      return changed ? next : p;
+    });
+  }, [creation, initialChanges]);
+
+  /**
    * Bring the lit row to the middle of the panel — but only when the *map* drove the selection.
    *
    * `block: "nearest"` was wrong here and read as right in code: it scrolls the **minimum**
@@ -407,6 +461,47 @@ export function ManualReview({
                 ? "Inspect the whole floor, then publish it or upload a corrected floor-plan."
                 : "Confirm each change to apply it now, flag it for a later dashboard edit, or reject it."}
           </Text>
+          {/*
+            The wizard's level cycle — step 3's "Level to Align, N of M" idiom, reused because you
+            are still inside the wizard and it taught this control two steps earlier. Levels with
+            nothing to confirm never appear here: a zero-issue level is creation's Green, and the
+            wizard skips it rather than asking you to open an empty list (Olcay's answer 2).
+          */}
+          {creation?.levels && creation.levels.items.length > 1 && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4, color: "var(--review-ink)" }}>
+                ● Level to Review{" "}
+                <span
+                  style={{
+                    background: "var(--primitives-colors-emotional-success-0)",
+                    border: "1px solid var(--primitives-colors-emotional-success-200)",
+                    borderRadius: 999,
+                    padding: "0 8px",
+                    fontSize: 10,
+                  }}
+                >
+                  {creation.levels.items.findIndex((l) => l.id === creation.levels!.currentId) + 1} of{" "}
+                  {creation.levels.items.length}
+                </span>
+              </div>
+              <Select
+                value={String(creation.levels.currentId)}
+                onValueChange={(v) => creation.levels!.onPick(Number(v))}
+              >
+                <SelectTrigger aria-label="Level to Review">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {creation.levels.items.map((l) => (
+                    <SelectItem key={l.id} value={String(l.id)}>
+                      {l.label} · {l.issues} issue{l.issues === 1 ? "" : "s"}
+                      {l.done ? " ✓" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {/* magnitude — traffic light, the one place red/amber/green is allowed. Cause B has no
               reliable ratio, so the block explains instead of counting (US5). */}
           <div
@@ -658,11 +753,26 @@ export function ManualReview({
 
             The held state is **"In review"**, never "draft" (Olcay: *"similar to draft but we
             don't want to say draft"*) — decision 5 removed the draft model and the word is spoken
-            for. Creation's Confirm Changes stays a single button: the wizard has no grace period
-            to come back within, and nothing publishes there.
+            for.
+
+            **Creation carries the same pair** (§18: *"each level gets its own Save / Complete
+            review, exactly like the update flow"*), superseding its single Confirm Changes. The
+            words mean the same things: Save keeps your decisions and leaves the level **In
+            review**; Complete review concludes it. What differs is only what conclusion *costs* —
+            in the update flow it can publish a site, so it asks first; here it publishes nothing,
+            so it doesn't.
           */}
           {creation ? (
-            <Button onClick={() => creation.onConfirm(changes)}>Confirm Changes</Button>
+            <>
+              <Button
+                variant="secondary"
+                title="Save your decisions and come back to this level later. Nothing is concluded."
+                onClick={() => creation.onSave(changes)}
+              >
+                Save
+              </Button>
+              <Button onClick={() => creation.onConfirm(changes)}>Complete review</Button>
+            </>
           ) : (
             <>
               <Button
