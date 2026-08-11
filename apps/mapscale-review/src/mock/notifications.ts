@@ -238,8 +238,8 @@ export function buildFeed(): Notification[] {
        * Version-matched, so a NEW upload to the same level notifies again: that outcome is about
        * a floor-plan which has since been replaced.
        */
-      const handled = getReviewOutcome(key);
-      if (handled && handled.versionN === newest.n) continue;
+      const handled = getReviewOutcome(key, newest.n);
+      if (handled) continue;
       const n = forVersion(newest, b, l);
       if (n) out.push(n);
     }

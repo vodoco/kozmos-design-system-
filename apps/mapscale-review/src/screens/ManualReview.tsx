@@ -157,7 +157,11 @@ export function ManualReview({
    */
   const [fate, setFate] = useState<"pending" | "published" | "cancelled" | "held">(() => {
     if (creation || !target) return "pending";
-    const saved = getReviewOutcome(levelKey(target.buildingId, target.index));
+    const key = levelKey(target.buildingId, target.index);
+    const newestN = getLevelVersions(key, () =>
+      seedVersions(target.short, target.index, target.buildingId),
+    )[0]?.n;
+    const saved = getReviewOutcome(key, newestN);
     return saved && !saved.complete ? "held" : "pending";
   });
   /** Save asks first — the consequence lives in the v9 confirmation overlay, not in a caption. */
@@ -171,11 +175,12 @@ export function ManualReview({
     // inheriting decisions taken about a floor-plan that has since been replaced.
     if (creation || !target) return seeded;
     const key = levelKey(target.buildingId, target.index);
-    const saved = getReviewOutcome(key);
     const newestN = getLevelVersions(key, () =>
       seedVersions(target.short, target.index, target.buildingId),
     )[0]?.n;
-    if (!saved || saved.versionN !== newestN) return seeded;
+    // version-matched by the key itself now: a newer upload simply has no report yet
+    const saved = getReviewOutcome(key, newestN);
+    if (!saved) return seeded;
     return { ...seeded, ...saved.decisions };
   });
   // memoised: this array is posted to the map, so a fresh identity each render would re-post it

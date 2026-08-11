@@ -278,10 +278,10 @@ function levelTagsFor(buildingId: string, index: number): LevelTag[] | undefined
 function liveTagsFor(buildingId: string, index: number, short: string): LevelTag[] | undefined {
   const seeded = levelTagsFor(buildingId, index);
   const key = levelKey(buildingId, index);
-  const outcome = getReviewOutcome(key);
-  if (!outcome) return seeded;
   const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
-  if (!newest || newest.n !== outcome.versionN) return seeded;  // a newer upload supersedes it
+  // asking by version is the supersede rule: a newer upload has no report of its own yet
+  const outcome = getReviewOutcome(key, newest?.n);
+  if (!outcome) return seeded;
 
   /**
    * **Two orthogonal facts, reported separately: is it live, and is the review finished?**

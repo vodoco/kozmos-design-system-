@@ -486,7 +486,7 @@ export function BuildingWizard({
       if (!initial?.storeId) return {};
       const out: Record<number, { rows: Change[]; complete: boolean }> = {};
       (initial.levels ?? []).forEach((l, i) => {
-        const saved = getReviewOutcome(levelKey(initial.storeId, l.index));
+        const saved = getReviewOutcome(levelKey(initial.storeId, l.index), 1);
         if (saved) out[i + 1] = { rows: saved.changes, complete: saved.complete };
       });
       return out;

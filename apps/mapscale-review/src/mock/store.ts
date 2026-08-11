@@ -153,8 +153,26 @@ const reviewListeners = new Set<() => void>();
  */
 let reviewsVersion = 0;
 
+/**
+ * **A report belongs to the VERSION it was about, not to the level** (Olcay, 2026-08-12: *"what
+ * happens if the user does this and then restores — are we able to keep the report?"*).
+ *
+ * It used to be one entry per level, which answered that question with *no*. Upload a new
+ * floor-plan over a reviewed one and the old report was stranded — every reader compared
+ * `versionN` to the newest version and ignored it — and the moment you reviewed the new upload it
+ * was **overwritten outright**. Restoring the old floor-plan then brought back its content with no
+ * record of what anyone had decided about it.
+ *
+ * Keyed by version, each report survives its version. That also makes the version-matching every
+ * reader was doing by hand structural: ask for the report of version N and you cannot be handed
+ * one about a floor-plan that has since been replaced.
+ */
+function reviewKey(key: string, versionN: number): string {
+  return `${key}:v${versionN}`;
+}
+
 export function setReviewOutcome(key: string, outcome: ReviewOutcome) {
-  reviews.set(key, outcome);
+  reviews.set(reviewKey(key, outcome.versionN), outcome);
   reviewsVersion++;
   reviewListeners.forEach((l) => l());
 }
@@ -164,8 +182,9 @@ export function getReviewCount(): number {
   return reviewsVersion;
 }
 
-export function getReviewOutcome(key: string): ReviewOutcome | undefined {
-  return reviews.get(key);
+/** The report for one version of one level. A version with no review returns undefined. */
+export function getReviewOutcome(key: string, versionN: number | undefined): ReviewOutcome | undefined {
+  return versionN === undefined ? undefined : reviews.get(reviewKey(key, versionN));
 }
 
 export function subscribeReviews(fn: () => void): () => void {

@@ -210,6 +210,7 @@ function RestoreAction({
  * `versionBadge`, never stored; Restore appears only where it means something (`isRestorable`).
  */
 function PreviousVersions({
+  level,
   versions,
   restoreReason: reason,
   onRestore,
@@ -217,6 +218,8 @@ function PreviousVersions({
   onPreview,
   onCompare,
 }: {
+  /** Whose versions these are — needed to look up each one's saved review. */
+  level: LevelRef;
   versions: LevelVersion[];
   /** Present ⇒ Restore is disabled, and this is why (the expert hold, or a running job). */
   restoreReason?: string;
@@ -318,6 +321,25 @@ function PreviousVersions({
                   {v.at}
                   {v.by ? ` · ${v.by}` : ""}
                 </div>
+                {/*
+                  **The report a version kept** (2026-08-12). Reports are stored per version now,
+                  so an old floor-plan still knows what was decided about it — but "we keep it" is
+                  only true if you can see it, and the history is where you look when deciding
+                  whether to restore something.
+                */}
+                {(() => {
+                  const rep = getReviewOutcome(levelKey(level.buildingId, level.index), v.n);
+                  if (!rep) return null;
+                  const flagged = rep.changes.filter((c) => c.decision === "flag").length;
+                  return (
+                    <span
+                      style={{ fontSize: 11, color: MUTED, flex: "0 0 auto" }}
+                      title={`This version was reviewed${flagged ? `, with ${flagged} change${flagged === 1 ? "" : "s"} flagged to edit later` : ""}. Restoring it brings the report back with it.`}
+                    >
+                      · reviewed{flagged ? ` · ${flagged} flagged` : ""}
+                    </span>
+                  );
+                })()}
                 {typeof v.changePct === "number" && (
                   <span style={{ fontSize: 11, color: MUTED, flex: "0 0 auto" }}>+{v.changePct}%</span>
                 )}
@@ -449,11 +471,9 @@ export function LevelEditor({
    *
    * Version-matched on purpose: a newer upload must not inherit an older review's conclusions.
    */
-  const reviewOutcome = useSyncExternalStore(subscribeReviews, () =>
-    getReviewOutcome(levelKey(level.buildingId, level.index)),
+  const forThisVersion = useSyncExternalStore(subscribeReviews, () =>
+    getReviewOutcome(levelKey(level.buildingId, level.index), versions[0]?.n),
   );
-  const forThisVersion =
-    reviewOutcome && reviewOutcome.versionN === versions[0]?.n ? reviewOutcome : undefined;
   /** Finished. A part-way save is a different thing — see `inProgress`. */
   const concluded = forThisVersion?.complete ? forThisVersion : undefined;
   /**
@@ -936,6 +956,7 @@ export function LevelEditor({
           )}
 
           <PreviousVersions
+            level={level}
             versions={versions}
             restoreReason={restoreReason}
             onRestore={restore}
@@ -1030,24 +1051,30 @@ export function LevelEditor({
         <ConfirmOverlay
           open={confirmUpload}
           tone="info"
-          title="Upload a new floor-plan and start over?"
-          confirmLabel="Upload new floor-plan"
+          title="Start over with a new floor-plan?"
+          confirmLabel="Start over"
           onCancel={() => setConfirmUpload(false)}
           onConfirm={() => {
             setConfirmUpload(false);
             uploadNew();
           }}
         >
-          {`This level is at its final stage — ${
-            current?.state === "published" ? "the current floor-plan is live" : "its review is waiting on you"
-          }. A new floor-plan runs the whole process again: MapScale maps it, Pointr's mapping team corrects it, and it comes back for review.`}
-          {forThisVersion && (
-            <div style={{ fontSize: 13, color: MUTED, marginTop: 8 }}>
-              {`Your ${Object.values(forThisVersion.decisions).filter(Boolean).length} decision${
-                Object.values(forThisVersion.decisions).filter(Boolean).length === 1 ? "" : "s"
-              } on Version ${forThisVersion.versionN} stay in its history, but they don't carry over to the new one.`}
-            </div>
-          )}
+          {/*
+            Short, because a confirmation is read in a second (Olcay, 2026-08-12: *"all we want to
+            say is — you've just run a floor-plan and it's at review stage, do you want to
+            restart?"*). The first draft explained the whole pipeline back to someone who had just
+            watched it run.
+
+            The second line is the part worth keeping: it names the **way back**. Version N stays
+            restorable and keeps its report, which is exactly what makes starting over a safe thing
+            to agree to.
+          */}
+          {`Version ${current?.n} is ${current?.state === "published" ? "live" : "at review stage"}. A new floor-plan starts the process again.`}
+          <div style={{ fontSize: 13, color: MUTED, marginTop: 8 }}>
+            {forThisVersion
+              ? `You can restore Version ${current?.n} later — it keeps its review.`
+              : `You can restore Version ${current?.n} later.`}
+          </div>
         </ConfirmOverlay>
       </div>
     </div>
