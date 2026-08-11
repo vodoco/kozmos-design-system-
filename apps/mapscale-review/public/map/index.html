@@ -35,6 +35,10 @@
      would retreat every time you reached for it. A pseudo-element hits as its host, so the
      `tip.contains(ev.target)` test passes the whole way across. */
   #tip::before { content: ""; position: absolute; left: 0; right: 0; bottom: -18px; height: 18px; }
+  /* A pinned card doesn't need the bridge — it survives whatever the cursor does — and keeping it
+     would swallow the click just under the card, which is one of the places you'd naturally click
+     to dismiss it. */
+  #tip.pinned::before { display: none; }
   /* flipped under the shape when there's no room above */
   #tip.below { transform: translate(-50%, 16px); }
   #tip.below::after { bottom: auto; top: -7px; border: none; border-left: 1px solid #E7E9EE;
@@ -580,15 +584,52 @@ function redraw() {
 
 /* ── selection tooltip ──────────────────────────────────────────────────── */
 
+/**
+ * The card has exactly two modes, and they never negotiate (Olcay, 2026-08-11: *"I like it visible
+ * on hover and invisible off hover, but if I click and select, the overlay tooltip should stay
+ * until I deselect — click out or click close button"*):
+ *
+ *   **pinned**  — shows the selected change and stays until you deselect. Hover cannot change it,
+ *                 remove it, or preview anything else. Leaves via ✕, a click outside, or Escape.
+ *   **hovering** — shows what's under the cursor and disappears the moment it isn't.
+ *
+ * Hover is ignored outright while pinned. That is what makes it predictable: with hover still
+ * tracked underneath, deselecting could pop a stale card back up, and every "sometimes it stays,
+ * sometimes it goes" bug lives in that gap.
+ */
 function hover(change) {
+  if (SELECTED) return;                  // pinned wins, unconditionally
   if (HOVERED === change) return;
   HOVERED = change;
   renderTip();
   redraw();
 }
 
+/**
+ * End a hover unless the cursor is somewhere that should keep it alive — the shape itself, or the
+ * card (which is interactive: it carries the decision control).
+ *
+ * One function because the exits are many and each one used to be its own judgement call: the map
+ * had a `mousemove`, the shapes had `mouseleave`, and **nothing at all handled leaving the map** —
+ * move the cursor onto the left panel and no further mousemove ever fired, so the card stayed up
+ * for good. `#tip` and `#hl` are *siblings* of `#map`, not children, so `#map` only ever sees bare
+ * map; every other surface has to report for itself.
+ */
+function endHoverUnless(el) {
+  if (SELECTED || !HOVERED) return;
+  if (el && el.nodeType === 1) {
+    if (tip.contains(el)) return;
+    if (el.classList && el.classList.contains("hit")) return;
+  }
+  hover(null);
+}
+
 function select(change) {
   SELECTED = SELECTED === change ? null : change;   // clicking the same shape again unpins it
+  // Pinning takes the hover with it. Otherwise HOVERED goes stale the moment the cursor moves —
+  // hover() ignores everything while pinned — and deselecting would resurrect a card for whatever
+  // you happened to be over when you clicked, instead of simply closing.
+  HOVERED = null;
   renderTip();
   redraw();
   // `id` so the app can light the matching row — `name` alone can't, since bindToFloor re-points
@@ -658,6 +699,7 @@ function renderTip() {
     tip.appendChild(x);
   }
 
+  tip.classList.toggle("pinned", SELECTED === c);
   tip.style.display = "block";
   positionTip();
 }
@@ -1122,16 +1164,35 @@ function start() {
   document.getElementById("zoomin").addEventListener("click", () => { if (map) map.zoomIn(); });
   document.getElementById("zoomout").addEventListener("click", () => { if (map) map.zoomOut(); });
 
-  // A hover card must die when the cursor leaves the shape — but redraw() rebuilds every path per
-  // render frame (MapLibre renders continually for symbol fades), so the hovered path is often
-  // destroyed before its mouseleave can fire and the card stuck forever. Clear from the container
-  // instead: any movement NOT over a change shape ends the hover. Pinned cards are unaffected.
-  document.getElementById("map").addEventListener("mousemove", ev => {
-    if (!HOVERED) return;
-    const onShape = ev.target && ev.target.classList && ev.target.classList.contains("hit");
-    if (!onShape && !tip.contains(ev.target)) hover(null);
-  });
+  /**
+   * Every way a hover can end, each reporting to `endHoverUnless`.
+   *
+   * A path's own `mouseleave` can't be trusted on its own — `redraw()` rebuilds every path per
+   * render frame (MapLibre renders continually for symbol fades), so the hovered element is often
+   * destroyed before its leave event fires. Hence the surfaces below, which are stable.
+   *
+   * `#tip` and `#hl` are siblings of `#map`, so each needs its own listener: a `mousemove` on
+   * `#map` fires only over *bare* map and never sees the card or the shapes.
+   */
+  const mapEl = document.getElementById("map");
+  mapEl.addEventListener("mousemove", ev => endHoverUnless(ev.target));
+  // leaving the map for the panel, the chrome, or another window — the case that used to strand
+  // the card on screen indefinitely, because no further mousemove was ever coming
+  mapEl.addEventListener("mouseleave", ev => endHoverUnless(ev.relatedTarget));
+  // leaving the card itself; `relatedTarget` keeps a trip back to its own shape from flickering
+  tip.addEventListener("mouseleave", ev => endHoverUnless(ev.relatedTarget));
+  document.getElementById("hl").addEventListener("mouseleave", ev => endHoverUnless(ev.relatedTarget));
+  // out of the document entirely (relatedTarget is null on the way out of the window)
+  document.addEventListener("mouseout", ev => { if (!ev.relatedTarget) endHoverUnless(null); });
+  window.addEventListener("blur", () => endHoverUnless(null));
+
   map.on("movestart", () => { if (HOVERED) hover(null); });
+
+  // Escape deselects, like every other overlay in the app. Pinned only — a hover card needs no
+  // dismissing, it dies when you look away.
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && SELECTED) select(SELECTED);
+  });
 
   resolveAndFrame(partial => post("ready", { changes: RESOLVED.length, level: levelInfo(), features: levelFeatureNames(),
     buildings: siteBuildings(), partial }));
