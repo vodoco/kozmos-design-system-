@@ -70,9 +70,18 @@ export function getLevelVersions(
   return v;
 }
 
+/** Bumped on every write, so `useSyncExternalStore` has a stable primitive to compare. A Map has
+    no such handle, and its `size` doesn't move when an existing key is overwritten. */
+let versionsRevision = 0;
+
 export function setLevelVersions(key: string, versions: LevelVersion[]) {
   versionsByLevel.set(key, versions);
+  versionsRevision++;
   versionListeners.forEach((l) => l());
+}
+
+export function getLevelVersionsRevision(): number {
+  return versionsRevision;
 }
 
 export function subscribeLevelVersions(fn: () => void): () => void {
@@ -94,6 +103,7 @@ export function subscribeLevelVersions(fn: () => void): () => void {
 export function clearLevelVersions() {
   if (versionsByLevel.size === 0) return;
   versionsByLevel.clear();
+  versionsRevision++;   // same handle every other mutation bumps — see getLevelVersionsRevision
   versionListeners.forEach((l) => l());
 }
 

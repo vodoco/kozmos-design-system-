@@ -493,12 +493,38 @@ export function LevelEditor({
     if (!concluded) return undefined;
     const n = flagged.length;
     const tail = n ? ` · ${n} flagged for later` : "";
-    return concluded.published
+    // Live-ness comes from the version, not from the outcome — the version is what every other
+    // surface reads, and an explicit Publish now moves it regardless of the review.
+    return versions[0]?.state === "published"
       ? { state: "published", note: `Published · reviewed by you${tail}` }
       : {
           state: "completed",
           note: `Review complete · not published${tail}`,
           info: "You concluded the review but this version hasn't been published. Publish it whenever you're ready.",
+        };
+  };
+
+  /**
+   * The unfinished-review card. Two facts, and they are independent: whether the version is live,
+   * and whether you have finished reviewing it.
+   *
+   * The first version of this only existed inside the `phase === "done"` branch, so pressing
+   * **Publish now** and then **Save** — which publishes the level and leaves the review open —
+   * dropped through to the resting "Completed" card and lost the unfinished review entirely,
+   * while the tree simultaneously claimed the level was held out of publishing.
+   */
+  const inProgressCard = (): { state: MapScaleState; note: string; primary?: string } | undefined => {
+    if (!inProgress) return undefined;
+    return versions[0]?.state === "published"
+      ? {
+          state: "published",
+          note: `Published · your review is unfinished`,
+          primary: "Review",
+        }
+      : {
+          state: "user-review",
+          note: `In review · ${run.pct}% of floor area · held from publishing until you complete it`,
+          primary: "Review",
         };
   };
   /** One shape for every source of the card, so the JSX stops probing it with `in` guards. */
@@ -509,24 +535,24 @@ export function LevelEditor({
     action?: string;
     primary?: string;
     info?: string;
-  } = concluded
-    ? reviewedCard()!
-    : phase === "done"
-      ? inProgress
-        ? // Same card and the same Review button — the review is unfinished, so the way back in
-          // has to stay. What changes is the promise: it is no longer counting down to a publish,
-          // it is being held out of one.
-          //
-          // Deliberately NOT "N of M reviewed": the seeds arrive pre-decided (so the demo has a
-          // populated tally), which made that counter read "18 of 18 reviewed" beside "Awaiting
-          // your review" after the user had touched two rows — a count of decided rows is not a
-          // count of *your* progress, and it claimed the job was done.
-          {
-            ...outcome,
-            note: `In review · ${run.pct}% of floor area · held from publishing until you complete it`,
-          }
-        : outcome
-      : PHASE[phase];
+  } =
+    /**
+     * A saved review outranks the phase, because it is a fact about what *you* did and the phase
+     * is only where the job got to. Checked before `phase === "done"` on purpose: publishing moves
+     * the version to a resting phase, and nesting these inside "done" is what let a published-but-
+     * unfinished review fall through to the blank "Completed" card.
+     *
+     * Deliberately NOT "N of M reviewed" anywhere here: the seeds arrive pre-decided (so the demo
+     * has a populated tally), which made that counter read "18 of 18 reviewed" beside "Awaiting
+     * your review" after the user had touched two rows.
+     */
+    concluded
+      ? reviewedCard()!
+      : inProgress
+        ? inProgressCard()!
+        : phase === "done"
+          ? outcome
+          : PHASE[phase];
   const running = phase === "queued" || phase === "validating" || phase === "mapping";
 
   /**

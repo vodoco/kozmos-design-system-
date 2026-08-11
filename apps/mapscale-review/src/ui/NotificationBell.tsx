@@ -10,6 +10,12 @@ import {
   type Notification,
 } from "../mock/notifications";
 import { getSettings, subscribeSettings } from "../mock/settings";
+import {
+  getLevelVersionsRevision,
+  getReviewCount,
+  subscribeLevelVersions,
+  subscribeReviews,
+} from "../mock/store";
 
 /**
  * S7 · Notifications (Figma `2495:463`) — a **bell dropdown in the chrome, not a page**. The
@@ -110,7 +116,14 @@ export function NotificationBell({ onGo }: { onGo: (t: NotificationTarget) => vo
   // The feed depends on the grace period, so it must re-derive when Settings changes it.
   const settings = useSyncExternalStore(subscribeSettings, getSettings);
   const read = useSyncExternalStore(subscribeRead, getRead);
-  const feed = useMemo(() => buildFeed(), [settings]);
+  /**
+   * The feed is derived from three stores, so it has to listen to all three. It subscribed only to
+   * settings at first, which meant a concluded review changed the underlying data and the bell
+   * went on showing the old projection until something unrelated happened to re-render it.
+   */
+  const versions = useSyncExternalStore(subscribeLevelVersions, getLevelVersionsRevision);
+  const reviews = useSyncExternalStore(subscribeReviews, getReviewCount);
+  const feed = useMemo(() => buildFeed(), [settings, versions, reviews]);
   const unreadIds = feed.filter((n) => !read.has(n.id)).map((n) => n.id);
   /**
    * Controlled so acting on a notification closes it. Left uncontrolled, following a row left the

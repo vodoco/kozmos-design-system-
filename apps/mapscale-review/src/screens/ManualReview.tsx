@@ -244,9 +244,18 @@ export function ManualReview({
     const versions = getLevelVersions(key, () => seedVersions(target.short, target.index, target.buildingId));
     const newest = versions[0];
     if (!newest) return;
-    // Only completing can publish. Saving progress deliberately leaves the version — and therefore
-    // the grace countdown and the tree tag — exactly where it was.
-    const published = complete && (fate === "published" || (!matchFailed && bandKind === "medium"));
+    /**
+     * Two different publishes, and only one of them waits for the review to be finished.
+     *
+     * **Publish now** (the fate strip) is a deliberate act: the strip already says *"Published
+     * just now — this version is live"*, so it must publish whether or not you then Save or
+     * Complete. Gating it on `complete` — as this did — meant pressing Publish now and then Save
+     * left the version unpublished under a strip claiming it was live.
+     *
+     * **Auto-publish on conclusion** (decision 5) is the other one, and that genuinely requires
+     * completing: an amber level publishes because you finished reviewing it.
+     */
+    const published = fate === "published" || (complete && !matchFailed && bandKind === "medium");
     setReviewOutcome(key, { versionN: newest.n, decisions, changes, published, complete });
     if (published && newest.state !== "published")
       setLevelVersions(key, [{ ...newest, state: "published" }, ...versions.slice(1)]);

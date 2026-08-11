@@ -22,6 +22,7 @@ import {
 } from "./diff";
 import { SITE_SNAPSHOT } from "./site";
 import { getSettings, graceDays } from "./settings";
+import { getLevelVersions, getReviewOutcome, levelKey } from "./store";
 
 /* ── what a notification is ───────────────────────────────────────────────── */
 
@@ -213,8 +214,32 @@ export function buildFeed(): Notification[] {
   const out: Notification[] = [];
   for (const b of SITE_SNAPSHOT) {
     for (const l of b.levels) {
-      const newest = seedVersions(l.short, l.index, b.id)[0];
+      const key = levelKey(b.id, l.index);
+      /**
+       * **The store first, the seed only as its fallback** — the same rule every other reader in
+       * the app follows, and the one this file broke.
+       *
+       * Calling `seedVersions()` directly made the feed a projection of the *original* demo data
+       * rather than of what has actually happened, so completing a review left the editor saying
+       * "Published · reviewed by you" while the bell went on insisting the same level "publishes
+       * in 6 days". Two surfaces contradicting each other about one level is precisely the failure
+       * deriving this feed was supposed to make impossible.
+       */
+      const newest = getLevelVersions(key, () => seedVersions(l.short, l.index, b.id))[0];
       if (!newest) continue;
+      /**
+       * A level you have already engaged with drops out of the feed.
+       *
+       * Notifications are things wanting attention; a review you concluded had yours, and one you
+       * saved part-way is held out of publishing so nothing is pending on it either. The tree tag
+       * and the editor's card carry those states — the bell would only repeat them, and while
+       * held it would repeat them *wrongly*, since the countdown it quotes is suspended.
+       *
+       * Version-matched, so a NEW upload to the same level notifies again: that outcome is about
+       * a floor-plan which has since been replaced.
+       */
+      const handled = getReviewOutcome(key);
+      if (handled && handled.versionN === newest.n) continue;
       const n = forVersion(newest, b, l);
       if (n) out.push(n);
     }

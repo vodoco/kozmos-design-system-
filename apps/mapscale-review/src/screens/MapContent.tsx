@@ -284,41 +284,55 @@ function liveTagsFor(buildingId: string, index: number, short: string): LevelTag
   if (!newest || newest.n !== outcome.versionN) return seeded;  // a newer upload supersedes it
 
   /**
-   * Saved part-way: the level is **held out of publishing** until the review is completed (Olcay,
-   * 2026-08-11 — *"it's in a certain state where it can't be included in publish"*). It keeps the
-   * review action, because the way back in has to stay, but it supersedes the countdown tags: a
-   * level being held cannot also be publishing in 6 days.
+   * **Two orthogonal facts, reported separately: is it live, and is the review finished?**
    *
-   * The tone is neutral, not a band colour. Traffic-light is magnitude speaking (§10), and being
-   * held is not a magnitude — it is something *you* did.
+   * They were conflated at first — "saved part-way" simply returned *In review · won't publish
+   * until you complete it*. That is a lie in one reachable case: pressing **Publish now** and then
+   * **Save** publishes the level deliberately while leaving the review unfinished, and the tree
+   * went on claiming it couldn't publish something that was already live.
+   *
+   * Live-ness is read from the **version**, never from `outcome.published` — the version is what
+   * every other surface reads, and an explicit publish moves it whatever the review is doing.
    */
-  if (!outcome.complete)
-    return [
-      {
-        kind: "in-review",
-        label: "In review",
-        tone: "neutral",
-        action: "review",
-        title: "You saved this review part-way. It won't publish — automatically or otherwise — until you complete it.",
-      },
-    ];
-
+  const live = newest.state === "published";
   const flags = Object.values(outcome.decisions).filter((d) => d === "flag").length;
   const tags: LevelTag[] = [];
-  if (outcome.published)
+
+  if (live)
     tags.push({
       kind: "auto-published",
       label: "Published",
       tone: "minor",
-      title: "You reviewed this version and it went live",
+      title: outcome.complete
+        ? "You reviewed this version and it went live"
+        : "You published this version. The review is still unfinished.",
     });
-  if (flags)
+
+  if (!outcome.complete)
+    /**
+     * The hold, when there is one. Neutral, not a band colour — traffic-light is magnitude
+     * speaking (§10), and being mid-review is something *you* did, not a size. It keeps the
+     * review action because the way back in has to stay, and it supersedes the countdown tags:
+     * a level being held cannot also be publishing in 6 days.
+     */
+    tags.push({
+      kind: "in-review",
+      label: live ? "Review unfinished" : "In review",
+      tone: "neutral",
+      action: "review",
+      title: live
+        ? "This version is live, but you haven't finished reviewing it."
+        : "You saved this review part-way. It won't publish — automatically or otherwise — until you complete it.",
+    });
+
+  if (outcome.complete && flags)
     tags.push({
       kind: "flagged",
       label: `${flags} flagged`,
       tone: "neutral",
       title: `${flags} change${flags === 1 ? "" : "s"} flagged for a later dashboard edit`,
     });
+
   return tags.length ? tags : seeded;
 }
 

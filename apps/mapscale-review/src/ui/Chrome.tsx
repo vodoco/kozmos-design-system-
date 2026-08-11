@@ -134,31 +134,41 @@ export function TopBar({
         {tab("Settings", { to: "Settings" })}
       </nav>
 
-      {/* Prototype-only review tools, deliberately outside the design's chrome vocabulary — see
-          ui/FeedbackLayer.tsx. Nothing here is part of the Pointr dashboard. */}
-      {tools}
+      {/*
+        The right-hand cluster, as one group.
+        The header is `space-between`, which distributes the free space between EVERY child — so
+        as separate children the tools, the bell and the avatar each drifted apart and the bell
+        ended up floating in the middle of nothing (Olcay: *"bell should be next to user menu"*).
+        Grouped, they sit together at the right edge the way `2495:463` draws them, and the space
+        falls where it should: after the nav.
+      */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* Prototype-only review tools, deliberately outside the design's chrome vocabulary — see
+            ui/FeedbackLayer.tsx. Nothing here is part of the Pointr dashboard. */}
+        {tools}
 
-      {/* S7 — the notification bell sits between the tools and the user menu, as in 2495:463 */}
-      {bell}
+        {/* S7 — the bell sits immediately before the user menu, as in 2495:463 */}
+        {bell}
 
-      {/* user menu — avatar + chevron only, per the design */}
-      <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 12 }}>
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 24,
-            background: LINE,
-            border: "2px solid #c7cad1",
-            display: "grid",
-            placeItems: "center",
-            overflow: "hidden",
-            color: "#8b909c",
-          }}
-        >
-          <Icon name="user-01" />
+        {/* user menu — avatar + chevron only, per the design */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 24,
+              background: LINE,
+              border: "2px solid #c7cad1",
+              display: "grid",
+              placeItems: "center",
+              overflow: "hidden",
+              color: "#8b909c",
+            }}
+          >
+            <Icon name="user-01" />
+          </div>
+          <Icon name="chevron-down" />
         </div>
-        <Icon name="chevron-down" />
       </div>
     </header>
   );
