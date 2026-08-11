@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Icon, Input, Text } from "@kozmos/react";
 import { Tour, TOUR_STEPS, type TourScreen } from "./Tour";
 
@@ -97,6 +97,13 @@ export function FeedbackLayer({
   const [panel, setPanel] = useState(false);
   const [busy, setBusy] = useState(false);
   const [author, setAuthor] = useState(() => localStorage.getItem(NAME_KEY) || "");
+  /**
+   * The newest list revision this browser has seen. The 25s poll is what made a deleted note come
+   * back (Olcay, 2026-08-11): the store's read path is eventually consistent, so a poll landing
+   * seconds after your delete could return the list from *before* it and overwrite the screen.
+   * A response older than what we already have is dropped.
+   */
+  const revRef = useRef(-1);
   const [tourStep, setTourStep] = useState<number | null>(() =>
     localStorage.getItem(TOUR_SEEN) ? null : 0,
   );
@@ -105,19 +112,30 @@ export function FeedbackLayer({
     if (author) localStorage.setItem(NAME_KEY, author);
   }, [author]);
 
+  /**
+   * Accept a server payload only if it is at least as new as what we already hold. `rev` is
+   * monotonic per write, so an older one is a stale read and must not repaint the screen.
+   */
+  const accept = useCallback((data: { notes?: Note[]; rev?: number }) => {
+    if (!Array.isArray(data?.notes)) return;
+    const rev = typeof data.rev === "number" ? data.rev : revRef.current;
+    if (rev < revRef.current) return;   // stale — drop it
+    revRef.current = rev;
+    setNotes(data.notes);
+  }, []);
+
   /** Pull the shared list. Falls back to local — and stays there — if the endpoint isn't live. */
   const refresh = useCallback(async () => {
     try {
       const res = await fetch(API, { cache: "no-store" });
       if (!res.ok) throw new Error(String(res.status));
-      const data = await res.json();
-      setNotes(Array.isArray(data.notes) ? data.notes : []);
+      accept(await res.json());
       setMode("shared");
     } catch {
       setMode((m) => (m === "shared" ? "shared" : "local"));
       setNotes(loadLocal());
     }
-  }, []);
+  }, [accept]);
 
   useEffect(() => {
     refresh();
@@ -208,7 +226,7 @@ export function FeedbackLayer({
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "save failed");
-        setNotes(data.notes);
+        accept(data);
       } catch {
         // don't lose what they typed: keep it locally and tell them the truth
         setNotes((n) => [...n, note]);
@@ -233,7 +251,7 @@ export function FeedbackLayer({
           body: JSON.stringify({ deleteId: id }),
         });
         const data = await res.json();
-        if (res.ok) setNotes(data.notes);
+        if (res.ok) accept(data);
         else await refresh();      // same reason as patch(): show reality, not a no-op
       } finally {
         setBusy(false);
@@ -262,7 +280,7 @@ export function FeedbackLayer({
         // A failed patch must not look like a dead button. The store is eventually consistent, so
         // a write issued moments after another can be told "no such note" — re-read and show the
         // truth rather than leaving the UI silently unchanged. See api/feedback.mjs.
-        if (res.ok) setNotes(data.notes);
+        if (res.ok) accept(data);
         else await refresh();
       } finally {
         setBusy(false);
@@ -446,6 +464,19 @@ export function FeedbackLayer({
                     {n.editedAt ? " · edited" : ""}
                   </div>
                 </div>
+                {/* Every card closes from its own header (Olcay, 2026-08-11) — clicking the pin
+                    again worked, but only if you knew that; Escape only helps if you knew that too. */}
+                <button
+                  onClick={() => { setOpenNote(null); setEditing(null); }}
+                  aria-label="Close comment"
+                  title="Close"
+                  style={{
+                    border: "none", background: "none", cursor: "pointer", color: "#737373",
+                    fontSize: 14, lineHeight: 1, padding: 2, flex: "0 0 auto",
+                  }}
+                >
+                  ✕
+                </button>
               </div>
 
               {editing?.id === n.id ? (

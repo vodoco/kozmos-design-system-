@@ -567,6 +567,40 @@ export const CHANGE_COLORS: Record<ChangeType, string> = {
  */
 export const DECISION_INK = "#000000";
 
+/**
+ * **EXPERIMENT — one switch, flip to `false` to revert** (Olcay, 2026-08-11: *"I'd like to try
+ * coloring the flags… so make it easy to revert"*).
+ *
+ * `true` colours the three decisions — ✓ green, 🚩 amber, ✗ red — in the changelog, on the map's
+ * centroid badges and in the map card's control. `false` restores the neutral black below.
+ *
+ * ⚠️ **This is a deliberate suspension of two rules, which is why it is a switch and not a
+ * rewrite.** §3: *"Confirm / Flag / Reject are neutral black — a decision never recolours
+ * anything"*, and Olcay's own 2026-08-09 ruling: *"Flags should not change the color of the
+ * state… Black for distinction."* The reasoning behind them still stands and is worth re-reading
+ * before making this permanent: the map already spends colour on **what a feature is** (the four
+ * diff colours) and on **magnitude** (the traffic light), so decisions were given the one axis
+ * nobody else was using. Colouring them puts green/amber/red on the map twice, meaning two
+ * different things.
+ *
+ * ⚠️ The map page keeps its own copy of both the flag and the colours — it never loads this module
+ * (`public/map/index.html`, search `COLOURED_DECISIONS`). Flip both, or the list and the map will
+ * disagree.
+ */
+export const COLOURED_DECISIONS = true;
+
+/** Green / amber / red for ✓ 🚩 ✗. Only consulted while `COLOURED_DECISIONS` is on. */
+export const DECISION_COLORS: Record<Decision, string> = {
+  confirm: "#23b26b",
+  flag: "#D98C0D",
+  reject: "#d41c42",
+};
+
+/** The ink a decision glyph draws in — the single place both states are resolved. */
+export function decisionInk(d?: Decision): string {
+  return COLOURED_DECISIONS && d ? DECISION_COLORS[d] : DECISION_INK;
+}
+
 /** Colour for a row/feature — always the diff type. */
 export function changeAccent(c: Change): string {
   return CHANGE_COLORS[c.type];

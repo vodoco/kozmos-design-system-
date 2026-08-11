@@ -49,17 +49,46 @@ async function findUrl(t) {
   return hit?.url ?? null;
 }
 
-async function readNotes(t) {
-  const url = await findUrl(t);
-  if (!url) return [];
-  // cache-buster: blob URLs are CDN-cached, and a comment feed must not serve a stale list
-  const res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" });
-  if (!res.ok) return [];
-  const json = await res.json().catch(() => []);
-  return Array.isArray(json) ? json : [];
+/**
+ * The newest list this warm instance has written, and its revision.
+ *
+ * **This is what stops a deleted note coming back** (Olcay, 2026-08-11). The blob's read path is
+ * eventually consistent, so a read moments after a write can still return the previous list — and
+ * a read-modify-write built on that silently reverts whatever it didn't see. Every list now carries
+ * a monotonic `rev`; if the store hands back something older than what this instance last wrote, we
+ * know it is stale and use ours instead.
+ *
+ * It is not a distributed fix — a different lambda instance has its own memory — but it covers the
+ * case that actually bites: one person clicking delete, then the 25s poll pulling a stale list.
+ */
+let lastWrite = { rev: 0, notes: null };
+
+/** Stored shape is `{rev, notes}`; older data is a bare array, which reads as rev 0. */
+function unwrap(json) {
+  if (Array.isArray(json)) return { rev: 0, notes: json };
+  if (json && Array.isArray(json.notes)) return { rev: Number(json.rev) || 0, notes: json.notes };
+  return { rev: 0, notes: [] };
 }
 
-async function writeNotes(t, notes) {
+async function readState(t) {
+  const url = await findUrl(t);
+  let fetched = { rev: 0, notes: [] };
+  if (url) {
+    // cache-buster: blob URLs are CDN-cached, and a comment feed must not serve a stale list
+    const res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" });
+    if (res.ok) fetched = unwrap(await res.json().catch(() => []));
+  }
+  // Trust whichever is newer. Equal revs mean the store has caught up.
+  if (lastWrite.notes && lastWrite.rev > fetched.rev) return lastWrite;
+  return fetched;
+}
+
+async function readNotes(t) {
+  return (await readState(t)).notes;
+}
+
+async function writeNotes(t, notes, baseRev = 0) {
+  const rev = Math.max(baseRev, lastWrite.rev) + 1;
   const res = await fetch(`${API}/${PATHNAME}`, {
     method: "PUT",
     headers: {
@@ -70,10 +99,11 @@ async function writeNotes(t, notes) {
       "x-add-random-suffix": "0",
       "x-cache-control-max-age": "0",
     },
-    body: JSON.stringify(notes),
+    body: JSON.stringify({ rev, notes }),
   });
   if (!res.ok) throw new Error(`blob write failed: ${res.status} ${await res.text()}`);
-  return notes;
+  lastWrite = { rev, notes };
+  return { rev, notes };
 }
 
 export default async function handler(req, res) {
@@ -87,19 +117,21 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      res.status(200).json({ notes: await readNotes(t) });
+      const st = await readState(t);
+      res.status(200).json({ notes: st.notes, rev: st.rev });
       return;
     }
 
     if (req.method === "POST") {
       const body =
         typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body ?? {});
-      const notes = await readNotes(t);
+      const state = await readState(t);
+      const notes = state.notes;
 
       if (body.deleteId) {
         const next = notes.filter((n) => n.id !== body.deleteId);
-        await writeNotes(t, next);
-        res.status(200).json({ notes: next });
+        const w = await writeNotes(t, next, state.rev);
+        res.status(200).json({ notes: w.notes, rev: w.rev });
         return;
       }
 
@@ -139,8 +171,8 @@ export default async function handler(req, res) {
                   : {}),
               },
         );
-        await writeNotes(t, next);
-        res.status(200).json({ notes: next });
+        const w = await writeNotes(t, next, state.rev);
+        res.status(200).json({ notes: w.notes, rev: w.rev });
         return;
       }
 
@@ -161,8 +193,8 @@ export default async function handler(req, res) {
           at: new Date().toISOString(),
         },
       ];
-      await writeNotes(t, next);
-      res.status(200).json({ notes: next });
+      const w = await writeNotes(t, next, state.rev);
+      res.status(200).json({ notes: w.notes, rev: w.rev });
       return;
     }
 

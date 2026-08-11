@@ -18,7 +18,7 @@ import PointrMap, { type MapBuilding } from "../map/PointrMap";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { AiMappingStatus, type MapScaleState } from "../ui/AiMappingStatus";
-import { ExpertHoldBanner, ExpertHoldChip } from "../ui/ExpertHoldNotice";
+import { ExpertHoldChip } from "../ui/ExpertHoldNotice";
 import { SourcePill } from "../ui/SourcePill";
 import { FloorPlanThumb } from "../ui/FloorPlanThumb";
 import { PANEL_PAD, PanelHeader } from "../ui/PanelHeader";
@@ -731,8 +731,20 @@ export function LevelEditor({
           minHeight: 0,
         }}
       >
-        {/* full-bleed, above the breadcrumb: it is the first fact about the screen, not a footnote */}
-        {expertHold && <ExpertHoldBanner />}
+        {/*
+          The full-bleed hold banner was here and is **removed** (Olcay, 2026-08-11: *"let's remove
+          this notification, it's already on the side button"*). It said exactly what the map's
+          corner chip says, a few hundred pixels away, so the screen opened by telling you the same
+          thing twice.
+
+          ⚠️ **This inverts §16's reasoning about the chip, so read that note next to this one.**
+          Dismissing the chip used to be safe *because* "the chip is the echo; banner, status card
+          and locks remain" — with the banner gone the chip is the loudest voice, and it is
+          dismissible. The hold is still stated three ways after a dismiss: the status card reads
+          *Awaiting Expert Review* with `EXPERT_HOLD.what` in its info slot, and every frame-changing
+          control is disabled carrying its own reason. That is enough — but if the chip is ever made
+          quieter, this is the load-bearing bit that would go with it.
+        */}
         {/* The header is chrome: it sits outside the scroll area so the ✕ can neither be pushed
             sideways by a scrollbar nor scrolled off the top — see PANEL_PAD. */}
         <div style={{ padding: PANEL_PAD }}>

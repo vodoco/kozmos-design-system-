@@ -127,14 +127,19 @@ export function FloorPlanThumb({ file }: { file: string }) {
         aria-label={`Preview floor-plan — ${file}`}
         title="Preview floor-plan"
         style={{
-          // v9 FloorPlanThumbnail: 80×40, white, 2px background/900 border, radius 8, clipped
-          width: 80,
-          height: 40,
+          /**
+           * **Square, with rounded corners** (Olcay, 2026-08-11). v9's `FloorPlanThumbnail` is
+           * 80×40 — a landscape slot that suits its own card, but here the same component sits in
+           * level rows and lists where every other slot is square, and a 2:1 box read as a
+           * different kind of thing on each row.
+           */
+          width: 48,
+          height: 48,
           flex: "0 0 auto",
           padding: 0,
           background: "#fff",
           border: `2px solid ${LINE}`,
-          borderRadius: 8,
+          borderRadius: 10,
           overflow: "hidden",
           position: "relative",
           cursor: "zoom-in",
@@ -144,12 +149,15 @@ export function FloorPlanThumb({ file }: { file: string }) {
           src={PREVIEW_SRC}
           alt=""
           style={{
-            // the v9 node's own crop: overscale to trim the asset's baked-in card margin
+            /**
+             * `cover` on a square box, centred. The v9 crop numbers (113.19% / -6.6% …) were
+             * calibrated to trim the asset's baked-in margin inside a 2:1 box — reused on a square
+             * one they cut the plan off-centre, so the box does the cropping now.
+             */
             position: "absolute",
-            width: "113.19%",
-            height: "127.81%",
-            left: "-6.6%",
-            top: "-13.91%",
+            inset: 0,
+            width: "100%",
+            height: "100%",
             maxWidth: "none",
             objectFit: "cover",
           }}

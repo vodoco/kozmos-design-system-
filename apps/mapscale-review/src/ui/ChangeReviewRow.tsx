@@ -1,6 +1,7 @@
 import { SegmentedControl, Tooltip, TooltipTrigger, TooltipContent } from "@kozmos/react";
 import {
   changeAccent,
+  decisionInk,
   warningOf,
   DECISION_INK,
   WARNING_LABEL,
@@ -105,7 +106,7 @@ export function ChangeReviewRow({
             <span
               role="img"
               aria-label="Flag for later"
-              style={{ display: "grid", placeItems: "center", color: DECISION_INK }}
+              style={{ display: "grid", placeItems: "center", color: decisionInk("flag") }}
             >
               <DecisionGlyph kind="flag" />
             </span>
@@ -124,7 +125,7 @@ export function ChangeReviewRow({
           <span
             role="img"
             aria-label={a.label}
-            style={{ display: "grid", placeItems: "center", color: DECISION_INK }}
+            style={{ display: "grid", placeItems: "center", color: decisionInk(a.value) }}
           >
             <DecisionGlyph kind={a.value} />
           </span>
@@ -174,28 +175,49 @@ export function ChangeReviewRow({
             {change.name}
           </span>
           {/*
-            Glyph only, not a labelled pill: at 440px the label ate the feature name ("Nurs…"), and
-            the name is the thing you scan for. The label is spelled out on the line below instead.
+            The glyph moved INTO the chip below (Olcay, 2026-08-11). It used to sit here beside the
+            name, which meant the same warning was announced twice on two lines — a mark up here and
+            its label down there — and the mark was the half with no words on it.
           */}
-          {warning && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  role="img"
-                  aria-label={`Warning: ${WARNING_LABEL[warning]}`}
-                  style={{ flex: "0 0 auto", display: "grid", placeItems: "center", color: DECISION_INK }}
-                >
-                  <WarningGlyph />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{WARNING_WHY[warning]}</TooltipContent>
-            </Tooltip>
-          )}
         </div>
         {warning && (
-          <div style={{ fontSize: 12, fontWeight: 600, color: DECISION_INK, marginTop: 1 }}>
-            {WARNING_LABEL[warning]}
-          </div>
+          /**
+           * **A yellow chip** (Olcay, 2026-08-11). This supersedes §3's *"Risk is a third axis, and
+           * it is never coloured… never amber"* — the reasoning there was that amber already means
+           * *magnitude*, so spending it on risk says two things with one colour. Worth re-reading
+           * before it becomes law; the chip is at least confined to the row, where no traffic light
+           * appears.
+           */
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                role="img"
+                aria-label={`Warning: ${WARNING_LABEL[warning]}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "var(--primitives-colors-emotional-alert-900)",
+                  background: "var(--primitives-colors-emotional-alert-0)",
+                  border: "1px solid #fde0a8",
+                  borderRadius: 999,
+                  padding: "1px 8px 1px 6px",
+                  margin: "3px 0 1px",
+                  cursor: "help",
+                }}
+              >
+                <WarningGlyph size={12} />
+                {WARNING_LABEL[warning]}
+              </div>
+            </TooltipTrigger>
+            {/* Bounded, or a single sentence lays itself out as one line wider than the panel
+                (Olcay, 2026-08-11) — it overhung the drawer and covered the row above. */}
+            <TooltipContent style={{ maxWidth: 260, whiteSpace: "normal", lineHeight: 1.4 }}>
+              {WARNING_WHY[warning]}
+            </TooltipContent>
+          </Tooltip>
         )}
         {/* one line per attribute that moved, as the MapScale report words it */}
         {change.details?.length ? (

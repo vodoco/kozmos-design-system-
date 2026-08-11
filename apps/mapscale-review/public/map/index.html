@@ -551,7 +551,7 @@ function resolveChanges() {
 /* ── overlay ────────────────────────────────────────────────────────────── */
 
 function drawBadge(cx, cy, kind){
-  const col = INK;
+  const col = decisionInk(kind);
   const g = el("g", {});
   g.appendChild(el("circle", { cx, cy, r:11, fill:"#fff", stroke:col, "stroke-width":2 }));
   const p = el("path", { fill:"none", stroke:col, "stroke-width":2.2, "stroke-linecap":"round", "stroke-linejoin":"round" });
@@ -775,6 +775,16 @@ function positionTip() {
  * re-renders this card and the centroid badge. Deciding locally would work right up until the two
  * disagreed, which is the failure this whole protocol is arranged to prevent.
  */
+/**
+ * EXPERIMENT, mirrored from diff.ts (Olcay, 2026-08-11: "I'd like to try coloring the flags").
+ * ⚠️ Flip BOTH this and `COLOURED_DECISIONS` in src/mock/diff.ts — this page never loads that
+ * module, so a change in one place alone makes the map and the list disagree.
+ * `false` restores §3's neutral black for ✓ 🚩 ✗.
+ */
+const COLOURED_DECISIONS = true;
+const DECISION_COLORS = { confirm:"#23b26b", flag:"#D98C0D", reject:"#d41c42" };
+function decisionInk(kind) { return COLOURED_DECISIONS && DECISION_COLORS[kind] ? DECISION_COLORS[kind] : INK; }
+
 const ALL_ACTIONS = [
   ["confirm", "Confirm"],
   ["flag", "Flag for later"],
@@ -817,8 +827,9 @@ function drawBadgeGlyph(kind) {
   const d = kind === "confirm" ? "M4 9.5 L7.5 13 L14 5.5"
     : kind === "reject" ? "M5 5 L13 13 M13 5 L5 13"
     : "M5.5 4 L5.5 15";
-  s.appendChild(el("path", { d, fill:"none", stroke:INK, "stroke-width":2, "stroke-linecap":"round" }));
-  if (kind === "flag") s.appendChild(el("path", { d:"M5.5 4 L14 6.5 L5.5 9 Z", fill:INK }));
+  const col = decisionInk(kind);
+  s.appendChild(el("path", { d, fill:"none", stroke:col, "stroke-width":2, "stroke-linecap":"round" }));
+  if (kind === "flag") s.appendChild(el("path", { d:"M5.5 4 L14 6.5 L5.5 9 Z", fill:col }));
   return s;
 }
 
