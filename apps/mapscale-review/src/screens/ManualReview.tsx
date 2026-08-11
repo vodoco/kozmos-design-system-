@@ -206,11 +206,20 @@ export function ManualReview({
    * Clicking a row opens that feature's card and eases the camera onto it; clicking a shape lights
    * the row and scrolls it into view. Held here rather than in either surface because neither owns
    * it: it is a fact about the review.
+   *
+   * It carries **who made it**, because the two want opposite scrolling: a row you clicked is
+   * already under your eye, and moving the list then is an unrequested jolt — while a selection
+   * made on the map has to come and find you.
    */
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const activate = (id: string) => setActiveId((cur) => (cur === id ? null : id));
+  const [active, setActive] = useState<{ id: string | null; from: "list" | "map" }>({
+    id: null,
+    from: "list",
+  });
+  const activeId = active.id;
+  const activate = (id: string) =>
+    setActive((cur) => ({ id: cur.id === id ? null : id, from: "list" }));
   /** Stable, so PointrMap doesn't re-subscribe its message listener on every render. */
-  const onMapSelect = useCallback((id: string | null) => setActiveId(id), []);
+  const onMapSelect = useCallback((id: string | null) => setActive({ id, from: "map" }), []);
 
   /**
    * Concluding the review — what Save leaves behind (Olcay, 2026-08-11: *"we need to show the
@@ -260,15 +269,18 @@ export function ManualReview({
   ).length;
 
   /**
-   * Bring the lit row into view when the *map* drove the selection. Guarded on the row already
-   * being off-screen: scrolling a row you just clicked yourself is an unrequested jolt, and
-   * `block: "nearest"` does nothing when it's already visible.
+   * Bring the lit row to the middle of the panel — but only when the *map* drove the selection.
+   *
+   * `block: "nearest"` was wrong here and read as right in code: it scrolls the **minimum**
+   * distance, so a row from the bottom of a 23-row list arrived jammed against the sticky footer,
+   * half covered, exactly where nobody is looking. The list had followed the map and appeared not
+   * to. `"center"` puts it where the eye already is.
    */
   useEffect(() => {
-    if (!activeId) return;
-    const row = document.querySelector(`[data-change-row="${CSS.escape(activeId)}"]`);
-    row?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [activeId]);
+    if (!active.id || active.from !== "map") return;
+    const row = document.querySelector(`[data-change-row="${CSS.escape(active.id)}"]`);
+    row?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [active]);
   /**
    * Bulk decision — used by both a group header and a whole risk section.
    *
