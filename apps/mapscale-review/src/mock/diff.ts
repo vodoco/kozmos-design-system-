@@ -359,7 +359,7 @@ export function seedVersions(
   const history: LevelVersion[] = [
     {
       n: 2, source: "dashboard", at: "10 Jul 2025 · 09:14", state: "published", changePct: 10,
-      by: "Ege Yılmaz", input: { kind: "floor-plan", file: `${short}-departures-rev2.dwg` },
+      by: "Ege Akpinar", input: { kind: "floor-plan", file: `${short}-departures-rev2.dwg` },
     },
     {
       n: 1, source: "dashboard", at: "02 Jun 2025 · 15:20", state: "published",

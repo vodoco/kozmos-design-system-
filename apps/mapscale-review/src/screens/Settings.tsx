@@ -13,7 +13,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@kozmos/react";
-import { PANEL_WIDTH } from "../ui/Chrome";
 import { BAND, MAGNITUDE } from "../mock/diff";
 import { SITE_SNAPSHOT, SITE_ID, SITE_NAME } from "../mock/site";
 import {
@@ -36,17 +35,25 @@ import {
 } from "../mock/settings";
 
 /**
- * S5 · Settings → SDK Configuration (Figma `2487:776`).
+ * Settings → **System Settings** (Figma `2002:41171` — the real dashboard, captured at
+ * `design.pointr.cloud/map-studio`).
  *
- * Two cards. The first is the frame's own — the Auto-Map Updates switches and the grace period —
- * with **one line of its copy deliberately not built as drawn**: the frame's Expert Review row
- * says "The level stays read-only while they work", which decision 8 reversed to warn-but-allow
- * on 2026-08-10. Building the frame verbatim would have shipped a settings screen contradicting
- * the behaviour three other surfaces already have.
+ * This replaced a first build against `2487:776`, an earlier MAP-566 sketch that called the page
+ * *SDK Configuration* and put the settings in a left text panel. `2002:41171` is the authoritative
+ * chrome: **System Settings** is its own rail item, SDK Configuration is a *different* page, and
+ * the settings sit in cards across the full page width with no second panel. Olcay, 2026-08-11:
+ * *"I don't think this should be SDK configuration."*
  *
- * The second card is **not in the frame at all**: US6's notification recipients have never been
- * drawn, and S5 is the story's only plausible home. It is marked as new in the handoff rather
- * than passed off as a design that exists.
+ * **Three departures from the frame, all deliberate:**
+ *
+ * 1. Its Expert Review row says *"Maps stay read-only until the review is approved"* — decision 8
+ *    reversed that on 2026-08-10. The level stays editable; only frame-changing operations lock.
+ * 2. It labels that row **"Expert Review (Manual Review)"**, conflating two things this project
+ *    keeps carefully apart (§1): *Expert Review* is Pointr's mapping team, *Manual Review* is the
+ *    customer's own per-change pass and a separate config flag. They are two toggles here.
+ * 3. It has no grace period and no notification recipients, because it predates them — both are
+ *    required by the stories ("User Story: Configure grace period", and US6), so they are built
+ *    in the frame's own card idiom and flagged as needing frames.
  */
 
 const LINE = "var(--primitives-colors-background-100)";
@@ -56,53 +63,29 @@ const TINT = "#f1f5fe";
 const MUTED = "var(--primitives-colors-background-600)";
 const FG = "#2e3138";
 
-/** The settings pages the dashboard's own Settings rail lists, per the frame. Only one is ours. */
-const NAV = [
-  "Metadata",
-  "SDK Configuration",
-  "User Management",
-  "UI Translation Manager",
-  "Taxonomy Management",
-  "Style Editor",
-  "Security",
-];
-
 function useSettings() {
   return useSyncExternalStore(subscribeSettings, getSettings);
 }
 
-/* ── layout pieces ────────────────────────────────────────────────────────── */
+/* ── layout pieces, in the frame's idiom ──────────────────────────────────── */
 
-function Card({ children }: { children: React.ReactNode }) {
+function Card({ title, sub, children }: { title: string; sub: string; children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        background: "#fff",
-        border: `1px solid ${LINE}`,
-        borderRadius: 12,
-        overflow: "hidden",
-      }}
-    >
+    <div style={{ border: `1px solid ${LINE}`, borderRadius: 8, background: "#fff", marginBottom: 24 }}>
+      <div style={{ padding: "18px 20px 14px" }}>
+        <Text style={{ display: "block", fontSize: 15, fontWeight: 600, color: INK }}>{title}</Text>
+        <Text style={{ display: "block", fontSize: 13, color: MUTED, marginTop: 4, lineHeight: 1.5 }}>
+          {sub}
+        </Text>
+      </div>
       {children}
-    </div>
-  );
-}
-
-function CardHead({ title, sub }: { title: string; sub: string }) {
-  return (
-    <div style={{ padding: "20px 24px", borderBottom: `1px solid ${LINE}` }}>
-      <Text style={{ display: "block", fontSize: 15, fontWeight: 600, color: INK }}>{title}</Text>
-      <Text style={{ display: "block", fontSize: 13, color: MUTED, marginTop: 4, lineHeight: 1.5 }}>
-        {sub}
-      </Text>
     </div>
   );
 }
 
 /**
  * One setting: what it is on the left, the control on the right. The description carries the
- * consequence, not the mechanism — "changes apply automatically by magnitude" is what turning
- * Manual Review off actually does to you.
+ * consequence rather than the mechanism — what turning it off does *to you*.
  */
 function Row({
   title,
@@ -121,8 +104,9 @@ function Row({
         display: "flex",
         alignItems: "flex-start",
         gap: 24,
-        padding: "16px 24px",
-        borderBottom: last ? "none" : `1px solid ${LINE}`,
+        padding: "14px 20px",
+        borderTop: `1px solid ${LINE}`,
+        borderBottom: last ? "none" : "none",
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -158,17 +142,14 @@ function Toggle({
         aria-label={label}
         wrapperClassName="w-auto shrink-0"
       />
-      <Text style={{ fontSize: 12.5, color: on ? LINK : MUTED, minWidth: 64 }}>{state}</Text>
+      <Text style={{ fontSize: 12.5, color: on ? LINK : MUTED, minWidth: 66 }}>{state}</Text>
     </>
   );
 }
 
-/* ── the band legend ──────────────────────────────────────────────────────── */
-
 /**
- * The footer strip from the frame. It is the one place the three bands are stated as a rule
- * rather than as an outcome, and it is templated from `MAGNITUDE` so it can't drift from the
- * thresholds the code actually routes on.
+ * The three bands as a rule rather than an outcome — templated from `MAGNITUDE` so it can't drift
+ * from the thresholds the code actually routes on.
  */
 function BandLegend({ autoUpdates }: { autoUpdates: boolean }) {
   const items = [
@@ -177,15 +158,7 @@ function BandLegend({ autoUpdates }: { autoUpdates: boolean }) {
     { tone: BAND.large, text: `>${MAGNITUDE.largeAbove}% · rejected` },
   ];
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 24,
-        padding: "12px 24px",
-        borderTop: `1px solid ${LINE}`,
-        background: "#fbfcfd",
-      }}
-    >
+    <div style={{ display: "flex", gap: 24, padding: "12px 20px", borderTop: `1px solid ${LINE}`, background: "#fbfcfd" }}>
       {items.map((it) => (
         <span key={it.text} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: MUTED }}>
           <span style={{ width: 8, height: 8, borderRadius: 4, background: it.tone.solid }} />
@@ -223,15 +196,14 @@ function RecipientList() {
     return { level: "building", id: b.id, name: b.name };
   }, [level, buildingId]);
 
-  // `s` is read so the list re-renders on every store write; the store is the source, not state.
+  // read so the list re-renders on every store write; the store is the source, not local state
   void s;
   const people = recipientsAt(scope);
   const admin = canAdminister(scope);
   const available = DIRECTORY.filter((d) => !people.some((p) => p.id === d.id));
 
   return (
-    <div style={{ padding: "16px 24px 20px" }}>
-      {/* scope picker */}
+    <div style={{ padding: "14px 20px 18px", borderTop: `1px solid ${LINE}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <div style={{ display: "inline-flex", border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden" }}>
           {SCOPE_TABS.map((t) => (
@@ -270,33 +242,23 @@ function RecipientList() {
         {SCOPE_BLURB[level]}
       </Text>
 
-      {/* the lacking-admin state — US6 gates all six assign/remove criteria on it */}
+      {/* the lacking-admin state — US6 gates six of its seven criteria on it */}
       {!admin && (
         <div
           style={{
-            display: "flex",
-            gap: 8,
-            alignItems: "flex-start",
-            marginTop: 12,
-            padding: "10px 12px",
-            background: "#f6f7f9",
-            border: `1px solid ${LINE}`,
-            borderRadius: 8,
-            fontSize: 12.5,
-            color: MUTED,
-            lineHeight: 1.5,
+            display: "flex", gap: 8, alignItems: "flex-start", marginTop: 12,
+            padding: "10px 12px", background: "#f6f7f9", border: `1px solid ${LINE}`,
+            borderRadius: 8, fontSize: 12.5, color: MUTED, lineHeight: 1.5,
           }}
         >
           <Icon name="info-circle" />
-          <span>
-            {NO_ADMIN_REASON} {SELF_REMOVE_NOTE}
-          </span>
+          <span>{NO_ADMIN_REASON} {SELF_REMOVE_NOTE}</span>
         </div>
       )}
 
       <div style={{ marginTop: 12, border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden" }}>
         {people.length === 0 && (
-          <div style={{ padding: "14px 14px", fontSize: 12.5, color: MUTED }}>
+          <div style={{ padding: "14px", fontSize: 12.5, color: MUTED }}>
             Nobody is notified at this level.
           </div>
         )}
@@ -307,10 +269,7 @@ function RecipientList() {
             <div
               key={p.id}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "10px 14px",
+                display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
                 borderTop: i === 0 ? "none" : `1px solid ${LINE}`,
               }}
             >
@@ -330,17 +289,12 @@ function RecipientList() {
                 </Text>
                 <Text style={{ display: "block", fontSize: 12, color: MUTED }}>{p.email}</Text>
               </div>
-              {/* A disabled <button> swallows its own hover, so the reason rides a wrapping span
-                  — the same pattern every locked control in the expert hold uses. */}
+              {/* a disabled <button> swallows its own hover, so the reason rides a wrapping span
+                  — the same pattern every locked control in the expert hold uses */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span style={{ display: "inline-flex" }}>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={!may}
-                      onClick={() => removeRecipient(scope, p.id)}
-                    >
+                    <Button size="sm" variant="ghost" disabled={!may} onClick={() => removeRecipient(scope, p.id)}>
                       Remove
                     </Button>
                   </span>
@@ -361,11 +315,8 @@ function RecipientList() {
       <div style={{ marginTop: 12 }}>
         {adding ? (
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <Select
-              value=""
-              onValueChange={(v) => { addRecipient(scope, v); setAdding(false); }}
-            >
-              <SelectTrigger aria-label="Add a recipient" style={{ width: 280 }}>
+            <Select value="" onValueChange={(v) => { addRecipient(scope, v); setAdding(false); }}>
+              <SelectTrigger aria-label="Add a recipient" style={{ width: 300 }}>
                 <SelectValue placeholder="Choose a user…" />
               </SelectTrigger>
               <SelectContent>
@@ -411,168 +362,141 @@ export function Settings() {
   const advice = graceAdvice(s.graceSeconds);
 
   return (
-    <>
-      {/* the Settings rail, in the same column every screen's left panel uses */}
-      <div
-        style={{
-          width: PANEL_WIDTH,
-          flex: `0 0 ${PANEL_WIDTH}px`,
-          borderRight: `1px solid ${LINE}`,
-          background: "#fff",
-          padding: "16px 12px",
-          overflowY: "auto",
-        }}
-      >
+    <div style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#fff" }}>
+      {/* page header — the frame's own copy, including the auto-save note */}
+      <div style={{ padding: "24px 32px 20px", borderBottom: `1px solid ${LINE}` }}>
+        <Text style={{ display: "block", fontSize: 12.5, color: MUTED }}>Settings</Text>
+        <Text style={{ display: "block", fontSize: 24, fontWeight: 700, color: INK, marginTop: 2 }}>
+          System Settings
+        </Text>
         <Text
           style={{
-            display: "block",
-            fontSize: 11,
-            letterSpacing: ".06em",
-            color: MUTED,
-            padding: "0 12px 8px",
+            display: "block", fontSize: 13, color: MUTED, marginTop: 6,
+            lineHeight: 1.6, maxWidth: 660,
           }}
         >
-          SETTINGS
+          All platform parameters can be managed below. By default, they apply system-wide but you
+          can override them via Site settings screen. Please note that changes are auto-saved but
+          they are effective only once published by an admin. Parameters can be reset to default
+          anytime.
         </Text>
-        {NAV.map((n) => {
-          const active = n === "SDK Configuration";
-          return (
-            <div
-              key={n}
-              style={{
-                padding: "9px 12px",
-                borderRadius: 8,
-                fontSize: 13,
-                color: active ? LINK : FG,
-                background: active ? TINT : "transparent",
-                fontWeight: active ? 600 : 400,
-                cursor: active ? "default" : "not-allowed",
-                opacity: active ? 1 : 0.75,
-              }}
-              title={active ? undefined : "Not part of this prototype"}
+      </div>
+
+      <div style={{ padding: "24px 32px 48px", maxWidth: 1000 }}>
+        {/* the frame's own card, verbatim but for the read-only copy decision 8 reversed */}
+        <Card
+          title="MapScale® Manager"
+          sub="Configure how Floor-plans are processed and checked before they go live. These settings apply to the entire client."
+        >
+          <Row
+            title="Expert Review"
+            /* NOT the frame's copy. `2002:41171` says "Maps stay read-only until the review is
+               approved" — true of the morning of 2026-08-10 and reversed that afternoon
+               (decision 8). It also titles this row "Expert Review (Manual Review)", which
+               conflates two separate things — Manual Review is its own row below. */
+            detail="Have Pointr's Mapping Team check each map after AI processing — so the change percentage you're shown is the corrected one. You can keep editing the level while they work; uploading, restoring and georeferencing wait until they're done."
+          >
+            <Toggle
+              on={s.expertReview}
+              onChange={(v) => setSetting("expertReview", v)}
+              label="Expert Review"
+              state={s.expertReview ? "Enabled" : "Disabled"}
+            />
+          </Row>
+
+          <Row
+            title="Expert Georeferencing"
+            detail="Let Pointr's Mapping Team precisely align each floorplan to real-world coordinates during processing. Improves positioning accuracy; adds some processing time."
+            last
+          >
+            <Toggle
+              on={s.expertGeoreferencing}
+              onChange={(v) => setSetting("expertGeoreferencing", v)}
+              label="Expert Georeferencing"
+              state={s.expertGeoreferencing ? "Enabled" : "Disabled"}
+            />
+          </Row>
+        </Card>
+
+        {/* Not in `2002:41171` — required by the stories, built in the frame's idiom. */}
+        <Card
+          title="Auto-Map Updates"
+          sub="What happens to a processed floor-plan: how much can change before someone has to look, and how long they have to look before it publishes itself."
+        >
+          <Row
+            title="Enable Auto-Map Updates"
+            detail="When on, MapScale detects changes in new floor-plans and updates maps automatically based on change magnitude."
+          >
+            <Toggle
+              on={s.autoUpdates}
+              onChange={(v) => setSetting("autoUpdates", v)}
+              label="Enable Auto-Map Updates"
+              state={s.autoUpdates ? "Enabled" : "Disabled"}
+            />
+          </Row>
+
+          <Row
+            title="Manual Review"
+            detail="Have your team confirm, flag, or reject each detected change before it's applied. Off = changes apply automatically by magnitude. This is your team's pass, not Pointr's."
+          >
+            <Toggle
+              on={s.manualReview}
+              onChange={(v) => setSetting("manualReview", v)}
+              label="Manual Review"
+              state={s.manualReview ? "On · default" : "Off"}
+            />
+          </Row>
+
+          <Row
+            title="Grace period"
+            detail={`How long medium changes (${MAGNITUDE.minorBelow}–${MAGNITUDE.largeAbove}%) wait for your review before auto-publishing. Applies to the entire client — it can't be set per site or building.`}
+            last
+          >
+            <Select
+              value={String(s.graceSeconds)}
+              onValueChange={(v) => setSetting("graceSeconds", Number(v))}
             >
-              {n}
+              <SelectTrigger aria-label="Grace period" style={{ width: 160 }}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GRACE_OPTIONS.map((o) => (
+                  <SelectItem key={o.seconds} value={String(o.seconds)}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Row>
+
+          {/* The story asks for advice at ≤1 week and a warning above 2 weeks. Neither blocks the
+              choice — it is the client's to make, and a warning that refuses is a rule in
+              disguise. */}
+          {advice && (
+            <div
+              style={{
+                display: "flex", gap: 8, alignItems: "flex-start",
+                margin: "0 20px 16px", padding: "10px 12px", borderRadius: 8,
+                fontSize: 12.5, lineHeight: 1.5,
+                background: advice.tone === "warn" ? BAND.medium.tint : "#f6f7f9",
+                border: `1px solid ${advice.tone === "warn" ? BAND.medium.border : LINE}`,
+                color: advice.tone === "warn" ? BAND.medium.ink : MUTED,
+              }}
+            >
+              <Icon name={advice.tone === "warn" ? "alert-triangle" : "info-circle"} />
+              <span>{advice.text}</span>
             </div>
-          );
-        })}
+          )}
+
+          <BandLegend autoUpdates={s.autoUpdates} />
+        </Card>
+
+        {/* US6 — no Figma frame exists for this at all; see the handoff. */}
+        <Card
+          title="Update notifications"
+          sub="Who gets emailed when a map update needs attention. The three levels stack — a client-level recipient hears about every site and building beneath it."
+        >
+          <RecipientList />
+        </Card>
       </div>
-
-      {/* the page */}
-      <div style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#f5f6f8", padding: "24px 40px 48px" }}>
-        <div style={{ maxWidth: 780 }}>
-          <Text style={{ display: "block", fontSize: 12, color: MUTED }}>Settings</Text>
-          <Text style={{ display: "block", fontSize: 24, fontWeight: 700, color: INK, marginTop: 2 }}>
-            SDK Configuration
-          </Text>
-          <Text style={{ display: "block", fontSize: 13, color: MUTED, marginTop: 4 }}>
-            Configure how MapScale™ handles floor-plan updates for this client.
-          </Text>
-
-          <div style={{ marginTop: 20 }}>
-            <Card>
-              <CardHead
-                title="Auto-Map Updates"
-                sub="Let MapScale™ keep this client's maps up to date as new floor-plans arrive."
-              />
-
-              <Row
-                title="Enable Auto-Map Updates"
-                detail="When on, MapScale detects changes in new floor-plans and updates maps automatically based on change magnitude."
-              >
-                <Toggle
-                  on={s.autoUpdates}
-                  onChange={(v) => setSetting("autoUpdates", v)}
-                  label="Enable Auto-Map Updates"
-                  state={s.autoUpdates ? "Enabled" : "Disabled"}
-                />
-              </Row>
-
-              <Row
-                title="Manual Review"
-                detail="Have your team confirm, flag, or reject each detected change before it's applied. Off = changes apply automatically by magnitude."
-              >
-                <Toggle
-                  on={s.manualReview}
-                  onChange={(v) => setSetting("manualReview", v)}
-                  label="Manual Review"
-                  state={s.manualReview ? "On · default" : "Off"}
-                />
-              </Row>
-
-              <Row
-                title="Expert Review"
-                /* NOT the frame's copy. `2487:776` says "The level stays read-only while they
-                   work" — true of the morning of 2026-08-10 and reversed that afternoon
-                   (decision 8). The level stays editable; only frame-changing operations lock. */
-                detail="Let Pointr's Mapping Team correct the result before your team sees it — so the change percentage you're shown is the corrected one. You can keep editing the level while they work; uploading, restoring and georeferencing wait until they're done."
-              >
-                <Toggle
-                  on={s.expertReview}
-                  onChange={(v) => setSetting("expertReview", v)}
-                  label="Expert Review"
-                  state={s.expertReview ? "On" : "Off"}
-                />
-              </Row>
-
-              <Row
-                title="Grace period"
-                detail={`How long medium changes (${MAGNITUDE.minorBelow}–${MAGNITUDE.largeAbove}%) wait for your review before auto-publishing.`}
-                last
-              >
-                <Select
-                  value={String(s.graceSeconds)}
-                  onValueChange={(v) => setSetting("graceSeconds", Number(v))}
-                >
-                  <SelectTrigger aria-label="Grace period" style={{ width: 160 }}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GRACE_OPTIONS.map((o) => (
-                      <SelectItem key={o.seconds} value={String(o.seconds)}>{o.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Row>
-
-              {/* The stories ask for advice at ≤1 week and a warning above 2 weeks. Neither
-                  blocks the choice — it is the client's to make. */}
-              {advice && (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    alignItems: "flex-start",
-                    margin: "0 24px 16px",
-                    padding: "10px 12px",
-                    borderRadius: 8,
-                    fontSize: 12.5,
-                    lineHeight: 1.5,
-                    background: advice.tone === "warn" ? BAND.medium.tint : "#f6f7f9",
-                    border: `1px solid ${advice.tone === "warn" ? BAND.medium.border : LINE}`,
-                    color: advice.tone === "warn" ? BAND.medium.ink : MUTED,
-                  }}
-                >
-                  <Icon name={advice.tone === "warn" ? "alert-triangle" : "info-circle"} />
-                  <span>{advice.text}</span>
-                </div>
-              )}
-
-              <BandLegend autoUpdates={s.autoUpdates} />
-            </Card>
-          </div>
-
-          {/* US6 — no Figma frame exists for this; see the handoff. */}
-          <div style={{ marginTop: 20 }}>
-            <Card>
-              <CardHead
-                title="Update notifications"
-                sub="Who gets emailed when a map update needs attention. The three levels stack — a client-level recipient hears about every site and building beneath it."
-              />
-              <RecipientList />
-            </Card>
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

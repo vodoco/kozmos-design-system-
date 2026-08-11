@@ -126,7 +126,7 @@ export interface Recipient {
 export const CURRENT_USER: Recipient & { adminOf: string[] } = {
   id: "u-olcay",
   name: "Olcay Kurtulus",
-  email: "olcay@vodo.co",
+  email: "olcay@pointr.tech",
   adminOf: [
     "site:c1126cb8-a192-4bd3-90f5-08fb70278862",
     "building:51dd37d1-c2bc-4d9e-8e22-2ea1a15a626c",
@@ -138,11 +138,11 @@ export const CURRENT_USER: Recipient & { adminOf: string[] } = {
 /** The people you can pick from — the client's user list, in the real thing. */
 export const DIRECTORY: Recipient[] = [
   CURRENT_USER,
-  { id: "u-ege", name: "Ege Yılmaz", email: "ege@pointr.tech" },
-  { id: "u-sara", name: "Sara Haddad", email: "sara.haddad@dubaiairports.ae" },
-  { id: "u-marcus", name: "Marcus Bell", email: "m.bell@dubaiairports.ae" },
-  { id: "u-priya", name: "Priya Raman", email: "priya.raman@dubaiairports.ae" },
-  { id: "u-ops", name: "Airport Ops", email: "ops-maps@dubaiairports.ae" },
+  { id: "u-ege", name: "Ege Akpinar", email: "ege@pointr.tech" },
+  { id: "u-sara", name: "Sara Haddad", email: "sara.haddad@pointr.tech" },
+  { id: "u-marcus", name: "Marcus Bell", email: "marcus.bell@pointr.tech" },
+  { id: "u-priya", name: "Priya Raman", email: "priya.raman@pointr.tech" },
+  { id: "u-ops", name: "Airport Ops", email: "ops-maps@pointr.tech" },
 ];
 
 /**
@@ -179,6 +179,12 @@ export interface Settings {
   manualReview: boolean;
   /** Does Pointr's mapping team correct the result before the customer sees it? (§6 decision 4) */
   expertReview: boolean;
+  /**
+   * The mapping team also lines the floor-plan up to real-world coordinates during processing.
+   * From the System Settings frame (`2002:41171`) — a sibling of Expert Review, and the setting
+   * behind the georeferencing that the expert hold locks (§16).
+   */
+  expertGeoreferencing: boolean;
   graceSeconds: number;
   /** Recipients per scope key. */
   recipients: Record<string, string[]>;
@@ -190,6 +196,7 @@ let settings: Settings = {
   autoUpdates: true,
   manualReview: true,
   expertReview: true,
+  expertGeoreferencing: true,
   graceSeconds: GRACE_DEFAULT_SECONDS,
   recipients: {
     "client:*": ["u-olcay", "u-ege"],

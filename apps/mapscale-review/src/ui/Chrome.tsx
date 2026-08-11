@@ -86,6 +86,12 @@ export function TopBar({
           {/* exported from the Figma header (globe-01) — not in @kozmos/icons */}
           <img src="/icons/globe-01.svg" alt="" width={32} height={32} />
         </div>
+        {/* The site block empties out on System Settings, per `2002:41171` — and that is a real
+            signal, not a layout tidy-up: these parameters are system-wide, so an "Active Site"
+            beside them would imply a scope they haven't got. Publish goes with it for the same
+            reason, and so do the rules that fence the column.
+            It keeps its WIDTH though: removing it outright slid the centred nav left into the
+            prototype tool pills. Empty space, same geometry. */}
         <div
           style={{
             width: PANEL_WIDTH,
@@ -94,8 +100,9 @@ export function TopBar({
             alignItems: "center",
             gap: 24,
             padding: "0 16px",
-            borderLeft: `1px solid ${LINE}`,
-            borderRight: `1px solid ${LINE}`,
+            visibility: current === "Settings" ? "hidden" : "visible",
+            borderLeft: current === "Settings" ? "none" : `1px solid ${LINE}`,
+            borderRight: current === "Settings" ? "none" : `1px solid ${LINE}`,
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -157,15 +164,32 @@ export function TopBar({
   );
 }
 
-const RAIL: { label: string; icon: KozmosIconKey; active?: boolean }[] = [
+type RailItem = { label: string; icon?: KozmosIconKey; img?: string; active?: boolean };
+
+const RAIL: RailItem[] = [
   { label: "Map Content", icon: "map-01", active: true },
   { label: "Geofences", icon: "marker-pin-01" },
   { label: "Wayfinding Network", icon: "navigation-pointer-01" },
   { label: "IoT Devices", icon: "wifi" },
 ];
 
+/**
+ * The Settings tab replaces the rail's contents rather than adding a second panel beside it —
+ * that is how `2002:41171` draws it, and it is why System Settings has the full page width.
+ * Only System Settings is ours; the rest are named so the screen sits in its real context.
+ */
+const SETTINGS_RAIL: RailItem[] = [
+  { label: "Metadata", icon: "alert-circle" },
+  { label: "SDK Configuration", icon: "settings-01" },
+  { label: "User Management", icon: "users-01" },
+  // @kozmos/icons has no translate/language glyph (D9) — the local globe export stands in
+  { label: "UI Translation Manager", img: "/icons/globe-01.svg" },
+  { label: "System Settings", icon: "settings-01", active: true },
+];
+
 /** Left icon rail. NB: uses the limited @kozmos/icons set — swap for the dashboard icon set when available. */
-export function LeftRail() {
+export function LeftRail({ variant = "maps" }: { variant?: "maps" | "settings" }) {
+  const items = variant === "settings" ? SETTINGS_RAIL : RAIL;
   return (
     <div
       style={{
@@ -179,9 +203,10 @@ export function LeftRail() {
         alignItems: "stretch",
       }}
     >
-      {RAIL.map((it) => (
+      {items.map((it) => (
         <div
           key={it.label}
+          title={it.active ? undefined : "Not part of this prototype"}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -190,9 +215,14 @@ export function LeftRail() {
             padding: "16px 8px",
             color: it.active ? LINK : MUTED,
             background: it.active ? TINT : "transparent",
+            opacity: it.active ? 1 : 0.85,
           }}
         >
-          <Icon name={it.icon} />
+          {it.img ? (
+            <img src={it.img} alt="" width={24} height={24} style={{ opacity: 0.5 }} />
+          ) : (
+            <Icon name={it.icon!} />
+          )}
           <Text style={{ fontSize: 11, lineHeight: "14px", textAlign: "center", color: "inherit" }}>
             {it.label}
           </Text>

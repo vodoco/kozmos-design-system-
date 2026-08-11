@@ -154,7 +154,7 @@ export default function App() {
           }
         />
         <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-          <LeftRail />
+          <LeftRail variant={screen === "settings" ? "settings" : "maps"} />
           {screen === "mapContent" && (
             <MapContent
               onEditLevel={openLevel}
