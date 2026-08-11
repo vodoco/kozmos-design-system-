@@ -90,6 +90,47 @@ export default async function handler(req, res) {
         return;
       }
 
+      /**
+       * Edit the text, or resolve/reopen (Olcay, 2026-08-11). One route for both because they are
+       * the same operation — patch a note in place — and splitting them would mean two read/write
+       * round-trips against a store whose concurrency is already last-write-wins.
+       *
+       * `resolved` is a fact about the note, not a deletion: a resolved comment stays readable, so
+       * the thread of a review survives. Only `text` and `resolved` are patchable — the pin's
+       * position, screen and author are what make it a *record* of who said what where.
+       */
+      if (body.updateId) {
+        const target = notes.find((n) => n.id === body.updateId);
+        if (!target) {
+          res.status(404).json({ error: "no such note" });
+          return;
+        }
+        if (body.text !== undefined && !String(body.text).trim()) {
+          res.status(400).json({ error: "empty note" });
+          return;
+        }
+        const next = notes.map((n) =>
+          n.id !== body.updateId
+            ? n
+            : {
+                ...n,
+                ...(body.text !== undefined
+                  ? { text: String(body.text).slice(0, 2000), editedAt: new Date().toISOString() }
+                  : {}),
+                ...(body.resolved !== undefined
+                  ? {
+                      resolved: !!body.resolved,
+                      resolvedBy: body.resolved ? String(body.by || "").slice(0, 60) : "",
+                      resolvedAt: body.resolved ? new Date().toISOString() : "",
+                    }
+                  : {}),
+              },
+        );
+        await writeNotes(t, next);
+        res.status(200).json({ notes: next });
+        return;
+      }
+
       const n = body.note;
       if (!n?.text?.trim()) {
         res.status(400).json({ error: "empty note" });

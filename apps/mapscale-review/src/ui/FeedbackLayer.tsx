@@ -34,8 +34,25 @@ export interface Note {
   xPct: number;
   yPct: number;
   text: string;
+  /** Who wrote it. Required at the point of writing — see `authorReady`. */
   author: string;
   at: string;
+  /** Set when the text was changed after posting, so an edit is visible rather than silent. */
+  editedAt?: string;
+  /**
+   * Dealt with (Olcay, 2026-08-11). Deliberately NOT a deletion: a resolved note stays readable so
+   * the thread of a review survives — you can see what was raised and that it was handled.
+   */
+  resolved?: boolean;
+  resolvedBy?: string;
+  resolvedAt?: string;
+}
+
+/** First letters of a name, for the pin card's little author badge. */
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
 }
 
 const SCREEN_LABEL: Record<string, string> = {
@@ -73,6 +90,10 @@ export function FeedbackLayer({
   const [placing, setPlacing] = useState(false);
   const [draft, setDraft] = useState<{ xPct: number; yPct: number; text: string } | null>(null);
   const [openNote, setOpenNote] = useState<string | null>(null);
+  /** The note being edited in place, and its working text. Shared by the pin card and the panel. */
+  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
+  /** Resolved notes are hidden by default — the panel is a to-do list, not an archive. */
+  const [showResolved, setShowResolved] = useState(false);
   const [panel, setPanel] = useState(false);
   const [busy, setBusy] = useState(false);
   const [author, setAuthor] = useState(() => localStorage.getItem(NAME_KEY) || "");
@@ -116,16 +137,45 @@ export function FeedbackLayer({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (draft) setDraft(null);
-      else if (placing) setPlacing(false);
-      else if (openNote) setOpenNote(null);
+      if (e.key === "Escape") {
+        if (editing) setEditing(null);
+        else if (draft) setDraft(null);
+        else if (placing) setPlacing(false);
+        else if (openNote) setOpenNote(null);
+        return;
+      }
+      /**
+       * **C arms a comment** (Olcay, 2026-08-11) — the same key Figma uses, so it costs nobody a
+       * lesson. Then click the thing you're commenting on.
+       *
+       * The guard is the whole trick: this is a bare letter with no modifier, so it MUST NOT fire
+       * while someone is typing. A reviewer writing "click here" into a comment box, or a level's
+       * Long Name into the editor, would otherwise arm the crosshair mid-word. Anything focused
+       * that accepts text is excluded — inputs, textareas, selects and contenteditable — as are
+       * modifier chords, which belong to the browser.
+       */
+      if (e.key !== "c" && e.key !== "C") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      const tag = el?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el?.isContentEditable) return;
+      if (draft || editing) return;
+      e.preventDefault();
+      setPlacing((p) => !p);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [draft, placing, openNote]);
+  }, [draft, placing, openNote, editing]);
 
   const here = useMemo(() => notes.filter((n) => n.screen === screen), [notes, screen]);
+  /**
+   * **A note must be signed** (Olcay, 2026-08-11: *"the comments should have Names"*). It used to
+   * default silently to "Anonymous", and the name field only appeared while the field was empty —
+   * so the first note you ever wrote was unsigned and there was no way to correct it afterwards.
+   * Save is now gated on a name, and the field is always reachable.
+   */
+  const authorReady = author.trim().length > 0;
+  const open = useMemo(() => notes.filter((n) => !n.resolved), [notes]);
 
   const place = useCallback((e: React.MouseEvent) => {
     setDraft({
@@ -137,14 +187,14 @@ export function FeedbackLayer({
   }, []);
 
   const save = async () => {
-    if (!draft?.text.trim()) return setDraft(null);
+    if (!draft?.text.trim() || !authorReady) return;
     const note: Note = {
       id: `n${Date.now()}${Math.round(Math.random() * 1e4)}`,
       screen,
       xPct: draft.xPct,
       yPct: draft.yPct,
       text: draft.text.trim(),
-      author: author.trim() || "Anonymous",
+      author: author.trim(),
       at: new Date().toISOString(),
     };
     setDraft(null);
@@ -173,6 +223,7 @@ export function FeedbackLayer({
 
   const remove = async (id: string) => {
     setOpenNote(null);
+    setEditing(null);
     if (mode === "shared") {
       setBusy(true);
       try {
@@ -191,6 +242,55 @@ export function FeedbackLayer({
     }
   };
 
+  /**
+   * Patch a note — the one path behind both **Edit** and **Resolve** (Olcay, 2026-08-11).
+   *
+   * Local mode applies the same patch by hand, so the two modes can't drift into behaving
+   * differently; the server stamps `editedAt` / `resolvedAt`, and local mirrors that here.
+   */
+  const patch = async (id: string, body: { text?: string; resolved?: boolean }) => {
+    if (mode === "shared") {
+      setBusy(true);
+      try {
+        const res = await fetch(API, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ updateId: id, ...body, by: author.trim() }),
+        });
+        const data = await res.json();
+        if (res.ok) setNotes(data.notes);
+      } finally {
+        setBusy(false);
+      }
+    } else {
+      const now = new Date().toISOString();
+      setNotes((all) =>
+        all.map((n) =>
+          n.id !== id
+            ? n
+            : {
+                ...n,
+                ...(body.text !== undefined ? { text: body.text, editedAt: now } : {}),
+                ...(body.resolved !== undefined
+                  ? {
+                      resolved: body.resolved,
+                      resolvedBy: body.resolved ? author.trim() : "",
+                      resolvedAt: body.resolved ? now : "",
+                    }
+                  : {}),
+              },
+        ),
+      );
+    }
+  };
+
+  const commitEdit = async () => {
+    if (!editing) return;
+    const text = editing.text.trim();
+    setEditing(null);
+    if (text) await patch(editing.id, { text });
+  };
+
   const copyAll = async () => {
     const byScreen = notes.reduce<Record<string, Note[]>>((acc, n) => {
       (acc[n.screen] ||= []).push(n);
@@ -202,7 +302,10 @@ export function FeedbackLayer({
       "",
       ...Object.entries(byScreen).flatMap(([s, list]) => [
         `## ${SCREEN_LABEL[s] ?? s}`,
-        ...list.map((n) => `- ${n.text}  \n  _${n.author} · ${when(n.at)}_`),
+        ...list.map(
+          (n) =>
+            `- ${n.resolved ? "~~" : ""}${n.text}${n.resolved ? "~~" : ""}  \n  _${n.author} · ${when(n.at)}${n.editedAt ? " · edited" : ""}${n.resolved ? ` · resolved${n.resolvedBy ? ` by ${n.resolvedBy}` : ""}` : ""}_`,
+        ),
         "",
       ]),
     ].join("\n");
@@ -240,9 +343,19 @@ export function FeedbackLayer({
             setPlacing((p) => !p);
             setDraft(null);
           }}
-          title="Click anywhere on the screen to pin a comment"
+          title="Click anywhere on the screen to pin a comment  (shortcut: C)"
         >
           <Icon name="edit-01" /> {placing ? "Click a spot…" : "Comment"}
+          {!placing && (
+            <kbd
+              style={{
+                marginLeft: 2, padding: "0 4px", borderRadius: 3, fontSize: 10, fontWeight: 700,
+                border: `1px solid ${ACCENT}`, background: "#fff", color: ACCENT_DARK, fontFamily: "inherit",
+              }}
+            >
+              C
+            </kbd>
+          )}
         </button>
         <button
           style={pill(panel)}
@@ -252,7 +365,9 @@ export function FeedbackLayer({
           }}
           title="All feedback"
         >
-          {notes.length} note{notes.length === 1 ? "" : "s"}
+          {/* The count is what's OPEN — a resolved note is done, and counting it makes the pill
+              read like a backlog that never shrinks. */}
+          {open.length} note{open.length === 1 ? "" : "s"}
         </button>
         <button style={pill(false)} onClick={() => setTourStep(0)} title="Guided walkthrough">
           Tour
@@ -266,17 +381,22 @@ export function FeedbackLayer({
         />
       )}
 
-      {here.map((n, i) => (
+      {here
+        // A resolved pin stops covering the screen it was about, but is never lost — the panel's
+        // "Show resolved" brings them all back.
+        .filter((n) => !n.resolved || showResolved)
+        .map((n, i) => (
         <div key={n.id} style={{ position: "fixed", left: `${n.xPct}%`, top: `${n.yPct}%`, zIndex: 61 }}>
           <button
             onClick={() => setOpenNote((o) => (o === n.id ? null : n.id))}
-            title={n.text}
+            title={`${n.text}\n— ${n.author}${n.resolved ? " (resolved)" : ""}`}
             style={{
               transform: "translate(-50%, -100%)",
               width: 26,
               height: 26,
               borderRadius: "50% 50% 50% 2px",
-              background: ACCENT,
+              background: n.resolved ? "#8B92A0" : ACCENT,
+              opacity: n.resolved ? 0.75 : 1,
               color: "#fff",
               border: "2px solid #fff",
               boxShadow: "0 2px 6px rgba(0,0,0,.3)",
@@ -285,7 +405,7 @@ export function FeedbackLayer({
               cursor: "pointer",
             }}
           >
-            {i + 1}
+            {n.resolved ? "✓" : i + 1}
           </button>
           {openNote === n.id && (
             <div
@@ -293,23 +413,76 @@ export function FeedbackLayer({
                 position: "absolute",
                 left: 16,
                 top: 0,
-                width: 240,
+                width: 260,
                 background: "#fff",
-                border: `1px solid ${ACCENT}`,
+                border: `1px solid ${n.resolved ? "#c9cedb" : ACCENT}`,
                 borderRadius: 10,
                 boxShadow: "0 6px 20px rgba(0,0,0,.18)",
                 padding: 12,
               }}
             >
-              <div style={{ fontSize: 12.5, color: "#1a1c24", lineHeight: 1.45 }}>{n.text}</div>
-              <div style={{ fontSize: 11, color: "#737373", marginTop: 6 }}>
-                {n.author} · {when(n.at)}
+              {/* Who said it, said first — a review note is worth as much as knowing whose it is. */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span
+                  style={{
+                    width: 22, height: 22, borderRadius: "50%", flex: "0 0 auto",
+                    background: n.resolved ? "#8B92A0" : ACCENT, color: "#fff",
+                    fontSize: 10, fontWeight: 700, display: "grid", placeItems: "center",
+                  }}
+                >
+                  {initials(n.author)}
+                </span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1c24", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {n.author}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: "#737373" }}>
+                    {when(n.at)}
+                    {n.editedAt ? " · edited" : ""}
+                  </div>
+                </div>
               </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                <Button size="sm" variant="link" disabled={busy} onClick={() => remove(n.id)}>
-                  Delete
-                </Button>
-              </div>
+
+              {editing?.id === n.id ? (
+                <>
+                  <textarea
+                    autoFocus
+                    // Caret to the END, not the start. `autoFocus` alone leaves it at position 0,
+                    // so the first thing you type when correcting a note lands *before* it.
+                    ref={(el) => el?.setSelectionRange(el.value.length, el.value.length)}
+                    value={editing.text}
+                    onChange={(e) => setEditing((s) => (s ? { ...s, text: e.target.value } : s))}
+                    style={{
+                      width: "100%", minHeight: 66, resize: "vertical", borderRadius: 8,
+                      border: "1px solid #e3e4e8", padding: 8, fontSize: 12.5, fontFamily: "inherit",
+                    }}
+                  />
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
+                    <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+                    <Button size="sm" disabled={busy || !editing.text.trim()} onClick={commitEdit}>Save</Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 12.5, color: "#1a1c24", lineHeight: 1.45 }}>{n.text}</div>
+                  {n.resolved && (
+                    <div style={{ fontSize: 10.5, color: "#4b7a5c", marginTop: 6, fontWeight: 600 }}>
+                      ✓ Resolved{n.resolvedBy ? ` by ${n.resolvedBy}` : ""}
+                    </div>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: 4, marginTop: 8 }}>
+                    <Button size="sm" variant="link" disabled={busy} onClick={() => patch(n.id, { resolved: !n.resolved })}>
+                      {n.resolved ? "Reopen" : "Resolve"}
+                    </Button>
+                    <Button size="sm" variant="link" disabled={busy} onClick={() => setEditing({ id: n.id, text: n.text })}>
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="link" disabled={busy} onClick={() => remove(n.id)}>
+                      Delete
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -350,21 +523,24 @@ export function FeedbackLayer({
               fontFamily: "inherit",
             }}
           />
-          {!author && (
-            <div style={{ marginTop: 8 }}>
-              <Input
-                label="Your name"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                placeholder="So the team knows whose note this is"
-              />
-            </div>
-          )}
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
+          {/* Always here, not just while it's empty: a name you can't revisit is a name you got
+              wrong once and live with forever. Save is gated on it, so no note goes out unsigned. */}
+          <div style={{ marginTop: 8 }}>
+            <Input
+              label="Your name"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              placeholder="So the team knows whose note this is"
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+            <span style={{ flex: 1, fontSize: 10.5, color: "#737373" }}>
+              {authorReady ? "" : "Add your name to post"}
+            </span>
             <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>
               Cancel
             </Button>
-            <Button size="sm" disabled={busy} onClick={save}>
+            <Button size="sm" disabled={busy || !draft.text.trim() || !authorReady} onClick={save}>
               Save
             </Button>
           </div>
@@ -391,6 +567,11 @@ export function FeedbackLayer({
           <div style={{ padding: "12px 14px", borderBottom: "1px solid #e3e4e8", display: "flex", alignItems: "center", gap: 8 }}>
             <Text style={{ fontSize: 14, fontWeight: 600, color: ACCENT_DARK, flex: 1 }}>
               {mode === "shared" ? "Team feedback" : "Your feedback"}
+              <span style={{ fontWeight: 400, color: "#737373", fontSize: 11 }}>
+                {" "}
+                · {open.length} open
+                {notes.length - open.length ? ` · ${notes.length - open.length} resolved` : ""}
+              </span>
             </Text>
             <button onClick={refresh} title="Refresh" style={{ border: "none", background: "none", cursor: "pointer", color: "#737373", fontSize: 11 }}>
               Refresh
@@ -405,20 +586,77 @@ export function FeedbackLayer({
                 No notes yet. Press <b>Comment</b>, then click anything on screen to pin one to it.
               </div>
             )}
-            {notes.map((n, i) => (
-              <div key={n.id} style={{ borderBottom: "1px solid #f1f2f4", padding: "8px 0" }}>
-                <div style={{ fontSize: 11, color: ACCENT_DARK, fontWeight: 600 }}>
-                  {i + 1} · {SCREEN_LABEL[n.screen] ?? n.screen}
+            {notes
+              .filter((n) => !n.resolved || showResolved)
+              .map((n, i) => (
+              <div key={n.id} style={{ borderBottom: "1px solid #f1f2f4", padding: "8px 0", opacity: n.resolved ? 0.6 : 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 11, color: ACCENT_DARK, fontWeight: 600, flex: 1 }}>
+                    {n.resolved ? "✓" : i + 1} · {SCREEN_LABEL[n.screen] ?? n.screen}
+                  </span>
                 </div>
-                <div style={{ fontSize: 12.5, color: "#1a1c24", lineHeight: 1.45 }}>{n.text}</div>
-                <div style={{ fontSize: 11, color: "#737373" }}>
-                  {n.author} · {when(n.at)}
-                </div>
+                {editing?.id === n.id ? (
+                  <>
+                    <textarea
+                      autoFocus
+                      ref={(el) => el?.setSelectionRange(el.value.length, el.value.length)}
+                      value={editing.text}
+                      onChange={(e) => setEditing((s) => (s ? { ...s, text: e.target.value } : s))}
+                      style={{
+                        width: "100%", minHeight: 56, resize: "vertical", borderRadius: 8,
+                        border: "1px solid #e3e4e8", padding: 6, fontSize: 12.5, fontFamily: "inherit",
+                      }}
+                    />
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginTop: 4 }}>
+                      <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+                      <Button size="sm" disabled={busy || !editing.text.trim()} onClick={commitEdit}>Save</Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 12.5, color: "#1a1c24", lineHeight: 1.45, textDecoration: n.resolved ? "line-through" : "none" }}>
+                      {n.text}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                      <span style={{ fontSize: 11, color: "#737373", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <b style={{ color: "#4a4f5c" }}>{n.author}</b> · {when(n.at)}
+                        {n.editedAt ? " · edited" : ""}
+                      </span>
+                      <Button size="sm" variant="link" disabled={busy} onClick={() => patch(n.id, { resolved: !n.resolved })}>
+                        {n.resolved ? "Reopen" : "Resolve"}
+                      </Button>
+                      <Button size="sm" variant="link" disabled={busy} onClick={() => setEditing({ id: n.id, text: n.text })}>
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="link" disabled={busy} onClick={() => remove(n.id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>
-          <div style={{ padding: 12, borderTop: "1px solid #e3e4e8", display: "flex", gap: 8 }}>
-            <Button size="sm" onClick={copyAll} disabled={!notes.length} className="w-full">
+          {/* Your name lives here too, so it can be set or corrected without writing a note —
+              and so it is obvious whose name is going on the next one. */}
+          <div style={{ padding: "10px 12px", borderTop: "1px solid #e3e4e8", display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, color: "#737373", flex: "0 0 auto" }}>Commenting as</span>
+            <input
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              placeholder="Your name"
+              style={{
+                flex: 1, minWidth: 0, borderRadius: 6, border: `1px solid ${authorReady ? "#e3e4e8" : ACCENT}`,
+                padding: "4px 8px", fontSize: 12, fontFamily: "inherit",
+              }}
+            />
+          </div>
+          <div style={{ padding: 12, borderTop: "1px solid #e3e4e8", display: "flex", alignItems: "center", gap: 8 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#737373", cursor: "pointer", flex: 1 }}>
+              <input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} />
+              Show resolved
+            </label>
+            <Button size="sm" onClick={copyAll} disabled={!notes.length}>
               Copy all
             </Button>
           </div>
