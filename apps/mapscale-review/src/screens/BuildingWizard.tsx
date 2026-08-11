@@ -22,7 +22,7 @@ import PointrMap from "../map/PointrMap";
 import { AiMappingStatus, type MapScaleState } from "../ui/AiMappingStatus";
 import { FloorPlanThumb } from "../ui/FloorPlanThumb";
 import { dropKind } from "../ui/UploadDropConfirm";
-import { PanelHeader } from "../ui/PanelHeader";
+import { PANEL_PAD, PanelHeader } from "../ui/PanelHeader";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import { ManualReview } from "./ManualReview";
 import {
@@ -1579,14 +1579,18 @@ export function BuildingWizard({
   return (
     <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
       <div style={{ width: PANEL_WIDTH, flex: `0 0 ${PANEL_WIDTH}px`, borderRight: `1px solid ${LINE}`, background: "#fff", display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div style={{ padding: "16px 20px 8px", overflow: "auto", flex: 1 }}>
+        {/* Header outside the scroll area — the ✕ must not move with a scrollbar or scroll off
+            the top of the panel (see PANEL_PAD). */}
+        <div style={{ padding: PANEL_PAD }}>
           <PanelHeader
             title={initial ? "Edit Building" : "New Building"}
             subtitle="Add a building to facilitate detailed indoor navigation and POI management across multiple levels."
             onClose={onClose}
             closeLabel={initial ? "Close building editor" : "Close wizard"}
           />
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
+        </div>
+        <div style={{ padding: "0 20px 8px", overflow: "auto", flex: 1 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
             {WIZARD_STEPS.map((s) => (
               <StepRow
                 key={s.key}

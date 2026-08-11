@@ -1,6 +1,19 @@
 import { IconButton, Icon, Text } from "@kozmos/react";
 
 /**
+ * The padding of the block a `PanelHeader` sits in — **the thing that decides where the ✕ lands**,
+ * since the header aligns it to `flex-start` and the panel's own right edge.
+ *
+ * It is a constant because it drifted (Olcay, 2026-08-11: *"position of the close button should be
+ * consistent"*): Manual Review used `18px` where every other panel used `16px`, and — far worse —
+ * three of the four screens had the header **inside** their scrolling area, so a 15px scrollbar
+ * pushed the ✕ left on exactly the long screens that grow one, and scrolling took it off the top of
+ * the panel altogether. Put the header in its own non-scrolling block with this padding, and the
+ * scroller beneath it.
+ */
+export const PANEL_PAD = "16px 20px 8px";
+
+/**
  * The panel header every drawer-shaped screen wears: title block on the left, the v9 drawerHeader
  * **✕ on the right** (Olcay's standing rule — panels close from the header, footers keep only the
  * concluding action). Figma `12929:243939`'s `drawerHeader` / `x-close` anatomy.

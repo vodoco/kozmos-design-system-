@@ -13,7 +13,7 @@ import { ChangeReviewRow } from "../ui/ChangeReviewRow";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings } from "../ui/MapSettings";
-import { PanelHeader } from "../ui/PanelHeader";
+import { PANEL_PAD, PanelHeader } from "../ui/PanelHeader";
 import PointrMap, { type MapPrefs, type MapLevel } from "../map/PointrMap";
 import type { LevelRef } from "./MapContent";
 import {
@@ -379,7 +379,7 @@ export function ManualReview({
             minHeight: 0,
           }}
         >
-          <div style={{ padding: "18px 20px 8px", flex: 1 }}>
+          <div style={{ padding: PANEL_PAD, flex: 1 }}>
             <PanelHeader
               eyebrow={shown.building}
               title={`${shown.short} | ${shown.long}`}
@@ -424,7 +424,21 @@ export function ManualReview({
           minHeight: 0,
         }}
       >
-        <div style={{ padding: "18px 20px 8px", overflow: "auto", flex: 1 }}>
+        {/*
+          The header sits OUTSIDE the scroll area (fixed 2026-08-11, Olcay: *"position of the close
+          button should be consistent"*). Two things were wrong while it scrolled with the content:
+
+          1. **A scrollbar moved it.** The ✕ was 36px from the panel's right edge here and 21px on
+             the level editor — exactly one 15px scrollbar apart, because a scrollbar takes its
+             width out of the content box and only the long screens have one.
+          2. **It scrolled away entirely.** 300px down the changelog put the ✕ at top −228 — off
+             screen. Panels close from the header ✕ (the standing rule), so the only way out was to
+             scroll back up to find it.
+
+          A drawer header is chrome, not content. `PANEL_PAD` keeps every panel's header block
+          identical, which is what makes the ✕ land in the same place on every screen.
+        */}
+        <div style={{ padding: PANEL_PAD }}>
           {/*
             The level is the subject of this screen, so it carries the title weight; the building is
             context above it. (Supersedes the earlier rule of "building name large" — you review a
@@ -453,7 +467,10 @@ export function ManualReview({
             onClose={creation ? creation.onBack : onClose}
             closeLabel={creation ? "Back to the wizard" : "Close review"}
           />
-          <div style={{ height: 10 }} />
+        </div>
+        <div style={{ padding: "0 20px 8px", overflow: "auto", flex: 1 }}>
+          {/* 8px of the old 10px gap now comes from the header block's own bottom padding */}
+          <div style={{ height: 2 }} />
           <Text style={{ fontSize: 13, color: "var(--review-muted)", display: "block", lineHeight: 1.45 }}>
             {creation
               ? "Confirm each of MapScale's guesses, flag it for a later dashboard edit, or reject it."

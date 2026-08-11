@@ -3,7 +3,7 @@ import { Button, Text } from "@kozmos/react";
 import PointrMap, { type MapCamera, type PointrMapHandle } from "../map/PointrMap";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
-import { PanelHeader } from "../ui/PanelHeader";
+import { PANEL_PAD, PanelHeader } from "../ui/PanelHeader";
 import { SourcePill } from "../ui/SourcePill";
 import {
   magnitudeBand,
@@ -232,7 +232,7 @@ export function VersionHistory({
           minHeight: 0,
         }}
       >
-        <div style={{ padding: "16px 20px 12px", borderBottom: `1px solid ${LINE}` }}>
+        <div style={{ padding: PANEL_PAD, borderBottom: `1px solid ${LINE}` }}>
           <PanelHeader
             title="Version history"
             onClose={onBack}

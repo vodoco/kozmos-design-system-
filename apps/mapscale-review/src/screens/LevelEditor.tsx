@@ -21,7 +21,7 @@ import { AiMappingStatus, type MapScaleState } from "../ui/AiMappingStatus";
 import { ExpertHoldBanner, ExpertHoldChip } from "../ui/ExpertHoldNotice";
 import { SourcePill } from "../ui/SourcePill";
 import { FloorPlanThumb } from "../ui/FloorPlanThumb";
-import { PanelHeader } from "../ui/PanelHeader";
+import { PANEL_PAD, PanelHeader } from "../ui/PanelHeader";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import { UploadDropConfirm, dropKind } from "../ui/UploadDropConfirm";
 import {
@@ -733,7 +733,9 @@ export function LevelEditor({
       >
         {/* full-bleed, above the breadcrumb: it is the first fact about the screen, not a footnote */}
         {expertHold && <ExpertHoldBanner />}
-        <div style={{ padding: "16px 20px 8px", overflow: "auto", flex: 1 }}>
+        {/* The header is chrome: it sits outside the scroll area so the ✕ can neither be pushed
+            sideways by a scrollbar nor scrolled off the top — see PANEL_PAD. */}
+        <div style={{ padding: PANEL_PAD }}>
           {/* the ✕ IS Cancel (Olcay's standing rule), so the footer carries only Update */}
           <PanelHeader
             eyebrow={`Map Content › ${level.building}`}
@@ -741,8 +743,9 @@ export function LevelEditor({
             onClose={onCancel}
             closeLabel="Close editor"
           />
-
-          <Text style={{ fontSize: 13, fontWeight: 600, display: "block", marginTop: 20 }}>
+        </div>
+        <div style={{ padding: "0 20px 8px", overflow: "auto", flex: 1 }}>
+          <Text style={{ fontSize: 13, fontWeight: 600, display: "block", marginTop: 12 }}>
             Metadata
           </Text>
           {/*
