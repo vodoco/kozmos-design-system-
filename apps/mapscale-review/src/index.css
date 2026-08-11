@@ -1,0 +1,21 @@
+:root {
+  --review-surface: #f1f2f4;
+  --review-muted: #737373;
+  --review-ink: #1a1c24;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  color: var(--review-ink);
+  font-family: "Readex Pro", var(--primitives-typography-font-family-primary, system-ui), sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}

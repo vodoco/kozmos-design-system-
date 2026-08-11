@@ -1,0 +1,861 @@
+// MAP-566 diff contract.
+// Phase 1: mock (this file). Phase 2: replace `seedDiff` with a client-side diff of
+// published level features vs. the MapScale job-result GeoJSON (see MAP-566_build_plan.md §4).
+
+/**
+ * The MapScale Update Report's taxonomy — Add Feature · Delete Feature · Modify Geometry ·
+ * Metadata Update — plus `preserved` for a user override carried through untouched.
+ *
+ * `updated` was one value until 2026-08-09; the report separates geometry from metadata, and the
+ * two want different review treatment (geometry needs the map editor, metadata is a one-field fix),
+ * so they are separate types that happen to share the "updated" colour and metric box.
+ *
+ * A feature that changed in both ways stays ONE change — one feature, one map highlight, one
+ * decision — classified by the heavier action (geometry), with `details` listing everything.
+ */
+export type ChangeType = "new" | "geometry" | "metadata" | "deleted" | "preserved";
+export type Decision = "confirm" | "flag" | "reject";
+
+/**
+ * US8: *"Changelog consists of Notices and Warnings. Notices include any changes deemed safe by the
+ * system. Warnings include any changes deemed risky."* This is the primary sort — warnings first
+ * and expanded, notices collapsed — because it answers "what needs me?" before "what happened?".
+ */
+export type Risk = "notice" | "warning";
+
+/**
+ * Why a change is risky. The first four are the US7 preservation warnings; the last three are
+ * whole-floor conditions (US10) and the engine's own confidence.
+ */
+export type WarningKind =
+  | "source-conflict"
+  | "clash"
+  | "out-of-bounds"
+  | "re-removed"
+  | "georeference-shifted"
+  | "floorplan-resized"
+  | "low-confidence";
+
+export const WARNING_LABEL: Record<WarningKind, string> = {
+  "source-conflict": "Source conflict",
+  clash: "Overlaps another object",
+  "out-of-bounds": "Outside the floor plan",
+  "re-removed": "Removed again",
+  "georeference-shifted": "Georeference shifted",
+  "floorplan-resized": "Floor plan resized",
+  "low-confidence": "Low match confidence",
+};
+
+/** One line saying why it needs a human — shown under the warning group's title. */
+export const WARNING_WHY: Record<WarningKind, string> = {
+  "source-conflict": "The source value changed underneath an edit you made. Yours is still applied.",
+  clash: "Now collides with another object on the new floor plan.",
+  "out-of-bounds": "Now falls outside the new floor plan's boundary.",
+  "re-removed": "You removed this before. It is back in the source and has been removed again.",
+  "georeference-shifted": "The new floor plan is positioned differently to the published one.",
+  "floorplan-resized": "The new floor plan covers a different area to the published one.",
+  "low-confidence": "MapScale matched this to the published feature with low confidence.",
+};
+
+/**
+ * Below this, a geometry change is treated as risky on its own — the engine is saying it is not
+ * sure the new shape is the same object. Gap 13: the score should drive order, not just be printed.
+ */
+export const SIMILARITY_WARN = 0.7;
+
+export interface Change {
+  id: string; // feature.properties.fid
+  name: string; // feature.properties.name
+  type: ChangeType;
+  detail?: string; // e.g. 'Type: "Restaurant" → "Cafe"'
+  /**
+   * One line per attribute that moved, in the real report's voice ("Name changed: from X to Y",
+   * "Geometry modified — similarity 0.73"). A single feature routinely has several.
+   */
+  details?: string[];
+  /** The object type MapScale reports it as — retail-space, meeting-room-chair, wall… */
+  kind?: string;
+  /** Why this is risky. Present ⇒ warning. Absent ⇒ see `riskOf()`, which also reads similarity. */
+  warning?: WarningKind;
+  /** 0–1, geometry changes only. The report carries it; below SIMILARITY_WARN it raises a warning. */
+  similarity?: number;
+  decision?: Decision; // Manual Review — client state
+  geometry?: unknown; // GeoJSON.Geometry — for the map highlight
+}
+
+export interface DiffResult {
+  changes: Change[];
+  magnitudePct: number; // share of floor AREA changed → <20 auto · 20–50 review · >50 manual
+}
+
+export type MagnitudeBand = "minor" | "medium" | "large";
+
+/**
+ * The traffic light, per the "Automatic Map Updates" user stories (US3/4/5):
+ *   Green  (<20% of sqft)   → published automatically, no intervention
+ *   Amber  (20–50% of sqft) → notify; auto-publishes after the grace period (7 days by default)
+ *                             unless reviewed; on review you may cancel the publish or publish now
+ *   Red    (>50% of sqft)   → NEVER auto-published, but publishable manually at any time.
+ *                             Red is also returned when the engine cannot match (B) or cannot
+ *                             process (C) the floorplan — see MAP-566_AUDIT.md §2.
+ * The measure is the share of **floor area**, not a count of features — the MapScale Update Report
+ * calls it "Ratio of the modified area".
+ */
+export const MAGNITUDE = { minorBelow: 20, largeAbove: 50 };
+
+/**
+ * US5: Red is one band with three causes, and they behave differently:
+ *   A `large-change`   — >50% of floor area. **Rejected outright** (Olcay, 2026-08-10, ruling the
+ *                        Q9 dev note): a change this large is assumed unrealistic unless major
+ *                        construction happened — more likely the wrong file, or a line-up failure
+ *                        that slipped past the matcher. No review, no publish; upload a corrected
+ *                        floor plan, or contact support if the construction is real. This
+ *                        supersedes US5-A's "review link + publishable anytime" acceptance
+ *                        criteria (decision 9). Implied by the band, never stored.
+ *   B `cannot-match`   — the engine produced content but couldn't align it with the published
+ *                        map, so there is no reliable ratio. Review is offered (the whole floor
+ *                        needs eyes); the magnitude block explains instead of counting.
+ *   C `cannot-process` — the engine couldn't read the file at all. Nothing exists to review or
+ *                        publish, so the only offers are the error and a fresh upload.
+ *
+ * The A-guard targets suspect *uploads*. A **restore** is deliberate re-submission of known-good
+ * content, so it never trips it — restores review at any size (the mock keeps its demo under the
+ * threshold).
+ */
+export type RedCause = "large-change" | "cannot-match" | "cannot-process";
+
+export const RED_CAUSE_COPY = {
+  "large-change": {
+    card: (pct: number) => `Rejected · ${pct}% of floor area changed`,
+    error:
+      "A change this large is unrealistic unless major construction happened — more likely the wrong file, or a floor plan that couldn't be lined up with the published map. Check the floor plan and upload a corrected file. If this really is new construction, get in touch with our support team.",
+  },
+  "cannot-match": {
+    card: "Needs your decision · couldn't match the floor plan",
+    title: "Match failed",
+    detail:
+      "MapScale couldn't align the new floor plan with the published map, so there is no reliable change ratio — the whole floor needs your eyes.",
+  },
+  "cannot-process": {
+    card: "Couldn't process the floor plan",
+    error:
+      "The file couldn't be read as a floor plan — usually an unsupported or corrupted CAD export. Check the export settings, then upload a new floor plan.",
+  },
+};
+
+/**
+ * The grace period (US4): Amber publishes itself after this many days unless someone intervenes.
+ * Client-wide; S5 makes it configurable (0s–3 months, default 7, advise ≤1 week). `demoLeft` is
+ * how far into the demo countdown the seeds are — the tree tag says the same 6.
+ */
+export const GRACE_DAYS = { default: 7, demoLeft: 6 };
+
+/**
+ * Does Pointr's mapping team check the result before the customer sees it? A **Settings** flag
+ * (S5 / TODO 6 wires it to real config); this constant is the seam until then.
+ *
+ * Expert review runs **before** the customer's review (Olcay, 2026-08-09 — reversing the earlier
+ * decision). The experts prune MapScale's over-reporting, so the modified-area ratio the customer
+ * is shown is the *post-expert* number: usually much lower, often low enough to fall in Green and
+ * publish automatically with no one having to look at it. That also settles who owns the number in
+ * `MAP-566_AUDIT.md` §7 Q3 — it is the mapping team's, not the raw engine's.
+ *
+ * Turned off, the raw MapScale result goes straight to the customer and the % is the engine's own.
+ */
+export const EXPERT_REVIEW_ENABLED = true;
+
+/* ── the expert-review hold (S2 — warn-but-allow, Olcay 2026-08-10) ───────── */
+
+/**
+ * Which level the mapping team currently holds. The sibling of `EXPERT_REVIEW_ENABLED`: that says
+ * the phase exists at all, this says who is in it. The real thing reads the job's
+ * `resultExtra.internalStatus` (build_plan §5), and both seams disappear together when it lands.
+ */
+export const EXPERT_REVIEW_LEVEL = 2;
+
+/**
+ * Is Pointr's mapping team currently working on this level?
+ *
+ * With experts running first (handoff §6 decision 4) most jobs land Green and publish unseen — so
+ * this is not a waiting room on the way to review, it is the only screen many customers ever see
+ * of an update. Every frame-changing control has to ask this question (see EXPERT_HOLD).
+ */
+export function isUnderExpertReview(levelIndex: number): boolean {
+  return EXPERT_REVIEW_ENABLED && levelIndex === EXPERT_REVIEW_LEVEL;
+}
+
+/**
+ * S2 began as a hard read-only lock (Ege on MAP-566: *"the user cannot touch their map until the
+ * Mapping Team is done"*) and was **reversed the day it was built** (Olcay, 2026-08-10): the
+ * customer keeps working while the team does, warned that the team's corrections may override
+ * theirs. "Let them play."
+ *
+ * The line between allowed and locked is **mergeability, not ownership**:
+ *
+ * - **Field-level edits merge.** Metadata and settings are exactly what US7's preservation
+ *   machinery reconciles — a user edit with a source that moved underneath it surfaces in the
+ *   changelog as an override with a source-conflict warning. So they stay open, warned.
+ * - **Frame-changing operations don't merge** — they move or replace the substrate the experts
+ *   are correcting in, so they stay locked:
+ *     · **georeferencing** (Figma `2090:16799`, the named exception) — re-aligning the floor
+ *       moves every correction the team has made with it
+ *     · **uploading a new floor plan** — replaces the input mid-correction (newest-wins would
+ *       silently discard their work)
+ *     · **restore** — replaces the content wholesale; an upload by another name
+ *     · **deleting the level** — destroys the subject
+ *
+ * Precedence — ruled (Olcay, 2026-08-10 evening, answering audit Q7): **the team's corrections
+ * win.** The floor-plan that went to the experts is a frozen snapshot; whatever the user edits
+ * during the hold is "for playing around" — it does NOT get the US7 kept-and-warned treatment
+ * when the result lands. The mapping team *may choose* to fold those updates into their result,
+ * which is why "may be overridden" (not "will be") stays the honest wording. US7's preservation
+ * machinery still covers the normal case: edits made *between* updates, reconciled when the next
+ * floor-plan arrives.
+ */
+export const EXPERT_HOLD = {
+  /** The banner across the top of the panel — a caution, not a lock. */
+  banner:
+    "Pointr's Mapping Team is reviewing this floor. You can keep editing — changes may be overridden by their corrections.",
+  /** The chip over the map, which carries no controls of its own to explain. */
+  mapTitle: "Mapping Team is reviewing this floor",
+  mapDetail: "Changes you make may be overridden by their corrections.",
+  /** The status card's info tooltip: what is happening, and what decides what happens next. */
+  what:
+    "Pointr's mapping team is correcting MapScale's result before you see it. The floor they're working on is a snapshot — you can keep editing meanwhile, but their corrections take precedence when the result lands (the team may fold your updates in). Once they finish, how much of the floor area changed decides what happens next: minor updates publish automatically, larger ones come to you for review.",
+  /** Per-action reasons, hung off each locked control where the question is asked. */
+  upload: "Locked during Expert Review — a new floor plan would replace the one the mapping team is correcting.",
+  restore: "Locked during Expert Review — restoring would replace the content the mapping team is correcting.",
+  remove: "Locked during Expert Review — the mapping team is working on this level.",
+  georeference:
+    "Locked during Expert Review — re-aligning the floor plan would move it under the mapping team's corrections.",
+};
+
+/** The hold's tone (Figma 2450:65 / 2450:69): amber, because it is a caution, not a failure. */
+export const HOLD_TONE = { tint: "#fff7e0", border: "#edc759", ink: "#805905", dot: "#D98C0D" };
+
+/* ── versions ─────────────────────────────────────────────────────────────── */
+
+/**
+ * A version is a floor-plan revision of ONE level, created the moment a file arrives — before
+ * MapScale runs — so a job that fails to process still has something to attach its error to.
+ *
+ * `source` matters as much as the number: a level's history interleaves dashboard uploads and API
+ * ingests, and "who sent this" is the first question when two of them land close together.
+ */
+export type VersionSource = "dashboard" | "api";
+
+/**
+ * What actually arrived. The section is a timeline of arrivals, and MapScale is a per-version
+ * processing step, not the section's subject: a **floor-plan** file (DWG/DXF/PDF) is what MapScale
+ * requires and runs on; **GeoJSON** is already-mapped vector content, so it skips MapScale
+ * entirely. v9's Add-level flow accepts both ("Supported File Types: GeoJSON & DWG/DXF").
+ * A restore re-submits an old version's mapped content, so it behaves like the GeoJSON path.
+ */
+export type VersionInputKind = "floor-plan" | "geojson";
+
+export const KIND_LABEL: Record<VersionInputKind, string> = {
+  "floor-plan": "Floor plan",
+  geojson: "GeoJSON",
+};
+
+export interface VersionInput {
+  kind: VersionInputKind;
+  file: string;
+}
+
+export type VersionState =
+  | "created"        // level created, no floor plan yet
+  | "processing"     // MapScale is mapping it; frame-changing actions are held (JOB_RUNNING)
+  | "expert-review"  // Pointr's mapping team is correcting the result
+  | "needs-review"   // amber — publishes after the grace period unless reviewed
+  | "needs-decision" // red cause B — never auto-published, always manually publishable
+  | "rejected"       // red cause A — >50%, unrealistic, rejected outright (decision 9); no review, no publish
+  | "failed"         // red cause C — the job couldn't read the file; nothing exists to publish
+  | "published";
+
+export const VERSION_STATE_LABEL: Record<VersionState, string> = {
+  created: "Created",
+  processing: "Processing",
+  "expert-review": "Expert Review",
+  "needs-review": "Needs your review",
+  "needs-decision": "Needs your decision",
+  rejected: "Rejected",
+  failed: "Processing failed",
+  published: "Published",
+};
+
+export const SOURCE_LABEL: Record<VersionSource, string> = {
+  dashboard: "Dashboard",
+  api: "API",
+};
+
+export interface LevelVersion {
+  n: number;
+  source: VersionSource;
+  /** Already formatted — the mock has no clock, and the real thing formats server-side anyway. */
+  at: string;
+  state: VersionState;
+  /** Share of floor area changed vs the version before it. Absent on the first version. */
+  changePct?: number;
+  /** Who sent it. Concurrency starts here: two people uploading to one level is the common case. */
+  by?: string;
+  /** What arrived. A floor-plan input doubles as the level's blueprint overlay on the map. */
+  input: VersionInput;
+  /** Set when this version was created by restoring an older one — lineage, never a rewrite. */
+  restoredFrom?: number;
+  /**
+   * Why a red outcome is red, when it isn't the band's own arithmetic: `cannot-match` (B) and
+   * `cannot-process` (C) are stored; cause A (`large-change`) is carried by the `rejected` state
+   * itself — the seed tags it too, but `changePct` > 50 alone implies it (decision 9).
+   */
+  redCause?: RedCause;
+}
+
+/**
+ * Newest first, as the dashboard lists them. v1 created the level from already-mapped GeoJSON,
+ * v2 is the floor-plan revision that is live today, and whether there is a v3 — and what state it
+ * is in — depends on the level, **kept in step with `LEVEL_TAGS` in MapContent.tsx** (both are
+ * keyed by level index): the tag you clicked in the tree and the status card you land on must
+ * always tell the same story. The editor seeds its phase from `versions[0].state`.
+ */
+export function seedVersions(short: string, levelIndex: number): LevelVersion[] {
+  const history: LevelVersion[] = [
+    {
+      n: 2, source: "dashboard", at: "10 Jul 2025 · 09:14", state: "published", changePct: 10,
+      by: "Ege Yılmaz", input: { kind: "floor-plan", file: `${short}-departures-rev2.dwg` },
+    },
+    {
+      n: 1, source: "dashboard", at: "02 Jun 2025 · 15:20", state: "published",
+      by: "Olcay Kurtulus", input: { kind: "geojson", file: `${short}-initial-content.geojson` },
+    },
+  ];
+
+  const arrival = (state: VersionState, changePct?: number): LevelVersion => ({
+    n: 3, source: "api", at: "09 Aug 2026 · 18:21", state, changePct,
+    by: "Airport Ops (API)", input: { kind: "floor-plan", file: `${short}-departures-rev3.dwg` },
+  });
+
+  // The same indices LEVEL_TAGS speaks for. Everything else has a quiet two-version history.
+  //
+  // The three traffic-light cases live on three Terminal 3 and B Gates levels (Olcay, 2026-08-10):
+  //   Green  <20%  → level 0  (Connection Floor, 12% — auto-published, nothing to review)
+  //   Amber 20–50% → level -2 (B2, 30% — the full review demo, its diff has real geometry)
+  //   Red   >50%   → level 3  (EK Lounges, 62% — never auto-published, cause A)
+  // Red's other two causes: B (cannot-match) lives on level 4 — only Concourse A has one, so
+  // Terminal 3's six demos are untouched; C (cannot-process) is the upload cycle's fourth step.
+  if (levelIndex === 3) return [{ ...arrival("rejected", 62), redCause: "large-change" }, ...history]; // Red — cause A, rejected
+  if (levelIndex === 4)
+    return [{ ...arrival("needs-decision"), redCause: "cannot-match" }, ...history]; // Red — cause B
+  if (levelIndex === 0) return [arrival("published", 12), ...history]; // Green — auto-published
+  if (levelIndex === 1) return [arrival("needs-review", 30), ...history]; // Amber — grace running
+  if (levelIndex === EXPERT_REVIEW_LEVEL && EXPERT_REVIEW_ENABLED)
+    return [arrival("expert-review"), ...history]; // the mapping team holds it (S2)
+  if (levelIndex === -2) return [arrival("needs-review", 30), ...history]; // Amber — B2, the review demo
+  return history;
+}
+
+/** The version the published map currently shows — the newest one that reached `published`. */
+export function liveN(versions: LevelVersion[]): number | undefined {
+  return versions
+    .filter((v) => v.state === "published")
+    .map((v) => v.n)
+    .sort((a, b) => b - a)[0];
+}
+
+/**
+ * How a version reads in a history list. **Live and Superseded are derived, never stored**:
+ * "published" is a fact about the version's past, "live" is a fact about the level now, and
+ * storing the second would let the two drift. Anything overtaken by a newer version reads
+ * Superseded — newest wins (§11); warning the person whose review is being superseded before it
+ * happens is still an open gap.
+ */
+export function versionBadge(
+  versions: LevelVersion[],
+  v: LevelVersion,
+): { label: string; live: boolean } {
+  if (v.state === "published")
+    return v.n === liveN(versions) ? { label: "Live", live: true } : { label: "Superseded", live: false };
+  const overtaken = versions.some((o) => o.n > v.n);
+  if (overtaken && v.state !== "created") return { label: "Superseded", live: false };
+  return { label: VERSION_STATE_LABEL[v.state], live: false };
+}
+
+/**
+ * Restore re-publishes old *mapped* content, so only versions that actually went live qualify —
+ * and not the live one, because restoring it would be a no-op.
+ */
+export function isRestorable(versions: LevelVersion[], v: LevelVersion): boolean {
+  return v.state === "published" && v.n !== liveN(versions);
+}
+
+/**
+ * Why THIS version offers no Restore — the row wears the reason instead of hiding the control
+ * (same law as the expert hold's locks: a control that vanishes teaches nothing). Olcay's
+ * question "why don't we have restore for all items?" is exactly what a hidden control invites.
+ */
+export function restoreBlockReason(versions: LevelVersion[], v: LevelVersion): string | undefined {
+  if (isRestorable(versions, v)) return undefined;
+  if (v.state === "published") return "This is the live version — restoring it would change nothing.";
+  if (v.state === "created" || v.state === "processing")
+    return "Nothing to restore — this version never finished processing, so it has no mapped content.";
+  if (v.state === "failed")
+    return "Nothing to restore — processing failed, so this version has no mapped content.";
+  // superseded needs-review / needs-decision / rejected / expert-review: content exists but nobody
+  // ever approved it — restoring must return to a KNOWN-GOOD state, and unpublished isn't one.
+  return "Never published — only content that actually went live can be restored.";
+}
+
+/**
+ * Restore, in one sentence: an **append-only re-submission**. It creates a NEW version carrying an
+ * old one's content and walks the same pipeline as any arrival — minus MapScale (there is no
+ * floor-plan to re-map) and minus Expert Review (nothing engine-reported to prune) — so it lands
+ * straight at the traffic light. The diff vs the published map still gates it: restoring away
+ * months of later edits is usually a large change, so it lands Red and waits for an explicit
+ * publish. That is the protection working, not friction — it is also exactly where the US7
+ * preservation warnings matter most, because your own dashboard edits are the thing at stake.
+ * History is never rewritten; the restored-from version keeps its place.
+ */
+export const RESTORE_COPY = {
+  action: "Restore",
+  title: (n: number) => `Restore Version ${n}?`,
+  body: (n: number, next: number) =>
+    `Creates Version ${next} from Version ${n}'s map content and compares it against the published map. Nothing is deleted.`,
+  detail: "Skips MapScale and Expert Review — this content was already mapped.",
+};
+
+/** Why Upload new / Restore are unavailable while the pipeline is running. */
+export const JOB_RUNNING = "A MapScale job is already running for this level.";
+
+/**
+ * Bind a change set to the features that are ACTUALLY on the floor being shown.
+ *
+ * The seeds name B2's units, because that is the floor whose tiles the demo diff was harvested
+ * from. On any other level — EK Lounges, Concourse A's L4, a building the wizard just created —
+ * those names resolve to nothing, so the panel listed changes beside a map with no highlights
+ * (old defect D4). The map now reports its floor's named polygons and this rebinds each row to
+ * one of them, so the list and the map always describe the same place.
+ *
+ * What is preserved is the *story*: every row keeps its type, risk, warning, bullets and decision;
+ * only the feature it points at changes. Rows whose seeded name is already present on this floor
+ * keep it — B2 therefore renders exactly as it always did, which is what makes this safe.
+ *
+ * `preserved` rows are bound too: a user override is a real feature like any other.
+ */
+export function bindToFloor(changes: Change[], available: string[]): Change[] {
+  if (!available.length) return changes;
+  const onFloor = new Set(available);
+  // names this floor offers that the seed didn't already claim, in the map's own order (biggest
+  // first) so the highlights land on units a reviewer can actually see
+  const claimed = new Set(changes.filter((c) => onFloor.has(c.name)).map((c) => c.name));
+  const spare = available.filter((n) => !claimed.has(n));
+  let next = 0;
+  return changes.map((c) => {
+    if (onFloor.has(c.name)) return c;
+    const name = spare[next++];
+    // ran out of real features: keep the seeded name rather than inventing a duplicate — the row
+    // simply won't highlight, which is the honest outcome for a floor with too little content
+    return name ? { ...c, name } : c;
+  });
+}
+
+export function magnitudeBand(pct: number): MagnitudeBand {
+  if (pct < MAGNITUDE.minorBelow) return "minor";
+  return pct > MAGNITUDE.largeAbove ? "large" : "medium";
+}
+
+/** Traffic-light colours — reserved for magnitude, never for a change type, risk or a decision. */
+export const BAND: Record<
+  MagnitudeBand,
+  { tint: string; border: string; ink: string; solid: string; title: string; detail: string }
+> = {
+  minor: {
+    tint: "#F1FBF5", border: "#B7E4C7", ink: "#1E7A46", solid: "#2FBF71",
+    title: "Auto-published",
+    detail: "Minor change — published automatically, nothing to review.",
+  },
+  medium: {
+    tint: "#FFF8EC", border: "#F5D08A", ink: "#8A5A00", solid: "#F5A623",
+    title: "Ready for your review",
+    detail: `Publishes automatically in ${GRACE_DAYS.demoLeft} days unless you review it.`,
+  },
+  large: {
+    tint: "#FEF2F2", border: "#F3B4B4", ink: "#B42318", solid: "#EF4444",
+    title: "Needs your decision",
+    detail: "Never published automatically. Review it, then publish when you're ready.",
+  },
+};
+
+/** Four colours, five types: geometry and metadata are both "updated" to the eye. */
+export const CHANGE_COLORS: Record<ChangeType, string> = {
+  new: "#2FBF71",
+  geometry: "#3B82F6",
+  metadata: "#3B82F6",
+  deleted: "#EF4444",
+  preserved: "#9C6EFF",
+};
+
+/**
+ * Confirm / Flag / Reject are *state*, not identity — a flagged "new" feature is still new — so a
+ * decision never recolours the row or the map shape. The ✓/🚩/✗ marks carry it instead, in neutral
+ * black so they read as a separate axis from the four type colours. Risk is a third axis and is
+ * likewise never coloured: warnings are marked with a glyph, not with amber.
+ */
+export const DECISION_INK = "#000000";
+
+/** Colour for a row/feature — always the diff type. */
+export function changeAccent(c: Change): string {
+  return CHANGE_COLORS[c.type];
+}
+
+/* ── the four metric boxes (v9 node 12826:126197) ─────────────────────────── */
+
+/** The tally keeps v9's four categories, so geometry + metadata both count as "Updated". */
+export type MetricCategory = "preserved" | "new" | "updated" | "deleted";
+
+export const METRIC_ORDER: MetricCategory[] = ["preserved", "new", "updated", "deleted"];
+
+export const METRIC_LABEL: Record<MetricCategory, string> = {
+  preserved: "User Override",
+  new: "New Items",
+  updated: "Updated",
+  deleted: "Removed",
+};
+
+export const METRIC_COLOR: Record<MetricCategory, string> = {
+  preserved: CHANGE_COLORS.preserved,
+  new: CHANGE_COLORS.new,
+  updated: CHANGE_COLORS.geometry,
+  deleted: CHANGE_COLORS.deleted,
+};
+
+export function inMetric(c: Change, m: MetricCategory): boolean {
+  return m === "updated" ? c.type === "geometry" || c.type === "metadata" : c.type === m;
+}
+
+/* ── risk + grouping ──────────────────────────────────────────────────────── */
+
+/** An explicit warning wins; otherwise a geometry change the engine isn't sure about is risky. */
+export function riskOf(c: Change): Risk {
+  if (c.warning) return "warning";
+  if (c.type === "geometry" && c.similarity !== undefined && c.similarity < SIMILARITY_WARN)
+    return "warning";
+  return "notice";
+}
+
+/** The warning to show — explicit, or the one implied by a low similarity score. */
+export function warningOf(c: Change): WarningKind | undefined {
+  if (c.warning) return c.warning;
+  if (c.type === "geometry" && c.similarity !== undefined && c.similarity < SIMILARITY_WARN)
+    return "low-confidence";
+  return undefined;
+}
+
+/** How a group of this type is named — the report's taxonomy, in the dashboard's voice. */
+export const TYPE_GROUP_LABEL: Record<ChangeType, string> = {
+  new: "Added",
+  geometry: "Geometry changed",
+  metadata: "Details changed",
+  deleted: "Removed",
+  preserved: "Kept — your edit",
+};
+
+/** Plain-language plural of a MapScale object type: `food-beverage-space` → "food & beverage spaces". */
+export function humanKind(kind: string | undefined, count: number): string {
+  if (!kind) return count === 1 ? "object" : "objects";
+  const words = kind.replace(/-/g, " ").replace(/\bbeverage\b/, "& beverage");
+  if (count === 1) return words;
+  return /s$/.test(words) ? words : `${words}s`;
+}
+
+export interface ChangeGroup {
+  key: string;
+  /** "Added · retail spaces" — a collapsed bucket standing in for many rows of one object type. */
+  title: string;
+  changes: Change[];
+}
+
+/**
+ * Collapse a (change type × object type) bucket into one counted row only ABOVE this many members.
+ *
+ * The report's "15 new meeting-room-chairs are added" is a real problem at 139 chairs and a
+ * non-problem at 22 changes: grouping everything turned the changelog into a dozen identical grey
+ * boxes you had to click to see anything, and threw away the type colours that made the list
+ * readable at a glance. So the list stays flat and coloured, and collapsing is what happens when a
+ * single bucket would otherwise flood it.
+ */
+export const COLLAPSE_ABOVE = 6;
+
+/** One coloured section of the changelog — the v9 shape: NEW · UPDATED · REMOVED · USER OVERRIDES. */
+export interface ReviewSection {
+  key: MetricCategory;
+  label: string;
+  color: string;
+  /** Rendered as individual coloured rows. Risky ones first. */
+  rows: Change[];
+  /** Only buckets big enough to flood the list (> COLLAPSE_ABOVE of one object type). */
+  groups: ChangeGroup[];
+  count: number;
+}
+
+export const SECTION_LABEL: Record<MetricCategory, string> = {
+  new: "NEW",
+  updated: "UPDATED",
+  deleted: "REMOVED",
+  preserved: "USER OVERRIDES",
+};
+
+/** New first, then the things that changed, then removals, then your own edits as context. */
+export const SECTION_ORDER: MetricCategory[] = ["new", "updated", "deleted", "preserved"];
+
+/**
+ * The changelog: sections by change type, each one colour-keyed, rows visible.
+ *
+ * US8's risk split is carried **on the rows**, not as a container — risky changes sort to the top of
+ * their section and wear a warning mark. Making risk the outer container (Warnings ▸ / Notices ▸)
+ * was tried and reverted: it hid every change behind a chevron and drained the type colour that
+ * makes the list scannable, which is the whole point of the panel.
+ *
+ * Within a section, order is: warnings first, least-confident geometry first among those (the
+ * engine's own doubt is the best ordering signal we have), then the rest as seeded.
+ */
+export function buildSections(changes: Change[]): ReviewSection[] {
+  const byRisk = (a: Change, b: Change) => {
+    const ra = riskOf(a) === "warning" ? 0 : 1;
+    const rb = riskOf(b) === "warning" ? 0 : 1;
+    if (ra !== rb) return ra - rb;
+    return (a.similarity ?? 1) - (b.similarity ?? 1);
+  };
+
+  return SECTION_ORDER.map((key) => {
+    const inSection = changes.filter((c) => inMetric(c, key));
+
+    // Only a bucket that would flood the section gets collapsed; everything else stays a real row.
+    const byKind = new Map<string, Change[]>();
+    for (const c of inSection) {
+      const k = `${c.type}:${c.kind ?? "other"}`;
+      byKind.set(k, [...(byKind.get(k) ?? []), c]);
+    }
+    const groups: ChangeGroup[] = [];
+    const collapsed = new Set<Change>();
+    for (const [k, cs] of byKind) {
+      if (cs.length <= COLLAPSE_ABOVE) continue;
+      groups.push({
+        key: k,
+        title: `${TYPE_GROUP_LABEL[cs[0].type]} · ${humanKind(cs[0].kind, cs.length)}`,
+        changes: [...cs].sort(byRisk),
+      });
+      cs.forEach((c) => collapsed.add(c));
+    }
+
+    return {
+      key,
+      label: SECTION_LABEL[key],
+      color: METRIC_COLOR[key],
+      rows: inSection.filter((c) => !collapsed.has(c)).sort(byRisk),
+      groups,
+      count: inSection.length,
+    };
+  }).filter((s) => s.count > 0);
+}
+
+/**
+ * The amber (30%) change set — 6 new · 7 updated · 5 removed · 4 user overrides — tagged onto
+ * features that genuinely exist on the level under review — Dubai · Terminal 3 and B Gates ·
+ * **levelIndex -2, "Departures - Terminal 3" (short title B2)**. Every row therefore has geometry
+ * on the map. NB: this building numbers floors per terminal, so B2 is levelIndex -2; levelIndex 2
+ * is "L2", Departures · Concourse B.
+ *
+ * Risk is *derived*, not hand-tagged, wherever the data can carry it: the two low-similarity
+ * geometry changes below become warnings through `riskOf()`. Only the US7 preservation cases —
+ * which the engine reports explicitly — set `warning` themselves.
+ */
+function amberChanges(): Change[] {
+  return [
+    // ── New ────────────────────────────────────────────────────────────────
+    { id: "costa", name: "Costa Coffee", type: "new", kind: "food-beverage-space", detail: "New café", decision: "confirm" },
+    { id: "ddfzone10", name: "DDF Zone 10", type: "new", kind: "retail-space", detail: "New retail zone", decision: "confirm" },
+    { id: "giraffe", name: "Giraffe Pop-up Outlet", type: "new", kind: "retail-space", detail: "New pop-up unit", decision: "confirm" },
+    { id: "desi", name: "Desi LunchBox", type: "new", kind: "food-beverage-space", detail: "New quick-service unit", decision: "confirm" },
+    { id: "childcare", name: "Child Care", type: "new", kind: "amenity-space", detail: "New amenity", decision: "confirm" },
+    { id: "prayerf", name: "Female Prayer Room", type: "new", kind: "faith-worship-space", detail: "New amenity", decision: "confirm" },
+
+    // ── Geometry ───────────────────────────────────────────────────────────
+    {
+      id: "burgerking", name: "Burger King", type: "geometry", kind: "food-beverage-space",
+      similarity: 0.73,
+      detail: "Area & layout updated",
+      details: ["Geometry modified — similarity 0.73", "Area: 84 m² → 96 m²"],
+      decision: "confirm",
+    },
+    {
+      id: "ddfzone11", name: "DDF Zone 11", type: "geometry", kind: "retail-space",
+      similarity: 0.81,
+      detail: "Renamed & reshaped",
+      details: ['Name changed: from "DDF Zone 11" to "DDF Duty Free 11"', "Geometry modified — similarity 0.81"],
+      decision: "confirm",
+    },
+    {
+      // similarity 0.66 → below SIMILARITY_WARN, so riskOf() raises a low-confidence warning
+      id: "rostamani", name: "Al Rostamani Exchange", type: "geometry", kind: "service-space",
+      similarity: 0.66,
+      detail: "Geometry changed",
+      details: ["Geometry modified — similarity 0.66"],
+      decision: "confirm",
+    },
+    {
+      id: "nursery", name: "Nursery", type: "geometry", kind: "amenity-space",
+      similarity: 0.58,
+      detail: "Moved & renamed",
+      details: ['Name changed: from "Nursery" to "Baby Care Room"', "Geometry modified — similarity 0.58"],
+      decision: "confirm",
+    },
+    {
+      id: "visacancel", name: "Visa Cancellation Services", type: "geometry", kind: "service-space",
+      similarity: 0.79,
+      detail: "Area reduced",
+      details: ["Geometry modified — similarity 0.79", "Area: 31 m² → 22 m²"],
+      decision: "confirm",
+    },
+
+    // ── Metadata ───────────────────────────────────────────────────────────
+    {
+      id: "subway", name: "Subway", type: "metadata", kind: "food-beverage-space",
+      detail: 'Type: "Restaurant" → "Cafe"',
+      details: ['Type changed: from "Restaurant" to "Cafe"'],
+      decision: "flag",
+    },
+    {
+      id: "ahlan", name: "Dubai Ahlan Counter", type: "metadata", kind: "service-space",
+      detail: "Renamed",
+      details: ['Name changed: from "Dubai Ahlan Counter" to "Ahlan Services Desk"'],
+      decision: "flag",
+    },
+
+    // ── Removed ────────────────────────────────────────────────────────────
+    { id: "pharmacy", name: "DDF Pharmacy", type: "deleted", kind: "retail-space", detail: "Removed from floor plan", decision: "reject" },
+    { id: "wrapping", name: "Emirates Baggage Wrapping", type: "deleted", kind: "retail-space", detail: "Removed from floor plan", decision: "reject" },
+    { id: "dilizie", name: "Dilizie", type: "deleted", kind: "food-beverage-space", detail: "Removed from floor plan", decision: "reject" },
+    {
+      // US7: you deleted this once already; it is back in the source and has been removed again
+      id: "wrapmachine", name: "Wrapping Machine Area", type: "deleted", kind: "retail-space",
+      warning: "re-removed",
+      detail: "Removed from floor plan",
+      details: ["You removed this in Version 2", "Present in the new source, removed again"],
+      decision: "confirm",
+    },
+    { id: "ambulance", name: "Ambulance Services Room", type: "deleted", kind: "medical-space", detail: "Removed from floor plan", decision: "reject" },
+
+    // ── User overrides — your own dashboard edits, carried through untouched.
+    // No review action applies to these; they're shown so you can see they survived.
+    {
+      // US7: the source value moved underneath your rename — yours still stands, but you should know
+      id: "marhaba", name: "Marhaba Reception", type: "preserved", kind: "service-space",
+      warning: "source-conflict",
+      detail: "Your edit kept — source changed",
+      details: ['You renamed "Marhaba" to "Marhaba Reception"', 'Source now calls it "Marhaba Services"'],
+    },
+    {
+      id: "prm", name: "PRM Lounge  Reception", type: "preserved", kind: "service-space",
+      detail: "Your earlier edit — kept",
+      details: ['Type changed: from "Lounge" to "Assistance"'],
+    },
+    {
+      // US7: a manually added object that now collides with the new floor plan
+      id: "costaseating", name: "Costa Coffee Seating", type: "preserved", kind: "social-space",
+      warning: "clash",
+      detail: "Your edit kept — now overlaps",
+      details: ["You added this in Version 2", "Overlaps the new Costa Coffee unit"],
+    },
+    {
+      id: "ekcustoms", name: "EK & Customs Counter", type: "preserved", kind: "service-space",
+      detail: "Your earlier edit — kept",
+      details: ['Name changed: from "EK Customs" to "EK & Customs Counter"', "Geometry changed"],
+    },
+    {
+      // US7's third preservation warning. It was declared in WarningKind but never seeded, so
+      // "Outside the floor plan" could not appear on any screen (found 2026-08-11) — the new plan
+      // is a different shape, and something you added now sits off it.
+      id: "wrapdesk", name: "Wrapping Desk 2", type: "preserved", kind: "service-space",
+      warning: "out-of-bounds",
+      detail: "Your edit kept — now off the plan",
+      details: [
+        "You added this in Version 2",
+        "The new floor plan's boundary no longer covers it",
+      ],
+    },
+  ];
+}
+
+/**
+ * The weight that makes 62% believable — a wing remodel on top of everything the amber set
+ * already said (red ⊇ amber, so a story that grew from 30% to 62% stays recognisable). Every name
+ * below was harvested from B2's live vector tiles (2026-08-10), so every row still highlights.
+ *
+ * The eight check-in counters are the point: a real large update hits whole families of one
+ * object type — the report's "15 new meeting-room-chairs" case — and a bucket of 8 is what
+ * finally trips COLLAPSE_ABOVE, so the changelog shows a counted group instead of a flood.
+ */
+function redExtras(): Change[] {
+  return [
+    // ── New — the remodel's anchors ─────────────────────────────────────────
+    { id: "apm", name: "APM Station", type: "new", kind: "transit-space", detail: "New APM station", details: ["New automated people mover station", "Area: 1,240 m²"], decision: "confirm" },
+    { id: "prayerm", name: "Male Prayer Room", type: "new", kind: "faith-worship-space", detail: "New amenity", decision: "confirm" },
+    { id: "nbd", name: "Emirates NBD", type: "new", kind: "service-space", detail: "New bank branch", decision: "confirm" },
+
+    // ── Geometry — the check-in row rebuilt (collapses: 8 of one kind) ─────
+    { id: "bagdrop1", name: "Bag Drop Check-in 1", type: "geometry", kind: "check-in-counter", similarity: 0.55, detail: "Rebuilt", details: ["Geometry modified — similarity 0.55"], decision: "confirm" },
+    { id: "baggagedrop", name: "Baggage Drop", type: "geometry", kind: "check-in-counter", similarity: 0.58, detail: "Rebuilt", details: ["Geometry modified — similarity 0.58"], decision: "confirm" },
+    { id: "ekexpress", name: "Emirates F&J Express Check-in Counter", type: "geometry", kind: "check-in-counter", similarity: 0.63, detail: "Rebuilt", details: ["Geometry modified — similarity 0.63"], decision: "confirm" },
+    { id: "ektickets", name: "Emirates Ticket Sales Counters", type: "geometry", kind: "check-in-counter", similarity: 0.72, detail: "Rebuilt", details: ["Geometry modified — similarity 0.72"], decision: "confirm" },
+    { id: "ekticketing", name: "Emirates Ticketing Counter", type: "geometry", kind: "check-in-counter", similarity: 0.76, detail: "Rebuilt", details: ["Geometry modified — similarity 0.76"], decision: "confirm" },
+    { id: "excessbag", name: "Excess Baggage Cashier", type: "geometry", kind: "check-in-counter", similarity: 0.81, detail: "Rebuilt", details: ["Geometry modified — similarity 0.81"], decision: "confirm" },
+    { id: "fbcheckin", name: "First and Business Class Check-in", type: "geometry", kind: "check-in-counter", similarity: 0.84, detail: "Rebuilt", details: ["Geometry modified — similarity 0.84"], decision: "confirm" },
+    { id: "checkin", name: "Check-in", type: "geometry", kind: "check-in-counter", similarity: 0.88, detail: "Rebuilt", details: ["Geometry modified — similarity 0.88", "Area: 96 m² → 128 m²"], decision: "confirm" },
+
+    // ── Geometry — the two big floor movers ────────────────────────────────
+    { id: "foodcourt", name: "Food Court", type: "geometry", kind: "food-beverage-space", similarity: 0.52, detail: "Nearly doubled", details: ["Geometry modified — similarity 0.52", "Area: 310 m² → 540 m²"], decision: "confirm" },
+    { id: "entrancehall", name: "Entrance Hall", type: "geometry", kind: "circulation-space", similarity: 0.61, detail: "Reshaped", details: ["Geometry modified — similarity 0.61", "Reshaped around the new APM station"], decision: "confirm" },
+
+    // ── Metadata ───────────────────────────────────────────────────────────
+    { id: "umlounge", name: "Emirates Um Service Lounge", type: "metadata", kind: "service-space", detail: "Renamed", details: ['Name changed: from "Emirates Um Service Lounge" to "Emirates Unaccompanied Minors Lounge"'], decision: "confirm" },
+    { id: "workspace", name: "Work Space", type: "metadata", kind: "social-space", detail: 'Type: "Office" → "Co-working Space"', details: ['Type changed: from "Office" to "Co-working Space"'], decision: "confirm" },
+
+    // ── Removed — the east services cluster cleared ────────────────────────
+    { id: "police", name: "Police Reception & Corridor", type: "deleted", kind: "service-space", detail: "Removed from floor plan", details: ["Relocated off this floor in the new plan"], decision: "reject" },
+    { id: "paycabin", name: "Automatic Pay Machine Cabin", type: "deleted", kind: "service-space", detail: "Removed from floor plan", decision: "reject" },
+    { id: "valet", name: "Valet Parking Space", type: "deleted", kind: "transit-space", detail: "Removed from floor plan", decision: "reject" },
+
+    // ── User overrides ─────────────────────────────────────────────────────
+    {
+      id: "dilizieseating", name: "Dilizie Seating", type: "preserved", kind: "social-space",
+      detail: "Your edit kept — its unit was removed",
+      details: ["You added this seating in Version 2", "The unit it serves (Dilizie) is removed in this update"],
+    },
+  ];
+}
+
+/** The green (<20%) set: a quiet drift — a subset of the amber ids, so stories stay consistent. */
+const GREEN_IDS = new Set(["costa", "subway", "ahlan", "visacancel", "prm"]);
+
+/**
+ * The change set now matches the declared magnitude (Olcay, 2026-08-10: *"the content could match
+ * the declaration of 62% so it's a realistic use case"*): green reads like a drift, amber like a
+ * renovation, red like a remodel. The % itself is still seeded, not computed from these rows —
+ * that is D5, and it closes when the client-side diff lands. All three sets name only B2 features
+ * (D4), so the full red experience — list, groups and map highlights — is demoable on B2 via
+ * Restore or the upload cycle.
+ */
+export function seedChanges(band: MagnitudeBand): Change[] {
+  switch (band) {
+    case "minor":
+      return amberChanges().filter((c) => GREEN_IDS.has(c.id));
+    case "large":
+      return [...amberChanges(), ...redExtras()];
+    default:
+      return amberChanges();
+  }
+}
+
+export function seedDiff(magnitudePct = 30): DiffResult {
+  return { changes: seedChanges(magnitudeBand(magnitudePct)), magnitudePct };
+}
