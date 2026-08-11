@@ -22,9 +22,11 @@ import {
   RED_CAUSE_COPY,
   type Change,
   type Decision,
+  seedVersions,
   type MagnitudeBand,
   type RedCause,
 } from "../mock/diff";
+import { getLevelVersions, levelKey, setLevelVersions, setReviewOutcome } from "../mock/store";
 
 const LINE = "#e3e4e8";
 /** Stable identity — PointrMap re-posts whenever `changes` changes by reference. */
@@ -189,6 +191,40 @@ export function ManualReview({
   const activate = (id: string) => setActiveId((cur) => (cur === id ? null : id));
   /** Stable, so PointrMap doesn't re-subscribe its message listener on every render. */
   const onMapSelect = useCallback((id: string | null) => setActiveId(id), []);
+
+  /**
+   * Concluding the review — what Save leaves behind (Olcay, 2026-08-11: *"we need to show the
+   * flags once saved — on the map"*, and *"AI Mapping state should change too as the user
+   * concluded the review"*).
+   *
+   * Two writes, both to the store the editor already reads:
+   *
+   * 1. **The outcome**, so the flags survive. Decision 2 chose Flag over Edit on the promise that
+   *    you *"keep flagged items visible to edit later"* — and until now the decisions died with
+   *    the screen, so there was no later.
+   * 2. **The version's state**, because saving an eligible review *is* the publish (decision 5).
+   *    Amber concluded → published. Red cause B never auto-publishes (US5), so it only moves if
+   *    the fate strip's *Publish now* was used. A rejected version never gets here at all.
+   *
+   * Creation mode writes nothing: the wizard's review hands its rows back to the wizard, and the
+   * building isn't in the tree yet.
+   */
+  const concludeReview = () => {
+    if (creation || !target) return;
+    const key = levelKey(target.buildingId, target.index);
+    const versions = getLevelVersions(key, () => seedVersions(target.short, target.index, target.buildingId));
+    const newest = versions[0];
+    if (!newest) return;
+    const published = fate === "published" || (!matchFailed && bandKind === "medium");
+    setReviewOutcome(key, {
+      versionN: newest.n,
+      decisions,
+      changes,
+      published,
+    });
+    if (published && newest.state !== "published")
+      setLevelVersions(key, [{ ...newest, state: "published" }, ...versions.slice(1)]);
+  };
 
   /**
    * Bring the lit row into view when the *map* drove the selection. Guarded on the row already
@@ -570,6 +606,7 @@ export function ManualReview({
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
             setConfirmOpen(false);
+            concludeReview();
             onClose?.();
           }}
         >

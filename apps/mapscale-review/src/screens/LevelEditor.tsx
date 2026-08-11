@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { getReviewOutcome, levelKey, subscribeReviews } from "../mock/store";
 import {
   Button,
   FieldWrapper,
@@ -438,6 +439,31 @@ export function LevelEditor({
     [level.buildingId, level.index],
   );
 
+  /**
+   * A concluded review for the version currently on screen (Olcay, 2026-08-11). Two things hang
+   * off it: the status card stops asking for a review that already happened, and the flagged
+   * changes come back onto this level's map — which is the whole promise decision 2 made when it
+   * chose Flag over Edit.
+   *
+   * Version-matched on purpose: a newer upload must not inherit an older review's conclusions.
+   */
+  const reviewOutcome = useSyncExternalStore(subscribeReviews, () =>
+    getReviewOutcome(levelKey(level.buildingId, level.index)),
+  );
+  const concluded = reviewOutcome && reviewOutcome.versionN === versions[0]?.n ? reviewOutcome : undefined;
+  /**
+   * Only the flagged ones. A confirmed change is applied and a rejected one is discarded — neither
+   * is unfinished business, and drawing all 22 again would say "still to review" when the point is
+   * that you're done. Memoised because PointrMap re-posts on identity.
+   */
+  const flagged: Change[] = useMemo(
+    () => (concluded ? concluded.changes.filter((c) => concluded.decisions[c.id] === "flag") : []),
+    [concluded],
+  );
+
+  /** Has anything in the metadata block been touched? Drives Done vs Update in the footer. */
+  const [metaDirty, setMetaDirty] = useState(false);
+
   const outcome = outcomeFor(run.pct, run.cause);
   const PHASE: Record<Exclude<Phase, "done">, { state: MapScaleState; note?: string; progress?: number; action?: string }> = {
     idle: { state: "completed" },
@@ -446,7 +472,35 @@ export function LevelEditor({
     mapping: { state: "in-progress", progress: 0.55, action: "Cancel" },
     expert: { state: "expert-review" },
   };
-  const card = phase === "done" ? outcome : PHASE[phase];
+  /**
+   * The card after the review is concluded. It must stop saying "Awaiting your review" with a
+   * Review button next to it — the user just finished doing that.
+   *
+   * It reports the two things they'd want to know afterwards: whether it went live, and what they
+   * left for later. The flag count is the honest bit — a review you concluded with three flags
+   * isn't finished business, and the card is where that belongs.
+   */
+  const reviewedCard = (): { state: MapScaleState; note: string; info?: string } | undefined => {
+    if (!concluded) return undefined;
+    const n = flagged.length;
+    const tail = n ? ` · ${n} flagged for later` : "";
+    return concluded.published
+      ? { state: "published", note: `Published · reviewed by you${tail}` }
+      : {
+          state: "completed",
+          note: `Review complete · not published${tail}`,
+          info: "You concluded the review but this version hasn't been published. Publish it whenever you're ready.",
+        };
+  };
+  /** One shape for every source of the card, so the JSX stops probing it with `in` guards. */
+  const card: {
+    state: MapScaleState;
+    note?: string;
+    progress?: number;
+    action?: string;
+    primary?: string;
+    info?: string;
+  } = concluded ? reviewedCard()! : phase === "done" ? outcome : PHASE[phase];
   const running = phase === "queued" || phase === "validating" || phase === "mapping";
 
   /**
@@ -646,7 +700,14 @@ export function LevelEditor({
             Identifier. Uncontrolled on purpose: Update doesn't persist anything yet (D3).
             Editable under the expert hold — field edits merge, and the banner carries the warning.
           */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+          {/* One listener for the whole block rather than five: the fields are uncontrolled (D3 —
+              Update persists nothing yet), so this is only asking "did anything get touched?",
+              which is exactly what the footer button needs to know. */}
+          <div
+            onInput={() => setMetaDirty(true)}
+            onChange={() => setMetaDirty(true)}
+            style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}
+          >
             {/*
               Level Type is the sector list (Olcay, 2026-08-10), not free text: sector groups,
               sub-sector options, alphabetical with "Other" pinned last (PICKER_SECTORS).
@@ -762,14 +823,14 @@ export function LevelEditor({
             <div style={{ padding: "0 8px 8px" }}>
               <AiMappingStatus
                 state={card.state}
-                note={"note" in card ? card.note : undefined}
-                progress={"progress" in card ? card.progress : undefined}
-                action={"action" in card ? card.action : undefined}
+                note={card.note}
+                progress={card.progress}
+                action={card.action}
                 onAction={cancelRun}
-                primary={"primary" in card ? card.primary : undefined}
+                primary={card.primary}
                 onPrimary={() => onReview(run.pct, run.cause)}
                 /* the slot explains what offers no action: the hold, or cause C's error details */
-                info={expertHold ? EXPERT_HOLD.what : "info" in card ? card.info : undefined}
+                info={expertHold ? EXPERT_HOLD.what : card.info}
               />
               {/* under the hold or mid-run the button stays visible, disabled with its reason */}
               <span data-tour="upload" title={uploadReason} style={{ display: "block", marginTop: 8 }}>
@@ -824,13 +885,25 @@ export function LevelEditor({
         >
           {/* Cancel became the header's ✕ (Olcay, 2026-08-10 evening); saving field edits is
               allowed under the hold — the banner already carries the risk */}
-          <Button onClick={onCancel}>Update</Button>
+          {/*
+            **Done, not Update, when nothing is dirty** (Olcay, 2026-08-11: *"so that we don't need
+            to update as we've just saved the review"*). Coming back from a concluded review, the
+            only thing left to do on this screen is leave it — and a button called Update invites
+            you to wonder what is still unsaved. It becomes Update the moment a metadata field is
+            touched.
+
+            **Still the primary** (Olcay, same day): it is demoted in *meaning*, not in weight —
+            Done is the way out of the screen and the only action in the footer, so a secondary
+            treatment just made the panel look like it had nothing to offer.
+          */}
+          <Button onClick={onCancel}>{metaDirty ? "Update" : "Done"}</Button>
         </div>
       </div>
 
       <div style={{ position: "relative", flex: 1, background: "#EDEEF0", minWidth: 0 }}>
         <PointrMap
-          changes={NO_CHANGES}
+          /* the flags you left behind, and nothing else — see `flagged` */
+          changes={flagged.length ? flagged : NO_CHANGES}
           prefs={prefs}
           target={mapTarget}
           onBuildings={onBuildings}

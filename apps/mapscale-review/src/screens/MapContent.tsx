@@ -1,12 +1,20 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { Button, Icon, Input, Popover, PopoverTrigger, PopoverContent, Text } from "@kozmos/react";
 import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
-import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, expertReviewEnabled, isUnderExpertReview, type Change } from "../mock/diff";
+import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, expertReviewEnabled, isUnderExpertReview, seedVersions, type Change } from "../mock/diff";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { LevelSelector } from "../ui/LevelSelector";
 import { UploadDropConfirm } from "../ui/UploadDropConfirm";
-import { getCreatedBuildings, subscribeCreatedBuildings } from "../mock/store";
+import {
+  getCreatedBuildings,
+  getLevelVersions,
+  getReviewOutcome,
+  levelKey,
+  subscribeCreatedBuildings,
+  subscribeReviews,
+  getReviewCount,
+} from "../mock/store";
 import { CONCOURSE_A_ID, SITE_SNAPSHOT, T3_ID } from "../mock/site";
 
 /**
@@ -253,6 +261,42 @@ function levelTagsFor(buildingId: string, index: number): LevelTag[] | undefined
 }
 
 /**
+ * The tags a level wears *now*, seeds overridden by anything that has actually happened.
+ *
+ * A concluded review is the case that matters: the seeded tags say "Needs review · New version"
+ * forever, so reviewing B2 and coming back to the tree found it still asking to be reviewed —
+ * the same class of drift as the expert hold above, and exactly what §10's "the tree tag and the
+ * screen you land on must agree" rule exists to prevent. Once concluded, the level reports what
+ * it became: published, and whatever you left flagged.
+ */
+function liveTagsFor(buildingId: string, index: number, short: string): LevelTag[] | undefined {
+  const seeded = levelTagsFor(buildingId, index);
+  const key = levelKey(buildingId, index);
+  const outcome = getReviewOutcome(key);
+  if (!outcome) return seeded;
+  const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
+  if (!newest || newest.n !== outcome.versionN) return seeded;  // a newer upload supersedes it
+
+  const flags = Object.values(outcome.decisions).filter((d) => d === "flag").length;
+  const tags: LevelTag[] = [];
+  if (outcome.published)
+    tags.push({
+      kind: "auto-published",
+      label: "Published",
+      tone: "minor",
+      title: "You reviewed this version and it went live",
+    });
+  if (flags)
+    tags.push({
+      kind: "flagged",
+      label: `${flags} flagged`,
+      tone: "neutral",
+      title: `${flags} change${flags === 1 ? "" : "s"} flagged for a later dashboard edit`,
+    });
+  return tags.length ? tags : seeded;
+}
+
+/**
  * The tree is built from the SDK's own buildings and levels (via the map), so the tree, the
  * breadcrumb and the map can't disagree. `BUILDINGS` below is only the pre-load placeholder.
  */
@@ -417,7 +461,9 @@ function LevelRow({
    * but Expert Review has to be able to *disappear* when S5 turns the phase off, and no getter
    * removes an array element. `levelTagsFor` is cheap and the row already re-renders.
    */
-  const { shown: shownTags, hidden: hiddenTags } = resolveTags(levelTagsFor(buildingId, level.index));
+  const { shown: shownTags, hidden: hiddenTags } = resolveTags(
+    liveTagsFor(buildingId, level.index, level.short),
+  );
   const lockedByExperts = isUnderExpertReview(level.index, buildingId);
 
   return (
@@ -726,6 +772,9 @@ export function MapContent({
   // Wizard-created buildings ride the store so they survive navigation; their levels carry no
   // index-keyed tags — a just-created building has no update story yet.
   const created = useSyncExternalStore(subscribeCreatedBuildings, getCreatedBuildings);
+  // Concluding a review changes what the level's tags say — re-read when one lands. (Navigating
+  // back here remounts the screen anyway; this covers a review concluded in another surface.)
+  useSyncExternalStore(subscribeReviews, getReviewCount);
   const tree = [
     ...(buildings ?? BUILDINGS),
     ...created.map((b) => ({

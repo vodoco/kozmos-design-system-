@@ -8,7 +8,7 @@
  * uploads to levels whose editors aren't open finally have somewhere to live.
  */
 
-import type { LevelVersion } from "./diff";
+import type { Change, Decision, LevelVersion } from "./diff";
 
 export interface StoredLevel {
   index: number;
@@ -95,6 +95,56 @@ export function clearLevelVersions() {
   if (versionsByLevel.size === 0) return;
   versionsByLevel.clear();
   versionListeners.forEach((l) => l());
+}
+
+/* ── concluded reviews ────────────────────────────────────────────────────── */
+
+/**
+ * What a finished Manual Review leaves behind, per level.
+ *
+ * Until 2026-08-11 the decisions lived in `ManualReview`'s own state and **died the moment you
+ * saved** — you concluded a review, landed back on the level, and nothing anywhere remembered it.
+ * Which made the flag meaningless: decision 2 chose Flag over Edit precisely because *"flag now,
+ * keep flagged items visible to edit later"*, and there was no later.
+ *
+ * Keyed by level; `versionN` records which version was reviewed, so a newer upload doesn't inherit
+ * an older review's conclusions.
+ */
+export interface ReviewOutcome {
+  versionN: number;
+  decisions: Record<string, Decision | undefined>;
+  /** The changes exactly as reviewed — the editor draws the flagged ones on its own map. */
+  changes: Change[];
+  /** Did concluding it publish the level? (Amber does; red cause B only via Publish now.) */
+  published: boolean;
+}
+
+const reviews = new Map<string, ReviewOutcome>();
+const reviewListeners = new Set<() => void>();
+/**
+ * A counter, not `reviews.size` — re-reviewing the same level overwrites its entry and leaves the
+ * size unchanged, which `useSyncExternalStore` would read as "nothing happened".
+ */
+let reviewsVersion = 0;
+
+export function setReviewOutcome(key: string, outcome: ReviewOutcome) {
+  reviews.set(key, outcome);
+  reviewsVersion++;
+  reviewListeners.forEach((l) => l());
+}
+
+/** Snapshot for `useSyncExternalStore` — a primitive, so it's stable between writes. */
+export function getReviewCount(): number {
+  return reviewsVersion;
+}
+
+export function getReviewOutcome(key: string): ReviewOutcome | undefined {
+  return reviews.get(key);
+}
+
+export function subscribeReviews(fn: () => void): () => void {
+  reviewListeners.add(fn);
+  return () => reviewListeners.delete(fn);
 }
 
 /** Stable reference between mutations — what useSyncExternalStore requires of a snapshot. */
