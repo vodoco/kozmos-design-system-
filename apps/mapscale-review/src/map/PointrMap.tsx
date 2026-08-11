@@ -69,7 +69,13 @@ const PointrMap = forwardRef<PointrMapHandle, {
    * and the map correspond on EVERY level rather than only on the one the seeds were written for.
    */
   onFeatures?: (names: string[]) => void;
-}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, target }, handle) {
+  /**
+   * A decision taken on the map itself — the pinned card's ✓ / 🚩 / ✗ (Olcay, 2026-08-11). The
+   * map reports it and changes nothing; the app applies it and posts the result back down, so the
+   * centroid badge and the changelog row can never disagree about what you decided.
+   */
+  onDecision?: (id: string, decision: "confirm" | "flag" | "reject") => void;
+}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onDecision, target }, handle) {
   const ref = useRef<HTMLIFrameElement>(null);
   useImperativeHandle(handle, () => ({
     setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
@@ -85,7 +91,11 @@ const PointrMap = forwardRef<PointrMapHandle, {
       win.postMessage(
         {
           type: "changes",
-          changes: latest.current.changes.map(({ name, type, detail, decision }) => ({
+          // `id` rides along so the map can decide a change back at us (the pinned card's
+          // ✓ / 🚩 / ✗) — decisions are keyed by id, and a name can be re-pointed by
+          // `bindToFloor`, so name would be the wrong key even though it is the merge key here.
+          changes: latest.current.changes.map(({ id, name, type, detail, decision }) => ({
+            id,
             name,
             type,
             detail,
@@ -128,11 +138,14 @@ const PointrMap = forwardRef<PointrMapHandle, {
       } else if (ev.data.type === "filedrop" && ev.data.name) {
         if (ev.source === ref.current?.contentWindow)
           onFileDrop?.({ name: ev.data.name, size: ev.data.size ?? 0 });
+      } else if (ev.data.type === "decision" && ev.data.id && ev.data.decision) {
+        // Compare renders two panes; only this one's iframe may decide for it.
+        if (ev.source === ref.current?.contentWindow) onDecision?.(ev.data.id, ev.data.decision);
       }
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [onLevel, onBuildings, onCamera, onFileDrop, onFeatures]);
+  }, [onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onDecision]);
 
   useEffect(send, [changes, prefs, target]);
   /**

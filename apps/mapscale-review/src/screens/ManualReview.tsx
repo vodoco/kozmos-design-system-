@@ -166,6 +166,19 @@ export function ManualReview({
   );
   const setOne = (id: string, d: Decision) => setDecisions((p) => ({ ...p, [id]: d }));
   /**
+   * The map's pinned card decides through the SAME function the list rows use (Olcay, 2026-08-11:
+   * *"I want to click on the markers on the map, see all options and change to something else"*).
+   * One store of decisions, two ways in — which is what keeps the centroid badge, the row's
+   * control and the tally from ever telling different stories.
+   *
+   * Stable identity: `PointrMap` re-subscribes when this changes, and an inline arrow would
+   * re-register the listener on every render.
+   */
+  const onMapDecision = useCallback(
+    (id: string, d: "confirm" | "flag" | "reject") => setOne(id, d as Decision),
+    [],
+  );
+  /**
    * Bulk decision — used by both a group header and a whole risk section.
    *
    * A flag is a deliberate "I've seen this, come back to it", so a bulk action never silently
@@ -544,7 +557,14 @@ export function ManualReview({
 
       {/* Map pane — live Pointr WebSDK map, highlights driven by the decisions above */}
       <div data-tour="review-map" style={{ position: "relative", flex: 1, background: "#EDEEF0", minWidth: 0 }}>
-        <PointrMap changes={changes} prefs={prefs} onLevel={onLevel} onFeatures={onFeatures} target={mapTarget} />
+        <PointrMap
+          changes={changes}
+          prefs={prefs}
+          onLevel={onLevel}
+          onFeatures={onFeatures}
+          onDecision={onMapDecision}
+          target={mapTarget}
+        />
         <MapChrome prefs={prefs} onPrefs={setPrefs} focus={!matchFailed} />
       </div>
     </div>

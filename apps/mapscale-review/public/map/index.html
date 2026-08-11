@@ -42,6 +42,22 @@
   #tip .t-decision { display: flex; align-items: center; gap: 6px; margin-top: 8px;
     padding-top: 8px; border-top: 1px solid #EEF0F3; }
 
+  /* Decide from the map (Olcay, 2026-08-11: "click on the markers, see all options and change to
+     something else"). The badge at the centroid already SAYS the decision; this is where you set
+     it. Only a PINNED card gets it — hover stays a preview, and a control that appears under a
+     moving cursor is one you can't hit. Interactive, so like the ✕ it opts back into pointer
+     events; the card itself stays click-through so it never blocks the map beneath.
+     The icon-only segmented control is the list's, deliberately: same three marks, same neutral
+     ink, same order (§3 — a decision is its own axis and never recolours the feature). */
+  #tip .t-actions { display: flex; gap: 4px; margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid #EEF0F3; pointer-events: auto; }
+  #tip .t-actions button { flex: 1; display: grid; place-items: center; height: 28px;
+    border: 1px solid #E7E9EE; border-radius: 6px; background: #fff; cursor: pointer; padding: 0;
+    color: #1F2328; }
+  #tip .t-actions button:hover { background: #F4F5F7; }
+  #tip .t-actions button[aria-pressed="true"] { background: #EEF0F3; border-color: #C7CAD1; }
+  #tip .t-actions button:focus-visible { outline: 2px solid #0b369c; outline-offset: 1px; }
+
   /* zoom control, bottom-right (Figma 2103:22178): two white squares, + over −. Sibling of #map
      on purpose — #map swallows clicks in the capture phase (see below), so buttons inside it
      would never hear their own click. */
@@ -581,7 +597,13 @@ function renderTip() {
   tip.appendChild(div("t-name", c.name));
   if (c.detail) tip.appendChild(div("t-detail", c.detail));
 
-  if (c.decision) {
+  // Pinned → decide here. Hovering → just report what the decision currently is.
+  //
+  // `preserved` is skipped in both directions, the same rule the list's rows follow: a user
+  // override is carried through untouched, so there is no decision to make on it.
+  if (SELECTED === c && c.type !== "preserved") {
+    tip.appendChild(decisionControl(c));
+  } else if (c.decision) {
     const row = div("t-decision");
     row.appendChild(drawBadgeGlyph(c.decision));
     row.appendChild(div(null, DECISION_LABEL[c.decision]));
@@ -618,6 +640,35 @@ function positionTip() {
   tip.classList.toggle("below", flip);
   tip.style.left = map.project(hit.centroid).x + "px";
   tip.style.top = (flip ? bottom : top) + "px";
+}
+
+/**
+ * The pinned card's ✓ / 🚩 / ✗ control — the map's half of "the list and the map are one thing".
+ *
+ * It reports the click upward rather than mutating `CHANGES` locally, because the app owns the
+ * diff: `ManualReview` holds the decisions (keyed by id), and its next `changes` post is what
+ * re-renders this card and the centroid badge. Deciding locally would work right up until the two
+ * disagreed, which is the failure this whole protocol is arranged to prevent.
+ */
+function decisionControl(c) {
+  const row = div("t-actions");
+  [
+    ["confirm", "Confirm"],
+    ["flag", "Flag for later"],
+    ["reject", "Reject"],
+  ].forEach(([kind, label]) => {
+    const b = document.createElement("button");
+    b.setAttribute("aria-pressed", String(c.decision === kind));
+    b.setAttribute("aria-label", label);
+    b.title = label;                       // the only label an icon-only control has
+    b.appendChild(drawBadgeGlyph(kind));
+    b.addEventListener("click", (ev) => {
+      ev.stopPropagation();                // else the map's own handler unpins the card
+      post("decision", { id: c.id, name: c.name, decision: kind });
+    });
+    row.appendChild(b);
+  });
+  return row;
 }
 
 // the ✓ / 🚩 / ✗ mark on its own, for the tooltip's decision row
