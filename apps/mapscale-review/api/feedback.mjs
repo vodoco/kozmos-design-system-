@@ -13,6 +13,19 @@
  * saving in the same second could lose one note. For a design review that is the right trade —
  * anything stronger means a real database.
  *
+ * ⚠️ **Read-after-write is NOT immediate** (measured against production, 2026-08-11 — this is the
+ * sharper half of "last-write-wins" and worth stating separately). The blob listing is eventually
+ * consistent, so a request issued moments after a write can still see the previous list. Two
+ * concrete consequences, both observed:
+ *
+ *   1. Editing or resolving a note **immediately** after posting it can answer `no such note`.
+ *   2. A write built on a stale read **reverts** the writes it didn't see — a delete issued right
+ *      after an edit + resolve resurrected the note with its original text.
+ *
+ * A second or two apart, everything behaves. The client handles the visible half by re-reading
+ * whenever a patch or delete fails, so a stale answer shows the truth instead of a dead button;
+ * the silent-revert half is inherent to last-write-wins and needs a real database to fix.
+ *
  * Needs `BLOB_READ_WRITE_TOKEN`, which appears when a Blob store is connected to the project.
  * Without it every route answers 501 and the client quietly falls back to local-only notes.
  */

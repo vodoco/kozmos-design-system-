@@ -234,6 +234,7 @@ export function FeedbackLayer({
         });
         const data = await res.json();
         if (res.ok) setNotes(data.notes);
+        else await refresh();      // same reason as patch(): show reality, not a no-op
       } finally {
         setBusy(false);
       }
@@ -258,7 +259,11 @@ export function FeedbackLayer({
           body: JSON.stringify({ updateId: id, ...body, by: author.trim() }),
         });
         const data = await res.json();
+        // A failed patch must not look like a dead button. The store is eventually consistent, so
+        // a write issued moments after another can be told "no such note" — re-read and show the
+        // truth rather than leaving the UI silently unchanged. See api/feedback.mjs.
         if (res.ok) setNotes(data.notes);
+        else await refresh();
       } finally {
         setBusy(false);
       }
