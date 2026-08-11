@@ -181,11 +181,20 @@ let SELECTED = null, HOVERED = null;
  */
 let PENDING_ACTIVE = null;
 /**
- * Which change was pressed, and where. Captured on `pointerdown` (which always lands on a live
- * path) and consumed by the SVG's delegated `click` — see the listener on the shapes for why a
- * per-path `click` cannot be trusted.
+ * Where the press landed, so a release can tell a tap from a pan.
+ *
+ * Recorded from a **document-level capture** listener rather than from the shape, because the
+ * mousedown does not reliably target the shape — MapLibre's drag-pan handler is in the way, and
+ * `redraw()` may have replaced the path between the pointer arriving and the button going down.
+ * We don't care what it targeted; we only care where it was.
  */
-let PENDING_HIT = null, PENDING_AT = null;
+let DOWN_AT = null;
+
+/** A release counts as a tap if the pointer barely moved since the press. Shapes sit over a
+    draggable map, so pressing on a unit to pan must not select it. */
+function isTap(ev) {
+  return !!DOWN_AT && Math.hypot(ev.clientX - DOWN_AT[0], ev.clientY - DOWN_AT[1]) <= 4;
+}
 const shown = () => SELECTED || HOVERED;
 let RESOLVED = [];                 // [{ change, rings:[[lnglat,…]], centroid:[lng,lat] }]
 // Greyscale is the *review* mode — a level being edited or simply viewed stays in full colour.
@@ -580,22 +589,33 @@ function redraw() {
       path.addEventListener("mouseenter", () => hover(change));
       path.addEventListener("mouseleave", () => hover(null));
       /**
-       * **Not a `click` listener, deliberately.**
+       * **Selection hangs off `mouseup`, not `click` or `pointerdown`.** This is the third attempt
+       * and the first one built on evidence; the previous two were built on what *ought* to work.
        *
-       * `redraw()` wipes and rebuilds every path (see the top of this function) and runs on every
-       * render frame, because MapLibre renders continually for symbol fades. A real click is
-       * mousedown + mouseup on the *same* element — so if a frame lands between the press and the
-       * release, the path you pressed no longer exists and the browser dispatches `click` on the
-       * nearest common ancestor, the SVG, where a per-path listener can never see it. The shape
-       * simply didn't respond, intermittently and unreproducibly (Olcay: *"click still doesn't
-       * make a feature selected"*).
+       * Instrumenting a real click on a shape produces exactly this:
        *
-       * `pointerdown` is a single event that always lands on a live path, so it records WHAT was
-       * pressed; the delegated handler on the SVG decides what to do with it.
+       *     mouseover → path.hit          (hover works)
+       *     mousedown → #hl               (the SVG, NOT the path)
+       *     pointerup → path.hit
+       *     mouseup   → path.hit
+       *                                   (no `click` event, ever)
+       *
+       * Two independent reasons a `click` never arrives. `redraw()` wipes and rebuilds every path
+       * on every render frame — MapLibre renders continually for symbol fades — so the press and
+       * the release resolve to different nodes and the browser has no single element to fire
+       * `click` on; and MapLibre's own drag-pan handler consumes the mousedown. `pointerdown`
+       * isn't delivered to the path either.
+       *
+       * `mouseup` *is* delivered, on whatever path occupies that spot at release — which is the
+       * same change, since it's the same geometry redrawn. So the closure is still correct.
+       *
+       * ⚠️ This is why synthetic `dispatchEvent(new MouseEvent('click'))` must never be trusted to
+       * verify this: it fires by fiat an event the real browser never produces here.
        */
-      path.addEventListener("pointerdown", ev => {
-        PENDING_HIT = change;
-        PENDING_AT = [ev.clientX, ev.clientY];
+      path.addEventListener("mouseup", ev => {
+        if (!isTap(ev)) return;          // a press that travelled is a pan, not a selection
+        ev.stopPropagation();
+        select(change);
       });
       svg.appendChild(path);
     });
@@ -1172,16 +1192,30 @@ function start() {
   });
   // The SDK treats a map click as wayfinding navigation — clicking anywhere on the building
   // footprint re-focuses and zooms to it, which is hostile in a review pane. Swallow the click in
-  // the capture phase before MapLibre's own listener sees it (mousedown/move still pan and zoom),
-  // and use it to dismiss the tooltip. Overriding uiController.MapView_onMapClicked does NOT work —
-  // the SDK registered the original function by reference.
-  document.getElementById("map").addEventListener("click", ev => {
-    ev.stopPropagation();
-    // clicking the ✕ (or anything inside the tip) is the tip's own business
-    if (tip.contains(ev.target)) return;
-    if (SELECTED) select(SELECTED);
-    if (HOVERED) hover(null);
-  }, true);
+  // the capture phase before MapLibre's own listener sees it (mousedown/move still pan and zoom).
+  // Overriding uiController.MapView_onMapClicked does NOT work — the SDK registered the original
+  // function by reference. Dismissal is NOT done here: over the shapes a `click` is never produced
+  // at all (see the shapes' mouseup listener), so it happens on mouseup below.
+  document.getElementById("map").addEventListener("click", ev => { ev.stopPropagation(); }, true);
+
+  /**
+   * Press and release, the only two mouse events this map can rely on.
+   *
+   * The press is recorded wherever it lands — its target is not trustworthy — and the release
+   * decides. A shape's own `mouseup` selects it (see `redraw`); this one handles the other half:
+   * releasing on bare map dismisses a pinned card, which is the "click out" exit.
+   */
+  document.addEventListener("mousedown", ev => { DOWN_AT = [ev.clientX, ev.clientY]; }, true);
+  document.addEventListener("mouseup", ev => {
+    const onShape = !!(ev.target && ev.target.classList && ev.target.classList.contains("hit"));
+    const inTip = tip.contains(ev.target);
+    const tap = isTap(ev);
+    DOWN_AT = null;                      // consumed either way
+    // a shape handles its own release, and the card's controls handle theirs
+    if (!tap || onShape || inTip) return;
+    if (SELECTED) select(SELECTED);      // click out — dismiss
+    else if (HOVERED) hover(null);
+  });
 
   // Zoom control (Figma 2103:22178). MapLibre's own eased zoom; no-ops until the map exists.
   document.getElementById("zoomin").addEventListener("click", () => { if (map) map.zoomIn(); });
@@ -1197,28 +1231,6 @@ function start() {
    * `#tip` and `#hl` are siblings of `#map`, so each needs its own listener: a `mousemove` on
    * `#map` fires only over *bare* map and never sees the card or the shapes.
    */
-  /**
-   * Selecting a shape, delegated to the SVG because the shapes themselves are transient.
-   *
-   * The SVG element is stable — `redraw()` empties it but never replaces it — so a click always
-   * reaches here, whether it landed on the original path, its replacement, or (when a frame fell
-   * between press and release) on the SVG itself. `PENDING_HIT` carries the identity from the
-   * pointerdown that started it.
-   *
-   * The distance check separates a click from a drag: the shapes sit over a pannable map, and
-   * pressing on a unit to drag the map should move the map, not select the unit.
-   */
-  document.getElementById("hl").addEventListener("click", ev => {
-    const hit = PENDING_HIT, at = PENDING_AT;
-    PENDING_HIT = null; PENDING_AT = null;
-    if (!hit) return;
-    if (at && Math.hypot(ev.clientX - at[0], ev.clientY - at[1]) > 4) return;   // that was a pan
-    ev.stopPropagation();
-    select(hit);
-  });
-  // a press that wandered off and released elsewhere shouldn't leave a live pending selection
-  window.addEventListener("pointerup", () => { setTimeout(() => { PENDING_HIT = null; PENDING_AT = null; }, 0); });
-
   const mapEl = document.getElementById("map");
   mapEl.addEventListener("mousemove", ev => endHoverUnless(ev.target));
   // leaving the map for the panel, the chrome, or another window — the case that used to strand
