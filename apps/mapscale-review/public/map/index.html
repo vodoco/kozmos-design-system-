@@ -18,6 +18,10 @@
   /* the overlay ignores the pointer, but the change shapes themselves take it back so they're
      clickable without stealing pan/zoom anywhere else */
   #hl .hit { pointer-events: auto; cursor: pointer; }
+  /* A cluster is clickable too, and `#hl` is `pointer-events: none` — so like `.hit` it has to opt
+     back in, or the bubble is painted but nothing can ever hit it (2026-08-11: it silently didn't
+     zoom, exactly the trap `#tip` hit before it). */
+  #hl .cluster { pointer-events: auto; cursor: zoom-in; }
 
   /* The card takes the pointer, because it carries the decision control (Olcay, 2026-08-11:
      "how do we change the flags?" — it used to be `pointer-events: none`, so a hover card could
@@ -582,6 +586,7 @@ function redraw() {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const P = c => map.project(c);
   const f = fillFactor();
+  const marks = [];
   RESOLVED.forEach(({ change, rings, centroid }) => {
     const fill = COLORS[change.type];
     const line = LINE[change.type];
@@ -627,9 +632,94 @@ function redraw() {
     // the ✓ / 🚩 / ✗ mark at the feature's centroid. Keyed on the decision alone — which is what
     // lets a FLAGGED user override show its mark here like any other flag (2026-08-11); the
     // comment used to claim preserved was skipped, and it never was.
-    if (change.decision) { const p = P(centroid); svg.appendChild(drawBadge(p.x, p.y, change.decision)); }
+    // Collected rather than drawn here, so overlapping marks can cluster — see drawMarks().
+    if (change.decision) { const p = P(centroid); marks.push({ x:p.x, y:p.y, change, centroid }); }
   });
+  drawMarks(marks);
   positionTip();
+}
+
+/**
+ * How close two marks must be, in SCREEN pixels, to become one cluster.
+ *
+ * Screen space is the right space for this: "too crowded to read" is a fact about pixels, not
+ * metres, so the same threshold behaves correctly at every zoom and the cluster dissolves on its
+ * own as you zoom in. It also costs nothing — `redraw()` has already projected every centroid.
+ * A badge is 22px across, so 34 leaves a little air before two of them are judged to collide.
+ */
+const CLUSTER_PX = 34;
+
+/**
+ * Draw the decision marks, grouping any that would overlap (Olcay, 2026-08-11: *"can we make a
+ * cluster for the diffs on the map?"*).
+ *
+ * Greedy single-pass grouping: walk the marks, and for each ungrouped one absorb every other
+ * ungrouped mark within `CLUSTER_PX`. Good enough for tens of marks and stable frame to frame,
+ * which matters more here than perfect clustering — a group that reshuffles between frames would
+ * shimmer, since this runs on every render.
+ *
+ * A cluster keeps its decision colour when the whole group agrees, and falls back to neutral ink
+ * when it doesn't — so a bubble reading green is genuinely "5 confirmed", not "5 things".
+ */
+function drawMarks(marks) {
+  const used = new Array(marks.length).fill(false);
+  for (let i = 0; i < marks.length; i++) {
+    if (used[i]) continue;
+    used[i] = true;
+    const group = [marks[i]];
+    for (let j = i + 1; j < marks.length; j++) {
+      if (used[j]) continue;
+      const dx = marks[j].x - marks[i].x;
+      const dy = marks[j].y - marks[i].y;
+      if (dx * dx + dy * dy <= CLUSTER_PX * CLUSTER_PX) { used[j] = true; group.push(marks[j]); }
+    }
+    if (group.length === 1) svg.appendChild(drawBadge(marks[i].x, marks[i].y, marks[i].change.decision));
+    else svg.appendChild(drawCluster(group));
+  }
+}
+
+/** One bubble standing for N overlapping marks; click it to zoom until they separate. */
+function drawCluster(group) {
+  const cx = group.reduce((n, m) => n + m.x, 0) / group.length;
+  const cy = group.reduce((n, m) => n + m.y, 0) / group.length;
+  const kinds = new Set(group.map(m => m.change.decision));
+  const col = kinds.size === 1 ? decisionInk([...kinds][0]) : INK;
+  const r = Math.min(20, 12 + group.length);
+
+  const g = el("g", { class:"cluster" });
+  // a soft halo, so a cluster reads as "several" at a glance rather than as a bigger badge
+  g.appendChild(el("circle", { cx, cy, r: r + 4, fill: col, "fill-opacity": 0.18 }));
+  g.appendChild(el("circle", { cx, cy, r, fill:"#fff", stroke: col, "stroke-width": 2 }));
+  const t = el("text", { x: cx, y: cy + 4, "text-anchor":"middle", fill: col,
+                         "font-size": 12, "font-weight": 700, "font-family":"inherit" });
+  t.textContent = String(group.length);
+  g.appendChild(t);
+  g.appendChild(el("title", {})).textContent =
+    `${group.length} changes here — click to zoom in`;
+
+  // mouseup, not click: same reason the shapes use it — redraw() rebuilds these nodes every frame,
+  // so press and release land on different elements and no click is ever produced.
+  g.addEventListener("mouseup", ev => {
+    if (!isTap(ev)) return;
+    ev.stopPropagation();
+    zoomToGroup(group);
+  });
+  return g;
+}
+
+/** Frame a cluster's features so they stop overlapping. */
+function zoomToGroup(group) {
+  const lngs = group.map(m => m.centroid[0]);
+  const lats = group.map(m => m.centroid[1]);
+  const w = Math.max(...lngs) - Math.min(...lngs);
+  const h = Math.max(...lats) - Math.min(...lats);
+  // Stacked centroids have no extent to fit — fitBounds would slam to max zoom, so step in instead.
+  if (w < 1e-7 && h < 1e-7) {
+    map.easeTo({ center: group[0].centroid, zoom: Math.min(map.getZoom() + 2, 21), duration: 450 });
+    return;
+  }
+  map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
+                { padding: 120, maxZoom: 20, duration: 450 });
 }
 
 /* ── selection tooltip ──────────────────────────────────────────────────── */
