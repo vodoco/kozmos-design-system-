@@ -1207,12 +1207,18 @@ function start() {
    */
   document.addEventListener("mousedown", ev => { DOWN_AT = [ev.clientX, ev.clientY]; }, true);
   document.addEventListener("mouseup", ev => {
-    const onShape = !!(ev.target && ev.target.classList && ev.target.classList.contains("hit"));
-    const inTip = tip.contains(ev.target);
     const tap = isTap(ev);
     DOWN_AT = null;                      // consumed either way
-    // a shape handles its own release, and the card's controls handle theirs
-    if (!tap || onShape || inTip) return;
+    /**
+     * Dismiss only on a release **on the map itself**, stated positively.
+     *
+     * The first version excluded shapes and the card and dismissed on everything else — which
+     * silently included the zoom buttons, so zooming with a card pinned would close it. `#hl`
+     * (the shapes) and `#tip` and `#zoomctl` are all siblings of `#map`, so asking "is the
+     * release inside #map?" excludes every one of them by construction, and keeps excluding any
+     * chrome added later.
+     */
+    if (!tap || !document.getElementById("map").contains(ev.target)) return;
     if (SELECTED) select(SELECTED);      // click out — dismiss
     else if (HOVERED) hover(null);
   });
