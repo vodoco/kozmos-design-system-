@@ -92,7 +92,7 @@ export function ChangeGroupBlock({
   onDecideGroup,
 }: {
   group: ChangeGroup;
-  onDecideOne: (id: string, d: Decision) => void;
+  onDecideOne: (id: string, d: Decision | undefined) => void;
   onDecideGroup: (ids: string[], d: Decision) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -159,7 +159,7 @@ export function ChangeGroupBlock({
             <ChangeReviewRow
               key={c.id}
               change={c}
-              readOnly={c.type === "preserved"}
+              override={c.type === "preserved"}
               onDecide={(d) => onDecideOne(c.id, d)}
             />
           ))}

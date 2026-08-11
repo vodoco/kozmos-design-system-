@@ -52,14 +52,29 @@ const ACTIONS: { value: Decision; label: string }[] = [
 export function ChangeReviewRow({
   change,
   onDecide,
-  readOnly,
+  override,
   active,
   onActivate,
 }: {
   change: Change;
-  onDecide: (d: Decision) => void;
-  /** Preserved features are carried through untouched — there is no decision to make on them. */
-  readOnly?: boolean;
+  /** `undefined` clears the decision — how a user override returns to its resting "Kept". */
+  onDecide: (d: Decision | undefined) => void;
+  /**
+   * A user override — carried through untouched, so there is no *change* to confirm or reject.
+   *
+   * It used to be `readOnly` and render the bare word "Kept" (Olcay, 2026-08-11: *"maybe we should
+   * allow flagging the user overrides too?"* — and he is right; this is the missing half of US7).
+   * The warned ones are precisely the rows you need to come back to — an override that now
+   * **overlaps** the new content, or that the new floor-plan's boundary **no longer covers**, or
+   * whose **source value moved underneath it** — and "Kept" was a statement with no affordance,
+   * the same gap D17 names for re-removals.
+   *
+   * **Flag only, and deliberately so.** Confirm would be a no-op: it is already kept. Reject would
+   * mean discarding your own earlier work, which is a destructive act and must not be a ✗ in a
+   * triage list next to twenty ordinary rows. So an override has two states — kept, and kept but
+   * flagged — and flagging one now carries it onto the editor's map like any other flag.
+   */
+  override?: boolean;
   /** This is the change the map is showing — the two surfaces share one selection. */
   active?: boolean;
   /** Clicking the row anywhere but the decision control makes it the active one. */
@@ -67,6 +82,39 @@ export function ChangeReviewRow({
 }) {
   const accent = changeAccent(change);
   const warning = warningOf(change);
+  /** A user override's two states: kept, and kept but flagged to come back to. */
+  const overrideItems = [
+    {
+      value: "confirm",
+      label: (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span aria-label="Keep as it is" style={{ fontSize: 12, color: DECISION_INK, padding: "0 2px" }}>
+              Kept
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Keep your edit as it is</TooltipContent>
+        </Tooltip>
+      ),
+    },
+    {
+      value: "flag",
+      label: (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              role="img"
+              aria-label="Flag for later"
+              style={{ display: "grid", placeItems: "center", color: DECISION_INK }}
+            >
+              <DecisionGlyph kind="flag" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Flag for later</TooltipContent>
+        </Tooltip>
+      ),
+    },
+  ];
   const items = ACTIONS.map((a) => ({
     value: a.value,
     label: (
@@ -173,8 +221,22 @@ export function ChangeReviewRow({
       {/* Deciding is not selecting: without this, every ✓ would also fly the map to that feature,
           and working down the list would become a slideshow. */}
       <div style={{ flex: "0 0 auto" }} onClick={(e) => e.stopPropagation()}>
-        {readOnly ? (
-          <span style={{ fontSize: 12, color: "var(--review-muted)" }}>Kept</span>
+        {override ? (
+          /*
+            "Kept" stays a word rather than becoming a ✓, because it is the row's *status* and
+            people read it as one — and because ✓ means "apply this change", which is not what is
+            happening here. It is a segment now instead of a label, so it doubles as the way back
+            out of a flag: within a review you un-flag by picking Kept again.
+          */
+          <SegmentedControl
+            items={overrideItems}
+            /* "Kept" is the resting state, so it is SHOWN selected while the row carries no
+               decision at all — and picking it clears back to none rather than writing `confirm`.
+               Recording a decision here would put a ✓ badge on the map for a feature that was
+               never in question; five overrides would all sprout marks meaning "still kept". */
+            value={change.decision === "flag" ? "flag" : "confirm"}
+            onValueChange={(v) => onDecide(v === "flag" ? "flag" : undefined)}
+          />
         ) : (
           <SegmentedControl
             items={items}

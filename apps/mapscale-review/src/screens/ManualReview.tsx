@@ -216,7 +216,7 @@ export function ManualReview({
     () => (target?.buildingId ? { building: target.buildingId, level: target.index } : undefined),
     [target?.buildingId, target?.index],
   );
-  const setOne = (id: string, d: Decision) => setDecisions((p) => ({ ...p, [id]: d }));
+  const setOne = (id: string, d: Decision | undefined) => setDecisions((p) => ({ ...p, [id]: d }));
   /**
    * The map's pinned card decides through the SAME function the list rows use (Olcay, 2026-08-11:
    * *"I want to click on the markers on the map, see all options and change to something else"*).
@@ -227,7 +227,7 @@ export function ManualReview({
    * re-register the listener on every render.
    */
   const onMapDecision = useCallback(
-    (id: string, d: "confirm" | "flag" | "reject") => setOne(id, d as Decision),
+    (id: string, d: "confirm" | "flag" | "reject" | null) => setOne(id, d ?? undefined),
     [],
   );
 
@@ -718,7 +718,7 @@ export function ManualReview({
                   <ChangeReviewRow
                     key={c.id}
                     change={c}
-                    readOnly={c.type === "preserved"}
+                    override={c.type === "preserved"}
                     onDecide={(d) => setOne(c.id, d)}
                     active={activeId === c.id}
                     onActivate={() => activate(c.id)}

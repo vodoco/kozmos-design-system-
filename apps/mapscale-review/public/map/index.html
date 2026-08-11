@@ -619,7 +619,9 @@ function redraw() {
       });
       svg.appendChild(path);
     });
-    // action badge (skip for preserved / no decision)
+    // the ✓ / 🚩 / ✗ mark at the feature's centroid. Keyed on the decision alone — which is what
+    // lets a FLAGGED user override show its mark here like any other flag (2026-08-11); the
+    // comment used to claim preserved was skipped, and it never was.
     if (change.decision) { const p = P(centroid); svg.appendChild(drawBadge(p.x, p.y, change.decision)); }
   });
   positionTip();
@@ -721,16 +723,11 @@ function renderTip() {
   // hit; a hover card is actually stationary above its shape and the container-level mousemove
   // keeps it alive while you're over it, so the only thing pinned-only bought was a step.
   //
-  // `preserved` is skipped, the same rule the list's rows follow: a user override is carried
-  // through untouched, so there is no decision to make on it — it keeps the read-only line.
-  if (c.type !== "preserved") {
-    tip.appendChild(decisionControl(c));
-  } else if (c.decision) {
-    const row = div("t-decision");
-    row.appendChild(drawBadgeGlyph(c.decision));
-    row.appendChild(div(null, DECISION_LABEL[c.decision]));
-    tip.appendChild(row);
-  }
+  // A user override gets the SAME two options the list gives it (Olcay, 2026-08-11) — kept, or
+  // kept and flagged to come back to. Not the full three: there is no detected change to confirm,
+  // and rejecting your own earlier edit is a destructive act, not a triage button. This card used
+  // to offer overrides nothing at all, which would now disagree with the row beside it.
+  tip.appendChild(decisionControl(c, c.type === "preserved" ? OVERRIDE_ACTIONS : ALL_ACTIONS));
 
   // A pinned card outlives the cursor, so it needs its own way out (clicking the empty map or the
   // same shape also unpins). Hover cards don't get one — they die when the cursor leaves.
@@ -773,21 +770,36 @@ function positionTip() {
  * re-renders this card and the centroid badge. Deciding locally would work right up until the two
  * disagreed, which is the failure this whole protocol is arranged to prevent.
  */
-function decisionControl(c) {
+const ALL_ACTIONS = [
+  ["confirm", "Confirm"],
+  ["flag", "Flag for later"],
+  ["reject", "Reject"],
+];
+/** A user override is already kept; the only thing left to say is "come back to this". */
+const OVERRIDE_ACTIONS = [
+  ["confirm", "Keep as it is"],
+  ["flag", "Flag for later"],
+];
+
+function decisionControl(c, actions) {
   const row = div("t-actions");
-  [
-    ["confirm", "Confirm"],
-    ["flag", "Flag for later"],
-    ["reject", "Reject"],
-  ].forEach(([kind, label]) => {
+  const list = actions || ALL_ACTIONS;
+  // An override with no decision is still *kept* — that is its resting state, not an absence of
+  // one, so "Keep as it is" reads pressed until you flag it. Same rule as the list's segments.
+  const shown = list === OVERRIDE_ACTIONS ? (c.decision === "flag" ? "flag" : "confirm") : c.decision;
+  list.forEach(([kind, label]) => {
     const b = document.createElement("button");
-    b.setAttribute("aria-pressed", String(c.decision === kind));
+    b.setAttribute("aria-pressed", String(shown === kind));
     b.setAttribute("aria-label", label);
     b.title = label;                       // the only label an icon-only control has
     b.appendChild(drawBadgeGlyph(kind));
     b.addEventListener("click", (ev) => {
       ev.stopPropagation();                // else the map's own handler unpins the card
-      post("decision", { id: c.id, name: c.name, decision: kind });
+      // An override's "Keep as it is" CLEARS the decision rather than recording `confirm`: keeping
+      // it is what already happens, and recording it would badge the feature on the map for a
+      // change nobody proposed. The app decides; this only reports.
+      const value = list === OVERRIDE_ACTIONS && kind === "confirm" ? null : kind;
+      post("decision", { id: c.id, name: c.name, decision: value });
     });
     row.appendChild(b);
   });

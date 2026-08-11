@@ -74,7 +74,8 @@ const PointrMap = forwardRef<PointrMapHandle, {
    * map reports it and changes nothing; the app applies it and posts the result back down, so the
    * centroid badge and the changelog row can never disagree about what you decided.
    */
-  onDecision?: (id: string, decision: "confirm" | "flag" | "reject") => void;
+  /** `null` clears it — a user override returning to its resting "Kept" (2026-08-11). */
+  onDecision?: (id: string, decision: "confirm" | "flag" | "reject" | null) => void;
   /**
    * The change currently selected, shared with the changelog — one selection, two surfaces.
    * Setting it opens that feature's card and eases the camera onto it; `onSelect` reports the
@@ -146,7 +147,9 @@ const PointrMap = forwardRef<PointrMapHandle, {
       } else if (ev.data.type === "filedrop" && ev.data.name) {
         if (ev.source === ref.current?.contentWindow)
           onFileDrop?.({ name: ev.data.name, size: ev.data.size ?? 0 });
-      } else if (ev.data.type === "decision" && ev.data.id && ev.data.decision) {
+        // `"decision" in data`, not a truthiness test: `null` is a real value here — it clears a
+        // user override's flag — and a falsy guard would have swallowed exactly that message.
+      } else if (ev.data.type === "decision" && ev.data.id && "decision" in ev.data) {
         // Compare renders two panes; only this one's iframe may decide for it.
         if (ev.source === ref.current?.contentWindow) onDecision?.(ev.data.id, ev.data.decision);
       } else if (ev.data.type === "select") {
