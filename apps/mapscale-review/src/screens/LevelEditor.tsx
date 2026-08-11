@@ -450,7 +450,16 @@ export function LevelEditor({
   const reviewOutcome = useSyncExternalStore(subscribeReviews, () =>
     getReviewOutcome(levelKey(level.buildingId, level.index)),
   );
-  const concluded = reviewOutcome && reviewOutcome.versionN === versions[0]?.n ? reviewOutcome : undefined;
+  const forThisVersion =
+    reviewOutcome && reviewOutcome.versionN === versions[0]?.n ? reviewOutcome : undefined;
+  /** Finished. A part-way save is a different thing — see `inProgress`. */
+  const concluded = forThisVersion?.complete ? forThisVersion : undefined;
+  /**
+   * Saved part-way (Olcay, 2026-08-11). The level is still awaiting review and still counting down
+   * to its automatic publish — nothing about its state changed — so the card keeps saying so and
+   * keeps offering Review. It just adds how far you got, which is the only new fact.
+   */
+  const inProgress = forThisVersion && !forThisVersion.complete ? forThisVersion : undefined;
   /**
    * Only the flagged ones. A confirmed change is applied and a rejected one is discarded — neither
    * is unfinished business, and drawing all 22 again would say "still to review" when the point is
@@ -500,7 +509,24 @@ export function LevelEditor({
     action?: string;
     primary?: string;
     info?: string;
-  } = concluded ? reviewedCard()! : phase === "done" ? outcome : PHASE[phase];
+  } = concluded
+    ? reviewedCard()!
+    : phase === "done"
+      ? inProgress
+        ? // Same card and the same Review button — the review is unfinished, so the way back in
+          // has to stay. What changes is the promise: it is no longer counting down to a publish,
+          // it is being held out of one.
+          //
+          // Deliberately NOT "N of M reviewed": the seeds arrive pre-decided (so the demo has a
+          // populated tally), which made that counter read "18 of 18 reviewed" beside "Awaiting
+          // your review" after the user had touched two rows — a count of decided rows is not a
+          // count of *your* progress, and it claimed the job was done.
+          {
+            ...outcome,
+            note: `In review · ${run.pct}% of floor area · held from publishing until you complete it`,
+          }
+        : outcome
+      : PHASE[phase];
   const running = phase === "queued" || phase === "validating" || phase === "mapping";
 
   /**

@@ -60,7 +60,9 @@ export type LevelTagKind =
   | "expert-review"
   | "new-version"
   | "auto-published"
-  | "flagged";
+  | "flagged"
+  /** Saved part-way: held out of publishing until the review is completed (never "draft"). */
+  | "in-review";
 
 export interface LevelTag {
   kind: LevelTagKind;
@@ -87,6 +89,8 @@ const TAG_PRIORITY: Record<LevelTagKind, number> = {
   "new-version": 50,
   "auto-published": 40,
   flagged: 30,
+  // Above the band tags it suspends: a level being held cannot also be counting down.
+  "in-review": 95,
 };
 
 /**
@@ -99,6 +103,8 @@ const TAG_SUPERSEDES: Partial<Record<LevelTagKind, LevelTagKind[]>> = {
   "needs-decision": ["needs-review", "grace", "new-version"],
   grace: ["needs-review"],
   "auto-published": ["new-version"],
+  // The countdown is suspended while it's held, so showing it would contradict the hold.
+  "in-review": ["needs-review", "grace", "new-version"],
 };
 
 /** How many tags a row shows before the rest collapse into a count. */
@@ -276,6 +282,26 @@ function liveTagsFor(buildingId: string, index: number, short: string): LevelTag
   if (!outcome) return seeded;
   const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
   if (!newest || newest.n !== outcome.versionN) return seeded;  // a newer upload supersedes it
+
+  /**
+   * Saved part-way: the level is **held out of publishing** until the review is completed (Olcay,
+   * 2026-08-11 — *"it's in a certain state where it can't be included in publish"*). It keeps the
+   * review action, because the way back in has to stay, but it supersedes the countdown tags: a
+   * level being held cannot also be publishing in 6 days.
+   *
+   * The tone is neutral, not a band colour. Traffic-light is magnitude speaking (§10), and being
+   * held is not a magnitude — it is something *you* did.
+   */
+  if (!outcome.complete)
+    return [
+      {
+        kind: "in-review",
+        label: "In review",
+        tone: "neutral",
+        action: "review",
+        title: "You saved this review part-way. It won't publish — automatically or otherwise — until you complete it.",
+      },
+    ];
 
   const flags = Object.values(outcome.decisions).filter((d) => d === "flag").length;
   const tags: LevelTag[] = [];

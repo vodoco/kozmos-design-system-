@@ -26,7 +26,7 @@ import {
   type MagnitudeBand,
   type RedCause,
 } from "../mock/diff";
-import { getLevelVersions, levelKey, setLevelVersions, setReviewOutcome } from "../mock/store";
+import { getLevelVersions, getReviewOutcome, levelKey, setLevelVersions, setReviewOutcome } from "../mock/store";
 
 const LINE = "#e3e4e8";
 /** Stable identity — PointrMap re-posts whenever `changes` changes by reference. */
@@ -119,15 +119,35 @@ export function ManualReview({
    * counts down to an automatic publish (US4 — cancellable, or publish now); Red never publishes
    * itself but may be published at any time (US5). Local state only — persistence is Phase 2.
    */
-  const [fate, setFate] = useState<"pending" | "published" | "cancelled">("pending");
+  /**
+   * `held` = this review was saved part-way, so the level is out of publishing until it is
+   * completed (Olcay, 2026-08-11). Seeded on mount from the store, because reopening a held level
+   * must not greet you with "publishes automatically in 6 days" — that countdown is suspended, and
+   * saying otherwise would be the screen lying about the one thing it exists to tell you.
+   */
+  const [fate, setFate] = useState<"pending" | "published" | "cancelled" | "held">(() => {
+    if (creation || !target) return "pending";
+    const saved = getReviewOutcome(levelKey(target.buildingId, target.index));
+    return saved && !saved.complete ? "held" : "pending";
+  });
   /** Save asks first — the consequence lives in the v9 confirmation overlay, not in a caption. */
   const [confirmOpen, setConfirmOpen] = useState(false);
   // `preserved` is not a change to review — it carries no decision, and the group and section
   // controls filter it out themselves rather than the screen pre-computing a list.
   // keyed by id, so a rebind (which changes names, never ids) can't lose a decision
-  const [decisions, setDecisions] = useState<Record<string, Decision | undefined>>(() =>
-    Object.fromEntries(initialChanges.map((c) => [c.id, c.decision])),
-  );
+  const [decisions, setDecisions] = useState<Record<string, Decision | undefined>>(() => {
+    const seeded = Object.fromEntries(initialChanges.map((c) => [c.id, c.decision]));
+    // Resume a review saved part-way. Version-matched, so a new upload starts clean rather than
+    // inheriting decisions taken about a floor-plan that has since been replaced.
+    if (creation || !target) return seeded;
+    const key = levelKey(target.buildingId, target.index);
+    const saved = getReviewOutcome(key);
+    const newestN = getLevelVersions(key, () =>
+      seedVersions(target.short, target.index, target.buildingId),
+    )[0]?.n;
+    if (!saved || saved.versionN !== newestN) return seeded;
+    return { ...seeded, ...saved.decisions };
+  });
   // memoised: this array is posted to the map, so a fresh identity each render would re-post it
   const changes: Change[] = useMemo(
     () => initialChanges.map((c) => ({ ...c, decision: decisions[c.id] })),
@@ -209,22 +229,35 @@ export function ManualReview({
    * Creation mode writes nothing: the wizard's review hands its rows back to the wizard, and the
    * building isn't in the tree yet.
    */
-  const concludeReview = () => {
+  const writeOutcome = (complete: boolean) => {
     if (creation || !target) return;
     const key = levelKey(target.buildingId, target.index);
     const versions = getLevelVersions(key, () => seedVersions(target.short, target.index, target.buildingId));
     const newest = versions[0];
     if (!newest) return;
-    const published = fate === "published" || (!matchFailed && bandKind === "medium");
-    setReviewOutcome(key, {
-      versionN: newest.n,
-      decisions,
-      changes,
-      published,
-    });
+    // Only completing can publish. Saving progress deliberately leaves the version — and therefore
+    // the grace countdown and the tree tag — exactly where it was.
+    const published = complete && (fate === "published" || (!matchFailed && bandKind === "medium"));
+    setReviewOutcome(key, { versionN: newest.n, decisions, changes, published, complete });
     if (published && newest.state !== "published")
       setLevelVersions(key, [{ ...newest, state: "published" }, ...versions.slice(1)]);
   };
+
+  /** Come back to it later. No ceremony: nothing is decided, nothing publishes, nothing is lost. */
+  const saveProgress = () => writeOutcome(false);
+  /** Conclude it — the version's state moves, and an eligible level publishes (decision 5). */
+  const concludeReview = () => writeOutcome(true);
+
+  /**
+   * How many changes still carry no decision. Completing with some undecided is **allowed** — the
+   * stories never require deciding everything, and a footer that refuses is a rule pretending to
+   * be a review. But the overlay has to say what happens to them, and what happens is that they
+   * apply: doing nothing at all is what the grace period already does, so an undecided change is
+   * a change you let through.
+   */
+  const undecidedCount = changes.filter(
+    (c) => c.type !== "preserved" && !decisions[c.id],
+  ).length;
 
   /**
    * Bring the lit row into view when the *map* drove the selection. Guarded on the row already
@@ -447,10 +480,14 @@ export function ManualReview({
               <div style={{ flex: 1 }}>
                 {fate === "published"
                   ? "Published just now — this version is live."
-                  : "Scheduled publish cancelled — nothing publishes until you conclude the review or publish it yourself."}
+                  : fate === "held"
+                    ? // A part-way save suspends the countdown, so the strip must stop promising it.
+                      "In review — this level is held out of publishing, including the automatic one, until you complete the review."
+                    : "Scheduled publish cancelled — nothing publishes until you conclude the review or publish it yourself."}
               </div>
-              {/* killing the timer doesn't take away the deliberate path */}
-              {fate === "cancelled" && (
+              {/* killing the timer doesn't take away the deliberate path — and being held doesn't
+                  either: you can still decide to put it live as it stands */}
+              {(fate === "cancelled" || fate === "held") && (
                 <Button size="sm" onClick={() => setFate("published")}>
                   Publish now
                 </Button>
@@ -585,24 +622,48 @@ export function ManualReview({
             justifyContent: "flex-end",
           }}
         >
-          {/* Cancel/Go back became the header's ✕ (Olcay's standing rule) — the footer keeps only
-              the concluding action. Just "Save", no subtext (Olcay, 2026-08-10 twice over: the
-              draft model is gone, and the consequence belongs in a confirmation overlay, not in a
-              caption). A concluded, eligible review triggers the site publish automatically; the
-              overlay says so before it happens. Creation's Confirm Changes has no ceremony —
-              nothing publishes there. */}
+          {/*
+            Cancel/Go back became the header's ✕ (Olcay's standing rule). The footer used to keep
+            only the concluding action — one button, "Save" — and it now keeps **two**, because
+            they are genuinely two different intentions (Olcay, 2026-08-11):
+
+              **Save** — "I'm part-way through, I'll come back." Your decisions are written to the
+              level and **the level is held out of publishing until you complete the review** —
+              including the automatic publish, because a grace period firing here would take a
+              half-reviewed floor live. No confirmation: nothing goes live, so there is nothing to
+              warn about.
+              **Complete review** — the concluding action, and the only one that publishes.
+              Primary, right-most, and it still asks first.
+
+            The held state is **"In review"**, never "draft" (Olcay: *"similar to draft but we
+            don't want to say draft"*) — decision 5 removed the draft model and the word is spoken
+            for. Creation's Confirm Changes stays a single button: the wizard has no grace period
+            to come back within, and nothing publishes there.
+          */}
           {creation ? (
             <Button onClick={() => creation.onConfirm(changes)}>Confirm Changes</Button>
           ) : (
-            <Button onClick={() => setConfirmOpen(true)}>Save</Button>
+            <>
+              <Button
+                variant="secondary"
+                title="Save your decisions to the level and come back later. The level is held out of publishing — including the automatic one — until you complete the review."
+                onClick={() => {
+                  saveProgress();
+                  onClose?.();
+                }}
+              >
+                Save
+              </Button>
+              <Button onClick={() => setConfirmOpen(true)}>Complete review</Button>
+            </>
           )}
         </div>
 
         <ConfirmOverlay
           open={confirmOpen}
           tone="info"
-          title="Save this review?"
-          confirmLabel="Save"
+          title="Complete this review?"
+          confirmLabel="Complete review"
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
             setConfirmOpen(false);
@@ -610,9 +671,15 @@ export function ManualReview({
             onClose?.();
           }}
         >
-          {fate === "published"
-            ? "This version is already live. Saving keeps your decisions on record."
-            : "Saving concludes the review. If this level is eligible, the site publishes automatically with your decisions applied."}
+          {/* The undecided sentence is the honest part: completing doesn't require deciding
+              everything, so it has to say what silence means — and silence means they apply,
+              because that is exactly what the grace period would have done unattended. */}
+          {(fate === "published"
+            ? "This version is already live. Completing the review keeps your decisions on record."
+            : "Completing concludes the review. If this level is eligible, the site publishes automatically with your decisions applied.") +
+            (undecidedCount
+              ? ` ${undecidedCount} change${undecidedCount === 1 ? "" : "s"} still ${undecidedCount === 1 ? "has" : "have"} no decision — ${undecidedCount === 1 ? "it will be applied" : "they will be applied"} as detected.`
+              : "")}
         </ConfirmOverlay>
       </div>
 

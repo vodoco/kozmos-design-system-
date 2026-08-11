@@ -117,6 +117,22 @@ export interface ReviewOutcome {
   changes: Change[];
   /** Did concluding it publish the level? (Amber does; red cause B only via Publish now.) */
   published: boolean;
+  /**
+   * Is the review **finished**, or saved part-way (Olcay, 2026-08-11)?
+   *
+   * `true` = *Complete review*: concluded, and an eligible level publishes.
+   *
+   * `false` = *Save*: your decisions are written to the level, **and the level is held out of
+   * publishing until you complete the review**. Olcay: *"we update the level data — it's in a
+   * certain state where it can't be included in publish."* That includes the automatic one: a
+   * grace period that fired here would publish a half-reviewed floor, which is the exact thing
+   * this state exists to prevent. Touching the review takes responsibility for it.
+   *
+   * ⚠️ **Do not call this a draft** — Olcay, explicitly: *"Similar to draft but we don't want to
+   * say draft."* Decision 5 removed the draft model and the word is spoken for. The state is
+   * surfaced as **"In review"** everywhere: the tree tag, the editor's card and the fate strip.
+   */
+  complete: boolean;
 }
 
 const reviews = new Map<string, ReviewOutcome>();
