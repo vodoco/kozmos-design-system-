@@ -75,13 +75,20 @@ const PointrMap = forwardRef<PointrMapHandle, {
    * centroid badge and the changelog row can never disagree about what you decided.
    */
   onDecision?: (id: string, decision: "confirm" | "flag" | "reject") => void;
-}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onDecision, target }, handle) {
+  /**
+   * The change currently selected, shared with the changelog — one selection, two surfaces.
+   * Setting it opens that feature's card and eases the camera onto it; `onSelect` reports the
+   * same thing happening from the map's side.
+   */
+  active?: string | null;
+  onSelect?: (id: string | null) => void;
+}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onDecision, active, onSelect, target }, handle) {
   const ref = useRef<HTMLIFrameElement>(null);
   useImperativeHandle(handle, () => ({
     setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
   }), []);
-  const latest = useRef({ changes, prefs, target, dropOn: !!onFileDrop });
-  latest.current = { changes, prefs, target, dropOn: !!onFileDrop };
+  const latest = useRef({ changes, prefs, target, active, dropOn: !!onFileDrop });
+  latest.current = { changes, prefs, target, active, dropOn: !!onFileDrop };
 
   const send = () => {
     const win = ref.current?.contentWindow;
@@ -106,6 +113,7 @@ const PointrMap = forwardRef<PointrMapHandle, {
       );
     if (latest.current.prefs) win.postMessage({ type: "prefs", ...latest.current.prefs }, "*");
     if (latest.current.target) win.postMessage({ type: "target", ...latest.current.target }, "*");
+    if (latest.current.active) win.postMessage({ type: "active", id: latest.current.active }, "*");
   };
 
   // The map page announces itself when the level is up; anything posted before that is lost.
@@ -141,11 +149,22 @@ const PointrMap = forwardRef<PointrMapHandle, {
       } else if (ev.data.type === "decision" && ev.data.id && ev.data.decision) {
         // Compare renders two panes; only this one's iframe may decide for it.
         if (ev.source === ref.current?.contentWindow) onDecision?.(ev.data.id, ev.data.decision);
+      } else if (ev.data.type === "select") {
+        if (ev.source === ref.current?.contentWindow) onSelect?.(ev.data.id ?? null);
       }
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onDecision]);
+  }, [onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onDecision, onSelect]);
+
+  /**
+   * Its own effect, not part of `send()`: selection changes far more often than the diff does, and
+   * bundling them would re-post the whole change set (and reset the map's resolved geometry) every
+   * time you clicked a row.
+   */
+  useEffect(() => {
+    ref.current?.contentWindow?.postMessage({ type: "active", id: active ?? null }, "*");
+  }, [active]);
 
   useEffect(send, [changes, prefs, target]);
   /**

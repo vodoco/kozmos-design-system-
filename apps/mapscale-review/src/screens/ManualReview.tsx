@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Text, Button } from "@kozmos/react";
 import { ChangeGroupBlock } from "../ui/ChangeGroup";
 import { ChangeReviewRow } from "../ui/ChangeReviewRow";
@@ -178,6 +178,28 @@ export function ManualReview({
     (id: string, d: "confirm" | "flag" | "reject") => setOne(id, d as Decision),
     [],
   );
+
+  /**
+   * The active change — one selection shared by the changelog and the map (Olcay, 2026-08-11).
+   * Clicking a row opens that feature's card and eases the camera onto it; clicking a shape lights
+   * the row and scrolls it into view. Held here rather than in either surface because neither owns
+   * it: it is a fact about the review.
+   */
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const activate = (id: string) => setActiveId((cur) => (cur === id ? null : id));
+  /** Stable, so PointrMap doesn't re-subscribe its message listener on every render. */
+  const onMapSelect = useCallback((id: string | null) => setActiveId(id), []);
+
+  /**
+   * Bring the lit row into view when the *map* drove the selection. Guarded on the row already
+   * being off-screen: scrolling a row you just clicked yourself is an unrequested jolt, and
+   * `block: "nearest"` does nothing when it's already visible.
+   */
+  useEffect(() => {
+    if (!activeId) return;
+    const row = document.querySelector(`[data-change-row="${CSS.escape(activeId)}"]`);
+    row?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [activeId]);
   /**
    * Bulk decision — used by both a group header and a whole risk section.
    *
@@ -509,6 +531,8 @@ export function ManualReview({
                     change={c}
                     readOnly={c.type === "preserved"}
                     onDecide={(d) => setOne(c.id, d)}
+                    active={activeId === c.id}
+                    onActivate={() => activate(c.id)}
                   />
                 ))}
               </div>
@@ -563,6 +587,8 @@ export function ManualReview({
           onLevel={onLevel}
           onFeatures={onFeatures}
           onDecision={onMapDecision}
+          active={activeId}
+          onSelect={onMapSelect}
           target={mapTarget}
         />
         <MapChrome prefs={prefs} onPrefs={setPrefs} focus={!matchFailed} />

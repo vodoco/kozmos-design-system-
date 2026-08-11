@@ -53,11 +53,17 @@ export function ChangeReviewRow({
   change,
   onDecide,
   readOnly,
+  active,
+  onActivate,
 }: {
   change: Change;
   onDecide: (d: Decision) => void;
   /** Preserved features are carried through untouched — there is no decision to make on them. */
   readOnly?: boolean;
+  /** This is the change the map is showing — the two surfaces share one selection. */
+  active?: boolean;
+  /** Clicking the row anywhere but the decision control makes it the active one. */
+  onActivate?: () => void;
 }) {
   const accent = changeAccent(change);
   const warning = warningOf(change);
@@ -82,14 +88,28 @@ export function ChangeReviewRow({
 
   return (
     <div
+      data-change-row={change.id}
+      onClick={onActivate}
       style={{
         display: "flex",
         alignItems: "center",
         gap: 12,
-        background: "var(--review-surface)",
+        /**
+         * The active row and the map's open tooltip are the same selection seen twice. The
+         * treatment is deliberately NOT a colour: §3 reserves colour for what a feature *is* and
+         * marks for what you *decided*, and selection is neither. So it reads as a ring and a
+         * lift — the row comes forward, keeping its type accent and its decision mark saying
+         * exactly what they said before.
+         */
+        background: active ? "#fff" : "var(--review-surface)",
         borderLeft: `4px solid ${accent}`,
         borderRadius: 8,
         padding: "10px 12px 10px 14px",
+        boxShadow: active
+          ? "0 0 0 2px var(--primitives-colors-theme-800), 0 2px 8px rgba(0,0,0,.10)"
+          : "none",
+        cursor: onActivate ? "pointer" : "default",
+        transition: "box-shadow .12s, background .12s",
       }}
     >
       <div style={{ flex: "1 1 0", minWidth: 0 }}>
@@ -150,7 +170,9 @@ export function ChangeReviewRow({
           </div>
         )}
       </div>
-      <div style={{ flex: "0 0 auto" }}>
+      {/* Deciding is not selecting: without this, every ✓ would also fly the map to that feature,
+          and working down the list would become a slideshow. */}
+      <div style={{ flex: "0 0 auto" }} onClick={(e) => e.stopPropagation()}>
         {readOnly ? (
           <span style={{ fontSize: 12, color: "var(--review-muted)" }}>Kept</span>
         ) : (

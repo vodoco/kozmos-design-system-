@@ -19,17 +19,27 @@
      clickable without stealing pan/zoom anywhere else */
   #hl .hit { pointer-events: auto; cursor: pointer; }
 
-  #tip { position: absolute; z-index: 6; display: none; pointer-events: none; min-width: 168px; max-width: 260px;
+  /* The card takes the pointer, because it carries the decision control (Olcay, 2026-08-11:
+     "how do we change the flags?" — it used to be `pointer-events: none`, so a hover card could
+     only ever *report* the decision and the control was unreachable without pinning first). */
+  #tip { position: absolute; z-index: 6; display: none; pointer-events: auto; min-width: 168px; max-width: 260px;
     transform: translate(-50%, calc(-100% - 16px)); background: #fff; color: #1F2328;
     font: 13px/1.45 "Readex Pro", system-ui, sans-serif; border: 1px solid #E7E9EE;
     border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,.16); padding: 10px 12px; }
   #tip::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 12px; height: 12px;
     margin-left: -6px; background: #fff; border-right: 1px solid #E7E9EE;
     border-bottom: 1px solid #E7E9EE; transform: rotate(45deg); }
+  /* Invisible bridge across the 16px the card is offset by. Without it, travelling from the shape
+     to the card crosses bare map for a few pixels, the container-level mousemove sees a move that
+     is neither on a shape nor on the card, and the hover clears before you arrive — the control
+     would retreat every time you reached for it. A pseudo-element hits as its host, so the
+     `tip.contains(ev.target)` test passes the whole way across. */
+  #tip::before { content: ""; position: absolute; left: 0; right: 0; bottom: -18px; height: 18px; }
   /* flipped under the shape when there's no room above */
   #tip.below { transform: translate(-50%, 16px); }
   #tip.below::after { bottom: auto; top: -7px; border: none; border-left: 1px solid #E7E9EE;
     border-top: 1px solid #E7E9EE; }
+  #tip.below::before { bottom: auto; top: -18px; }
   #tip .t-type { display: flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 1px;
     font-weight: 600; color: #9AA0A6; }
   #tip .t-dot { width: 9px; height: 9px; border-radius: 3px; }
@@ -159,6 +169,13 @@ const CHANGES = [
 let pw, map, svg = document.getElementById("hl"), tip = document.getElementById("tip");
 // hover previews a change, a click pins it (so you can pan around with the details still up)
 let SELECTED = null, HOVERED = null;
+/**
+ * The active change the app last named, held so it can be applied again once geometry resolves.
+ * A row is clickable the instant the panel paints, which is routinely before `resolveChanges()`
+ * has found that feature in the tiles — without this, an early click would select nothing and
+ * silently do nothing.
+ */
+let PENDING_ACTIVE = null;
 const shown = () => SELECTED || HOVERED;
 let RESOLVED = [];                 // [{ change, rings:[[lnglat,…]], centroid:[lng,lat] }]
 // Greyscale is the *review* mode — a level being edited or simply viewed stays in full colour.
@@ -502,6 +519,8 @@ function resolveChanges() {
     RESOLVED.push({ change, rings, centroid: centroid(rings[0]) });
   });
   RESOLVED.sort((a, b) => CHANGES.indexOf(a.change) - CHANGES.indexOf(b.change));
+  // A row clicked before its geometry existed asked for something we couldn't show yet. Now we can.
+  if (PENDING_ACTIVE != null && !SELECTED) setActive(PENDING_ACTIVE);
   return RESOLVED.length;
 }
 
@@ -572,7 +591,23 @@ function select(change) {
   SELECTED = SELECTED === change ? null : change;   // clicking the same shape again unpins it
   renderTip();
   redraw();
-  post("select", { name: SELECTED ? SELECTED.name : null });
+  // `id` so the app can light the matching row — `name` alone can't, since bindToFloor re-points
+  // names and two floors can carry the same one.
+  post("select", { name: SELECTED ? SELECTED.name : null, id: SELECTED ? SELECTED.id : null });
+}
+
+/**
+ * The app naming the active change (a row was clicked). Selecting and framing, but deliberately
+ * NOT posting `select` back: that would echo into the app's own state and fight the click that
+ * started it — the same loop the camera mirror is guarded against.
+ */
+function setActive(id) {
+  const change = id == null ? null : CHANGES.find(c => c.id === id);
+  if (change === SELECTED) return;                  // already there; don't re-fly under the user
+  SELECTED = change || null;
+  renderTip();
+  redraw();
+  if (SELECTED) focusChange(SELECTED);
 }
 
 function div(cls, text) {
@@ -597,11 +632,14 @@ function renderTip() {
   tip.appendChild(div("t-name", c.name));
   if (c.detail) tip.appendChild(div("t-detail", c.detail));
 
-  // Pinned → decide here. Hovering → just report what the decision currently is.
+  // Decide from the card — hovering or pinned, both (Olcay: "how do we change the flags?").
+  // It was pinned-only at first, on the theory that a control under a moving cursor is hard to
+  // hit; a hover card is actually stationary above its shape and the container-level mousemove
+  // keeps it alive while you're over it, so the only thing pinned-only bought was a step.
   //
-  // `preserved` is skipped in both directions, the same rule the list's rows follow: a user
-  // override is carried through untouched, so there is no decision to make on it.
-  if (SELECTED === c && c.type !== "preserved") {
+  // `preserved` is skipped, the same rule the list's rows follow: a user override is carried
+  // through untouched, so there is no decision to make on it — it keeps the read-only line.
+  if (c.type !== "preserved") {
     tip.appendChild(decisionControl(c));
   } else if (c.decision) {
     const row = div("t-decision");
@@ -832,6 +870,42 @@ function frameChanges() {
   RESOLVED.forEach(({ rings }) => rings.forEach(r => r.forEach(([x,y]) => {
     n++; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; })));
   if (n) { map.setPitch(0); map.setBearing(0); map.fitBounds([[minx,miny],[maxx,maxy]], { padding:70, duration:0 }); }
+}
+
+/**
+ * Bring one change into view when it becomes the active selection (Olcay, 2026-08-11: *"the map
+ * should center the item and focus gracefully so that the user can both understand the whereabouts
+ * of the feature and see its geometry"*).
+ *
+ * Both halves of that sentence are a constraint, and they pull against each other. **Whereabouts**
+ * wants context — fill the pane with one unit and you're looking at a rectangle with no idea which
+ * building you're in. **Geometry** wants closeness. So this fits the feature's own bounds with a
+ * generous pad and then caps the zoom: small units stop at `FOCUS_MAX_ZOOM` with their surroundings
+ * still around them, while a whole concourse still gets framed to fit.
+ *
+ * `easeTo` rather than `flyTo` on purpose: fly's zoom-out-and-back arc is a lovely gesture across a
+ * city and a nauseating one across thirty metres.
+ */
+var FOCUS_MAX_ZOOM = 19.5;
+
+function focusChange(change) {
+  if (!map) return;
+  const hit = RESOLVED.find(r => r.change === change);
+  if (!hit) return;                       // geometry not resolved yet — the map just doesn't move
+  let minx=180, miny=90, maxx=-180, maxy=-90, n=0;
+  hit.rings.forEach(r => r.forEach(([x,y]) => {
+    n++; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; }));
+  if (!n) return;
+  try {
+    map.fitBounds([[minx,miny],[maxx,maxy]], {
+      // room for the card, which sits above the shape and would otherwise cover the neighbours
+      // that tell you where you are
+      padding: { top: 190, bottom: 90, left: 90, right: 90 },
+      maxZoom: FOCUS_MAX_ZOOM,
+      duration: 650,
+      essential: true,                    // survives prefers-reduced-motion being set
+    });
+  } catch(e){}
 }
 
 /**
@@ -1161,6 +1235,11 @@ window.addEventListener("message", (ev) => {
     SELECTED = CHANGES.indexOf(SELECTED) >= 0 ? SELECTED : null;
     HOVERED = null;
     if (map) { resolveChanges(); redraw(); renderTip(); }
+  } else if (d.type === "active") {
+    // A changelog row was clicked — mirror it here. Deferred until geometry exists, because a
+    // row can be clicked before `resolveChanges()` has caught up and there'd be nothing to fly to.
+    PENDING_ACTIVE = d.id ?? null;
+    if (map) setActive(PENDING_ACTIVE);
   } else if (d.type === "target") {
     // Switch the level (and building) under the map without reloading the SDK. All of the care —
     // idempotence, coalescing, the readiness gate — lives in requestTarget().
