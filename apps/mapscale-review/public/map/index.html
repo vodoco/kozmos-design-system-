@@ -1,0 +1,1402 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="https://pointr-websdk.azureedge.net/10.7.1/css/pointr.css" />
+<style>
+  html, body { margin: 0; height: 100%; width: 100%; background: #eef0f2; overflow: hidden; }
+  #map { position: absolute; inset: 0; }
+  /* live greyscale of the WebGL base; highlights live in the SVG overlay on top (kept colour) */
+  #map canvas.grey { filter: grayscale(1); }
+  /* clean map pane: hide the SDK's own UI chrome (search / level selector / exit / welcome).
+     Keep #pointr-loading (the pane's loading state) and the Pointr watermark (licence). */
+  #pointr-top, #pointr-bottom, #pointr-welcome-overlay, #pointr-promote-app-overlay,
+  #pointr-rating-overlay, #pointr-info-view { display: none !important; }
+  /* explicit width/height: an absolutely positioned <svg> with only `inset:0` falls back to its
+     300x150 intrinsic size (replaced element), which silently clips every highlight. */
+  #hl { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+  /* the overlay ignores the pointer, but the change shapes themselves take it back so they're
+     clickable without stealing pan/zoom anywhere else */
+  #hl .hit { pointer-events: auto; cursor: pointer; }
+
+  /* The card takes the pointer, because it carries the decision control (Olcay, 2026-08-11:
+     "how do we change the flags?" — it used to be `pointer-events: none`, so a hover card could
+     only ever *report* the decision and the control was unreachable without pinning first). */
+  #tip { position: absolute; z-index: 6; display: none; pointer-events: auto; min-width: 168px; max-width: 260px;
+    transform: translate(-50%, calc(-100% - 16px)); background: #fff; color: #1F2328;
+    font: 13px/1.45 "Readex Pro", system-ui, sans-serif; border: 1px solid #E7E9EE;
+    border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,.16); padding: 10px 12px; }
+  #tip::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 12px; height: 12px;
+    margin-left: -6px; background: #fff; border-right: 1px solid #E7E9EE;
+    border-bottom: 1px solid #E7E9EE; transform: rotate(45deg); }
+  /* Invisible bridge across the 16px the card is offset by. Without it, travelling from the shape
+     to the card crosses bare map for a few pixels, the container-level mousemove sees a move that
+     is neither on a shape nor on the card, and the hover clears before you arrive — the control
+     would retreat every time you reached for it. A pseudo-element hits as its host, so the
+     `tip.contains(ev.target)` test passes the whole way across. */
+  #tip::before { content: ""; position: absolute; left: 0; right: 0; bottom: -18px; height: 18px; }
+  /* A pinned card doesn't need the bridge — it survives whatever the cursor does — and keeping it
+     would swallow the click just under the card, which is one of the places you'd naturally click
+     to dismiss it. */
+  #tip.pinned::before { display: none; }
+  /* flipped under the shape when there's no room above */
+  #tip.below { transform: translate(-50%, 16px); }
+  #tip.below::after { bottom: auto; top: -7px; border: none; border-left: 1px solid #E7E9EE;
+    border-top: 1px solid #E7E9EE; }
+  #tip.below::before { bottom: auto; top: -18px; }
+  #tip .t-type { display: flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 1px;
+    font-weight: 600; color: #9AA0A6; }
+  #tip .t-dot { width: 9px; height: 9px; border-radius: 3px; }
+  /* the ✕ is the one interactive part of a pinned card — the card itself stays click-through */
+  #tip .t-close { position: absolute; top: 6px; right: 8px; pointer-events: auto; cursor: pointer;
+    font-size: 12px; line-height: 1; color: #9AA0A6; padding: 4px; }
+  #tip .t-close:hover { color: #1F2328; }
+  #tip .t-name { font-weight: 600; margin: 3px 0 1px; }
+  #tip .t-detail { color: #6B7280; }
+  #tip .t-decision { display: flex; align-items: center; gap: 6px; margin-top: 8px;
+    padding-top: 8px; border-top: 1px solid #EEF0F3; }
+
+  /* Decide from the map (Olcay, 2026-08-11: "click on the markers, see all options and change to
+     something else"). The badge at the centroid already SAYS the decision; this is where you set
+     it. Only a PINNED card gets it — hover stays a preview, and a control that appears under a
+     moving cursor is one you can't hit. Interactive, so like the ✕ it opts back into pointer
+     events; the card itself stays click-through so it never blocks the map beneath.
+     The icon-only segmented control is the list's, deliberately: same three marks, same neutral
+     ink, same order (§3 — a decision is its own axis and never recolours the feature). */
+  #tip .t-actions { display: flex; gap: 4px; margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid #EEF0F3; pointer-events: auto; }
+  #tip .t-actions button { flex: 1; display: grid; place-items: center; height: 28px;
+    border: 1px solid #E7E9EE; border-radius: 6px; background: #fff; cursor: pointer; padding: 0;
+    color: #1F2328; }
+  #tip .t-actions button:hover { background: #F4F5F7; }
+  #tip .t-actions button[aria-pressed="true"] { background: #EEF0F3; border-color: #C7CAD1; }
+  #tip .t-actions button:focus-visible { outline: 2px solid #0b369c; outline-offset: 1px; }
+
+  /* zoom control, bottom-right (Figma 2103:22178): two white squares, + over −. Sibling of #map
+     on purpose — #map swallows clicks in the capture phase (see below), so buttons inside it
+     would never hear their own click. */
+  #zoomctl { position: absolute; right: 16px; bottom: 16px; z-index: 6;
+    display: flex; flex-direction: column; gap: 6px; }
+  /* 44×44 / radius 12 / same shadow as the Map Settings trigger — every over-map button one size
+     (Olcay, 2026-08-10 evening) */
+  #zoomctl button { width: 44px; height: 44px; border: none; border-radius: 12px; background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,.16); color: #1F2328; font: 20px/1 "Readex Pro", system-ui, sans-serif;
+    cursor: pointer; display: grid; place-items: center; padding: 0; }
+  #zoomctl button:hover { background: #f2f3f5; }
+
+  /* drop veil — v9's Dropzone look (dashed theme border on a light tint); purely visual, the
+     document handles the events, so the veil never steals the drop */
+  #dropveil { position: absolute; inset: 12px; z-index: 7; display: none; pointer-events: none;
+    border: 2px dashed #346df1; border-radius: 12px; background: rgba(241,245,254,.88);
+    align-items: center; justify-content: center; }
+  #dropveil.on { display: flex; }
+  #dropveil .dz { text-align: center; font: 600 15px/1.5 "Readex Pro", system-ui, sans-serif; color: #0d44c2; }
+  #dropveil .dz small { display: block; font-weight: 400; font-size: 12px; color: #5d626f; }
+</style>
+<script src="https://pointr-websdk.azureedge.net/10.7.1/pointrwebsdk.js"></script>
+</head>
+<body>
+<div id="map"></div>
+<svg id="hl" xmlns="http://www.w3.org/2000/svg"></svg>
+<div id="tip"></div>
+<div id="zoomctl">
+  <button id="zoomin" type="button" aria-label="Zoom in" title="Zoom in">+</button>
+  <button id="zoomout" type="button" aria-label="Zoom out" title="Zoom out">&minus;</button>
+</div>
+<div id="dropveil"><div class="dz">Drop to upload a floor-plan<small>GeoJSON · DWG/DXF · PDF (experimental)</small></div></div>
+<script>
+const SVGNS = "http://www.w3.org/2000/svg";
+
+/**
+ * The Pointr connection, handed over on the query string by the parent app (see
+ * src/mock/pointrConfig.ts). Nothing is hardcoded here any more: this file lives in `public/`,
+ * which Vite copies verbatim into the deployment, so anything written here ships to production —
+ * credentials included. The app reads them from env (`.env.local` locally, Vercel's project vars
+ * for the deployed build) and passes them in.
+ *
+ * Opening /map/index.html standalone therefore needs them too:
+ *   /map/index.html?baseUrl=…&client=…&licence=…&site=…&building=…&level=-2
+ * Without them the page says so rather than failing silently inside the SDK.
+ */
+const CFG = new URLSearchParams(location.search);
+
+// Dubai International Airport · Terminal 3 and B Gates · Departures - Terminal 3 ("B2").
+// Passing site+building+level as SDK Options boots straight into the level (the SDK otherwise only
+// hydrates/opens a building on user selection). siteInternalIdentifier is REQUIRED alongside
+// buildingInternalIdentifier — Options.validateBuilding() rejects the building on its own.
+const TARGET = {
+  site:     CFG.get("site") || "",
+  building: CFG.get("building") || "",
+  level:    CFG.has("level") ? Number(CFG.get("level")) : -2,
+};
+const CONN = {
+  baseUrl: CFG.get("baseUrl") || "",
+  client:  CFG.get("client")  || "",
+  licence: CFG.get("licence") || "",
+};
+
+/** Say what's missing, in the pane, instead of dying inside the SDK's constructor. */
+function missingConfig() {
+  return [
+    ["baseUrl", CONN.baseUrl], ["client", CONN.client], ["licence", CONN.licence],
+    ["site", TARGET.site], ["building", TARGET.building],
+  ].filter(([, v]) => !v).map(([k]) => k);
+}
+
+// Four colours, six keys: the app splits the report's "updated" into geometry vs metadata (they
+// want different review treatment), but to the eye both are the one "updated" blue. `updated`
+// stays as an alias so this page still works standalone off its own seed below.
+const COLORS = { new:"#2FBF71", updated:"#3B82F6", geometry:"#3B82F6", metadata:"#3B82F6", deleted:"#EF4444", preserved:"#9C6EFF" };
+const LINE   = { new:"#1E9E4A", updated:"#1D4ED8", geometry:"#1D4ED8", metadata:"#1D4ED8", deleted:"#B91C1C", preserved:"#6D28D9" };
+// A decision (✓ / 🚩 / ✗) is state, not identity: it never recolours the feature — a flagged
+// "new" feature is still new. Badges are therefore neutral black, distinct from every type colour.
+const INK = "#000000";
+
+// Floor-plan outline = source_ptr wall/space polygons, minus the big grouping layers
+// (see memory `map-settings-v9`: outline linework under the change highlights).
+const FP_SKIP = { section:1, transition:1, transportationspace:1 };
+
+const TYPE_LABEL = { new:"NEW", updated:"UPDATED", geometry:"GEOMETRY CHANGED", metadata:"DETAILS CHANGED",
+                     deleted:"REMOVED", preserved:"PRESERVED" };
+const DECISION_LABEL = { confirm:"Confirmed", flag:"Flagged for later", reject:"Rejected" };
+
+// The app owns the diff and pushes it in ({type:"changes"}); this seed only keeps the page usable
+// on its own (open /map/index.html directly) and is merged by feature name, never replaced.
+const CHANGES = [
+  { name:"Costa Coffee",              type:"new",       decision:"confirm" },
+  { name:"Burger King",               type:"updated",   decision:"confirm" },
+  { name:"Subway",                    type:"updated",   decision:"flag"    },
+  { name:"DDF Pharmacy",              type:"deleted",   decision:"reject"  },
+  { name:"Marhaba Reception",         type:"preserved", decision:null      },
+];
+
+let pw, map, svg = document.getElementById("hl"), tip = document.getElementById("tip");
+// hover previews a change, a click pins it (so you can pan around with the details still up)
+let SELECTED = null, HOVERED = null;
+/**
+ * The active change the app last named, held so it can be applied again once geometry resolves.
+ * A row is clickable the instant the panel paints, which is routinely before `resolveChanges()`
+ * has found that feature in the tiles — without this, an early click would select nothing and
+ * silently do nothing.
+ */
+let PENDING_ACTIVE = null;
+/**
+ * Which change was pressed, and where. Captured on `pointerdown` (which always lands on a live
+ * path) and consumed by the SVG's delegated `click` — see the listener on the shapes for why a
+ * per-path `click` cannot be trusted.
+ */
+let PENDING_HIT = null, PENDING_AT = null;
+const shown = () => SELECTED || HOVERED;
+let RESOLVED = [];                 // [{ change, rings:[[lnglat,…]], centroid:[lng,lat] }]
+// Greyscale is the *review* mode — a level being edited or simply viewed stays in full colour.
+// The screen that shows changes turns it on; nothing else does.
+const prefs = { greyscale: false, hidePoiLabels: false, floorplan: true, basemap: "vector" };
+
+function post(type, extra) { try { parent.postMessage(Object.assign({ source:"mapscale-map", type }, extra||{}), "*"); } catch(e){} }
+function el(tag, attrs){ const e=document.createElementNS(SVGNS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+/* ── map handle ─────────────────────────────────────────────────────────── */
+
+function getMap() {
+  try { return pw.uiController.mapViewController.view.map; } catch(e) { return null; }
+}
+
+// MapLibre reports style/tile/sprite failures on its own `error` event; nothing in the SDK surfaces
+// them, so a broken style just looks like a blank pane. Keep the last few for debugging.
+let errHooked = false;
+function hookMapErrors() {
+  if (errHooked || !map) return;
+  errHooked = true;
+  window.__mapErrs = [];
+  map.on("error", ev => {
+    const err = ev && ev.error;
+    const msg = (err && err.message) || (ev && ev.message) || "map error";
+    window.__mapErrs.push({ msg, stack: err && err.stack ? String(err.stack).split("\n").slice(0, 4) : null });
+    if (window.__mapErrs.length < 4) post("error", { message: "map: " + msg });
+  });
+}
+
+// What the pane is actually showing, straight from the SDK — the app labels the map with it so the
+// floor is never in doubt. (levelIndex 2 = short "L2", "Departures - Concourse B". Careful: this
+// building's short titles are per-terminal — "B2" is levelIndex -2, Departures · Terminal 3.)
+function levelInfo() {
+  try {
+    const uc = pw.getUiController();
+    const b = uc.getCurrentBuilding();
+    // Resolve from mvc.levelIndex — the index the *layer filters* use, i.e. what is actually on
+    // screen — rather than pw.getCurrentLevel(). handleLevelObject() can set the current-level
+    // object while updateLayersForCurrentLevel() fails to stick, and getCurrentLevel() then names
+    // a floor the map isn't rendering. Reporting that is how a level selector ends up lying.
+    const idx = uc.getMapViewController().levelIndex;
+    const l = (b && (b.levels || []).find(x => x.levelIndex === idx)) || pw.getCurrentLevel();
+    return { index: l.levelIndex, short: l.levelShortTitle, long: l.levelLongTitle,
+      building: b && b.buildingTitle };
+  } catch(e) { return null; }
+}
+
+// Every building on the active site, with its levels — the Map Content tree is built from this
+// rather than from a hard-coded list, so the tree, the breadcrumb and the map always agree.
+function siteBuildings() {
+  try {
+    return pw.getSiteBuildingManager().getAllBuildings()
+      .filter(b => b.siteInternalIdentifier === TARGET.site)
+      .map(b => ({
+        id: b.buildingInternalIdentifier,
+        name: b.buildingTitle,
+        levels: (b.levels || [])
+          .map(l => ({ index: l.levelIndex, short: l.levelShortTitle, long: l.levelLongTitle }))
+          .sort((a, z) => z.index - a.index),          // top floor first, as the dashboard lists them
+      }));
+  } catch(e) { return []; }
+}
+
+// `onTimeout` matters: a poll that gives up used to just post an error, so anything holding state
+// for the duration (the level-switch latch) was left holding it. Every wait now has a losing branch.
+function poll(test, cb, label, onTimeout) {
+  let tries = 0;
+  (function tick() {
+    if (test()) return cb();
+    if (++tries > 120) {                                  // 120 × 250ms = 30s
+      post("error", { message: "timed out waiting for " + label });
+      return onTimeout && onTimeout();
+    }
+    setTimeout(tick, 250);
+  })();
+}
+
+/**
+ * Open the target site/building.
+ *
+ * The SDK consumes siteInternalIdentifier/buildingInternalIdentifier/levelIndex in
+ * MapViewController.updateSiteIfOptionSet()/updateBuildingIfOptionSet(), but on a cold load those
+ * run against an empty `mvc.sites` (map-ready beats data-loaded), so the options are silently
+ * dropped and the widget sits on the world map ("no building is set"). We drive the same SDK
+ * methods ourselves once the data is in — minus updateSiteIfOptionSet(), which scrollToSite()s out
+ * to the whole airport: below SITE_ZOOM_LEVEL (15) the SDK flips to world mode and hides every
+ * indoor layer, and it also seeds the layer filters with the building's LOWEST level.
+ */
+function openTarget() {
+  const uc = pw.getUiController(), mvc = uc.getMapViewController();
+  try {
+    mvc.updateCurrentSite(TARGET.site);
+    mvc.scrollToBuilding(TARGET.building);    // centres the building at zoom 17.1 (indoor minzoom is 17)
+    // tiles are ensureTiles()'s job — it waits for the style before touching sources
+  } catch(e) { post("error", { message: "openTarget: " + e.message }); }
+  try { uc.hideLoadingView(); } catch(e){}
+}
+
+// The MapLibre style is applied by the SDK a beat after the map object exists. Touching sources
+// before then throws inside updateMapTiles() and can leave a half-added `source_ptr` behind, after
+// which the style never finishes loading and the pane stays empty. getStyle() is no good as a probe
+// (it returns undefined that whole time) — the parsed stylesheet is.
+function styleReady() {
+  try { const s = map.style && map.style.stylesheet; return !!(s && s.layers && s.layers.length); }
+  catch(e) { return false; }
+}
+
+/**
+ * Set the level. Also re-applied after the tiles resolve: updateSiteIfOptionSet() seeds the layer
+ * filters with the building's lowest level, and a level set before `source_ptr` has data leaves
+ * layers filtered on `lvl == 0` — right level object, wrong floor on screen.
+ */
+function applyLevel() {
+  try {
+    const uc = pw.getUiController(), mvc = uc.getMapViewController();
+    const b = uc.getCurrentBuilding();
+    const lvl = b && (b.levels || []).find(l => l.levelIndex === TARGET.level);
+    if (lvl) pw.handleLevelObject(lvl);
+    else post("error", { message: "level " + TARGET.level + " not found on building" });
+    // handleLevelObject() → MapViewController.setLevel() early-returns once levelIndex matches, so
+    // a level set before the style's `_ptr` layers existed never reaches the layer filters and the
+    // map keeps rendering level 0. This call re-applies them unconditionally.
+    mvc.updateLayersForCurrentLevel(TARGET.level);
+  } catch(e) { post("error", { message: "applyLevel: " + e.message }); }
+}
+
+/**
+ * When the SDK swings its camera into 3D-model mode it calls hidePtrLayersExceptOutlines(), which
+ * hides every indoor fill/symbol layer — the pane then shows only outlines and our own floor-plan
+ * lines, with no rooms, icons or labels. updateLayersForCurrentLevel() re-shows them, so probe a
+ * known indoor layer and re-apply the level if it has been hidden behind our back.
+ */
+// The SDK re-seeds the level from its own level selector after we've set ours, so the map can drift
+// back to level 0 a beat after boot. Cheap to check, and only re-applies when it has actually drifted.
+// Rate-limited for exactly the reason boot and the switch nudge on a ~3s cadence:
+// updateLayersForCurrentLevel() rewrites ~600 filters, and `idle` fires after every pan settles.
+// Unthrottled, a level the SDK won't take — or a switch that failed, which leaves TARGET.level
+// permanently ahead of the SDK — re-filters the entire style on every settle, forever.
+let lastEnsure = 0;
+function ensureLevel() {
+  try {
+    if (pw.uiController.mapViewController.levelIndex === TARGET.level) return;
+    const now = Date.now();
+    if (now - lastEnsure < 3000) return;
+    lastEnsure = now;
+    applyLevel();
+  } catch(e){}
+}
+
+function ensureIndoorVisible() {
+  try {
+    if (!map.getLayer("fill_retail-space_ptr")) return;
+    if (map.getLayoutProperty("fill_retail-space_ptr", "visibility") === "none") applyLevel();
+  } catch(e){}
+}
+
+// True once the *target level's* content is on screen — not merely any indoor feature, which can
+// be level 0 leaking through a stale filter. Paint-dependent: queryRenderedFeatures() is empty
+// until MapLibre has drawn a frame, so this is a boot-time signal only, never a gate (see below).
+function levelIsRendering() {
+  try {
+    return map.queryRenderedFeatures().some(f =>
+      f.source === "source_ptr" && f.properties && f.properties.lvl === TARGET.level);
+  } catch(e) { return false; }
+}
+
+// The style's indoor layers exist, so an updateLayersForCurrentLevel() call actually reaches some
+// filters. getStyle() deep-clones ~600 layers, so remember one layer id and probe *that* on later
+// calls — as cheap as a cached boolean, but unlike one it re-checks honestly if the SDK ever swaps
+// the style out from under us (a cached `true` would then wave a switch through onto no layers).
+let ptrProbeId = null;
+function hasPtrLayers() {
+  try {
+    if (ptrProbeId && map.getLayer(ptrProbeId)) return true;
+    const l = map.getStyle().layers.find(l => l.id.indexOf("_ptr") >= 0);
+    ptrProbeId = l ? l.id : null;
+    return !!l;
+  } catch(e) { return false; }
+}
+
+/**
+ * Readiness gate for a level switch — deliberately NOT levelIsRendering().
+ *
+ * Gating a switch on a *painted* feature wedges the map: queryRenderedFeatures() stays empty in any
+ * tab that isn't painting (MapLibre defers style/tile work to an animation frame), so the poll spun
+ * for its full 30s, the completion callback never ran, and the `switching` latch swallowed every
+ * further switch until its timer expired. That is why the map was left sitting on L2.
+ *
+ * Ask the SDK instead — paint-independent, and true the moment the switch has actually taken:
+ * the right building is current, the style's `_ptr` layers exist (so the level reached the layer
+ * filters rather than early-returning into nothing), and mvc.levelIndex is the level we asked for.
+ */
+function levelApplied() {
+  try {
+    if (!styleReady() || !hasPtrLayers()) return false;
+    const uc = pw.getUiController();
+    const b = uc.getCurrentBuilding();
+    if (!b) return false;
+    if (b.buildingInternalIdentifier && b.buildingInternalIdentifier !== TARGET.building) return false;
+    return uc.getMapViewController().levelIndex === TARGET.level;
+  } catch(e) { return false; }
+}
+
+/**
+ * The indoor vector tiles hang off `source_ptr`, whose URL is built by updateMapTiles() from the
+ * site's CDN version + the global config. On a cold load that can run before the config lands and
+ * the URL is set to "" — map opens on the right level, renders nothing. Re-issue until it sticks.
+ */
+function ensureTiles(cb, tries) {
+  tries = tries || 0;
+  if (styleReady()) {
+    const src = (() => { try { return map.getSource("source_ptr"); } catch(e) { return null; } })();
+    if (src && src.url) return cb();
+    // Only once the style exists — calling this earlier throws inside the SDK's own source-url
+    // setter. Re-issue every ~3s rather than every tick: until the site's CDN version resolves it
+    // sets the url to "", and each of those throws again inside MapLibre.
+    if (tries % 6 === 0) { try { pw.uiController.mapViewController.updateMapTiles(TARGET.site); } catch(e){} }
+  }
+  if (tries > 60) return post("error", { message: "indoor tile url never resolved" });
+  setTimeout(() => ensureTiles(cb, tries + 1), 500);
+}
+
+/* ── change geometry (resolved once, then only re-projected) ─────────────── */
+
+// Match on level + building, not just name: the same shop name exists on other floors (and the
+// SDK's layer filters pass through a transient level-0 state at boot), so a name-only match can
+// permanently cache a polygon from the wrong floor — it then draws in open space.
+function pickFeature(name, all, center) {
+  const cs = all.filter(f => f.properties && f.properties.name === name && f.sourceLayer !== "wall" &&
+    f.properties.lvl === TARGET.level &&
+    (!f.properties.bid || f.properties.bid === TARGET.building) &&
+    f.geometry && (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon"));
+  if (!cs.length) return null;
+  const fc = f => f.geometry.type === "Polygon" ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0][0][0];
+  cs.sort((a,b) => { const pa=fc(a), pb=fc(b);
+    return ((pa[0]-center.lng)**2+(pa[1]-center.lat)**2) - ((pb[0]-center.lng)**2+(pb[1]-center.lat)**2); });
+  return cs[0];
+}
+function ringsOuter(f){ const g=f.geometry; return g.type==="Polygon"?[g.coordinates[0]]:g.coordinates.map(p=>p[0]); }
+function centroid(r){ let x=0,y=0; r.forEach(c=>{x+=c[0];y+=c[1];}); return [x/r.length, y/r.length]; }
+
+// Cache lng/lat rings so `redraw()` on every frame is just a projection pass, not a 1000-feature
+// query. Re-run on `idle` to pick up features from newly loaded tiles — but only for changes we
+// haven't resolved yet: pickFeature() breaks ties by distance to the map centre, so re-picking a
+// resolved change makes its highlight jump to a different same-named unit as the user pans.
+/**
+ * Candidate features for the change list.
+ *
+ * queryRenderedFeatures() only sees the current viewport, which is fatal when the level being
+ * reviewed sits in a different wing of the building from wherever the camera opened — the changes
+ * never resolve, so the map never frames them, so they never come into view. querySourceFeatures()
+ * reads the loaded tiles instead, independent of the viewport and of each layer's minzoom.
+ */
+function candidateFeatures() {
+  const out = [];
+  const seen = new Set();
+  const push = f => {
+    const k = f.properties && (f.properties.fid || f.properties.name + ":" + f.id);
+    if (k && seen.has(k)) return;
+    if (k) seen.add(k);
+    out.push(f);
+  };
+  try { map.queryRenderedFeatures().forEach(push); } catch(e){}
+  try {
+    const layers = [...new Set(map.getStyle().layers
+      .filter(l => l.source === "source_ptr" && l["source-layer"])
+      .map(l => l["source-layer"]))];
+    layers.forEach(L => {
+      try { map.querySourceFeatures("source_ptr", { sourceLayer: L }).forEach(f => push({ ...f, sourceLayer: L })); } catch(e){}
+    });
+  } catch(e){}
+  return out;
+}
+
+/**
+ * The named polygons actually present on the current level, biggest first.
+ *
+ * This is what lets the app build a changelog that MATCHES THE MAP on any floor. The seeds used to
+ * name B2's features exclusively, so reviewing any other level drew a list beside a map with
+ * nothing highlighted (old defect D4) — and the Building wizard's creation review, whose building
+ * has no geometry at all, listed seven guesses against an untouched map. Now the app asks the map
+ * what is on the floor and binds its rows to real shapes.
+ *
+ * Ordered by bounding-box area so the picks are prominent units a reviewer can actually see, not
+ * slivers; `wall` and the big grouping layers are skipped for the same reason pickFeature skips them.
+ */
+function levelFeatureNames(limit) {
+  try {
+    const seen = new Map();
+    candidateFeatures().forEach(f => {
+      const p = f.properties;
+      if (!p || !p.name || f.sourceLayer === "wall" || FP_SKIP[f.sourceLayer]) return;
+      if (p.lvl !== TARGET.level) return;
+      if (p.bid && p.bid !== TARGET.building) return;
+      if (!f.geometry || (f.geometry.type !== "Polygon" && f.geometry.type !== "MultiPolygon")) return;
+      const ring = ringsOuter(f)[0];
+      if (!ring || ring.length < 3) return;
+      let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+      ring.forEach(c => {
+        if (c[0] < minx) minx = c[0];
+        if (c[0] > maxx) maxx = c[0];
+        if (c[1] < miny) miny = c[1];
+        if (c[1] > maxy) maxy = c[1];
+      });
+      const area = (maxx - minx) * (maxy - miny);
+      // keep the largest instance of each name — the same unit repeats across tile boundaries
+      if (!seen.has(p.name) || seen.get(p.name) < area) seen.set(p.name, area);
+    });
+    // NB report EVERY named feature, not a top-N. The app uses this list two ways: as the pool it
+    // binds unmatched rows to (where biggest-first matters, so highlights land on visible units),
+    // and as a membership test for the names a seed already uses. A truncated list breaks the
+    // second: B2's authored demo names small shops — Costa Coffee, DDF Zone 10 — which a top-60
+    // by area would exclude, and the binder would then "fix" a set that was never broken.
+    return [...seen.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit || seen.size)
+      .map(e => e[0]);
+  } catch (e) { return []; }
+}
+
+// A change whose feature simply isn't on this level can never resolve; without a cap we'd rescan
+// every source layer on every `idle` for the life of the page. Give up after a fair number of tries.
+let resolvePasses = 0;
+const MAX_RESOLVE_PASSES = 40;
+
+function resolveChanges() {
+  const missing = CHANGES.filter(c => !RESOLVED.some(r => r.change === c));
+  if (!missing.length) return RESOLVED.length;
+  if (resolvePasses++ > MAX_RESOLVE_PASSES) {
+    if (resolvePasses === MAX_RESOLVE_PASSES + 2)
+      post("error", { message: "gave up resolving: " + missing.map(c => c.name).join(", ") });
+    return RESOLVED.length;
+  }
+  const all = candidateFeatures();
+  const center = map.getCenter();
+  missing.forEach(change => {
+    const f = pickFeature(change.name, all, center);
+    if (!f) return;
+    const rings = ringsOuter(f);
+    RESOLVED.push({ change, rings, centroid: centroid(rings[0]) });
+  });
+  RESOLVED.sort((a, b) => CHANGES.indexOf(a.change) - CHANGES.indexOf(b.change));
+  // A row clicked before its geometry existed asked for something we couldn't show yet. Now we can.
+  if (PENDING_ACTIVE != null && !SELECTED) setActive(PENDING_ACTIVE);
+  return RESOLVED.length;
+}
+
+/* ── overlay ────────────────────────────────────────────────────────────── */
+
+function drawBadge(cx, cy, kind){
+  const col = INK;
+  const g = el("g", {});
+  g.appendChild(el("circle", { cx, cy, r:11, fill:"#fff", stroke:col, "stroke-width":2 }));
+  const p = el("path", { fill:"none", stroke:col, "stroke-width":2.2, "stroke-linecap":"round", "stroke-linejoin":"round" });
+  if (kind==="confirm") p.setAttribute("d", `M${cx-5} ${cy} L${cx-1.5} ${cy+4} L${cx+5.5} ${cy-4.5}`);
+  else if (kind==="reject") p.setAttribute("d", `M${cx-4.5} ${cy-4.5} L${cx+4.5} ${cy+4.5} M${cx+4.5} ${cy-4.5} L${cx-4.5} ${cy+4.5}`);
+  else { // flag
+    p.setAttribute("d", `M${cx-4} ${cy-5.5} L${cx-4} ${cy+6}`);
+    const flag = el("path", { fill:col, stroke:col, "stroke-width":1, d:`M${cx-4} ${cy-5.5} L${cx+5.5} ${cy-2.5} L${cx-4} ${cy+0.5} Z` });
+    g.appendChild(p); g.appendChild(flag); return g;
+  }
+  g.appendChild(p); return g;
+}
+
+// Zoomed in far enough, you are standing *inside* a feature and its fill is all the pane shows —
+// a wash between you and the floor plan (Olcay hit it at max zoom). So past the whole-floor
+// framing (~z16.7) the fill fades toward a floor and the outline, the dash and the badge carry
+// the identity instead. Strokes stay constant: colour never disappears, it just stops painting
+// over the map you zoomed in to read.
+function fillFactor() {
+  const z = map.getZoom();
+  if (z <= 17.5) return 1;
+  if (z >= 20) return 0.2;
+  return 1 - 0.8 * (z - 17.5) / 2.5;
+}
+
+function redraw() {
+  if (!map) return;
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const P = c => map.project(c);
+  const f = fillFactor();
+  RESOLVED.forEach(({ change, rings, centroid }) => {
+    const fill = COLORS[change.type];
+    const line = LINE[change.type];
+    const active = shown() === change;
+    rings.forEach(ring => {
+      const d = ring.map((c,i) => { const p = P(c); return (i? "L":"M") + p.x + " " + p.y; }).join(" ") + " Z";
+      const path = el("path", { d, fill, "fill-opacity": (active ? 0.6 : 0.42) * f, stroke:line,
+        "stroke-width": active ? 5 : 3, class:"hit",
+        ...(change.type==="deleted" ? { "stroke-dasharray":"9 6" } : {}) });
+      path.addEventListener("mouseenter", () => hover(change));
+      path.addEventListener("mouseleave", () => hover(null));
+      /**
+       * **Not a `click` listener, deliberately.**
+       *
+       * `redraw()` wipes and rebuilds every path (see the top of this function) and runs on every
+       * render frame, because MapLibre renders continually for symbol fades. A real click is
+       * mousedown + mouseup on the *same* element — so if a frame lands between the press and the
+       * release, the path you pressed no longer exists and the browser dispatches `click` on the
+       * nearest common ancestor, the SVG, where a per-path listener can never see it. The shape
+       * simply didn't respond, intermittently and unreproducibly (Olcay: *"click still doesn't
+       * make a feature selected"*).
+       *
+       * `pointerdown` is a single event that always lands on a live path, so it records WHAT was
+       * pressed; the delegated handler on the SVG decides what to do with it.
+       */
+      path.addEventListener("pointerdown", ev => {
+        PENDING_HIT = change;
+        PENDING_AT = [ev.clientX, ev.clientY];
+      });
+      svg.appendChild(path);
+    });
+    // action badge (skip for preserved / no decision)
+    if (change.decision) { const p = P(centroid); svg.appendChild(drawBadge(p.x, p.y, change.decision)); }
+  });
+  positionTip();
+}
+
+/* ── selection tooltip ──────────────────────────────────────────────────── */
+
+/**
+ * The card has exactly two modes, and they never negotiate (Olcay, 2026-08-11: *"I like it visible
+ * on hover and invisible off hover, but if I click and select, the overlay tooltip should stay
+ * until I deselect — click out or click close button"*):
+ *
+ *   **pinned**  — shows the selected change and stays until you deselect. Hover cannot change it,
+ *                 remove it, or preview anything else. Leaves via ✕, a click outside, or Escape.
+ *   **hovering** — shows what's under the cursor and disappears the moment it isn't.
+ *
+ * Hover is ignored outright while pinned. That is what makes it predictable: with hover still
+ * tracked underneath, deselecting could pop a stale card back up, and every "sometimes it stays,
+ * sometimes it goes" bug lives in that gap.
+ */
+function hover(change) {
+  if (SELECTED) return;                  // pinned wins, unconditionally
+  if (HOVERED === change) return;
+  HOVERED = change;
+  renderTip();
+  redraw();
+}
+
+/**
+ * End a hover unless the cursor is somewhere that should keep it alive — the shape itself, or the
+ * card (which is interactive: it carries the decision control).
+ *
+ * One function because the exits are many and each one used to be its own judgement call: the map
+ * had a `mousemove`, the shapes had `mouseleave`, and **nothing at all handled leaving the map** —
+ * move the cursor onto the left panel and no further mousemove ever fired, so the card stayed up
+ * for good. `#tip` and `#hl` are *siblings* of `#map`, not children, so `#map` only ever sees bare
+ * map; every other surface has to report for itself.
+ */
+function endHoverUnless(el) {
+  if (SELECTED || !HOVERED) return;
+  if (el && el.nodeType === 1) {
+    if (tip.contains(el)) return;
+    if (el.classList && el.classList.contains("hit")) return;
+  }
+  hover(null);
+}
+
+function select(change) {
+  SELECTED = SELECTED === change ? null : change;   // clicking the same shape again unpins it
+  // Pinning takes the hover with it. Otherwise HOVERED goes stale the moment the cursor moves —
+  // hover() ignores everything while pinned — and deselecting would resurrect a card for whatever
+  // you happened to be over when you clicked, instead of simply closing.
+  HOVERED = null;
+  renderTip();
+  redraw();
+  // `id` so the app can light the matching row — `name` alone can't, since bindToFloor re-points
+  // names and two floors can carry the same one.
+  post("select", { name: SELECTED ? SELECTED.name : null, id: SELECTED ? SELECTED.id : null });
+}
+
+/**
+ * The app naming the active change (a row was clicked). Selecting and framing, but deliberately
+ * NOT posting `select` back: that would echo into the app's own state and fight the click that
+ * started it — the same loop the camera mirror is guarded against.
+ */
+function setActive(id) {
+  const change = id == null ? null : CHANGES.find(c => c.id === id);
+  if (change === SELECTED) return;                  // already there; don't re-fly under the user
+  SELECTED = change || null;
+  renderTip();
+  redraw();
+  if (SELECTED) focusChange(SELECTED);
+}
+
+function div(cls, text) {
+  const d = document.createElement("div");
+  if (cls) d.className = cls;
+  if (text != null) d.textContent = text;
+  return d;
+}
+
+function renderTip() {
+  const c = shown();
+  if (!c) { tip.style.display = "none"; return; }
+  while (tip.firstChild) tip.removeChild(tip.firstChild);
+
+  const type = div("t-type");
+  const dot = div("t-dot");
+  dot.style.background = COLORS[c.type];
+  type.appendChild(dot);
+  type.appendChild(document.createTextNode(TYPE_LABEL[c.type] || ""));
+  tip.appendChild(type);
+
+  tip.appendChild(div("t-name", c.name));
+  if (c.detail) tip.appendChild(div("t-detail", c.detail));
+
+  // Decide from the card — hovering or pinned, both (Olcay: "how do we change the flags?").
+  // It was pinned-only at first, on the theory that a control under a moving cursor is hard to
+  // hit; a hover card is actually stationary above its shape and the container-level mousemove
+  // keeps it alive while you're over it, so the only thing pinned-only bought was a step.
+  //
+  // `preserved` is skipped, the same rule the list's rows follow: a user override is carried
+  // through untouched, so there is no decision to make on it — it keeps the read-only line.
+  if (c.type !== "preserved") {
+    tip.appendChild(decisionControl(c));
+  } else if (c.decision) {
+    const row = div("t-decision");
+    row.appendChild(drawBadgeGlyph(c.decision));
+    row.appendChild(div(null, DECISION_LABEL[c.decision]));
+    tip.appendChild(row);
+  }
+
+  // A pinned card outlives the cursor, so it needs its own way out (clicking the empty map or the
+  // same shape also unpins). Hover cards don't get one — they die when the cursor leaves.
+  if (SELECTED === c) {
+    const x = div("t-close", "✕");
+    x.setAttribute("role", "button");
+    x.setAttribute("aria-label", "Close");
+    x.addEventListener("click", (ev) => { ev.stopPropagation(); select(SELECTED); });
+    tip.appendChild(x);
+  }
+
+  tip.classList.toggle("pinned", SELECTED === c);
+  tip.style.display = "block";
+  positionTip();
+}
+
+function positionTip() {
+  const c = shown();
+  if (!c) return;
+  const hit = RESOLVED.find(r => r.change === c);
+  if (!hit) { tip.style.display = "none"; return; }
+  // anchor to the shape's top edge, not its centroid, so the card never covers what it describes
+  let top = Infinity, bottom = -Infinity;
+  hit.rings.forEach(r => r.forEach(pt => {
+    const p = map.project(pt);
+    if (p.y < top) top = p.y;
+    if (p.y > bottom) bottom = p.y;
+  }));
+  const flip = top - tip.offsetHeight - 16 < 0;     // no room above → sit under the shape instead
+  tip.classList.toggle("below", flip);
+  tip.style.left = map.project(hit.centroid).x + "px";
+  tip.style.top = (flip ? bottom : top) + "px";
+}
+
+/**
+ * The pinned card's ✓ / 🚩 / ✗ control — the map's half of "the list and the map are one thing".
+ *
+ * It reports the click upward rather than mutating `CHANGES` locally, because the app owns the
+ * diff: `ManualReview` holds the decisions (keyed by id), and its next `changes` post is what
+ * re-renders this card and the centroid badge. Deciding locally would work right up until the two
+ * disagreed, which is the failure this whole protocol is arranged to prevent.
+ */
+function decisionControl(c) {
+  const row = div("t-actions");
+  [
+    ["confirm", "Confirm"],
+    ["flag", "Flag for later"],
+    ["reject", "Reject"],
+  ].forEach(([kind, label]) => {
+    const b = document.createElement("button");
+    b.setAttribute("aria-pressed", String(c.decision === kind));
+    b.setAttribute("aria-label", label);
+    b.title = label;                       // the only label an icon-only control has
+    b.appendChild(drawBadgeGlyph(kind));
+    b.addEventListener("click", (ev) => {
+      ev.stopPropagation();                // else the map's own handler unpins the card
+      post("decision", { id: c.id, name: c.name, decision: kind });
+    });
+    row.appendChild(b);
+  });
+  return row;
+}
+
+// the ✓ / 🚩 / ✗ mark on its own, for the tooltip's decision row
+function drawBadgeGlyph(kind) {
+  const s = el("svg", { width:16, height:16, viewBox:"0 0 18 18" });
+  const d = kind === "confirm" ? "M4 9.5 L7.5 13 L14 5.5"
+    : kind === "reject" ? "M5 5 L13 13 M13 5 L5 13"
+    : "M5.5 4 L5.5 15";
+  s.appendChild(el("path", { d, fill:"none", stroke:INK, "stroke-width":2, "stroke-linecap":"round" }));
+  if (kind === "flag") s.appendChild(el("path", { d:"M5.5 4 L14 6.5 L5.5 9 Z", fill:INK }));
+  return s;
+}
+
+/* ── floor-plan outline + framing + prefs ────────────────────────────────── */
+
+// Line layers straight off the vector source, so the outline follows tile loading instead of
+// freezing whatever was in view when we drew it.
+//
+// The level filter is ours to apply: MapViewController.updateLayersForCurrentLevel() only rewrites
+// layers whose id contains `_ptr` or `rmaps`, so an id like `__fp_wall` is invisible to it and the
+// outline otherwise draws EVERY floor of the building at once on top of the current level.
+const FP_LAYERS = [];   // ids of the outline layers we've added
+let fpLevel = null;     // the level their filters are currently built for
+
+// all-expression syntax: mixing the legacy `["==","$type",…]` form with expressions makes MapLibre
+// read "$type" as a plain string, and the layer silently matches nothing.
+function fpFilter() {
+  return ["all",
+    ["==", ["geometry-type"], "Polygon"],
+    ["any", ["==", ["get", "lvl"], TARGET.level], ["==", ["get", "lvl"], null]]];
+}
+
+function addFloorplan() {
+  try {
+    // These layers outlive a level switch, and their filter is baked in when they're created — so
+    // re-set it whenever the target level has moved, or the previous floor's walls keep drawing
+    // underneath the new floor's content. Guarded on the level because setFilter() invalidates the
+    // layer, and this runs on every resolve pass.
+    if (fpLevel !== TARGET.level) {
+      FP_LAYERS.forEach(id => { if (map.getLayer(id)) map.setFilter(id, fpFilter()); });
+      fpLevel = TARGET.level;
+    }
+    const layers = [...new Set(map.queryRenderedFeatures()
+      .filter(f => f.source === "source_ptr" && !FP_SKIP[f.sourceLayer])
+      .map(f => f.sourceLayer))];
+    layers.forEach(L => {
+      const id = "__fp_" + L;
+      if (map.getLayer(id)) return;
+      map.addLayer({ id, type:"line", source:"source_ptr", "source-layer":L,
+        filter: fpFilter(),
+        layout:{ visibility: prefs.floorplan ? "visible" : "none" },
+        paint:{ "line-color":"#33425c", "line-width":1, "line-opacity":0.5 } });
+      FP_LAYERS.push(id);
+    });
+  } catch(e){ post("error", { message: "floorplan: " + e.message }); }
+}
+
+// Satellite base map, reusing the MapTiler key the SDK's own style is already configured with.
+// Inserted beneath the first indoor layer so the floor plan and highlights stay on top.
+function ensureSatellite() {
+  if (map.getSource("__sat")) return true;
+  try {
+    const om = map.getStyle().sources.openmaptiles;
+    const key = (String((om && om.tiles && om.tiles[0]) || "").match(/[?&]key=([^&]+)/) || [])[1];
+    if (!key) return false;
+    map.addSource("__sat", { type:"raster", tileSize:256,
+      tiles:["https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=" + key] });
+    const firstIndoor = (map.getStyle().layers.find(l => l.source === "source_ptr") || {}).id;
+    map.addLayer({ id:"__sat", type:"raster", source:"__sat", paint:{ "raster-opacity":1 } }, firstIndoor);
+    return true;
+  } catch(e) { post("error", { message: "satellite: " + e.message }); return false; }
+}
+
+// The SDK's building chrome — the footprint extrusion and the building name/icon symbol — sits
+// between the viewer and the indoor content on every screen this app has, so it is hidden
+// outright (Olcay, 2026-08-10). Exact ids, not a pattern: osm2-buildings-flat is the basemap's
+// own and stays. Re-applied from applyPrefs() and the idle pass, because the SDK re-shows its
+// layers after level switches and 3D-mode recoveries.
+function hideBuildingChrome() {
+  try {
+    ["fill_building-outline_ptr", "symbol_building-outline_ptr"].forEach(id => {
+      if (map.getLayer(id) && map.getLayoutProperty(id, "visibility") !== "none")
+        map.setLayoutProperty(id, "visibility", "none");
+    });
+  } catch (e) {}
+}
+
+// Most indoor layers cut off below z17 (96 of ~100 sit at 17–17.5) while the tiles themselves
+// exist down to z5 — so a zoomed-out map went EMPTY once the building chrome was hidden (Olcay,
+// 2026-08-10). Lower the GEOMETRY layers' minzoom to a legible floor; the symbol layers keep the
+// SDK's own staging so labels don't collide at city scale. Re-asserted with hideBuildingChrome —
+// cheap after the first pass, since already-lowered layers are skipped.
+const PTR_GEOMETRY_MINZOOM = 14;
+function relaxPtrMinzoom() {
+  try {
+    map.getStyle().layers.forEach(l => {
+      if (!/_ptr/.test(l.id)) return;
+      if (l.id === "fill_building-outline_ptr" || l.id === "symbol_building-outline_ptr") return;
+      if (l.type !== "fill" && l.type !== "line" && l.type !== "fill-extrusion") return;
+      if (typeof l.minzoom === "number" && l.minzoom > PTR_GEOMETRY_MINZOOM)
+        map.setLayerZoomRange(l.id, PTR_GEOMETRY_MINZOOM, l.maxzoom ?? 24);
+    });
+  } catch (e) {}
+}
+
+/* ── camera sync (Compare's two panes mirror each other) ─────────────────── */
+
+// The app forwards one pane's camera to the other. `applyingCam` stops the mirrored jumpTo from
+// re-posting — MapLibre fires move synchronously inside jumpTo, so the guard is airtight.
+let applyingCam = false;
+function postCam() {
+  if (applyingCam || !map) return;
+  const c = map.getCenter();
+  post("camera", { cam: { lng: c.lng, lat: c.lat, zoom: map.getZoom(), bearing: map.getBearing(), pitch: map.getPitch() } });
+}
+
+function applyPrefs() {
+  hideBuildingChrome();
+  relaxPtrMinzoom();
+  const c = document.querySelector("#map canvas");
+  if (c) c.classList.toggle("grey", !!prefs.greyscale);
+  try {
+    const satellite = prefs.basemap === "satellite" && ensureSatellite();
+    map.getStyle().layers.forEach(l => {
+      if (l.id.indexOf("__fp_") === 0)
+        map.setLayoutProperty(l.id, "visibility", prefs.floorplan ? "visible" : "none");
+      else if (l.id === "__sat")
+        map.setLayoutProperty(l.id, "visibility", satellite ? "visible" : "none");
+      // Review focus: the SDK's POI pins and labels sit on top of the diff highlights and are the
+      // single biggest source of visual noise when comparing floors. Symbol layers only — hiding
+      // the fills would take the floor plan with them.
+      else if (l.type === "symbol" && l.source === "source_ptr")
+        map.setLayoutProperty(l.id, "visibility", prefs.hidePoiLabels ? "none" : "visible");
+      // the vector base (streets/outdoor) would show through the satellite raster
+      else if (l.source === "openmaptiles" || l.source === "outdoor-tiles")
+        map.setLayoutProperty(l.id, "visibility", satellite ? "none" : "visible");
+    });
+  } catch(e){}
+}
+
+let framed = false;
+
+// Pull back to the whole building so its tiles load — the level under review may be in a wing the
+// opening camera never covered, and nothing can resolve from tiles that were never fetched.
+function fitBuilding() {
+  try {
+    const b = pw.getUiController().getCurrentBuilding();
+    const nums = JSON.stringify(b.geometry.coordinates).match(/-?\d+\.\d+/g).map(Number);
+    let minx = 180, miny = 90, maxx = -180, maxy = -90;
+    for (let i = 0; i < nums.length; i += 2) {
+      const x = nums[i], y = nums[i + 1];
+      if (x < minx) minx = x; if (x > maxx) maxx = x;
+      if (y < miny) miny = y; if (y > maxy) maxy = y;
+    }
+    map.fitBounds([[minx, miny], [maxx, maxy]], { padding: 20, duration: 0 });
+  } catch(e){}
+}
+
+function frameChanges() {
+  let minx=180, miny=90, maxx=-180, maxy=-90, n=0;
+  RESOLVED.forEach(({ rings }) => rings.forEach(r => r.forEach(([x,y]) => {
+    n++; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; })));
+  if (n) { map.setPitch(0); map.setBearing(0); map.fitBounds([[minx,miny],[maxx,maxy]], { padding:70, duration:0 }); }
+}
+
+/**
+ * Bring one change into view when it becomes the active selection (Olcay, 2026-08-11: *"the map
+ * should center the item and focus gracefully so that the user can both understand the whereabouts
+ * of the feature and see its geometry"*).
+ *
+ * Both halves of that sentence are a constraint, and they pull against each other. **Whereabouts**
+ * wants context — fill the pane with one unit and you're looking at a rectangle with no idea which
+ * building you're in. **Geometry** wants closeness. So this fits the feature's own bounds with a
+ * generous pad and then caps the zoom: small units stop at `FOCUS_MAX_ZOOM` with their surroundings
+ * still around them, while a whole concourse still gets framed to fit.
+ *
+ * `easeTo` rather than `flyTo` on purpose: fly's zoom-out-and-back arc is a lovely gesture across a
+ * city and a nauseating one across thirty metres.
+ */
+var FOCUS_MAX_ZOOM = 19.5;
+
+function focusChange(change) {
+  if (!map) return;
+  const hit = RESOLVED.find(r => r.change === change);
+  if (!hit) return;                       // geometry not resolved yet — the map just doesn't move
+  let minx=180, miny=90, maxx=-180, maxy=-90, n=0;
+  hit.rings.forEach(r => r.forEach(([x,y]) => {
+    n++; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; }));
+  if (!n) return;
+  try {
+    map.fitBounds([[minx,miny],[maxx,maxy]], {
+      // room for the card, which sits above the shape and would otherwise cover the neighbours
+      // that tell you where you are
+      padding: { top: 190, bottom: 90, left: 90, right: 90 },
+      maxZoom: FOCUS_MAX_ZOOM,
+      duration: 650,
+      essential: true,                    // survives prefers-reduced-motion being set
+    });
+  } catch(e){}
+}
+
+/**
+ * The pane *opens* top-down — a floor plan is read flat — but rotate/tilt stay available (right-
+ * drag or ctrl-drag, two-finger on touch). Only the SDK's own unrequested pitch is reset, and only
+ * until we've framed; after that the camera is the user's.
+ *
+ * Tilting flips the SDK into 3D-model mode, which hides the indoor fills/symbols — ensureIndoorVisible()
+ * on `idle` puts them back, so rotation no longer costs you the floor plan.
+ */
+function flattenOnce() {
+  try {
+    if (map.getPitch() !== 0) map.setPitch(0);
+    if (map.getBearing() !== 0) map.setBearing(0);
+  } catch(e){}
+}
+
+// Fit to the changes once — and only once they've ALL resolved, otherwise the first tile to render
+// frames a single shop at max zoom. `force` gives up waiting for a change that never appears.
+function maybeFrame(force) {
+  if (framed || !RESOLVED.length) return;
+  if (!force && RESOLVED.length < CHANGES.length) return;
+  framed = true;
+  frameChanges();
+}
+
+/**
+ * Resolve every change against the current floor, then frame them. Tiles stream in, so this takes
+ * several passes, and the whole building has to stay in view while it runs — queryRenderedFeatures()
+ * only sees the viewport, so framing first strands every change outside the new view.
+ *
+ * Shared by boot and by a level switch. A switched-to floor needs exactly this pass and never used
+ * to get one, so its changes stayed unresolved and unframed. `done(partial)` — partial means we
+ * gave up with changes still unresolved.
+ *
+ * A pass belongs to the switch generation that started it: if a newer switch begins mid-flight this
+ * one stands down rather than resolving, framing and reporting a floor we have already left.
+ */
+function resolveAndFrame(done) {
+  const gen = switchGen;
+  const stale = () => gen !== switchGen;
+  let attempts = 0, widened = false;
+  poll(() => {
+      if (stale()) return true;
+      attempts++;
+      resolveChanges(); addFloorplan(); redraw();
+      if (RESOLVED.length >= CHANGES.length) return true;
+      if (!widened && attempts > 8) { widened = true; fitBuilding(); }
+      return false;
+    },
+    () => {
+      if (stale()) return;
+      maybeFrame(true);
+      // scrollToBuilding()'s animation lands *after* our fitBounds and snaps back to the building
+      // view, so re-fit once it has settled.
+      setTimeout(() => { if (stale()) return; framed = false; maybeFrame(true); }, 1500);
+      done(false);
+    },
+    "change features",
+    () => { if (stale()) return; maybeFrame(true); done(true); });
+}
+
+/* ── level / building switch ─────────────────────────────────────────────── */
+
+let switching = false;      // one switch in flight at a time
+let pendingTarget = null;   // newest request received while one was in flight (coalesced, not queued)
+let switchGen = 0;          // bumped per switch; an older resolve pass stands down (see resolveAndFrame)
+let started = false;        // start() has run; before that boot owns the camera, tiles and level
+
+/**
+ * Can this target exist at all? `map` is assigned during boot polling, long before boot has
+ * finished, so a switch must not be judged only by whether the map object is there.
+ *
+ * Answered from the SDK's building list without moving anything: Concourse C has no B2, and asking
+ * for one would otherwise spin the poll's full 30s budget before reporting a failure we could have
+ * known instantly.
+ */
+function targetExists(t) {
+  const bs = siteBuildings();
+  if (!bs.length) return true;                       // list not in yet — let the poll decide
+  const b = bs.find(x => x.id === (t.building || TARGET.building));
+  if (!b) return false;
+  return typeof t.level !== "number" || b.levels.some(l => l.index === t.level);
+}
+
+/**
+ * Ask the map for a building/level. Returns true if a switch actually started.
+ *
+ * Idempotent by design: the app re-sends its target whenever we post `ready`, so a request for
+ * where we already are must be a no-op, or app and map feed each other in a loop — re-opening the
+ * building and re-framing the camera under the user's hands.
+ *
+ * Requests arriving mid-switch are held, not dropped, and only the newest is kept: clicking down
+ * four floors should land on the fourth, not replay all four. Dropping them was half of the
+ * stuck-on-L2 bug — a switch sent inside the latch window vanished without a trace.
+ */
+function requestTarget(t) {
+  if (!t) return false;
+  // Held, not dropped. Gate on `started`, not on `map`: the map object is assigned during boot
+  // polling, so gating on it lets a switch start mid-boot and race boot's own
+  // openTarget → ensureTiles → applyLevel sequence. start() drains whatever is waiting.
+  if (!started || switching) { pendingTarget = t; return false; }
+  const sameBuilding = !t.building || t.building === TARGET.building;
+  const sameLevel = typeof t.level !== "number" || t.level === TARGET.level;
+  if (sameBuilding && sameLevel) return false;
+  if (!targetExists(t)) {
+    post("error", { message: "no level " + t.level + " on the requested building" });
+    post("switched", { level: levelInfo(), ok: false });   // tells the app to snap its selector back
+    return false;
+  }
+
+  switching = true;
+  switchGen++;
+  try {
+    if (t.building) TARGET.building = t.building;
+    if (typeof t.level === "number") TARGET.level = t.level;
+    RESOLVED = [];
+    resolvePasses = 0;
+    framed = false;
+    SELECTED = null; HOVERED = null; renderTip();
+    openTarget();
+    applyLevel();
+
+    // Nudge on boot's ~3s cadence, NOT on every 250ms tick as this used to: updateLayersForCurrentLevel()
+    // setFilter()s ~600 layers, and at 4Hz that invalidates tiles faster than they can be parsed. The
+    // old switch path was therefore stopping the new floor from ever painting — i.e. stopping its own
+    // painted-feature gate from ever coming true.
+    let nudges = 0;
+    poll(() => {
+        if (levelApplied()) return true;
+        if (++nudges % 12 === 0) applyLevel();
+        return false;
+      },
+      () => endSwitch(true),
+      "level " + TARGET.level + " to apply",
+      () => endSwitch(false));
+  } catch(e) {
+    // The latch must never outlive its switch — that is the whole failure mode being fixed here.
+    post("error", { message: "switch: " + e.message });
+    if (switching) endSwitch(false);
+    return false;
+  }
+  return true;
+}
+
+// Both branches release the latch and report, so the app always learns what the map settled on. On
+// failure that is the floor it never left, which snaps the level selector back to the truth instead
+// of leaving it pointing at a floor the map never reached.
+function endSwitch(ok) {
+  switching = false;
+  const queued = pendingTarget;
+  pendingTarget = null;
+  // Superseded — don't spend a resolve pass on a floor we're already leaving.
+  if (queued && requestTarget(queued)) return;
+  // A failed switch must not leave TARGET pointing at a floor we never reached. Three things read
+  // TARGET independently — the outline filter, ensureLevel()'s retry, and everything downstream of
+  // levelInfo() — so a stale TARGET means they disagree, and the app gets told a level the map
+  // isn't rendering. Roll back to what the SDK actually holds: intent lives in the app, the map
+  // reports and holds reality, and the app can ask again if it still wants that floor.
+  if (!ok) rollbackTarget();
+  // Both branches re-point the outline: it follows TARGET, so leaving it behind would draw the
+  // old floor's walls under the new one either way.
+  addFloorplan(); applyPrefs(); redraw();
+  if (ok) resolveAndFrame(() => post("features", { features: levelFeatureNames() }));
+  else post("switched", { level: levelInfo(), ok: false });
+}
+
+function rollbackTarget() {
+  try {
+    const uc = pw.getUiController(), b = uc.getCurrentBuilding();
+    const idx = uc.getMapViewController().levelIndex;
+    if (b && b.buildingInternalIdentifier) TARGET.building = b.buildingInternalIdentifier;
+    if (typeof idx === "number") TARGET.level = idx;
+  } catch(e){}
+}
+
+/* ── boot ───────────────────────────────────────────────────────────────── */
+
+function start() {
+  window.__map = map;                 // exposed for debugging
+  // Announce as soon as the map is usable. Waiting until every change has resolved meant a screen
+  // with no changes (Map Content, Editing Level) never got its prefs — so it stayed greyscale.
+  post("ready", { level: levelInfo(), buildings: siteBuildings(), features: levelFeatureNames() });
+  window.__state = () => ({ changes: CHANGES, resolved: RESOLVED.map(r => r.change.name) });
+  flattenOnce();
+  addFloorplan();
+  applyPrefs();
+  resolveChanges();
+  redraw();
+  map.on("render", redraw);
+  map.on("move", postCam);
+  map.on("move", redraw);
+  map.on("idle", () => {
+    ensureLevel();
+    ensureIndoorVisible();
+    hideBuildingChrome(); // the SDK re-shows its layers after switches and 3D recoveries
+    relaxPtrMinzoom();
+    if (resolveChanges()) { addFloorplan(); applyPrefs(); redraw(); }
+  });
+  // The SDK treats a map click as wayfinding navigation — clicking anywhere on the building
+  // footprint re-focuses and zooms to it, which is hostile in a review pane. Swallow the click in
+  // the capture phase before MapLibre's own listener sees it (mousedown/move still pan and zoom),
+  // and use it to dismiss the tooltip. Overriding uiController.MapView_onMapClicked does NOT work —
+  // the SDK registered the original function by reference.
+  document.getElementById("map").addEventListener("click", ev => {
+    ev.stopPropagation();
+    // clicking the ✕ (or anything inside the tip) is the tip's own business
+    if (tip.contains(ev.target)) return;
+    if (SELECTED) select(SELECTED);
+    if (HOVERED) hover(null);
+  }, true);
+
+  // Zoom control (Figma 2103:22178). MapLibre's own eased zoom; no-ops until the map exists.
+  document.getElementById("zoomin").addEventListener("click", () => { if (map) map.zoomIn(); });
+  document.getElementById("zoomout").addEventListener("click", () => { if (map) map.zoomOut(); });
+
+  /**
+   * Every way a hover can end, each reporting to `endHoverUnless`.
+   *
+   * A path's own `mouseleave` can't be trusted on its own — `redraw()` rebuilds every path per
+   * render frame (MapLibre renders continually for symbol fades), so the hovered element is often
+   * destroyed before its leave event fires. Hence the surfaces below, which are stable.
+   *
+   * `#tip` and `#hl` are siblings of `#map`, so each needs its own listener: a `mousemove` on
+   * `#map` fires only over *bare* map and never sees the card or the shapes.
+   */
+  /**
+   * Selecting a shape, delegated to the SVG because the shapes themselves are transient.
+   *
+   * The SVG element is stable — `redraw()` empties it but never replaces it — so a click always
+   * reaches here, whether it landed on the original path, its replacement, or (when a frame fell
+   * between press and release) on the SVG itself. `PENDING_HIT` carries the identity from the
+   * pointerdown that started it.
+   *
+   * The distance check separates a click from a drag: the shapes sit over a pannable map, and
+   * pressing on a unit to drag the map should move the map, not select the unit.
+   */
+  document.getElementById("hl").addEventListener("click", ev => {
+    const hit = PENDING_HIT, at = PENDING_AT;
+    PENDING_HIT = null; PENDING_AT = null;
+    if (!hit) return;
+    if (at && Math.hypot(ev.clientX - at[0], ev.clientY - at[1]) > 4) return;   // that was a pan
+    ev.stopPropagation();
+    select(hit);
+  });
+  // a press that wandered off and released elsewhere shouldn't leave a live pending selection
+  window.addEventListener("pointerup", () => { setTimeout(() => { PENDING_HIT = null; PENDING_AT = null; }, 0); });
+
+  const mapEl = document.getElementById("map");
+  mapEl.addEventListener("mousemove", ev => endHoverUnless(ev.target));
+  // leaving the map for the panel, the chrome, or another window — the case that used to strand
+  // the card on screen indefinitely, because no further mousemove was ever coming
+  mapEl.addEventListener("mouseleave", ev => endHoverUnless(ev.relatedTarget));
+  // leaving the card itself; `relatedTarget` keeps a trip back to its own shape from flickering
+  tip.addEventListener("mouseleave", ev => endHoverUnless(ev.relatedTarget));
+  document.getElementById("hl").addEventListener("mouseleave", ev => endHoverUnless(ev.relatedTarget));
+  // out of the document entirely (relatedTarget is null on the way out of the window)
+  document.addEventListener("mouseout", ev => { if (!ev.relatedTarget) endHoverUnless(null); });
+  window.addEventListener("blur", () => endHoverUnless(null));
+
+  map.on("movestart", () => { if (HOVERED) hover(null); });
+
+  // Escape deselects, like every other overlay in the app. Pinned only — a hover card needs no
+  // dismissing, it dies when you look away.
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && SELECTED) select(SELECTED);
+  });
+
+  resolveAndFrame(partial => post("ready", { changes: RESOLVED.length, level: levelInfo(), features: levelFeatureNames(),
+    buildings: siteBuildings(), partial }));
+
+  // Boot is done: switches may run from here. Anything that arrived while boot owned the map was
+  // held rather than dropped on the floor, so drain it now.
+  started = true;
+  const queued = pendingTarget;
+  pendingTarget = null;
+  requestTarget(queued);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const missing = missingConfig();
+  if (missing.length) {
+    document.getElementById("map").innerHTML =
+      '<div style="position:absolute;inset:0;display:grid;place-items:center;padding:24px;' +
+      'font:13px/1.6 \'Readex Pro\',system-ui,sans-serif;color:#5d626f;text-align:center">' +
+      '<div><b style="color:#1F2328">Map configuration missing</b><br>No ' + missing.join(", ") +
+      '.<br>The app passes these on the query string from its environment ' +
+      '(VITE_POINTR_*). Opening this page directly needs them too.</div></div>';
+    post("error", { message: "missing map config: " + missing.join(", ") });
+    return;
+  }
+  try {
+    const options = new PointrWebSDK.Options({
+      container: "map",
+      baseUrl: CONN.baseUrl,
+      clientIdentifier: CONN.client,
+      licenseKey: CONN.licence,
+      mapMaxZoom: 21,
+      pitch: 0,                         // a floor plan is read top-down; a pitched camera also
+      bearing: 0,                       // flips the SDK into 3D-model mode (see lockFlat)
+      siteInternalIdentifier: TARGET.site,
+      buildingInternalIdentifier: TARGET.building,
+      levelIndex: TARGET.level,
+      // this pane is a review viewport, not a wayfinding widget
+      isSearchEnabled: false,
+      isPoiDetailsEnabled: false,
+      isZoomControlEnabled: false,
+      isLanguageSelectorEnabled: false,
+      isNavigationEnabled: false,
+      isQuickAccessEnabled: false,
+      isAppBannerEnabled: false,
+    });
+    pw = new PointrWebSDK.MapWidget(options);
+    window.pw = pw;                   // exposed for debugging
+
+    pw.start();
+
+    // 1. map + site list ready → 2. open Dubai/Concourse B → 3. tile URL → 4. indoor features.
+    // Gated on the SDK's `dataLoaded` event with a poll as backstop (`pw.isDataLoaded` stays false
+    // even on a fully loaded widget, so it can't be trusted). boot() is idempotent.
+    let booted = false;
+    const sdkReady = () => {
+      map = getMap();
+      hookMapErrors();
+      const mvc = (() => { try { return pw.uiController.mapViewController; } catch(e) { return null; } })();
+      return !!(map && mvc && mvc.sites && mvc.sites.length);
+    };
+    const boot = () => {
+      if (booted || !sdkReady()) return;
+      booted = true;
+      openTarget();
+      applyLevel();
+      ensureTiles(() => {
+        try { pw.uiController.mapViewController.scrollToBuilding(TARGET.building); } catch(e){}
+        applyLevel();                                  // now that the tiles are real, pin level 2
+        // Nudge the level every ~3s, NOT every tick: updateLayersForCurrentLevel() setFilter()s
+        // ~600 layers, and doing that at 4Hz invalidates tiles faster than they can be parsed —
+        // the map then renders nothing at all.
+        let nudges = 0;
+        poll(() => {
+          if (levelIsRendering()) return true;
+          if (++nudges % 12 === 0) applyLevel();
+          return false;
+        }, start, "level " + TARGET.level + " features");
+      });
+    };
+    try { pw.on("dataLoaded", boot); } catch(e){}
+    poll(sdkReady, boot, "sdk data");
+  } catch(e) { post("error", { message: e.message }); }
+});
+
+// live decisions + map view preferences from the app
+window.addEventListener("message", (ev) => {
+  const d = ev.data;
+  if (!d) return;
+  if (d.type === "changes" && Array.isArray(d.changes)) {
+    // The app owns the diff, so its list is authoritative: drop anything it no longer sends (an
+    // empty list = a plain map, e.g. Map Content / Editing Level), then merge by feature name so
+    // geometry we've already resolved survives a decision change.
+    const keep = CHANGES.filter(c => d.changes.some(i => i.name === c.name));
+    CHANGES.length = 0;
+    d.changes.forEach(incoming => {
+      const ch = keep.find(c => c.name === incoming.name);
+      CHANGES.push(ch ? Object.assign(ch, incoming) : Object.assign({}, incoming));
+    });
+    RESOLVED = RESOLVED.filter(r => CHANGES.indexOf(r.change) >= 0);
+    resolvePasses = 0;
+    SELECTED = CHANGES.indexOf(SELECTED) >= 0 ? SELECTED : null;
+    HOVERED = null;
+    if (map) { resolveChanges(); redraw(); renderTip(); }
+  } else if (d.type === "active") {
+    // A changelog row was clicked — mirror it here. Deferred until geometry exists, because a
+    // row can be clicked before `resolveChanges()` has caught up and there'd be nothing to fly to.
+    PENDING_ACTIVE = d.id ?? null;
+    if (map) setActive(PENDING_ACTIVE);
+  } else if (d.type === "target") {
+    // Switch the level (and building) under the map without reloading the SDK. All of the care —
+    // idempotence, coalescing, the readiness gate — lives in requestTarget().
+    requestTarget({ building: d.building, level: d.level });
+  } else if (d.type === "camera" && d.cam && map) {
+    // A mirrored move from the other Compare pane. Guarded so it can't echo back.
+    applyingCam = true;
+    try {
+      map.jumpTo({ center: [d.cam.lng, d.cam.lat], zoom: d.cam.zoom, bearing: d.cam.bearing, pitch: d.cam.pitch });
+    } finally { applyingCam = false; }
+  } else if (d.type === "prefs") {
+    if ("greyscale" in d) prefs.greyscale = !!d.greyscale;
+    if ("hidePoiLabels" in d) prefs.hidePoiLabels = !!d.hidePoiLabels;
+    if ("floorplan" in d) prefs.floorplan = !!d.floorplan;
+    if ("basemap" in d) prefs.basemap = d.basemap;
+    applyPrefs();
+  } else if (d.type === "dropzone") {
+    // The app says whether this pane accepts file drops (upload surfaces only — a Compare pane
+    // or a review map shouldn't invite an upload it can't take).
+    DROP_ON = !!d.on;
+  }
+});
+
+/* ── drag-and-drop floor-plan upload ─────────────────────────────────────────
+   The iframe owns every drag event over the map, so the drop is caught HERE and only the file's
+   name/size is posted up — the app decides what it means (confirmation overlay with the
+   building/level the map is showing). preventDefault runs regardless of DROP_ON so a stray drop
+   never makes the browser navigate away from the map page. The veil is visual only
+   (pointer-events: none); depth-counting dragenter/leave is the classic fix for leave events
+   firing on every child boundary. */
+let DROP_ON = false, dragDepth = 0;
+const veil = document.getElementById("dropveil");
+const hasFiles = ev => !!(ev.dataTransfer && Array.from(ev.dataTransfer.types || []).indexOf("Files") >= 0);
+document.addEventListener("dragenter", ev => {
+  if (!hasFiles(ev)) return;
+  ev.preventDefault();
+  dragDepth++;
+  if (DROP_ON) veil.classList.add("on");
+});
+document.addEventListener("dragover", ev => { if (hasFiles(ev)) ev.preventDefault(); });
+document.addEventListener("dragleave", ev => {
+  if (!hasFiles(ev)) return;
+  if (--dragDepth <= 0) { dragDepth = 0; veil.classList.remove("on"); }
+});
+document.addEventListener("drop", ev => {
+  ev.preventDefault();
+  dragDepth = 0;
+  veil.classList.remove("on");
+  const f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if (DROP_ON && f) post("filedrop", { name: f.name, size: f.size });
+});
+</script>
+</body>
+</html>

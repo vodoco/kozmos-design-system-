@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- DS declares Readex Pro but ships no @font-face; load it so the DS font actually renders -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Pointr WebSDK (live indoor map) -->
+    <link rel="stylesheet" href="https://pointr-websdk.azureedge.net/10.7.1/css/pointr.css" />
+    <script src="https://pointr-websdk.azureedge.net/10.7.1/pointrwebsdk.js"></script>
+    <title>MapScale — Auto Map Updates</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

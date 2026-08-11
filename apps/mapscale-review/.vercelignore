@@ -1,0 +1,26 @@
+# Only the built output ships. The app is part of a pnpm workspace and depends on
+# @kozmos/react via workspace:*, so Vercel cannot install or build it standalone —
+# we build locally (pnpm --filter mapscale-review build) and upload dist/.
+#
+# NB every pattern is ROOT-ANCHORED with a leading slash. Unanchored, `index.html`
+# matches at any depth and silently swallows dist/index.html — which deploys a site
+# whose assets all resolve and whose front page is a 404.
+/node_modules
+/src
+/public
+/index.html
+/vite.config.ts
+/tsconfig.json
+/tsconfig.app.json
+/tsconfig.node.json
+/package.json
+/pnpm-lock.yaml
+/eslint.config.js
+/README.md
+/_dev.log
+/_install.log
+/.env.local
+/.env*.local
+
+# the feedback function must ship (see api/feedback.mjs)
+!/api
