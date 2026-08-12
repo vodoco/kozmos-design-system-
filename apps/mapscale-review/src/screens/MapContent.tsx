@@ -320,6 +320,17 @@ function flaggedNamesFor(buildingId: string, index: number, short: string): Set<
 const EMPTY_FLAGS: Set<string> = new Set();
 
 /**
+ * The half of a feature's bag the editor may never touch — which feature it is, and where it lives.
+ * Kept aside so a save can *replace* the editable half wholesale (a removed field must actually go)
+ * without the identity going with it.
+ */
+function pickIdentity(props: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const k of ["fid", "bid", "sid", "lvl", "mainType", "mapPersonas"]) if (k in props) out[k] = props[k];
+  return out;
+}
+
+/**
  * **Editing a feature clears its flag** — §18a's ruling, finally implemented.
  *
  * Olcay ruled de-flagging *implicit on edit* on 2026-08-11, and the handoff has said ever since
@@ -1391,10 +1402,16 @@ export function MapContent({
    * — §18a, implicit on edit.
    */
   const onEdited = useCallback(
-    (next: { name: string; subType?: string }) => {
+    (next: Record<string, unknown>) => {
       if (!focused || !target) return;
       setEdits((cur) => ({ ...cur, [focused.fid]: next }));
-      setProps((cur) => (cur && cur.fid === focused.fid ? { ...cur, props: { ...cur.props, ...next } } : cur));
+      // Replace rather than merge the property bag: a field REMOVED in the editor has to disappear,
+      // and a spread would keep resurrecting it from the tile's original values.
+      setProps((cur) =>
+        cur && cur.fid === focused.fid
+          ? { ...cur, props: { ...pickIdentity(cur.props), ...next } }
+          : cur,
+      );
       const short =
         live.find((b) => b.id === target.building)?.levels.find((l) => l.index === target.level)?.short ?? "";
       // Clear against the name it had when it was flagged — a rename would otherwise orphan the flag
