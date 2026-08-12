@@ -102,7 +102,13 @@ export function MapSettings({
                 onClick={() => onChange({ ...prefs, basemap: b.value })}
                 aria-pressed={selected}
                 style={{
-                  flex: 1,
+                  /**
+                   * A fixed 80px tile, not a flexed half of the popover (Olcay, 2026-08-12).
+                   * `flex: 1` made the thumbnail as big as the panel allowed — two large pictures
+                   * dominating a preferences popover whose actual subject is one switch and a
+                   * choice. A thumbnail only has to be recognisable.
+                   */
+                  flex: "0 0 80px",
                   padding: 0,
                   background: "none",
                   border: "none",
@@ -120,8 +126,8 @@ export function MapSettings({
                      * how wide the popover happened to be: a landscape box next to a square one
                      * elsewhere in the same app. `aspectRatio` keeps it square at any width.
                      */
-                    width: "100%",
-                    aspectRatio: "1 / 1",
+                    width: 80,
+                    height: 80,
                     display: "block",
                     objectFit: "cover",
                     borderRadius: 8,

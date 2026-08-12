@@ -491,6 +491,46 @@ function candidateFeatures() {
  * Ordered by bounding-box area so the picks are prominent units a reviewer can actually see, not
  * slivers; `wall` and the big grouping layers are skipped for the same reason pickFeature skips them.
  */
+/**
+ * What KINDS of thing are on the current floor, and how many of each — the data behind the tree's
+ * expandable level rows (Olcay, 2026-08-11: *"we need to expand levels to show each type"*).
+ *
+ * The taxonomy rides on the features themselves: every `source_ptr` feature carries `mainType` and
+ * `subType`, so this counts pairs rather than guessing from layer ids. Deduped on `fid`, because a
+ * feature split across tiles is reported once per tile and would otherwise inflate every count.
+ *
+ * ⚠️ **These are counts of what the map has LOADED**, not a census. `querySourceFeatures` only
+ * sees loaded tiles, so a floor whose far end has never been in view under-reports. Boot frames the
+ * whole building before this runs, which is why the numbers are close — but they are honest-ish,
+ * not authoritative, and the real dashboard would read them from the content API.
+ */
+function levelTypeCounts() {
+  try {
+    const seen = new Set();
+    const tally = new Map();
+    const layers = [...new Set(map.getStyle().layers
+      .filter(l => l.source === "source_ptr" && l["source-layer"])
+      .map(l => l["source-layer"]))];
+    for (const L of layers) {
+      let fs = [];
+      try { fs = map.querySourceFeatures("source_ptr", { sourceLayer: L }); } catch (e) { continue; }
+      for (const f of fs) {
+        const p = f.properties;
+        if (!p || p.lvl !== TARGET.level) continue;
+        if (TARGET.building && p.bid && p.bid !== TARGET.building) continue;
+        if (p.fid == null || seen.has(p.fid)) continue;
+        seen.add(p.fid);
+        const key = (p.mainType || L) + "\u0000" + (p.subType || "");
+        tally.set(key, (tally.get(key) || 0) + 1);
+      }
+    }
+    return [...tally.entries()].map(([k, count]) => {
+      const [mainType, subType] = k.split("\u0000");
+      return subType ? { mainType, subType, count } : { mainType, count };
+    });
+  } catch (e) { return []; }
+}
+
 function levelFeatureNames(limit) {
   try {
     const seen = new Map();
@@ -1272,7 +1312,7 @@ function endSwitch(ok) {
   // Both branches re-point the outline: it follows TARGET, so leaving it behind would draw the
   // old floor's walls under the new one either way.
   addFloorplan(); applyPrefs(); redraw();
-  if (ok) resolveAndFrame(() => post("features", { features: levelFeatureNames() }));
+  if (ok) resolveAndFrame(() => post("features", { features: levelFeatureNames(), types: levelTypeCounts(), forLevel: { building: TARGET.building, level: TARGET.level } }));
   else post("switched", { level: levelInfo(), ok: false });
 }
 
@@ -1291,7 +1331,7 @@ function start() {
   window.__map = map;                 // exposed for debugging
   // Announce as soon as the map is usable. Waiting until every change has resolved meant a screen
   // with no changes (Map Content, Editing Level) never got its prefs — so it stayed greyscale.
-  post("ready", { level: levelInfo(), buildings: siteBuildings(), features: levelFeatureNames() });
+  post("ready", { level: levelInfo(), buildings: siteBuildings(), features: levelFeatureNames(), types: levelTypeCounts(), forLevel: { building: TARGET.building, level: TARGET.level } });
   window.__state = () => ({ changes: CHANGES, resolved: RESOLVED.map(r => r.change.name) });
   flattenOnce();
   addFloorplan();
@@ -1376,6 +1416,7 @@ function start() {
   });
 
   resolveAndFrame(partial => post("ready", { changes: RESOLVED.length, level: levelInfo(), features: levelFeatureNames(),
+    types: levelTypeCounts(), forLevel: { building: TARGET.building, level: TARGET.level },
     buildings: siteBuildings(), partial }));
 
   // Boot is done: switches may run from here. Anything that arrived while boot owned the map was

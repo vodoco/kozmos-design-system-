@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { Change } from "../mock/diff";
+import type { LevelTypeCount } from "../mock/taxonomy";
 import { pointrMapSrc } from "../mock/pointrConfig";
 
 /**
@@ -70,6 +71,11 @@ const PointrMap = forwardRef<PointrMapHandle, {
    */
   onFeatures?: (names: string[]) => void;
   /**
+   * What kinds of feature the reported floor holds, and how many of each — the tree's expandable
+   * level rows read this. Arrives with `features`, from the same `ready`/`switched` moments.
+   */
+  onTypes?: (forLevel: { building: string; level: number }, types: LevelTypeCount[]) => void;
+  /**
    * A decision taken on the map itself — the pinned card's ✓ / 🚩 / ✗ (Olcay, 2026-08-11). The
    * map reports it and changes nothing; the app applies it and posts the result back down, so the
    * centroid badge and the changelog row can never disagree about what you decided.
@@ -83,7 +89,7 @@ const PointrMap = forwardRef<PointrMapHandle, {
    */
   active?: string | null;
   onSelect?: (id: string | null) => void;
-}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onDecision, active, onSelect, target }, handle) {
+}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, target }, handle) {
   const ref = useRef<HTMLIFrameElement>(null);
   useImperativeHandle(handle, () => ({
     setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
@@ -126,10 +132,13 @@ const PointrMap = forwardRef<PointrMapHandle, {
         if (ev.data.level) onLevel?.(ev.data.level);
         if (ev.data.buildings?.length) onBuildings?.(ev.data.buildings);
         if (ev.data.features?.length) onFeatures?.(ev.data.features);
+        if (ev.data.types?.length && ev.data.forLevel) onTypes?.(ev.data.forLevel, ev.data.types);
       } else if (ev.data.type === "features") {
         // a switch settled on a new floor — its features replace the old floor's
         if (ev.source === ref.current?.contentWindow && ev.data.features?.length)
           onFeatures?.(ev.data.features);
+        if (ev.source === ref.current?.contentWindow && ev.data.types?.length && ev.data.forLevel)
+          onTypes?.(ev.data.forLevel, ev.data.types);
       } else if (ev.data.type === "switched" && ev.data.ok === false) {
         // Only failures are reported upward, and deliberately so. The app owns intent; the map
         // reports reality; the app corrects itself only when reality contradicts intent. Feeding
@@ -158,7 +167,7 @@ const PointrMap = forwardRef<PointrMapHandle, {
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onDecision, onSelect]);
+  }, [onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, onSelect]);
 
   /**
    * Its own effect, not part of `send()`: selection changes far more often than the diff does, and

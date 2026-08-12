@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Button, Icon, Input, Popover, PopoverTrigger, PopoverContent, Text } from "@kozmos/react";
 import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
 import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, expertReviewEnabled, isUnderExpertReview, seedVersions, type Change } from "../mock/diff";
@@ -16,6 +16,15 @@ import {
   getReviewCount,
 } from "../mock/store";
 import { CONCOURSE_A_ID, SITE_SNAPSHOT, T3_ID } from "../mock/site";
+import {
+  CLASS_LABEL,
+  SPRITE_BASE,
+  groupByClass,
+  spriteName,
+  rowLabel,
+  type LevelTypeCount,
+  type SpriteSheet,
+} from "../mock/taxonomy";
 
 /**
  * S4 — Map Content (Figma node 2483:776). The dashboard's entry point: the buildings of the active
@@ -472,6 +481,127 @@ function MenuItem({
   );
 }
 
+/**
+ * What the map has told us is on each floor, keyed `buildingId:index`, plus the way to ask about a
+ * floor it hasn't visited.
+ *
+ * A **context**, not props: the only consumer is `LevelRow`, three components down, and threading
+ * a cache plus a setter through `BuildingRow` would make that component carry state it has no
+ * opinion about.
+ */
+const LevelTypesContext = createContext<{
+  byLevel: Record<string, LevelTypeCount[]>;
+  /** Show this floor on the map — which is also what makes its counts arrive. */
+  request: (buildingId: string, index: number) => void;
+  sheet: SpriteSheet | null;
+}>({ byLevel: {}, request: () => {}, sheet: null });
+
+/**
+ * One taxonomy icon, drawn straight from the published sprite sheet.
+ *
+ * The sheet is one PNG plus a JSON of frames, so an icon is a background-position — no per-icon
+ * request, and it stays in step with the taxonomy because it *is* the taxonomy's own artwork.
+ * A type with no icon renders a neutral dot rather than a broken frame: `wall`, `section` and
+ * `furniture` genuinely have none.
+ */
+function TypeIcon({ mainType, subType }: { mainType: string; subType?: string }) {
+  const { sheet } = useContext(LevelTypesContext);
+  const name = spriteName(sheet, mainType, subType);
+  const f = name && sheet ? sheet[name] : null;
+  if (!f) {
+    return <span style={{ width: 16, height: 16, borderRadius: 8, background: "var(--primitives-colors-background-200)", flex: "0 0 auto" }} />;
+  }
+  // scale the frame into a 16px box; background-size scales the whole sheet by the same factor
+  const k = 16 / Math.max(f.width, f.height);
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: 16,
+        height: 16,
+        flex: "0 0 auto",
+        backgroundImage: `url(${SPRITE_BASE}.png)`,
+        backgroundPosition: `-${f.x * k}px -${f.y * k}px`,
+        backgroundSize: `${SPRITE_W * k}px auto`,
+        backgroundRepeat: "no-repeat",
+      }}
+    />
+  );
+}
+/**
+ * The sheet's own pixel width — every frame's x/y is relative to it, so `background-size` has to
+ * scale the WHOLE sheet by the same factor as the frame.
+ *
+ * Measured from the PNG header (2046×588), not guessed: a wrong width doesn't fail loudly, it just
+ * lands every icon on empty sheet and renders blanks.
+ */
+const SPRITE_W = 2046;
+
+/** The expanded body of a level row: its feature types, grouped by taxonomy class. */
+function LevelTypes({ buildingId, index }: { buildingId: string; index: number }) {
+  const { byLevel } = useContext(LevelTypesContext);
+  const counts = byLevel[`${buildingId}:${index}`];
+  const groups = useMemo(() => (counts ? groupByClass(counts) : []), [counts]);
+
+  if (!counts) {
+    return (
+      <div style={{ padding: `8px 12px 8px ${indent(2)}px`, borderBottom: `1px solid ${LINE}`, fontSize: 12.5, color: MUTED }}>
+        Reading this floor…
+      </div>
+    );
+  }
+  if (!groups.length) {
+    return (
+      <div style={{ padding: `8px 12px 8px ${indent(2)}px`, borderBottom: `1px solid ${LINE}`, fontSize: 12.5, color: MUTED }}>
+        Nothing mapped on this floor yet.
+      </div>
+    );
+  }
+  return (
+    <>
+      {groups.map((g) => (
+        <div key={g.cls}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: `6px 12px 6px ${indent(2)}px`,
+              borderBottom: `1px solid ${LINE}`,
+              background: "#fbfcfd",
+            }}
+          >
+            <span style={{ fontSize: 10.5, letterSpacing: 0.8, fontWeight: 700, color: "var(--primitives-colors-theme-700)" }}>
+              {CLASS_LABEL[g.cls].toUpperCase()}
+            </span>
+            <span style={{ fontSize: 10.5, color: MUTED }}>· {g.total} as loaded</span>
+          </div>
+          {g.rows.map((r) => (
+            <div
+              key={`${r.mainType}/${r.subType ?? ""}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: `6px 12px 6px ${indent(3)}px`,
+                borderBottom: `1px solid ${LINE}`,
+                fontSize: 12.5,
+                color: "var(--review-ink)",
+              }}
+            >
+              <TypeIcon mainType={r.mainType} subType={r.subType} />
+              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {rowLabel(r, counts)}
+              </span>
+              <span style={{ fontSize: 11, color: MUTED, flex: "0 0 auto" }}>{r.count}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
 function LevelRow({
   building,
   buildingId,
@@ -505,6 +635,7 @@ function LevelRow({
     liveTagsFor(buildingId, level.index, level.short),
   );
   const lockedByExperts = isUnderExpertReview(level.index, buildingId);
+  const { request: requestTypes } = useContext(LevelTypesContext);
 
   return (
     <>
@@ -521,14 +652,17 @@ function LevelRow({
         }}
       >
         <button
-          onClick={() => setOpen((o) => !o)}
-          disabled={!level.children}
+          onClick={() => {
+            // Expanding a floor shows it on the map — which is also what makes its counts arrive,
+            // since the map can only count the floor it is rendering.
+            if (!open) requestTypes(buildingId, level.index);
+            setOpen((o) => !o);
+          }}
           style={{
             background: "none",
             border: "none",
             padding: 0,
-            cursor: level.children ? "pointer" : "default",
-            opacity: level.children ? 1 : 0.25,
+            cursor: "pointer",
           }}
           aria-label={open ? "Collapse" : "Expand"}
         >
@@ -624,24 +758,20 @@ function LevelRow({
           </PopoverContent>
         </Popover>
       </div>
-      {open &&
-        level.children?.map((c) => (
-          <div
-            key={c}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: `8px 12px 8px ${indent(2)}px`,
-              borderBottom: `1px solid ${LINE}`,
-              fontSize: 13,
-              color: MUTED,
-            }}
-          >
-            <Chevron open={false} />
-            {c}
-          </div>
-        ))}
+      {/*
+        **What is actually on this floor** (Olcay, 2026-08-11: *"we need to expand levels to show
+        each type"*), grouped the way the real dashboard groups it.
+
+        The grouping is the taxonomy's own `class` — POI · Structural · Interior · Virtual — and the
+        counts are the map's, not a fixture: every `source_ptr` feature carries `mainType`/`subType`,
+        so this is the floor describing itself. Icons come from the taxonomy's published sprite
+        sheet, so they cannot drift from the types they label.
+
+        ⚠️ **Counts are of what the map has LOADED.** `querySourceFeatures` only sees loaded tiles,
+        so a floor whose far end has never been in view under-reports. Hence "as loaded" in the
+        header rather than a bare total — the real dashboard reads these from the content API.
+      */}
+      {open && <LevelTypes buildingId={buildingId} index={level.index} />}
     </>
   );
 }
@@ -790,6 +920,42 @@ export function MapContent({
   const [live, setLive] = useState<MapBuilding[]>([]);
   // What the map is showing — driven by the selector over the map, top-centre.
   const [target, setTarget] = useState<{ building: string; level: number } | undefined>();
+
+  /**
+   * The per-level type counts the map reports, cached so a floor you have already looked at stays
+   * populated when you collapse and re-open it — and so switching away doesn't blank it.
+   */
+  const [typesByLevel, setTypesByLevel] = useState<Record<string, LevelTypeCount[]>>({});
+  const onTypes = useCallback(
+    (forLevel: { building: string; level: number }, types: LevelTypeCount[]) =>
+      setTypesByLevel((prev) => ({ ...prev, [`${forLevel.building}:${forLevel.level}`]: types })),
+    [],
+  );
+
+  /**
+   * The taxonomy's sprite sheet, fetched once. It is a published, versioned artefact, so the icons
+   * cannot drift from the types they label — and one PNG plus one JSON costs one request each
+   * rather than an icon per type.
+   */
+  const [sheet, setSheet] = useState<SpriteSheet | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetch(`${SPRITE_BASE}.json`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (live && j) setSheet(j); })
+      .catch(() => {});      // no icons is a fine outcome; the rows still read
+    return () => { live = false; };
+  }, []);
+
+  /** Expanding a floor shows it on the map, which is what makes its counts arrive. */
+  const requestTypes = useCallback(
+    (building: string, level: number) => setTarget((t) => (t?.building === building && t?.level === level ? t : { building, level })),
+    [],
+  );
+  const typesCtx = useMemo(
+    () => ({ byLevel: typesByLevel, request: requestTypes, sheet }),
+    [typesByLevel, requestTypes, sheet],
+  );
   const [mapLevel, setMapLevel] = useState<MapLevel | null>(null);
   const onBuildings = useCallback((b: MapBuilding[]) => {
     setBuildings(toBuildings(b));
@@ -858,6 +1024,7 @@ export function MapContent({
   const onFileDrop = useCallback((f: { name: string }) => setDropped(f.name), []);
 
   return (
+    <LevelTypesContext.Provider value={typesCtx}>
     <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
       <div
         style={{
@@ -934,6 +1101,7 @@ export function MapContent({
           prefs={prefs}
           onBuildings={onBuildings}
           onLevel={onLevel}
+          onTypes={onTypes}
           onFileDrop={onFileDrop}
           target={target}
         />
@@ -961,5 +1129,6 @@ export function MapContent({
         )}
       </div>
     </div>
+    </LevelTypesContext.Provider>
   );
 }
