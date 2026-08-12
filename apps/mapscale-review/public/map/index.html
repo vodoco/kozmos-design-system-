@@ -1148,7 +1148,8 @@ var FOCUS_MAX_ZOOM = 19.5;
  * filling the pane with a single toilet tells you its shape and nothing about where it is. Padding
  * is even all round here — unlike a change, a tree selection opens no card to make room for.
  */
-function focusFeature(fid) {
+function focusFeature(fid, tries) {
+  tries = tries || 0;
   if (!map || fid == null) return;
   let minx=180, miny=90, maxx=-180, maxy=-90, n=0;
   const eat = coords => {
@@ -1168,7 +1169,21 @@ function focusFeature(fid) {
       }
     }
   } catch(e){}
-  if (!n) return;                       // not in a loaded tile — the map simply doesn't move
+  if (!n) {
+    /**
+     * Not in a loaded tile yet. That is the normal case straight after a LEVEL SWITCH — the tree
+     * asks for the floor and the feature in the same breath, and the tiles are still arriving — so
+     * try again rather than silently doing nothing, which is what made clicking a row on another
+     * floor look broken.
+     *
+     * ⚠️ The window has to outlast a LEVEL SWITCH, and that is the bit worth measuring rather than
+     * guessing: the switch re-applies ~600 layer filters on a ~3s cadence, so a 3.2s window
+     * (8 × 400ms) expired just as the tiles began arriving and the map stayed put. 20 × 500ms
+     * gives it 10s, comfortably longer than the switch itself.
+     */
+    if (tries < 20) setTimeout(() => focusFeature(fid, tries + 1), 500);
+    return;
+  }
   try {
     map.fitBounds([[minx,miny],[maxx,maxy]], {
       padding: 120, maxZoom: FOCUS_MAX_ZOOM, duration: 650, essential: true,

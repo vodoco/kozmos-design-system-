@@ -97,19 +97,19 @@ export interface SpriteEntry { x: number; y: number; width: number; height: numb
 export type SpriteSheet = Record<string, SpriteEntry>;
 
 /**
- * The taxonomy's own generic pin, used when a type has no icon of its own — `wall`, `section` and
- * `furniture` genuinely have none (Olcay, 2026-08-12: *"use generic marker in the sprite for those
- * that doesn't have marker"*). It beats a grey dot because it comes from the same sheet and reads
- * as "a thing on the map" rather than as a rendering failure.
+ * Which sprite draws this type — subType, then mainType, then **nothing**.
+ *
+ * ⚠️ **The sheet has no generic marker.** Asked for one (Olcay, 2026-08-12), I checked: all 408 of
+ * its 32×32 frames are specific type glyphs, and the nearest candidate — `landmark-attraction` —
+ * is a landmark icon, not a neutral one. Labelling a wall with it would be worse than labelling it
+ * with nothing. So a type with no icon of its own falls back to the DS's `marker-pin-01`, which is
+ * genuinely neutral; `wall`, `section` and `furniture` are the ones that need it.
  */
-const GENERIC_SPRITE = "landmark-attraction";
-
-/** Which sprite draws this type — subType, then mainType, then the generic pin. */
 export function spriteName(sheet: SpriteSheet | null, mainType: string, subType?: string): string | null {
   if (!sheet) return null;
   if (subType && sheet[subType]) return subType;
   if (sheet[mainType]) return mainType;
-  return sheet[GENERIC_SPRITE] ? GENERIC_SPRITE : null;
+  return null;
 }
 
 /* ── what the map reports ──────────────────────────────────────────────────── */

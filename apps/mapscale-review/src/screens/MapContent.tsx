@@ -494,8 +494,12 @@ const LevelTypesContext = createContext<{
   /** Show this floor on the map — which is also what makes its counts arrive. */
   request: (buildingId: string, index: number) => void;
   sheet: SpriteSheet | null;
-  /** Centre the map on one feature, and mark its row as the selected one. */
-  focus: (fid: string) => void;
+  /**
+   * Centre the map on one feature — **and switch to its floor**, which is the half that was
+   * missing: the map can be showing a different level than the row you clicked, and centring on
+   * the right coordinates of the wrong floor lands you nowhere useful.
+   */
+  focus: (buildingId: string, index: number, fid: string) => void;
   focused: string | null;
 }>({ byLevel: {}, request: () => {}, sheet: null, focus: () => {}, focused: null });
 
@@ -512,7 +516,13 @@ function TypeIcon({ mainType, subType }: { mainType: string; subType?: string })
   const name = spriteName(sheet, mainType, subType);
   const f = name && sheet ? sheet[name] : null;
   if (!f) {
-    return <span style={{ width: 16, height: 16, borderRadius: 8, background: "var(--primitives-colors-background-200)", flex: "0 0 auto" }} />;
+    // The sprite has no generic marker (see spriteName) — the DS's neutral pin stands in, so a
+    // type without artwork still reads as "a thing on the map" rather than as a missing image.
+    return (
+      <span style={{ width: 16, height: 16, flex: "0 0 auto", display: "grid", placeItems: "center", color: "var(--primitives-colors-background-400)" }}>
+        <Icon name="marker-pin-01" />
+      </span>
+    );
   }
   // scale the frame into a 16px box; background-size scales the whole sheet by the same factor
   const k = 16 / Math.max(f.width, f.height);
@@ -614,7 +624,7 @@ function CountChip({ n }: { n: number }) {
 }
 
 /** A single feature under its type — the leaf of the tree, and the only row you edit. */
-function FeatureRow({ name, unnamed, fid }: { name: string; unnamed: boolean; fid?: string }) {
+function FeatureRow({ name, unnamed, fid, buildingId, index }: { name: string; unnamed: boolean; fid?: string; buildingId: string; index: number }) {
   const [hover, setHover] = useState(false);
   const { focus, focused } = useContext(LevelTypesContext);
   const selected = !!fid && focused === fid;
@@ -622,7 +632,7 @@ function FeatureRow({ name, unnamed, fid }: { name: string; unnamed: boolean; fi
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      onClick={() => fid && focus(fid)}
+      onClick={() => fid && focus(buildingId, index, fid)}
       title={fid ? "Show on the map" : undefined}
       style={{
         cursor: fid ? "pointer" : "default",
@@ -666,7 +676,7 @@ function FeatureRow({ name, unnamed, fid }: { name: string; unnamed: boolean; fi
  * 2026-08-12). One indent step is chevron + gap, so a child that starts under its parent's *symbol*
  * rather than under its parent's chevron is the tree's existing rule; this row simply follows it.
  */
-function TypeRow({ row, all }: { row: LevelTypeCount; all: LevelTypeCount[] }) {
+function TypeRow({ row, all, buildingId, index }: { row: LevelTypeCount; all: LevelTypeCount[]; buildingId: string; index: number }) {
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
   const names = row.names ?? [];
@@ -715,7 +725,14 @@ function TypeRow({ row, all }: { row: LevelTypeCount; all: LevelTypeCount[] }) {
       </div>
       {open &&
         names.map((n, i) => (
-          <FeatureRow key={`${n.fid ?? i}`} name={n.name || `${label} ${i + 1}`} unnamed={!n.name} fid={n.fid} />
+          <FeatureRow
+            key={`${n.fid ?? i}`}
+            name={n.name || `${label} ${i + 1}`}
+            unnamed={!n.name}
+            fid={n.fid}
+            buildingId={buildingId}
+            index={index}
+          />
         ))}
       {open && row.count > names.length && (
         <div
@@ -773,7 +790,7 @@ function LevelTypes({ buildingId, index }: { buildingId: string; index: number }
             <span style={{ fontSize: 10.5, color: MUTED }}>· {g.total} as loaded</span>
           </div>
           {g.rows.map((r) => (
-            <TypeRow key={`${r.mainType}/${r.subType ?? ""}`} row={r} all={counts} />
+            <TypeRow key={`${r.mainType}/${r.subType ?? ""}`} row={r} all={counts} buildingId={buildingId} index={index} />
           ))}
         </div>
       ))}
@@ -1143,7 +1160,11 @@ export function MapContent({
    * clicking the same row twice re-centres, which matters because you may have panned away since.
    */
   const [focused, setFocused] = useState<{ fid: string; n: number } | null>(null);
-  const focus = useCallback((fid: string) => setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 })), []);
+  const focus = useCallback((buildingId: string, index: number, fid: string) => {
+    // the floor first, then the feature — see the context's `focus` note
+    setTarget((t) => (t?.building === buildingId && t?.level === index ? t : { building: buildingId, level: index }));
+    setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
+  }, []);
   const typesCtx = useMemo(
     () => ({ byLevel: typesByLevel, request: requestTypes, sheet, focus, focused: focused?.fid ?? null }),
     [typesByLevel, requestTypes, sheet, focus, focused],
