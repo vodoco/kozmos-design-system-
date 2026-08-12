@@ -504,6 +504,7 @@ function candidateFeatures() {
  * whole building before this runs, which is why the numbers are close — but they are honest-ish,
  * not authoritative, and the real dashboard would read them from the content API.
  */
+const NAME_CAP = 60;
 function levelTypeCounts() {
   try {
     const seen = new Set();
@@ -521,12 +522,20 @@ function levelTypeCounts() {
         if (p.fid == null || seen.has(p.fid)) continue;
         seen.add(p.fid);
         const key = (p.mainType || L) + "\u0000" + (p.subType || "");
-        tally.set(key, (tally.get(key) || 0) + 1);
+        const row = tally.get(key) || { count: 0, names: [] };
+        row.count++;
+        // Names for the individual features, capped: a floor with 989 walls would otherwise post a
+        // thousand strings per level, and nobody scrolls a list that long. The count stays exact;
+        // the list says when it is showing only the first slice.
+        if (row.names.length < NAME_CAP) row.names.push(p.name || "");
+        tally.set(key, row);
       }
     }
-    return [...tally.entries()].map(([k, count]) => {
+    return [...tally.entries()].map(([k, v]) => {
       const [mainType, subType] = k.split("\u0000");
-      return subType ? { mainType, subType, count } : { mainType, count };
+      const out = { mainType, count: v.count, names: v.names };
+      if (subType) out.subType = subType;
+      return out;
     });
   } catch (e) { return []; }
 }

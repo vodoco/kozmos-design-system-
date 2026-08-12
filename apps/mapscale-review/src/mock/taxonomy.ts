@@ -111,6 +111,12 @@ export interface LevelTypeCount {
   mainType: string;
   subType?: string;
   count: number;
+  /**
+   * The individual features, capped by the map at 60 — `count` stays exact, so a type with more
+   * says so rather than quietly showing a short list. An empty string is a real, unnamed feature:
+   * walls and conveyor belts mostly have no name, and hiding them would misreport the floor.
+   */
+  names?: string[];
 }
 
 export interface ClassGroup {

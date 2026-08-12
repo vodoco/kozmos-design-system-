@@ -537,6 +537,115 @@ function TypeIcon({ mainType, subType }: { mainType: string; subType?: string })
  */
 const SPRITE_W = 2046;
 
+/**
+ * A count in a circle, sitting **beside its word** rather than pinned to the far right (Olcay,
+ * 2026-08-12). Right-aligned numbers put a column of digits an inch away from the labels they
+ * belong to, and the eye has to travel to pair them up; a chip reads as part of the phrase.
+ */
+function CountChip({ n }: { n: number }) {
+  return (
+    <span
+      style={{
+        flex: "0 0 auto",
+        minWidth: 20,
+        height: 20,
+        padding: "0 6px",
+        borderRadius: 999,
+        background: "var(--primitives-colors-background-100)",
+        color: MUTED,
+        fontSize: 11,
+        fontWeight: 600,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {n}
+    </span>
+  );
+}
+
+/**
+ * One feature type under a level — and, on demand, the individual features of that type.
+ *
+ * Indented to `indent(2)`, which is the column the level's **index digit** occupies (Olcay,
+ * 2026-08-12). One indent step is chevron + gap, so a child that starts under its parent's *symbol*
+ * rather than under its parent's chevron is the tree's existing rule; this row simply follows it.
+ */
+function TypeRow({ row, all }: { row: LevelTypeCount; all: LevelTypeCount[] }) {
+  const [open, setOpen] = useState(false);
+  const names = row.names ?? [];
+  const label = rowLabel(row, all);
+  return (
+    <>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: `6px 12px 6px ${indent(2)}px`,
+          borderBottom: `1px solid ${LINE}`,
+          fontSize: 12.5,
+          color: "var(--review-ink)",
+        }}
+      >
+        <button
+          onClick={() => setOpen((o) => !o)}
+          disabled={!names.length}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: names.length ? "pointer" : "default",
+            opacity: names.length ? 1 : 0.25,
+          }}
+          aria-label={open ? `Collapse ${label}` : `Expand ${label}`}
+        >
+          <Chevron open={open} />
+        </button>
+        <TypeIcon mainType={row.mainType} subType={row.subType} />
+        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {label}
+        </span>
+        <CountChip n={row.count} />
+      </div>
+      {open &&
+        names.map((n, i) => (
+          <div
+            key={`${n}:${i}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: `5px 12px 5px ${indent(3)}px`,
+              borderBottom: `1px solid ${LINE}`,
+              fontSize: 12,
+              color: n ? "var(--review-ink)" : MUTED,
+            }}
+          >
+            {/* An unnamed feature is still a feature — numbering it beats hiding it, and most
+                structural geometry genuinely has no name. */}
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {n || `${label} ${i + 1}`}
+            </span>
+          </div>
+        ))}
+      {open && row.count > names.length && (
+        <div
+          style={{
+            padding: `5px 12px 5px ${indent(3)}px`,
+            borderBottom: `1px solid ${LINE}`,
+            fontSize: 11.5,
+            color: MUTED,
+          }}
+        >
+          + {row.count - names.length} more
+        </div>
+      )}
+    </>
+  );
+}
+
 /** The expanded body of a level row: its feature types, grouped by taxonomy class. */
 function LevelTypes({ buildingId, index }: { buildingId: string; index: number }) {
   const { byLevel } = useContext(LevelTypesContext);
@@ -577,24 +686,7 @@ function LevelTypes({ buildingId, index }: { buildingId: string; index: number }
             <span style={{ fontSize: 10.5, color: MUTED }}>· {g.total} as loaded</span>
           </div>
           {g.rows.map((r) => (
-            <div
-              key={`${r.mainType}/${r.subType ?? ""}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: `6px 12px 6px ${indent(3)}px`,
-                borderBottom: `1px solid ${LINE}`,
-                fontSize: 12.5,
-                color: "var(--review-ink)",
-              }}
-            >
-              <TypeIcon mainType={r.mainType} subType={r.subType} />
-              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {rowLabel(r, counts)}
-              </span>
-              <span style={{ fontSize: 11, color: MUTED, flex: "0 0 auto" }}>{r.count}</span>
-            </div>
+            <TypeRow key={`${r.mainType}/${r.subType ?? ""}`} row={r} all={counts} />
           ))}
         </div>
       ))}
