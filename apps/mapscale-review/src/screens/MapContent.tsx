@@ -538,6 +538,56 @@ function TypeIcon({ mainType, subType }: { mainType: string; subType?: string })
 const SPRITE_W = 2046;
 
 /**
+ * The ⋯ menu a type or feature row wears (Olcay, 2026-08-12).
+ *
+ * Same rule as the level row's: it is **always in the layout and only ever hidden**
+ * (`visibility`, not conditional rendering), because a hover affordance that appears in flow
+ * changes the row's height — the bug that cost the tree its rhythm once already (§3).
+ *
+ * ⚠️ **Every item here is inert.** These are the affordances the real dashboard offers, placed so
+ * the shape of the screen can be judged; none of them has a backend in this prototype. Wiring one
+ * up means giving it something real to do, not just removing this note.
+ */
+function RowMenu({ label, items }: { label: string; items: { label: string; danger?: boolean }[] }) {
+  const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState(false);
+  return (
+    <span
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ flex: "0 0 auto", display: "flex" }}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            aria-label={`Actions for ${label}`}
+            style={{
+              display: "grid",
+              placeItems: "center",
+              width: 24,
+              height: 24,
+              borderRadius: 6,
+              border: "none",
+              background: "none",
+              color: MUTED,
+              cursor: "pointer",
+              visibility: hover || open ? "visible" : "hidden",
+            }}
+          >
+            <Ellipsis />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" side="bottom" style={{ width: 200, padding: 6 }}>
+          {items.map((i) => (
+            <MenuItem key={i.label} label={i.label} danger={i.danger} onClick={() => setOpen(false)} />
+          ))}
+        </PopoverContent>
+      </Popover>
+    </span>
+  );
+}
+
+/**
  * A count in a circle, sitting **beside its word** rather than pinned to the far right (Olcay,
  * 2026-08-12). Right-aligned numbers put a column of digits an inch away from the labels they
  * belong to, and the eye has to travel to pair them up; a chip reads as part of the phrase.
@@ -565,6 +615,43 @@ function CountChip({ n }: { n: number }) {
   );
 }
 
+/** A single feature under its type — the leaf of the tree, and the only row you edit. */
+function FeatureRow({ name, unnamed }: { name: string; unnamed: boolean }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: `5px 12px 5px ${indent(3)}px`,
+        borderBottom: `1px solid ${LINE}`,
+        fontSize: 12,
+        // An unnamed feature is still a feature — numbering it beats hiding it, and most
+        // structural geometry genuinely has no name. It reads muted because the label is ours.
+        color: unnamed ? MUTED : "var(--review-ink)",
+        background: hover ? "#f6f7f9" : undefined,
+      }}
+    >
+      <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {name}
+      </span>
+      <RowMenu
+        label={name}
+        items={[
+          { label: "Edit" },
+          { label: "Duplicate" },
+          { label: "Select" },
+          { label: "Assign to…" },
+          { label: "Delete", danger: true },
+        ]}
+      />
+    </div>
+  );
+}
+
 /**
  * One feature type under a level — and, on demand, the individual features of that type.
  *
@@ -574,11 +661,14 @@ function CountChip({ n }: { n: number }) {
  */
 function TypeRow({ row, all }: { row: LevelTypeCount; all: LevelTypeCount[] }) {
   const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState(false);
   const names = row.names ?? [];
   const label = rowLabel(row, all);
   return (
     <>
       <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
         style={{
           display: "flex",
           alignItems: "center",
@@ -587,6 +677,7 @@ function TypeRow({ row, all }: { row: LevelTypeCount; all: LevelTypeCount[] }) {
           borderBottom: `1px solid ${LINE}`,
           fontSize: 12.5,
           color: "var(--review-ink)",
+          background: hover ? "#f6f7f9" : undefined,
         }}
       >
         <button
@@ -608,27 +699,14 @@ function TypeRow({ row, all }: { row: LevelTypeCount; all: LevelTypeCount[] }) {
           {label}
         </span>
         <CountChip n={row.count} />
+        <span style={{ flex: 1 }} />
+        {/* A whole type is something you act on in bulk — pick it out on the map, or hand the lot
+            to someone. Editing or deleting belongs to the individual feature, not to the type. */}
+        <RowMenu label={label} items={[{ label: "Select" }, { label: "Assign to…" }]} />
       </div>
       {open &&
         names.map((n, i) => (
-          <div
-            key={`${n}:${i}`}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: `5px 12px 5px ${indent(3)}px`,
-              borderBottom: `1px solid ${LINE}`,
-              fontSize: 12,
-              color: n ? "var(--review-ink)" : MUTED,
-            }}
-          >
-            {/* An unnamed feature is still a feature — numbering it beats hiding it, and most
-                structural geometry genuinely has no name. */}
-            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {n || `${label} ${i + 1}`}
-            </span>
-          </div>
+          <FeatureRow key={`${n}:${i}`} name={n || `${label} ${i + 1}`} unnamed={!n} />
         ))}
       {open && row.count > names.length && (
         <div
@@ -760,7 +838,14 @@ function LevelRow({
         >
           <Chevron open={open} />
         </button>
-        <span style={{ width: 16, textAlign: "right", fontSize: 13, color: MUTED }}>
+        {/*
+          **Left-aligned** (Olcay, 2026-08-12: *"POI and chevron should align with 0 above"*).
+          The box always started on the child column, but the digit was right-aligned inside it, so
+          the glyph sat ~10px to the right of everything nested beneath it and nothing looked lined
+          up. Right-alignment was making the indices agree with *each other*; agreeing with their
+          own children matters more, and a negative index simply takes the first character slot.
+        */}
+        <span style={{ width: 16, textAlign: "left", fontSize: 13, color: MUTED }}>
           {level.index}
         </span>
         {/*
