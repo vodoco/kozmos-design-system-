@@ -108,18 +108,38 @@ const PointrMap = forwardRef<PointrMapHandle, {
    * the camera and must not fire on every mouseover.
    */
   highlight?: { fid?: string; mainType?: string; subType?: string } | null;
-}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, highlight, target }, handle) {
+  /**
+   * The properties of the focused feature, as the vector tiles carry them — the POI panel's supply
+   * (§19). Arrives with the focus rather than on request: the map's focus scan already holds the
+   * bag, and it is the only path that waits for the tiles.
+   */
+  onFeatureProps?: (fid: string, props: Record<string, unknown>) => void;
+  /**
+   * Screen space to keep clear on the RIGHT when framing a focused feature — the panel's own
+   * width. The map is not resized; the feature is simply framed in the part of it you can still
+   * see.
+   */
+  focusPadRight?: number;
+}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, highlight, onFeatureProps, focusPadRight, target }, handle) {
   const ref = useRef<HTMLIFrameElement>(null);
   useImperativeHandle(handle, () => ({
     setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
   }), []);
-  const latest = useRef({ changes, prefs, target, active, dropOn: !!onFileDrop });
-  latest.current = { changes, prefs, target, active, dropOn: !!onFileDrop };
+  const latest = useRef({ changes, prefs, target, active, dropOn: !!onFileDrop, focusPadRight });
+  latest.current = { changes, prefs, target, active, dropOn: !!onFileDrop, focusPadRight };
 
   // Its own effect: a focus is an EVENT, not state to re-send on every `ready` — re-posting it
   // with the rest would re-centre the map every time the iframe re-announced itself.
+  //
+  // The padding is read from the ref, never a dependency: it changes when the panel opens and
+  // closes, and depending on it would re-fly the camera every time — a focus is the click, not
+  // the layout.
   useEffect(() => {
-    if (focusFeature) ref.current?.contentWindow?.postMessage({ type: "focusfeature", fid: focusFeature }, "*");
+    if (focusFeature)
+      ref.current?.contentWindow?.postMessage(
+        { type: "focusfeature", fid: focusFeature, padRight: latest.current.focusPadRight ?? 0 },
+        "*",
+      );
   }, [focusFeature, focusNonce]);
 
   useEffect(() => {
@@ -162,6 +182,9 @@ const PointrMap = forwardRef<PointrMapHandle, {
         if (ev.data.buildings?.length) onBuildings?.(ev.data.buildings);
         if (ev.data.features?.length) onFeatures?.(ev.data.features);
         if (ev.data.types?.length && ev.data.forLevel) onTypes?.(ev.data.forLevel, ev.data.types);
+      } else if (ev.data.type === "featureprops") {
+        if (ev.source === ref.current?.contentWindow && ev.data.fid && ev.data.props)
+          onFeatureProps?.(ev.data.fid, ev.data.props);
       } else if (ev.data.type === "features") {
         // a switch settled on a new floor — its features replace the old floor's
         if (ev.source === ref.current?.contentWindow && ev.data.features?.length)
@@ -196,7 +219,7 @@ const PointrMap = forwardRef<PointrMapHandle, {
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, onSelect]);
+  }, [onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, onSelect, onFeatureProps]);
 
   /**
    * Its own effect, not part of `send()`: selection changes far more often than the diff does, and

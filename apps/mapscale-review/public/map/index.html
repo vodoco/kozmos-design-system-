@@ -1191,10 +1191,26 @@ function highlightFeatures(sel) {
   try { src.setData({ type: "FeatureCollection", features: feats }); } catch(e){}
 }
 
-function focusFeature(fid, tries) {
+/**
+ * Centre the map on one feature — **and report its properties**, which is the POI panel's whole
+ * supply (§19).
+ *
+ * The property bag rides this function rather than getting a request of its own for two reasons:
+ * the scan that finds the geometry has the properties in its hand already, and — the load-bearing
+ * one — this is the only place that **retries until the tiles land**. A separate lookup would need
+ * its own copy of that retry, and would answer "no such feature" during the ~3s a level switch
+ * takes, which is exactly when the panel is opening.
+ *
+ * `padRight` reserves the panel's own width so the feature frames in the map you can still SEE
+ * (Olcay, 2026-08-12: *"don't resize map but center — offset the key element"*). Without it a
+ * feature centres in the pane and then sits underneath the panel that is describing it.
+ */
+function focusFeature(fid, tries, padRight) {
   tries = tries || 0;
+  padRight = padRight || 0;
   if (!map || fid == null) return;
   let minx=180, miny=90, maxx=-180, maxy=-90, n=0;
+  let props = null;
   const eat = coords => {
     if (typeof coords[0] === "number") {
       const x = coords[0], y = coords[1]; n++;
@@ -1208,10 +1224,14 @@ function focusFeature(fid, tries) {
     for (const L of layers) {
       for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L })) {
         if (!f.properties || f.properties.fid !== fid) continue;
+        // A feature split across tiles arrives once per tile with the same properties, so the
+        // first bag is as good as any; the geometry still accumulates over all of them.
+        if (!props) props = Object.assign({}, f.properties);
         if (f.geometry && f.geometry.coordinates) eat(f.geometry.coordinates);
       }
     }
   } catch(e){}
+  if (props) post("featureprops", { fid, props });
   if (!n) {
     /**
      * Not in a loaded tile yet. That is the normal case straight after a LEVEL SWITCH — the tree
@@ -1224,12 +1244,13 @@ function focusFeature(fid, tries) {
      * (8 × 400ms) expired just as the tiles began arriving and the map stayed put. 20 × 500ms
      * gives it 10s, comfortably longer than the switch itself.
      */
-    if (tries < 20) setTimeout(() => focusFeature(fid, tries + 1), 500);
+    if (tries < 20) setTimeout(() => focusFeature(fid, tries + 1, padRight), 500);
     return;
   }
   try {
     map.fitBounds([[minx,miny],[maxx,maxy]], {
-      padding: 120, maxZoom: FOCUS_MAX_ZOOM, duration: 650, essential: true,
+      padding: { top: 120, bottom: 120, left: 120, right: 120 + padRight },
+      maxZoom: FOCUS_MAX_ZOOM, duration: 650, essential: true,
     });
   } catch(e){}
 }
@@ -1624,7 +1645,7 @@ window.addEventListener("message", (ev) => {
   } else if (d.type === "highlight") {
     highlightFeatures(d.sel || null);
   } else if (d.type === "focusfeature") {
-    focusFeature(d.fid);
+    focusFeature(d.fid, 0, d.padRight);
   } else if (d.type === "active") {
     // A changelog row was clicked — mirror it here. Deferred until geometry exists, because a
     // row can be clicked before `resolveChanges()` has caught up and there'd be nothing to fly to.

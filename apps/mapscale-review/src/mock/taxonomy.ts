@@ -112,6 +112,126 @@ export function spriteName(sheet: SpriteSheet | null, mainType: string, subType?
   return null;
 }
 
+/* ── what a type is EXPECTED to carry ──────────────────────────────────────── */
+
+/**
+ * The taxonomy's `category` and `suggestedProperties` per type — the honest shape of a POI card.
+ *
+ * `suggestedProperties` is what the product expects a feature of this type to carry
+ * (`food-beverage-space` → `cuisines · dietaryOptions · openingHours · priceRange …`). The vector
+ * tiles carry none of them: they live in the **content API**, which this prototype does not call.
+ * So the panel shows them as *expected and not loaded* rather than inventing values — the same
+ * honesty as "as loaded" on the counts.
+ *
+ * ⚠️ **Keyed by `mainType`, and that is a measured simplification, not a shortcut.** Class depends
+ * on the *pair* (see `SUBTYPE_CLASS`), but suggested properties are overwhelmingly constant across
+ * a mainType's subTypes — all 17 `circulation-space` subTypes suggest the same three, all 18
+ * `retail-space` subTypes the same six. Only the genuine exceptions are listed below. Read from the
+ * taxonomy service, same as the class table, and carrying the same limit: **it is a cache of a
+ * service the app can't reach at runtime.** An unknown type reports *no* suggestions rather than a
+ * borrowed list — claiming a wall should have opening hours would be worse than saying nothing.
+ *
+ * ⚠️ **Plenty of types legitimately suggest NOTHING** — `wall`, `furniture`, `operational-space`,
+ * `virtual-obstacle` all come back empty. That is a real answer ("this type expects no extra
+ * properties"), not a gap in this table, and the panel says so in words.
+ */
+const MAIN_SUGGESTED: Record<string, string[]> = {
+  "food-beverage-space": ["cuisines", "description", "dietaryOptions", "hasAlcoholService", "hasWifi", "isPetFriendly", "phoneNumber", "priceRange", "serviceOptions", "websiteUrl"],
+  "retail-space": ["description", "hasAssistance", "isAnchor", "isFeatured", "productTypes", "websiteUrl"],
+  "service-space": ["description", "hasAssistance", "openingHours", "phoneNumber", "serviceTypes", "websiteUrl"],
+  "restroom-space": ["genderDesignation", "hasChangingFacilities", "hasLockers", "hasRestrooms", "isFamilyFriendly", "isWheelchairAccessible"],
+  "amenity-space": ["hasAssistance", "openingHours", "serviceTypes"],
+  "activity-space": ["accessRestrictions", "crowdLevel", "description", "hasChangingFacilities", "occupancyStatus", "openingHours", "sportTypes"],
+  "entrance-exit": ["description", "hasAssistance", "isWheelchairAccessible", "waitTime"],
+  "circulation-space": ["hasWifi", "isPetFriendly", "isWheelchairAccessible"],
+  "faith-worship-space": ["description", "genderDesignation", "hasAssistance"],
+  "entertainment-space": ["accessRestrictions", "description"],
+  equipment: ["description", "languageSupport"],
+  "social-space": ["description", "hasWifi"],
+  transition: ["isWheelchairAccessible"],
+  "transportation-space": ["hasAssistance"],
+  "security-space": ["description"],
+  "parking-space": ["description"],
+  "wellness-space": ["genderDesignation"],
+  "work-space": ["description"],
+  // Deliberately empty — the service returns no suggestions for these.
+  wall: [],
+  furniture: [],
+  "operational-space": [],
+  "medical-space": [],
+  "virtual-obstacle": [],
+  "wayfinding-network": [],
+};
+
+/** The handful of subTypes whose suggestions genuinely differ from their mainType's. */
+const SUBTYPE_SUGGESTED: Record<string, string[]> = {
+  "service-space/lounge": ["accessRestrictions", "description", "hasAssistance", "openingHours", "phoneNumber", "serviceTypes", "websiteUrl"],
+  "activity-space/play-area": ["accessRestrictions", "ageRestriction", "crowdLevel", "description", "hasChangingFacilities", "occupancyStatus", "openingHours", "sportTypes"],
+};
+
+/** The taxonomy's own `category` — a second axis beside `class`, and the one a POI card names. */
+const MAIN_CATEGORY: Record<string, string> = {
+  "food-beverage-space": "COMMERCIAL",
+  "retail-space": "COMMERCIAL",
+  "service-space": "SERVICES",
+  "transportation-space": "SERVICES",
+  "parking-space": "SERVICES",
+  "restroom-space": "FACILITIES",
+  "amenity-space": "FACILITIES",
+  equipment: "FACILITIES",
+  "operational-space": "OPERATIONS",
+  "activity-space": "RECREATION",
+  "social-space": "RECREATION",
+  "entertainment-space": "GATHERINGS",
+  "medical-space": "CARE",
+  "wellness-space": "CARE",
+  "faith-worship-space": "WORK",
+  "work-space": "WORK",
+  "circulation-space": "ACCESS",
+  transition: "ACCESS",
+  "entrance-exit": "ACCESS",
+  "security-space": "ACCESS",
+  wall: "ACCESS",
+  furniture: "ACCESS",
+  "wayfinding-network": "ACCESS",
+  "virtual-obstacle": "SYSTEM",
+};
+
+/** Where a subType is filed under a different category from its mainType. */
+const SUBTYPE_CATEGORY: Record<string, string> = {
+  "retail-space/returns-desk": "OPERATIONS",
+  "retail-space/personal-shopper-assist": "SERVICES",
+  "amenity-space/pet-relief": "WORK",
+  "restroom-space/mothers-room": "CARE",
+  "restroom-space/baby-care-hygiene": "CARE",
+};
+
+/**
+ * What this type is expected to carry. `null` means *we don't know* (an unknown type); an **empty
+ * array** means *the taxonomy suggests nothing*, which is a different and equally honest answer.
+ *
+ * ⚠️ The service sometimes suggests a **value**, not just a name — `transition/ramp` returns
+ * `isWheelchairAccessible:true` and `escalator` returns `:false`. Names only here; a read-only card
+ * naming the property is the useful half, and a "suggested default" is a claim about content this
+ * prototype has no way to check.
+ */
+export function suggestedFor(mainType: string, subType?: string): string[] | null {
+  if (subType && SUBTYPE_SUGGESTED[`${mainType}/${subType}`]) return SUBTYPE_SUGGESTED[`${mainType}/${subType}`];
+  return MAIN_SUGGESTED[mainType] ?? null;
+}
+
+export function categoryOf(mainType: string, subType?: string): string | null {
+  if (subType && SUBTYPE_CATEGORY[`${mainType}/${subType}`]) return SUBTYPE_CATEGORY[`${mainType}/${subType}`];
+  return MAIN_CATEGORY[mainType] ?? null;
+}
+
+/**
+ * `COMMERCIAL` → `Commercial`. The taxonomy shouts its categories; the dashboard doesn't.
+ */
+export function categoryLabel(cat: string): string {
+  return cat.charAt(0) + cat.slice(1).toLowerCase();
+}
+
 /* ── what the map reports ──────────────────────────────────────────────────── */
 
 /** One row under a level: a feature type and how many of it the floor has. */

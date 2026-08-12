@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mapscale-review",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "mapscale-review", "dev"],
+      "port": 5173
+    }
+  ]
+}

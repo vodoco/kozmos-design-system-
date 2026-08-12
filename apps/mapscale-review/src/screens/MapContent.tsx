@@ -5,6 +5,7 @@ import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, expertReviewEnabled
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { LevelSelector } from "../ui/LevelSelector";
+import { FeaturePanel, FEATURE_PANEL_WIDTH } from "../ui/FeaturePanel";
 import { UploadDropConfirm } from "../ui/UploadDropConfirm";
 import {
   getCreatedBuildings,
@@ -1170,7 +1171,29 @@ export function MapContent({
     // the floor first, then the feature — see the context's `focus` note
     setTarget((t) => (t?.building === buildingId && t?.level === index ? t : { building: buildingId, level: index }));
     setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
+    // Drop the previous feature's properties the moment a new one is picked. Keeping them until
+    // the replacement arrives would show the OLD feature's fid under the NEW feature's name for as
+    // long as the tiles take — and after a level switch that is seconds, not frames.
+    setProps((cur) => (cur && cur.fid === fid ? cur : null));
   }, []);
+  /**
+   * The focused feature's own properties, as the map reported them (§19). Held beside `focused`
+   * rather than inside it because they arrive **later**: the map retries until the tiles carrying
+   * that feature have landed.
+   */
+  const [props, setProps] = useState<{ fid: string; props: Record<string, unknown> } | null>(null);
+  const onFeatureProps = useCallback(
+    (fid: string, p: Record<string, unknown>) => setProps({ fid, props: p }),
+    [],
+  );
+  /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
+  const closeProps = useCallback(() => {
+    setFocused(null);
+    setProps(null);
+  }, []);
+  // Only ever show properties for the feature currently selected: a late reply about a feature you
+  // have already moved on from must not repaint the panel.
+  const shownProps = focused && props && props.fid === focused.fid ? props.props : null;
   const [hovered, setHovered] = useState<{ fid?: string; mainType?: string; subType?: string } | null>(null);
   const typesCtx = useMemo(
     () => ({ byLevel: typesByLevel, request: requestTypes, sheet, focus, focused: focused?.fid ?? null, hover: setHovered }),
@@ -1331,6 +1354,10 @@ export function MapContent({
           focusFeature={focused?.fid ?? null}
           focusNonce={focused?.n ?? 0}
           highlight={highlight}
+          onFeatureProps={onFeatureProps}
+          // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
+          // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.
+          focusPadRight={focused ? FEATURE_PANEL_WIDTH + 24 : 0}
           target={target}
         />
         {live.length > 0 && target && (
@@ -1339,6 +1366,19 @@ export function MapContent({
             buildingId={target.building}
             levelIndex={target.level}
             onChange={(building, level) => setTarget({ building, level })}
+            offsetRight={shownProps ? FEATURE_PANEL_WIDTH + 24 : 0}
+          />
+        )}
+        {shownProps && (
+          <FeaturePanel
+            props={shownProps}
+            icon={
+              <TypeIcon
+                mainType={String(shownProps.mainType ?? "")}
+                subType={shownProps.subType ? String(shownProps.subType) : undefined}
+              />
+            }
+            onClose={closeProps}
           />
         )}
         <MapSettings prefs={prefs} onChange={setPrefs} />
