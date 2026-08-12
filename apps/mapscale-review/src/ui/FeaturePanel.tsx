@@ -1,5 +1,7 @@
 import { Text } from "@kozmos/react";
 import { PanelHeader, PANEL_PAD } from "./PanelHeader";
+import { DecisionGlyph } from "./ChangeReviewRow";
+import { decisionInk } from "../mock/diff";
 import {
   CLASS_LABEL,
   categoryLabel,
@@ -141,12 +143,22 @@ function SectionTitle({ children }: { children: string }) {
 export function FeaturePanel({
   props: p,
   icon,
+  flagged,
+  flagShared,
   onClose,
 }: {
   /** The tile's own property bag, exactly as the map reported it. */
   props: Record<string, unknown>;
   /** The taxonomy sprite for this type — passed in, so this file needs no map context. */
   icon?: React.ReactNode;
+  /** Was this feature flagged in the level's most recent review? */
+  flagged?: boolean;
+  /**
+   * Set when more than one feature on the floor carries this name, which is how many the flag could
+   * be about. A review records the *name*, so with duplicates it cannot say which — and the notice
+   * says so rather than pointing confidently at whichever one you happened to open.
+   */
+  flagShared?: number;
   onClose: () => void;
 }) {
   const mainType = String(p.mainType ?? "");
@@ -211,6 +223,46 @@ export function FeaturePanel({
       </div>
 
       <div style={{ overflow: "auto", flex: 1, minHeight: 0, padding: "0 20px 16px" }}>
+        {/*
+          The flag, on the one surface that describes a single feature.
+
+          A banded strip, deliberately NOT a coloured one: §3 reserves traffic-light for magnitude,
+          and being flagged is something *you* did, not a size. The glyph and its ink are the
+          review's own (`DecisionGlyph` + `decisionInk`), so this reads as the same decision you
+          took there rather than a second, similar-looking fact.
+
+          ⚠️ It says what a flag MEANS and stops. There is deliberately no Resolve control here —
+          §18a ruled de-flagging implicit on edit, and adding one would be exactly the affordance
+          that ruling rejected.
+        */}
+        {flagged && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 8,
+              padding: "8px 10px",
+              marginBottom: 14,
+              borderRadius: 8,
+              border: `1px solid ${LINE}`,
+              background: "var(--primitives-colors-background-100)",
+            }}
+          >
+            <span style={{ flex: "0 0 auto", marginTop: 1, color: decisionInk("flag") }}>
+              <DecisionGlyph kind="flag" size={16} />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <Text style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--review-ink)" }}>
+                Flagged during review
+              </Text>
+              <Text style={{ display: "block", fontSize: 11.5, color: MUTED, lineHeight: 1.45, marginTop: 1 }}>
+                {flagShared
+                  ? `A review flagged “${name}”, and ${flagShared} features on this floor share that name — so the flag may be about any of them. Editing the feature clears it.`
+                  : "Someone marked this to come back to. Editing the feature clears the flag."}
+              </Text>
+            </div>
+          </div>
+        )}
         <SectionTitle>Properties</SectionTitle>
         <div>
           {TILE_PROPS.map((f) => (
