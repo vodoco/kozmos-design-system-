@@ -12,6 +12,7 @@ import {
   getCreatedBuildings,
   getLevelVersions,
   getReviewOutcome,
+  setReviewOutcome,
   levelKey,
   subscribeCreatedBuildings,
   subscribeReviews,
@@ -318,6 +319,31 @@ function flaggedNamesFor(buildingId: string, index: number, short: string): Set<
 /** One identity for "nothing flagged", so an unflagged level can't re-render its subtree forever. */
 const EMPTY_FLAGS: Set<string> = new Set();
 
+/**
+ * **Editing a feature clears its flag** — §18a's ruling, finally implemented.
+ *
+ * Olcay ruled de-flagging *implicit on edit* on 2026-08-11, and the handoff has said ever since
+ * that "there is no de-flag affordance in the app and there should not be one… it arrives with
+ * US8's Edit". Until the properties panel gained an edit mode, nothing in the app could edit a
+ * feature — so no flag could ever be cleared, by design. Saving an edit is that arrival.
+ *
+ * ⚠️ **It clears by NAME, so with duplicate names it clears them together** — editing one of B2's
+ * four *Food Court* features clears the flag for all four. That is not a bug introduced here, it is
+ * the same ambiguity D18 records: the review recorded a name, and a name cannot pick one of four.
+ * The panel says so before you edit.
+ */
+function clearFlagForName(buildingId: string, index: number, short: string, name: string) {
+  const key = levelKey(buildingId, index);
+  const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
+  const outcome = getReviewOutcome(key, newest?.n);
+  if (!outcome) return;
+  const ids = outcome.changes.filter((c) => c.name === name && outcome.decisions[c.id] === "flag");
+  if (!ids.length) return;
+  const decisions = { ...outcome.decisions };
+  for (const c of ids) decisions[c.id] = undefined;
+  setReviewOutcome(key, { ...outcome, decisions });
+}
+
 function liveTagsFor(buildingId: string, index: number, short: string): LevelTag[] | undefined {
   const seeded = levelTagsFor(buildingId, index);
   const key = levelKey(buildingId, index);
@@ -540,7 +566,9 @@ const LevelTypesContext = createContext<{
    * leave, which falls back to whatever is selected rather than going dark.
    */
   hover: (sel: { fid?: string; mainType?: string; subType?: string } | null) => void;
-}>({ byLevel: {}, request: () => {}, sheet: null, focus: () => {}, focused: null, hover: () => {} });
+  /** Local edits by `fid`, so a rename in the panel shows in the tree too. In memory only (D3). */
+  edits: Record<string, { name?: string; subType?: string }>;
+}>({ byLevel: {}, request: () => {}, sheet: null, focus: () => {}, focused: null, hover: () => {}, edits: {} });
 
 /**
  * One taxonomy icon, drawn straight from the published sprite sheet.
@@ -686,8 +714,11 @@ function FlagMark({ title }: { title: string }) {
 /** A single feature under its type — the leaf of the tree, and the only row you edit. */
 function FeatureRow({ name, unnamed, fid, buildingId, index, flagged, sharing = 1 }: { name: string; unnamed: boolean; fid?: string; buildingId: string; index: number; flagged?: boolean; sharing?: number }) {
   const [hover, setHover] = useState(false);
-  const { focus, focused, hover: onHover } = useContext(LevelTypesContext);
+  const { focus, focused, hover: onHover, edits } = useContext(LevelTypesContext);
   const selected = !!fid && focused === fid;
+  // A rename in the panel shows here too — one edit, every surface. In memory only (D3).
+  const edited = fid ? edits[fid]?.name : undefined;
+  const shown = edited !== undefined && edited !== "" ? edited : name;
   return (
     <div
       onMouseEnter={() => { setHover(true); if (fid) onHover({ fid }); }}
@@ -712,7 +743,7 @@ function FeatureRow({ name, unnamed, fid, buildingId, index, flagged, sharing = 
       }}
     >
       <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {name}
+        {shown}
       </span>
       {flagged && (
         <FlagMark
@@ -1294,6 +1325,15 @@ export function MapContent({
    * that feature have landed.
    */
   const [props, setProps] = useState<{ fid: string; props: Record<string, unknown> } | null>(null);
+  /**
+   * Local feature edits, keyed by `fid` — the panel's edit mode writing back.
+   *
+   * ⚠️ **In memory only** (D3): the vector tiles are the SDK's and this prototype writes to nothing.
+   * It is held here rather than in the panel so that **every surface agrees** — the tree row renames
+   * with the panel, which is the whole design principle this app is arranged around. A reload
+   * restores whatever the tiles say.
+   */
+  const [edits, setEdits] = useState<Record<string, { name?: string; subType?: string }>>({});
   const onFeatureProps = useCallback(
     (fid: string, p: Record<string, unknown>) => setProps({ fid, props: p }),
     [],
@@ -1331,10 +1371,42 @@ export function MapContent({
           0,
         )
       : 1;
+  /**
+   * Which subTypes this feature's mainType offers — taken from **the floor's own types**, so the
+   * list can't drift from the taxonomy the rest of the screen is drawn from. A type the floor
+   * doesn't have yet is not offered, which is the honest limit of reading options off the content
+   * rather than off the taxonomy service.
+   */
+  const subTypeOptions = useMemo(() => {
+    if (!shownProps || !target) return [];
+    const rows = typesByLevel[`${target.building}:${target.level}`] ?? [];
+    const mine = String(shownProps.mainType ?? "");
+    const set = new Set(rows.filter((r) => r.mainType === mine && r.subType).map((r) => r.subType!));
+    if (shownProps.subType) set.add(String(shownProps.subType));
+    return [...set].sort();
+  }, [shownProps, target, typesByLevel]);
+  /**
+   * Saving an edit. Two consequences, and the second is the ruled one:
+   * the panel shows the new values (via `edits`, which every surface reads), and **the flag clears**
+   * — §18a, implicit on edit.
+   */
+  const onEdited = useCallback(
+    (next: { name: string; subType?: string }) => {
+      if (!focused || !target) return;
+      setEdits((cur) => ({ ...cur, [focused.fid]: next }));
+      setProps((cur) => (cur && cur.fid === focused.fid ? { ...cur, props: { ...cur.props, ...next } } : cur));
+      const short =
+        live.find((b) => b.id === target.building)?.levels.find((l) => l.index === target.level)?.short ?? "";
+      // Clear against the name it had when it was flagged — a rename would otherwise orphan the flag
+      // under the old string, leaving it stuck on a feature that no longer answers to it.
+      if (shownProps?.name) clearFlagForName(target.building, target.level, short, String(shownProps.name));
+    },
+    [focused, target, live, shownProps],
+  );
   const [hovered, setHovered] = useState<{ fid?: string; mainType?: string; subType?: string } | null>(null);
   const typesCtx = useMemo(
-    () => ({ byLevel: typesByLevel, request: requestTypes, sheet, focus, focused: focused?.fid ?? null, hover: setHovered }),
-    [typesByLevel, requestTypes, sheet, focus, focused],
+    () => ({ byLevel: typesByLevel, request: requestTypes, sheet, focus, focused: focused?.fid ?? null, hover: setHovered, edits }),
+    [typesByLevel, requestTypes, sheet, focus, focused, edits],
   );
   /** Hover wins while it lasts; leaving falls back to the selection rather than going dark. */
   const highlight = useMemo(
@@ -1517,6 +1589,8 @@ export function MapContent({
             }
             flagged={focusedFlagged}
             flagShared={focusedSharing > 1 ? focusedSharing : undefined}
+            subTypeOptions={subTypeOptions}
+            onEdited={onEdited}
             onClose={closeProps}
           />
         )}

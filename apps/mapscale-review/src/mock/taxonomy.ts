@@ -55,6 +55,10 @@ const MAIN_CLASS: Record<string, FeatureClass> = {
 /** Where a subType disagrees with its mainType — see the warning above. */
 const SUBTYPE_CLASS: Record<string, FeatureClass> = {
   "circulation-space/elevator-lobby": "poi",
+  // `section` is a POI grouping, except where the area is a hole in the floor rather than a place
+  // you can go — those two are structural.
+  "section/construction": "structural",
+  "section/no-access": "structural",
 };
 
 export function classOf(mainType: string, subType?: string): FeatureClass {
@@ -154,6 +158,10 @@ const MAIN_SUGGESTED: Record<string, string[]> = {
   "parking-space": ["description"],
   "wellness-space": ["genderDesignation"],
   "work-space": ["description"],
+  // `section` groups a floor into named areas (Customs & Immigration, Food Court, Terminal). Missed
+  // on the first sweep, which is how B2's *F&J Departure Hall Security Check-in* came to report
+  // "isn't in the cached taxonomy" — spotted by Olcay, 2026-08-12.
+  section: ["description", "hasRestrooms"],
   // Deliberately empty — the service returns no suggestions for these.
   wall: [],
   furniture: [],
@@ -197,13 +205,26 @@ const MAIN_CATEGORY: Record<string, string> = {
   "virtual-obstacle": "SYSTEM",
 };
 
-/** Where a subType is filed under a different category from its mainType. */
+/**
+ * Where a subType is filed under a different category from its mainType.
+ *
+ * `section` is the one that really needs this: the mainType has **no** category of its own, and its
+ * subTypes scatter across four (a food court is COMMERCIAL, a terminal is SERVICES, customs is
+ * ACCESS, an exhibit hall is GATHERINGS).
+ */
 const SUBTYPE_CATEGORY: Record<string, string> = {
   "retail-space/returns-desk": "OPERATIONS",
   "retail-space/personal-shopper-assist": "SERVICES",
   "amenity-space/pet-relief": "WORK",
   "restroom-space/mothers-room": "CARE",
   "restroom-space/baby-care-hygiene": "CARE",
+  "section/customs-immigration": "ACCESS",
+  "section/aisle": "ACCESS",
+  "section/construction": "ACCESS",
+  "section/no-access": "ACCESS",
+  "section/food-court": "COMMERCIAL",
+  "section/terminal": "SERVICES",
+  "section/exhibit-hall": "GATHERINGS",
 };
 
 /**
