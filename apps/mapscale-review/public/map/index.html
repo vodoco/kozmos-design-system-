@@ -505,6 +505,42 @@ function candidateFeatures() {
  * not authoritative, and the real dashboard would read them from the content API.
  */
 const NAME_CAP = 60;
+
+/**
+ * Where every feature the tree can offer you actually IS — `fid` → `[minx,miny,maxx,maxy]`.
+ *
+ * ⚠️ **This exists to break a chicken-and-egg that made clicking a row silently do nothing**
+ * (Olcay, 2026-08-12: *"sometimes after a while... for some items it doesn't show details panel and
+ * doesn't center"*). `focusFeature()` used to find the feature by scanning **loaded tiles** — but
+ * tiles only load where the camera already is, so a feature at the far end of the floor could not
+ * be found, and the only thing that would bring its tiles in is the camera move we were trying to
+ * compute. The retry then expired after 10s with no geometry, no properties and no complaint.
+ *
+ * Measured on B2 while diagnosing: **1,491 features on the floor, 1,156 fids in loaded tiles** —
+ * so about a fifth of the tree's rows were dead at any moment, which is exactly the reported
+ * *"some items"*.
+ *
+ * Filled by the same scan that builds the rows, so the cache covers precisely the set that is
+ * clickable: a feature the counts never saw isn't in the tree to be clicked. Bounds ACCUMULATE
+ * across tiles (recorded before the `seen` dedupe), because a unit split down a tile boundary
+ * would otherwise remember only the fragment that happened to come first.
+ */
+const FEATURE_BOUNDS = Object.create(null);
+
+function noteBounds(fid, geometry) {
+  if (fid == null || !geometry || !geometry.coordinates) return;
+  const b = FEATURE_BOUNDS[fid] || (FEATURE_BOUNDS[fid] = [180, 90, -180, -90]);
+  const eat = c => {
+    if (typeof c[0] === "number") {
+      if (c[0] < b[0]) b[0] = c[0];
+      if (c[1] < b[1]) b[1] = c[1];
+      if (c[0] > b[2]) b[2] = c[0];
+      if (c[1] > b[3]) b[3] = c[1];
+    } else c.forEach(eat);
+  };
+  eat(geometry.coordinates);
+}
+
 function levelTypeCounts() {
   try {
     const seen = new Set();
@@ -519,7 +555,11 @@ function levelTypeCounts() {
         const p = f.properties;
         if (!p || p.lvl !== TARGET.level) continue;
         if (TARGET.building && p.bid && p.bid !== TARGET.building) continue;
-        if (p.fid == null || seen.has(p.fid)) continue;
+        if (p.fid == null) continue;
+        // BEFORE the dedupe: a feature straddling a tile boundary arrives once per tile, and its
+        // full extent is the union of those fragments.
+        noteBounds(p.fid, f.geometry);
+        if (seen.has(p.fid)) continue;
         seen.add(p.fid);
         const key = (p.mainType || L) + "\u0000" + (p.subType || "");
         const row = tally.get(key) || { count: 0, names: [] };
@@ -1205,10 +1245,12 @@ function highlightFeatures(sel) {
  * (Olcay, 2026-08-12: *"don't resize map but center — offset the key element"*). Without it a
  * feature centres in the pane and then sits underneath the panel that is describing it.
  */
-function focusFeature(fid, tries, padRight) {
-  tries = tries || 0;
-  padRight = padRight || 0;
-  if (!map || fid == null) return;
+/**
+ * Find one feature in the tiles that happen to be loaded: its extent and its property bag.
+ * Returns `null` when the tiles holding it aren't in memory — which is a normal, frequent state,
+ * not an error (see `FEATURE_BOUNDS`).
+ */
+function scanFeature(fid) {
   let minx=180, miny=90, maxx=-180, maxy=-90, n=0;
   let props = null;
   const eat = coords => {
@@ -1231,13 +1273,46 @@ function focusFeature(fid, tries, padRight) {
       }
     }
   } catch(e){}
-  if (props) post("featureprops", { fid, props });
-  if (!n) {
+  if (!props && !n) return null;
+  return { props, bounds: n ? [minx, miny, maxx, maxy] : null };
+}
+
+/**
+ * Report a feature's properties to the app — the POI panel's supply (§19).
+ *
+ * **Separate from `focusFeature` on purpose.** The two want different things from a retry: the
+ * camera move needs to happen ONCE and must not fight the user's panning, while the properties may
+ * legitimately need several attempts — a feature outside the loaded tiles has no bag to read until
+ * the camera has flown there and the tiles have arrived. Sharing one retry meant a re-fit on every
+ * attempt; splitting them lets the properties keep trying while the camera stays put.
+ */
+function sendFeatureProps(fid, tries) {
+  tries = tries || 0;
+  if (!map || fid == null) return;
+  const hit = scanFeature(fid);
+  if (hit && hit.props) { post("featureprops", { fid, props: hit.props }); return; }
+  if (tries < 20) setTimeout(() => sendFeatureProps(fid, tries + 1), 500);
+}
+
+function focusFeature(fid, tries, padRight) {
+  tries = tries || 0;
+  padRight = padRight || 0;
+  if (!map || fid == null) return;
+  const hit = scanFeature(fid);
+  /**
+   * Loaded tiles first, then the cache recorded when the tree's rows were built.
+   *
+   * The fallback is what makes a far-away feature reachable at all: without it the camera could
+   * only ever fly to somewhere it had already been. With it, the move happens immediately, the
+   * tiles arrive because of the move, and `sendFeatureProps` picks the properties up on a retry.
+   */
+  const bounds = (hit && hit.bounds) || FEATURE_BOUNDS[fid] || null;
+  if (!bounds) {
     /**
-     * Not in a loaded tile yet. That is the normal case straight after a LEVEL SWITCH — the tree
-     * asks for the floor and the feature in the same breath, and the tiles are still arriving — so
-     * try again rather than silently doing nothing, which is what made clicking a row on another
-     * floor look broken.
+     * Neither loaded nor cached — the normal case straight after a LEVEL SWITCH, when the tree has
+     * asked for the floor and the feature in one breath and the counts haven't run yet. Retry
+     * rather than silently doing nothing, which is what made clicking a row on another floor look
+     * broken.
      *
      * ⚠️ The window has to outlast a LEVEL SWITCH, and that is the bit worth measuring rather than
      * guessing: the switch re-applies ~600 layer filters on a ~3s cadence, so a 3.2s window
@@ -1248,7 +1323,7 @@ function focusFeature(fid, tries, padRight) {
     return;
   }
   try {
-    map.fitBounds([[minx,miny],[maxx,maxy]], {
+    map.fitBounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]], {
       padding: { top: 120, bottom: 120, left: 120, right: 120 + padRight },
       maxZoom: FOCUS_MAX_ZOOM, duration: 650, essential: true,
     });
@@ -1645,7 +1720,9 @@ window.addEventListener("message", (ev) => {
   } else if (d.type === "highlight") {
     highlightFeatures(d.sel || null);
   } else if (d.type === "focusfeature") {
+    // Two jobs, two retry budgets — see sendFeatureProps.
     focusFeature(d.fid, 0, d.padRight);
+    sendFeatureProps(d.fid);
   } else if (d.type === "active") {
     // A changelog row was clicked — mirror it here. Deferred until geometry exists, because a
     // row can be clicked before `resolveChanges()` has caught up and there'd be nothing to fly to.
