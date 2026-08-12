@@ -101,7 +101,14 @@ const PointrMap = forwardRef<PointrMapHandle, {
    * to bring you back.
    */
   focusNonce?: number;
-}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, target }, handle) {
+  /**
+   * What to light up on the map, through the SDK's own selection layer: one feature by `fid`, or a
+   * whole type. `null` clears it. Hover drives this as well as selection, so it changes often —
+   * which is why it is its own prop rather than folded into `focusFeature`, whose job is to MOVE
+   * the camera and must not fire on every mouseover.
+   */
+  highlight?: { fid?: string; mainType?: string; subType?: string } | null;
+}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, highlight, target }, handle) {
   const ref = useRef<HTMLIFrameElement>(null);
   useImperativeHandle(handle, () => ({
     setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
@@ -114,6 +121,10 @@ const PointrMap = forwardRef<PointrMapHandle, {
   useEffect(() => {
     if (focusFeature) ref.current?.contentWindow?.postMessage({ type: "focusfeature", fid: focusFeature }, "*");
   }, [focusFeature, focusNonce]);
+
+  useEffect(() => {
+    ref.current?.contentWindow?.postMessage({ type: "highlight", sel: highlight ?? null }, "*");
+  }, [highlight]);
 
   const send = () => {
     const win = ref.current?.contentWindow;

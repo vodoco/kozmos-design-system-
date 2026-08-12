@@ -1148,6 +1148,49 @@ var FOCUS_MAX_ZOOM = 19.5;
  * filling the pane with a single toilet tells you its shape and nothing about where it is. Padding
  * is even all round here — unlike a change, a tree selection opens no card to make room for.
  */
+/**
+ * Highlight features on the map using **the SDK's own selection layer** (Olcay, 2026-08-12: *"we
+ * should already have this covered in the style json"* — and it is).
+ *
+ * `source_selected_ptr` is an empty GeoJSON source that the published style already draws through
+ * `fill_selected_ptr` (a blue #346DF1 fill-extrusion) and `symbol_selected_ptr`. So highlighting is
+ * just handing it geometry: no layer of ours, no colours of ours, and it looks exactly like every
+ * other selection in the product.
+ *
+ * Takes either one `fid` or a whole `mainType`/`subType` — hovering a type row lights the lot,
+ * which is how you find out where 989 walls actually are. Capped, because setData on thousands of
+ * polygons at hover speed is not worth the frame it costs.
+ */
+const HIGHLIGHT_CAP = 400;
+function highlightFeatures(sel) {
+  const src = map && map.getSource("source_selected_ptr");
+  if (!src) return;
+  const feats = [];
+  if (sel) {
+    try {
+      const layers = [...new Set(map.getStyle().layers
+        .filter(l => l.source === "source_ptr" && l["source-layer"])
+        .map(l => l["source-layer"]))];
+      const seen = new Set();
+      for (const L of layers) {
+        for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L })) {
+          const p = f.properties; if (!p) continue;
+          if (sel.fid != null ? p.fid !== sel.fid
+                              : (p.mainType !== sel.mainType || (sel.subType || "") !== (p.subType || ""))) continue;
+          if (p.lvl !== TARGET.level) continue;
+          // a feature split across tiles arrives once per tile; the same fid twice is one shape
+          const k = p.fid + ":" + JSON.stringify(f.geometry && f.geometry.coordinates ? f.geometry.coordinates[0] : 0).slice(0, 40);
+          if (seen.has(k)) continue; seen.add(k);
+          if (f.geometry) feats.push({ type: "Feature", geometry: f.geometry, properties: {} });
+          if (feats.length >= HIGHLIGHT_CAP) break;
+        }
+        if (feats.length >= HIGHLIGHT_CAP) break;
+      }
+    } catch(e){}
+  }
+  try { src.setData({ type: "FeatureCollection", features: feats }); } catch(e){}
+}
+
 function focusFeature(fid, tries) {
   tries = tries || 0;
   if (!map || fid == null) return;
@@ -1578,6 +1621,8 @@ window.addEventListener("message", (ev) => {
     SELECTED = CHANGES.indexOf(SELECTED) >= 0 ? SELECTED : null;
     HOVERED = null;
     if (map) { resolveChanges(); redraw(); renderTip(); }
+  } else if (d.type === "highlight") {
+    highlightFeatures(d.sel || null);
   } else if (d.type === "focusfeature") {
     focusFeature(d.fid);
   } else if (d.type === "active") {

@@ -501,7 +501,12 @@ const LevelTypesContext = createContext<{
    */
   focus: (buildingId: string, index: number, fid: string) => void;
   focused: string | null;
-}>({ byLevel: {}, request: () => {}, sheet: null, focus: () => {}, focused: null });
+  /**
+   * What the cursor is over — lit on the map through the SDK's own selection layer. `null` on
+   * leave, which falls back to whatever is selected rather than going dark.
+   */
+  hover: (sel: { fid?: string; mainType?: string; subType?: string } | null) => void;
+}>({ byLevel: {}, request: () => {}, sheet: null, focus: () => {}, focused: null, hover: () => {} });
 
 /**
  * One taxonomy icon, drawn straight from the published sprite sheet.
@@ -626,12 +631,12 @@ function CountChip({ n }: { n: number }) {
 /** A single feature under its type — the leaf of the tree, and the only row you edit. */
 function FeatureRow({ name, unnamed, fid, buildingId, index }: { name: string; unnamed: boolean; fid?: string; buildingId: string; index: number }) {
   const [hover, setHover] = useState(false);
-  const { focus, focused } = useContext(LevelTypesContext);
+  const { focus, focused, hover: onHover } = useContext(LevelTypesContext);
   const selected = !!fid && focused === fid;
   return (
     <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseEnter={() => { setHover(true); if (fid) onHover({ fid }); }}
+      onMouseLeave={() => { setHover(false); onHover(null); }}
       onClick={() => fid && focus(buildingId, index, fid)}
       title={fid ? "Show on the map" : undefined}
       style={{
@@ -679,13 +684,14 @@ function FeatureRow({ name, unnamed, fid, buildingId, index }: { name: string; u
 function TypeRow({ row, all, buildingId, index }: { row: LevelTypeCount; all: LevelTypeCount[]; buildingId: string; index: number }) {
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
+  const { hover: onHover } = useContext(LevelTypesContext);
   const names = row.names ?? [];
   const label = rowLabel(row, all);
   return (
     <>
       <div
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
+        onMouseEnter={() => { setHover(true); onHover({ mainType: row.mainType, subType: row.subType }); }}
+        onMouseLeave={() => { setHover(false); onHover(null); }}
         style={{
           display: "flex",
           alignItems: "center",
@@ -1165,9 +1171,15 @@ export function MapContent({
     setTarget((t) => (t?.building === buildingId && t?.level === index ? t : { building: buildingId, level: index }));
     setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
   }, []);
+  const [hovered, setHovered] = useState<{ fid?: string; mainType?: string; subType?: string } | null>(null);
   const typesCtx = useMemo(
-    () => ({ byLevel: typesByLevel, request: requestTypes, sheet, focus, focused: focused?.fid ?? null }),
+    () => ({ byLevel: typesByLevel, request: requestTypes, sheet, focus, focused: focused?.fid ?? null, hover: setHovered }),
     [typesByLevel, requestTypes, sheet, focus, focused],
+  );
+  /** Hover wins while it lasts; leaving falls back to the selection rather than going dark. */
+  const highlight = useMemo(
+    () => hovered ?? (focused ? { fid: focused.fid } : null),
+    [hovered, focused],
   );
   const [mapLevel, setMapLevel] = useState<MapLevel | null>(null);
   const onBuildings = useCallback((b: MapBuilding[]) => {
@@ -1318,6 +1330,7 @@ export function MapContent({
           onFileDrop={onFileDrop}
           focusFeature={focused?.fid ?? null}
           focusNonce={focused?.n ?? 0}
+          highlight={highlight}
           target={target}
         />
         {live.length > 0 && target && (
