@@ -527,7 +527,7 @@ function levelTypeCounts() {
         // Names for the individual features, capped: a floor with 989 walls would otherwise post a
         // thousand strings per level, and nobody scrolls a list that long. The count stays exact;
         // the list says when it is showing only the first slice.
-        if (row.names.length < NAME_CAP) row.names.push(p.name || "");
+        if (row.names.length < NAME_CAP) row.names.push({ name: p.name || "", fid: p.fid });
         tally.set(key, row);
       }
     }
@@ -1140,6 +1140,42 @@ function frameChanges() {
  */
 var FOCUS_MAX_ZOOM = 19.5;
 
+/**
+ * Centre the map on ONE feature, found by its `fid` — what clicking a row in the tree's level
+ * expansion does (Olcay, 2026-08-12).
+ *
+ * Same framing rule as `focusChange`: fit the feature's own bounds but **cap the zoom**, because
+ * filling the pane with a single toilet tells you its shape and nothing about where it is. Padding
+ * is even all round here — unlike a change, a tree selection opens no card to make room for.
+ */
+function focusFeature(fid) {
+  if (!map || fid == null) return;
+  let minx=180, miny=90, maxx=-180, maxy=-90, n=0;
+  const eat = coords => {
+    if (typeof coords[0] === "number") {
+      const x = coords[0], y = coords[1]; n++;
+      if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y;
+    } else coords.forEach(eat);
+  };
+  try {
+    const layers = [...new Set(map.getStyle().layers
+      .filter(l => l.source === "source_ptr" && l["source-layer"])
+      .map(l => l["source-layer"]))];
+    for (const L of layers) {
+      for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L })) {
+        if (!f.properties || f.properties.fid !== fid) continue;
+        if (f.geometry && f.geometry.coordinates) eat(f.geometry.coordinates);
+      }
+    }
+  } catch(e){}
+  if (!n) return;                       // not in a loaded tile — the map simply doesn't move
+  try {
+    map.fitBounds([[minx,miny],[maxx,maxy]], {
+      padding: 120, maxZoom: FOCUS_MAX_ZOOM, duration: 650, essential: true,
+    });
+  } catch(e){}
+}
+
 function focusChange(change) {
   if (!map) return;
   const hit = RESOLVED.find(r => r.change === change);
@@ -1527,6 +1563,8 @@ window.addEventListener("message", (ev) => {
     SELECTED = CHANGES.indexOf(SELECTED) >= 0 ? SELECTED : null;
     HOVERED = null;
     if (map) { resolveChanges(); redraw(); renderTip(); }
+  } else if (d.type === "focusfeature") {
+    focusFeature(d.fid);
   } else if (d.type === "active") {
     // A changelog row was clicked — mirror it here. Deferred until geometry exists, because a
     // row can be clicked before `resolveChanges()` has caught up and there'd be nothing to fly to.

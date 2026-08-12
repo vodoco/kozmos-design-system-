@@ -494,7 +494,10 @@ const LevelTypesContext = createContext<{
   /** Show this floor on the map — which is also what makes its counts arrive. */
   request: (buildingId: string, index: number) => void;
   sheet: SpriteSheet | null;
-}>({ byLevel: {}, request: () => {}, sheet: null });
+  /** Centre the map on one feature, and mark its row as the selected one. */
+  focus: (fid: string) => void;
+  focused: string | null;
+}>({ byLevel: {}, request: () => {}, sheet: null, focus: () => {}, focused: null });
 
 /**
  * One taxonomy icon, drawn straight from the published sprite sheet.
@@ -548,15 +551,10 @@ const SPRITE_W = 2046;
  * the shape of the screen can be judged; none of them has a backend in this prototype. Wiring one
  * up means giving it something real to do, not just removing this note.
  */
-function RowMenu({ label, items }: { label: string; items: { label: string; danger?: boolean }[] }) {
+function RowMenu({ label, items, show }: { label: string; items: { label: string; danger?: boolean }[]; show: boolean }) {
   const [open, setOpen] = useState(false);
-  const [hover, setHover] = useState(false);
   return (
-    <span
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{ flex: "0 0 auto", display: "flex" }}
-    >
+    <span style={{ flex: "0 0 auto", display: "flex" }}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
@@ -571,7 +569,7 @@ function RowMenu({ label, items }: { label: string; items: { label: string; dang
               background: "none",
               color: MUTED,
               cursor: "pointer",
-              visibility: hover || open ? "visible" : "hidden",
+              visibility: show || open ? "visible" : "hidden",
             }}
           >
             <Ellipsis />
@@ -616,13 +614,18 @@ function CountChip({ n }: { n: number }) {
 }
 
 /** A single feature under its type — the leaf of the tree, and the only row you edit. */
-function FeatureRow({ name, unnamed }: { name: string; unnamed: boolean }) {
+function FeatureRow({ name, unnamed, fid }: { name: string; unnamed: boolean; fid?: string }) {
   const [hover, setHover] = useState(false);
+  const { focus, focused } = useContext(LevelTypesContext);
+  const selected = !!fid && focused === fid;
   return (
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      onClick={() => fid && focus(fid)}
+      title={fid ? "Show on the map" : undefined}
       style={{
+        cursor: fid ? "pointer" : "default",
         display: "flex",
         alignItems: "center",
         gap: 8,
@@ -632,7 +635,10 @@ function FeatureRow({ name, unnamed }: { name: string; unnamed: boolean }) {
         // An unnamed feature is still a feature — numbering it beats hiding it, and most
         // structural geometry genuinely has no name. It reads muted because the label is ours.
         color: unnamed ? MUTED : "var(--review-ink)",
-        background: hover ? "#f6f7f9" : undefined,
+        /* Selection is a ring and a tint, never a colour — the same rule the changelog follows:
+           colour says what a thing IS, and being selected is not a property of the thing. */
+        background: selected ? "var(--primitives-colors-theme-0)" : hover ? "#f6f7f9" : undefined,
+        boxShadow: selected ? "inset 3px 0 0 var(--primitives-colors-theme-500)" : undefined,
       }}
     >
       <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -640,6 +646,7 @@ function FeatureRow({ name, unnamed }: { name: string; unnamed: boolean }) {
       </span>
       <RowMenu
         label={name}
+        show={hover}
         items={[
           { label: "Edit" },
           { label: "Duplicate" },
@@ -673,7 +680,9 @@ function TypeRow({ row, all }: { row: LevelTypeCount; all: LevelTypeCount[] }) {
           display: "flex",
           alignItems: "center",
           gap: 8,
-          padding: `6px 12px 6px ${indent(2)}px`,
+          // 2px left of the column (Olcay, 2026-08-12): a chevron glyph carries its own
+          // internal padding, so aligning its BOX leaves the stroke looking indented.
+          padding: `6px 12px 6px ${indent(2) - 2}px`,
           borderBottom: `1px solid ${LINE}`,
           fontSize: 12.5,
           color: "var(--review-ink)",
@@ -702,11 +711,11 @@ function TypeRow({ row, all }: { row: LevelTypeCount; all: LevelTypeCount[] }) {
         <span style={{ flex: 1 }} />
         {/* A whole type is something you act on in bulk — pick it out on the map, or hand the lot
             to someone. Editing or deleting belongs to the individual feature, not to the type. */}
-        <RowMenu label={label} items={[{ label: "Select" }, { label: "Assign to…" }]} />
+        <RowMenu label={label} show={hover} items={[{ label: "Select" }, { label: "Assign to…" }]} />
       </div>
       {open &&
         names.map((n, i) => (
-          <FeatureRow key={`${n}:${i}`} name={n || `${label} ${i + 1}`} unnamed={!n} />
+          <FeatureRow key={`${n.fid ?? i}`} name={n.name || `${label} ${i + 1}`} unnamed={!n.name} fid={n.fid} />
         ))}
       {open && row.count > names.length && (
         <div
@@ -1129,9 +1138,15 @@ export function MapContent({
     (building: string, level: number) => setTarget((t) => (t?.building === building && t?.level === level ? t : { building, level })),
     [],
   );
+  /**
+   * The feature the tree has centred the map on, plus a nonce that rises on every request — so
+   * clicking the same row twice re-centres, which matters because you may have panned away since.
+   */
+  const [focused, setFocused] = useState<{ fid: string; n: number } | null>(null);
+  const focus = useCallback((fid: string) => setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 })), []);
   const typesCtx = useMemo(
-    () => ({ byLevel: typesByLevel, request: requestTypes, sheet }),
-    [typesByLevel, requestTypes, sheet],
+    () => ({ byLevel: typesByLevel, request: requestTypes, sheet, focus, focused: focused?.fid ?? null }),
+    [typesByLevel, requestTypes, sheet, focus, focused],
   );
   const [mapLevel, setMapLevel] = useState<MapLevel | null>(null);
   const onBuildings = useCallback((b: MapBuilding[]) => {
@@ -1280,6 +1295,8 @@ export function MapContent({
           onLevel={onLevel}
           onTypes={onTypes}
           onFileDrop={onFileDrop}
+          focusFeature={focused?.fid ?? null}
+          focusNonce={focused?.n ?? 0}
           target={target}
         />
         {live.length > 0 && target && (

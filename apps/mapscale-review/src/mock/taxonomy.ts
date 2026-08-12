@@ -96,12 +96,20 @@ export const SPRITE_BASE =
 export interface SpriteEntry { x: number; y: number; width: number; height: number; pixelRatio?: number }
 export type SpriteSheet = Record<string, SpriteEntry>;
 
-/** Which sprite draws this type — subType first, then mainType, then nothing. */
+/**
+ * The taxonomy's own generic pin, used when a type has no icon of its own — `wall`, `section` and
+ * `furniture` genuinely have none (Olcay, 2026-08-12: *"use generic marker in the sprite for those
+ * that doesn't have marker"*). It beats a grey dot because it comes from the same sheet and reads
+ * as "a thing on the map" rather than as a rendering failure.
+ */
+const GENERIC_SPRITE = "landmark-attraction";
+
+/** Which sprite draws this type — subType, then mainType, then the generic pin. */
 export function spriteName(sheet: SpriteSheet | null, mainType: string, subType?: string): string | null {
   if (!sheet) return null;
   if (subType && sheet[subType]) return subType;
   if (sheet[mainType]) return mainType;
-  return null;
+  return sheet[GENERIC_SPRITE] ? GENERIC_SPRITE : null;
 }
 
 /* ── what the map reports ──────────────────────────────────────────────────── */
@@ -113,10 +121,12 @@ export interface LevelTypeCount {
   count: number;
   /**
    * The individual features, capped by the map at 60 — `count` stays exact, so a type with more
-   * says so rather than quietly showing a short list. An empty string is a real, unnamed feature:
-   * walls and conveyor belts mostly have no name, and hiding them would misreport the floor.
+   * says so rather than quietly showing a short list. An empty name is a real, unnamed feature:
+   * walls and conveyor belts mostly have none, and hiding them would misreport the floor.
+   *
+   * `fid` is the SDK's own feature id, which is what lets a row centre the map on itself.
    */
-  names?: string[];
+  names?: { name: string; fid: string }[];
 }
 
 export interface ClassGroup {

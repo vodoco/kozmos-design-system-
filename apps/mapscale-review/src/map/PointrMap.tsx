@@ -89,13 +89,31 @@ const PointrMap = forwardRef<PointrMapHandle, {
    */
   active?: string | null;
   onSelect?: (id: string | null) => void;
-}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, target }, handle) {
+  /**
+   * Centre the map on one SDK feature by its `fid` — the tree's level expansion selecting a row.
+   * Distinct from `active`, which is about a *change* in a review; this is about a feature that
+   * simply exists.
+   */
+  focusFeature?: string | null;
+  /**
+   * Bumped by the caller on every focus request. Without it, clicking the same row twice is the
+   * same prop value and the effect never re-fires — so a row you'd panned away from would refuse
+   * to bring you back.
+   */
+  focusNonce?: number;
+}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, target }, handle) {
   const ref = useRef<HTMLIFrameElement>(null);
   useImperativeHandle(handle, () => ({
     setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
   }), []);
   const latest = useRef({ changes, prefs, target, active, dropOn: !!onFileDrop });
   latest.current = { changes, prefs, target, active, dropOn: !!onFileDrop };
+
+  // Its own effect: a focus is an EVENT, not state to re-send on every `ready` — re-posting it
+  // with the rest would re-centre the map every time the iframe re-announced itself.
+  useEffect(() => {
+    if (focusFeature) ref.current?.contentWindow?.postMessage({ type: "focusfeature", fid: focusFeature }, "*");
+  }, [focusFeature, focusNonce]);
 
   const send = () => {
     const win = ref.current?.contentWindow;
