@@ -39,12 +39,27 @@ export interface HeldLevel {
   /** How many changes are waiting. `undefined` for cause B, which has no changelog to count. */
   changes?: number;
   /** Why it is held — the overlay says this out loud, it never just greys a row. */
-  reason: "needs-review" | "needs-decision" | "expert-review" | "part-way";
+  reason: "needs-review" | "needs-decision" | "part-way";
 }
 
-/** Is this version still waiting on somebody? */
+/**
+ * Is this version waiting on **the person publishing**?
+ *
+ * The overlay lists what someone can act on, and nothing else (Olcay, 2026-08-13). Two states are
+ * pending but deliberately absent:
+ *
+ *   · **expert-review** — Pointr's mapping team owns it. There is no result to include yet, so
+ *     nothing is being "left out" that this user could have had, and there is no action to offer.
+ *     Listing it would be reporting our own internal queue as if it were their problem.
+ *   · **rejected** — decision 9 threw the arrival away, so the level still holds exactly the data
+ *     it held before. A publish loses nothing. (Never reached this function: `rejected` is not a
+ *     pending state — but it is the same reasoning, and the two must not drift apart.)
+ *
+ * What is left is only what a human here can finish: an unreviewed arrival, one already part-way,
+ * and cause B waiting on a decision.
+ */
 function isPending(v: LevelVersion): boolean {
-  return v.state === "needs-review" || v.state === "needs-decision" || v.state === "expert-review";
+  return v.state === "needs-review" || v.state === "needs-decision";
 }
 
 /**
@@ -67,15 +82,13 @@ export function levelsHeldFromPublish(): HeldLevel[] {
       if (outcome?.complete) continue;
 
       /**
-       * A count only when there is an honest one to give:
-       *   · cause B has no changelog at all (decision 11) — counting is exactly what failed;
-       *   · a level under EXPERT REVIEW has no final list either. The mapping team is still
-       *     pruning it, so any number here would be overwritten before the user ever saw it.
+       * A count only when there is an honest one to give. Cause B has none at all (decision 11) —
+       * counting is exactly what failed there.
        */
-      const countable = newest.redCause !== "cannot-match" && newest.state !== "expert-review";
-      const changes = !countable
-        ? undefined
-        : outcome?.changes.length ?? seedChanges(magnitudeBand(newest.changePct ?? 30)).length;
+      const changes =
+        newest.redCause === "cannot-match"
+          ? undefined
+          : outcome?.changes.length ?? seedChanges(magnitudeBand(newest.changePct ?? 30)).length;
 
       held.push({
         buildingId: b.id,
@@ -97,6 +110,5 @@ export function levelsHeldFromPublish(): HeldLevel[] {
 export const HELD_REASON: Record<HeldLevel["reason"], string> = {
   "needs-review": "Nobody has reviewed this yet",
   "needs-decision": "Waiting on your decision",
-  "expert-review": "Pointr's mapping team is still working on it",
   "part-way": "Review started but not concluded",
 };

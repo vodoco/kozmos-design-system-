@@ -57,11 +57,7 @@ export function PublishScope({
    * matched to the published map.
    */
   const status = (l: HeldLevel) =>
-    l.changes !== undefined
-      ? `${l.changes} changes`
-      : l.reason === "expert-review"
-        ? "Not final yet"
-        : "Couldn’t be matched";
+    l.changes !== undefined ? `${l.changes} changes` : "Couldn’t be matched";
 
   return (
     <ConfirmOverlay
