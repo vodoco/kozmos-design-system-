@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@kozmos/react";
 import { ChangeGroupBlock } from "../ui/ChangeGroup";
-import { ChangeReviewRow } from "../ui/ChangeReviewRow";
+import { ChangeReviewRow, WarningGlyph } from "../ui/ChangeReviewRow";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings } from "../ui/MapSettings";
@@ -33,6 +33,8 @@ import {
   seedVersions,
   type MagnitudeBand,
   type RedCause,
+  WARNING_LABEL,
+  type FloorWarning,
 } from "../mock/diff";
 import { getLevelVersions, getReviewOutcome, levelKey, setLevelVersions, setReviewOutcome } from "../mock/store";
 
@@ -55,6 +57,7 @@ export function ManualReview({
   onClose,
   onCompare,
   creation,
+  floorWarnings,
 }: {
   level?: LevelRef | null;
   /**
@@ -67,6 +70,12 @@ export function ManualReview({
   onClose?: () => void;
   /** Opens Version History in Compare mode — cause B's review is the one that needs it. */
   onCompare?: () => void;
+  /**
+   * Whole-floor conditions (D16) — US10's georeference shift, US7's size edge cases. They render
+   * as a notice ABOVE the changelog because they scope every row beneath them; hanging them off a
+   * single change was the bug this prop exists to end.
+   */
+  floorWarnings?: FloorWarning[];
   /**
    * The Building wizard's review sequence rides THIS screen (Olcay, 2026-08-11: "exactly the
    * same as user review"): MapScale's guesses arrive as changes, the magnitude block carries the
@@ -720,6 +729,40 @@ export function ManualReview({
             which hid every change behind a chevron. Confirm all / Reject all sit on the first
             section's title row.
           */}
+          {/*
+            D16 — whole-floor conditions, above the list they scope. Neutral by §3: risk is a third
+            axis and is never coloured, so this never wears amber even though it is a warning. It
+            says the list is UNAFFECTED, because US10's whole point is that the engine carries on.
+          */}
+          {floorWarnings && floorWarnings.length > 0 && (
+            <div
+              data-tour="floor-warnings"
+              style={{ marginTop: 10, border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden" }}
+            >
+              {floorWarnings.map((w, i) => (
+                <div
+                  key={w.kind}
+                  style={{
+                    display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 12px",
+                    background: "#f6f7f9", borderTop: i ? `1px solid ${LINE}` : "none",
+                  }}
+                >
+                  <span style={{ flex: "0 0 auto", marginTop: 1 }}>
+                    <WarningGlyph size={13} />
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--review-ink)" }}>
+                      {WARNING_LABEL[w.kind]}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#5d626f", lineHeight: 1.45, marginTop: 2 }}>
+                      {w.detail}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div data-tour="changelog">
           {sections.map((s, i) => (
             <div key={s.key} style={{ marginTop: i ? 18 : 10 }}>

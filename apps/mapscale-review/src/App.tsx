@@ -8,7 +8,7 @@ import { VersionHistory } from "./screens/VersionHistory";
 import { BuildingWizard } from "./screens/BuildingWizard";
 import { Settings } from "./screens/Settings";
 import { NotificationBell, type NotificationTarget } from "./ui/NotificationBell";
-import { seedVersions, type RedCause } from "./mock/diff";
+import { seedFloorWarnings, seedVersions, type RedCause } from "./mock/diff";
 import { getCreatedBuildings, getLevelVersions, levelKey } from "./mock/store";
 import { FeedbackLayer } from "./ui/FeedbackLayer";
 import type { TourScreen } from "./ui/Tour";
@@ -231,6 +231,7 @@ export default function App() {
               // concluded Save (the editor is where the version's new state shows).
               onClose={() => setScreen(level ? "levelEditor" : "mapContent")}
               onCompare={level ? () => openHistory(level, "review", undefined, "compare") : undefined}
+              floorWarnings={level ? seedFloorWarnings(level.buildingId, level.index) : undefined}
             />
           )}
         </div>

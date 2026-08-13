@@ -89,9 +89,34 @@ export interface Change {
   geometry?: unknown; // GeoJSON.Geometry — for the map highlight
 }
 
+/**
+ * The two `WarningKind`s that are **facts about the floor**, not about any one object — US10's
+ * georeference shift and US7's "the new plan is a different size" edge cases.
+ */
+export type FloorWarningKind = Extract<WarningKind, "georeference-shifted" | "floorplan-resized">;
+
+/**
+ * **D16, fixed 2026-08-13.** These used to have nowhere to live: the only slot for a warning was
+ * `Change.warning`, so saying "the floor moved" meant picking an arbitrary feature and hanging the
+ * warning off it — which reads as *"Costa Coffee: georeference shifted"* when what moved was
+ * everything. A whole-floor fact now travels with the diff itself and renders **above** the
+ * changelog, where it scopes every row beneath it instead of impersonating one.
+ */
+export interface FloorWarning {
+  kind: FloorWarningKind;
+  /** The measured statement — "8% larger", "shifted 1.4 m north-east". Never a bare restatement. */
+  detail: string;
+}
+
 export interface DiffResult {
   changes: Change[];
   magnitudePct: number; // share of floor AREA changed → <20 auto · 20–50 review · >50 manual
+  /**
+   * Whole-floor conditions, if any. Empty for most updates. Never merged into `changes`: US10
+   * requires the engine to *continue* processing everything else, so these scope the list rather
+   * than joining it.
+   */
+  floorWarnings: FloorWarning[];
 }
 
 export type MagnitudeBand = "minor" | "medium" | "large";
@@ -196,6 +221,13 @@ export function expertReviewEnabled(): boolean {
  * `resultExtra.internalStatus` (build_plan §5), and both seams disappear together when it lands.
  */
 export const EXPERT_REVIEW_LEVEL = 2;
+
+/**
+ * The level carrying the reviewable amber arrival — B2, "Departures - Terminal 3". Moved here from
+ * `MapContent.tsx` on 2026-08-13 so the tree's tag, `seedVersions()` and `seedFloorWarnings()` read
+ * one constant instead of three copies of `-2`; `mock/` owns the demo data, and the screens read it.
+ */
+export const NEW_VERSION_LEVEL = -2;
 
 /**
  * Is Pointr's mapping team currently working on this level?
@@ -758,7 +790,7 @@ export function buildSections(changes: Change[]): ReviewSection[] {
 }
 
 /**
- * The amber (30%) change set — 6 new · 7 updated · 5 removed · 4 user overrides — tagged onto
+ * The amber (30%) change set — 6 new · 7 updated · 5 removed · 5 user overrides — tagged onto
  * features that genuinely exist on the level under review — Dubai · Terminal 3 and B Gates ·
  * **levelIndex -2, "Departures - Terminal 3" (short title B2)**. Every row therefore has geometry
  * on the map. NB: this building numbers floors per terminal, so B2 is levelIndex -2; levelIndex 2
@@ -955,6 +987,43 @@ export function seedChanges(band: MagnitudeBand): Change[] {
   }
 }
 
-export function seedDiff(magnitudePct = 30): DiffResult {
-  return { changes: seedChanges(magnitudeBand(magnitudePct)), magnitudePct };
+/**
+ * The demo floor conditions (D16). Kept out of `seedDiff`'s default so the canonical Green / Amber
+ * / Red screens are unchanged — a floor warning is the exception, not the resting state, and every
+ * screen growing a notice strip would say the opposite.
+ */
+export const FLOOR_WARNING_DEMO: Record<FloorWarningKind, FloorWarning> = {
+  "georeference-shifted": {
+    kind: "georeference-shifted",
+    detail:
+      "Shifted 1.4 m north-east of the published floor plan. Every change below was matched after correcting for it, so the list is unaffected.",
+  },
+  "floorplan-resized": {
+    kind: "floorplan-resized",
+    detail:
+      "The new floor plan covers 8% more area than the published one. The traffic light still reads the share of area that changed, not the size difference.",
+  },
+};
+
+/**
+ * Which demo level's floor actually moved — **Terminal 3 · B2**, the amber review (US10's demo,
+ * D16). It is deliberately the same level as the main walkthrough, because **B2's is the only
+ * review the tree can actually open**: L1's countdown tag carries no `action: "review"`, and L0's
+ * "New version" tag is superseded by "Auto-published". A warning parked on either could never be
+ * seen, and an unseeable demo is worse than none.
+ *
+ * The story still lands, because a floor warning must not move the traffic light: B2 stays at 30%
+ * and amber with the floor shifted under it, which is exactly US10's acceptance criterion — warn,
+ * and **carry on** processing everything else.
+ *
+ * ⚠️ One constant to revert. Point it at another level and the amber walkthrough goes back to a
+ * floor that stayed put — at the cost of nobody being able to reach the notice.
+ */
+export function seedFloorWarnings(buildingId: string | undefined, levelIndex: number): FloorWarning[] {
+  if ((buildingId ?? T3_ID) !== T3_ID || levelIndex !== NEW_VERSION_LEVEL) return [];
+  return [FLOOR_WARNING_DEMO["georeference-shifted"], FLOOR_WARNING_DEMO["floorplan-resized"]];
+}
+
+export function seedDiff(magnitudePct = 30, floorWarnings: FloorWarning[] = []): DiffResult {
+  return { changes: seedChanges(magnitudeBand(magnitudePct)), magnitudePct, floorWarnings };
 }

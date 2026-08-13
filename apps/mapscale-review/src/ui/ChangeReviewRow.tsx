@@ -16,7 +16,9 @@ import {
  * magnitude, and the four diff colours stay reserved for what a feature *is*. So a warning is a
  * neutral mark, in the same ink as ✓ 🚩 ✗.
  */
-function WarningGlyph({ size = 14 }: { size?: number }) {
+/** Exported since 2026-08-13: the floor-warning strip (D16) draws the same mark, and two copies
+ *  of one glyph is exactly how the two halves of a statement drift apart. */
+export function WarningGlyph({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden focusable="false">
       <path d="M8 2.2 L14.6 13.4 H1.4 Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />

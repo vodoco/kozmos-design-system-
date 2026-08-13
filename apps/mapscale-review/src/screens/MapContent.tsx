@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Button, Icon, Input, Popover, PopoverTrigger, PopoverContent, Text } from "@kozmos/react";
 import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
-import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, decisionInk, expertReviewEnabled, isUnderExpertReview, seedVersions, type Change } from "../mock/diff";
+import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, NEW_VERSION_LEVEL, decisionInk, expertReviewEnabled, isUnderExpertReview, seedVersions, type Change } from "../mock/diff";
 import { DecisionGlyph } from "../ui/ChangeReviewRow";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
@@ -153,7 +153,6 @@ interface Building {
 const OUTDOOR = { id: "outdoor", name: "Outdoor Map Content", count: 13 };
 
 /** The level MapScale has a new version for — the one the review flow opens (see LEVEL_TAGS). */
-const NEW_VERSION_LEVEL = -2;
 
 const TAG_TONE: Record<TagTone, { bg: string; border: string; ink: string }> = {
   info: { bg: "#eef3ff", border: "#cfdcff", ink: LINK },
