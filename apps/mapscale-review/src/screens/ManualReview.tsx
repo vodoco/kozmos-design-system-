@@ -675,15 +675,27 @@ export function ManualReview({
                     // here (decision 9) and cause C never produces anything to review
                     "Never published automatically. Review it, then publish when you're ready."}
               </div>
+              {/*
+                Amber carries ONE action, and it is the quiet one (Olcay, 2026-08-13).
+                *Publish now* used to sit here too, and it was the wrong offer mid-review: it
+                publishes the same thing **Complete review** publishes, from the opposite end of the
+                screen, while you are still deciding. US4's "publish immediately as soon as I'm done
+                with my review" IS Complete review — so the duplicate went, and only the action with
+                no substitute stayed: stopping the clock.
+
+                Cause B keeps *Publish now*, and must: decision 11 gives it no changelog, so there
+                is nothing to "complete" and this is its only way to publish.
+              */}
               <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
-                {bandKind === "medium" && (
-                  <Button variant="outline" size="sm" onClick={() => setFate("cancelled")}>
+                {bandKind === "medium" ? (
+                  <Button variant="link" size="sm" onClick={() => setFate("cancelled")}>
                     Cancel scheduled publish
                   </Button>
+                ) : (
+                  <Button size="sm" onClick={() => setFate("published")}>
+                    Publish now
+                  </Button>
                 )}
-                <Button size="sm" onClick={() => setFate("published")}>
-                  Publish now
-                </Button>
               </div>
             </div>
           ))}
