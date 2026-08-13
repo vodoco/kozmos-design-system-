@@ -11,6 +11,7 @@ import { NotificationBell, type NotificationTarget } from "./ui/NotificationBell
 import { seedFloorWarnings, seedVersions, type RedCause } from "./mock/diff";
 import { getCreatedBuildings, getLevelVersions, levelKey } from "./mock/store";
 import { FeedbackLayer } from "./ui/FeedbackLayer";
+import { PublishScope } from "./ui/PublishScope";
 import type { TourScreen } from "./ui/Tour";
 
 /**
@@ -85,6 +86,12 @@ export default function App() {
    * reports back so a later visit can't replay the upload.
    */
   const [pendingUpload, setPendingUpload] = useState<string | null>(null);
+  /**
+   * The site publish asks first (2026-08-13). It does not gate anything — the overlay says which
+   * levels are held out of the publish because their review has not concluded, and offers a route
+   * into each. See `mock/publishScope.ts` for why holding them out is the rule.
+   */
+  const [publishOpen, setPublishOpen] = useState(false);
   const openUpload = (l: LevelRef, file: string) => {
     setLevel(l);
     setPendingUpload(file);
@@ -112,6 +119,7 @@ export default function App() {
         <TopBar
           tab={screen === "settings" ? "Settings" : "Maps"}
           onTab={(t) => setScreen(t === "Settings" ? "settings" : "mapContent")}
+          onPublish={() => setPublishOpen(true)}
           bell={
             <NotificationBell
               /**
@@ -236,6 +244,21 @@ export default function App() {
           )}
         </div>
       </div>
+        <PublishScope
+          open={publishOpen}
+          onCancel={() => setPublishOpen(false)}
+          onPublish={() => setPublishOpen(false)}
+          onOpenLevel={(l) => {
+            setPublishOpen(false);
+            openReview({
+              building: l.building,
+              buildingId: l.buildingId,
+              index: l.index,
+              name: l.name,
+              short: l.short,
+            });
+          }}
+        />
     </TooltipProvider>
   );
 }

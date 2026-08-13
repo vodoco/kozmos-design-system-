@@ -26,6 +26,7 @@ export function TopBar({
   bell,
   tab: current = "Maps",
   onTab,
+  onPublish,
 }: {
   tools?: React.ReactNode;
   /** The notification bell (S7) — passed in so the chrome doesn't have to know the app's routing. */
@@ -33,6 +34,11 @@ export function TopBar({
   /** Which top-level tab is lit. Settings became reachable when S5 was built (2026-08-11). */
   tab?: "Maps" | "Settings";
   onTab?: (t: "Maps" | "Settings") => void;
+  /**
+   * Publishing is a SITE action while a review is a LEVEL one, so this cannot just fire: it opens
+   * the scope overlay, which says which levels are held out of the publish (2026-08-13).
+   */
+  onPublish?: () => void;
 }) {
   const tab = (label: string, opts?: { to?: "Maps" | "Settings" }) => {
     const active = label === current;
@@ -124,7 +130,7 @@ export function TopBar({
               <Icon name="chevron-down" />
             </div>
           </div>
-          <Button size="sm">Publish</Button>
+          <Button size="sm" onClick={onPublish}>Publish</Button>
         </div>
       </div>
 
