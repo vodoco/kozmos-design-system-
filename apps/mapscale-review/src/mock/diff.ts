@@ -30,14 +30,19 @@ export type Decision = "confirm" | "flag" | "reject";
 export type Risk = "notice" | "warning";
 
 /**
- * Why a change is risky. The first four are the US7 preservation warnings; the last three are
+ * Why a change is risky. The first FIVE are the US7 preservation warnings; the last three are
  * whole-floor conditions (US10) and the engine's own confidence.
+ *
+ * `override-removed` was added 2026-08-13, for the collision US7 never covers: one object that is
+ * both **your edit** and **the source's deletion**. `type` carries its fate, `warning` carries why
+ * a human is needed — two axes, so neither fact is lost.
  */
 export type WarningKind =
   | "source-conflict"
   | "clash"
   | "out-of-bounds"
   | "re-removed"
+  | "override-removed"
   | "georeference-shifted"
   | "floorplan-resized"
   | "low-confidence";
@@ -47,6 +52,7 @@ export const WARNING_LABEL: Record<WarningKind, string> = {
   clash: "Overlaps another object",
   "out-of-bounds": "Outside the floor plan",
   "re-removed": "Removed again",
+  "override-removed": "Edited, now removed",
   "georeference-shifted": "Georeference shifted",
   "floorplan-resized": "Floor plan resized",
   "low-confidence": "Low match confidence",
@@ -58,6 +64,8 @@ export const WARNING_WHY: Record<WarningKind, string> = {
   clash: "Now collides with another object on the new floor plan.",
   "out-of-bounds": "Now falls outside the new floor plan's boundary.",
   "re-removed": "You removed this before. It is back in the source and has been removed again.",
+  "override-removed":
+    "The new floor plan does not contain an object you had edited. Confirming this removal discards that edit.",
   "georeference-shifted": "The new floor plan is positioned differently to the published one.",
   "floorplan-resized": "The new floor plan covers a different area to the published one.",
   "low-confidence": "MapScale matched this to the published feature with low confidence.",
@@ -790,7 +798,7 @@ export function buildSections(changes: Change[]): ReviewSection[] {
 }
 
 /**
- * The amber (30%) change set — 6 new · 7 updated · 5 removed · 5 user overrides — tagged onto
+ * The amber (30%) change set — 6 new · 7 updated · 6 removed · 5 user overrides — tagged onto
  * features that genuinely exist on the level under review — Dubai · Terminal 3 and B Gates ·
  * **levelIndex -2, "Departures - Terminal 3" (short title B2)**. Every row therefore has geometry
  * on the map. NB: this building numbers floors per terminal, so B2 is levelIndex -2; levelIndex 2
@@ -872,12 +880,37 @@ function amberChanges(): Change[] {
       warning: "re-removed",
       detail: "Removed from floor plan",
       details: ["You removed this in Version 2", "Present in the new source, removed again"],
-      // D17, approved 2026-08-13: a re-removal rests UNDECIDED. It used to seed `confirm`, so the
-      // default answer was "yes, remove it again" — the opposite of what US7's "option to NOT
-      // remove a Map Object" asks for. The row now waits, and its reject reads "Keep it".
-      decision: undefined,
+      /**
+       * Rests APPLIED, and that is the point (Olcay, 2026-08-13: *"is it respecting the user's
+       * removal — similar to user overrides?"*). It is: US7 says a manually removed object **must
+       * remain removed**, so the system re-applies your removal and the row REPORTS it. It is not
+       * asking you to decide. D17's "option to NOT remove" is the escape hatch from that default,
+       * which is the reject control — hence its "Keep it" tooltip.
+       *
+       * ⚠️ I briefly made this `undefined` on the same day, reading "the user should be given an
+       * option" as "the user must choose". Wrong: an option is an escape hatch from a default, not
+       * the absence of one.
+       */
+      decision: "confirm",
     },
     { id: "ambulance", name: "Ambulance Services Room", type: "deleted", kind: "medical-space", detail: "Removed from floor plan", decision: "reject" },
+    {
+      /**
+       * **The case US7 does not cover** (Olcay, 2026-08-13). US7 says overrides must be kept, and
+       * it says source removals are changes — but never what happens when one object is both. The
+       * two facts live on different axes: `type` is the object's FATE, `warning` is why a human is
+       * needed. So this stays a removal, and wears the mark.
+       *
+       * It rests **undecided** — the opposite of the re-removal above, and for the opposite
+       * reason: there, the answer is known (you already removed it). Here nothing can know whether
+       * you want the object you invested in deleted, so the system must not choose for you.
+       */
+      id: "berlinroom", name: "Berlin Room", type: "deleted", kind: "service-space",
+      warning: "override-removed",
+      detail: "Removed from floor plan",
+      details: ['You renamed this from "Room 10" in Version 2', "The new floor-plan does not contain it"],
+      decision: undefined,
+    },
 
     // ── User overrides — your own dashboard edits, carried through untouched.
     // No review action applies to these; they're shown so you can see they survived.

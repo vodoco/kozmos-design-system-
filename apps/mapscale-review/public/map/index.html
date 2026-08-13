@@ -2,9 +2,17 @@
 <html>
 <head>
 <meta charset="utf-8" />
+<!-- This page is an IFRAME: it inherits nothing from the app, so the DS font has to be loaded
+     here too. Without it every "Readex Pro" in this file silently fell back — and the SVG
+     cluster badges, which ask for `font-family: inherit`, fell all the way to the SVG
+     default: serif. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://pointr-websdk.azureedge.net/10.7.1/css/pointr.css" />
 <style>
-  html, body { margin: 0; height: 100%; width: 100%; background: #eef0f2; overflow: hidden; }
+  html, body { margin: 0; height: 100%; width: 100%; background: #eef0f2; overflow: hidden;
+               font-family: "Readex Pro", system-ui, sans-serif; }
   #map { position: absolute; inset: 0; }
   /* live greyscale of the WebGL base; highlights live in the SVG overlay on top (kept colour) */
   #map canvas.grey { filter: grayscale(1); }
