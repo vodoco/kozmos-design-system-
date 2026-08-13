@@ -47,13 +47,21 @@ export function PublishScope({
     else buildings.push({ name: l.building, levels: [l] });
   }
 
-  /** Two or three words, never a sentence — and never a number we cannot stand behind. */
+  /**
+   * Two or three words, never a sentence — and never a number we cannot stand behind.
+   *
+   * ⚠️ Not "No changelog" (Olcay, 2026-08-13: *"our system doesn't have a changelog at all"*). He is
+   * right: "changelog" is OUR word for the per-change list, it names nothing the user has ever
+   * seen, and here it would be explaining an absence with a term they do not have. What actually
+   * happened is plainer and is what Red B says everywhere else — the floor-plan could not be
+   * matched to the published map.
+   */
   const status = (l: HeldLevel) =>
     l.changes !== undefined
       ? `${l.changes} changes`
       : l.reason === "expert-review"
         ? "Not final yet"
-        : "No changelog";
+        : "Couldn’t be matched";
 
   return (
     <ConfirmOverlay

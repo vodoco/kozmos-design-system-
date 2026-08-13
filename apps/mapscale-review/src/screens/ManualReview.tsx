@@ -721,7 +721,7 @@ export function ManualReview({
               <div style={{ fontWeight: 600, fontSize: 13, color: "var(--review-ink)", marginBottom: 4 }}>
                 No per-change list for this update
               </div>
-              A changelog is a comparison against the published map — and aligning the two is
+              A per-change list is a comparison against the published map — and aligning the two is
               exactly what failed, so listing changes here would be guesswork. Inspect the floor on
               the map, compare it with the published version, then publish when you're satisfied —
               or upload a corrected floor-plan from the level's editor.
