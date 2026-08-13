@@ -120,24 +120,38 @@ export function ChangeReviewRow({
       ),
     },
   ];
-  const items = ACTIONS.map((a) => ({
-    value: a.value,
-    label: (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          {/* the label lives in the tooltip, so the glyph still needs an accessible name */}
-          <span
-            role="img"
-            aria-label={a.label}
-            style={{ display: "grid", placeItems: "center", color: decisionInk(a.value) }}
-          >
-            <DecisionGlyph kind={a.value} />
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>{a.label}</TooltipContent>
-      </Tooltip>
-    ),
-  }));
+  /**
+   * **D17 (approved 2026-08-13, wording settled the same day).** US7 requires "an option to NOT
+   * remove a Map Object", and the only mechanism was the generic ✗ with nothing saying that
+   * rejecting a removal is *how you keep it*.
+   *
+   * The affordance is the **words, not a different control** (Olcay: *"I'd like them consistent so
+   * X is fine, tooltip could say Keep it"*). Every row keeps the same three glyphs — a re-removal
+   * must not grow a fourth-looking control in a list of twenty — and only the reject tooltip
+   * changes. It still writes a plain `reject`, so no new state enters the model.
+   */
+  const keepIt = change.warning === "re-removed";
+  const items = ACTIONS.map((a) => {
+    const label = keepIt && a.value === "reject" ? "Keep it — this object stays on the map" : a.label;
+    return {
+      value: a.value,
+      label: (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {/* the label lives in the tooltip, so the glyph still needs an accessible name */}
+            <span
+              role="img"
+              aria-label={label}
+              style={{ display: "grid", placeItems: "center", color: decisionInk(a.value) }}
+            >
+              <DecisionGlyph kind={a.value} />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{label}</TooltipContent>
+        </Tooltip>
+      ),
+    };
+  });
 
   return (
     <div

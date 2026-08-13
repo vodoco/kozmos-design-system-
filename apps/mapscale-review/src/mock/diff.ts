@@ -872,7 +872,10 @@ function amberChanges(): Change[] {
       warning: "re-removed",
       detail: "Removed from floor plan",
       details: ["You removed this in Version 2", "Present in the new source, removed again"],
-      decision: "confirm",
+      // D17, approved 2026-08-13: a re-removal rests UNDECIDED. It used to seed `confirm`, so the
+      // default answer was "yes, remove it again" — the opposite of what US7's "option to NOT
+      // remove a Map Object" asks for. The row now waits, and its reject reads "Keep it".
+      decision: undefined,
     },
     { id: "ambulance", name: "Ambulance Services Room", type: "deleted", kind: "medical-space", detail: "Removed from floor plan", decision: "reject" },
 
