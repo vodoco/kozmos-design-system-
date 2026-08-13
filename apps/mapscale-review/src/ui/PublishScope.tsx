@@ -1,26 +1,30 @@
-import { Text } from "@kozmos/react";
+import { Icon, Text } from "@kozmos/react";
 import { ConfirmOverlay } from "./ConfirmOverlay";
-import { HELD_REASON, levelsHeldFromPublish, type HeldLevel } from "../mock/publishScope";
+import { levelsHeldFromPublish, type HeldLevel } from "../mock/publishScope";
+import { SITE_NAME } from "../mock/site";
 
 const LINE = "#e3e4e8";
 const MUTED = "#5d626f";
+const INK = "var(--review-ink)";
 
 /**
- * **What a site publish will leave behind** (Olcay, 2026-08-13).
+ * **The site publish confirmation — the product's own overlay, plus what it will leave behind.**
  *
- * Publishing is a SITE action, but a review is a LEVEL one — so the moment two people work on one
- * site, "Publish" stops meaning "publish what I just did". A level still in review is held out
- * (see `mock/publishScope.ts` for why), and this is where that is said.
+ * ⚠️ This is **not a new dialog**. Publishing already asks *"Ready to publish?"*, names the site and
+ * warns about caching; a second overlay competing with it would be the worst outcome. The held
+ * levels are an **insert** into that existing copy (Olcay, 2026-08-13: *"merge with the current
+ * publish overlay"*), between the sentence and the caching note, and the buttons stay the ones
+ * people already know.
  *
- * Three rules this screen obeys:
+ * **Density is the constraint** (Olcay: *"too crowded"*). The first cut gave every level three
+ * lines of prose and a *Review it* link, and four of those buried the sentence that matters. So:
+ *   · the building is a heading, written **once**, not repeated on every row;
+ *   · one line per level;
+ *   · the status is two or three words at the right edge, never a sentence;
+ *   · the whole row is the target, so no per-row link text.
  *
- * 1. **It does not block.** Publish stays available. The held levels are information, not a gate —
- *    the person publishing may know perfectly well that B2 is mid-review and want the rest live.
- * 2. **It names names.** "Some levels are held" would be worse than saying nothing: the whole risk
- *    of excluding is that a map ships MISSING work somebody uploaded, so every held level appears
- *    with its building, its change count and the reason.
- * 3. **It offers the way out.** Each row routes into that level's review, because the action the
- *    user probably wants is "finish that first", not "publish anyway".
+ * What it must never lose: **the count of what is being skipped**, and a route into each. Excluding
+ * a level means shipping a map missing work somebody uploaded — that is only safe if it is said.
  */
 export function PublishScope({
   open,
@@ -31,78 +35,100 @@ export function PublishScope({
   open: boolean;
   onCancel: () => void;
   onPublish: () => void;
-  /** Take me to that level's review — the reason most people opened this overlay. */
   onOpenLevel?: (l: HeldLevel) => void;
 }) {
   const held = open ? levelsHeldFromPublish() : [];
 
+  // one heading per building, in the order the tree shows them
+  const buildings: { name: string; levels: HeldLevel[] }[] = [];
+  for (const l of held) {
+    const last = buildings[buildings.length - 1];
+    if (last && last.name === l.building) last.levels.push(l);
+    else buildings.push({ name: l.building, levels: [l] });
+  }
+
+  /** Two or three words, never a sentence — and never a number we cannot stand behind. */
+  const status = (l: HeldLevel) =>
+    l.changes !== undefined
+      ? `${l.changes} changes`
+      : l.reason === "expert-review"
+        ? "Not final yet"
+        : "No changelog";
+
   return (
     <ConfirmOverlay
       open={open}
-      tone={held.length ? "warning" : "info"}
-      title={held.length ? `Publish site — ${held.length} level${held.length > 1 ? "s" : ""} will be left out` : "Publish site"}
-      confirmLabel="Publish anyway"
-      cancelLabel="Cancel"
+      tone="info"
+      title="Ready to publish?"
+      confirmLabel="Yes, continue"
+      cancelLabel="Go back"
       onConfirm={onPublish}
       onCancel={onCancel}
     >
-      {held.length === 0 ? (
-        <Text style={{ fontSize: 13, color: MUTED, lineHeight: 1.5 }}>
-          Every level is up to date. Publishing takes the site live as you see it.
-        </Text>
-      ) : (
-        <>
-          <Text style={{ display: "block", fontSize: 13, color: MUTED, lineHeight: 1.5 }}>
-            A level stays out of every publish until its review is concluded — so the changes below
-            will <strong>not</strong> go live. Finish a review and it publishes with the next one.
+      <Text style={{ display: "block", fontSize: 13.5, color: INK, lineHeight: 1.5 }}>
+        You are about to go live with the content updates for site, {SITE_NAME}.
+      </Text>
+
+      {held.length > 0 && (
+        <div style={{ marginTop: 14 }}>
+          <Text style={{ display: "block", fontSize: 13, color: INK, lineHeight: 1.5 }}>
+            <strong>{held.length} levels are still in review</strong> and will not be included.
           </Text>
 
-          <div style={{ marginTop: 12, border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden" }}>
-            {held.map((l, i) => (
-              <div
-                key={`${l.buildingId}:${l.index}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "10px 12px",
-                  borderTop: i === 0 ? "none" : `1px solid ${LINE}`,
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ display: "block", fontSize: 13, color: "var(--review-ink)" }}>
-                    {l.short} · {l.name}
-                  </Text>
-                  <Text style={{ display: "block", fontSize: 12, color: MUTED }}>
-                    {l.building} — {HELD_REASON[l.reason]}
-                    {l.changes !== undefined
-                      ? ` · ${l.changes} change${l.changes === 1 ? "" : "s"} waiting`
-                      : l.reason === "expert-review"
-                        ? " · the list isn’t final yet"
-                        : " · no changelog (couldn’t be matched)"}
-                  </Text>
+          <div style={{ marginTop: 8, border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden" }}>
+            {buildings.map((b, bi) => (
+              <div key={b.name}>
+                <div
+                  style={{
+                    padding: "6px 12px",
+                    background: "#f6f7f9",
+                    borderTop: bi === 0 ? "none" : `1px solid ${LINE}`,
+                    fontSize: 11,
+                    letterSpacing: 0.3,
+                    color: MUTED,
+                  }}
+                >
+                  {b.name}
                 </div>
-                {onOpenLevel && (
-                  <button
-                    onClick={() => onOpenLevel(l)}
+                {b.levels.map((l) => (
+                  <div
+                    key={`${l.buildingId}:${l.index}`}
+                    onClick={() => onOpenLevel?.(l)}
                     style={{
-                      border: "none",
-                      background: "none",
-                      padding: 0,
-                      cursor: "pointer",
-                      fontSize: 12.5,
-                      color: "#0b369c",
-                      whiteSpace: "nowrap",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "8px 12px",
+                      borderTop: `1px solid ${LINE}`,
+                      cursor: onOpenLevel ? "pointer" : "default",
                     }}
                   >
-                    Review it
-                  </button>
-                )}
+                    <Text
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        fontSize: 13,
+                        color: INK,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {l.short} · {l.name}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: MUTED, whiteSpace: "nowrap" }}>{status(l)}</Text>
+                    <Icon name="chevron-right" />
+                  </div>
+                ))}
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
+
+      <Text style={{ display: "block", fontSize: 12.5, color: MUTED, marginTop: 14 }}>
+        Note: It may take up to 15 minutes due to caching.
+      </Text>
     </ConfirmOverlay>
   );
 }
