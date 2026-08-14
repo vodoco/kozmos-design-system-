@@ -145,6 +145,10 @@ const CONN = {
   baseUrl: CFG.get("baseUrl") || "",
   client:  CFG.get("client")  || "",
   licence: CFG.get("licence") || "",
+  // The map persona — see src/mock/pointrConfig.ts for what the SDK does with it. NOT in
+  // missingConfig(): omitting it is legitimate (the SDK then applies the client's default
+  // persona), unlike the five values without which the map cannot boot at all.
+  persona: CFG.get("persona") || "",
 };
 
 /** Say what's missing, in the pane, instead of dying inside the SDK's constructor. */
@@ -1716,6 +1720,13 @@ document.addEventListener("DOMContentLoaded", () => {
       siteInternalIdentifier: TARGET.site,
       buildingInternalIdentifier: TARGET.building,
       levelIndex: TARGET.level,
+      /**
+       * The persona this map is rendered for. The SDK matches it against each enabled persona's
+       * `personaIdentifier` OR its `key`, so the plain key (`facilityManager`) is enough; it then
+       * takes that persona's `styleUrl` as the map's style, and hides any POI whose `mapPersonas`
+       * excludes the key. Left out entirely, the client's default persona applies.
+       */
+      ...(CONN.persona ? { personaIdentifier: CONN.persona } : {}),
       // this pane is a review viewport, not a wayfinding widget
       isSearchEnabled: false,
       isPoiDetailsEnabled: false,

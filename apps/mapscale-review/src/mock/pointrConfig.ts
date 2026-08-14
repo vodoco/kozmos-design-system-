@@ -23,7 +23,36 @@ export interface PointrConfig {
   building: string;
 }
 
+/**
+ * **The map persona** (Olcay, 2026-08-14: *"let's use facility manager map persona for the map and
+ * content"*). The dashboard is an operator's tool, so it renders the building the way the people
+ * who run it see it — not the way a passenger does.
+ *
+ * `facilityManager` is one of the six canonical keys the platform ships
+ * (`customer · visitor · vip · staff · facilityManager · contractor`), confirmed against
+ * `docs/PointrCloudRestApiV10.postman_collection.json`, where every feature's `mapPersonas` array
+ * is drawn from exactly that set.
+ *
+ * **The SDK does the rest from this one value.** `Options.personaIdentifier` accepts either a
+ * persona's `personaIdentifier` *or* its `key`, so the key is enough. On boot the SDK loads the
+ * client's personas, keeps the enabled ones, finds this one, and then:
+ *   · **style** — if that persona has a `styleUrl`, it becomes the map's `styleJsonUrl`, which is
+ *     what makes the map itself look like the persona rather than just filtering it;
+ *   · **content** — `isPoiVisibleForPersonaKey()` hides any POI whose `mapPersonas` excludes the
+ *     key. A POI carrying no `mapPersonas` at all stays visible.
+ *
+ * ⚠️ **A wrong key does not fail loudly.** The SDK falls back to the client's default persona and
+ * only writes `"Given persona identifier is not valid, default persona will be applied"` to the
+ * console — so a typo here looks like a working map with the wrong style.
+ *
+ * ⚠️ **`dashboardStyleUrl` is not this.** The `PersonaModel` carries both `styleUrl` and
+ * `dashboardStyleUrl`, but the WebSDK reads only `styleUrl` — `dashboardStyleUrl` appears nowhere
+ * in the 10.7.1 bundle. It is for a server-rendered dashboard map, not this SDK.
+ */
+
 const env = import.meta.env;
+
+export const MAP_PERSONA = env.VITE_POINTR_PERSONA ?? "facilityManager";
 
 export const POINTR: PointrConfig = {
   baseUrl: env.VITE_POINTR_BASE_URL ?? "",
@@ -52,6 +81,7 @@ export function pointrMapSrc(): string {
     licence: POINTR.licence,
     site: POINTR.site,
     building: POINTR.building,
+    persona: MAP_PERSONA,
   });
   return `/map/index.html?${q.toString()}`;
 }
