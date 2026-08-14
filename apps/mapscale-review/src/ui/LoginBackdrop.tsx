@@ -5,6 +5,9 @@ import { useMemo } from "react";
  * does rather than from stock motion (Olcay, 2026-08-14: *"possibly with animated background
  * elements related with what we're doing. Or maybe different variations"*).
  *
+ * - **`review`** — the whole product in eight seconds: a plan draws, a scan sweeps it, and the
+ *   changes bloom in the diff palette behind the sweep, each taking its decision mark. This is the
+ *   one that leads, because it is the only one that shows what the dashboard is FOR.
  * - **`survey`** — a floor plan drawing itself, the way MapScale reads a CAD file: outer shell
  *   first, then rooms, then the fixtures inside them.
  * - **`wayfinding`** — a route solving itself across a floor, with the pulse travelling along it.
@@ -18,9 +21,9 @@ import { useMemo } from "react";
  * removing it, leaving the finished drawing. The composition is the point; the drawing of it is
  * the flourish, and for someone who asked not to be moved, the flourish is the part that has to go.
  */
-export type BackdropKind = "survey" | "wayfinding" | "levels";
+export type BackdropKind = "review" | "survey" | "wayfinding" | "levels";
 
-export const BACKDROPS: BackdropKind[] = ["survey", "wayfinding", "levels"];
+export const BACKDROPS: BackdropKind[] = ["review", "survey", "wayfinding", "levels"];
 
 /** Deterministic per calendar day, so a reload shows the same one and a return visit does not. */
 export function backdropOfTheDay(seed = Math.floor(Date.now() / 86_400_000)): BackdropKind {
@@ -28,6 +31,12 @@ export function backdropOfTheDay(seed = Math.floor(Date.now() / 86_400_000)): Ba
 }
 
 const INK = "#0b369c";
+/**
+ * The diff palette, deliberately the same four values the app uses (`Semantics/Diff` in
+ * @kozmos/tokens, mirrored in `mock/diff.ts`). A login screen quoting the product's own colours is
+ * why the animation reads as *this* product rather than as decoration.
+ */
+const NEW = "#2FBF71", UPDATED = "#3B82F6", REMOVED = "#EF4444";
 
 export function LoginBackdrop({ kind }: { kind: BackdropKind }) {
   // The rooms are generated once: a fresh set on every render would re-draw mid-animation.
@@ -43,6 +52,19 @@ export function LoginBackdrop({ kind }: { kind: BackdropKind }) {
     ],
     [],
   );
+  /**
+   * The changes the sweep finds. `at` is the delay that lines each bloom up with the moment the
+   * scan line passes it — x/600 of the 8s cycle, give or take, so the two read as cause and effect.
+   */
+  const CHANGES = useMemo(
+    () => [
+      { id: "a", kind: "new", tone: NEW, x: 76, y: 226, w: 58, h: 48, at: 1.0 },
+      { id: "b", kind: "updated", tone: UPDATED, x: 236, y: 106, w: 78, h: 78, at: 2.6 },
+      { id: "c", kind: "removed", tone: REMOVED, x: 356, y: 176, w: 62, h: 96, at: 4.2 },
+      { id: "d", kind: "new", tone: NEW, x: 460, y: 100, w: 64, h: 42, at: 5.4 },
+    ],
+    [],
+  );
 
   return (
     <div aria-hidden style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
@@ -52,11 +74,27 @@ export function LoginBackdrop({ kind }: { kind: BackdropKind }) {
         @keyframes ms-travel { to { offset-distance: 100%; } }
         @keyframes ms-pulse  { 0%,100% { r: 4; opacity: .9 } 50% { r: 9; opacity: .25 } }
         @keyframes ms-lift   { to { transform: translateY(0); opacity: 1; } }
+        @keyframes ms-sweep  { 0% { transform: translateX(-40px); opacity: 0 }
+                               8% { opacity: 1 }
+                               92% { opacity: 1 }
+                               100% { transform: translateX(560px); opacity: 0 } }
+        @keyframes ms-bloom  { 0%,100% { opacity: 0; transform: scale(.9) }
+                               12%, 78% { opacity: 1; transform: scale(1) } }
+        @keyframes ms-mark   { 0%, 20% { opacity: 0; transform: scale(.6) }
+                               34%, 78% { opacity: 1; transform: scale(1) }
+                               100% { opacity: 0 } }
         .ms-draw   { stroke-dasharray: 1200; stroke-dashoffset: 1200;
                      animation: ms-draw 2.4s cubic-bezier(.4,0,.2,1) forwards; }
         .ms-fade   { opacity: 0; animation: ms-fade .8s ease forwards; }
         .ms-plate  { opacity: 0; transform: translateY(26px); animation: ms-lift 1s cubic-bezier(.2,.8,.2,1) forwards; }
         .ms-dot    { animation: ms-pulse 2.6s ease-in-out infinite; }
+        .ms-sweep  { animation: ms-sweep 8s cubic-bezier(.5,0,.5,1) infinite; }
+        /* Each change blooms as the sweep reaches it, so the motion reads as CAUSED by the scan
+           rather than as decoration running alongside it. Delays are the x-position over speed. */
+        .ms-bloom  { opacity: 0; transform-box: fill-box; transform-origin: center;
+                     animation: ms-bloom 8s ease-in-out infinite; }
+        .ms-mark   { opacity: 0; transform-box: fill-box; transform-origin: center;
+                     animation: ms-mark 8s ease-in-out infinite; }
         .ms-walker { offset-path: path('M 90 250 L 200 250 L 200 150 L 380 150 L 380 120 L 520 120');
                      offset-distance: 0%; animation: ms-travel 6s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
@@ -65,6 +103,8 @@ export function LoginBackdrop({ kind }: { kind: BackdropKind }) {
           .ms-fade, .ms-plate { animation: none; opacity: 1; transform: none; }
           .ms-dot { animation: none; }
           .ms-walker { animation: none; offset-distance: 62%; }
+          .ms-sweep  { animation: none; opacity: 0; }
+          .ms-bloom, .ms-mark { animation: none; opacity: 1; transform: none; }
         }
       `}</style>
 
@@ -75,6 +115,70 @@ export function LoginBackdrop({ kind }: { kind: BackdropKind }) {
         preserveAspectRatio="xMidYMid meet"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.45 }}
       >
+        {kind === "review" && (
+          <g fill="none" stroke={INK} strokeLinejoin="round">
+            {/* the published floor, quiet */}
+            <rect x="50" y="80" width="500" height="220" rx="4" strokeWidth="2" opacity="0.3" />
+            {rooms.map((r, i) => (
+              <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} strokeWidth="1" opacity="0.16" />
+            ))}
+
+            {/* what the new plan changed — each keyed to where the sweep will reach it */}
+            {CHANGES.map((c) => (
+              <g key={c.id}>
+                <rect
+                  className="ms-bloom"
+                  x={c.x}
+                  y={c.y}
+                  width={c.w}
+                  height={c.h}
+                  rx="2"
+                  fill={c.tone}
+                  fillOpacity="0.16"
+                  stroke={c.tone}
+                  strokeWidth="1.8"
+                  strokeDasharray={c.kind === "removed" ? "7 5" : undefined}
+                  style={{ animationDelay: `${c.at}s` }}
+                />
+                {/* the decision it gets — the marks this dashboard is built around */}
+                <g className="ms-mark" style={{ animationDelay: `${c.at}s` }}>
+                  <circle
+                    cx={c.x + c.w / 2}
+                    cy={c.y + c.h / 2}
+                    r="10"
+                    fill="#fff"
+                    stroke={c.tone}
+                    strokeWidth="2"
+                  />
+                  <path
+                    d={
+                      c.kind === "removed"
+                        ? `M ${c.x + c.w / 2 - 4} ${c.y + c.h / 2 - 4} L ${c.x + c.w / 2 + 4} ${c.y + c.h / 2 + 4} M ${c.x + c.w / 2 + 4} ${c.y + c.h / 2 - 4} L ${c.x + c.w / 2 - 4} ${c.y + c.h / 2 + 4}`
+                        : `M ${c.x + c.w / 2 - 4.5} ${c.y + c.h / 2} L ${c.x + c.w / 2 - 1} ${c.y + c.h / 2 + 3.5} L ${c.x + c.w / 2 + 5} ${c.y + c.h / 2 - 3.5}`
+                    }
+                    stroke={c.tone}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              </g>
+            ))}
+
+            {/* the scan itself — a soft leading edge, so it reads as reading rather than as a wipe */}
+            <g className="ms-sweep">
+              <defs>
+                <linearGradient id="ms-scan" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor={INK} stopOpacity="0" />
+                  <stop offset="100%" stopColor={INK} stopOpacity="0.28" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="80" width="46" height="220" fill="url(#ms-scan)" stroke="none" />
+              <line x1="46" y1="74" x2="46" y2="306" stroke={INK} strokeWidth="2" opacity="0.75" />
+            </g>
+          </g>
+        )}
+
         {kind === "survey" && (
           <g fill="none" stroke={INK} strokeLinejoin="round">
             <rect

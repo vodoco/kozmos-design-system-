@@ -961,6 +961,7 @@ function renderTip() {
   const c = shown();
   if (!c) return renderFeatureTip();
   HOVER_FEATURE = null;                 // a change's card wins: it says strictly more
+  tip.style.pointerEvents = "";         // this one IS interactive — restore what the feature card cleared
   while (tip.firstChild) tip.removeChild(tip.firstChild);
 
   const type = div("t-type");
@@ -1050,6 +1051,13 @@ function renderFeatureTip() {
   tip.appendChild(div("t-name", HOVER_FEATURE.name || "Unnamed"));
   tip.appendChild(div("t-detail", "Click to edit"));
 
+  /**
+   * ⚠️ **The feature card must not take the pointer.** `#tip` is `pointer-events: auto` because the
+   * REVIEW card carries the decision control — but this card carries nothing, sits 14px under the
+   * cursor, and so slid straight under the click it was inviting: the canvas never saw a `click`,
+   * and "Click to edit" did nothing (Olcay, 2026-08-14).
+   */
+  tip.style.pointerEvents = "none";
   tip.classList.remove("pinned");
   tip.classList.toggle("below", HOVER_FEATURE.below);
   tip.style.left = HOVER_FEATURE.x + "px";
@@ -1689,7 +1697,7 @@ function start() {
     }
     map.getCanvas().style.cursor = "pointer";
     if (HOVER_FEATURE && HOVER_FEATURE.fid === fid) {  // same feature, just moved — reposition only
-      HOVER_FEATURE.x = ev.point.x; HOVER_FEATURE.y = ev.point.y + 14;
+      HOVER_FEATURE.x = ev.point.x; HOVER_FEATURE.y = ev.point.y + 18;
       renderTip();
       return;
     }
@@ -1698,7 +1706,7 @@ function start() {
       name: f.properties.name || "",
       typeLabel: prettyType(f.properties),
       x: ev.point.x,
-      y: ev.point.y + 14,
+      y: ev.point.y + 18,
       below: true,
     };
     highlightFeatures({ fid });                        // the SDK's own selection layer lights it
@@ -1710,14 +1718,6 @@ function start() {
     if (!HOVER_FEATURE) return;
     HOVER_FEATURE = null; highlightFeatures(null); renderTip();
     map.getCanvas().style.cursor = "";
-  });
-
-  /** Click an editable feature → the app opens its panel, ready to edit. */
-  map.on("click", ev => {
-    if (shown()) return;                              // a change's card handles its own clicks
-    const f = editableAt(ev.point);
-    if (!f || !f.properties || !f.properties.fid) return;
-    post("featureclick", { fid: f.properties.fid, props: plainProps(f.properties) });
   });
 
   map.on("move", postCam);
@@ -1760,6 +1760,19 @@ function start() {
     if (!tap || !document.getElementById("map").contains(ev.target)) return;
     if (SELECTED) select(SELECTED);      // click out — dismiss
     else if (HOVERED) hover(null);
+    /**
+     * **Opening a feature hangs off the release too**, and for the reason this file already
+     * learned the hard way: `map.on("click")` never fires here. Verified 2026-08-14 — the canvas
+     * receives a DOM `click`, but MapLibre's own click never reaches a handler, so "Click to edit"
+     * did nothing. `mouseup` + `isTap` is the pattern every other selection here uses; this one
+     * was written against what ought to work instead of what does.
+     */
+    else if (map && !shown()) {
+      const rect = map.getCanvas().getBoundingClientRect();
+      const f = editableAt([ev.clientX - rect.left, ev.clientY - rect.top]);
+      if (f && f.properties && f.properties.fid)
+        post("featureclick", { fid: f.properties.fid, props: plainProps(f.properties) });
+    }
   });
 
   // Zoom control (Figma 2103:22178). MapLibre's own eased zoom; no-ops until the map exists.
