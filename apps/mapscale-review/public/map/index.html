@@ -694,14 +694,6 @@ function redraw() {
   const f = fillFactor();
   const marks = [];
   RESOLVED.forEach(({ change, rings, centroid }) => {
-    // `markOnly` — the mark without the diff shape. Browsing is not reviewing: the review is over
-    // and the floor is live, so painting features in diff colours would claim there is something
-    // left to decide. A flag is a note to self that outlived the review, and it still has to be
-    // findable on the map rather than only in the tree.
-    if (change.markOnly) {
-      if (change.decision) { const p = P(centroid); marks.push({ x:p.x, y:p.y, change, centroid }); }
-      return;
-    }
     const fill = COLORS[change.type];
     const line = LINE[change.type];
     const active = shown() === change;
@@ -790,17 +782,6 @@ function drawMarks(marks) {
     if (group.length === 1) {
       const m = marks[i];
       const badge = drawBadge(m.x, m.y, m.change.decision, !!m.change.note);
-      /**
-       * A `markOnly` change draws **no shape**, so it has no hit area — and without one the note
-       * could never be reached, because `shown()` is driven by hovering the feature. The badge
-       * becomes the hit area instead. Only for markOnly: where a shape exists it is the bigger and
-       * better target, and two overlapping hit areas would fight over the hover.
-       */
-      if (m.change.markOnly) {
-        badge.setAttribute("class", "hit");
-        badge.addEventListener("mouseenter", () => hover(m.change));
-        badge.addEventListener("mouseleave", () => hover(null));
-      }
       svg.appendChild(badge);
       // The note reads under its own flag, for the shown feature only. Painting every note at once
       // is label soup at anything but max zoom — and the dot on the badge already says which flags

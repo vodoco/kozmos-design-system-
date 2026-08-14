@@ -356,6 +356,20 @@ export function ManualReview({
    * that must say so is the moment before it happens. It warns; it never refuses.
    */
   const flaggedCount = changes.filter((c) => decisions[c.id] === "flag").length;
+  /**
+   * The changes as the MAP should see them: the report, plus whatever was written against each
+   * flag. The note lives in review state, not on the change, so the two are married here — this is
+   * the only place that needs them joined, and doing it in the map's prop keeps `changes` itself a
+   * clean snapshot of what MapScale said.
+   *
+   * **The flag overlay belongs to the review module and nowhere else** (Olcay, 2026-08-14:
+   * *"flags overlay should not show out of review module"*). Browsing Map Content shows flags in
+   * the tree, where they annotate the content; the map only carries them while you are reviewing.
+   */
+  const mapChanges = useMemo(
+    () => changes.map((c) => (notes[c.id]?.trim() ? { ...c, note: notes[c.id].trim() } : c)),
+    [changes, notes],
+  );
   /** Does completing this review actually publish? Decision 5 — and only for an eligible band. */
   const willPublish = fate !== "published" && !matchFailed && bandKind === "medium";
 
@@ -988,7 +1002,7 @@ export function ManualReview({
       {/* Map pane — live Pointr WebSDK map, highlights driven by the decisions above */}
       <div data-tour="review-map" style={{ position: "relative", flex: 1, background: "#EDEEF0", minWidth: 0 }}>
         <PointrMap
-          changes={changes}
+          changes={mapChanges}
           prefs={prefs}
           onLevel={onLevel}
           onFeatures={onFeatures}

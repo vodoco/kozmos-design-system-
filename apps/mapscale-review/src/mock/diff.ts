@@ -95,16 +95,6 @@ export interface Change {
   similarity?: number;
   decision?: Decision; // Manual Review — client state
   /**
-   * Draw the decision mark, but **not** the diff shape (Olcay, 2026-08-14: *"I'd like to see
-   * visible flags on the map for those that are flagged"*).
-   *
-   * Browsing Map Content is not reviewing. The review is over and the floor is live, so repainting
-   * features in diff colours would claim there is something to decide — but a flag is a note to
-   * self that outlived the review, and it has to be findable on the map, not only in the tree.
-   * So the map takes the real change and renders the pennant alone.
-   */
-  markOnly?: boolean;
-  /**
    * The note written when this was flagged (Olcay, 2026-08-14: *"flag with optional notes"*).
    *
    * A flag on its own says *come back to this* and not **what for** — which is a mystery a week
