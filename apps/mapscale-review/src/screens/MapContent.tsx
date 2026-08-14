@@ -3,6 +3,9 @@ import { Button, Icon, Input, Popover, PopoverTrigger, PopoverContent, Text } fr
 import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import {
+  getFollowRequest,
+  followVersion,
+  subscribeFollow,
   getPeersOnFloor,
   peerColour,
   presenceVersion,
@@ -1482,8 +1485,26 @@ export function MapContent({
    */
   useSyncExternalStore(subscribePresence, presenceVersion);
   useEffect(() => {
-    setPresenceFloor(target?.building, target?.level);
-  }, [target]);
+    const b = live.find((x) => x.id === target?.building);
+    const l = b?.levels.find((x) => x.index === target?.level);
+    setPresenceFloor(target?.building, target?.level, b?.name, l?.long ?? l?.short);
+  }, [target, live]);
+  /**
+   * Somebody chose to follow a colleague. The request comes through presence rather than a prop:
+   * the control is in the top bar and the destination is this screen's `target`, and threading a
+   * callback through App would make it the middleman for a fact it has no reason to know.
+   */
+  useSyncExternalStore(subscribeFollow, followVersion);
+  const follow = getFollowRequest();
+  useEffect(() => {
+    if (!follow) return;
+    setTarget((t) =>
+      t?.building === follow.building && t?.level === follow.level
+        ? t
+        : { building: follow.building, level: follow.level },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [follow?.n]);
   const peers = useMemo(
     () =>
       getPeersOnFloor(target?.building, target?.level).map((p) => ({

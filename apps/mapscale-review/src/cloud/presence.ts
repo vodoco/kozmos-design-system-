@@ -34,6 +34,12 @@ export interface Peer {
   /** Which floor they are on. Presence is compared on this, and nothing else. */
   building?: string;
   level?: number;
+  /**
+   * The same place in words. Carried rather than looked up, because a viewer may not have loaded
+   * the building a colleague is in — and "Ege is somewhere" is not worth showing.
+   */
+  buildingName?: string;
+  levelName?: string;
   /** Map coordinates, so every viewer projects it into their own viewport. */
   lng?: number;
   lat?: number;
@@ -45,7 +51,7 @@ export interface Peer {
 type Wire =
   | { t: "hi"; p: Peer }
   | { t: "move"; id: string; lng: number; lat: number; at: number }
-  | { t: "floor"; id: string; building?: string; level?: number; at: number }
+  | { t: "floor"; id: string; building?: string; level?: number; buildingName?: string; levelName?: string; at: number }
   | { t: "bye"; id: string };
 
 export interface Transport {
@@ -100,7 +106,7 @@ let me: Peer | null = null;
  * `me` was still null and was dropped, and because it only re-sends on CHANGE it never came back.
  * The symptom was the top bar calling a colleague "elsewhere" while their cursor was on the map.
  */
-let pendingFloor: { building?: string; level?: number } | null = null;
+let pendingFloor: { building?: string; level?: number; buildingName?: string; levelName?: string } | null = null;
 let version = 0;
 
 function emit() {
@@ -131,7 +137,8 @@ function onMessage(m: Wire) {
   } else if (m.t === "floor") {
     const p = peers.get(m.id);
     if (!p) return;
-    p.building = m.building; p.level = m.level; p.at = m.at;
+    p.building = m.building; p.level = m.level;
+    p.buildingName = m.buildingName; p.levelName = m.levelName; p.at = m.at;
     emit();
   } else if (m.t === "bye") {
     if (peers.delete(m.id)) emit();
@@ -170,13 +177,20 @@ export function stopPresence() {
 }
 
 /** Tell everyone which floor this tab is on. Cheap, and only sent when it actually changes. */
-export function setPresenceFloor(building: string | undefined, level: number | undefined) {
-  if (!me) { pendingFloor = { building, level }; return; }   // remembered, applied on start
-  if (me.building === building && me.level === level) return;
+export function setPresenceFloor(
+  building: string | undefined,
+  level: number | undefined,
+  buildingName?: string,
+  levelName?: string,
+) {
+  if (!me) { pendingFloor = { building, level, buildingName, levelName }; return; }  // applied on start
+  if (me.building === building && me.level === level && me.levelName === levelName) return;
   me.building = building;
   me.level = level;
+  me.buildingName = buildingName;
+  me.levelName = levelName;
   me.at = Date.now();
-  transport?.send({ t: "floor", id: selfId, building, level, at: me.at });
+  transport?.send({ t: "floor", id: selfId, building, level, buildingName, levelName, at: me.at });
 }
 
 /** Report the cursor, in map coordinates. Throttled — this fires on every mouse move. */
@@ -192,6 +206,38 @@ export function setPresenceCursor(lng: number, lat: number) {
 export function subscribePresence(fn: () => void): () => void {
   listeners.add(fn);
   return () => listeners.delete(fn);
+}
+
+/**
+ * **Follow** — go to where somebody is (Olcay, 2026-08-14: *"I can follow them ... go to where
+ * they are as in site building and level"*).
+ *
+ * Routed through presence rather than through props because the two ends are far apart: the
+ * control lives in the top bar (App's chrome) and the destination is Map Content's `target`.
+ * Threading a callback down would make App the middleman for a fact it has no other reason to
+ * know. This is the same reason `getMyFloor` lives here.
+ */
+let followRequest: { building: string; level: number; n: number } | null = null;
+const followListeners = new Set<() => void>();
+
+export function followPeer(p: Peer) {
+  if (p.building === undefined || p.level === undefined) return;
+  followRequest = { building: p.building, level: p.level, n: (followRequest?.n ?? 0) + 1 };
+  followListeners.forEach((l) => l());
+}
+
+export function subscribeFollow(fn: () => void): () => void {
+  followListeners.add(fn);
+  return () => followListeners.delete(fn);
+}
+
+/** The nonce rises per request, so following the same person twice still fires. */
+export function followVersion(): number {
+  return followRequest?.n ?? 0;
+}
+
+export function getFollowRequest() {
+  return followRequest;
 }
 
 /** A primitive for `useSyncExternalStore` — bumped on every change to the peer set. */

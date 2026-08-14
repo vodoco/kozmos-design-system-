@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@kozmos/react";
+import { Popover, PopoverContent, PopoverTrigger, Text } from "@kozmos/react";
 import {
+  followPeer,
   getMyFloor,
   getPeers,
   peerColour,
@@ -10,21 +11,20 @@ import {
 } from "../cloud/presence";
 
 /**
- * Who else is in the dashboard, beside the bell.
+ * Who else is in the dashboard, beside the bell — **a stack that opens on hover** (Olcay,
+ * 2026-08-14: *"should be stacked when hovered overlay shows which users are online and I can
+ * follow them"*).
  *
- * **Everyone online is listed; only some of them have a cursor on your map.** That is the same
- * distinction the map makes and it is worth showing rather than hiding: a colleague on another
- * floor is present — worth knowing before you edit — but pointing at something you cannot see.
- * So a peer on your floor is drawn solid, and one elsewhere is drawn faded with their location in
- * the tooltip. The alternative, dropping them from the list entirely, answers "is anyone here?"
- * with "no" while somebody is editing the floor below.
+ * **Everyone online is listed; only some of them have a cursor on your map.** A colleague on
+ * another floor is present — worth knowing before you edit — but pointing at something you cannot
+ * see. So the avatar is solid on your floor and faded elsewhere, and the list says where. Dropping
+ * the distant ones would answer *"is anyone here?"* with *"no"* while somebody edits the floor below.
+ *
+ * **Following is the point of naming the place.** Knowing Ege is on Concourse A · L4 is only useful
+ * if you can go there, so the whole row is the control — it moves the map to their building and
+ * level, which is the same destination their cursor is drawn in.
  */
-export function OnlinePeople({
-  levelName,
-}: {
-  /** How to name a floor in the tooltip, when the app can resolve it. */
-  levelName?: (building: string | undefined, level: number | undefined) => string | undefined;
-}) {
+export function OnlinePeople() {
   useSyncExternalStore(subscribePresence, presenceVersion);
   const peers = getPeers();
   // Read from presence rather than from props: it is the same fact the map scopes cursors on, and
@@ -34,60 +34,163 @@ export function OnlinePeople({
 
   const withYou = (p: Peer) =>
     p.building !== undefined && p.building === building && p.level === level;
+  const placeOf = (p: Peer) =>
+    p.levelName
+      ? p.buildingName
+        ? `${p.buildingName} · ${p.levelName}`
+        : p.levelName
+      : "Not on a floor yet";
 
-  // Newest first would reshuffle constantly; `getPeers` sorts by name, and this keeps the people
-  // on your own floor at the front so the useful ones are never the ones that overflow.
+  // People on your own floor come first, so the useful ones are never the ones that overflow.
   const ordered = [...peers].sort((a, b) => Number(withYou(b)) - Number(withYou(a)));
   const shown = ordered.slice(0, 4);
   const extra = ordered.length - shown.length;
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        {shown.map((p, i) => {
+    <Popover>
+      {/*
+        Hover opens it, click keeps it — a list you have to click into is a list nobody reads, and
+        one that vanishes the moment you reach for a row is worse than none.
+      */}
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${peers.length} ${peers.length === 1 ? "person" : "people"} online`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            background: "none",
+            border: "none",
+            padding: "2px 4px",
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ display: "flex", alignItems: "center" }}>
+            {shown.map((p, i) => (
+              <span
+                key={p.id}
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 999,
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  color: "#fff",
+                  background: peerColour(p),
+                  marginLeft: i ? -8 : 0,
+                  boxShadow: "0 0 0 2px #fff",
+                  // Faded = present, but not where you are. The colour still identifies them, so
+                  // the same person is the same colour here and on the map.
+                  opacity: withYou(p) ? 1 : 0.42,
+                }}
+              >
+                {p.identity.initials}
+              </span>
+            ))}
+          </span>
+          {extra > 0 && (
+            <span style={{ fontSize: 11.5, color: "var(--primitives-colors-background-600)" }}>
+              +{extra}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+
+      <PopoverContent align="end" style={{ width: 288, padding: 8 }}>
+        <Text
+          style={{
+            display: "block",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: ".04em",
+            textTransform: "uppercase",
+            color: "var(--primitives-colors-background-600)",
+            padding: "4px 8px 8px",
+          }}
+        >
+          {peers.length} online
+        </Text>
+
+        {ordered.map((p) => {
           const here = withYou(p);
-          const where = levelName?.(p.building, p.level);
+          const canFollow = p.building !== undefined && p.level !== undefined && !here;
           return (
-            <Tooltip key={p.id}>
-              <TooltipTrigger asChild>
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => canFollow && followPeer(p)}
+              disabled={!canFollow}
+              title={here ? "Already on this floor" : canFollow ? `Go to ${placeOf(p)}` : "Not on a floor yet"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                width: "100%",
+                textAlign: "left",
+                padding: "7px 8px",
+                borderRadius: 8,
+                border: "none",
+                background: "none",
+                cursor: canFollow ? "pointer" : "default",
+                font: "inherit",
+              }}
+            >
+              <span
+                style={{
+                  flex: "0 0 auto",
+                  width: 26,
+                  height: 26,
+                  borderRadius: 999,
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  color: "#fff",
+                  background: peerColour(p),
+                  opacity: here ? 1 : 0.55,
+                }}
+              >
+                {p.identity.initials}
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
                 <span
-                  aria-label={`${p.identity.name}${here ? " — on this floor" : where ? ` — on ${where}` : " — elsewhere"}`}
                   style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 999,
-                    display: "grid",
-                    placeItems: "center",
-                    fontSize: 10.5,
-                    fontWeight: 600,
-                    letterSpacing: ".02em",
-                    color: "#fff",
-                    background: peerColour(p),
-                    // overlapped, in the usual way, so a row of people costs less width
-                    marginLeft: i ? -8 : 0,
-                    boxShadow: "0 0 0 2px #fff",
-                    // Faded = present, but not where you are. The colour still identifies them,
-                    // so the same person is the same colour in the list and on the map.
-                    opacity: here ? 1 : 0.42,
-                    cursor: "default",
+                    display: "block",
+                    fontSize: 12.5,
+                    color: "var(--review-ink)",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
-                  {p.identity.initials}
+                  {p.identity.name}
                 </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                {p.identity.name}
-                {here ? " · on this floor" : where ? ` · on ${where}` : " · on another floor"}
-              </TooltipContent>
-            </Tooltip>
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: 11.5,
+                    color: "var(--primitives-colors-background-600)",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {here ? "On this floor with you" : placeOf(p)}
+                </span>
+              </span>
+              {/* The affordance names the destination, and says nothing when there is nowhere to go */}
+              {canFollow && (
+                <span style={{ flex: "0 0 auto", fontSize: 11.5, color: "#0b369c", fontWeight: 500 }}>
+                  Follow
+                </span>
+              )}
+            </button>
           );
         })}
-      </div>
-      {extra > 0 && (
-        <span style={{ fontSize: 11.5, color: "var(--primitives-colors-background-600)" }}>
-          +{extra}
-        </span>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }

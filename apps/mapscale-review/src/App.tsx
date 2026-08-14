@@ -27,7 +27,7 @@ import { PublishScope } from "./ui/PublishScope";
 import type { TourScreen } from "./ui/Tour";
 import { Login } from "./screens/Login";
 import { getSession, sessionKey, subscribeSession } from "./cloud/session";
-import { startPresence, stopPresence } from "./cloud/presence";
+import { followVersion, startPresence, stopPresence, subscribeFollow } from "./cloud/presence";
 import { OnlinePeople } from "./ui/OnlinePeople";
 
 /**
@@ -179,6 +179,15 @@ export default function App() {
     if (getSession()) startPresence();
     else stopPresence();
   });
+  /**
+   * Following somebody has to bring you back to the map. Map Content moves its own target; this is
+   * the other half — you can be in Settings or the editor when you decide to go and see what a
+   * colleague is doing, and arriving on the right floor of a screen you are not on is no arrival.
+   */
+  const follows = useSyncExternalStore(subscribeFollow, followVersion);
+  useEffect(() => {
+    if (follows > 0) setScreen("mapContent");
+  }, [follows]);
   if (!getSession())
     return (
       <TooltipProvider delayDuration={0}>
