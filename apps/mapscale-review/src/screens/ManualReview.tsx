@@ -175,6 +175,16 @@ export function ManualReview({
   });
   /** Save asks first — the consequence lives in the v9 confirmation overlay, not in a caption. */
   const [confirmOpen, setConfirmOpen] = useState(false);
+  /**
+   * Whole-floor notices rest COLLAPSED (Olcay, 2026-08-14: *"georeference and floor plan resized
+   * takes too much space"*). Expanded they were **188px** — two paragraphs to read before the first
+   * change is even visible, on a 440 panel. They are context for the list, not the work.
+   *
+   * Collapsed still **names them and says the list is unaffected**, because that is US10's whole
+   * point; only the explanatory sentence folds away. A count alone ("2 notices") would have hidden
+   * which conditions applied, which is the one thing a reviewer needs at a glance.
+   */
+  const [floorNoticesOpen, setFloorNoticesOpen] = useState(false);
   // `preserved` is not a change to review — it carries no decision, and the group and section
   // controls filter it out themselves rather than the screen pre-computing a list.
   // keyed by id, so a rebind (which changes names, never ids) can't lose a decision
@@ -664,11 +674,23 @@ export function ManualReview({
                 marginBottom: 12,
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
+                // when the action wraps under the sentence it is an aside, not a second block
+                columnGap: 10,
+                rowGap: 6,
                 flexWrap: "wrap",
               }}
             >
-              <div style={{ flex: 1, minWidth: 180, fontSize: 12, lineHeight: 1.4 }}>
+              {/*
+                Amber's one action is a text link, so it fits BESIDE the sentence — and squeezes it
+                into three cramped lines. Give the sentence the whole row and let the link sit under
+                it. Cause B keeps them side by side: its action is a real button and reads as one.
+              */}
+              <div
+                style={{
+                  flex: bandKind === "medium" ? "1 1 100%" : 1,
+                  minWidth: 180, fontSize: 12, lineHeight: 1.4,
+                }}
+              >
                 {bandKind === "medium"
                   ? `Publishes automatically in ${GRACE_DAYS.demoLeft} days unless you finish reviewing.`
                   : // only cause B reaches a large-band review: cause A is rejected before it gets
@@ -688,7 +710,14 @@ export function ManualReview({
               */}
               <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
                 {bandKind === "medium" ? (
-                  <Button variant="link" size="sm" onClick={() => setFate("cancelled")}>
+                  // A link in a 41px button box left the strip 90px tall for one line of text
+                  // (Olcay, 2026-08-14). Sized to its own text, it reads as the aside it is.
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => setFate("cancelled")}
+                    style={{ padding: 0, height: "auto", minHeight: 0 }}
+                  >
                     Cancel scheduled publish
                   </Button>
                 ) : (
@@ -749,20 +778,42 @@ export function ManualReview({
           {floorWarnings && floorWarnings.length > 0 && (
             <div
               data-tour="floor-warnings"
-              style={{ marginTop: 10, border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden" }}
+              style={{
+                marginTop: 10, border: `1px solid ${LINE}`, borderRadius: 8,
+                overflow: "hidden", background: "#f6f7f9",
+              }}
             >
-              {floorWarnings.map((w, i) => (
-                <div
-                  key={w.kind}
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "9px 12px" }}>
+                <span style={{ flex: "0 0 auto", marginTop: 2 }}>
+                  <WarningGlyph size={13} />
+                </span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--review-ink)" }}>
+                    {floorWarnings.map((w) => WARNING_LABEL[w.kind]).join(" · ")}
+                  </div>
+                  {/* US10's point, and the reason these never wear amber: the engine carried on */}
+                  <div style={{ fontSize: 12, color: "#5d626f", lineHeight: 1.45, marginTop: 2 }}>
+                    Affects the whole floor. The change list below is unaffected.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFloorNoticesOpen((v) => !v)}
+                  aria-expanded={floorNoticesOpen}
                   style={{
-                    display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 12px",
-                    background: "#f6f7f9", borderTop: i ? `1px solid ${LINE}` : "none",
+                    flex: "0 0 auto", border: 0, background: "none", padding: 0, cursor: "pointer",
+                    fontSize: 12, color: "var(--review-link, #0b369c)", fontFamily: "inherit",
                   }}
                 >
-                  <span style={{ flex: "0 0 auto", marginTop: 1 }}>
-                    <WarningGlyph size={13} />
-                  </span>
-                  <div style={{ minWidth: 0 }}>
+                  {floorNoticesOpen ? "Hide" : "Details"}
+                </button>
+              </div>
+              {floorNoticesOpen &&
+                floorWarnings.map((w) => (
+                  <div
+                    key={w.kind}
+                    style={{ padding: "9px 12px 9px 35px", borderTop: `1px solid ${LINE}` }}
+                  >
                     <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--review-ink)" }}>
                       {WARNING_LABEL[w.kind]}
                     </div>
@@ -770,8 +821,7 @@ export function ManualReview({
                       {w.detail}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
 
