@@ -694,6 +694,14 @@ function redraw() {
   const f = fillFactor();
   const marks = [];
   RESOLVED.forEach(({ change, rings, centroid }) => {
+    // `markOnly` — the mark without the diff shape. Browsing is not reviewing: the review is over
+    // and the floor is live, so painting features in diff colours would claim there is something
+    // left to decide. A flag is a note to self that outlived the review, and it still has to be
+    // findable on the map rather than only in the tree.
+    if (change.markOnly) {
+      if (change.decision) { const p = P(centroid); marks.push({ x:p.x, y:p.y, change, centroid }); }
+      return;
+    }
     const fill = COLORS[change.type];
     const line = LINE[change.type];
     const active = shown() === change;
@@ -782,6 +790,17 @@ function drawMarks(marks) {
     if (group.length === 1) {
       const m = marks[i];
       const badge = drawBadge(m.x, m.y, m.change.decision, !!m.change.note);
+      /**
+       * A `markOnly` change draws **no shape**, so it has no hit area — and without one the note
+       * could never be reached, because `shown()` is driven by hovering the feature. The badge
+       * becomes the hit area instead. Only for markOnly: where a shape exists it is the bigger and
+       * better target, and two overlapping hit areas would fight over the hover.
+       */
+      if (m.change.markOnly) {
+        badge.setAttribute("class", "hit");
+        badge.addEventListener("mouseenter", () => hover(m.change));
+        badge.addEventListener("mouseleave", () => hover(null));
+      }
       svg.appendChild(badge);
       // The note reads under its own flag, for the shown feature only. Painting every note at once
       // is label soup at anything but max zoom — and the dot on the badge already says which flags
@@ -962,7 +981,10 @@ function renderTip() {
   // kept and flagged to come back to. Not the full three: there is no detected change to confirm,
   // and rejecting your own earlier edit is a destructive act, not a triage button. This card used
   // to offer overrides nothing at all, which would now disagree with the row beside it.
-  tip.appendChild(decisionControl(c, c.type === "preserved" ? OVERRIDE_ACTIONS : ALL_ACTIONS));
+  // Outside a review the card still REPORTS the decision (the badge and the note say it);
+  // what it must not do is offer to change it.
+  if (CAN_DECIDE)
+    tip.appendChild(decisionControl(c, c.type === "preserved" ? OVERRIDE_ACTIONS : ALL_ACTIONS));
 
   // A pinned card outlives the cursor, so it needs its own way out (clicking the empty map or the
   // same shape also unpins). Hover cards don't get one — they die when the cursor leaves.
@@ -1806,6 +1828,9 @@ window.addEventListener("message", (ev) => {
     // The app says whether this pane accepts file drops (upload surfaces only — a Compare pane
     // or a review map shouldn't invite an upload it can't take).
     DROP_ON = !!d.on;
+  } else if (d.type === "decidable") {
+    CAN_DECIDE = !!d.on;
+    renderTip();          // a card already open must lose its control immediately
   }
 });
 
@@ -1817,6 +1842,20 @@ window.addEventListener("message", (ev) => {
    (pointer-events: none); depth-counting dragenter/leave is the classic fix for leave events
    firing on every child boundary. */
 let DROP_ON = false, dragDepth = 0;
+/**
+ * May the user DECIDE from this map? (Olcay, 2026-08-14: *"the overlay that we can reject
+ * flag or confirm ... only lives in review. Once flagged the flag icon should continue
+ * showing on the map."*)
+ *
+ * The mark and the control are two different things. A flag is a **fact about the feature**
+ * and travels with it everywhere; ✓ 🚩 ✗ is an **act of reviewing** and belongs only where a
+ * review is happening. Browsing Map Content you see the flag and cannot change it.
+ *
+ * Told, not inferred, and defaulting to true — a pane that forgets to say stays as it was.
+ * The parent sets it from whether it passed an `onDecision` handler at all, so the map can
+ * never offer a control whose result nobody is listening for.
+ */
+let CAN_DECIDE = true;
 const veil = document.getElementById("dropveil");
 const hasFiles = ev => !!(ev.dataTransfer && Array.from(ev.dataTransfer.types || []).indexOf("Files") >= 0);
 document.addEventListener("dragenter", ev => {

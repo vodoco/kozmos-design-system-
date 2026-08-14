@@ -361,10 +361,6 @@ export function ManualReview({
    * flag. The note lives in review state, not on the change, so the two are married here — this is
    * the only place that needs them joined, and doing it in the map's prop keeps `changes` itself a
    * clean snapshot of what MapScale said.
-   *
-   * **The flag overlay belongs to the review module and nowhere else** (Olcay, 2026-08-14:
-   * *"flags overlay should not show out of review module"*). Browsing Map Content shows flags in
-   * the tree, where they annotate the content; the map only carries them while you are reviewing.
    */
   const mapChanges = useMemo(
     () => changes.map((c) => (notes[c.id]?.trim() ? { ...c, note: notes[c.id].trim() } : c)),

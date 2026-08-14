@@ -125,8 +125,8 @@ const PointrMap = forwardRef<PointrMapHandle, {
   useImperativeHandle(handle, () => ({
     setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
   }), []);
-  const latest = useRef({ changes, prefs, target, active, dropOn: !!onFileDrop, focusPadRight });
-  latest.current = { changes, prefs, target, active, dropOn: !!onFileDrop, focusPadRight };
+  const latest = useRef({ changes, prefs, target, active, dropOn: !!onFileDrop, canDecide: !!onDecision, focusPadRight });
+  latest.current = { changes, prefs, target, active, dropOn: !!onFileDrop, canDecide: !!onDecision, focusPadRight };
 
   // Its own effect: a focus is an EVENT, not state to re-send on every `ready` — re-posting it
   // with the rest would re-centre the map every time the iframe re-announced itself.
@@ -150,6 +150,14 @@ const PointrMap = forwardRef<PointrMapHandle, {
     const win = ref.current?.contentWindow;
     if (!win) return;
     win.postMessage({ type: "dropzone", on: latest.current.dropOn }, "*");
+    /**
+     * Whether the map may offer ✓ 🚩 ✗ — derived from whether this caller passed `onDecision`
+     * at all, so a control can never appear whose result nobody is listening for.
+     *
+     * The flag MARK is unaffected and shows everywhere: it is a fact about the feature.
+     * Deciding is an act of reviewing, and only the review screen wires the handler.
+     */
+    win.postMessage({ type: "decidable", on: latest.current.canDecide }, "*");
     if (latest.current.changes)
       win.postMessage(
         {
@@ -157,14 +165,15 @@ const PointrMap = forwardRef<PointrMapHandle, {
           // `id` rides along so the map can decide a change back at us (the pinned card's
           // ✓ / 🚩 / ✗) — decisions are keyed by id, and a name can be re-pointed by
           // `bindToFloor`, so name would be the wrong key even though it is the merge key here.
-          // `note` has to ride along: this projection is a whitelist, so a field left out here
-          // silently never reaches the map however carefully it was set upstream.
-          changes: latest.current.changes.map(({ id, name, type, detail, decision, note }) => ({
+          // `markOnly` has to ride along too: this projection is a whitelist, so a field left out
+          // here silently never reaches the map however carefully it was set upstream.
+          changes: latest.current.changes.map(({ id, name, type, detail, decision, markOnly, note }) => ({
             id,
             name,
             type,
             detail,
             decision,
+            markOnly,
             note,
           })),
         },

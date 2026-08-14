@@ -336,6 +336,29 @@ function flagNoteFor(buildingId: string, index: number, short: string, name: str
   return undefined;
 }
 
+/**
+ * The flagged changes for a level, as marks for the map (Olcay, 2026-08-14: *"I'd like to see
+ * visible flags on the map for those that are flagged"*).
+ *
+ * The tree already says *"2 flagged"* on the level and marks the rows — but the map beside it drew
+ * nothing at all, because Map Content passed it an empty `changes` list. A flag means *come back to
+ * this*, and the one surface that can show you **where** it is was the one staying silent.
+ *
+ * These carry `markOnly`, so the pennant appears without the floor being repainted as a diff: the
+ * review concluded and this version is live. Same version-matching as `flaggedNamesFor` — a flag
+ * raised against a floor-plan that has since been replaced is not this floor's flag.
+ */
+function flaggedChangesFor(buildingId: string, index: number, short: string): Change[] {
+  const key = levelKey(buildingId, index);
+  const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
+  const outcome = getReviewOutcome(key, newest?.n);
+  if (!outcome) return NO_CHANGES;
+  const out = outcome.changes
+    .filter((c) => outcome.decisions[c.id] === "flag")
+    // the note comes from the outcome, not the change: `changes` is the report as it arrived
+    .map((c) => ({ ...c, decision: "flag" as const, markOnly: true, note: outcome.notes?.[c.id] }));
+  return out.length ? out : NO_CHANGES;
+}
 
 /**
  * The half of a feature's bag the editor may never touch — which feature it is, and where it lives.
@@ -1379,6 +1402,22 @@ export function MapContent({
    * Is the feature in the panel flagged? Read for the level the map is actually on, which is the
    * level the focused feature belongs to — `focus()` switches the target before it sets `focused`.
    */
+  /**
+   * The flags for the level the map is on, as marks. Memoised on the target rather than computed
+   * inline: `changes` is a prop the map diffs against its previous value, and a fresh array every
+   * render would re-post the whole set and restart feature resolution on every keystroke.
+   */
+  const mapFlagMarks = useMemo(
+    () =>
+      target
+        ? flaggedChangesFor(
+            target.building,
+            target.level,
+            live.find((b) => b.id === target.building)?.levels.find((l) => l.index === target.level)?.short ?? "",
+          )
+        : NO_CHANGES,
+    [target, live],
+  );
   const focusedFlagged =
     !!shownProps &&
     !!shownProps.name &&
@@ -1656,7 +1695,7 @@ export function MapContent({
           </svg>
         </button>
         <PointrMap
-          changes={NO_CHANGES}
+          changes={mapFlagMarks}
           prefs={prefs}
           onBuildings={onBuildings}
           onLevel={onLevel}
