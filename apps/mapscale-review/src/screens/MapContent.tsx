@@ -2,6 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Button, Icon, Input, Popover, PopoverTrigger, PopoverContent, Text } from "@kozmos/react";
 import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
+import {
+  getPeersOnFloor,
+  peerColour,
+  presenceVersion,
+  setPresenceCursor,
+  setPresenceFloor,
+  subscribePresence,
+} from "../cloud/presence";
 import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, NEW_VERSION_LEVEL, decisionInk, expertReviewEnabled, isUnderExpertReview, seedVersions, type Change } from "../mock/diff";
 import { DecisionGlyph } from "../ui/ChangeReviewRow";
 import { PANEL_WIDTH } from "../ui/Chrome";
@@ -1466,6 +1474,28 @@ export function MapContent({
     },
     [focusNow],
   );
+  /**
+   * **Presence is scoped to the floor** (Olcay, 2026-08-14: *"don't show cursor even though same
+   * viewport but different levels"*). Two people at the same coordinates on different levels are
+   * not looking at the same thing — an airport stacks its floors, so the same lng/lat is a
+   * different room one storey down.
+   */
+  useSyncExternalStore(subscribePresence, presenceVersion);
+  useEffect(() => {
+    setPresenceFloor(target?.building, target?.level);
+  }, [target]);
+  const peers = useMemo(
+    () =>
+      getPeersOnFloor(target?.building, target?.level).map((p) => ({
+        id: p.id,
+        name: p.identity.name,
+        colour: peerColour(p),
+        lng: p.lng,
+        lat: p.lat,
+      })),
+    // presenceVersion is the dependency in spirit; the subscription above re-renders us
+    [target, presenceVersion()],
+  );
   /** Closing the panel clears the selection itself — the panel IS the selection made visible. */  /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
   const closeProps = useCallback(() => {
     setFocused(null);
@@ -1802,6 +1832,8 @@ export function MapContent({
            * destination the tree's rows reach, from the other surface.
            */
           onFeatureClick={onFeatureClick}
+          onCursor={setPresenceCursor}
+          peers={peers}
           // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
           // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.
           focusPadRight={focused ? FEATURE_PANEL_WIDTH + 24 : 0}

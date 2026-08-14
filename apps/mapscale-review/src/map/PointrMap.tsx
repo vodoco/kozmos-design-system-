@@ -120,13 +120,20 @@ const PointrMap = forwardRef<PointrMapHandle, {
    * which is about a *change* in a review; this is about a feature that simply exists.
    */
   onFeatureClick?: (fid: string, props: Record<string, unknown>) => void;
+  /** This tab's cursor, in map coordinates — presence broadcasts it (see cloud/presence.ts). */
+  onCursor?: (lng: number, lat: number) => void;
+  /**
+   * Other people's cursors to draw. The APP decides who belongs here, because it is the app that
+   * knows which floor everyone is on — presence is scoped to the level, not the viewport.
+   */
+  peers?: { id: string; name: string; colour: string; lng?: number; lat?: number }[];
   /**
    * Screen space to keep clear on the RIGHT when framing a focused feature — the panel's own
    * width. The map is not resized; the feature is simply framed in the part of it you can still
    * see.
    */
   focusPadRight?: number;
-}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, highlight, onFeatureProps, onFeatureClick, focusPadRight, target }, handle) {
+}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, highlight, onFeatureProps, onFeatureClick, onCursor, peers, focusPadRight, target }, handle) {
   const ref = useRef<HTMLIFrameElement>(null);
   useImperativeHandle(handle, () => ({
     setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
@@ -151,6 +158,12 @@ const PointrMap = forwardRef<PointrMapHandle, {
   useEffect(() => {
     ref.current?.contentWindow?.postMessage({ type: "highlight", sel: highlight ?? null }, "*");
   }, [highlight]);
+
+  // Its own effect, and not part of `send()`: peers move ~20 times a second, and folding them in
+  // would re-post the whole diff on every mouse twitch anyone else made.
+  useEffect(() => {
+    ref.current?.contentWindow?.postMessage({ type: "peers", peers: peers ?? [] }, "*");
+  }, [peers]);
 
   const send = () => {
     const win = ref.current?.contentWindow;
@@ -206,6 +219,9 @@ const PointrMap = forwardRef<PointrMapHandle, {
         if (ev.data.buildings?.length) onBuildings?.(ev.data.buildings);
         if (ev.data.features?.length) onFeatures?.(ev.data.features);
         if (ev.data.types?.length && ev.data.forLevel) onTypes?.(ev.data.forLevel, ev.data.types);
+      } else if (ev.data.type === "cursor") {
+        if (ev.source === ref.current?.contentWindow && typeof ev.data.lng === "number")
+          onCursor?.(ev.data.lng, ev.data.lat);
       } else if (ev.data.type === "featureclick") {
         if (ev.source === ref.current?.contentWindow && ev.data.fid && ev.data.props)
           onFeatureClick?.(ev.data.fid, ev.data.props);

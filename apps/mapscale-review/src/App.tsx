@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { TooltipProvider } from "@kozmos/react";
 import { TopBar, LeftRail } from "./ui/Chrome";
 import { MapContent, type LevelRef } from "./screens/MapContent";
@@ -27,6 +27,8 @@ import { PublishScope } from "./ui/PublishScope";
 import type { TourScreen } from "./ui/Tour";
 import { Login } from "./screens/Login";
 import { getSession, sessionKey, subscribeSession } from "./cloud/session";
+import { startPresence, stopPresence } from "./cloud/presence";
+import { OnlinePeople } from "./ui/OnlinePeople";
 
 /**
  * The flow, in the order a customer walks it:
@@ -168,6 +170,15 @@ export default function App() {
    * `useSyncExternalStore` over the token, so signing out anywhere drops the whole app back here.
    */
   useSyncExternalStore(subscribeSession, sessionKey);
+  /**
+   * Presence follows the session exactly: you appear to others when you sign in and vanish when
+   * you sign out. Started here rather than inside a screen so that moving between screens does not
+   * make you flicker in and out of everyone else's list.
+   */
+  useEffect(() => {
+    if (getSession()) startPresence();
+    else stopPresence();
+  });
   if (!getSession())
     return (
       <TooltipProvider delayDuration={0}>
@@ -183,6 +194,7 @@ export default function App() {
     <TooltipProvider delayDuration={0}>
       <div style={{ display: "flex", flexDirection: "column", height: "100vh", minHeight: 0 }}>
         <TopBar
+          people={<OnlinePeople />}
           tab={screen === "settings" ? "Settings" : "Maps"}
           onTab={(t) => setScreen(t === "Settings" ? "settings" : "mapContent")}
           onPublish={() => setPublishOpen(true)}

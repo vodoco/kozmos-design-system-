@@ -34,6 +34,13 @@
   /* The card takes the pointer, because it carries the decision control (Olcay, 2026-08-11:
      "how do we change the flags?" — it used to be `pointer-events: none`, so a hover card could
      only ever *report* the decision and the control was unreachable without pinning first). */
+  /* Peer cursors. The transition is the whole trick: positions arrive ~20/s, and interpolating
+     between them is what turns a stutter into a glide. `will-change` keeps it on the compositor. */
+  .peer { position: absolute; top: 0; left: 0; will-change: transform;
+          transition: transform .12s linear; display: flex; align-items: flex-start; gap: 4px; }
+  .peer-name { transform: translateY(12px); font-size: 10.5px; line-height: 1; color: #fff;
+               padding: 3px 6px; border-radius: 999px; white-space: nowrap;
+               font-family: 'Readex Pro', system-ui, sans-serif; }
   #tip { position: absolute; z-index: 6; display: none; pointer-events: auto; min-width: 168px; max-width: 260px;
     transform: translate(-50%, calc(-100% - 16px)); background: #fff; color: #1F2328;
     font: 13px/1.45 "Readex Pro", system-ui, sans-serif; border: 1px solid #E7E9EE;
@@ -654,6 +661,47 @@ function resolveChanges() {
 }
 
 /* ── overlay ────────────────────────────────────────────────────────────── */
+
+/**
+ * Other people's cursors. Their own SVG layer, NOT part of `redraw()` — that runs on every render
+ * frame and rebuilds the diff overlay wholesale, and a cursor rebuilt 60 times a second cannot
+ * carry a CSS transition, which is exactly what turns a 20Hz feed into smooth movement.
+ */
+function drawPeers() {
+  if (!map) return;
+  let layer = document.getElementById("peers");
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.id = "peers";
+    layer.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden";
+    document.body.appendChild(layer);   // a sibling of #map, exactly like #tip and #hl
+  }
+  const seen = new Set();
+  for (const p of PEERS) {
+    if (p.lng === undefined || p.lat === undefined) continue;
+    seen.add(p.id);
+    let node = document.getElementById("peer-" + p.id);
+    if (!node) {
+      node = document.createElement("div");
+      node.id = "peer-" + p.id;
+      node.className = "peer";
+      node.innerHTML =
+        '<svg width="20" height="22" viewBox="0 0 20 22" aria-hidden>' +
+        '<path d="M3 2 L16 11 L10 12 L13 18 L10.5 19 L8 13 L3 17 Z" fill="currentColor" ' +
+        'stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>' +
+        '<span class="peer-name"></span>';
+      layer.appendChild(node);
+    }
+    node.style.color = p.colour || "#3B82F6";
+    const label = node.querySelector(".peer-name");
+    if (label) { label.textContent = p.name || ""; label.style.background = p.colour || "#3B82F6"; }
+    const pt = map.project([p.lng, p.lat]);
+    node.style.transform = "translate3d(" + Math.round(pt.x) + "px," + Math.round(pt.y) + "px,0)";
+  }
+  // Anyone who left, or moved to another floor, goes with them.
+  for (const node of [...layer.children])
+    if (!seen.has(node.id.slice(5))) node.remove();
+}
 
 function drawBadge(cx, cy, kind, hasNote){
   const col = decisionInk(kind);
@@ -1687,6 +1735,9 @@ function start() {
    * its detail, and where allowed its decision control).
    */
   map.on("mousemove", ev => {
+    // Everyone else sees where you point, wherever you point — this is not gated on hovering
+    // something, because a cursor resting on blank floor is still information.
+    post("cursor", { lng: ev.lngLat.lng, lat: ev.lngLat.lat });
     if (shown()) return;                              // a change's card owns the cursor
     const f = editableAt(ev.point);
     const fid = f && f.properties && f.properties.fid;
@@ -1722,6 +1773,7 @@ function start() {
 
   map.on("move", postCam);
   map.on("move", redraw);
+  map.on("move", drawPeers);   // the cursor is at a coordinate, so panning must re-project it
   map.on("idle", () => {
     ensureLevel();
     ensureIndoorVisible();
@@ -1950,6 +2002,9 @@ window.addEventListener("message", (ev) => {
     // The app says whether this pane accepts file drops (upload surfaces only — a Compare pane
     // or a review map shouldn't invite an upload it can't take).
     DROP_ON = !!d.on;
+  } else if (d.type === "peers") {
+    PEERS = Array.isArray(d.peers) ? d.peers : [];
+    drawPeers();
   } else if (d.type === "editabletypes") {
     BLOCKED_TYPES = new Set(d.types || []);
   } else if (d.type === "decidable") {
@@ -1980,6 +2035,16 @@ let DROP_ON = false, dragDepth = 0;
  * never offer a control whose result nobody is listening for.
  */
 let CAN_DECIDE = true;
+
+/**
+ * Other people's cursors, in MAP coordinates (Olcay, 2026-08-14).
+ *
+ * The app decides who belongs here — it knows the floor everyone is on, and presence is scoped to
+ * the level, never the viewport. This page's only job is to project lng/lat into its own screen
+ * and draw a pointer, which is why the position travels as coordinates: everyone is at a different
+ * zoom and window size, and a pixel means nothing outside the viewport that produced it.
+ */
+let PEERS = [];
 
 /**
  * The `mainType`s the panel will NOT edit — posted by the app, which owns the taxonomy (this page

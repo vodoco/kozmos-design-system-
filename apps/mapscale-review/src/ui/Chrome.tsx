@@ -23,12 +23,19 @@ export const PANEL_WIDTH = 440;
 
 export function TopBar({
   tools,
+  people,
   bell,
   tab: current = "Maps",
   onTab,
   onPublish,
 }: {
   tools?: React.ReactNode;
+  /**
+   * Who else is online (2026-08-14). Beside the bell because they answer the same question —
+   * *what is happening that I did not do?* — and passed in for the same reason the bell is: the
+   * chrome should not have to know about sessions.
+   */
+  people?: React.ReactNode;
   /** The notification bell (S7) — passed in so the chrome doesn't have to know the app's routing. */
   bell?: React.ReactNode;
   /** Which top-level tab is lit. Settings became reachable when S5 was built (2026-08-11). */
@@ -154,6 +161,7 @@ export function TopBar({
         {tools}
 
         {/* S7 — the bell sits immediately before the user menu, as in 2495:463 */}
+        {people}
         {bell}
 
         {/* user menu — avatar + chevron only, per the design */}
