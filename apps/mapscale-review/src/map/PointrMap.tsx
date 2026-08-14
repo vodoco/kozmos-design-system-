@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { Change } from "../mock/diff";
-import type { LevelTypeCount } from "../mock/taxonomy";
+import { NON_EDITABLE_MAIN_TYPES, type LevelTypeCount } from "../mock/taxonomy";
 import { pointrMapSrc } from "../mock/pointrConfig";
 
 /**
@@ -115,12 +115,18 @@ const PointrMap = forwardRef<PointrMapHandle, {
    */
   onFeatureProps?: (fid: string, props: Record<string, unknown>) => void;
   /**
+   * An editable feature was clicked on the map (Olcay, 2026-08-14: *"click on a feature on the map
+   * and on the listing should show the details panel in edit mode"*). Distinct from `onSelect`,
+   * which is about a *change* in a review; this is about a feature that simply exists.
+   */
+  onFeatureClick?: (fid: string, props: Record<string, unknown>) => void;
+  /**
    * Screen space to keep clear on the RIGHT when framing a focused feature — the panel's own
    * width. The map is not resized; the feature is simply framed in the part of it you can still
    * see.
    */
   focusPadRight?: number;
-}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, highlight, onFeatureProps, focusPadRight, target }, handle) {
+}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, highlight, onFeatureProps, onFeatureClick, focusPadRight, target }, handle) {
   const ref = useRef<HTMLIFrameElement>(null);
   useImperativeHandle(handle, () => ({
     setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
@@ -158,6 +164,12 @@ const PointrMap = forwardRef<PointrMapHandle, {
      * Deciding is an act of reviewing, and only the review screen wires the handler.
      */
     win.postMessage({ type: "decidable", on: latest.current.canDecide }, "*");
+    /**
+     * What the map may offer to edit. The app owns the taxonomy; the map page has none, so it is
+     * told rather than left to guess — and until it is told it treats nothing as editable, which
+     * is the safe direction.
+     */
+    win.postMessage({ type: "editabletypes", types: NON_EDITABLE_MAIN_TYPES }, "*");
     if (latest.current.changes)
       win.postMessage(
         {
@@ -194,6 +206,9 @@ const PointrMap = forwardRef<PointrMapHandle, {
         if (ev.data.buildings?.length) onBuildings?.(ev.data.buildings);
         if (ev.data.features?.length) onFeatures?.(ev.data.features);
         if (ev.data.types?.length && ev.data.forLevel) onTypes?.(ev.data.forLevel, ev.data.types);
+      } else if (ev.data.type === "featureclick") {
+        if (ev.source === ref.current?.contentWindow && ev.data.fid && ev.data.props)
+          onFeatureClick?.(ev.data.fid, ev.data.props);
       } else if (ev.data.type === "featureprops") {
         if (ev.source === ref.current?.contentWindow && ev.data.fid && ev.data.props)
           onFeatureProps?.(ev.data.fid, ev.data.props);

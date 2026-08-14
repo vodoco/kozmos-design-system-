@@ -67,6 +67,19 @@ export function classOf(mainType: string, subType?: string): FeatureClass {
 }
 
 /** The order and words the dashboard uses. `system` is hidden — it is plumbing, not content. */
+/**
+ * The `mainType`s the map must NOT offer to edit — the floor plan itself rather than content
+ * somebody curates (Olcay, 2026-08-14: hover highlight *"if editable"*).
+ *
+ * Expressed as the NEGATIVE set on purpose: `MAIN_CLASS` defaults anything it does not list to
+ * `poi`, so the editable side is open-ended and cannot be enumerated, while this side is closed
+ * and short. The map treats "has a fid and is not in here" as editable, which keeps the two in
+ * step as the taxonomy grows.
+ */
+export const NON_EDITABLE_MAIN_TYPES: string[] = Object.entries(MAIN_CLASS)
+  .filter(([, cls]) => cls !== "poi" && cls !== "interior-asset")
+  .map(([mainType]) => mainType);
+
 export const CLASS_ORDER: FeatureClass[] = ["poi", "structural", "interior-asset", "virtual"];
 export const CLASS_LABEL: Record<FeatureClass, string> = {
   poi: "POI",

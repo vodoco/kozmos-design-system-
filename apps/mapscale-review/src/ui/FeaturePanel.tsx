@@ -472,7 +472,16 @@ export function FeaturePanel({
   const category = categoryOf(mainType, subType);
   const suggested = suggestedFor(mainType, subType);
 
-  const [editing, setEditing] = useState(false);
+  /**
+   * **The panel opens in EDIT mode** (Olcay, 2026-08-14: *"click on a feature on the map and on
+   * the listing should show the details panel in edit mode ... No need to add additional edit
+   * button"*). Selecting a feature in a dashboard IS the intent to work on it; a read-only stop
+   * with an Edit button in it was a step between the click and the thing the click was for.
+   *
+   * Safe because nothing commits until **Update**, which stays disabled until something actually
+   * changes — so a look still costs nothing, exactly as it did before.
+   */
+  const [editing, setEditing] = useState(true);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
   /** Which optional properties the editor is showing — those with values, plus what you add. */
   const [fields, setFields] = useState<string[]>([]);
@@ -481,9 +490,10 @@ export function FeaturePanel({
     setDraft({ ...p });
     setFields(Object.keys(p).filter((k) => !RESERVED.has(k)));
   };
-  // Selecting a different feature must not carry the previous one's half-typed edit across.
+  // Selecting a different feature must not carry the previous one's half-typed edit across —
+  // and it lands in edit mode like the first one did, because that is what selecting now means.
   useEffect(() => {
-    setEditing(false);
+    setEditing(true);
     setDraft({ ...p });
     setFields(Object.keys(p).filter((k) => !RESERVED.has(k)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -614,13 +624,9 @@ export function FeaturePanel({
         {!editing ? (
           /* ── reading: the POI card, derived ─────────────────────────────────── */
           <>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <SectionTitle>Details</SectionTitle>
-              <span style={{ flex: 1 }} />
-              <Button variant="outline" size="sm" onClick={() => { reset(); setEditing(true); }}>
-                Edit
-              </Button>
-            </div>
+            {/* No Edit button: the panel opens in edit mode, so there is nothing to switch INTO.
+                Reading is what you get after saving, or on a feature the taxonomy will not edit. */}
+            <SectionTitle>Details</SectionTitle>
 
             {description && (
               <Text style={{ display: "block", fontSize: 13, lineHeight: 1.5, color: INK, marginTop: 8 }}>

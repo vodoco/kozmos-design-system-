@@ -959,7 +959,8 @@ function div(cls, text) {
 
 function renderTip() {
   const c = shown();
-  if (!c) { tip.style.display = "none"; return; }
+  if (!c) return renderFeatureTip();
+  HOVER_FEATURE = null;                 // a change's card wins: it says strictly more
   while (tip.firstChild) tip.removeChild(tip.firstChild);
 
   const type = div("t-type");
@@ -1001,9 +1002,64 @@ function renderTip() {
   positionTip();
 }
 
+/**
+ * The same card, for a feature that is not part of a review: what it is, and what it is called.
+ * No decision control — there is no change here to decide about — and no close button, because it
+ * only ever exists under the cursor.
+ */
+/** The topmost EDITABLE feature under a point, or null. Structural geometry is deliberately inert. */
+function editableAt(point) {
+  let hits = [];
+  try { hits = map.queryRenderedFeatures(point) || []; } catch (e) { return null; }
+  for (const f of hits) {
+    const p = f && f.properties;
+    if (!p || !p.fid) continue;
+    if (!BLOCKED_TYPES || BLOCKED_TYPES.has(p.mainType)) continue;
+    return f;
+  }
+  return null;
+}
+
+/** "Retail Space · Cafe" from the tile's own type fields — Title Case, no taxonomy needed here. */
+function prettyType(p) {
+  const words = t => String(t).split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  if (!p || !p.mainType) return "";
+  return p.subType ? words(p.mainType) + " · " + words(p.subType) : words(p.mainType);
+}
+
+/** A tile property bag is not structured-cloneable as-is; copy the primitives across. */
+function plainProps(p) {
+  const out = {};
+  for (const k of Object.keys(p || {})) {
+    const v = p[k];
+    if (v === null || ["string", "number", "boolean"].indexOf(typeof v) >= 0) out[k] = v;
+  }
+  return out;
+}
+
+function renderFeatureTip() {
+  if (!HOVER_FEATURE) { tip.style.display = "none"; return; }
+  while (tip.firstChild) tip.removeChild(tip.firstChild);
+
+  const type = div("t-type");
+  const dot = div("t-dot");
+  dot.style.background = INK;           // neutral: this is identity, not a diff
+  type.appendChild(dot);
+  type.appendChild(document.createTextNode(HOVER_FEATURE.typeLabel || "Map content"));
+  tip.appendChild(type);
+  tip.appendChild(div("t-name", HOVER_FEATURE.name || "Unnamed"));
+  tip.appendChild(div("t-detail", "Click to edit"));
+
+  tip.classList.remove("pinned");
+  tip.classList.toggle("below", HOVER_FEATURE.below);
+  tip.style.left = HOVER_FEATURE.x + "px";
+  tip.style.top = HOVER_FEATURE.y + "px";
+  tip.style.display = "block";
+}
+
 function positionTip() {
   const c = shown();
-  if (!c) return;
+  if (!c) return renderFeatureTip();   // the feature card carries its own anchor
   const hit = RESOLVED.find(r => r.change === c);
   if (!hit) { tip.style.display = "none"; return; }
   // anchor to the shape's top edge, not its centroid, so the card never covers what it describes
@@ -1611,6 +1667,59 @@ function start() {
   resolveChanges();
   redraw();
   map.on("render", redraw);
+  /**
+   * **Hover anything editable** (Olcay, 2026-08-14). The diff shapes carry their own listeners;
+   * this is for every other feature on the floor, hit-tested against the SDK's own vector layers.
+   *
+   * Only editable content responds — `EDITABLE_TYPES` is the tree's POI/Structural split, posted
+   * by the app. Walls, roads and circulation space are the floor plan, not content somebody
+   * curates, and lighting up 715 of them would make the hover meaningless.
+   *
+   * A change under the cursor wins and this stands aside: that card says strictly more (its type,
+   * its detail, and where allowed its decision control).
+   */
+  map.on("mousemove", ev => {
+    if (shown()) return;                              // a change's card owns the cursor
+    const f = editableAt(ev.point);
+    const fid = f && f.properties && f.properties.fid;
+    if (!f) {
+      if (HOVER_FEATURE) { HOVER_FEATURE = null; highlightFeatures(null); renderTip(); }
+      map.getCanvas().style.cursor = "";
+      return;
+    }
+    map.getCanvas().style.cursor = "pointer";
+    if (HOVER_FEATURE && HOVER_FEATURE.fid === fid) {  // same feature, just moved — reposition only
+      HOVER_FEATURE.x = ev.point.x; HOVER_FEATURE.y = ev.point.y + 14;
+      renderTip();
+      return;
+    }
+    HOVER_FEATURE = {
+      fid,
+      name: f.properties.name || "",
+      typeLabel: prettyType(f.properties),
+      x: ev.point.x,
+      y: ev.point.y + 14,
+      below: true,
+    };
+    highlightFeatures({ fid });                        // the SDK's own selection layer lights it
+    renderTip();
+  });
+
+  // Leaving the canvas has to clear it — the container listener below only covers the card.
+  map.on("mouseout", () => {
+    if (!HOVER_FEATURE) return;
+    HOVER_FEATURE = null; highlightFeatures(null); renderTip();
+    map.getCanvas().style.cursor = "";
+  });
+
+  /** Click an editable feature → the app opens its panel, ready to edit. */
+  map.on("click", ev => {
+    if (shown()) return;                              // a change's card handles its own clicks
+    const f = editableAt(ev.point);
+    if (!f || !f.properties || !f.properties.fid) return;
+    post("featureclick", { fid: f.properties.fid, props: plainProps(f.properties) });
+  });
+
   map.on("move", postCam);
   map.on("move", redraw);
   map.on("idle", () => {
@@ -1828,6 +1937,8 @@ window.addEventListener("message", (ev) => {
     // The app says whether this pane accepts file drops (upload surfaces only — a Compare pane
     // or a review map shouldn't invite an upload it can't take).
     DROP_ON = !!d.on;
+  } else if (d.type === "editabletypes") {
+    BLOCKED_TYPES = new Set(d.types || []);
   } else if (d.type === "decidable") {
     CAN_DECIDE = !!d.on;
     renderTip();          // a card already open must lose its control immediately
@@ -1856,6 +1967,24 @@ let DROP_ON = false, dragDepth = 0;
  * never offer a control whose result nobody is listening for.
  */
 let CAN_DECIDE = true;
+
+/**
+ * The `mainType`s the panel will NOT edit — posted by the app, which owns the taxonomy (this page
+ * has none). `null` means "not told yet", and nothing is editable until it arrives: guessing would
+ * light up walls.
+ *
+ * A NEGATIVE set, because that is the closed one. `MAIN_CLASS` defaults anything it does not list
+ * to `poi`, so the editable side is open-ended; the floor-plan side is short and finite.
+ */
+let BLOCKED_TYPES = null;
+
+/**
+ * The feature under the cursor that is NOT part of a review — Olcay, 2026-08-14: *"when hovered we
+ * should show the same overlay for each feature"*. A change already has its own card (with the
+ * decision control where that is allowed); this is the same card for everything else, so hovering
+ * the map answers "what is this?" everywhere rather than only over the diff.
+ */
+let HOVER_FEATURE = null;
 const veil = document.getElementById("dropveil");
 const hasFiles = ev => !!(ev.dataTransfer && Array.from(ev.dataTransfer.types || []).indexOf("Files") >= 0);
 document.addEventListener("dragenter", ev => {

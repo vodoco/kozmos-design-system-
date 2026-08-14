@@ -1412,6 +1412,19 @@ export function MapContent({
     (fid: string, p: Record<string, unknown>) => setProps({ fid, props: p }),
     [],
   );
+  /**
+   * A click on the map's own geometry. The panel is driven by `focused`, so a map click has to
+   * become a focus exactly as a tree row does — otherwise `shownProps` discards the properties as
+   * belonging to a feature nobody selected.
+   *
+   * The camera is deliberately NOT re-flown: you clicked the thing, you can already see it, and
+   * moving the map under a cursor that just landed is disorienting. The nonce still rises so a
+   * second click on the same feature re-opens a panel you had closed.
+   */
+  const onFeatureClick = useCallback((fid: string, p: Record<string, unknown>) => {
+    setProps({ fid, props: p });
+    setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
+  }, []);
   /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
   const closeProps = useCallback(() => {
     setFocused(null);
@@ -1727,6 +1740,11 @@ export function MapContent({
           focusNonce={focused?.n ?? 0}
           highlight={highlight}
           onFeatureProps={onFeatureProps}
+          /**
+           * Clicking an editable feature on the map opens its panel, ready to edit — the same
+           * destination the tree's rows reach, from the other surface.
+           */
+          onFeatureClick={onFeatureClick}
           // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
           // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.
           focusPadRight={focused ? FEATURE_PANEL_WIDTH + 24 : 0}
