@@ -651,10 +651,15 @@ function resolveChanges() {
 
 /* ── overlay ────────────────────────────────────────────────────────────── */
 
-function drawBadge(cx, cy, kind){
+function drawBadge(cx, cy, kind, hasNote){
   const col = decisionInk(kind);
   const g = el("g", {});
   g.appendChild(el("circle", { cx, cy, r:11, fill:"#fff", stroke:col, "stroke-width":2 }));
+  // A flag carrying a note wears a filled dot, so you can tell WHICH flags have something written
+  // on them without every note being painted across the floor. The note itself appears under the
+  // badge when the feature is the shown one — see `drawNote`.
+  if (kind === "flag" && hasNote)
+    g.appendChild(el("circle", { cx: cx + 8, cy: cy - 8, r: 3.5, fill: col, stroke: "#fff", "stroke-width": 1.5 }));
   const p = el("path", { fill:"none", stroke:col, "stroke-width":2.2, "stroke-linecap":"round", "stroke-linejoin":"round" });
   if (kind==="confirm") p.setAttribute("d", `M${cx-5} ${cy} L${cx-1.5} ${cy+4} L${cx+5.5} ${cy-4.5}`);
   else if (kind==="reject") p.setAttribute("d", `M${cx-4.5} ${cy-4.5} L${cx+4.5} ${cy+4.5} M${cx+4.5} ${cy-4.5} L${cx-4.5} ${cy+4.5}`);
@@ -778,9 +783,54 @@ function drawMarks(marks) {
       const dy = marks[j].y - marks[i].y;
       if (dx * dx + dy * dy <= CLUSTER_PX * CLUSTER_PX) { used[j] = true; group.push(marks[j]); }
     }
-    if (group.length === 1) svg.appendChild(drawBadge(marks[i].x, marks[i].y, marks[i].change.decision));
+    if (group.length === 1) {
+      const m = marks[i];
+      const badge = drawBadge(m.x, m.y, m.change.decision, !!m.change.note);
+      /**
+       * A `markOnly` change draws **no shape**, so it has no hit area — and without one the note
+       * could never be reached, because `shown()` is driven by hovering the feature. The badge
+       * becomes the hit area instead. Only for markOnly: where a shape exists it is the bigger and
+       * better target, and two overlapping hit areas would fight over the hover.
+       */
+      if (m.change.markOnly) {
+        badge.setAttribute("class", "hit");
+        badge.addEventListener("mouseenter", () => hover(m.change));
+        badge.addEventListener("mouseleave", () => hover(null));
+      }
+      svg.appendChild(badge);
+      // The note reads under its own flag, for the shown feature only. Painting every note at once
+      // is label soup at anything but max zoom — and the dot on the badge already says which flags
+      // have one, so nothing is hidden, it is just not all shouted at the same time.
+      if (m.change.decision === "flag" && m.change.note && shown() === m.change)
+        svg.appendChild(drawNote(m.x, m.y + 16, m.change.note));
+    }
     else svg.appendChild(drawCluster(group));
   }
+}
+
+/** The flag's note, as a wrapped chip under the badge. Sized here because SVG will not wrap text. */
+function drawNote(cx, top, text) {
+  const MAXW = 210, SIZE = 11.5, LH = 15, CH = SIZE * 0.55;
+  const words = String(text).split(" ");
+  const lines = [];
+  let line = "";
+  for (const w of words) {
+    const next = line ? line + " " + w : w;
+    if (next.length * CH > MAXW && line) { lines.push(line); line = w; } else line = next;
+  }
+  if (line) lines.push(line);
+  const w = Math.min(MAXW, Math.max.apply(null, lines.map(l => l.length * CH))) + 20;
+  const h = lines.length * LH + 12;
+  const g = el("g", { class: "note" });
+  g.appendChild(el("rect", { x: cx - w / 2, y: top, width: w, height: h, rx: 7,
+                             fill: "#fff", stroke: decisionInk("flag"), "stroke-width": 1.5 }));
+  lines.forEach((l, i) => {
+    const t = el("text", { x: cx, y: top + 15 + i * LH, "text-anchor": "middle",
+                           fill: "#1a1c24", "font-size": SIZE, "font-family": "inherit" });
+    t.textContent = l;
+    g.appendChild(t);
+  });
+  return g;
 }
 
 /** One bubble standing for N overlapping marks; click it to zoom until they separate. */

@@ -104,6 +104,15 @@ export interface Change {
    * So the map takes the real change and renders the pennant alone.
    */
   markOnly?: boolean;
+  /**
+   * The note written when this was flagged (Olcay, 2026-08-14: *"flag with optional notes"*).
+   *
+   * A flag on its own says *come back to this* and not **what for** — which is a mystery a week
+   * later, to the person who wrote it as much as to anyone else. Optional on purpose: making it
+   * required would turn a one-click triage mark into a form, and the whole point of Flag is that
+   * it is the cheap decision.
+   */
+  note?: string;
   geometry?: unknown; // GeoJSON.Geometry — for the map highlight
 }
 
@@ -1078,6 +1087,47 @@ export const FLOOR_WARNING_DEMO: Record<FloorWarningKind, FloorWarning> = {
 export function seedFloorWarnings(buildingId: string | undefined, levelIndex: number): FloorWarning[] {
   if ((buildingId ?? T3_ID) !== T3_ID || levelIndex !== NEW_VERSION_LEVEL) return [];
   return [FLOOR_WARNING_DEMO["georeference-shifted"], FLOOR_WARNING_DEMO["floorplan-resized"]];
+}
+
+/** B4 · Arrivals — Terminal 3: the level whose review was concluded with two flags left on it. */
+export const FLAGGED_LEVEL = -4;
+
+/**
+ * The two flagged changes B4 carries, **with their notes** — a review someone finished and left
+ * two things to come back to.
+ *
+ * This exists because the tree advertised *"2 flagged"* on B4 as a **hardcoded label** with no
+ * report behind it, so the map beside it correctly drew nothing and the feature looked broken
+ * (found 2026-08-14). A tag that claims work nobody did is worse than no tag: every surface that
+ * reads the real data disagrees with it.
+ *
+ * Both names are single features on that floor — `pickFeature` resolves by name, and *"Baggage
+ * Reclaim"* would have been ambiguous fourteen ways.
+ */
+export function seedFlaggedChanges(): Change[] {
+  return [
+    {
+      id: "b4-passport",
+      name: "Arrival Passport Control",
+      type: "metadata",
+      kind: "checkpoint",
+      detail: 'Name: "Passport Control" → "Arrival Passport Control"',
+      details: ['Name changed: from "Passport Control" to "Arrival Passport Control"'],
+      decision: "flag",
+      note: "Check the new name against the airport's signage before this goes in the wayfinding voice prompts.",
+    },
+    {
+      id: "b4-customs",
+      name: "Arrival Customs Hall",
+      type: "geometry",
+      kind: "operational-space",
+      similarity: 0.71,
+      detail: "Boundary redrawn",
+      details: ["Geometry modified — similarity 0.71", "Area: 940 m² → 1,020 m²"],
+      decision: "flag",
+      note: "The hall now overlaps the queue barriers we drew by hand. Redraw those in the editor.",
+    },
+  ];
 }
 
 export function seedDiff(magnitudePct = 30, floorWarnings: FloorWarning[] = []): DiffResult {

@@ -185,6 +185,16 @@ export function ManualReview({
    * which conditions applied, which is the one thing a reviewer needs at a glance.
    */
   const [floorNoticesOpen, setFloorNoticesOpen] = useState(false);
+  /**
+   * Notes written against flags, keyed by change id. Seeded from the saved report so re-opening a
+   * part-way review brings back what you wrote, exactly as `decisions` does.
+   */
+  const [notes, setNotes] = useState<Record<string, string>>(() => {
+    if (!target) return {};
+    const key = levelKey(target.buildingId, target.index);
+    const newest = getLevelVersions(key, () => seedVersions(target.short, target.index, target.buildingId))[0];
+    return { ...(getReviewOutcome(key, newest?.n)?.notes ?? {}) };
+  });
   // `preserved` is not a change to review — it carries no decision, and the group and section
   // controls filter it out themselves rather than the screen pre-computing a list.
   // keyed by id, so a rebind (which changes names, never ids) can't lose a decision
@@ -310,7 +320,12 @@ export function ManualReview({
      * completing: an amber level publishes because you finished reviewing it.
      */
     const published = fate === "published" || (complete && !matchFailed && bandKind === "medium");
-    setReviewOutcome(key, { versionN: newest.n, decisions, changes, published, complete });
+    // Only notes on rows that are still flagged: un-flagging drops the note with the decision, so
+    // a stale sentence can never resurface if the row is flagged again for a different reason.
+    const keptNotes: Record<string, string> = {};
+    for (const c of changes)
+      if (decisions[c.id] === "flag" && notes[c.id]?.trim()) keptNotes[c.id] = notes[c.id].trim();
+    setReviewOutcome(key, { versionN: newest.n, decisions, changes, published, complete, notes: keptNotes });
     if (published && newest.state !== "published")
       setLevelVersions(key, [{ ...newest, state: "published" }, ...versions.slice(1)]);
   };
@@ -862,6 +877,8 @@ export function ManualReview({
                     onDecide={(d) => setOne(c.id, d)}
                     active={activeId === c.id}
                     onActivate={() => activate(c.id)}
+                    note={notes[c.id]}
+                    onNote={(v) => setNotes((n) => ({ ...n, [c.id]: v }))}
                   />
                 ))}
               </div>

@@ -448,6 +448,7 @@ export function FeaturePanel({
   icon,
   flagged,
   flagShared,
+  flagNote,
   subTypeOptions,
   onEdited,
   onClose,
@@ -457,6 +458,8 @@ export function FeaturePanel({
   icon?: React.ReactNode;
   flagged?: boolean;
   flagShared?: number;
+  /** What the reviewer wrote when they raised the flag, if anything. */
+  flagNote?: string;
   subTypeOptions?: string[];
   /** An edit was saved. Carries the flag-clearing consequence (§18a) up. D3: nothing persists. */
   onEdited?: (next: Record<string, unknown>) => void;
@@ -586,6 +589,23 @@ export function FeaturePanel({
                     ? `A review flagged “${name}”, and ${flagShared} features on this floor share that name — so the flag may be about any of them. Editing clears it.`
                     : "Someone marked this to come back to. Editing this feature clears the flag."}
                 </AlertDescription>
+                {/* The note, in the reviewer's own words. Quoted rather than paraphrased into the
+                    sentence above: it is somebody's writing, and this panel is where the person
+                    who has to act on it finally reads it. */}
+                {flagNote && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      paddingLeft: 10,
+                      borderLeft: `3px solid ${decisionInk("flag")}`,
+                      fontSize: 12,
+                      lineHeight: 1.45,
+                      color: "var(--review-ink)",
+                    }}
+                  >
+                    “{flagNote}”
+                  </div>
+                )}
               </div>
             </div>
           </Alert>

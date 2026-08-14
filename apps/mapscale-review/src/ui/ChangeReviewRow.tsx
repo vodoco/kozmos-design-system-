@@ -59,6 +59,8 @@ export function ChangeReviewRow({
   override,
   active,
   onActivate,
+  note,
+  onNote,
 }: {
   change: Change;
   /** `undefined` clears the decision — how a user override returns to its resting "Kept". */
@@ -79,6 +81,10 @@ export function ChangeReviewRow({
    * flagged — and flagging one now carries it onto the editor's map like any other flag.
    */
   override?: boolean;
+  /** The note written against this flag, if any. Lives in the review outcome, not on the change. */
+  note?: string;
+  /** Omit to render the row without a note field — the map's card does, it has no room. */
+  onNote?: (v: string) => void;
   /** This is the change the map is showing — the two surfaces share one selection. */
   active?: boolean;
   /** Clicking the row anywhere but the decision control makes it the active one. */
@@ -285,6 +291,40 @@ export function ChangeReviewRow({
         )}
       </div>
       </div>
+
+      {/*
+        **The note, and only when the row is flagged** (Olcay, 2026-08-14: *"flag with optional
+        notes"*). A flag says *come back to this* and not what for; a week later that is a mystery
+        to whoever wrote it. It appears on flagging and disappears with the flag, so it can never
+        become a field you scroll past on twenty settled rows.
+
+        Optional, deliberately: requiring it would turn the cheap triage mark into a form, and Flag
+        exists precisely because it is the decision that costs nothing.
+      */}
+      {change.decision === "flag" && onNote && (
+        <div style={{ width: "100%" }} onClick={(e) => e.stopPropagation()}>
+          <textarea
+            value={note ?? ""}
+            onChange={(e) => onNote(e.target.value)}
+            rows={note && note.length > 60 ? 2 : 1}
+            placeholder="Add a note — what should you come back for?"
+            aria-label={`Note on ${change.name}`}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              resize: "vertical",
+              font: "inherit",
+              fontSize: 12,
+              lineHeight: 1.45,
+              color: "var(--review-ink)",
+              padding: "6px 8px",
+              borderRadius: 6,
+              border: `1px solid ${decisionInk("flag")}55`,
+              background: "#fffdf7",
+            }}
+          />
+        </div>
+      )}
 
       {/*
         The bullets use the FULL card width, and the toggle is a **full-width bottom cap**

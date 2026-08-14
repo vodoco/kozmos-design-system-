@@ -224,7 +224,10 @@ const LEVEL_TAGS: Record<number, LevelTag[]> = {
   3: [
     { kind: "rejected", label: "Rejected", tone: "large", title: "62% of floor area changed — a change this large is unrealistic, so the floor plan was rejected. Upload a corrected file, or contact our support team if this really is new construction" },
   ],
-  [-4]: [{ kind: "flagged", label: "2 flagged", tone: "neutral", title: "Two changes flagged for a later dashboard edit" }],
+  // B4 carries no seeded tag any more. It used to say "2 flagged" as a hardcoded label with no
+  // report behind it, so the map beside it drew nothing and the feature looked broken. The review
+  // is seeded for real in App.tsx now, and `liveTagsFor` derives the tag from it like every other
+  // level — the count is whatever is actually flagged, and it drops to nothing when you clear them.
   0: [
     { kind: "auto-published", label: "Auto-published", tone: "minor", title: "Minor change (12% of floor area) — published automatically" },
     // Superseded by auto-published: the arrival is history once it is live.
@@ -319,6 +322,21 @@ function flaggedNamesFor(buildingId: string, index: number, short: string): Set<
 const EMPTY_FLAGS: Set<string> = new Set();
 
 /**
+ * The note written against a flag on this feature, if there is one. Name-matched like every other
+ * flag reader here — see `TypeRow`'s note on why the count is of flagged *things*, not rows.
+ */
+function flagNoteFor(buildingId: string, index: number, short: string, name: string): string | undefined {
+  const key = levelKey(buildingId, index);
+  const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
+  const outcome = getReviewOutcome(key, newest?.n);
+  if (!outcome?.notes) return undefined;
+  for (const c of outcome.changes)
+    if (c.name === name && outcome.decisions[c.id] === "flag" && outcome.notes[c.id])
+      return outcome.notes[c.id];
+  return undefined;
+}
+
+/**
  * The flagged changes for a level, as marks for the map (Olcay, 2026-08-14: *"I'd like to see
  * visible flags on the map for those that are flagged"*).
  *
@@ -337,7 +355,8 @@ function flaggedChangesFor(buildingId: string, index: number, short: string): Ch
   if (!outcome) return NO_CHANGES;
   const out = outcome.changes
     .filter((c) => outcome.decisions[c.id] === "flag")
-    .map((c) => ({ ...c, decision: "flag" as const, markOnly: true }));
+    // the note comes from the outcome, not the change: `changes` is the report as it arrived
+    .map((c) => ({ ...c, decision: "flag" as const, markOnly: true, note: outcome.notes?.[c.id] }));
   return out.length ? out : NO_CHANGES;
 }
 
@@ -1643,6 +1662,16 @@ export function MapContent({
               />
             }
             flagged={focusedFlagged}
+            flagNote={
+              focusedFlagged && shownProps?.name && target
+                ? flagNoteFor(
+                    target.building,
+                    target.level,
+                    live.find((b) => b.id === target.building)?.levels.find((l) => l.index === target.level)?.short ?? "",
+                    String(shownProps.name),
+                  )
+                : undefined
+            }
             flagShared={focusedSharing > 1 ? focusedSharing : undefined}
             subTypeOptions={subTypeOptions}
             onEdited={onEdited}

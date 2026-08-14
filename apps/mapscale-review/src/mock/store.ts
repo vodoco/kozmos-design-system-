@@ -125,6 +125,15 @@ export interface ReviewOutcome {
   decisions: Record<string, Decision | undefined>;
   /** The changes exactly as reviewed — the editor draws the flagged ones on its own map. */
   changes: Change[];
+  /**
+   * Optional note per flagged change, keyed by change id — **a sibling of `decisions`, not a field
+   * on the change** (Olcay, 2026-08-14: *"flag with optional notes"*).
+   *
+   * Same reason `decisions` is separate: `changes` is the report as it arrived and must stay a
+   * faithful snapshot of what MapScale said. What a person wrote about it afterwards is theirs,
+   * and keying it the same way means an un-flag can drop the note with the decision.
+   */
+  notes?: Record<string, string>;
   /** Did concluding it publish the level? (Amber does; red cause B only via Publish now.) */
   published: boolean;
   /**
