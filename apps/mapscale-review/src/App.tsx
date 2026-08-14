@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { TooltipProvider } from "@kozmos/react";
 import { TopBar, LeftRail } from "./ui/Chrome";
 import { MapContent, type LevelRef } from "./screens/MapContent";
@@ -25,6 +25,8 @@ import {
 import { FeedbackLayer } from "./ui/FeedbackLayer";
 import { PublishScope } from "./ui/PublishScope";
 import type { TourScreen } from "./ui/Tour";
+import { Login } from "./screens/Login";
+import { getSession, sessionKey, subscribeSession } from "./cloud/session";
 
 /**
  * The flow, in the order a customer walks it:
@@ -155,6 +157,26 @@ export default function App() {
     setBrowseOnOpen(true);
     setScreen("levelEditor");
   };
+
+  /**
+   * **Nothing renders until someone is signed in** (2026-08-14). Not a permission check — the app
+   * is a prototype and the instance decides what you may see — but an identity check: everything
+   * queued behind this (a flag's author, a comment thread, a cursor with a name on it) is
+   * meaningless without a person attached, and bolting identity on afterwards is how you end up
+   * with anonymous rows nobody can attribute.
+   *
+   * `useSyncExternalStore` over the token, so signing out anywhere drops the whole app back here.
+   */
+  useSyncExternalStore(subscribeSession, sessionKey);
+  if (!getSession())
+    return (
+      <TooltipProvider delayDuration={0}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100vh", minHeight: 0 }}>
+          {/* `onDone` exists for the transition; the store is what actually re-renders this. */}
+          <Login onDone={() => undefined} />
+        </div>
+      </TooltipProvider>
+    );
 
   return (
     // no hover delay: these tooltips carry the only label the icon-only controls have
