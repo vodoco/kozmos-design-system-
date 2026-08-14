@@ -113,14 +113,14 @@ export function LoginBackdrop({ kind }: { kind: BackdropKind }) {
         /* `meet`, not `slice`: the composition IS the drawing, and cover-scaling a 600×360 plan
            into a tall viewport magnified it past the point where it read as a floor plan at all. */
         preserveAspectRatio="xMidYMid meet"
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.45 }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.6 }}
       >
         {kind === "review" && (
           <g fill="none" stroke={INK} strokeLinejoin="round">
             {/* the published floor, quiet */}
-            <rect x="50" y="80" width="500" height="220" rx="4" strokeWidth="2" opacity="0.3" />
+            <rect x="50" y="80" width="500" height="220" rx="4" strokeWidth="2.2" opacity="0.55" />
             {rooms.map((r, i) => (
-              <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} strokeWidth="1" opacity="0.16" />
+              <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} strokeWidth="1.2" opacity="0.3" />
             ))}
 
             {/* what the new plan changed — each keyed to where the sweep will reach it */}
@@ -134,9 +134,9 @@ export function LoginBackdrop({ kind }: { kind: BackdropKind }) {
                   height={c.h}
                   rx="2"
                   fill={c.tone}
-                  fillOpacity="0.16"
+                  fillOpacity="0.22"
                   stroke={c.tone}
-                  strokeWidth="1.8"
+                  strokeWidth="2.2"
                   strokeDasharray={c.kind === "removed" ? "7 5" : undefined}
                   style={{ animationDelay: `${c.at}s` }}
                 />
