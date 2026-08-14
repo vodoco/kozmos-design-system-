@@ -603,6 +603,8 @@ function MenuItem({
  */
 const LevelTypesContext = createContext<{
   byLevel: Record<string, LevelTypeCount[]>;
+  /** The level the map is showing. Its row in the tree starts expanded — you open on what you see. */
+  current?: { building: string; level: number };
   /** Show this floor on the map — which is also what makes its counts arrive. */
   request: (buildingId: string, index: number) => void;
   sheet: SpriteSheet | null;
@@ -1010,9 +1012,33 @@ function LevelRow({
   /** Update floor-plan: opens the editor with the file browser already popped. */
   onUpdate: (l: LevelRef) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const { request: requestTypes, current: mapLevel } = useContext(LevelTypesContext);
+  const current = mapLevel?.building === buildingId && mapLevel?.level === level.index;
+  /**
+   * The level the map is already showing starts EXPANDED (Olcay, 2026-08-14) — the tree should
+   * open on what you are looking at, not make you find it and click it open.
+   */
+  const [open, setOpen] = useState(current);
   const [hover, setHover] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  /**
+   * Expanding a floor shows it on the map — which is also what makes its counts arrive, since the
+   * map can only count the floor it is rendering.
+   *
+   * **The whole row toggles, not only the caret** (Olcay, 2026-08-14). A 10px chevron as the sole
+   * target is a smaller thing to hit than the row it controls, and every other row in this tree
+   * already answers a click somewhere along its length.
+   */
+  const toggle = useCallback(() => {
+    setOpen((o) => {
+      if (!o) requestTypes(buildingId, level.index);
+      return !o;
+    });
+  }, [buildingId, level.index, requestTypes]);
+  // The map moving to this level opens it too — same rule, arrived at from the other direction.
+  useEffect(() => {
+    if (current) setOpen(true);
+  }, [current]);
   const ref: LevelRef = { building, buildingId, index: level.index, name: level.name, short: level.short };
   /**
    * Derived at render, not read off `level.tags`.
@@ -1033,13 +1059,13 @@ function LevelRow({
    */
   const flagged = flaggedNamesFor(buildingId, level.index, level.short);
   const lockedByExperts = isUnderExpertReview(level.index, buildingId);
-  const { request: requestTypes } = useContext(LevelTypesContext);
 
   return (
     <>
       <div
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
+        onClick={toggle}
         style={{
           display: "flex",
           alignItems: "center",
@@ -1047,15 +1073,11 @@ function LevelRow({
           padding: `8px 12px 8px ${indent(1)}px`,
           borderBottom: `1px solid ${LINE}`,
           background: hover || menuOpen ? "#f6f7f9" : "#fff",
+          cursor: "pointer",
         }}
       >
         <button
-          onClick={() => {
-            // Expanding a floor shows it on the map — which is also what makes its counts arrive,
-            // since the map can only count the floor it is rendering.
-            if (!open) requestTypes(buildingId, level.index);
-            setOpen((o) => !o);
-          }}
+          onClick={(e) => { e.stopPropagation(); toggle(); }}
           style={{
             background: "none",
             border: "none",
@@ -1479,8 +1501,8 @@ export function MapContent({
   );
   const [hovered, setHovered] = useState<{ fid?: string; mainType?: string; subType?: string } | null>(null);
   const typesCtx = useMemo(
-    () => ({ byLevel: typesByLevel, request: requestTypes, sheet, focus, focused: focused?.fid ?? null, hover: setHovered, edits }),
-    [typesByLevel, requestTypes, sheet, focus, focused, edits],
+    () => ({ byLevel: typesByLevel, current: target, request: requestTypes, sheet, focus, focused: focused?.fid ?? null, hover: setHovered, edits }),
+    [typesByLevel, target, requestTypes, sheet, focus, focused, edits],
   );
   /** Hover wins while it lasts; leaving falls back to the selection rather than going dark. */
   const highlight = useMemo(
