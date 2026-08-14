@@ -1553,19 +1553,48 @@ export function MapContent({
   // map has booted — before that there is no honest building/level to prefill.
   const [dropped, setDropped] = useState<string | null>(null);
   const onFileDrop = useCallback((f: { name: string }) => setDropped(f.name), []);
+  /** Remembered across navigation, so choosing to work on the map survives leaving the screen. */
+  const [listOpen, setListOpen] = useState(() => {
+    try {
+      return localStorage.getItem("mapscale.listOpen") !== "0";
+    } catch {
+      return true; // private mode, or storage disabled — the list is the safer default
+    }
+  });
+  const toggleList = useCallback(() => {
+    setListOpen((v) => {
+      try {
+        localStorage.setItem("mapscale.listOpen", v ? "0" : "1");
+      } catch {
+        /* not being able to remember it must not stop it working now */
+      }
+      return !v;
+    });
+  }, []);
 
   return (
     <LevelTypesContext.Provider value={typesCtx}>
-    <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
+    <div style={{ flex: 1, display: "flex", minHeight: 0, position: "relative" }}>
+      {/*
+        **The list collapses** (Olcay, 2026-08-14: *"maybe we could have a collapse listing feature.
+        So I can click on the map and continue editing"*). Editing happens on the map with the panel
+        on the right; the tree is how you *get* there, and once you have arrived it is 440px of the
+        thing you are working on that you cannot see.
+
+        A remembered toggle, never automatic: collapsing the list out from under someone the moment
+        they select a feature moves the ground they are standing on, which is worse than a click.
+      */}
       <div
         style={{
-          width: PANEL_WIDTH,
-          flex: `0 0 ${PANEL_WIDTH}px`,
-          borderRight: `1px solid ${LINE}`,
+          width: listOpen ? PANEL_WIDTH : 0,
+          flex: `0 0 ${listOpen ? PANEL_WIDTH : 0}px`,
+          borderRight: listOpen ? `1px solid ${LINE}` : "none",
           background: "#fff",
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
+          overflow: "hidden",
+          transition: "width .16s ease, flex-basis .16s ease",
         }}
       >
         <div style={{ padding: "16px 16px 12px" }}>
@@ -1627,6 +1656,44 @@ export function MapContent({
       </div>
 
       <div style={{ position: "relative", flex: 1, background: "#EDEEF0", minWidth: 0 }}>
+        {/* On the map's own left edge, so it sits where the list's boundary is and reads as the
+            handle for it — the arrow points the way the list will move. */}
+        <button
+          type="button"
+          onClick={toggleList}
+          aria-expanded={listOpen}
+          aria-label={listOpen ? "Hide the content list" : "Show the content list"}
+          title={listOpen ? "Hide the list" : "Show the list"}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 16,
+            zIndex: 3,
+            width: 22,
+            height: 44,
+            display: "grid",
+            placeItems: "center",
+            padding: 0,
+            cursor: "pointer",
+            border: `1px solid ${LINE}`,
+            borderLeft: "none",
+            borderRadius: "0 8px 8px 0",
+            background: "#fff",
+            color: MUTED,
+            boxShadow: "0 1px 4px rgba(0,0,0,.10)",
+          }}
+        >
+          <svg width="10" height="14" viewBox="0 0 10 14" aria-hidden focusable="false">
+            <path
+              d={listOpen ? "M7 2 L3 7 L7 12" : "M3 2 L7 7 L3 12"}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
         <PointrMap
           changes={mapFlagMarks}
           prefs={prefs}
