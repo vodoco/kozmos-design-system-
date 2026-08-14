@@ -157,12 +157,15 @@ const PointrMap = forwardRef<PointrMapHandle, {
           // `id` rides along so the map can decide a change back at us (the pinned card's
           // ✓ / 🚩 / ✗) — decisions are keyed by id, and a name can be re-pointed by
           // `bindToFloor`, so name would be the wrong key even though it is the merge key here.
-          changes: latest.current.changes.map(({ id, name, type, detail, decision }) => ({
+          // `markOnly` has to ride along too: this projection is a whitelist, so a field left out
+          // here silently never reaches the map however carefully it was set upstream.
+          changes: latest.current.changes.map(({ id, name, type, detail, decision, markOnly }) => ({
             id,
             name,
             type,
             detail,
             decision,
+            markOnly,
           })),
         },
         "*",

@@ -562,7 +562,7 @@ export function ManualReview({
             data-tour="magnitude"
             style={{
               background: band.solid,
-              color: "#3A2A00",
+              color: band.onSolid,
               // the tally hangs off the block's bottom edge; without one (cause B) it closes itself
               borderRadius: matchFailed ? 10 : "10px 10px 0 0",
               padding: "12px 14px",

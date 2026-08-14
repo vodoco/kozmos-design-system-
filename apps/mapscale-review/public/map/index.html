@@ -685,6 +685,14 @@ function redraw() {
   const f = fillFactor();
   const marks = [];
   RESOLVED.forEach(({ change, rings, centroid }) => {
+    // `markOnly` — the mark without the diff shape. Browsing is not reviewing: the review is over
+    // and the floor is live, so painting features in diff colours would claim there is something
+    // left to decide. A flag is a note to self that outlived the review, and it still has to be
+    // findable on the map rather than only in the tree.
+    if (change.markOnly) {
+      if (change.decision) { const p = P(centroid); marks.push({ x:p.x, y:p.y, change, centroid }); }
+      return;
+    }
     const fill = COLORS[change.type];
     const line = LINE[change.type];
     const active = shown() === change;

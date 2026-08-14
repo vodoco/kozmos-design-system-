@@ -94,6 +94,16 @@ export interface Change {
   /** 0–1, geometry changes only. The report carries it; below SIMILARITY_WARN it raises a warning. */
   similarity?: number;
   decision?: Decision; // Manual Review — client state
+  /**
+   * Draw the decision mark, but **not** the diff shape (Olcay, 2026-08-14: *"I'd like to see
+   * visible flags on the map for those that are flagged"*).
+   *
+   * Browsing Map Content is not reviewing. The review is over and the floor is live, so repainting
+   * features in diff colours would claim there is something to decide — but a flag is a note to
+   * self that outlived the review, and it has to be findable on the map, not only in the tree.
+   * So the map takes the real change and renders the pennant alone.
+   */
+  markOnly?: boolean;
   geometry?: unknown; // GeoJSON.Geometry — for the map highlight
 }
 
@@ -545,17 +555,27 @@ export function magnitudeBand(pct: number): MagnitudeBand {
 }
 
 /** Traffic-light colours — reserved for magnitude, never for a change type, risk or a decision. */
+/**
+ * `onSolid` is the ink that goes ON the `solid` surface, and it is **per band on purpose**
+ * (Olcay, 2026-08-14: *"not enough contrast, black on red"*).
+ *
+ * One shared ink `#3A2A00` used to sit on all three. It is an amber ink and it measures
+ * **6.8:1 on amber** and **5.8:1 on green** — but only **3.66:1 on red**, which fails WCAG AA for
+ * the 12px detail line underneath. White on the old `#EF4444` was worse still at 3.76:1, so the
+ * surface had to move, not just the ink: `large.solid` is now **`#B42318`** — the band's own `ink`
+ * value, so no new hue enters the palette — and carries **white at 6.62:1**.
+ */
 export const BAND: Record<
   MagnitudeBand,
-  { tint: string; border: string; ink: string; solid: string; title: string; detail: string }
+  { tint: string; border: string; ink: string; solid: string; onSolid: string; title: string; detail: string }
 > = {
   minor: {
-    tint: "#F1FBF5", border: "#B7E4C7", ink: "#1E7A46", solid: "#2FBF71",
+    tint: "#F1FBF5", border: "#B7E4C7", ink: "#1E7A46", solid: "#2FBF71", onSolid: "#3A2A00",
     title: "Auto-published",
     detail: "Minor change — published automatically, nothing to review.",
   },
   medium: {
-    tint: "#FFF8EC", border: "#F5D08A", ink: "#8A5A00", solid: "#F5A623",
+    tint: "#FFF8EC", border: "#F5D08A", ink: "#8A5A00", solid: "#F5A623", onSolid: "#3A2A00",
     title: "Ready for your review",
     // a getter for the same reason GRACE_DAYS is one — a template literal here would bake in
     // whatever the grace period was when the module first loaded
@@ -566,7 +586,7 @@ export const BAND: Record<
     },
   },
   large: {
-    tint: "#FEF2F2", border: "#F3B4B4", ink: "#B42318", solid: "#EF4444",
+    tint: "#FEF2F2", border: "#F3B4B4", ink: "#B42318", solid: "#B42318", onSolid: "#FFFFFF",
     title: "Needs your decision",
     detail: "Never published automatically. Review it, then publish when you're ready.",
   },
