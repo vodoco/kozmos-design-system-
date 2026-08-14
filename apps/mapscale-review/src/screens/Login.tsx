@@ -58,6 +58,28 @@ export function Login({ onDone }: { onDone: () => void }) {
     >
       <LoginBackdrop kind={kind} />
 
+      {/*
+        **A scrim under each content block** (Olcay, 2026-08-14: *"adjust the animation content
+        layout so that it works out with the text content and login box"*). The backdrop is a
+        continuous field, so it needs somewhere to recede rather than being switched off: an
+        elliptical wash behind the copy and a plain one behind the card. Both are transparent at
+        the edges, so nothing draws a box — the texture simply thins where reading happens.
+      */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: "2vw",
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: "min(760px, 62vw)",
+          height: 460,
+          background:
+            "radial-gradient(ellipse at 42% 50%, rgba(244,247,254,.96) 0%, rgba(244,247,254,.86) 42%, rgba(244,247,254,0) 72%)",
+          pointerEvents: "none",
+        }}
+      />
+
       {/* the proposition */}
       <div style={{ position: "relative", flex: "1 1 0", minWidth: 0, maxWidth: 620 }}>
         <Text
@@ -104,7 +126,8 @@ export function Login({ onDone }: { onDone: () => void }) {
           background: "#fff",
           borderRadius: 16,
           padding: 32,
-          boxShadow: "0 18px 50px rgba(11,54,156,.13), 0 2px 6px rgba(11,54,156,.06)",
+          boxShadow: "0 24px 70px rgba(11,54,156,.16), 0 2px 8px rgba(11,54,156,.07)",
+          border: "1px solid rgba(255,255,255,.9)",
         }}
       >
         <Text style={{ display: "block", fontSize: 26, fontWeight: 600, color: "#1a1c24" }}>
