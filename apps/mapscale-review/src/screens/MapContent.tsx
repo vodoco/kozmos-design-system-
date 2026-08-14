@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Button, Icon, Input, Popover, PopoverTrigger, PopoverContent, Text } from "@kozmos/react";
 import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
+import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, NEW_VERSION_LEVEL, decisionInk, expertReviewEnabled, isUnderExpertReview, seedVersions, type Change } from "../mock/diff";
 import { DecisionGlyph } from "../ui/ChangeReviewRow";
 import { PANEL_WIDTH } from "../ui/Chrome";
@@ -1384,7 +1385,7 @@ export function MapContent({
    * clicking the same row twice re-centres, which matters because you may have panned away since.
    */
   const [focused, setFocused] = useState<{ fid: string; n: number } | null>(null);
-  const focus = useCallback((buildingId: string, index: number, fid: string) => {
+  const focusNow = useCallback((buildingId: string, index: number, fid: string) => {
     // the floor first, then the feature — see the context's `focus` note
     setTarget((t) => (t?.building === buildingId && t?.level === index ? t : { building: buildingId, level: index }));
     setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
@@ -1422,10 +1423,50 @@ export function MapContent({
    * second click on the same feature re-opens a panel you had closed.
    */
   const onFeatureClick = useCallback((fid: string, p: Record<string, unknown>) => {
+    if (dirtyRef.current) { setPendingPick({ kind: "map", fid, props: p }); return; }
     setProps({ fid, props: p });
     setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
   }, []);
-  /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
+  /**
+   * **Unsaved edits guard** (Olcay, 2026-08-14: *"warn the user if they changed a POI then tried
+   * to select some other POI"*).
+   *
+   * Held in a REF as well as state: the map's click handler is memoised with an empty dependency
+   * list — it must be, or every keystroke would re-post it to the iframe — so it cannot read
+   * changing state directly and would forever see `false`.
+   *
+   * Nothing is auto-saved. The choice is explicit and the safe branch is the default: discarding
+   * is the destructive one, so it is what the user has to ask for.
+   */
+  const dirtyRef = useRef(false);
+  const onDirtyChange = useCallback((d: boolean) => {
+    dirtyRef.current = d;
+  }, []);
+  const [pendingPick, setPendingPick] = useState<
+    { kind: "map"; fid: string; props: Record<string, unknown> } | { kind: "tree"; buildingId: string; index: number; fid: string } | null
+  >(null);
+  /** The user chose to lose the edit — carry out whichever selection was waiting. */
+  const applyPendingPick = useCallback(() => {
+    const pick = pendingPick;
+    setPendingPick(null);
+    dirtyRef.current = false;
+    if (!pick) return;
+    if (pick.kind === "map") {
+      setProps({ fid: pick.fid, props: pick.props });
+      setFocused((f) => ({ fid: pick.fid, n: (f?.n ?? 0) + 1 }));
+    } else {
+      focusNow(pick.buildingId, pick.index, pick.fid);
+    }
+  }, [pendingPick]);
+  /** The tree's selection, guarded the same way the map's is — one rule, both surfaces. */
+  const focus = useCallback(
+    (buildingId: string, index: number, fid: string) => {
+      if (dirtyRef.current) { setPendingPick({ kind: "tree", buildingId, index, fid }); return; }
+      focusNow(buildingId, index, fid);
+    },
+    [focusNow],
+  );
+  /** Closing the panel clears the selection itself — the panel IS the selection made visible. */  /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
   const closeProps = useCallback(() => {
     setFocused(null);
     setProps(null);
@@ -1729,6 +1770,22 @@ export function MapContent({
             />
           </svg>
         </button>
+        {/*
+          Switching away from a half-edited feature. Three ways out and none of them auto-saves:
+          keep editing (the default and the safe one), or discard and go where you were heading.
+          "Discard" is the destructive branch, so it is the one the user has to ask for.
+        */}
+        <ConfirmOverlay
+          open={!!pendingPick}
+          tone="warning"
+          title="You have unsaved changes"
+          confirmLabel="Discard changes"
+          cancelLabel="Keep editing"
+          onConfirm={applyPendingPick}
+          onCancel={() => setPendingPick(null)}
+        >
+          This feature has edits you have not saved. Opening another one will lose them.
+        </ConfirmOverlay>
         <PointrMap
           changes={mapFlagMarks}
           prefs={prefs}
@@ -1768,6 +1825,7 @@ export function MapContent({
                 subType={shownProps.subType ? String(shownProps.subType) : undefined}
               />
             }
+            onDirtyChange={onDirtyChange}
             flagged={focusedFlagged}
             flagNote={
               focusedFlagged && shownProps?.name && target

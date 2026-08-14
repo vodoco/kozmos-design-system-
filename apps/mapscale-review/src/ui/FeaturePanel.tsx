@@ -449,6 +449,7 @@ export function FeaturePanel({
   flagged,
   flagShared,
   flagNote,
+  onDirtyChange,
   subTypeOptions,
   onEdited,
   onClose,
@@ -460,6 +461,11 @@ export function FeaturePanel({
   flagShared?: number;
   /** What the reviewer wrote when they raised the flag, if anything. */
   flagNote?: string;
+  /**
+   * Told whenever the panel gains or loses unsaved changes — the app guards feature switches with
+   * it (Olcay: *"warn the user if they changed a POI then tried to select some other POI"*).
+   */
+  onDirtyChange?: (dirty: boolean) => void;
   subTypeOptions?: string[];
   /** An edit was saved. Carries the flag-clearing consequence (§18a) up. D3: nothing persists. */
   onEdited?: (next: Record<string, unknown>) => void;
@@ -498,6 +504,24 @@ export function FeaturePanel({
     setFields(Object.keys(p).filter((k) => !RESERVED.has(k)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.fid]);
+
+  /**
+   * Has anything actually been changed? Both halves count: a value edited, and a field added or
+   * binned — removing a property is an edit even though no value was typed.
+   *
+   * This is what makes "opens in edit mode" safe. Update stays dark until there is something to
+   * save, so selecting a feature to LOOK at it commits nothing and warns about nothing.
+   */
+  const dirty = useMemo(() => {
+    const original = Object.keys(p).filter((k) => !RESERVED.has(k));
+    if (fields.length !== original.length || fields.some((f) => !original.includes(f))) return true;
+    const keys = new Set([...Object.keys(p), ...Object.keys(draft)]);
+    for (const k of keys) if (JSON.stringify(p[k]) !== JSON.stringify(draft[k])) return true;
+    return false;
+  }, [p, draft, fields]);
+  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
+  // Leaving the panel must not leave the app believing an edit is still open.
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
   const values = editing ? draft : p;
   const description = String(values.description ?? "");
@@ -828,7 +852,7 @@ export function FeaturePanel({
             <Button variant="outline" style={{ flex: 1 }} onClick={() => { setEditing(false); reset(); }}>
               Cancel
             </Button>
-            <Button style={{ flex: 1 }} onClick={save} disabled={!String(draft.name ?? "").trim()}>
+            <Button style={{ flex: 1 }} onClick={save} disabled={!dirty || !String(draft.name ?? "").trim()}>
               Update
             </Button>
           </div>
