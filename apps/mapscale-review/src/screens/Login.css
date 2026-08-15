@@ -1,0 +1,204 @@
+.ms-login-page {
+  --login-ink: #123ea7;
+  --login-text: #20232b;
+  --login-muted: #626978;
+  --login-line: #d9dfeb;
+  --login-green: #2fbf71;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 390px);
+  align-items: center;
+  gap: clamp(56px, 8vw, 136px);
+  flex: 1;
+  min-height: 620px;
+  padding: clamp(48px, 7vw, 108px);
+  overflow: auto;
+  background: #f4f7fc;
+}
+
+.ms-login-story,
+.ms-login-auth-shell {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.ms-login-story {
+  transform: translateY(-52px);
+}
+
+.ms-login-copy {
+  max-width: 690px;
+}
+
+.ms-login-logo {
+  display: block;
+  width: 112px;
+  height: auto;
+  margin-bottom: 34px;
+}
+
+.ms-login-kicker {
+  margin-bottom: 22px;
+  color: #596273;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.ms-login-title {
+  max-width: 690px;
+  margin: 0;
+  color: var(--login-ink);
+  font-size: clamp(48px, 5.2vw, 76px);
+  font-weight: 700;
+  letter-spacing: -0.052em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.ms-login-lede {
+  max-width: 550px;
+  margin: 24px 0 0;
+  color: #454c59;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.ms-login-auth-shell {
+  display: grid;
+  place-items: center;
+}
+
+.ms-login-card {
+  width: min(390px, 100%);
+  padding: 32px;
+  border: 1px solid var(--login-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 26px 64px rgba(31, 55, 106, 0.1),
+    0 2px 8px rgba(31, 55, 106, 0.04);
+}
+
+.ms-login-card-title {
+  display: block;
+  color: var(--login-text);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ms-login-field {
+  display: block;
+  margin-top: 18px;
+  color: #424956;
+  font-size: 12px;
+}
+
+.ms-login-field:first-of-type {
+  margin-top: 22px;
+}
+
+.ms-login-input {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.ms-login-alert {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.ms-login-alert--error {
+  color: #430915;
+  border: 1px solid #f3a2b3;
+  background: #fceaee;
+}
+
+.ms-login-alert--neutral {
+  color: #464a53;
+  border: 1px solid #e3e4e8;
+  background: #f7f8f9;
+}
+
+.ms-login-submit {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.ms-login-privacy {
+  display: block;
+  margin-top: 14px;
+  color: var(--login-muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.ms-login-instance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 15px;
+  color: #737986;
+  border-top: 1px solid #e9edf4;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.ms-login-instance-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: var(--login-green);
+  box-shadow: 0 0 0 4px rgba(47, 191, 113, 0.11);
+}
+
+@media (max-width: 900px) {
+  .ms-login-page {
+    grid-template-columns: 1fr;
+    align-content: center;
+    gap: 44px;
+    min-height: 100%;
+    padding: clamp(32px, 8vw, 64px);
+  }
+
+  .ms-login-copy {
+    max-width: 620px;
+  }
+
+  .ms-login-story {
+    transform: none;
+  }
+
+  .ms-login-title {
+    font-size: clamp(42px, 9vw, 66px);
+  }
+
+  .ms-login-auth-shell {
+    place-items: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .ms-login-page {
+    gap: 34px;
+    padding: 28px 20px;
+  }
+
+  .ms-login-title {
+    font-size: clamp(38px, 12vw, 52px);
+    line-height: 1;
+  }
+
+  .ms-login-card {
+    padding: 25px 22px;
+    border-radius: 14px;
+  }
+}

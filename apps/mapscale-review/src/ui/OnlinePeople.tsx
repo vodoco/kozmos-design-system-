@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { Popover, PopoverContent, PopoverTrigger, Text } from "@kozmos/react";
 import {
+  isCrossMachine,
   followPeer,
   getMyFloor,
   getPeers,
@@ -30,7 +31,9 @@ export function OnlinePeople() {
   // Read from presence rather than from props: it is the same fact the map scopes cursors on, and
   // two copies of it is exactly how the badge ends up saying "elsewhere" about a visible cursor.
   const { building, level } = getMyFloor();
-  if (!peers.length) return null;
+  // Renders with nobody online too, when the transport is the same-browser one: "nobody is here"
+  // and "this build cannot see anybody" look the same, and only one of them is worth acting on.
+  if (!peers.length && isCrossMachine()) return null;
 
   const withYou = (p: Peer) =>
     p.building !== undefined && p.building === building && p.level === level;
@@ -42,7 +45,9 @@ export function OnlinePeople() {
       : "Not on a floor yet";
 
   // People on your own floor come first, so the useful ones are never the ones that overflow.
-  const ordered = [...peers].sort((a, b) => Number(withYou(b)) - Number(withYou(a)));
+  const ordered = [...peers].sort(
+    (a, b) => Number(withYou(b)) - Number(withYou(a)),
+  );
   const shown = ordered.slice(0, 4);
   const extra = ordered.length - shown.length;
 
@@ -67,6 +72,22 @@ export function OnlinePeople() {
           }}
         >
           <span style={{ display: "flex", alignItems: "center" }}>
+            {!peers.length && (
+              <span
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 999,
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: 11,
+                  color: "var(--primitives-colors-background-600)",
+                  border: "1px dashed var(--primitives-colors-background-900)",
+                }}
+              >
+                0
+              </span>
+            )}
             {shown.map((p, i) => (
               <span
                 key={p.id}
@@ -92,7 +113,12 @@ export function OnlinePeople() {
             ))}
           </span>
           {extra > 0 && (
-            <span style={{ fontSize: 11.5, color: "var(--primitives-colors-background-600)" }}>
+            <span
+              style={{
+                fontSize: 11.5,
+                color: "var(--primitives-colors-background-600)",
+              }}
+            >
               +{extra}
             </span>
           )}
@@ -116,14 +142,21 @@ export function OnlinePeople() {
 
         {ordered.map((p) => {
           const here = withYou(p);
-          const canFollow = p.building !== undefined && p.level !== undefined && !here;
+          const canFollow =
+            p.building !== undefined && p.level !== undefined && !here;
           return (
             <button
               key={p.id}
               type="button"
               onClick={() => canFollow && followPeer(p)}
               disabled={!canFollow}
-              title={here ? "Already on this floor" : canFollow ? `Go to ${placeOf(p)}` : "Not on a floor yet"}
+              title={
+                here
+                  ? "Already on this floor"
+                  : canFollow
+                    ? `Go to ${placeOf(p)}`
+                    : "Not on a floor yet"
+              }
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -183,13 +216,41 @@ export function OnlinePeople() {
               </span>
               {/* The affordance names the destination, and says nothing when there is nowhere to go */}
               {canFollow && (
-                <span style={{ flex: "0 0 auto", fontSize: 11.5, color: "#0b369c", fontWeight: 500 }}>
+                <span
+                  style={{
+                    flex: "0 0 auto",
+                    fontSize: 11.5,
+                    color: "#0b369c",
+                    fontWeight: 500,
+                  }}
+                >
                   Follow
                 </span>
               )}
             </button>
           );
         })}
+        {/*
+          **Say the limit out loud.** On BroadcastChannel this list can only ever contain other
+          tabs of THIS browser — so a colleague signed in on their own machine is genuinely absent,
+          and an empty list looks identical to a broken feature. Not saying so cost real time.
+        */}
+        {!isCrossMachine() && (
+          <div
+            style={{
+              marginTop: 6,
+              padding: "8px 8px 4px",
+              borderTop: "1px solid var(--primitives-colors-background-900)",
+              fontSize: 11,
+              lineHeight: 1.45,
+              color: "var(--primitives-colors-background-600)",
+            }}
+          >
+            Showing other tabs of this browser only. People on other machines
+            need a realtime key (
+            <code style={{ fontSize: 10.5 }}>VITE_ABLY_KEY</code>).
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

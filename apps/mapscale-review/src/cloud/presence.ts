@@ -1,4 +1,5 @@
 import { getSession, type Identity } from "./session";
+import { ablyTransport, hasRealtimeKey } from "./realtime";
 
 /**
  * Who else is here, and where they are pointing.
@@ -51,7 +52,15 @@ export interface Peer {
 type Wire =
   | { t: "hi"; p: Peer }
   | { t: "move"; id: string; lng: number; lat: number; at: number }
-  | { t: "floor"; id: string; building?: string; level?: number; buildingName?: string; levelName?: string; at: number }
+  | {
+      t: "floor";
+      id: string;
+      building?: string;
+      level?: number;
+      buildingName?: string;
+      levelName?: string;
+      at: number;
+    }
   | { t: "bye"; id: string };
 
 export interface Transport {
@@ -74,10 +83,32 @@ function broadcastTransport(onMessage: (m: Wire) => void): Transport {
   };
 }
 
-/** Swap this for a hosted realtime client and everything above keeps working unchanged. */
-let makeTransport = broadcastTransport;
-export function setPresenceTransport(factory: typeof broadcastTransport) {
-  makeTransport = factory;
+/**
+ * **Cross-machine if a key is configured, same-browser if not.**
+ *
+ * `BroadcastChannel` cannot cross a browser, let alone a machine — so two people in two browsers
+ * see nothing, which is the API working as designed and not a fault to hunt. `realtime.ts` crosses
+ * that gap over Ably's SSE/REST endpoints the moment `VITE_ABLY_KEY` exists.
+ *
+ * Announced once at startup, because a silent fallback is indistinguishable from a broken feature
+ * — and this exact confusion has already cost real time.
+ */
+function makeTransport(onMessage: (m: Wire) => void): Transport {
+  const realtime = ablyTransport(onMessage as (m: unknown) => void);
+  if (realtime) {
+    console.info("[presence] realtime: cross-machine (Ably)");
+    return realtime;
+  }
+  console.info(
+    "[presence] realtime: SAME BROWSER ONLY (BroadcastChannel). " +
+      "Two browsers, or two machines, will not see each other. Set VITE_ABLY_KEY to cross that gap.",
+  );
+  return broadcastTransport(onMessage);
+}
+
+/** Whether this build can see people on other machines at all. Surfaced in the UI. */
+export function isCrossMachine(): boolean {
+  return hasRealtimeKey();
 }
 
 /**
@@ -106,7 +137,12 @@ let me: Peer | null = null;
  * `me` was still null and was dropped, and because it only re-sends on CHANGE it never came back.
  * The symptom was the top bar calling a colleague "elsewhere" while their cursor was on the map.
  */
-let pendingFloor: { building?: string; level?: number; buildingName?: string; levelName?: string } | null = null;
+let pendingFloor: {
+  building?: string;
+  level?: number;
+  buildingName?: string;
+  levelName?: string;
+} | null = null;
 let version = 0;
 
 function emit() {
@@ -117,28 +153,47 @@ function emit() {
 function prune() {
   const cutoff = Date.now() - STALE_MS;
   let changed = false;
-  for (const [id, p] of peers) if (p.at < cutoff) { peers.delete(id); changed = true; }
+  for (const [id, p] of peers)
+    if (p.at < cutoff) {
+      peers.delete(id);
+      changed = true;
+    }
   if (changed) emit();
 }
 
 function onMessage(m: Wire) {
-  if (!m || (("id" in m) && m.id === selfId)) return;      // never render your own cursor
+  if (!m || ("id" in m && m.id === selfId)) return; // never render your own cursor
   if (m.t === "hi") {
     if (m.p.id === selfId) return;
+    /**
+     * ⚠️ **Answer only somebody NEW.** This used to answer every `hi`, which never terminates:
+     * A greets B, B answers, A answers the answer, B answers that — measured at **5,000 messages
+     * in 500ms** from a single announce, each one calling `emit()` and re-rendering React. Two
+     * signed-in tabs pegged the CPU and the app looked like it had failed to load.
+     *
+     * Replying only to a peer we have not met bounds it at three messages: greet, answer, silence.
+     * It also makes the 4s heartbeat free, because a heartbeat is by definition from someone we
+     * already know.
+     */
+    const isNew = !peers.has(m.p.id);
     peers.set(m.p.id, m.p);
-    // answer, so the newcomer learns about us without waiting for our next heartbeat
-    if (me) transport?.send({ t: "hi", p: { ...me, at: Date.now() } });
+    if (isNew && me) transport?.send({ t: "hi", p: { ...me, at: Date.now() } });
     emit();
   } else if (m.t === "move") {
     const p = peers.get(m.id);
-    if (!p) return;                                        // a mover we have never met: wait for its "hi"
-    p.lng = m.lng; p.lat = m.lat; p.at = m.at;
+    if (!p) return; // a mover we have never met: wait for its "hi"
+    p.lng = m.lng;
+    p.lat = m.lat;
+    p.at = m.at;
     emit();
   } else if (m.t === "floor") {
     const p = peers.get(m.id);
     if (!p) return;
-    p.building = m.building; p.level = m.level;
-    p.buildingName = m.buildingName; p.levelName = m.levelName; p.at = m.at;
+    p.building = m.building;
+    p.level = m.level;
+    p.buildingName = m.buildingName;
+    p.levelName = m.levelName;
+    p.at = m.at;
     emit();
   } else if (m.t === "bye") {
     if (peers.delete(m.id)) emit();
@@ -150,22 +205,29 @@ export function startPresence() {
   if (transport) return;
   const s = getSession();
   if (!s) return;
-  me = { id: selfId, identity: s.identity, at: Date.now(), ...(pendingFloor ?? {}) };
+  me = {
+    id: selfId,
+    identity: s.identity,
+    at: Date.now(),
+    ...(pendingFloor ?? {}),
+  };
   pendingFloor = null;
   transport = makeTransport(onMessage);
   transport.send({ t: "hi", p: me });
   heartbeat = setInterval(() => {
     if (!me) return;
     me.at = Date.now();
-    transport?.send({ t: "hi", p: me });                   // "hi" doubles as the heartbeat
+    transport?.send({ t: "hi", p: me }); // "hi" doubles as the heartbeat
     prune();
   }, HEARTBEAT_MS);
-  // Say goodbye on the way out, so nobody lingers for STALE_MS after closing a tab.
+  // Say goodbye on the way out, so nobody lingers for STALE_MS after closing a tab. Removed in
+  // `stopPresence`, so a sign-out/sign-in cycle does not stack a second listener.
   window.addEventListener("pagehide", stopPresence);
 }
 
 export function stopPresence() {
   if (!transport) return;
+  window.removeEventListener("pagehide", stopPresence);
   transport.send({ t: "bye", id: selfId });
   transport.close();
   transport = null;
@@ -183,14 +245,30 @@ export function setPresenceFloor(
   buildingName?: string,
   levelName?: string,
 ) {
-  if (!me) { pendingFloor = { building, level, buildingName, levelName }; return; }  // applied on start
-  if (me.building === building && me.level === level && me.levelName === levelName) return;
+  if (!me) {
+    pendingFloor = { building, level, buildingName, levelName };
+    return;
+  } // applied on start
+  if (
+    me.building === building &&
+    me.level === level &&
+    me.levelName === levelName
+  )
+    return;
   me.building = building;
   me.level = level;
   me.buildingName = buildingName;
   me.levelName = levelName;
   me.at = Date.now();
-  transport?.send({ t: "floor", id: selfId, building, level, buildingName, levelName, at: me.at });
+  transport?.send({
+    t: "floor",
+    id: selfId,
+    building,
+    level,
+    buildingName,
+    levelName,
+    at: me.at,
+  });
 }
 
 /** Report the cursor, in map coordinates. Throttled — this fires on every mouse move. */
@@ -199,7 +277,9 @@ export function setPresenceCursor(lng: number, lat: number) {
   const now = Date.now();
   if (now - lastMoveSent < MOVE_MS) return;
   lastMoveSent = now;
-  me.lng = lng; me.lat = lat; me.at = now;
+  me.lng = lng;
+  me.lat = lat;
+  me.at = now;
   transport?.send({ t: "move", id: selfId, lng, lat, at: now });
 }
 
@@ -222,7 +302,11 @@ const followListeners = new Set<() => void>();
 
 export function followPeer(p: Peer) {
   if (p.building === undefined || p.level === undefined) return;
-  followRequest = { building: p.building, level: p.level, n: (followRequest?.n ?? 0) + 1 };
+  followRequest = {
+    building: p.building,
+    level: p.level,
+    n: (followRequest?.n ?? 0) + 1,
+  };
   followListeners.forEach((l) => l());
 }
 
@@ -256,17 +340,26 @@ export function getMyFloor(): { building?: string; level?: number } {
 
 /** Everyone currently online, ordered so the list doesn't reshuffle under the cursor. */
 export function getPeers(): Peer[] {
-  return [...peers.values()].sort((a, b) => a.identity.name.localeCompare(b.identity.name));
+  return [...peers.values()].sort((a, b) =>
+    a.identity.name.localeCompare(b.identity.name),
+  );
 }
 
 /**
  * The peers whose cursor should be drawn: same building, same level, and actually pointing at
  * something. Everyone else stays in the top bar, where being elsewhere is the useful fact.
  */
-export function getPeersOnFloor(building: string | undefined, level: number | undefined): Peer[] {
+export function getPeersOnFloor(
+  building: string | undefined,
+  level: number | undefined,
+): Peer[] {
   if (building === undefined || level === undefined) return [];
   return getPeers().filter(
-    (p) => p.building === building && p.level === level && p.lng !== undefined && p.lat !== undefined,
+    (p) =>
+      p.building === building &&
+      p.level === level &&
+      p.lng !== undefined &&
+      p.lat !== undefined,
   );
 }
 
@@ -278,6 +371,13 @@ export function peerColour(p: Peer): string {
   const key = p.identity.email || p.identity.name || p.id;
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-  const palette = ["#2FBF71", "#3B82F6", "#9C6EFF", "#D98C0D", "#E4488F", "#12A5B0"];
+  const palette = [
+    "#2FBF71",
+    "#3B82F6",
+    "#9C6EFF",
+    "#D98C0D",
+    "#E4488F",
+    "#12A5B0",
+  ];
   return palette[h % palette.length];
 }
