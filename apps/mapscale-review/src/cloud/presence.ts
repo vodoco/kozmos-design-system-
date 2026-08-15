@@ -1,5 +1,5 @@
 import { getSession, type Identity } from "./session";
-import { ablyTransport, hasRealtimeKey } from "./realtime";
+import { ablyTransport, hasRealtimeKey, socketTransport } from "./realtime";
 
 /**
  * Who else is here, and where they are pointing.
@@ -94,6 +94,15 @@ function broadcastTransport(onMessage: (m: Wire) => void): Transport {
  * — and this exact confusion has already cost real time.
  */
 function makeTransport(onMessage: (m: Wire) => void): Transport {
+  /**
+   * Our own relay first: it keeps cursor coordinates and names inside your infrastructure, where a
+   * hosted service would carry them out of it. Ably stays as the no-server fallback.
+   */
+  const relay = socketTransport(onMessage as (m: unknown) => void);
+  if (relay) {
+    console.info("[presence] realtime: cross-machine (own relay)");
+    return relay;
+  }
   const realtime = ablyTransport(onMessage as (m: unknown) => void);
   if (realtime) {
     console.info("[presence] realtime: cross-machine (Ably)");
@@ -101,7 +110,8 @@ function makeTransport(onMessage: (m: Wire) => void): Transport {
   }
   console.info(
     "[presence] realtime: SAME BROWSER ONLY (BroadcastChannel). " +
-      "Two browsers, or two machines, will not see each other. Set VITE_ABLY_KEY to cross that gap.",
+      "Two browsers, or two machines, will not see each other. Set VITE_PRESENCE_URL (own relay) " +
+      "or VITE_ABLY_KEY to cross that gap.",
   );
   return broadcastTransport(onMessage);
 }

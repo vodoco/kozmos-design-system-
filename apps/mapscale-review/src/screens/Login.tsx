@@ -7,9 +7,8 @@ import "./Login.css";
 /**
  * Sign in to the real Pointr Cloud instance.
  *
- * The baseline deliberately contains no background artwork or motion. The proposition and the
- * authentication form are the only two visual elements; future micro-animation work can start
- * from this neutral, measurable state.
+ * The background deliberately contains no artwork or ambient motion. The Pointr Cloud mark has
+ * one short, self-contained entrance; the proposition and authentication form remain still.
  *
  * ⚠️ **The password is never held.** It lives in a controlled input for as long as someone is
  * typing and is cleared the moment the request resolves either way. `session.ts` never stores or

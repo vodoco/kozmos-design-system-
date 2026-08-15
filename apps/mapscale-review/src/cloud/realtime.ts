@@ -1,3 +1,4 @@
+import { io } from "socket.io-client";
 import type { Transport } from "./presence";
 
 /**
@@ -35,10 +36,67 @@ import type { Transport } from "./presence";
  */
 
 const CHANNEL = "mapscale-presence";
+
+/**
+ * Our own presence service — `Pointr Cloud/mapscale-presence`, a ~120-line Socket.IO relay.
+ *
+ * **Preferred over Ably when configured**, because cursor coordinates and names then never leave
+ * your infrastructure. The pattern is lifted from the 3D-to-GeoJSON server (cursors as lng/lat,
+ * Socket.IO for reconnection) but that project is not touched: it has 28 global broadcast sites,
+ * no rooms, and an auth middleware bound to its own JWT secret, so sharing its process would have
+ * meant rewriting a live collaboration service for a prototype's sake.
+ *
+ *     VITE_PRESENCE_URL=https://mapscale-presence-production.up.railway.app
+ *     VITE_PRESENCE_SECRET=<the service's PRESENCE_SECRET>
+ *     VITE_PRESENCE_ROOM=mapscale        # optional; separates environments on one service
+ */
+const PRESENCE_URL: string = import.meta.env.VITE_PRESENCE_URL ?? "";
+const PRESENCE_SECRET: string = import.meta.env.VITE_PRESENCE_SECRET ?? "";
+const PRESENCE_ROOM: string = import.meta.env.VITE_PRESENCE_ROOM ?? "mapscale";
 const KEY: string = import.meta.env.VITE_ABLY_KEY ?? "";
 
 export function hasRealtimeKey(): boolean {
-  return !!KEY;
+  return !!PRESENCE_URL || !!KEY;
+}
+
+/**
+ * The Socket.IO relay. Returns `null` when no URL is configured, so the caller falls through to
+ * Ably and then to `BroadcastChannel`.
+ *
+ * Every protocol message rides one `msg` event — the server is a pure relay and never learns the
+ * vocabulary, which is what lets presence evolve without redeploying it.
+ */
+export function socketTransport(
+  onMessage: (m: unknown) => void,
+): Transport | null {
+  if (!PRESENCE_URL) return null;
+
+  const socket = io(PRESENCE_URL, {
+    auth: { secret: PRESENCE_SECRET, room: PRESENCE_ROOM },
+    // websocket first; polling is the fallback that survives a corporate proxy
+    transports: ["websocket", "polling"],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+  });
+
+  socket.on("msg", (payload: unknown) => onMessage(payload));
+  /**
+   * Logged once. Socket.IO reconnects on its own, so a blip is not worth a banner — but a *wrong*
+   * URL or secret fails exactly the same way, and silence there is what makes a broken realtime
+   * feature look like an empty room.
+   */
+  let warned = false;
+  socket.on("connect_error", (err: Error) => {
+    if (warned) return;
+    warned = true;
+    console.warn(`[presence] relay connect failed (${err.message}) — retrying`);
+  });
+
+  return {
+    send: (msg) => socket.emit("msg", msg),
+    close: () => socket.close(),
+  };
 }
 
 /**
