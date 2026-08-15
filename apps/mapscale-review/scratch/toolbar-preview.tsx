@@ -44,6 +44,16 @@ const CASES: { title: string; state: GeomState; notice?: string }[] = [
     title: "After a split — three pieces, undo and redo both live",
     state: { ...BASE, canUndo: true, canRedo: true, dirty: true, pieces: 3 },
   },
+  {
+    title:
+      "Corners marquee-selected — drag moves them together, Delete removes them",
+    state: { ...BASE, selected: 4, canUndo: true, dirty: true },
+  },
+  {
+    title:
+      "A POINT feature — no outline, so Reshape / Move / Split / rotate / scale / Straighten all go",
+    state: { ...BASE, kind: "point" },
+  },
 ];
 
 function Bench() {

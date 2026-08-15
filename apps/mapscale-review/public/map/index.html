@@ -462,7 +462,21 @@ function pickFeature(name, all, center) {
     return ((pa[0]-center.lng)**2+(pa[1]-center.lat)**2) - ((pb[0]-center.lng)**2+(pb[1]-center.lat)**2); });
   return cs[0];
 }
-function ringsOuter(f){ const g=f.geometry; return g.type==="Polygon"?[g.coordinates[0]]:g.coordinates.map(p=>p[0]); }
+/**
+ * The outer rings of an AREA feature. Anything without rings gets an empty list.
+ *
+ * ⚠️ This used to be `g.type==="Polygon" ? [coords[0]] : coords.map(p=>p[0])`, which quietly
+ * assumed every non-Polygon was a MultiPolygon. A **Point** came back as `[undefined, undefined]`
+ * and a LineString as `[0, 1]` — so opening a point POI in the geometry editor built a `GEOM` full
+ * of nonsense and threw on the first draw. Half the POIs on a floor are points. See `geomFind`.
+ */
+function ringsOuter(f){
+  const g = f.geometry;
+  if (!g) return [];
+  if (g.type === "Polygon") return [g.coordinates[0]];
+  if (g.type === "MultiPolygon") return g.coordinates.map(p => p[0]);
+  return [];
+}
 function centroid(r){ let x=0,y=0; r.forEach(c=>{x+=c[0];y+=c[1];}); return [x/r.length, y/r.length]; }
 
 // Cache lng/lat rings so `redraw()` on every frame is just a projection pass, not a 1000-feature
@@ -749,7 +763,8 @@ function drawEditing() {
  * draw half a room — the same reason `scanFeature` accumulates its bounds rather than returning on
  * the first hit.
  */
-function featureRings(fid) {
+/** Every loaded feature carrying this `fid`, whatever its geometry type. */
+function featuresWithFid(fid) {
   const out = [];
   try {
     const layers = [...new Set(map.getStyle().layers
@@ -757,8 +772,14 @@ function featureRings(fid) {
       .map(l => l["source-layer"]))];
     for (const L of layers)
       for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L }))
-        if (f.properties && f.properties.fid === fid && f.geometry) out.push(...ringsOuter(f));
+        if (f.properties && f.properties.fid === fid && f.geometry) out.push(f);
   } catch (e) {}
+  return out;
+}
+
+function featureRings(fid) {
+  const out = [];
+  for (const f of featuresWithFid(fid)) out.push(...ringsOuter(f));
   return out;
 }
 
@@ -1899,6 +1920,13 @@ function start() {
       geomCutClick(map.unproject([ev.clientX - rect.left, ev.clientY - rect.top]));
       return;
     }
+    // A plain click on bare floor drops the corner selection — the counterpart to shift-marquee,
+    // and the only way out of one besides Escape.
+    if (GEOM && GEOM.sel && GEOM.sel.size && !ev.shiftKey) {
+      GEOM.sel.clear();
+      geomDraw(); post("geomstate", geomState());
+      return;
+    }
     if (SELECTED) select(SELECTED);      // click out — dismiss
     else if (HOVERED) hover(null);
     /**
@@ -1947,15 +1975,72 @@ function start() {
   // Escape deselects, like every other overlay in the app. Pinned only — a hover card needs no
   // dismissing, it dies when you look away.
   document.addEventListener("keydown", ev => {
+    /**
+     * **Delete removes the selected corners** (Olcay, 2026-08-15). Safe to bind bare, because this
+     * document is the map and has no text input in it — the properties panel lives in the parent,
+     * so typing a name there never reaches this listener.
+     */
+    if ((ev.key === "Delete" || ev.key === "Backspace") &&
+        GEOM && GEOM.kind === "area" && GEOM.sel.size) {
+      ev.preventDefault();
+      geomDeleteSelected();
+      return;
+    }
     if (ev.key !== "Escape") return;
-    // A half-laid cut is the innermost thing open, so it takes Escape first — and only the cut,
-    // never the edit: dropping the whole panel because somebody thought better of one click would
-    // throw away every unsaved change with it.
+    // Escape peels one layer at a time, innermost first — and never the edit itself: dropping the
+    // panel because somebody thought better of one click would take every unsaved change with it.
     if (GEOM && GEOM.mode === "split") {
       if (!geomCancelCut()) geomSetMode("vertices");
       return;
     }
+    if (GEOM && GEOM.sel && GEOM.sel.size) {
+      GEOM.sel.clear();
+      geomDraw(); post("geomstate", geomState());
+      return;
+    }
     if (SELECTED) select(SELECTED);
+  });
+
+  /**
+   * **Shift + drag across the map marquees the corners inside it** (Olcay, 2026-08-15: *"select
+   * multiple points with lasso select or shift marquee select"*).
+   *
+   * A rectangle rather than a freehand lasso: it is one drag either way, but a rectangle can be
+   * aimed — you can see what it will catch before you let go — and a lasso's own path has to be
+   * hit-tested, which is a lot of machinery for corners that sit on a building grid anyway.
+   *
+   * ⚠️ Shift+drag was **MapLibre's box zoom**; `geomBegin` disables it for as long as the editor is
+   * open. Without that, every marquee would also zoom the map out from under itself.
+   *
+   * Bubble phase, not capture: a handle's own `mousedown` calls `stopPropagation`, so a
+   * shift-click ON a corner reaches its toggle and never starts a marquee.
+   */
+  document.addEventListener("mousedown", ev => {
+    // Reshape only: corners are the subject of that mode and of no other.
+    if (!GEOM || GEOM.kind !== "area" || GEOM.mode !== "vertices") return;
+    if (!ev.shiftKey || ev.button !== 0) return;
+    if (!document.getElementById("map").contains(ev.target)) return;
+    ev.preventDefault();
+    const rect = map.getCanvas().getBoundingClientRect();
+    const at = e => {
+      const q = map.unproject([e.clientX - rect.left, e.clientY - rect.top]);
+      return [q.lng, q.lat];
+    };
+    GEOM.band = { a: at(ev), b: at(ev) };
+    try { map.dragPan.disable(); } catch (e) {}
+    const move = e => { if (GEOM && GEOM.band) { GEOM.band.b = at(e); geomDraw(); } };
+    const up = () => {
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+      try { map.dragPan.enable(); } catch (e) {}
+      if (!GEOM || !GEOM.band) return;
+      // Additive: shift is already down, and shift-to-add is what it means everywhere else.
+      geomSelectIn(GEOM.band.a, GEOM.band.b, true);
+      GEOM.band = null;
+      geomDraw(); post("geomstate", geomState());
+    };
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
   });
 
   resolveAndFrame(partial => post("ready", { changes: RESOLVED.length, level: levelInfo(), features: levelFeatureNames(),
@@ -2074,14 +2159,34 @@ const HANDLE_R = 5;
 function geomBegin(fid) {
   const f = geomFind(fid);
   if (!f) { post("geomerror", { fid, message: "no geometry on this floor yet" }); return; }
+  /**
+   * ⚠️ **MapLibre owns shift+drag** — it is bound to `boxZoom`. The marquee needs it, so it is
+   * taken away for as long as the editor is open and given straight back in `geomEnd`.
+   */
+  try { map.boxZoom.disable(); } catch (e) {}
   GEOM = {
     fid,
-    rings: JSON.parse(JSON.stringify(f)),   // deep copy: the source stays untouched until commit
+    kind: f.kind,
+    // deep copies: the source stays untouched until commit
+    rings: f.kind === "area" ? JSON.parse(JSON.stringify(f.rings)) : [],
+    point: f.kind === "point" ? f.point.slice() : null,
     history: [],
     future: [],
     snap: true,
     mode: "vertices",
     drag: null,
+    /**
+     * The selected vertices, as `"ri:ci"` keys (Olcay, 2026-08-15: *"select multiple points with
+     * lasso select or shift marquee select and move them at the same time and delete should delete
+     * them"*). A Set, so shift-toggling is O(1) and order never matters.
+     *
+     * Deliberately NOT part of the undo snapshot: it is what you have highlighted, not what the
+     * shape is. Undo clears it instead, because indices shift under a restore and a selection
+     * pointing at the wrong corners is worse than no selection.
+     */
+    sel: new Set(),
+    /** The marquee being dragged, in lng/lat: `{ a, b }`. */
+    band: null,
     /**
      * Which piece each ring belongs to, parallel to `rings`. Everything starts as piece 0 — one
      * feature, one piece, however many rings it arrived with — and `geomApplyCut` mints new ids.
@@ -2106,6 +2211,7 @@ function geomBegin(fid) {
 function geomSnap() {
   return {
     rings: JSON.parse(JSON.stringify(GEOM.rings)),
+    point: GEOM.point ? GEOM.point.slice() : null,
     pieceOf: GEOM.pieceOf.slice(),
     // The counter travels with the state, so undo rewinds it and redo replays it — otherwise a
     // split, an undo and another split would hand the same id to two different pieces.
@@ -2115,8 +2221,98 @@ function geomSnap() {
 
 function geomRestore(s) {
   GEOM.rings = JSON.parse(JSON.stringify(s.rings));
+  GEOM.point = s.point ? s.point.slice() : null;
   GEOM.pieceOf = s.pieceOf.slice();
   GEOM.nextPiece = s.nextPiece;
+  // Indices move under a restore, so a kept selection would highlight the wrong corners.
+  GEOM.sel.clear();
+}
+
+/* ── selection ─────────────────────────────────────────────────────────────── */
+
+const selKey = (ri, ci) => ri + ":" + ci;
+
+/**
+ * Any structural change CLEARS the selection rather than trying to carry it.
+ *
+ * Dropping only the out-of-range keys would be worse than useless: removing one corner shifts every
+ * later index down by one, so the surviving keys would still be *valid* and would now highlight
+ * the wrong corners — and the next drag would move corners the user never picked. Clearing is
+ * honest and takes one shift-drag to redo.
+ */
+function geomClearSel() {
+  if (GEOM && GEOM.sel) GEOM.sel.clear();
+}
+
+/**
+ * Everything inside the marquee. Screen space, because the marquee is a rectangle **on screen** —
+ * in lng/lat it would be a quadrilateral the moment the map is rotated.
+ */
+function geomSelectIn(a, b, additive) {
+  if (!GEOM || GEOM.kind !== "area") return;
+  const pa = map.project(a), pb = map.project(b);
+  const x0 = Math.min(pa.x, pb.x), x1 = Math.max(pa.x, pb.x);
+  const y0 = Math.min(pa.y, pb.y), y1 = Math.max(pa.y, pb.y);
+  if (!additive) GEOM.sel.clear();
+  GEOM.rings.forEach((ring, ri) => {
+    for (let ci = 0; ci < ring.length - 1; ci++) {
+      const p = map.project(ring[ci]);
+      if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) GEOM.sel.add(selKey(ri, ci));
+    }
+  });
+}
+
+/**
+ * Delete every selected vertex.
+ *
+ * ⚠️ **A ring cannot go below a triangle.** If the selection would take one under, the ring is left
+ * alone rather than mangled — unless the feature has other rings, in which case deleting the whole
+ * ring is what the user plainly meant. Whatever is refused is said out loud; silently keeping
+ * points somebody asked to delete is how you lose trust in a delete key.
+ */
+function geomDeleteSelected() {
+  if (!GEOM || GEOM.kind !== "area" || !GEOM.sel.size) return;
+  const byRing = new Map();
+  for (const k of GEOM.sel) {
+    const [ri, ci] = k.split(":").map(Number);
+    if (!byRing.has(ri)) byRing.set(ri, new Set());
+    byRing.get(ri).add(ci);
+  }
+  const rings = [], pieceOf = [];
+  let removed = 0, refused = 0;
+
+  GEOM.rings.forEach((ring, ri) => {
+    const keep = () => { rings.push(ring); pieceOf.push(GEOM.pieceOf[ri]); };
+    const drop = byRing.get(ri);
+    if (!drop) return keep();
+    const open = ring.slice(0, -1);
+    const kept = open.filter((_, ci) => !drop.has(ci));
+    if (kept.length >= 3) {                    // still a shape — take the corners out
+      removed += open.length - kept.length;
+      kept.push(kept[0].slice());
+      rings.push(kept); pieceOf.push(GEOM.pieceOf[ri]);
+    } else if (GEOM.rings.length > 1) {        // selecting all of one piece means delete the piece
+      removed += open.length;
+    } else {                                   // the last shape: refuse rather than mangle
+      refused++;
+      keep();
+    }
+  });
+
+  if (!removed) {
+    post("geomerror", { fid: GEOM.fid,
+      message: "a shape needs at least three corners — select fewer of them" });
+    return;
+  }
+  geomPush();
+  GEOM.rings = rings;
+  GEOM.pieceOf = pieceOf;
+  GEOM.sel.clear();
+  if (refused) {
+    post("geomerror", { fid: GEOM.fid,
+      message: "one shape kept its corners — three is the minimum" });
+  }
+  geomDraw(); post("geomstate", geomState());
 }
 
 /** How many separate pieces the feature is in. `1` is a feature nobody has split. */
@@ -2131,7 +2327,7 @@ function geomPieces() {
  */
 function geomCommit() {
   if (!GEOM) return;
-  post("geometry", { fid: GEOM.fid, rings: GEOM.rings, pieces: geomPieces() });
+  post("geometry", { fid: GEOM.fid, rings: GEOM.rings, point: GEOM.point, pieces: geomPieces() });
   GEOM.original = geomSnap();
   GEOM.history = [];
   GEOM.future = [];
@@ -2140,16 +2336,36 @@ function geomCommit() {
 
 function geomEnd(commit) {
   if (!GEOM) return;
-  if (commit) post("geometry", { fid: GEOM.fid, rings: GEOM.rings, pieces: geomPieces() });
+  if (commit) post("geometry", { fid: GEOM.fid, rings: GEOM.rings, point: GEOM.point, pieces: geomPieces() });
   GEOM = null;
+  // Shift+drag goes back to being MapLibre's box zoom — see geomBegin.
+  try { map.boxZoom.enable(); } catch (e) {}
   geomDraw();
   post("geomstate", { editing: false });
 }
 
-/** The feature's outer rings, from the vector source rather than the viewport. */
+/**
+ * What kind of thing is this feature, and where is it?
+ *
+ * `{ kind: "area", rings }` or `{ kind: "point", point }`, or `null` if the floor has not loaded
+ * it. **A great many POIs are points** (Olcay, 2026-08-15: *"if the geometry is point - there is no
+ * way to reshape it"*) — a point has no outline to reshape, but it can certainly be moved, and
+ * before this it could not even be opened without throwing.
+ *
+ * Rings win when a feature somehow has both: the outline is the editable thing.
+ */
 function geomFind(fid) {
-  const rings = featureRings(fid);
-  return rings.length ? rings : null;
+  const rings = [];
+  let point = null;
+  for (const f of featuresWithFid(fid)) {
+    const g = f.geometry;
+    if (g.type === "Point") { if (!point) point = g.coordinates.slice(); }
+    else if (g.type === "MultiPoint") { if (!point && g.coordinates[0]) point = g.coordinates[0].slice(); }
+    else rings.push(...ringsOuter(f));
+  }
+  if (rings.length) return { kind: "area", rings };
+  if (point) return { kind: "point", point };
+  return null;
 }
 
 function geomState() {
@@ -2163,6 +2379,9 @@ function geomState() {
         pieces: geomPieces(),
         // Has the first click of a cut landed? The toolbar says what the next click will do.
         cutting: GEOM.mode === "split" && !!GEOM.cutA,
+        // A point has no outline: the toolbar drops every tool that would be a lie on one.
+        kind: GEOM.kind,
+        selected: GEOM.sel.size,
       }
     : { editing: false };
 }
@@ -2213,6 +2432,7 @@ function geomAllPoints() {
 }
 
 function geomCentroid() {
+  if (GEOM.kind === "point") return GEOM.point.slice();
   let x = 0, y = 0, n = 0;
   GEOM.rings.forEach(r => r.forEach(c => { x += c[0]; y += c[1]; n++; }));
   return [x / n, y / n];
@@ -2558,6 +2778,7 @@ function geomApplyCut(a, b) {
   take(res.right, res.rightFrom);
   GEOM.rings = rings;
   GEOM.pieceOf = pieceOf;
+  geomClearSel();                    // the rings are wholly rebuilt; every old index is meaningless
   return true;
 }
 
@@ -2611,6 +2832,22 @@ function geomDraw() {
   while (l.firstChild) l.removeChild(l.firstChild);
   if (!GEOM || !map) return;
 
+  /**
+   * A point feature: one handle, and that is the whole of it. Drawn larger than a vertex handle
+   * because it IS the feature rather than a corner of one, and there is nothing else to aim at.
+   */
+  if (GEOM.kind === "point") {
+    if (!GEOM.point) return;
+    const p = map.project(GEOM.point);
+    l.appendChild(el("circle", { cx: p.x, cy: p.y, r: 13, fill: "#0b369c", "fill-opacity": .12 }));
+    const h = el("circle", { cx: p.x, cy: p.y, r: HANDLE_R + 2, fill: "#fff",
+                             stroke: "#0b369c", "stroke-width": 2.5, class: "geom-pt" });
+    h.setAttribute("style", "pointer-events:auto;cursor:grab");
+    h.addEventListener("mousedown", ev => { ev.stopPropagation(); geomDown(ev, { kind: "point" }); });
+    l.appendChild(h);
+    return;
+  }
+
   for (const [ri, ring] of GEOM.rings.entries()) {
     const d = ring.map((c, i) => { const p = map.project(c); return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ") + " Z";
     /**
@@ -2626,9 +2863,17 @@ function geomDraw() {
     l.appendChild(face);
 
     if (GEOM.mode === "vertices") {
-      // midpoints first, so a vertex always wins the click where the two overlap
-      ring.forEach((c, ci) => {
-        const n = ring[(ci + 1) % ring.length];
+      /**
+       * Midpoints first, so a vertex always wins the click where the two overlap.
+       *
+       * ⚠️ Over `slice(0, -1)`, not the whole ring. The closing point repeats the first, so the
+       * full loop produced a midpoint between `p0` and `p0` — a zero-length "edge" sitting exactly
+       * under the first handle, whose click inserted a vertex AFTER the closing point and tore the
+       * ring open. Its neighbour is `ring[ci + 1]`, which for the last real vertex is the closing
+       * point, i.e. the first — exactly the edge that wraps.
+       */
+      ring.slice(0, -1).forEach((c, ci) => {
+        const n = ring[ci + 1];
         const a = map.project(c), b = map.project(n);
         const m = el("circle", { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, r: 3.5,
                                  fill: "#fff", stroke: "#0b369c", "stroke-width": 1.5, class: "geom-mid" });
@@ -2636,20 +2881,46 @@ function geomDraw() {
         m.addEventListener("mousedown", ev => { ev.stopPropagation(); geomAddVertex(ri, ci); });
         l.appendChild(m);
       });
-      ring.forEach((c, ci) => {
+      // The closing point is the first one again — drawing a handle on it would put two handles on
+      // top of each other, and dragging the wrong one would tear the ring open.
+      ring.slice(0, -1).forEach((c, ci) => {
         const p = map.project(c);
-        const h = el("circle", { cx: p.x, cy: p.y, r: HANDLE_R, fill: "#fff",
+        const on = GEOM.sel.has(selKey(ri, ci));
+        // A selected corner is FILLED. Hollow-vs-hollow-with-a-thicker-ring is not a difference you
+        // can see across twenty handles at a glance, and the whole point of a marquee is the glance.
+        const h = el("circle", { cx: p.x, cy: p.y, r: on ? HANDLE_R + 1 : HANDLE_R,
+                                 fill: on ? "#0b369c" : "#fff",
                                  stroke: "#0b369c", "stroke-width": 2, class: "geom-vx" });
         h.setAttribute("style", "pointer-events:auto;cursor:grab");
         h.addEventListener("mousedown", ev => {
           ev.stopPropagation();
           // alt-click removes, which is the convention every editor already taught people
           if (ev.altKey) return geomRemoveVertex(ri, ci);
+          const key = selKey(ri, ci);
+          if (ev.shiftKey) {                       // shift-click toggles, and never starts a drag
+            if (GEOM.sel.has(key)) GEOM.sel.delete(key); else GEOM.sel.add(key);
+            geomDraw(); post("geomstate", geomState());
+            return;
+          }
+          // Dragging an unselected corner is a fresh single selection; dragging one that is
+          // already selected takes the whole set with it.
+          if (!GEOM.sel.has(key)) { GEOM.sel.clear(); GEOM.sel.add(key); geomDraw(); }
           geomDown(ev, { kind: "vertex", ri, ci });
         });
         l.appendChild(h);
       });
     }
+  }
+
+  // The marquee, while it is being dragged.
+  if (GEOM.band) {
+    const a = map.project(GEOM.band.a), b = map.project(GEOM.band.b);
+    l.appendChild(el("rect", {
+      x: Math.min(a.x, b.x), y: Math.min(a.y, b.y),
+      width: Math.abs(b.x - a.x), height: Math.abs(b.y - a.y),
+      fill: "#0b369c", "fill-opacity": .08,
+      stroke: "#0b369c", "stroke-width": 1, "stroke-dasharray": "4 3",
+    }));
   }
 
   /**
@@ -2676,6 +2947,7 @@ function geomDraw() {
 
 function geomAddVertex(ri, ci) {
   geomPush();
+  geomClearSel();                              // the insert reindexes everything after it
   const ring = GEOM.rings[ri];
   const a = ring[ci], b = ring[(ci + 1) % ring.length];
   ring.splice(ci + 1, 0, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
@@ -2686,6 +2958,7 @@ function geomRemoveVertex(ri, ci) {
   if (GEOM.rings[ri].length <= 4) return;      // a ring needs three distinct points, plus closure
   geomPush();
   GEOM.rings[ri].splice(ci, 1);
+  geomClearSel();                              // indices below this one have all shifted
   geomDraw(); post("geomstate", geomState());
 }
 
@@ -2706,10 +2979,39 @@ function geomDown(ev, what) {
     if (!GEOM) return;
     if (!moved) { moved = true; GEOM.history.push(before); GEOM.future = []; }
     const pt = { x: e.clientX, y: e.clientY };
-    if (what.kind === "vertex") {
+    if (what.kind === "point") {
       const snapped = geomSnapTarget(pt);
       const q = snapped ? { lng: snapped[0], lat: snapped[1] } : map.unproject([pt.x, pt.y]);
+      GEOM.point = [q.lng, q.lat];
+    } else if (what.kind === "vertex") {
+      const snapped = geomSnapTarget(pt);
+      const q = snapped ? { lng: snapped[0], lat: snapped[1] } : map.unproject([pt.x, pt.y]);
+      /**
+       * **The dragged corner goes where the pointer is; the rest of the selection follows by the
+       * same screen offset.** Not "every selected corner to the pointer", which would collapse
+       * them all onto one spot — the selection keeps its shape and simply moves.
+       *
+       * Snapping still applies to the corner under the cursor only. Snapping each of them to its
+       * own nearest neighbour would distort the group into whatever happened to be nearby.
+       */
+      const before = GEOM.rings[what.ri][what.ci];
+      const p0 = map.project(before), p1 = map.project([q.lng, q.lat]);
+      const dx = p1.x - p0.x, dy = p1.y - p0.y;
+      const others = [...GEOM.sel].filter(k => k !== selKey(what.ri, what.ci));
       GEOM.rings[what.ri][what.ci] = [q.lng, q.lat];
+      for (const k of others) {
+        const [ri, ci] = k.split(":").map(Number);
+        const ring = GEOM.rings[ri];
+        if (!ring || ci >= ring.length - 1) continue;
+        const p = map.project(ring[ci]);
+        const moved = map.unproject([p.x + dx, p.y + dy]);
+        ring[ci] = [moved.lng, moved.lat];
+      }
+      // Every ring closes on its own first point, so a moved first corner moves the closer too.
+      for (const ri of new Set([...GEOM.sel].map(k => Number(k.split(":")[0])).concat(what.ri))) {
+        const ring = GEOM.rings[ri];
+        if (ring) ring[ring.length - 1] = ring[0].slice();
+      }
     } else {
       const dx = pt.x - start.x, dy = pt.y - start.y;
       start.x = pt.x; start.y = pt.y;

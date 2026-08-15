@@ -50,6 +50,16 @@ export interface GeomState {
   pieces?: number;
   /** The first click of a cut has landed and the second is awaited. */
   cutting?: boolean;
+  /**
+   * ⚠️ **`"point"` means there is no outline** (Olcay, 2026-08-15: *"if the geometry is point -
+   * there is no way to reshape it"*). A great many POIs are a single coordinate: you can move it,
+   * and undo moving it, and nothing else in this bar means anything — reshaping, splitting,
+   * straightening and snapping all need corners. The tools that cannot apply are not shown rather
+   * than shown disabled: a row of greyed-out buttons invites you to work out why.
+   */
+  kind?: "area" | "point";
+  /** How many corners are selected, for the marquee's own feedback. */
+  selected?: number;
 }
 
 export type GeomCommand =
@@ -359,10 +369,13 @@ export function GeometryToolbar({
   if (!state.editing) return null;
 
   const pieces = state.pieces ?? 1;
+  const isPoint = state.kind === "point";
+  const selected = state.selected ?? 0;
   /**
-   * The caption's three jobs, in priority order: a refusal outranks an instruction, because it is
-   * about the click you just made rather than the one you are about to; and an instruction
-   * outranks the piece count, because you are mid-task.
+   * The caption, in priority order. A refusal outranks everything, because it is about the click
+   * you just made rather than the one you are about to. Then the instruction for the mode you are
+   * in. Then a live selection, which is the thing most likely to be acted on next. The piece count
+   * comes last: it is a standing fact, not a prompt.
    */
   const caption = notice
     ? { text: notice, bad: true }
@@ -373,9 +386,26 @@ export function GeometryToolbar({
             : "Click one side of the cut · Esc to cancel",
           bad: false,
         }
-      : pieces > 1
-        ? { text: `Split into ${pieces} pieces`, bad: false }
-        : null;
+      : selected > 0
+        ? {
+            // Short enough to stay on one line: the caption sits ABOVE the bar, and a wrapped one
+            // grows upward into the map. Dragging the selection is discoverable by trying it;
+            // Delete is not, so Delete is what the line spends its words on.
+            text: `${selected} corner${selected === 1 ? "" : "s"} selected · Delete to remove`,
+            bad: false,
+          }
+        : isPoint
+          ? {
+              text: "This feature is a single point — drag it to move it",
+              bad: false,
+            }
+          : pieces > 1
+            ? { text: `Split into ${pieces} pieces`, bad: false }
+            : // Only while reshaping, because that is the only mode where corners are the subject.
+              // An always-on hint would be permanent chrome for something you learn once.
+              state.mode === "vertices"
+              ? { text: "Shift-drag to select corners", bad: false }
+              : null;
 
   return (
     <div
@@ -432,93 +462,107 @@ export function GeometryToolbar({
           overflowX: "auto",
         }}
       >
-        {/* Mode — the three that are alternatives, on their own track. */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "stretch",
-            gap: 2,
-            padding: 3,
-            borderRadius: 9,
-            background: "var(--primitives-colors-background-100, #f2f3f5)",
-          }}
-        >
-          {/**
-           * ⚠️ **"Points" is gone** (Olcay, 2026-08-15: *"Points doesn't mean much"*). It named the
-           * thing you manipulate rather than the thing you achieve — and it named it in the
-           * editor's vocabulary, not the reviewer's. Nobody opens a floor plan wanting points; they
-           * want the room to be the right shape. **Reshape** is the job; the points are how.
-           *
-           * Its two neighbours were already verbs, so it was also the odd one out in its own group.
-           */}
-          <Tile
-            icon={<Reshape />}
-            label="Reshape"
-            title="Drag a corner to move it · click a midpoint to add one · Alt-click to remove"
-            on={state.mode === "vertices"}
-            onClick={() => onCommand({ cmd: "mode", mode: "vertices" })}
-          />
-          <Tile
-            icon={<Move />}
-            label="Move"
-            title="Drag the shape to move the whole thing"
-            on={state.mode === "move"}
-            onClick={() => onCommand({ cmd: "mode", mode: "move" })}
-          />
-          <Tile
-            icon={<Split />}
-            label="Split"
-            title="Click twice on the map to cut the shape in two · Escape to cancel"
-            on={state.mode === "split"}
-            onClick={() => onCommand({ cmd: "split" })}
-          />
-        </div>
+        {/* Mode — the three that are alternatives, on their own track. A point has no alternatives:
+            there is one coordinate and you drag it, so the whole track goes. */}
+        {!isPoint && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "stretch",
+              gap: 2,
+              padding: 3,
+              borderRadius: 9,
+              background: "var(--primitives-colors-background-100, #f2f3f5)",
+            }}
+          >
+            {/**
+             * ⚠️ **"Points" is gone** (Olcay, 2026-08-15: *"Points doesn't mean much"*). It named the
+             * thing you manipulate rather than the thing you achieve — and it named it in the
+             * editor's vocabulary, not the reviewer's. Nobody opens a floor plan wanting points; they
+             * want the room to be the right shape. **Reshape** is the job; the points are how.
+             *
+             * Its two neighbours were already verbs, so it was also the odd one out in its own group.
+             */}
+            <Tile
+              icon={<Reshape />}
+              label="Reshape"
+              title="Drag a corner to move it · click a midpoint to add one · Alt-click to remove"
+              on={state.mode === "vertices"}
+              onClick={() => onCommand({ cmd: "mode", mode: "vertices" })}
+            />
+            <Tile
+              icon={<Move />}
+              label="Move"
+              title="Drag the shape to move the whole thing"
+              on={state.mode === "move"}
+              onClick={() => onCommand({ cmd: "mode", mode: "move" })}
+            />
+            <Tile
+              icon={<Split />}
+              label="Split"
+              title="Click twice on the map to cut the shape in two · Escape to cancel"
+              on={state.mode === "split"}
+              onClick={() => onCommand({ cmd: "split" })}
+            />
+          </div>
+        )}
 
-        <Sep />
+        {!isPoint && <Sep />}
 
         {/* Transform — whole-shape, and stepped rather than dragged: a fixed increment is
             repeatable, and repeatability is what you want when squaring a room up to its
-            neighbours. The labels carry the step, which used to be discoverable only by pressing. */}
-        <Group>
-          <Tile
-            icon={<RotateLeft />}
-            label="15°"
-            title="Rotate 15° anticlockwise"
-            onClick={() => onCommand({ cmd: "rotate", deg: -15 })}
-          />
-          <Tile
-            icon={<RotateRight />}
-            label="15°"
-            title="Rotate 15° clockwise"
-            onClick={() => onCommand({ cmd: "rotate", deg: 15 })}
-          />
-          <Tile
-            icon={<ScaleDown />}
-            label="5%"
-            title="Scale down 5%"
-            onClick={() => onCommand({ cmd: "scale", k: 1 / 1.05 })}
-          />
-          <Tile
-            icon={<ScaleUp />}
-            label="5%"
-            title="Scale up 5%"
-            onClick={() => onCommand({ cmd: "scale", k: 1.05 })}
-          />
-        </Group>
+            neighbours. The labels carry the step, which used to be discoverable only by pressing.
+            Rotating or scaling a single coordinate about itself is a no-op, so a point skips it. */}
+        {!isPoint && (
+          <Group>
+            <Tile
+              icon={<RotateLeft />}
+              label="15°"
+              title="Rotate 15° anticlockwise"
+              onClick={() => onCommand({ cmd: "rotate", deg: -15 })}
+            />
+            <Tile
+              icon={<RotateRight />}
+              label="15°"
+              title="Rotate 15° clockwise"
+              onClick={() => onCommand({ cmd: "rotate", deg: 15 })}
+            />
+            <Tile
+              icon={<ScaleDown />}
+              label="5%"
+              title="Scale down 5%"
+              onClick={() => onCommand({ cmd: "scale", k: 1 / 1.05 })}
+            />
+            <Tile
+              icon={<ScaleUp />}
+              label="5%"
+              title="Scale up 5%"
+              onClick={() => onCommand({ cmd: "scale", k: 1.05 })}
+            />
+          </Group>
+        )}
 
-        <Sep />
+        {!isPoint && <Sep />}
 
         <Group>
-          <Tile
-            icon={<Straighten />}
-            label="Straighten"
-            title="Drop points that already sit on the line between their neighbours"
-            onClick={() => onCommand({ cmd: "straighten" })}
-          />
+          {/* Straighten needs corners to drop; a point has none. Snap survives, because a point
+              being dragged onto the corner of a room is exactly when you want it. */}
+          {!isPoint && (
+            <Tile
+              icon={<Straighten />}
+              label="Straighten"
+              title="Drop points that already sit on the line between their neighbours"
+              onClick={() => onCommand({ cmd: "straighten" })}
+            />
+          )}
           <Tile
             icon={<Snap />}
             label="Snap"
-            title="Snap points to nearby corners of other features"
+            title={
+              isPoint
+                ? "Snap this point to nearby corners of other features"
+                : "Snap points to nearby corners of other features"
+            }
             on={!!state.snap}
             onClick={() => onCommand({ cmd: "snap" })}
           />
