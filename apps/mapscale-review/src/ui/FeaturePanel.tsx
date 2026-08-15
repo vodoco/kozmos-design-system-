@@ -609,7 +609,7 @@ export function FeaturePanel({
    * Told whenever the panel gains or loses unsaved changes — the app guards feature switches with
    * it (Olcay: *"warn the user if they changed a POI then tried to select some other POI"*).
    */
-  onDirtyChange?: (dirty: boolean) => void;
+  onDirtyChange?: (dirty: boolean, canSave: boolean) => void;
   /**
    * The shape is edited on the map, but committed HERE — geometry and properties are one edit, so
    * they share one Update and one Cancel rather than each growing their own pair.
@@ -709,11 +709,18 @@ export function FeaturePanel({
    * save a reshaped outline would be to also change a property, which is absurd.
    */
   const anyDirty = dirty || !!geometryDirty;
+  /**
+   * ⚠️ **Exactly the condition on the Update button**, and it has to be, because *Save changes* in
+   * the unsaved-work overlay runs the same `save()` from outside the panel. Without this the
+   * overlay could save a feature with an empty **Name** — a required field the button itself
+   * refuses — so the one route enforced the rule and the other quietly walked around it.
+   */
+  const canSave = anyDirty && !!String(draft.name ?? "").trim();
   useEffect(() => {
-    onDirtyChange?.(anyDirty);
-  }, [anyDirty, onDirtyChange]);
+    onDirtyChange?.(anyDirty, canSave);
+  }, [anyDirty, canSave, onDirtyChange]);
   // Leaving the panel must not leave the app believing an edit is still open.
-  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false, false), [onDirtyChange]);
 
   const values = editing ? draft : p;
   const description = String(values.description ?? "");
@@ -803,8 +810,12 @@ export function FeaturePanel({
    */
   const saveRef = useRef(save);
   saveRef.current = save;
+  const canSaveRef = useRef(canSave);
+  canSaveRef.current = canSave;
   useEffect(() => {
-    if (saveSignal) saveRef.current();
+    // Guarded, not assumed: the screen only offers *Save changes* when it can be done, but the
+    // panel owns the rule and must not rely on the caller to have checked it.
+    if (saveSignal && canSaveRef.current) saveRef.current();
   }, [saveSignal]);
 
   return (
@@ -1257,11 +1268,7 @@ export function FeaturePanel({
             >
               Cancel
             </Button>
-            <Button
-              style={{ flex: 1 }}
-              onClick={save}
-              disabled={!anyDirty || !String(draft.name ?? "").trim()}
-            >
+            <Button style={{ flex: 1 }} onClick={save} disabled={!canSave}>
               Update
             </Button>
           </div>

@@ -1917,8 +1917,15 @@ export function MapContent({
    * is the destructive one, so it is what the user has to ask for.
    */
   const dirtyRef = useRef(false);
-  const onDirtyChange = useCallback((d: boolean) => {
+  /**
+   * Whether the panel's edit could actually be saved right now — it cannot, for instance, with the
+   * required **Name** emptied. State rather than a ref because the overlay reads it while
+   * rendering, to decide whether *Save changes* is an honest thing to offer at all.
+   */
+  const [canSave, setCanSave] = useState(false);
+  const onDirtyChange = useCallback((d: boolean, can: boolean) => {
     dirtyRef.current = d;
+    setCanSave(can);
   }, []);
   /**
    * Closing the panel clears the selection itself — the panel IS the selection made visible.
@@ -2617,20 +2624,29 @@ export function MapContent({
            * **Save changes**, not Discard: saving is the safe answer, and the destructive one
            * should never be the button that has focus when you hit Enter.
            */}
+          {/**
+           * ⚠️ **When the edit cannot be saved, saving is not offered.** Emptying the required Name
+           * disables Update, and *Save changes* runs the very same `save()` — so offering it here
+           * would let the overlay walk around a rule the button enforces. Discard becomes the
+           * primary in that case, and the copy says why rather than leaving a button mysteriously
+           * missing.
+           */}
           <ConfirmOverlay
             open={!!pendingPick}
             tone="warning"
             title="You have unsaved changes"
-            confirmLabel="Save changes"
-            altLabel="Discard changes"
+            confirmLabel={canSave ? "Save changes" : "Discard changes"}
+            altLabel={canSave ? "Discard changes" : undefined}
             cancelLabel="Keep editing"
-            onConfirm={saveAndContinue}
-            onAlt={discardAndContinue}
+            onConfirm={canSave ? saveAndContinue : discardAndContinue}
+            onAlt={canSave ? discardAndContinue : undefined}
             onCancel={() => setPendingPick(null)}
           >
-            {pendingPick?.kind === "close"
-              ? "This feature has edits you have not saved. Closing will lose them."
-              : "This feature has edits you have not saved. Opening another one will lose them."}
+            {!canSave
+              ? "This feature has edits that cannot be saved — it needs a name. Go back and give it one, or discard the changes."
+              : pendingPick?.kind === "close"
+                ? "This feature has edits you have not saved. Closing will lose them."
+                : "This feature has edits you have not saved. Opening another one will lose them."}
           </ConfirmOverlay>
           <PointrMap
             changes={mapFlagMarks}
