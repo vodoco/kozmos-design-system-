@@ -143,6 +143,11 @@ const PointrMap = forwardRef<
     }[];
     /** Features other people currently have open in the editor, so the map can say so. */
     editing?: { fid: string; who: string; colour: string }[];
+    /** Geometry-editor commands, and the state it reports back — see ui/GeometryToolbar. */
+    geomCommand?: { seq: number; body: Record<string, unknown> } | null;
+    onGeomState?: (s: Record<string, unknown>) => void;
+    /** A committed outline, in lng/lat rings. Local to the prototype, like every other edit. */
+    onGeometry?: (fid: string, rings: number[][][]) => void;
     /**
      * Screen space to keep clear on the RIGHT when framing a focused feature — the panel's own
      * width. The map is not resized; the feature is simply framed in the part of it you can still
@@ -171,6 +176,9 @@ const PointrMap = forwardRef<
     onCursor,
     peers,
     editing,
+    geomCommand,
+    onGeomState,
+    onGeometry,
     focusPadRight,
     target,
   },
@@ -237,6 +245,18 @@ const PointrMap = forwardRef<
       "*",
     );
   }, [peers]);
+
+  /**
+   * Commands carry a `seq` so the same one twice — two taps of Rotate — still fires. Without it the
+   * prop is identical and the effect never re-runs, which is the same trap `focusNonce` exists for.
+   */
+  useEffect(() => {
+    if (!geomCommand) return;
+    ref.current?.contentWindow?.postMessage(
+      { type: "geom", ...geomCommand.body },
+      "*",
+    );
+  }, [geomCommand?.seq]);
 
   // Its own effect: who is editing changes when a panel opens, not 20 times a second like a cursor.
   useEffect(() => {
@@ -309,6 +329,15 @@ const PointrMap = forwardRef<
         if (ev.data.features?.length) onFeatures?.(ev.data.features);
         if (ev.data.types?.length && ev.data.forLevel)
           onTypes?.(ev.data.forLevel, ev.data.types);
+      } else if (ev.data.type === "geomstate") {
+        if (ev.source === ref.current?.contentWindow) onGeomState?.(ev.data);
+      } else if (ev.data.type === "geometry") {
+        if (
+          ev.source === ref.current?.contentWindow &&
+          ev.data.fid &&
+          ev.data.rings
+        )
+          onGeometry?.(ev.data.fid, ev.data.rings);
       } else if (ev.data.type === "cursor") {
         if (
           ev.source === ref.current?.contentWindow &&

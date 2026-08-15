@@ -92,7 +92,16 @@ const IDENTITY: { key: string; label: string }[] = [
   { key: "lvl", label: "Level index" },
 ];
 /** Handled by their own dedicated controls rather than as generic properties. */
-const RESERVED = new Set(["fid", "bid", "sid", "lvl", "name", "mainType", "subType", "mapPersonas"]);
+const RESERVED = new Set([
+  "fid",
+  "bid",
+  "sid",
+  "lvl",
+  "name",
+  "mainType",
+  "subType",
+  "mapPersonas",
+]);
 
 /**
  * ⚠️ **`@kozmos/icons` has no copy glyph** — the set is 35 icons and `copy-01` isn't among them,
@@ -101,9 +110,30 @@ const RESERVED = new Set(["fid", "bid", "sid", "lvl", "name", "mainType", "subTy
  */
 function CopyGlyph() {
   return (
-    <svg width={16} height={16} viewBox="0 0 16 16" aria-hidden focusable="false">
-      <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M10.5 3.5 H3.5 a1 1 0 0 0-1 1 V11" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <svg
+      width={16}
+      height={16}
+      viewBox="0 0 16 16"
+      aria-hidden
+      focusable="false"
+    >
+      <rect
+        x="5.5"
+        y="5.5"
+        width="8"
+        height="8"
+        rx="1.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <path
+        d="M10.5 3.5 H3.5 a1 1 0 0 0-1 1 V11"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -134,7 +164,9 @@ function ValueChip({ children, muted }: { children: string; muted?: boolean }) {
         padding: "4px 9px",
         borderRadius: 999,
         border: `1px ${muted ? "dashed" : "solid"} ${LINE}`,
-        background: muted ? "transparent" : "var(--primitives-colors-background-100)",
+        background: muted
+          ? "transparent"
+          : "var(--primitives-colors-background-100)",
         color: muted ? MUTED : INK,
         whiteSpace: "nowrap",
       }}
@@ -164,7 +196,9 @@ function DerivedSections({ values }: { values: Record<string, unknown> }) {
       const chips = toArray(v);
       if (chips.length) out.push({ key, def, chips });
     }
-    return out.sort((a, b) => segmentRank(a.def.segment) - segmentRank(b.def.segment));
+    return out.sort(
+      (a, b) => segmentRank(a.def.segment) - segmentRank(b.def.segment),
+    );
   }, [values]);
 
   if (!sections.length) return null;
@@ -172,7 +206,15 @@ function DerivedSections({ values }: { values: Record<string, unknown> }) {
     <>
       {sections.map((s) => (
         <div key={s.key} style={{ marginTop: 16 }}>
-          <Text style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: INK, marginBottom: 6 }}>
+          <Text
+            style={{
+              display: "block",
+              fontSize: 12.5,
+              fontWeight: 600,
+              color: INK,
+              marginBottom: 6,
+            }}
+          >
             {propertyLabel(s.key)}
           </Text>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -205,18 +247,48 @@ function PropertyField({
   const chips = toArray(value);
 
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 12 }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 8,
+        marginTop: 12,
+      }}
+    >
       <div style={{ flex: 1, minWidth: 0 }}>
         {def.valueType === "boolean" ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0" }}>
-            <Switch checked={isTruthy(value)} onCheckedChange={(c: boolean) => onChange(c)} id={`f-${def.key}`} />
-            <label htmlFor={`f-${def.key}`} style={{ fontSize: 13, color: INK, cursor: "pointer" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "6px 0",
+            }}
+          >
+            <Switch
+              checked={isTruthy(value)}
+              onCheckedChange={(c: boolean) => onChange(c)}
+              id={`f-${def.key}`}
+            />
+            <label
+              htmlFor={`f-${def.key}`}
+              style={{ fontSize: 13, color: INK, cursor: "pointer" }}
+            >
               {label}
             </label>
           </div>
         ) : def.valueType === "text" && def.inputType === "textArea" ? (
           <div>
-            <Text style={{ display: "block", fontSize: 11, color: MUTED, marginBottom: 4 }}>{label}</Text>
+            <Text
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: MUTED,
+                marginBottom: 4,
+              }}
+            >
+              {label}
+            </Text>
             <textarea
               value={String(value ?? "")}
               onChange={(e) => onChange(e.target.value)}
@@ -239,7 +311,16 @@ function PropertyField({
           /* A closed list: chips you have, plus a picker. `array` takes many, `enum` takes one —
              which is the only difference between them and the reason both are kept. */
           <div>
-            <Text style={{ display: "block", fontSize: 11, color: MUTED, marginBottom: 4 }}>{label}</Text>
+            <Text
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: MUTED,
+                marginBottom: 4,
+              }}
+            >
+              {label}
+            </Text>
             <div
               style={{
                 display: "flex",
@@ -270,7 +351,14 @@ function PropertyField({
                   <button
                     onClick={() => onChange(chips.filter((x) => x !== c))}
                     aria-label={`Remove ${c}`}
-                    style={{ border: "none", background: "none", cursor: "pointer", color: MUTED, lineHeight: 1, padding: 2 }}
+                    style={{
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      color: MUTED,
+                      lineHeight: 1,
+                      padding: 2,
+                    }}
                   >
                     ✕
                   </button>
@@ -292,14 +380,24 @@ function PropertyField({
                     + Add
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="start" style={{ width: 260, padding: 4, maxHeight: 260, overflow: "auto" }}>
+                <PopoverContent
+                  align="start"
+                  style={{
+                    width: 260,
+                    padding: 4,
+                    maxHeight: 260,
+                    overflow: "auto",
+                  }}
+                >
                   {def.options
                     .filter((o) => !chips.includes(o))
                     .map((o) => (
                       <button
                         key={o}
                         onClick={() => {
-                          onChange(def.valueType === "enum" ? [o] : [...chips, o]);
+                          onChange(
+                            def.valueType === "enum" ? [o] : [...chips, o],
+                          );
                           setPick(false);
                         }}
                         style={{
@@ -356,10 +454,19 @@ function PropertyField({
  * i.e. what the product expects a feature of this type to carry. Everything else the vocabulary
  * knows sits under "Others", which is what stops the split from being a dead end.
  */
-function AddFieldPicker({ suggested, others, onAdd }: { suggested: string[]; others: string[]; onAdd: (key: string) => void }) {
+function AddFieldPicker({
+  suggested,
+  others,
+  onAdd,
+}: {
+  suggested: string[];
+  others: string[];
+  onAdd: (key: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const match = (k: string) => !q || propertyLabel(k).toLowerCase().includes(q.toLowerCase());
+  const match = (k: string) =>
+    !q || propertyLabel(k).toLowerCase().includes(q.toLowerCase());
   const s = suggested.filter(match);
   const o = others.filter(match);
 
@@ -387,8 +494,12 @@ function AddFieldPicker({ suggested, others, onAdd }: { suggested: string[]; oth
           borderRadius: 6,
         }}
       >
-        <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: INK }}>{propertyLabel(k)}</span>
-        <span style={{ flex: "0 0 auto", fontSize: 11, color: MUTED }}>{TYPE_LABEL[def.valueType]}</span>
+        <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: INK }}>
+          {propertyLabel(k)}
+        </span>
+        <span style={{ flex: "0 0 auto", fontSize: 11, color: MUTED }}>
+          {TYPE_LABEL[def.valueType]}
+        </span>
       </button>
     );
   };
@@ -413,13 +524,27 @@ function AddFieldPicker({ suggested, others, onAdd }: { suggested: string[]; oth
           <Icon name="plus" /> Add additional field
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" style={{ width: 300, padding: 6, maxHeight: 320, overflow: "auto" }}>
+      <PopoverContent
+        align="start"
+        style={{ width: 300, padding: 6, maxHeight: 320, overflow: "auto" }}
+      >
         <div style={{ padding: 4 }}>
-          <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search properties" />
+          <Input
+            placeholder="Search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label="Search properties"
+          />
         </div>
         {s.length > 0 && (
           <>
-            <div style={{ padding: "6px 10px", background: "var(--primitives-colors-background-100)", borderRadius: 4 }}>
+            <div
+              style={{
+                padding: "6px 10px",
+                background: "var(--primitives-colors-background-100)",
+                borderRadius: 4,
+              }}
+            >
               <SectionTitle>Suggested</SectionTitle>
             </div>
             {s.map(row)}
@@ -427,14 +552,28 @@ function AddFieldPicker({ suggested, others, onAdd }: { suggested: string[]; oth
         )}
         {o.length > 0 && (
           <>
-            <div style={{ padding: "6px 10px", marginTop: 4, background: "var(--primitives-colors-background-100)", borderRadius: 4 }}>
+            <div
+              style={{
+                padding: "6px 10px",
+                marginTop: 4,
+                background: "var(--primitives-colors-background-100)",
+                borderRadius: 4,
+              }}
+            >
               <SectionTitle>Others</SectionTitle>
             </div>
             {o.map(row)}
           </>
         )}
         {!s.length && !o.length && (
-          <Text style={{ display: "block", padding: 10, fontSize: 12, color: MUTED }}>
+          <Text
+            style={{
+              display: "block",
+              padding: 10,
+              fontSize: 12,
+              color: MUTED,
+            }}
+          >
             Nothing matches “{q}”.
           </Text>
         )}
@@ -450,6 +589,7 @@ export function FeaturePanel({
   flagShared,
   flagNote,
   onDirtyChange,
+  onEditGeometry,
   subTypeOptions,
   onEdited,
   onClose,
@@ -466,6 +606,11 @@ export function FeaturePanel({
    * it (Olcay: *"warn the user if they changed a POI then tried to select some other POI"*).
    */
   onDirtyChange?: (dirty: boolean) => void;
+  /**
+   * Start editing this feature's outline on the map. Omitted when there is nothing to edit — the
+   * geometry lives in the map page, so the panel only opens the door.
+   */
+  onEditGeometry?: () => void;
   subTypeOptions?: string[];
   /** An edit was saved. Carries the flag-clearing consequence (§18a) up. D3: nothing persists. */
   onEdited?: (next: Record<string, unknown>) => void;
@@ -502,7 +647,9 @@ export function FeaturePanel({
     setEditing(true);
     setDraft({ ...p });
     setFields(Object.keys(p).filter((k) => !RESERVED.has(k)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Keyed on `p.fid` alone: re-seeding on every property change would wipe a half-typed
+    // edit. (No eslint-disable — this config has no `react-hooks/exhaustive-deps` rule, so
+    // the directive is itself an error and fails the pre-commit hook.)
   }, [p.fid]);
 
   /**
@@ -514,25 +661,42 @@ export function FeaturePanel({
    */
   const dirty = useMemo(() => {
     const original = Object.keys(p).filter((k) => !RESERVED.has(k));
-    if (fields.length !== original.length || fields.some((f) => !original.includes(f))) return true;
+    if (
+      fields.length !== original.length ||
+      fields.some((f) => !original.includes(f))
+    )
+      return true;
     const keys = new Set([...Object.keys(p), ...Object.keys(draft)]);
-    for (const k of keys) if (JSON.stringify(p[k]) !== JSON.stringify(draft[k])) return true;
+    for (const k of keys)
+      if (JSON.stringify(p[k]) !== JSON.stringify(draft[k])) return true;
     return false;
   }, [p, draft, fields]);
-  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
   // Leaving the panel must not leave the app believing an edit is still open.
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
   const values = editing ? draft : p;
   const description = String(values.description ?? "");
-  const options = subTypeOptions?.length ? subTypeOptions : subType ? [subType] : [];
+  const options = subTypeOptions?.length
+    ? subTypeOptions
+    : subType
+      ? [subType]
+      : [];
 
   /** Not-yet-added properties, split the way the picker shows them. */
   const canAdd = useMemo(() => {
     const have = new Set(fields);
     const sug = (suggested ?? []).filter((k) => !have.has(k));
-    const others = ["description", "websiteUrl", "hasAssistance", "serviceTypes", "openingHours", "priceRange"]
-      .filter((k) => !have.has(k) && !sug.includes(k));
+    const others = [
+      "description",
+      "websiteUrl",
+      "hasAssistance",
+      "serviceTypes",
+      "openingHours",
+      "priceRange",
+    ].filter((k) => !have.has(k) && !sug.includes(k));
     return { sug, others };
   }, [fields, suggested]);
 
@@ -542,9 +706,14 @@ export function FeaturePanel({
     for (const [k, v] of Object.entries(values)) {
       if (RESERVED.has(k)) continue;
       const def = propertyDef(k);
-      if (def.valueType === "boolean" && isTruthy(v)) out.push(propertyLabel(k));
+      if (def.valueType === "boolean" && isTruthy(v))
+        out.push(propertyLabel(k));
       else if (def.valueType === "integer" && v != null && v !== "")
-        out.push(k === "priceRange" ? "$".repeat(Math.max(1, Math.min(4, Number(v) || 1))) : `${propertyLabel(k)} ${v}`);
+        out.push(
+          k === "priceRange"
+            ? "$".repeat(Math.max(1, Math.min(4, Number(v) || 1)))
+            : `${propertyLabel(k)} ${v}`,
+        );
     }
     return out;
   }, [values]);
@@ -552,15 +721,25 @@ export function FeaturePanel({
   const links = useMemo(
     () =>
       Object.entries(values)
-        .filter(([k, v]) => !RESERVED.has(k) && propertyDef(k).valueType === "hyperlink" && v)
-        .map(([k, v]) => ({ key: k, label: propertyDef(k).actionName ?? propertyLabel(k), href: String(v) })),
+        .filter(
+          ([k, v]) =>
+            !RESERVED.has(k) && propertyDef(k).valueType === "hyperlink" && v,
+        )
+        .map(([k, v]) => ({
+          key: k,
+          label: propertyDef(k).actionName ?? propertyLabel(k),
+          href: String(v),
+        })),
     [values],
   );
 
   const save = () => {
     setEditing(false);
     // Only the keys the editor owns; identity is never in the draft's gift.
-    const next: Record<string, unknown> = { name: draft.name ?? "", subType: draft.subType };
+    const next: Record<string, unknown> = {
+      name: draft.name ?? "",
+      subType: draft.subType,
+    };
     for (const k of fields) next[k] = draft[k];
     onEdited?.(next);
   };
@@ -584,19 +763,39 @@ export function FeaturePanel({
       <div style={{ padding: PANEL_PAD, flex: "0 0 auto" }}>
         <PanelHeader
           title={
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 2 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 8,
+                marginTop: 2,
+              }}
+            >
               <span style={{ flex: "0 0 auto", marginTop: 2 }}>{icon}</span>
               {/* Wraps, never truncates — a feature's name is the one thing here you can't
                   reconstruct from anything else. */}
-              <Text style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.3, color: "var(--primitives-colors-theme-900)", overflowWrap: "anywhere" }}>
-                {(editing ? String(draft.name ?? "") : name) || `Unnamed ${typeLabel(subType || mainType)}`}
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: 600,
+                  lineHeight: 1.3,
+                  color: "var(--primitives-colors-theme-900)",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {(editing ? String(draft.name ?? "") : name) ||
+                  `Unnamed ${typeLabel(subType || mainType)}`}
               </Text>
             </div>
           }
           subtitle={
             editing
               ? "You are editing this feature’s properties."
-              : [CLASS_LABEL[cls], category ? categoryLabel(category) : null, typeLabel(subType || mainType)]
+              : [
+                  CLASS_LABEL[cls],
+                  category ? categoryLabel(category) : null,
+                  typeLabel(subType || mainType),
+                ]
                   .filter(Boolean)
                   .join(" · ")
           }
@@ -607,18 +806,37 @@ export function FeaturePanel({
 
       <Separator />
 
-      <div style={{ overflow: "auto", flex: 1, minHeight: 0, padding: "14px 20px 16px" }}>
+      <div
+        style={{
+          overflow: "auto",
+          flex: 1,
+          minHeight: 0,
+          padding: "14px 20px 16px",
+        }}
+      >
         {/* A DS `Alert` in its default (neutral) variant, deliberately not `warning`: §3 reserves
             traffic-light for magnitude, and being flagged is something *you* did, not a size. */}
         {flagged && !editing && (
           <Alert style={{ padding: 12, marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <span style={{ flex: "0 0 auto", marginTop: 1, color: decisionInk("flag") }}>
+              <span
+                style={{
+                  flex: "0 0 auto",
+                  marginTop: 1,
+                  color: decisionInk("flag"),
+                }}
+              >
                 <DecisionGlyph kind="flag" size={16} />
               </span>
               <div style={{ minWidth: 0 }}>
-                <AlertTitle style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 2 }}>Flagged during review</AlertTitle>
-                <AlertDescription style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.45 }}>
+                <AlertTitle
+                  style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 2 }}
+                >
+                  Flagged during review
+                </AlertTitle>
+                <AlertDescription
+                  style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.45 }}
+                >
                   {flagShared
                     ? `A review flagged “${name}”, and ${flagShared} features on this floor share that name — so the flag may be about any of them. Editing clears it.`
                     : "Someone marked this to come back to. Editing this feature clears the flag."}
@@ -653,13 +871,28 @@ export function FeaturePanel({
             <SectionTitle>Details</SectionTitle>
 
             {description && (
-              <Text style={{ display: "block", fontSize: 13, lineHeight: 1.5, color: INK, marginTop: 8 }}>
+              <Text
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  lineHeight: 1.5,
+                  color: INK,
+                  marginTop: 8,
+                }}
+              >
                 {description}
               </Text>
             )}
 
             {links.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 6,
+                  marginTop: 10,
+                }}
+              >
                 {links.map((l) => (
                   <Button key={l.key} variant="outline" size="sm" asChild>
                     <a href={l.href} target="_blank" rel="noreferrer noopener">
@@ -671,7 +904,14 @@ export function FeaturePanel({
             )}
 
             {stats.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 6,
+                  marginTop: 10,
+                }}
+              >
                 {stats.map((s) => (
                   <ValueChip key={s}>{s}</ValueChip>
                 ))}
@@ -687,18 +927,30 @@ export function FeaturePanel({
               <div style={{ marginTop: 6 }}>
                 {suggested == null ? (
                   <Text style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>
-                    This type isn’t in the cached taxonomy, so what it should carry isn’t known here.
+                    This type isn’t in the cached taxonomy, so what it should
+                    carry isn’t known here.
                   </Text>
                 ) : suggested.length === 0 ? (
                   <Text style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>
-                    The taxonomy suggests no additional properties for this type.
+                    The taxonomy suggests no additional properties for this
+                    type.
                   </Text>
                 ) : (
                   <>
-                    <Text style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, display: "block", marginBottom: 8 }}>
-                      The taxonomy expects a {typeLabel(subType || mainType).toLowerCase()} to carry
-                      these. Values live in the content API, which this prototype doesn’t call — so
-                      the unfilled ones are named, not invented.
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: MUTED,
+                        lineHeight: 1.5,
+                        display: "block",
+                        marginBottom: 8,
+                      }}
+                    >
+                      The taxonomy expects a{" "}
+                      {typeLabel(subType || mainType).toLowerCase()} to carry
+                      these. Values live in the content API, which this
+                      prototype doesn’t call — so the unfilled ones are named,
+                      not invented.
                     </Text>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {suggested.map((s) => (
@@ -720,7 +972,16 @@ export function FeaturePanel({
                   <div key={f.key}>
                     {i > 0 && <Separator />}
                     <div style={{ padding: "8px 0" }}>
-                      <Text style={{ display: "block", fontSize: 11, lineHeight: "14px", color: MUTED }}>{f.label}</Text>
+                      <Text
+                        style={{
+                          display: "block",
+                          fontSize: 11,
+                          lineHeight: "14px",
+                          color: MUTED,
+                        }}
+                      >
+                        {f.label}
+                      </Text>
                       <Text
                         style={{
                           display: "block",
@@ -743,13 +1004,29 @@ export function FeaturePanel({
         ) : (
           /* ── editing: the dashboard's field editor ──────────────────────────── */
           <>
-            <Text style={{ display: "block", fontSize: 12.5, color: MUTED, marginBottom: 12 }}>
+            <Text
+              style={{
+                display: "block",
+                fontSize: 12.5,
+                color: MUTED,
+                marginBottom: 12,
+              }}
+            >
               Provide essential information below.
             </Text>
 
             {/* FID: read-only with a copy button, exactly as the real panel draws it. */}
             <div>
-              <Text style={{ display: "block", fontSize: 11, color: MUTED, marginBottom: 4 }}>FID</Text>
+              <Text
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  color: MUTED,
+                  marginBottom: 4,
+                }}
+              >
+                FID
+              </Text>
               <div
                 style={{
                   display: "flex",
@@ -761,7 +1038,15 @@ export function FeaturePanel({
                   background: "var(--primitives-colors-theme-0)",
                 }}
               >
-                <Text style={{ flex: 1, minWidth: 0, fontSize: 12, color: INK, overflowWrap: "anywhere" }}>
+                <Text
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    fontSize: 12,
+                    color: INK,
+                    overflowWrap: "anywhere",
+                  }}
+                >
                   {String(p.fid ?? "—")}
                 </Text>
                 <IconButton
@@ -769,7 +1054,9 @@ export function FeaturePanel({
                   size="sm"
                   aria-label="Copy FID"
                   title="Copy"
-                  onClick={() => navigator.clipboard?.writeText(String(p.fid ?? ""))}
+                  onClick={() =>
+                    navigator.clipboard?.writeText(String(p.fid ?? ""))
+                  }
                   style={{ flex: "0 0 auto" }}
                 >
                   <CopyGlyph />
@@ -780,11 +1067,23 @@ export function FeaturePanel({
             {/* Select type: the mainType is context, the subType is the value — the real panel's
                 anatomy, and it is right, because a feature's mainType is not a free choice. */}
             <div style={{ marginTop: 12 }}>
-              <Text style={{ display: "block", fontSize: 11, color: MUTED }}>Select type</Text>
-              <Text style={{ display: "block", fontSize: 11, color: MUTED, marginBottom: 4 }}>
+              <Text style={{ display: "block", fontSize: 11, color: MUTED }}>
+                Select type
+              </Text>
+              <Text
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  color: MUTED,
+                  marginBottom: 4,
+                }}
+              >
                 {typeLabel(mainType)}
               </Text>
-              <Select value={String(draft.subType ?? "")} onValueChange={(v) => setDraft((d) => ({ ...d, subType: v }))}>
+              <Select
+                value={String(draft.subType ?? "")}
+                onValueChange={(v) => setDraft((d) => ({ ...d, subType: v }))}
+              >
                 <SelectTrigger aria-label="Sub type">
                   <SelectValue placeholder="—" />
                 </SelectTrigger>
@@ -802,7 +1101,9 @@ export function FeaturePanel({
               <Input
                 label="Name *"
                 value={String(draft.name ?? "")}
-                onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, name: e.target.value }))
+                }
                 placeholder="Unnamed"
                 aria-label="Feature name"
               />
@@ -830,14 +1131,50 @@ export function FeaturePanel({
               others={canAdd.others}
               onAdd={(k) => {
                 setFields((f) => [...f, k]);
-                setDraft((d) => ({ ...d, [k]: propertyDef(k).valueType === "boolean" ? false : "" }));
+                setDraft((d) => ({
+                  ...d,
+                  [k]: propertyDef(k).valueType === "boolean" ? false : "",
+                }));
               }}
             />
 
-            <Text style={{ display: "block", fontSize: 11, color: MUTED, marginTop: 14 }}>* Required</Text>
+            {/*
+              **Geometry is edited on the map, not in the panel** — so this is a door, not a field.
+              A shape cannot be shown or manipulated in a 360px inspector, and the toolbar that
+              appears takes over the bottom of the map for exactly as long as you are drawing.
+            */}
+            {onEditGeometry && (
+              <Button
+                variant="outline"
+                onClick={onEditGeometry}
+                style={{ width: "100%", marginTop: 16 }}
+              >
+                Edit shape on the map
+              </Button>
+            )}
 
-            <Text style={{ display: "block", fontSize: 11, color: MUTED, lineHeight: 1.45, marginTop: 10 }}>
-              Edits are local to this prototype — nothing is written back to Pointr Cloud.
+            <Text
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: MUTED,
+                marginTop: 14,
+              }}
+            >
+              * Required
+            </Text>
+
+            <Text
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: MUTED,
+                lineHeight: 1.45,
+                marginTop: 10,
+              }}
+            >
+              Edits are local to this prototype — nothing is written back to
+              Pointr Cloud.
             </Text>
           </>
         )}
@@ -848,11 +1185,29 @@ export function FeaturePanel({
       {editing && (
         <>
           <Separator />
-          <div style={{ display: "flex", gap: 8, padding: "12px 20px", flex: "0 0 auto" }}>
-            <Button variant="outline" style={{ flex: 1 }} onClick={() => { setEditing(false); reset(); }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              padding: "12px 20px",
+              flex: "0 0 auto",
+            }}
+          >
+            <Button
+              variant="outline"
+              style={{ flex: 1 }}
+              onClick={() => {
+                setEditing(false);
+                reset();
+              }}
+            >
               Cancel
             </Button>
-            <Button style={{ flex: 1 }} onClick={save} disabled={!dirty || !String(draft.name ?? "").trim()}>
+            <Button
+              style={{ flex: 1 }}
+              onClick={save}
+              disabled={!dirty || !String(draft.name ?? "").trim()}
+            >
               Update
             </Button>
           </div>

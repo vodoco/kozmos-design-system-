@@ -20,6 +20,11 @@ import {
 import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import {
+  GeometryToolbar,
+  type GeomCommand,
+  type GeomState,
+} from "../ui/GeometryToolbar";
+import {
   getFollowRequest,
   followVersion,
   subscribeFollow,
@@ -2009,6 +2014,39 @@ export function MapContent({
     // presenceVersion is the dependency in spirit; the subscription above re-renders us
     [target, presenceVersion()],
   );
+  /**
+   * The geometry editor lives in the map page — it needs `project`/`unproject` on every mouse move,
+   * and round-tripping that through React would put a postMessage in the middle of a drag. This
+   * side owns only the toolbar and the state the map reports back.
+   */
+  const [geom, setGeom] = useState<GeomState>({ editing: false });
+  const [geomCommand, setGeomCommand] = useState<{
+    seq: number;
+    body: Record<string, unknown>;
+  } | null>(null);
+  const geomSeq = useRef(0);
+  const sendGeom = useCallback((body: Record<string, unknown>) => {
+    geomSeq.current += 1;
+    setGeomCommand({ seq: geomSeq.current, body });
+  }, []);
+  const onGeomCommand = useCallback(
+    (c: GeomCommand) => sendGeom(c as unknown as Record<string, unknown>),
+    [sendGeom],
+  );
+  const onGeomState = useCallback(
+    (st: Record<string, unknown>) => setGeom(st as unknown as GeomState),
+    [],
+  );
+  /**
+   * A committed outline. Local only, like every other edit here — the panel already says so — but
+   * recorded so the map keeps drawing what you shaped rather than snapping back on the next render.
+   */
+  const onGeometry = useCallback((fid: string, rings: number[][][]) => {
+    // Intentionally minimal for now: geometry is not part of `edits` yet, so nothing merges it
+    // into the tree the way a rename does. Recorded rather than silently dropped.
+    console.info("[geometry] edited", fid, rings.length, "ring(s)");
+  }, []);
+
   /** Closing the panel clears the selection itself — the panel IS the selection made visible. */ /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
   const closeProps = useCallback(() => {
     setFocused(null);
@@ -2430,6 +2468,8 @@ export function MapContent({
           keep editing (the default and the safe one), or discard and go where you were heading.
           "Discard" is the destructive branch, so it is the one the user has to ask for.
         */}
+          <GeometryToolbar state={geom} onCommand={onGeomCommand} />
+
           <ConfirmOverlay
             open={!!pendingPick}
             tone="warning"
@@ -2461,6 +2501,9 @@ export function MapContent({
             onCursor={setPresenceCursor}
             peers={peers}
             editing={editors}
+            geomCommand={geomCommand}
+            onGeomState={onGeomState}
+            onGeometry={onGeometry}
             // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
             // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.
             focusPadRight={focused ? FEATURE_PANEL_WIDTH + 24 : 0}
@@ -2487,6 +2530,11 @@ export function MapContent({
                 />
               }
               onDirtyChange={onDirtyChange}
+              onEditGeometry={
+                shownProps && props?.fid
+                  ? () => sendGeom({ cmd: "begin", fid: props.fid })
+                  : undefined
+              }
               flagged={focusedFlagged}
               flagNote={
                 focusedFlagged && shownProps?.name && target

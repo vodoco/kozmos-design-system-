@@ -1824,6 +1824,7 @@ function start() {
   map.on("move", redraw);
   map.on("move", drawPeers);   // the cursor is at a coordinate, so panning must re-project it
   map.on("move", drawEditing); // and so is the chip pinned to a feature
+  map.on("move", geomDraw);    // the outline is in lng/lat, so panning re-projects it
   map.on("idle", () => {
     ensureLevel();
     ensureIndoorVisible();
@@ -2003,6 +2004,300 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // live decisions + map view preferences from the app
+/* ── geometry editing ─────────────────────────────────────────────────────────────────────────
+ *
+ * Direct manipulation of a feature's outline, in the map's own coordinate space.
+ *
+ * **Rings are held in lng/lat, never in pixels.** Every operation converts to screen space, does
+ * its arithmetic there because that is where the cursor lives, and converts straight back. Holding
+ * pixels would silently rewrite the shape on every zoom.
+ *
+ * **Edits are local**, like every other edit in this prototype — nothing is written to Pointr
+ * Cloud. The app is told on commit so the panel and the tree can agree with the map.
+ *
+ * ⚠️ **`split` is deliberately absent.** Cutting a polygon properly means walking the ring,
+ * inserting every intersection with the cut line and re-assembling two valid rings — and doing it
+ * for concave shapes with multiple crossings. A version that only works on convex shapes would be
+ * a trap, so it is recorded as unbuilt rather than shipped half-right.
+ */
+let GEOM = null;
+
+const SNAP_PX = 10;
+const HANDLE_R = 5;
+
+function geomBegin(fid) {
+  const f = geomFind(fid);
+  if (!f) { post("geomerror", { fid, message: "no geometry on this floor yet" }); return; }
+  GEOM = {
+    fid,
+    rings: JSON.parse(JSON.stringify(f)),   // deep copy: the source stays untouched until commit
+    original: JSON.parse(JSON.stringify(f)),
+    history: [],
+    future: [],
+    snap: true,
+    mode: "vertices",
+    drag: null,
+  };
+  geomDraw();
+  post("geomstate", geomState());
+}
+
+function geomEnd(commit) {
+  if (!GEOM) return;
+  if (commit) post("geometry", { fid: GEOM.fid, rings: GEOM.rings });
+  GEOM = null;
+  geomDraw();
+  post("geomstate", { editing: false });
+}
+
+/** The feature's outer rings, from the vector source rather than the viewport. */
+function geomFind(fid) {
+  try {
+    const layers = [...new Set(map.getStyle().layers
+      .filter(l => l.source === "source_ptr" && l["source-layer"])
+      .map(l => l["source-layer"]))];
+    for (const L of layers)
+      for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L }))
+        if (f.properties && f.properties.fid === fid && f.geometry) return ringsOuter(f);
+  } catch (e) {}
+  return null;
+}
+
+function geomState() {
+  return GEOM
+    ? { editing: true, fid: GEOM.fid, mode: GEOM.mode, snap: GEOM.snap,
+        canUndo: GEOM.history.length > 0, canRedo: GEOM.future.length > 0 }
+    : { editing: false };
+}
+
+/** Snapshot before a change. Redo is dropped, as it is in every editor that has ever felt right. */
+function geomPush() {
+  if (!GEOM) return;
+  GEOM.history.push(JSON.parse(JSON.stringify(GEOM.rings)));
+  if (GEOM.history.length > 50) GEOM.history.shift();
+  GEOM.future = [];
+}
+
+function geomUndo() {
+  if (!GEOM || !GEOM.history.length) return;
+  GEOM.future.push(JSON.parse(JSON.stringify(GEOM.rings)));
+  GEOM.rings = GEOM.history.pop();
+  geomDraw(); post("geomstate", geomState());
+}
+
+function geomRedo() {
+  if (!GEOM || !GEOM.future.length) return;
+  GEOM.history.push(JSON.parse(JSON.stringify(GEOM.rings)));
+  GEOM.rings = GEOM.future.pop();
+  geomDraw(); post("geomstate", geomState());
+}
+
+function geomReset() {
+  if (!GEOM) return;
+  geomPush();
+  GEOM.rings = JSON.parse(JSON.stringify(GEOM.original));
+  geomDraw(); post("geomstate", geomState());
+}
+
+function geomSetMode(mode) { if (GEOM) { GEOM.mode = mode; geomDraw(); post("geomstate", geomState()); } }
+function geomToggleSnap() { if (GEOM) { GEOM.snap = !GEOM.snap; post("geomstate", geomState()); } }
+
+/** Every vertex of the shape, flattened — the unit most operations work on. */
+function geomAllPoints() {
+  const out = [];
+  GEOM.rings.forEach((r, ri) => r.forEach((c, ci) => out.push({ ri, ci, c })));
+  return out;
+}
+
+function geomCentroid() {
+  let x = 0, y = 0, n = 0;
+  GEOM.rings.forEach(r => r.forEach(c => { x += c[0]; y += c[1]; n++; }));
+  return [x / n, y / n];
+}
+
+/**
+ * The nearest vertex of ANOTHER feature, within `SNAP_PX` on screen.
+ *
+ * Screen distance, not ground distance, because snapping is about what the eye reads as touching —
+ * a metre is a lot when zoomed out and nothing when zoomed in.
+ */
+function geomSnapTarget(pt) {
+  if (!GEOM || !GEOM.snap) return null;
+  let best = null, bestD = SNAP_PX;
+  try {
+    for (const f of map.queryRenderedFeatures()) {
+      if (!f.properties || f.properties.fid === GEOM.fid || !f.geometry) continue;
+      const rings = ringsOuter(f);
+      for (const r of rings) for (const c of r) {
+        const p = map.project(c);
+        const d = Math.hypot(p.x - pt.x, p.y - pt.y);
+        if (d < bestD) { bestD = d; best = c.slice(); }
+      }
+    }
+  } catch (e) {}
+  return best;
+}
+
+function geomTransform(fn) {
+  geomPush();
+  GEOM.rings = GEOM.rings.map(r => r.map(fn));
+  geomDraw(); post("geomstate", geomState());
+}
+
+function geomRotate(deg) {
+  const c = map.project(geomCentroid());
+  const a = (deg * Math.PI) / 180, cos = Math.cos(a), sin = Math.sin(a);
+  geomTransform(coord => {
+    const p = map.project(coord), dx = p.x - c.x, dy = p.y - c.y;
+    const q = map.unproject([c.x + dx * cos - dy * sin, c.y + dx * sin + dy * cos]);
+    return [q.lng, q.lat];
+  });
+}
+
+function geomScale(k) {
+  const c = map.project(geomCentroid());
+  geomTransform(coord => {
+    const p = map.project(coord);
+    const q = map.unproject([c.x + (p.x - c.x) * k, c.y + (p.y - c.y) * k]);
+    return [q.lng, q.lat];
+  });
+}
+
+/**
+ * Straighten — drop vertices that already sit (nearly) on the line between their neighbours.
+ *
+ * Perpendicular distance in SCREEN space against a fixed tolerance, so "nearly straight" means what
+ * it looks like rather than what it measures in degrees of longitude. Never takes a ring below
+ * three points.
+ */
+function geomStraighten() {
+  if (!GEOM) return;
+  const TOL = 2.5;
+  geomPush();
+  GEOM.rings = GEOM.rings.map(r => {
+    if (r.length <= 4) return r;
+    const keep = r.filter((c, i) => {
+      if (i === 0 || i === r.length - 1) return true;
+      const a = map.project(r[i - 1]), b = map.project(c), d = map.project(r[i + 1]);
+      const len = Math.hypot(d.x - a.x, d.y - a.y) || 1;
+      const dist = Math.abs((d.x - a.x) * (a.y - b.y) - (a.x - b.x) * (d.y - a.y)) / len;
+      return dist > TOL;
+    });
+    return keep.length >= 4 ? keep : r;
+  });
+  geomDraw(); post("geomstate", geomState());
+}
+
+/* ── drawing and interaction ───────────────────────────────────────────────────────────────── */
+
+function geomLayer() {
+  let l = document.getElementById("geom");
+  if (!l) {
+    l = el("svg", { id: "geom" });
+    l.setAttribute("style",
+      "position:absolute;inset:0;width:100%;height:100%;z-index:8;pointer-events:none");
+    document.body.appendChild(l);
+  }
+  return l;
+}
+
+function geomDraw() {
+  const l = geomLayer();
+  while (l.firstChild) l.removeChild(l.firstChild);
+  if (!GEOM || !map) return;
+
+  for (const [ri, ring] of GEOM.rings.entries()) {
+    const d = ring.map((c, i) => { const p = map.project(c); return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ") + " Z";
+    const face = el("path", { d, fill: "#0b369c", "fill-opacity": .10, stroke: "#0b369c",
+                              "stroke-width": 2, class: "geom-face" });
+    if (GEOM.mode === "move") face.setAttribute("style", "pointer-events:auto;cursor:move");
+    face.addEventListener("mousedown", ev => geomDown(ev, { kind: "move" }));
+    l.appendChild(face);
+
+    if (GEOM.mode === "vertices") {
+      // midpoints first, so a vertex always wins the click where the two overlap
+      ring.forEach((c, ci) => {
+        const n = ring[(ci + 1) % ring.length];
+        const a = map.project(c), b = map.project(n);
+        const m = el("circle", { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, r: 3.5,
+                                 fill: "#fff", stroke: "#0b369c", "stroke-width": 1.5, class: "geom-mid" });
+        m.setAttribute("style", "pointer-events:auto;cursor:copy");
+        m.addEventListener("mousedown", ev => { ev.stopPropagation(); geomAddVertex(ri, ci); });
+        l.appendChild(m);
+      });
+      ring.forEach((c, ci) => {
+        const p = map.project(c);
+        const h = el("circle", { cx: p.x, cy: p.y, r: HANDLE_R, fill: "#fff",
+                                 stroke: "#0b369c", "stroke-width": 2, class: "geom-vx" });
+        h.setAttribute("style", "pointer-events:auto;cursor:grab");
+        h.addEventListener("mousedown", ev => {
+          ev.stopPropagation();
+          // alt-click removes, which is the convention every editor already taught people
+          if (ev.altKey) return geomRemoveVertex(ri, ci);
+          geomDown(ev, { kind: "vertex", ri, ci });
+        });
+        l.appendChild(h);
+      });
+    }
+  }
+}
+
+function geomAddVertex(ri, ci) {
+  geomPush();
+  const ring = GEOM.rings[ri];
+  const a = ring[ci], b = ring[(ci + 1) % ring.length];
+  ring.splice(ci + 1, 0, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+  geomDraw(); post("geomstate", geomState());
+}
+
+function geomRemoveVertex(ri, ci) {
+  if (GEOM.rings[ri].length <= 4) return;      // a ring needs three distinct points, plus closure
+  geomPush();
+  GEOM.rings[ri].splice(ci, 1);
+  geomDraw(); post("geomstate", geomState());
+}
+
+/**
+ * Drag, on `mousemove` at the document level rather than on the handle.
+ *
+ * The handle is re-created by `geomDraw()` on every frame, so a listener bound to it would be
+ * destroyed mid-gesture — the same reason selection here hangs off `mouseup` and not `click`.
+ */
+function geomDown(ev, what) {
+  if (!GEOM) return;
+  ev.preventDefault();
+  const start = { x: ev.clientX, y: ev.clientY };
+  const before = JSON.parse(JSON.stringify(GEOM.rings));
+  let moved = false;
+
+  const move = e => {
+    if (!GEOM) return;
+    if (!moved) { moved = true; GEOM.history.push(before); GEOM.future = []; }
+    const pt = { x: e.clientX, y: e.clientY };
+    if (what.kind === "vertex") {
+      const snapped = geomSnapTarget(pt);
+      const q = snapped ? { lng: snapped[0], lat: snapped[1] } : map.unproject([pt.x, pt.y]);
+      GEOM.rings[what.ri][what.ci] = [q.lng, q.lat];
+    } else {
+      const dx = pt.x - start.x, dy = pt.y - start.y;
+      start.x = pt.x; start.y = pt.y;
+      GEOM.rings = GEOM.rings.map(r => r.map(c => {
+        const p = map.project(c);
+        const q = map.unproject([p.x + dx, p.y + dy]);
+        return [q.lng, q.lat];
+      }));
+    }
+    geomDraw();
+  };
+  const up = () => {
+    document.removeEventListener("mousemove", move);
+    document.removeEventListener("mouseup", up);
+    if (moved) post("geomstate", geomState());
+  };
+  document.addEventListener("mousemove", move);
+  document.addEventListener("mouseup", up);
+}
+
 window.addEventListener("message", (ev) => {
   const d = ev.data;
   if (!d) return;
@@ -2055,6 +2350,18 @@ window.addEventListener("message", (ev) => {
   } else if (d.type === "peers") {
     PEERS = Array.isArray(d.peers) ? d.peers : [];
     drawPeers();
+  } else if (d.type === "geom") {
+    // One entry point for every toolbar command — the app never reaches into the editor's state.
+    if (d.cmd === "begin") geomBegin(d.fid);
+    else if (d.cmd === "end") geomEnd(!!d.commit);
+    else if (d.cmd === "mode") geomSetMode(d.mode);
+    else if (d.cmd === "snap") geomToggleSnap();
+    else if (d.cmd === "undo") geomUndo();
+    else if (d.cmd === "redo") geomRedo();
+    else if (d.cmd === "reset") geomReset();
+    else if (d.cmd === "straighten") geomStraighten();
+    else if (d.cmd === "rotate") geomRotate(d.deg || 15);
+    else if (d.cmd === "scale") geomScale(d.k || 1.05);
   } else if (d.type === "editing") {
     EDITING = Array.isArray(d.editing) ? d.editing : [];
     drawEditing();

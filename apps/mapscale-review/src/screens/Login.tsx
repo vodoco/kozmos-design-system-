@@ -7,8 +7,8 @@ import "./Login.css";
 /**
  * Sign in to the real Pointr Cloud instance.
  *
- * The background deliberately contains no artwork or ambient motion. The Pointr Cloud mark has
- * one short, self-contained entrance; the proposition and authentication form remain still.
+ * The background deliberately contains no artwork or ambient motion. The logo, proposition and
+ * authentication form share one short entrance sequence, then the entire screen remains still.
  *
  * ⚠️ **The password is never held.** It lives in a controlled input for as long as someone is
  * typing and is cleared the moment the request resolves either way. `session.ts` never stores or
@@ -55,11 +55,17 @@ export function Login({ onDone }: { onDone: () => void }) {
           />
           <div className="ms-login-kicker">Pointr · Connected venues</div>
           <h1 id="ms-login-title" className="ms-login-title">
-            Turn your venues
-            <br />
-            into connected
-            <br />
-            experiences.
+            <span className="ms-login-title-line">
+              <span className="ms-login-title-line-inner">
+                Turn your venues
+              </span>
+            </span>
+            <span className="ms-login-title-line">
+              <span className="ms-login-title-line-inner">into connected</span>
+            </span>
+            <span className="ms-login-title-line">
+              <span className="ms-login-title-line-inner">experiences.</span>
+            </span>
           </h1>
           <p className="ms-login-lede">
             Pointr brings maps, positioning, wayfinding and location services
