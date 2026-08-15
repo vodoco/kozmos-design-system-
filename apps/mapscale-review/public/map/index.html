@@ -1805,6 +1805,13 @@ function start() {
      */
     if (GEOM) {
       if (HOVER_FEATURE) { HOVER_FEATURE = null; highlightFeatures(null); renderTip(); }
+      // Laying a cut: the far end follows the pointer. In lng/lat, like the rings — the map can be
+      // panned mid-cut and the anchor has to stay on the floor, not on the screen.
+      if (GEOM.mode === "split") {
+        map.getCanvas().style.cursor = "crosshair";
+        if (GEOM.cutA) { GEOM.cutB = [ev.lngLat.lng, ev.lngLat.lat]; geomDraw(); }
+        return;
+      }
       map.getCanvas().style.cursor = "";
       return;
     }
@@ -1882,6 +1889,16 @@ function start() {
      * chrome added later.
      */
     if (!tap || !document.getElementById("map").contains(ev.target)) return;
+    /**
+     * **Laying a cut takes the release first**, before anything else can read it as a selection or
+     * a dismissal. Same `mouseup` + `isTap` as the rest of this file: a press that travelled was a
+     * pan, so you can still drag the map into position between the two clicks of a cut.
+     */
+    if (GEOM && GEOM.mode === "split" && map) {
+      const rect = map.getCanvas().getBoundingClientRect();
+      geomCutClick(map.unproject([ev.clientX - rect.left, ev.clientY - rect.top]));
+      return;
+    }
     if (SELECTED) select(SELECTED);      // click out — dismiss
     else if (HOVERED) hover(null);
     /**
@@ -1930,7 +1947,15 @@ function start() {
   // Escape deselects, like every other overlay in the app. Pinned only — a hover card needs no
   // dismissing, it dies when you look away.
   document.addEventListener("keydown", ev => {
-    if (ev.key === "Escape" && SELECTED) select(SELECTED);
+    if (ev.key !== "Escape") return;
+    // A half-laid cut is the innermost thing open, so it takes Escape first — and only the cut,
+    // never the edit: dropping the whole panel because somebody thought better of one click would
+    // throw away every unsaved change with it.
+    if (GEOM && GEOM.mode === "split") {
+      if (!geomCancelCut()) geomSetMode("vertices");
+      return;
+    }
+    if (SELECTED) select(SELECTED);
   });
 
   resolveAndFrame(partial => post("ready", { changes: RESOLVED.length, level: levelInfo(), features: levelFeatureNames(),
@@ -2052,15 +2077,51 @@ function geomBegin(fid) {
   GEOM = {
     fid,
     rings: JSON.parse(JSON.stringify(f)),   // deep copy: the source stays untouched until commit
-    original: JSON.parse(JSON.stringify(f)),
     history: [],
     future: [],
     snap: true,
     mode: "vertices",
     drag: null,
+    /**
+     * Which piece each ring belongs to, parallel to `rings`. Everything starts as piece 0 — one
+     * feature, one piece, however many rings it arrived with — and `geomApplyCut` mints new ids.
+     * The count of distinct ids is how many pieces the feature is in.
+     */
+    pieceOf: [],
+    nextPiece: 1,
+    /** The cut being laid, both ends in lng/lat. `cutB` tracks the pointer until the second click. */
+    cutA: null,
+    cutB: null,
   };
+  GEOM.pieceOf = GEOM.rings.map(() => 0);
+  GEOM.original = geomSnap();
   geomDraw();
   post("geomstate", geomState());
+}
+
+/**
+ * A restore point. Rings ALONE are not enough once splitting exists: undoing a split has to put the
+ * piece map back too, or the shape returns to one outline while the app still believes it is two.
+ */
+function geomSnap() {
+  return {
+    rings: JSON.parse(JSON.stringify(GEOM.rings)),
+    pieceOf: GEOM.pieceOf.slice(),
+    // The counter travels with the state, so undo rewinds it and redo replays it — otherwise a
+    // split, an undo and another split would hand the same id to two different pieces.
+    nextPiece: GEOM.nextPiece,
+  };
+}
+
+function geomRestore(s) {
+  GEOM.rings = JSON.parse(JSON.stringify(s.rings));
+  GEOM.pieceOf = s.pieceOf.slice();
+  GEOM.nextPiece = s.nextPiece;
+}
+
+/** How many separate pieces the feature is in. `1` is a feature nobody has split. */
+function geomPieces() {
+  return GEOM ? new Set(GEOM.pieceOf).size : 1;
 }
 
 /**
@@ -2070,8 +2131,8 @@ function geomBegin(fid) {
  */
 function geomCommit() {
   if (!GEOM) return;
-  post("geometry", { fid: GEOM.fid, rings: GEOM.rings });
-  GEOM.original = JSON.parse(JSON.stringify(GEOM.rings));
+  post("geometry", { fid: GEOM.fid, rings: GEOM.rings, pieces: geomPieces() });
+  GEOM.original = geomSnap();
   GEOM.history = [];
   GEOM.future = [];
   post("geomstate", geomState());
@@ -2079,7 +2140,7 @@ function geomCommit() {
 
 function geomEnd(commit) {
   if (!GEOM) return;
-  if (commit) post("geometry", { fid: GEOM.fid, rings: GEOM.rings });
+  if (commit) post("geometry", { fid: GEOM.fid, rings: GEOM.rings, pieces: geomPieces() });
   GEOM = null;
   geomDraw();
   post("geomstate", { editing: false });
@@ -2098,7 +2159,10 @@ function geomState() {
         canUndo: GEOM.history.length > 0, canRedo: GEOM.future.length > 0,
         // Compared against the baseline, not "did anything happen" — drag a point and put it back
         // and you have changed nothing, so Update must not light up.
-        dirty: JSON.stringify(GEOM.rings) !== JSON.stringify(GEOM.original),
+        dirty: JSON.stringify(geomSnap()) !== JSON.stringify(GEOM.original),
+        pieces: geomPieces(),
+        // Has the first click of a cut landed? The toolbar says what the next click will do.
+        cutting: GEOM.mode === "split" && !!GEOM.cutA,
       }
     : { editing: false };
 }
@@ -2106,33 +2170,39 @@ function geomState() {
 /** Snapshot before a change. Redo is dropped, as it is in every editor that has ever felt right. */
 function geomPush() {
   if (!GEOM) return;
-  GEOM.history.push(JSON.parse(JSON.stringify(GEOM.rings)));
+  GEOM.history.push(geomSnap());
   if (GEOM.history.length > 50) GEOM.history.shift();
   GEOM.future = [];
 }
 
 function geomUndo() {
   if (!GEOM || !GEOM.history.length) return;
-  GEOM.future.push(JSON.parse(JSON.stringify(GEOM.rings)));
-  GEOM.rings = GEOM.history.pop();
+  GEOM.future.push(geomSnap());
+  geomRestore(GEOM.history.pop());
   geomDraw(); post("geomstate", geomState());
 }
 
 function geomRedo() {
   if (!GEOM || !GEOM.future.length) return;
-  GEOM.history.push(JSON.parse(JSON.stringify(GEOM.rings)));
-  GEOM.rings = GEOM.future.pop();
+  GEOM.history.push(geomSnap());
+  geomRestore(GEOM.future.pop());
   geomDraw(); post("geomstate", geomState());
 }
 
 function geomReset() {
   if (!GEOM) return;
   geomPush();
-  GEOM.rings = JSON.parse(JSON.stringify(GEOM.original));
+  geomRestore(GEOM.original);
   geomDraw(); post("geomstate", geomState());
 }
 
-function geomSetMode(mode) { if (GEOM) { GEOM.mode = mode; geomDraw(); post("geomstate", geomState()); } }
+/** Changing mode always abandons a half-laid cut — a dangling anchor is a trap on the next click. */
+function geomSetMode(mode) {
+  if (!GEOM) return;
+  GEOM.mode = mode;
+  GEOM.cutA = GEOM.cutB = null;
+  geomDraw(); post("geomstate", geomState());
+}
 function geomToggleSnap() { if (GEOM) { GEOM.snap = !GEOM.snap; post("geomstate", geomState()); } }
 
 /** Every vertex of the shape, flattened — the unit most operations work on. */
@@ -2221,6 +2291,308 @@ function geomStraighten() {
   geomDraw(); post("geomstate", geomState());
 }
 
+/* ── split ─────────────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Cut a feature's rings with a straight line.
+ *
+ * This is the operation that was recorded as unbuilt until 2026-08-15, on the grounds that a
+ * convex-only version silently mangles a real floor plan. The bar was: walk the ring, insert every
+ * intersection, and re-assemble valid rings — **for concave shapes, with multiple crossings**. That
+ * is what this does, and `scratch/split-engine.test.mjs` extracts this exact code out of this file
+ * and proves it on a U cut across both arms, an L, a cut through a vertex, a tangent touch, a cut
+ * that misses, and a multi-ring feature.
+ *
+ * **A straight cut, not a freehand polyline.** A floor is divided by walls, and a wall is straight;
+ * a polyline cut buys generality nobody asked for and brings self-intersection with it. Two clicks.
+ *
+ * **Holes are already gone before we get here.** `ringsOuter()` takes `coordinates[0]` only, so
+ * every ring in `GEOM.rings` is a simple outer ring and each can be cut independently. If interior
+ * rings ever reach the editor this needs revisiting — a hole straddling the cut belongs to both
+ * halves and neither of them is a simple ring any more.
+ *
+ * Everything here is plane arithmetic in SCREEN pixels, like `geomRotate`/`geomScale`/
+ * `geomStraighten` — the caller projects on the way in and unprojects on the way out. Doing it in
+ * lng/lat would make "the same distance" mean two different things along the two axes.
+ */
+/* SPLIT-ENGINE-START — the harness extracts everything between these markers and runs it in node,
+   so the code under test is literally the code that ships. Keep it free of `map` and of the DOM. */
+function ringSignedArea(pts) {
+  let s = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i], q = pts[(i + 1) % pts.length];
+    s += p[0] * q[1] - q[0] * p[1];
+  }
+  return s / 2;
+}
+
+/** A ring with its closing point dropped — the arithmetic below wants each vertex exactly once. */
+function ringOpen(ring) {
+  const pts = ring.slice();
+  while (pts.length > 1 &&
+         pts[0][0] === pts[pts.length - 1][0] && pts[0][1] === pts[pts.length - 1][1]) pts.pop();
+  return pts;
+}
+
+/** …and back, closed the way every other ring in this file is. */
+function ringClose(pts) {
+  const out = pts.map(p => p.slice());
+  out.push(out[0].slice());
+  return out;
+}
+
+/**
+ * Split ONE ring by the line through `a`→`b`.
+ *
+ * Returns `{ left, right }` of open point arrays; `null` when the line simply does not cut this
+ * ring (the caller then keeps it whole); or `{ tangent: true }` when the line both cuts the ring
+ * AND touches it somewhere without crossing — see the refusal note in step 2.
+ */
+function splitOneRing(ring, a, dx, dy, len) {
+  const pts = ringOpen(ring);
+  const n = pts.length;
+  if (n < 3) return null;
+
+  // Distance-from-the-line, scaled by `len` so the tolerance below reads in pixels.
+  const cross = p => dx * (p[1] - a[1]) - dy * (p[0] - a[0]);
+  const ON = 1e-6 * len;
+  const sideOf = p => { const c = cross(p); return Math.abs(c) <= ON ? 0 : (c > 0 ? 1 : -1); };
+
+  /* 1. Augment the ring: every strict crossing becomes a real vertex sitting on the line. A vertex
+        that is already on the line needs no insertion — it is its own node. */
+  const nodes = [];
+  for (let i = 0; i < n; i++) {
+    const p = pts[i], q = pts[(i + 1) % n];
+    const sp = sideOf(p), sq = sideOf(q);
+    nodes.push({ p: p.slice(), s: sp });
+    if (sp !== 0 && sq !== 0 && sp !== sq) {
+      const cp = cross(p), cq = cross(q);
+      const t = cp / (cp - cq);
+      nodes.push({ p: [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t], s: 0 });
+    }
+  }
+  const nn = nodes.length;
+
+  /* 2. Which on-line nodes are genuine CROSSINGS? A vertex that touches the line and goes back the
+        way it came is not one, and counting it would pair the chords wrongly and shred the shape.
+        Consecutive on-line nodes (an edge lying along the cut) are one run, judged as a whole by
+        the sides either end of it. */
+  const isCross = new Array(nn).fill(false);
+  let touches = false;
+  if (!nodes.some(nd => nd.s !== 0)) return null;      // the whole ring lies on the line
+  for (let i = 0; i < nn; i++) {
+    if (nodes[i].s !== 0) continue;
+    if (nodes[(i - 1 + nn) % nn].s === 0) continue;    // not the first node of its run
+    let last = i;
+    while (nodes[(last + 1) % nn].s === 0) last = (last + 1) % nn;
+    const before = nodes[(i - 1 + nn) % nn].s;
+    const after = nodes[(last + 1) % nn].s;
+    // The run's LAST node carries the crossing; the earlier ones stay ordinary boundary points.
+    // They sit on the line, so whichever face they land in they add no area to it.
+    if (before !== after) isCross[last] = true;
+    else touches = true;
+  }
+
+  const crossIdx = [];
+  for (let i = 0; i < nn; i++) if (isCross[i]) crossIdx.push(i);
+  // A simple closed ring meets a straight line an even number of times. An odd count means the
+  // tolerance has swallowed something; refusing beats returning a shape nobody can trust.
+  if (crossIdx.length < 2 || crossIdx.length % 2) return null;
+  /**
+   * ⚠️ **A cut that also grazes the shape is refused, not guessed at.**
+   *
+   * Step 4 pairs crossings by assuming they alternate inside/outside along the line. A point where
+   * the ring merely TOUCHES the line breaks that alternation without announcing itself: lay a cut
+   * exactly along the inner edge of a U and the pairing joins the two arms straight through the
+   * notch, producing a ring that touches itself — area-correct, and complete nonsense as a room.
+   * Handling every tangency exactly is a lot of machinery for a case a user hits by accident,
+   * about one pixel wide. Refusing costs them a nudge and can never mangle a floor plan.
+   */
+  if (touches) return { tangent: true };
+  const K = crossIdx.length;
+
+  /* 3. Arcs — the ring path from one crossing to the next. Each is used exactly once below. */
+  const arcAt = new Map();
+  crossIdx.forEach((idx, k) => arcAt.set(idx, k));
+  const arcs = [];
+  for (let k = 0; k < K; k++) {
+    const start = crossIdx[k], end = crossIdx[(k + 1) % K];
+    const run = [];
+    let i = start;
+    do { run.push(nodes[i].p); i = (i + 1) % nn; } while (i !== end);
+    arcs.push(run);
+  }
+
+  /* 4. Chords — the stretches of the cut line that lie INSIDE the ring. Sorted along the line the
+        crossings alternate in/out, so consecutive pairs are exactly the inside stretches. This is
+        the step that makes concave shapes work: a U cut across both arms has four crossings and
+        two chords, and pairing them any other way would join the wrong arms. */
+  const along = i => (nodes[i].p[0] - a[0]) * dx + (nodes[i].p[1] - a[1]) * dy;
+  const order = crossIdx.slice().sort((i, j) => along(i) - along(j));
+  const mate = new Map();
+  for (let k = 0; k + 1 < order.length; k += 2) {
+    mate.set(order[k], order[k + 1]);
+    mate.set(order[k + 1], order[k]);
+  }
+
+  /* 5. Trace the faces: follow an arc, hop its end across the chord, follow the arc that starts on
+        the far side, and keep going until the arcs bring you home. */
+  const used = new Array(K).fill(false);
+  const faces = [];
+  for (let k0 = 0; k0 < K; k0++) {
+    if (used[k0]) continue;
+    const face = [];
+    let k = k0, guard = 0, ok = true;
+    while (!used[k]) {
+      used[k] = true;
+      for (const p of arcs[k]) face.push(p);
+      const end = crossIdx[(k + 1) % K];
+      face.push(nodes[end].p);
+      const m = mate.get(end);
+      const next = m === undefined ? undefined : arcAt.get(m);
+      if (next === undefined || ++guard > K) { ok = false; break; }
+      k = next;
+    }
+    if (ok && face.length >= 3) faces.push(face);
+  }
+
+  /* 6. Which side did each face land on? Read it off the vertex furthest from the line — the ones
+        sitting ON it say nothing, and every face has at least one that does not. */
+  const left = [], right = [];
+  for (const face of faces) {
+    if (Math.abs(ringSignedArea(face)) < 1e-6) continue;   // a sliver on the line, not a piece
+    let far = 0;
+    for (const p of face) { const c = cross(p); if (Math.abs(c) > Math.abs(far)) far = c; }
+    if (Math.abs(far) <= ON) continue;
+    (far > 0 ? left : right).push(face);
+  }
+  if (!left.length || !right.length) return null;          // touched, not cut
+  return { left, right };
+}
+
+/**
+ * Split every ring of a feature by the line through `a`→`b`.
+ *
+ * Returns `{ ok: false, reason }` — `"miss"` if the cut does not separate the feature, `"tangent"`
+ * if it does but also grazes it, and the fix for that is a nudge — or, on success:
+ *
+ *     { ok: true, left, right, leftFrom, rightFrom, wasCut }
+ *
+ * `left`/`right` are closed rings either side of the line. `leftFrom[i]` / `rightFrom[i]` say which
+ * INPUT ring each came from, and `wasCut[j]` whether input ring `j` was actually cut — the caller
+ * needs both to keep track of which pieces are new, and it cannot reconstruct them from two
+ * flattened lists.
+ *
+ * Rings the line misses entirely are not lost: they travel whole to whichever side they are on,
+ * which is what makes this correct for a feature that is already several pieces.
+ */
+function splitRingsByLine(rings, a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+  if (!(len > 0)) return { ok: false, reason: "miss" };
+  const left = [], right = [], leftFrom = [], rightFrom = [], wasCut = [];
+  let anyCut = false;
+  rings.forEach((ring, j) => {
+    const r = splitOneRing(ring, a, dx, dy, len);
+    if (r && r.tangent) { wasCut[j] = "tangent"; return; }
+    if (r) {
+      anyCut = true;
+      wasCut[j] = true;
+      for (const f of r.left) { left.push(ringClose(f)); leftFrom.push(j); }
+      for (const f of r.right) { right.push(ringClose(f)); rightFrom.push(j); }
+      return;
+    }
+    // Untouched — whole, to the side it is on. Judged on its furthest vertex for the same reason
+    // as a face: a ring resting a corner on the line is still entirely on one side of it.
+    wasCut[j] = false;
+    let far = 0;
+    for (const p of ringOpen(ring)) {
+      const c = dx * (p[1] - a[1]) - dy * (p[0] - a[0]);
+      if (Math.abs(c) > Math.abs(far)) far = c;
+    }
+    if (far > 0) { left.push(ringClose(ringOpen(ring))); leftFrom.push(j); }
+    else { right.push(ringClose(ringOpen(ring))); rightFrom.push(j); }
+  });
+  if (wasCut.some(c => c === "tangent")) return { ok: false, reason: "tangent" };
+  if (!anyCut || !left.length || !right.length) return { ok: false, reason: "miss" };
+  return { ok: true, left, right, leftFrom, rightFrom, wasCut };
+}
+/* SPLIT-ENGINE-END */
+
+/**
+ * Apply a cut, in lng/lat, and leave the feature holding every piece it now consists of.
+ *
+ * ⚠️ **No piece inherits the feature's identity, because nothing here can decide which should.**
+ * A split says "this is two rooms", and a room needs a name, a type and a row in the tree — but
+ * `edits` is keyed by `fid` and every fid comes from Pointr Cloud, so there is no second identity
+ * to hand out. An earlier version of this marked one side "part A" and dashed the other; that was
+ * the editor quietly answering a product question by which side of the line got clicked first.
+ * It now reports the piece COUNT and claims nothing about which is which. The question — does a
+ * split create a second feature, or reshape one feature into two parts? — is in the hand-off.
+ *
+ * Every face out of a cut ring becomes a NEW piece. Not "left keeps its identity": cut a U across
+ * both arms and the left side is two separate rooms, so side is not piece and never was.
+ */
+function geomApplyCut(a, b) {
+  if (!GEOM) return false;
+  const toScreen = c => { const p = map.project(c); return [p.x, p.y]; };
+  const res = splitRingsByLine(GEOM.rings.map(r => r.map(toScreen)),
+                               toScreen(a), toScreen(b));
+  if (!res.ok) {
+    post("geomerror", {
+      fid: GEOM.fid,
+      message: res.reason === "tangent"
+        ? "that cut runs along an edge — move it a little and try again"
+        : "that cut does not divide the shape in two",
+    });
+    return false;
+  }
+  geomPush();
+  const rings = [], pieceOf = [];
+  const take = (list, from) => list.forEach((r, i) => {
+    const src = from[i];
+    rings.push(r.map(([x, y]) => { const q = map.unproject([x, y]); return [q.lng, q.lat]; }));
+    // A ring the cut missed carries on being the piece it already was.
+    pieceOf.push(res.wasCut[src] ? GEOM.nextPiece++ : GEOM.pieceOf[src]);
+  });
+  take(res.left, res.leftFrom);
+  take(res.right, res.rightFrom);
+  GEOM.rings = rings;
+  GEOM.pieceOf = pieceOf;
+  return true;
+}
+
+/**
+ * The two clicks that lay a cut.
+ *
+ * `mouseup` + `isTap`, like every other selection on this map — see the note on the document
+ * handler. A press that travelled was a pan, and panning while you line a cut up is exactly what
+ * you want to be able to do.
+ */
+function geomCutClick(lngLat) {
+  if (!GEOM || GEOM.mode !== "split") return;
+  if (!GEOM.cutA) {
+    GEOM.cutA = [lngLat.lng, lngLat.lat];
+    GEOM.cutB = [lngLat.lng, lngLat.lat];
+    geomDraw(); post("geomstate", geomState());
+    return;
+  }
+  const a = GEOM.cutA, b = [lngLat.lng, lngLat.lat];
+  GEOM.cutA = GEOM.cutB = null;
+  // A refused cut stays in split mode, because the message it just posted says "try again" — being
+  // dropped back into Points would contradict it. A cut that landed goes to Points, where the new
+  // outlines can be tidied up.
+  if (geomApplyCut(a, b)) GEOM.mode = "vertices";
+  geomDraw(); post("geomstate", geomState());
+}
+
+/** Abandon a half-laid cut, leaving split mode armed for another go. */
+function geomCancelCut() {
+  if (!GEOM || !GEOM.cutA) return false;
+  GEOM.cutA = GEOM.cutB = null;
+  geomDraw(); post("geomstate", geomState());
+  return true;
+}
+
 /* ── drawing and interaction ───────────────────────────────────────────────────────────────── */
 
 function geomLayer() {
@@ -2241,6 +2613,12 @@ function geomDraw() {
 
   for (const [ri, ring] of GEOM.rings.entries()) {
     const d = ring.map((c, i) => { const p = map.project(c); return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ") + " Z";
+    /**
+     * Every piece is drawn the same. After a split they are all equally the feature — none of them
+     * is the "real" one and none is the leftover, because nothing here has decided which keeps the
+     * name. The cut shows as the seam between two outlines, which is the whole of what happened;
+     * the toolbar says how many pieces there now are.
+     */
     const face = el("path", { d, fill: "#0b369c", "fill-opacity": .10, stroke: "#0b369c",
                               "stroke-width": 2, class: "geom-face" });
     if (GEOM.mode === "move") face.setAttribute("style", "pointer-events:auto;cursor:move");
@@ -2273,6 +2651,27 @@ function geomDraw() {
       });
     }
   }
+
+  /**
+   * The cut being laid. Drawn EXTENDED to the edge of the viewport, because that is what the
+   * operation actually does — the two clicks pick a line, not a segment, and a stubby preview
+   * between two points would promise a cut that stops where you stopped clicking.
+   */
+  if (GEOM.mode === "split" && GEOM.cutA && GEOM.cutB) {
+    const a = map.project(GEOM.cutA), b = map.project(GEOM.cutB);
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len = Math.hypot(dx, dy);
+    if (len > 0.5) {
+      const far = (window.innerWidth + window.innerHeight) * 2;
+      const ux = (dx / len) * far, uy = (dy / len) * far;
+      l.appendChild(el("line", { x1: a.x - ux, y1: a.y - uy, x2: a.x + ux, y2: a.y + uy,
+                                 stroke: "#0b369c", "stroke-width": 1, "stroke-dasharray": "4 4",
+                                 "stroke-opacity": .45 }));
+    }
+    l.appendChild(el("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+                               stroke: "#0b369c", "stroke-width": 2 }));
+    l.appendChild(el("circle", { cx: a.x, cy: a.y, r: 4, fill: "#0b369c" }));
+  }
 }
 
 function geomAddVertex(ri, ci) {
@@ -2300,7 +2699,7 @@ function geomDown(ev, what) {
   if (!GEOM) return;
   ev.preventDefault();
   const start = { x: ev.clientX, y: ev.clientY };
-  const before = JSON.parse(JSON.stringify(GEOM.rings));
+  const before = geomSnap();
   let moved = false;
 
   const move = e => {
@@ -2396,6 +2795,8 @@ window.addEventListener("message", (ev) => {
     else if (d.cmd === "straighten") geomStraighten();
     else if (d.cmd === "rotate") geomRotate(d.deg || 15);
     else if (d.cmd === "scale") geomScale(d.k || 1.05);
+    // Split is a MODE, not an act: the toolbar arms it, the two clicks on the map do the cutting.
+    else if (d.cmd === "split") geomSetMode(GEOM && GEOM.mode === "split" ? "vertices" : "split");
   } else if (d.type === "editing") {
     EDITING = Array.isArray(d.editing) ? d.editing : [];
     drawEditing();

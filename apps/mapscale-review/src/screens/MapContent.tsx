@@ -2038,14 +2038,47 @@ export function MapContent({
     [],
   );
   /**
-   * A committed outline. Local only, like every other edit here — the panel already says so — but
-   * recorded so the map keeps drawing what you shaped rather than snapping back on the next render.
+   * A committed outline.
+   *
+   * ⚠️ **Local to the map, and only for as long as the panel is open.** `edits` is
+   * `{ name, subType }` keyed by `fid` — there is nowhere in it for a shape, so nothing merges a
+   * new outline into the tree the way a rename does, and closing the panel drops it. That is the
+   * honest state of geometry editing in this prototype; it is recorded here rather than dressed up.
+   *
+   * `pieces > 1` means the feature has been SPLIT. Which piece keeps the fid is deliberately not
+   * answered here — see the note on `geomApplyCut` in the map shell, and the open question in the
+   * hand-off. Naming the second room is the unbuilt half of this.
    */
-  const onGeometry = useCallback((fid: string, rings: number[][][]) => {
-    // Intentionally minimal for now: geometry is not part of `edits` yet, so nothing merges it
-    // into the tree the way a rename does. Recorded rather than silently dropped.
-    console.info("[geometry] edited", fid, rings.length, "ring(s)");
+  const onGeometry = useCallback(
+    (fid: string, rings: number[][][], pieces: number) => {
+      console.info(
+        "[geometry] edited",
+        fid,
+        rings.length,
+        "ring(s)",
+        pieces > 1 ? `· split into ${pieces} pieces` : "",
+      );
+    },
+    [],
+  );
+
+  /**
+   * The editor refusing a cut, in its own words. Shown on the toolbar rather than logged, because
+   * the message is an instruction — "move it a little and try again" is useless in a console.
+   */
+  const [geomNotice, setGeomNotice] = useState<string | null>(null);
+  const onGeomError = useCallback((_fid: string, message: string) => {
+    setGeomNotice(message);
   }, []);
+  useEffect(() => {
+    if (!geomNotice) return;
+    const t = setTimeout(() => setGeomNotice(null), 4000);
+    return () => clearTimeout(t);
+  }, [geomNotice]);
+  // A notice is about the cut you just tried; the moment you start another one it is stale.
+  useEffect(() => {
+    if (geom.cutting) setGeomNotice(null);
+  }, [geom.cutting]);
 
   /** Closing the panel clears the selection itself — the panel IS the selection made visible. */ /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
   const closeProps = useCallback(() => {
@@ -2480,7 +2513,11 @@ export function MapContent({
           keep editing (the default and the safe one), or discard and go where you were heading.
           "Discard" is the destructive branch, so it is the one the user has to ask for.
         */}
-          <GeometryToolbar state={geom} onCommand={onGeomCommand} />
+          <GeometryToolbar
+            state={geom}
+            notice={geomNotice}
+            onCommand={onGeomCommand}
+          />
 
           <ConfirmOverlay
             open={!!pendingPick}
@@ -2516,6 +2553,7 @@ export function MapContent({
             geomCommand={geomCommand}
             onGeomState={onGeomState}
             onGeometry={onGeometry}
+            onGeomError={onGeomError}
             // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
             // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.
             focusPadRight={focused ? FEATURE_PANEL_WIDTH + 24 : 0}

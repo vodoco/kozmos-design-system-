@@ -146,8 +146,17 @@ const PointrMap = forwardRef<
     /** Geometry-editor commands, and the state it reports back — see ui/GeometryToolbar. */
     geomCommand?: { seq: number; body: Record<string, unknown> } | null;
     onGeomState?: (s: Record<string, unknown>) => void;
-    /** A committed outline, in lng/lat rings. Local to the prototype, like every other edit. */
-    onGeometry?: (fid: string, rings: number[][][]) => void;
+    /**
+     * A committed outline, in lng/lat rings. Local to the prototype, like every other edit.
+     * `pieces` is how many separate pieces the feature is now in — `1` if nobody has split it.
+     */
+    onGeometry?: (fid: string, rings: number[][][], pieces: number) => void;
+    /**
+     * The editor refusing something, in words meant for the user — a cut that misses the shape, or
+     * one laid exactly along an edge. Posted since the editor was written and, until 2026-08-15,
+     * listened to by nobody: the map said why and the message went nowhere.
+     */
+    onGeomError?: (fid: string, message: string) => void;
     /**
      * Screen space to keep clear on the RIGHT when framing a focused feature — the panel's own
      * width. The map is not resized; the feature is simply framed in the part of it you can still
@@ -179,6 +188,7 @@ const PointrMap = forwardRef<
     geomCommand,
     onGeomState,
     onGeometry,
+    onGeomError,
     focusPadRight,
     target,
   },
@@ -337,7 +347,10 @@ const PointrMap = forwardRef<
           ev.data.fid &&
           ev.data.rings
         )
-          onGeometry?.(ev.data.fid, ev.data.rings);
+          onGeometry?.(ev.data.fid, ev.data.rings, Number(ev.data.pieces) || 1);
+      } else if (ev.data.type === "geomerror") {
+        if (ev.source === ref.current?.contentWindow && ev.data.message)
+          onGeomError?.(String(ev.data.fid ?? ""), String(ev.data.message));
       } else if (ev.data.type === "cursor") {
         if (
           ev.source === ref.current?.contentWindow &&

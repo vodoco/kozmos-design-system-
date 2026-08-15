@@ -11,21 +11,28 @@
  * It still disappears with the panel — a permanent bar across the middle of the map would cover the
  * floor plan for the 95% of the time nobody is editing.
  *
- * ⚠️ **`Split` is not here, deliberately.** Cutting a polygon properly means walking the ring,
- * inserting every intersection with the cut line and re-assembling two valid rings — for concave
- * shapes, with multiple crossings. A version that only worked on convex shapes would be a trap that
- * silently mangles a real floor plan, so it is recorded as unbuilt rather than shipped half-right.
- * Everything else from that list is here.
+ * **`Split` is a mode, not a button that does something.** Pressing it arms the map; the two clicks
+ * that follow lay the cut, and Escape backs out. It reads as pressed the whole time it is armed,
+ * because between those two clicks the map behaves differently and the toolbar is the only thing
+ * on screen that can say so.
  */
 export interface GeomState {
   editing: boolean;
   fid?: string;
-  mode?: "vertices" | "move";
+  mode?: "vertices" | "move" | "split";
   snap?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
   /** Has the outline actually changed? Feeds the panel's Update button. */
   dirty?: boolean;
+  /**
+   * How many separate pieces the feature is in. `1` is a feature nobody has split. The editor
+   * deliberately does NOT say which piece is which — see the note on `geomApplyCut` in the map
+   * shell for why that question is not the editor's to answer.
+   */
+  pieces?: number;
+  /** The first click of a cut has landed and the second is awaited. */
+  cutting?: boolean;
 }
 
 export type GeomCommand =
@@ -35,6 +42,7 @@ export type GeomCommand =
   | { cmd: "redo" }
   | { cmd: "reset" }
   | { cmd: "straighten" }
+  | { cmd: "split" }
   | { cmd: "rotate"; deg: number }
   | { cmd: "scale"; k: number };
 
@@ -68,9 +76,12 @@ function Sep() {
 
 export function GeometryToolbar({
   state,
+  notice,
   onCommand,
 }: {
   state: GeomState;
+  /** The editor refusing something, in its own words. Transient — the app clears it. */
+  notice?: string | null;
   onCommand: (c: GeomCommand) => void;
 }) {
   if (!state.editing) return null;
@@ -170,6 +181,44 @@ export function GeometryToolbar({
       >
         ⤡
       </button>
+
+      <Sep />
+      <button
+        type="button"
+        style={{ ...BTN, ...toggled(state.mode === "split") }}
+        aria-pressed={state.mode === "split"}
+        onClick={() => onCommand({ cmd: "split" })}
+        title="Click twice on the map to cut the shape in two · Escape to cancel"
+      >
+        Split
+      </button>
+      {/* The one place the toolbar says anything: the instruction while a cut is being laid, the
+          refusal when one is rejected, and the piece count once the shape is in more than one.
+          It appears beside the button rather than replacing anything, so the bar never reflows
+          under the cursor mid-cut. */}
+      {(state.mode === "split" || notice || (state.pieces ?? 1) > 1) && (
+        <span
+          style={{
+            ...BTN,
+            cursor: "default",
+            // The app's own danger ink (`AiMappingStatus`'s `danger600`), not a token — the DS
+            // publishes no red at this weight, and a `var()` that only ever resolves to its
+            // fallback is a token in appearance and a hex in fact.
+            color: notice
+              ? "#d41c42"
+              : "var(--primitives-colors-background-600)",
+            fontSize: 11.5,
+            padding: "0 4px",
+          }}
+        >
+          {notice ??
+            (state.mode === "split"
+              ? state.cutting
+                ? "…and the far side"
+                : "Click one side of the cut"
+              : `${state.pieces} pieces`)}
+        </span>
+      )}
 
       <Sep />
       <button
