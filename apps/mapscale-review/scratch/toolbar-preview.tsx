@@ -279,9 +279,10 @@ function Bench() {
           The Update confirmation, which replaces the panel it closes
         </div>
         <div
+          data-savedbox
           style={{
             position: "relative",
-            height: 110,
+            height: 260,
             borderRadius: 12,
             background:
               "repeating-linear-gradient(45deg,#dfe4ec 0 10px,#e7ebf2 10px 20px)",
@@ -290,6 +291,37 @@ function Bench() {
           }}
         >
           <SavedNotice name="Gate A12 Waiting Area" />
+          {/* Stand-in for the map page's #zoomctl — right:16 / bottom:16, two 44px buttons with a
+              6px gap. The notice has to clear this, not sit on top of it. */}
+          <div
+            data-zoomctl
+            style={{
+              position: "absolute",
+              right: 16,
+              bottom: 16,
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+            }}
+          >
+            {["+", "−"].map((s) => (
+              <div
+                key={s}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "#fff",
+                  boxShadow: "0 2px 6px rgba(0,0,0,.16)",
+                  display: "grid",
+                  placeItems: "center",
+                  font: "20px/1 system-ui",
+                }}
+              >
+                {s}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

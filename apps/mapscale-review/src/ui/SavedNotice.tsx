@@ -11,8 +11,14 @@
  * happened, so the demo gets its completed gesture without the prototype claiming a round-trip it
  * never made. The line underneath says where the change actually lives.
  *
- * **Top-centre**, because the geometry toolbar owns bottom-centre and a confirmation that covers
- * the tools you just used is a confirmation in the way.
+ * **Bottom-right** (Olcay, 2026-08-16), which is where a confirmation is looked for and where it
+ * costs nothing — the panel it replaces has just closed, taking the geometry toolbar with it.
+ *
+ * ⚠️ **Stacked ABOVE the zoom control rather than beside it.** `#zoomctl` in the map page sits at
+ * `right: 16 / bottom: 16` and is two 44px buttons with a 6px gap — 44×94, reaching 110px up from
+ * the bottom edge. Sitting flush in the corner would put a toast over the zoom buttons for its
+ * whole life; `bottom: 122` clears them with the same 12px breathing room the rest of the over-map
+ * chrome uses, and `right: 16` keeps it in that chrome's column.
  */
 export function SavedNotice({ name }: { name: string }) {
   return (
@@ -23,9 +29,8 @@ export function SavedNotice({ name }: { name: string }) {
       aria-live="polite"
       style={{
         position: "absolute",
-        top: 18,
-        left: "50%",
-        transform: "translateX(-50%)",
+        bottom: 122,
+        right: 16,
         zIndex: 6,
         display: "flex",
         alignItems: "center",
