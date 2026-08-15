@@ -7,12 +7,12 @@ import "./Login.css";
 /**
  * Sign in to the real Pointr Cloud instance.
  *
- * The background deliberately contains no artwork or ambient motion. The logo, proposition and
- * authentication form share one short entrance sequence, then the entire screen remains still.
+ * The background deliberately contains no artwork or ambient motion. The logo stays static while
+ * the proposition and authentication form share one short entrance, then everything remains still.
  *
- * ⚠️ **The password is never held.** It lives in a controlled input for as long as someone is
- * typing and is cleared the moment the request resolves either way. `session.ts` never stores or
- * logs it.
+ * ⚠️ **The password has a deliberately short lifetime.** It lives in a controlled input only
+ * while someone is typing and is cleared the moment the request resolves either way. `session.ts`
+ * never stores or logs it.
  */
 export function Login({ onDone }: { onDone: () => void }) {
   const [email, setEmail] = useState("");
@@ -52,18 +52,20 @@ export function Login({ onDone }: { onDone: () => void }) {
             className="ms-login-logo"
             src="/pointr-cloud-logo.svg"
             alt="Pointr Cloud"
+            width={112}
+            height={114}
           />
           <div className="ms-login-kicker">Pointr · Connected venues</div>
           <h1 id="ms-login-title" className="ms-login-title">
-            <span className="ms-login-title-line">
+            <span className="ms-login-title-line ms-login-title-line--first">
               <span className="ms-login-title-line-inner">
                 Turn your venues
               </span>
             </span>
-            <span className="ms-login-title-line">
+            <span className="ms-login-title-line ms-login-title-line--second">
               <span className="ms-login-title-line-inner">into connected</span>
             </span>
-            <span className="ms-login-title-line">
+            <span className="ms-login-title-line ms-login-title-line--third">
               <span className="ms-login-title-line-inner">experiences.</span>
             </span>
           </h1>
@@ -74,17 +76,21 @@ export function Login({ onDone }: { onDone: () => void }) {
         </div>
       </section>
 
-      <section
-        className="ms-login-auth-shell"
-        aria-label="Pointr Cloud sign in"
-      >
+      <section className="ms-login-auth-shell">
         <form
           className="ms-login-card"
           onSubmit={submit}
           aria-busy={busy}
+          aria-labelledby="ms-login-form-title"
           aria-describedby={error ? "ms-login-error" : undefined}
         >
-          <Text className="ms-login-card-title">Sign in</Text>
+          <Text
+            as="h2"
+            id="ms-login-form-title"
+            className="ms-login-card-title"
+          >
+            Sign in
+          </Text>
 
           <label className="ms-login-field">
             Email

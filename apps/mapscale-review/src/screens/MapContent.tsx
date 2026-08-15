@@ -2062,6 +2062,18 @@ export function MapContent({
    * focus is only a request — the panel is not actually open on a feature until its properties
    * have arrived, and announcing sooner would flag features nobody ended up editing.
    */
+  /**
+   * **Geometry editing starts with the panel** (Olcay, 2026-08-15: *"edit shape already should be
+   * enabled when in edit mode"*) — the same reasoning that removed the Edit button. Selecting a
+   * feature is the intent to work on it; making the shape wait behind one more click was the step
+   * between the click and the thing the click was for.
+   */
+  useEffect(() => {
+    const fid = shownProps ? String(props?.fid ?? "") : "";
+    if (fid) sendGeom({ cmd: "begin", fid });
+    else sendGeom({ cmd: "end", commit: false });
+  }, [shownProps, props?.fid, sendGeom]);
+
   useEffect(() => {
     setPresenceEditing(
       shownProps ? String(props?.fid ?? "") || undefined : undefined,
@@ -2530,11 +2542,9 @@ export function MapContent({
                 />
               }
               onDirtyChange={onDirtyChange}
-              onEditGeometry={
-                shownProps && props?.fid
-                  ? () => sendGeom({ cmd: "begin", fid: props.fid })
-                  : undefined
-              }
+              geometryDirty={!!geom.dirty}
+              onCommitGeometry={() => sendGeom({ cmd: "commit" })}
+              onRevertGeometry={() => sendGeom({ cmd: "reset" })}
               flagged={focusedFlagged}
               flagNote={
                 focusedFlagged && shownProps?.name && target

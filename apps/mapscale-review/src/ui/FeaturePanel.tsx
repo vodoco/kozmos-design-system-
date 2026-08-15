@@ -589,7 +589,9 @@ export function FeaturePanel({
   flagShared,
   flagNote,
   onDirtyChange,
-  onEditGeometry,
+  geometryDirty,
+  onCommitGeometry,
+  onRevertGeometry,
   subTypeOptions,
   onEdited,
   onClose,
@@ -607,10 +609,12 @@ export function FeaturePanel({
    */
   onDirtyChange?: (dirty: boolean) => void;
   /**
-   * Start editing this feature's outline on the map. Omitted when there is nothing to edit — the
-   * geometry lives in the map page, so the panel only opens the door.
+   * The shape is edited on the map, but committed HERE — geometry and properties are one edit, so
+   * they share one Update and one Cancel rather than each growing their own pair.
    */
-  onEditGeometry?: () => void;
+  geometryDirty?: boolean;
+  onCommitGeometry?: () => void;
+  onRevertGeometry?: () => void;
   subTypeOptions?: string[];
   /** An edit was saved. Carries the flag-clearing consequence (§18a) up. D3: nothing persists. */
   onEdited?: (next: Record<string, unknown>) => void;
@@ -671,9 +675,15 @@ export function FeaturePanel({
       if (JSON.stringify(p[k]) !== JSON.stringify(draft[k])) return true;
     return false;
   }, [p, draft, fields]);
+  /**
+   * The SHAPE counts as an edit too. Geometry lives on the map, but it is the same edit session, so
+   * dragging a corner must light Update exactly as typing a name does — otherwise the only way to
+   * save a reshaped outline would be to also change a property, which is absurd.
+   */
+  const anyDirty = dirty || !!geometryDirty;
   useEffect(() => {
-    onDirtyChange?.(dirty);
-  }, [dirty, onDirtyChange]);
+    onDirtyChange?.(anyDirty);
+  }, [anyDirty, onDirtyChange]);
   // Leaving the panel must not leave the app believing an edit is still open.
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
@@ -735,6 +745,9 @@ export function FeaturePanel({
 
   const save = () => {
     setEditing(false);
+    // One Update commits both halves. The map keeps the shape and re-baselines, so the panel does
+    // not stay dirty against an outline it has just saved.
+    onCommitGeometry?.();
     // Only the keys the editor owns; identity is never in the draft's gift.
     const next: Record<string, unknown> = {
       name: draft.name ?? "",
@@ -1138,21 +1151,6 @@ export function FeaturePanel({
               }}
             />
 
-            {/*
-              **Geometry is edited on the map, not in the panel** — so this is a door, not a field.
-              A shape cannot be shown or manipulated in a 360px inspector, and the toolbar that
-              appears takes over the bottom of the map for exactly as long as you are drawing.
-            */}
-            {onEditGeometry && (
-              <Button
-                variant="outline"
-                onClick={onEditGeometry}
-                style={{ width: "100%", marginTop: 16 }}
-              >
-                Edit shape on the map
-              </Button>
-            )}
-
             <Text
               style={{
                 display: "block",
@@ -1199,6 +1197,7 @@ export function FeaturePanel({
               onClick={() => {
                 setEditing(false);
                 reset();
+                onRevertGeometry?.(); // Cancel means the shape too, not just the fields
               }}
             >
               Cancel
@@ -1206,7 +1205,7 @@ export function FeaturePanel({
             <Button
               style={{ flex: 1 }}
               onClick={save}
-              disabled={!dirty || !String(draft.name ?? "").trim()}
+              disabled={!anyDirty || !String(draft.name ?? "").trim()}
             >
               Update
             </Button>

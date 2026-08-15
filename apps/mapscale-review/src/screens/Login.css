@@ -4,6 +4,21 @@
   --login-muted: #626978;
   --login-line: #d9dfeb;
   --login-green: #2fbf71;
+  /*
+   * One page-load choreography. Change timing here rather than on individual selectors.
+   * The Kozmos motion scale is honoured when the full design-config provider is present.
+   */
+  --login-motion-scale: var(--motion-duration-scale, 1);
+  --login-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --login-motion-duration-short: calc(360ms * var(--login-motion-scale));
+  --login-motion-duration-copy: calc(420ms * var(--login-motion-scale));
+  --login-motion-duration-main: calc(520ms * var(--login-motion-scale));
+  --login-motion-delay-kicker: calc(500ms * var(--login-motion-scale));
+  --login-motion-delay-title-1: calc(520ms * var(--login-motion-scale));
+  --login-motion-delay-title-2: calc(590ms * var(--login-motion-scale));
+  --login-motion-delay-card: calc(620ms * var(--login-motion-scale));
+  --login-motion-delay-title-3: calc(660ms * var(--login-motion-scale));
+  --login-motion-delay-lede: calc(800ms * var(--login-motion-scale));
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 390px);
@@ -45,7 +60,8 @@
   font-weight: 650;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  animation: ms-login-copy-arrive 360ms cubic-bezier(0.22, 1, 0.36, 1) 500ms both;
+  animation: ms-login-copy-arrive var(--login-motion-duration-short)
+    var(--login-motion-ease) var(--login-motion-delay-kicker) both;
 }
 
 .ms-login-title {
@@ -65,19 +81,20 @@
 
 .ms-login-title-line-inner {
   display: block;
-  animation: ms-login-title-arrive 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: ms-login-title-arrive var(--login-motion-duration-main)
+    var(--login-motion-ease) both;
 }
 
-.ms-login-title-line:nth-child(1) .ms-login-title-line-inner {
-  animation-delay: 520ms;
+.ms-login-title-line--first .ms-login-title-line-inner {
+  animation-delay: var(--login-motion-delay-title-1);
 }
 
-.ms-login-title-line:nth-child(2) .ms-login-title-line-inner {
-  animation-delay: 590ms;
+.ms-login-title-line--second .ms-login-title-line-inner {
+  animation-delay: var(--login-motion-delay-title-2);
 }
 
-.ms-login-title-line:nth-child(3) .ms-login-title-line-inner {
-  animation-delay: 660ms;
+.ms-login-title-line--third .ms-login-title-line-inner {
+  animation-delay: var(--login-motion-delay-title-3);
 }
 
 .ms-login-lede {
@@ -86,7 +103,8 @@
   color: #454c59;
   font-size: 15px;
   line-height: 1.65;
-  animation: ms-login-copy-arrive 420ms cubic-bezier(0.22, 1, 0.36, 1) 800ms both;
+  animation: ms-login-copy-arrive var(--login-motion-duration-copy)
+    var(--login-motion-ease) var(--login-motion-delay-lede) both;
 }
 
 .ms-login-auth-shell {
@@ -103,7 +121,8 @@
   box-shadow:
     0 26px 64px rgba(31, 55, 106, 0.1),
     0 2px 8px rgba(31, 55, 106, 0.04);
-  animation: ms-login-card-arrive 520ms cubic-bezier(0.22, 1, 0.36, 1) 620ms both;
+  animation: ms-login-card-arrive var(--login-motion-duration-main)
+    var(--login-motion-ease) var(--login-motion-delay-card) both;
 }
 
 @keyframes ms-login-copy-arrive {
@@ -144,6 +163,7 @@
 
 .ms-login-card-title {
   display: block;
+  margin: 0;
   color: var(--login-text);
   font-size: 26px;
   font-weight: 600;
@@ -205,7 +225,7 @@
   gap: 8px;
   margin-top: 18px;
   padding-top: 15px;
-  color: #737986;
+  color: var(--login-muted);
   border-top: 1px solid #e9edf4;
   font-size: 10.5px;
   line-height: 1.4;

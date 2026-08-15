@@ -1787,6 +1787,17 @@ function start() {
     // Everyone else sees where you point, wherever you point — this is not gated on hovering
     // something, because a cursor resting on blank floor is still information.
     post("cursor", { lng: ev.lngLat.lng, lat: ev.lngLat.lat });
+    /**
+     * ⚠️ **While a shape is being edited, nothing else may claim the pointer** (Olcay, 2026-08-15:
+     * *"edit-geometry nodes should prevent any overlay to trigger"*). The hover card was drawing
+     * itself straight over the vertex handles — covering the very points you were reaching for, and
+     * inviting a "Click to edit" on a feature you are already editing.
+     */
+    if (GEOM) {
+      if (HOVER_FEATURE) { HOVER_FEATURE = null; highlightFeatures(null); renderTip(); }
+      map.getCanvas().style.cursor = "";
+      return;
+    }
     if (shown()) return;                              // a change's card owns the cursor
     const f = editableAt(ev.point);
     const fid = f && f.properties && f.properties.fid;
@@ -1870,7 +1881,7 @@ function start() {
      * did nothing. `mouseup` + `isTap` is the pattern every other selection here uses; this one
      * was written against what ought to work instead of what does.
      */
-    else if (map && !shown()) {
+    else if (map && !shown() && !GEOM) {   // editing owns the pointer; see the mousemove note
       const rect = map.getCanvas().getBoundingClientRect();
       const f = editableAt([ev.clientX - rect.left, ev.clientY - rect.top]);
       if (f && f.properties && f.properties.fid)
@@ -2042,6 +2053,20 @@ function geomBegin(fid) {
   post("geomstate", geomState());
 }
 
+/**
+ * Save the shape and carry on editing — what the panel's **Update** means now that geometry is
+ * simply part of edit mode. Re-baselining is the point: without it the editor would still report
+ * itself dirty against the outline you just replaced.
+ */
+function geomCommit() {
+  if (!GEOM) return;
+  post("geometry", { fid: GEOM.fid, rings: GEOM.rings });
+  GEOM.original = JSON.parse(JSON.stringify(GEOM.rings));
+  GEOM.history = [];
+  GEOM.future = [];
+  post("geomstate", geomState());
+}
+
 function geomEnd(commit) {
   if (!GEOM) return;
   if (commit) post("geometry", { fid: GEOM.fid, rings: GEOM.rings });
@@ -2065,8 +2090,13 @@ function geomFind(fid) {
 
 function geomState() {
   return GEOM
-    ? { editing: true, fid: GEOM.fid, mode: GEOM.mode, snap: GEOM.snap,
-        canUndo: GEOM.history.length > 0, canRedo: GEOM.future.length > 0 }
+    ? {
+        editing: true, fid: GEOM.fid, mode: GEOM.mode, snap: GEOM.snap,
+        canUndo: GEOM.history.length > 0, canRedo: GEOM.future.length > 0,
+        // Compared against the baseline, not "did anything happen" — drag a point and put it back
+        // and you have changed nothing, so Update must not light up.
+        dirty: JSON.stringify(GEOM.rings) !== JSON.stringify(GEOM.original),
+      }
     : { editing: false };
 }
 
@@ -2354,6 +2384,7 @@ window.addEventListener("message", (ev) => {
     // One entry point for every toolbar command — the app never reaches into the editor's state.
     if (d.cmd === "begin") geomBegin(d.fid);
     else if (d.cmd === "end") geomEnd(!!d.commit);
+    else if (d.cmd === "commit") geomCommit();
     else if (d.cmd === "mode") geomSetMode(d.mode);
     else if (d.cmd === "snap") geomToggleSnap();
     else if (d.cmd === "undo") geomUndo();

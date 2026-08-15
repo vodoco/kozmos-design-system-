@@ -2,9 +2,14 @@
  * The geometry toolbar — bottom centre of the map, the v9 *Map Content Geometry* position
  * (Olcay, 2026-08-14, against `b8dqhE3CPxitYfqlXuQJTC` node `465:7046`).
  *
- * **It appears only while a feature is being edited**, which is the whole reason it can sit in the
- * middle of the map: a permanent bar there would cover the floor plan for the 95% of the time
- * nobody is drawing.
+ * **It appears whenever the properties panel is open**, which is whenever a feature is selected —
+ * because selecting a feature IS edit mode here (Olcay, 2026-08-15: *"edit shape already should be
+ * enabled when in edit mode"*). It carries no Cancel or Done of its own: the panel's own
+ * **Cancel** and **Update** commit or discard the shape and the properties together, because they
+ * are one edit, not two.
+ *
+ * It still disappears with the panel — a permanent bar across the middle of the map would cover the
+ * floor plan for the 95% of the time nobody is editing.
  *
  * ⚠️ **`Split` is not here, deliberately.** Cutting a polygon properly means walking the ring,
  * inserting every intersection with the cut line and re-assembling two valid rings — for concave
@@ -19,6 +24,8 @@ export interface GeomState {
   snap?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
+  /** Has the outline actually changed? Feeds the panel's Update button. */
+  dirty?: boolean;
 }
 
 export type GeomCommand =
@@ -29,8 +36,7 @@ export type GeomCommand =
   | { cmd: "reset" }
   | { cmd: "straighten" }
   | { cmd: "rotate"; deg: number }
-  | { cmd: "scale"; k: number }
-  | { cmd: "end"; commit: boolean };
+  | { cmd: "scale"; k: number };
 
 const BTN: React.CSSProperties = {
   display: "flex",
@@ -210,27 +216,6 @@ export function GeometryToolbar({
         title="Back to the published outline"
       >
         Reset
-      </button>
-
-      <Sep />
-      <button
-        type="button"
-        style={{ ...BTN, color: "var(--primitives-colors-background-600)" }}
-        onClick={() => onCommand({ cmd: "end", commit: false })}
-      >
-        Cancel
-      </button>
-      <button
-        type="button"
-        style={{
-          ...BTN,
-          background: "#0b369c",
-          color: "#fff",
-          fontWeight: 500,
-        }}
-        onClick={() => onCommand({ cmd: "end", commit: true })}
-      >
-        Done
       </button>
     </div>
   );
