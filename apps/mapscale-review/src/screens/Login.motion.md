@@ -24,6 +24,11 @@ masks so a paused or captured intermediate frame never shows sliced letterforms.
 - Headline text and deliberate line breaks: `Login.tsx`.
 - Static Pointr Cloud artwork: `public/pointr-cloud-logo.svg`.
 
+The full-screen surface and responsive page padding belong to `.ms-login-page`. The centered
+content frame belongs to `.ms-login-layout`: it is capped at 1240 px, with a two-column gap capped
+at 96 px. Change those values together when adjusting the wide-screen composition; do not put the
+maximum width on either column independently.
+
 The page timing variables are grouped at the top of `.ms-login-page`. Change those variables
 instead of editing individual animation declarations.
 
@@ -35,8 +40,8 @@ gains or loses a line, update the JSX and its delay token together; do not rely 
 - `prefers-reduced-motion: reduce` renders the final state immediately. The logo is already static.
 - Page durations also multiply by the Kozmos `--motion-duration-scale` token when the full design
   configuration provider supplies it.
-- Only `opacity`, `transform` and the small SVG's `stroke-dashoffset` animate. Do not animate layout
-  properties such as width, height, margin or top.
+- Only `opacity` and `transform` animate. Do not animate layout properties such as width, height,
+  margin or top.
 - Do not add a permanent `will-change`; this sequence is short and does not justify retaining
   compositor layers after it finishes.
 - Keep the background static unless the visual direction changes deliberately. A second unrelated
@@ -62,6 +67,7 @@ pnpm --filter mapscale-review exec eslint src/screens/Login.tsx
 xmllint --noout apps/mapscale-review/public/pointr-cloud-logo.svg
 ```
 
-Check at minimum 320 px, 390 px, 768 px, 900 px, 901 px, 1024 px and 1440 px widths. The page may
-scroll vertically on short mobile/tablet viewports, but it must never overflow horizontally or
-push the logo above the scroll origin.
+Check at minimum 320 px, 390 px, 768 px, 900 px, 901 px, 1024 px, 1440 px, 1920 px and 2560 px
+widths. At 1920 px and above, the content frame must remain 1240 px wide and centered. The page may
+scroll vertically on short mobile/tablet viewports, but it must never overflow horizontally or push
+the logo above the scroll origin.

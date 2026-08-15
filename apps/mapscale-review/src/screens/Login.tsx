@@ -46,123 +46,127 @@ export function Login({ onDone }: { onDone: () => void }) {
 
   return (
     <main className="ms-login-page">
-      <section className="ms-login-story" aria-labelledby="ms-login-title">
-        <div className="ms-login-copy">
-          <img
-            className="ms-login-logo"
-            src="/pointr-cloud-logo.svg"
-            alt="Pointr Cloud"
-            width={112}
-            height={114}
-          />
-          <div className="ms-login-kicker">Pointr · Connected venues</div>
-          <h1 id="ms-login-title" className="ms-login-title">
-            <span className="ms-login-title-line ms-login-title-line--first">
-              <span className="ms-login-title-line-inner">
-                Turn your venues
+      <div className="ms-login-layout">
+        <section className="ms-login-story" aria-labelledby="ms-login-title">
+          <div className="ms-login-copy">
+            <img
+              className="ms-login-logo"
+              src="/pointr-cloud-logo.svg"
+              alt="Pointr Cloud"
+              width={112}
+              height={114}
+            />
+            <div className="ms-login-kicker">Pointr · Connected venues</div>
+            <h1 id="ms-login-title" className="ms-login-title">
+              <span className="ms-login-title-line ms-login-title-line--first">
+                <span className="ms-login-title-line-inner">
+                  Turn your venues
+                </span>
               </span>
-            </span>
-            <span className="ms-login-title-line ms-login-title-line--second">
-              <span className="ms-login-title-line-inner">into connected</span>
-            </span>
-            <span className="ms-login-title-line ms-login-title-line--third">
-              <span className="ms-login-title-line-inner">experiences.</span>
-            </span>
-          </h1>
-          <p className="ms-login-lede">
-            Pointr brings maps, positioning, wayfinding and location services
-            together to make every venue feel seamlessly connected.
-          </p>
-        </div>
-      </section>
+              <span className="ms-login-title-line ms-login-title-line--second">
+                <span className="ms-login-title-line-inner">
+                  into connected
+                </span>
+              </span>
+              <span className="ms-login-title-line ms-login-title-line--third">
+                <span className="ms-login-title-line-inner">experiences.</span>
+              </span>
+            </h1>
+            <p className="ms-login-lede">
+              Pointr brings maps, positioning, wayfinding and location services
+              together to make every venue feel seamlessly connected.
+            </p>
+          </div>
+        </section>
 
-      <section className="ms-login-auth-shell">
-        <form
-          className="ms-login-card"
-          onSubmit={submit}
-          aria-busy={busy}
-          aria-labelledby="ms-login-form-title"
-          aria-describedby={error ? "ms-login-error" : undefined}
-        >
-          <Text
-            as="h2"
-            id="ms-login-form-title"
-            className="ms-login-card-title"
+        <section className="ms-login-auth-shell">
+          <form
+            className="ms-login-card"
+            onSubmit={submit}
+            aria-busy={busy}
+            aria-labelledby="ms-login-form-title"
+            aria-describedby={error ? "ms-login-error" : undefined}
           >
-            Sign in
-          </Text>
-
-          <label className="ms-login-field">
-            Email
-            <Input
-              className="ms-login-input"
-              type="email"
-              name="username"
-              autoComplete="username"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.currentTarget.value)}
-              placeholder="you@pointr.tech"
-            />
-          </label>
-
-          <label className="ms-login-field">
-            Password
-            <Input
-              className="ms-login-input"
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.currentTarget.value)}
-            />
-          </label>
-
-          {/* Announced, not just coloured — an authentication failure must never be visual-only. */}
-          {error && (
-            <div
-              id="ms-login-error"
-              className="ms-login-alert ms-login-alert--error"
-              role="alert"
+            <Text
+              as="h2"
+              id="ms-login-form-title"
+              className="ms-login-card-title"
             >
-              {error}
-            </div>
-          )}
-          {!configured && (
-            <div
-              className="ms-login-alert ms-login-alert--neutral"
-              role="alert"
+              Sign in
+            </Text>
+
+            <label className="ms-login-field">
+              Email
+              <Input
+                className="ms-login-input"
+                type="email"
+                name="username"
+                autoComplete="username"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.currentTarget.value)}
+                placeholder="you@pointr.tech"
+              />
+            </label>
+
+            <label className="ms-login-field">
+              Password
+              <Input
+                className="ms-login-input"
+                type="password"
+                name="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.currentTarget.value)}
+              />
+            </label>
+
+            {/* Announced, not just coloured — an authentication failure must never be visual-only. */}
+            {error && (
+              <div
+                id="ms-login-error"
+                className="ms-login-alert ms-login-alert--error"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+            {!configured && (
+              <div
+                className="ms-login-alert ms-login-alert--neutral"
+                role="alert"
+              >
+                This build has no Pointr connection configured, so there is
+                nothing to sign in to.
+              </div>
+            )}
+
+            <Button
+              className="ms-login-submit"
+              type="submit"
+              disabled={busy || !configured}
             >
-              This build has no Pointr connection configured, so there is
-              nothing to sign in to.
-            </div>
-          )}
+              {busy ? "Signing in…" : "Sign in"}
+            </Button>
 
-          <Button
-            className="ms-login-submit"
-            type="submit"
-            disabled={busy || !configured}
-          >
-            {busy ? "Signing in…" : "Sign in"}
-          </Button>
+            <Text className="ms-login-privacy">
+              Your session lasts until you close this tab. Nothing is stored on
+              this machine.
+            </Text>
 
-          <Text className="ms-login-privacy">
-            Your session lasts until you close this tab. Nothing is stored on
-            this machine.
-          </Text>
-
-          {configured && (
-            <div
-              className="ms-login-instance"
-              title={`Pointr Cloud instance: ${instance}`}
-            >
-              <span className="ms-login-instance-dot" aria-hidden="true" />
-              Connected to {instance}
-            </div>
-          )}
-        </form>
-      </section>
+            {configured && (
+              <div
+                className="ms-login-instance"
+                title={`Pointr Cloud instance: ${instance}`}
+              >
+                <span className="ms-login-instance-dot" aria-hidden="true" />
+                Connected to {instance}
+              </div>
+            )}
+          </form>
+        </section>
+      </div>
     </main>
   );
 }

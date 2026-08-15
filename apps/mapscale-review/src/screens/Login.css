@@ -21,14 +21,22 @@
   --login-motion-delay-lede: calc(800ms * var(--login-motion-scale));
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 390px);
-  align-items: center;
-  gap: clamp(56px, 8vw, 136px);
+  align-items: safe center;
+  justify-items: center;
   flex: 1;
   min-height: 620px;
   padding: clamp(48px, 7vw, 108px);
   overflow: auto;
   background: #f4f7fc;
+}
+
+.ms-login-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 390px);
+  align-items: center;
+  gap: clamp(56px, 7vw, 96px);
+  width: 100%;
+  max-width: 1240px;
 }
 
 .ms-login-story,
@@ -242,11 +250,12 @@
 
 @media (max-width: 900px) {
   .ms-login-page {
-    grid-template-columns: 1fr;
-    align-content: safe center;
-    gap: 44px;
-    min-height: 100%;
     padding: clamp(32px, 8vw, 64px);
+  }
+
+  .ms-login-layout {
+    grid-template-columns: 1fr;
+    gap: 44px;
   }
 
   .ms-login-copy {
@@ -268,8 +277,11 @@
 
 @media (max-width: 520px) {
   .ms-login-page {
-    gap: 34px;
     padding: 28px 20px;
+  }
+
+  .ms-login-layout {
+    gap: 34px;
   }
 
   .ms-login-title {
