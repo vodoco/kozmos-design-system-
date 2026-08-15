@@ -25,6 +25,28 @@ import {
  * if you can go there, so the whole row is the control — it moves the map to their building and
  * level, which is the same destination their cursor is drawn in.
  */
+/** A pencil, 12px. `@kozmos/icons` has no edit glyph at this size — the same D9 gap as elsewhere. */
+function EditGlyph({ colour }: { colour: string }) {
+  return (
+    <svg
+      width={12}
+      height={12}
+      viewBox="0 0 12 12"
+      aria-hidden
+      focusable="false"
+      style={{ flex: "0 0 auto" }}
+    >
+      <path
+        d="M8.2 1.6 L10.4 3.8 L4.3 9.9 L1.6 10.4 L2.1 7.7 Z"
+        fill="none"
+        stroke={colour}
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function OnlinePeople() {
   useSyncExternalStore(subscribePresence, presenceVersion);
   const { building, level } = getMyFloor();
@@ -150,13 +172,20 @@ export function OnlinePeople() {
               type="button"
               onClick={() => canFollow && followPeer(p.at)}
               disabled={!canFollow}
-              title={
+              title={[
+                p.at.editingName
+                  ? `Editing ${p.at.editingName}`
+                  : p.at.editingFid
+                    ? "Editing a feature"
+                    : "",
                 here
                   ? "Already on this floor"
                   : canFollow
                     ? `Go to ${placeOf(p)}`
-                    : "Not on a floor yet"
-              }
+                    : "Not on a floor yet",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -191,15 +220,30 @@ export function OnlinePeople() {
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span
                   style={{
-                    display: "block",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
                     fontSize: 12.5,
                     color: "var(--review-ink)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
+                    minWidth: 0,
                   }}
                 >
-                  {p.identity.name}
+                  <span
+                    style={{
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {p.identity.name}
+                  </span>
+                  {/*
+                    The map draws the outline they are working on, in this same colour — but only
+                    if you are on their floor and looking at it. The pencil is the version that
+                    survives being somewhere else, and the tooltip is the only place that says
+                    WHICH feature.
+                  */}
+                  {p.at.editingFid && <EditGlyph colour={peerColour(p)} />}
                 </span>
                 <span
                   style={{

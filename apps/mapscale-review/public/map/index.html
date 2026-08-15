@@ -38,13 +38,6 @@
      between them is what turns a stutter into a glide. `will-change` keeps it on the compositor. */
   .peer { position: absolute; top: 0; left: 0; will-change: transform;
           transition: transform .12s linear; display: flex; align-items: flex-start; gap: 4px; }
-  /* Pinned to a feature's centre, and centred ON it — this marks an object, not a point. */
-  .editing-chip { position: absolute; top: 0; left: 0; will-change: transform;
-                  transition: transform .12s linear; margin: -10px 0 0 0;
-                  transform-origin: 0 0; font-size: 10.5px; line-height: 1; color: #fff;
-                  padding: 4px 7px; border-radius: 999px; white-space: nowrap;
-                  font-family: 'Readex Pro', system-ui, sans-serif;
-                  box-shadow: 0 1px 4px rgba(0,0,0,.25); }
   .peer-name { transform: translateY(12px); font-size: 10.5px; line-height: 1; color: #fff;
                padding: 3px 6px; border-radius: 999px; white-space: nowrap;
                font-family: 'Readex Pro', system-ui, sans-serif; }
@@ -711,45 +704,62 @@ function drawPeers() {
 }
 
 /**
- * "Ege is editing this" — a chip pinned to the feature somebody else has open.
+ * **The outline of what somebody else has open**, drawn in their colour.
  *
- * Anchored to the FEATURE, not to their cursor: an editor's pointer wanders off to the panel on
- * the right while the thing they are changing stays put, and a marker that follows the cursor
- * would point at the wrong object precisely when it matters.
+ * It used to be a chip reading *"Ege is editing"* pinned to the feature. Olcay, 2026-08-15:
+ * *"instead of showing a tag for X is editing, let's highlight the geometry for other users. They
+ * already can see the cursor."* — which is right twice over. The colour already ties the shape to
+ * that person's cursor and avatar, so the name was saying a third time what two surfaces said
+ * already; and a text chip sits ON the map at a fixed size, covering the very floor plan the
+ * highlight is about.
  *
- * Position comes from `scanFeature`, with the same `FEATURE_BOUNDS` cache the camera uses — so a
- * feature that is off-screen or not yet in a loaded tile still resolves.
+ * Dashed on purpose: a solid coloured outline is what the diff layer uses for a *change*, and this
+ * is somebody's attention, not a change.
  */
 function drawEditing() {
   if (!map) return;
   let layer = document.getElementById("editing");
   if (!layer) {
-    layer = document.createElement("div");
-    layer.id = "editing";
-    layer.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden";
+    layer = el("svg", { id: "editing" });
+    layer.setAttribute("style",
+      "position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none");
     document.body.appendChild(layer);
   }
-  const seen = new Set();
+  while (layer.firstChild) layer.removeChild(layer.firstChild);
+
   for (const e of EDITING) {
     if (!e || !e.fid) continue;
-    const hit = scanFeature(e.fid);
-    const bounds = (hit && hit.bounds) || FEATURE_BOUNDS[e.fid] || null;
-    if (!bounds) continue;                       // not on this floor, or no tile for it yet
-    seen.add(e.fid);
-    let node = document.getElementById("edit-" + e.fid);
-    if (!node) {
-      node = document.createElement("div");
-      node.id = "edit-" + e.fid;
-      node.className = "editing-chip";
-      layer.appendChild(node);
+    const rings = featureRings(e.fid);
+    if (!rings.length) continue;                 // not on this floor, or no tile for it yet
+    const colour = e.colour || "#0b369c";
+    for (const ring of rings) {
+      const d = ring.map((c, i) => { const p = map.project(c); return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ") + " Z";
+      layer.appendChild(el("path", {
+        d, fill: colour, "fill-opacity": .12, stroke: colour,
+        "stroke-width": 2.5, "stroke-dasharray": "8 5", "stroke-linejoin": "round",
+      }));
     }
-    node.style.background = e.colour || "#0b369c";
-    node.textContent = e.who + " is editing";
-    const c = map.project([(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2]);
-    node.style.transform = "translate3d(" + Math.round(c.x) + "px," + Math.round(c.y) + "px,0)";
   }
-  for (const node of [...layer.children])
-    if (!seen.has(node.id.slice(5))) node.remove();
+}
+
+/**
+ * Every outer ring of a feature, accumulated across tiles.
+ *
+ * A feature that straddles a tile boundary arrives once per tile, so taking the first match would
+ * draw half a room — the same reason `scanFeature` accumulates its bounds rather than returning on
+ * the first hit.
+ */
+function featureRings(fid) {
+  const out = [];
+  try {
+    const layers = [...new Set(map.getStyle().layers
+      .filter(l => l.source === "source_ptr" && l["source-layer"])
+      .map(l => l["source-layer"]))];
+    for (const L of layers)
+      for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L }))
+        if (f.properties && f.properties.fid === fid && f.geometry) out.push(...ringsOuter(f));
+  } catch (e) {}
+  return out;
 }
 
 function drawBadge(cx, cy, kind, hasNote){
@@ -2077,15 +2087,8 @@ function geomEnd(commit) {
 
 /** The feature's outer rings, from the vector source rather than the viewport. */
 function geomFind(fid) {
-  try {
-    const layers = [...new Set(map.getStyle().layers
-      .filter(l => l.source === "source_ptr" && l["source-layer"])
-      .map(l => l["source-layer"]))];
-    for (const L of layers)
-      for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L }))
-        if (f.properties && f.properties.fid === fid && f.geometry) return ringsOuter(f);
-  } catch (e) {}
-  return null;
+  const rings = featureRings(fid);
+  return rings.length ? rings : null;
 }
 
 function geomState() {
