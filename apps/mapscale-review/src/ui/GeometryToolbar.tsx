@@ -64,13 +64,17 @@ export type GeomCommand =
   | { cmd: "scale"; k: number };
 
 /* ── icons ────────────────────────────────────────────────────────────────────
-   One 20×20 grid, one 1.6 stroke, `currentColor` throughout — so a button's own
-   colour and disabled state carry to its icon without a second set of rules. */
+   One 24×24 grid, one 1.6 stroke, `currentColor` throughout — so a button's own
+   colour and disabled state carry to its icon without a second set of rules.
+
+   Drawn at 22px (Olcay, 2026-08-15: *"I rather like to see larger symbols"*),
+   which is large enough that each one has to actually depict its operation —
+   at 17px a wrong icon merely looks like a smudge, at 22px it looks wrong. */
 
 const ICON = {
-  width: 17,
-  height: 17,
-  viewBox: "0 0 20 20",
+  width: 22,
+  height: 22,
+  viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
   strokeWidth: 1.6,
@@ -78,11 +82,47 @@ const ICON = {
   strokeLinejoin: "round",
 } as const;
 
+/** Reshape — an irregular outline with its corners grabbable. */
+function Reshape() {
+  return (
+    <svg {...ICON} aria-hidden>
+      <path d="M5.5 6.5 12 4l6.5 4.5-2 9.5-9-1z" />
+      <circle cx="5.5" cy="6.5" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="4" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="18.5" cy="8.5" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="16.5" cy="18" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="7.5" cy="17" r="1.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Move — the whole thing, in any direction. */
+function Move() {
+  return (
+    <svg {...ICON} aria-hidden>
+      <path d="M12 3.5v17M3.5 12h17" />
+      <path d="M9.6 5.9 12 3.5l2.4 2.4M9.6 18.1 12 20.5l2.4-2.4" />
+      <path d="M5.9 9.6 3.5 12l2.4 2.4M18.1 9.6 20.5 12l-2.4 2.4" />
+    </svg>
+  );
+}
+
+/** Split — one shape, two halves, the cut between them. */
+function Split() {
+  return (
+    <svg {...ICON} aria-hidden>
+      <path d="M9.5 5H5.5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4" />
+      <path d="M14.5 5h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4" />
+      <path d="M12 3v3M12 9v3M12 15v3M12 21v0" strokeDasharray="0.1 0" />
+    </svg>
+  );
+}
+
 function RotateLeft() {
   return (
     <svg {...ICON} aria-hidden>
-      <path d="M4.2 7.2A6.5 6.5 0 1 1 3.5 10" />
-      <path d="M3.4 3.6v3.7h3.7" />
+      <path d="M5 8.6A8 8 0 1 1 4 12" />
+      <path d="M4 4v4.6h4.6" />
     </svg>
   );
 }
@@ -90,8 +130,8 @@ function RotateLeft() {
 function RotateRight() {
   return (
     <svg {...ICON} aria-hidden>
-      <path d="M15.8 7.2A6.5 6.5 0 1 0 16.5 10" />
-      <path d="M16.6 3.6v3.7h-3.7" />
+      <path d="M19 8.6A8 8 0 1 0 20 12" />
+      <path d="M20 4v4.6h-4.6" />
     </svg>
   );
 }
@@ -100,8 +140,8 @@ function RotateRight() {
 function ScaleUp() {
   return (
     <svg {...ICON} aria-hidden>
-      <path d="M11.6 8.4 16.5 3.5M16.5 3.5h-4M16.5 3.5v4" />
-      <path d="M8.4 11.6 3.5 16.5M3.5 16.5h4M3.5 16.5v-4" />
+      <path d="M13.8 10.2 20 4M20 4h-5M20 4v5" />
+      <path d="M10.2 13.8 4 20M4 20h5M4 20v-5" />
     </svg>
   );
 }
@@ -110,8 +150,32 @@ function ScaleUp() {
 function ScaleDown() {
   return (
     <svg {...ICON} aria-hidden>
-      <path d="M16.5 3.5 11.6 8.4M11.6 8.4h4M11.6 8.4v-4" />
-      <path d="M3.5 16.5 8.4 11.6M8.4 11.6h-4M8.4 11.6v4" />
+      <path d="M20 4l-6.2 6.2M13.8 10.2h5M13.8 10.2v-5" />
+      <path d="M4 20l6.2-6.2M10.2 13.8h-5M10.2 13.8v5" />
+    </svg>
+  );
+}
+
+/** Straighten — three points that have been brought onto one line. */
+function Straighten() {
+  return (
+    <svg {...ICON} aria-hidden>
+      <path d="M3.5 15h17" />
+      <path d="M8 8.5 12 5l4 3.5" strokeOpacity=".35" />
+      <circle cx="4.5" cy="15" r="2" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="15" r="2" fill="currentColor" stroke="none" />
+      <circle cx="19.5" cy="15" r="2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Snap — two corners closing on the same point, which is literally what it does. */
+function Snap() {
+  return (
+    <svg {...ICON} aria-hidden>
+      <path d="M4 10V4h6" />
+      <path d="M20 14v6h-6" />
+      <circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -119,8 +183,8 @@ function ScaleDown() {
 function Undo() {
   return (
     <svg {...ICON} aria-hidden>
-      <path d="M4 9h8.2a3.9 3.9 0 0 1 0 7.8H7.5" />
-      <path d="M7 5.8 3.6 9 7 12.2" />
+      <path d="M4.5 10.5h9.8a4.8 4.8 0 0 1 0 9.6H8.5" />
+      <path d="M8.2 6.6 4.2 10.5l4 3.9" />
     </svg>
   );
 }
@@ -128,8 +192,20 @@ function Undo() {
 function Redo() {
   return (
     <svg {...ICON} aria-hidden>
-      <path d="M16 9H7.8a3.9 3.9 0 0 0 0 7.8h4.7" />
-      <path d="M13 5.8 16.4 9 13 12.2" />
+      <path d="M19.5 10.5H9.7a4.8 4.8 0 0 0 0 9.6h5.8" />
+      <path d="M15.8 6.6l4 3.9-4 3.9" />
+    </svg>
+  );
+}
+
+/** Reset — rewind to the start. Deliberately NOT a circular arrow: that is the rotate icon, and
+    the one control that throws your work away must not look like the one that nudges it 15°. */
+function Rewind() {
+  return (
+    <svg {...ICON} aria-hidden>
+      <path d="M4.5 5.5v13" />
+      <path d="M20 6.2v11.6L12.8 12z" />
+      <path d="M12.4 6.2v11.6L5.2 12z" />
     </svg>
   );
 }
@@ -144,38 +220,46 @@ const BAR_ON_INK = "#0b369c";
    and a hex in fact. */
 const BAR_BAD = "#d41c42";
 
-const ROW_H = 34;
-
-const CONTROL: React.CSSProperties = {
+/**
+ * **Symbol above, word below** (Olcay, 2026-08-15: *"I rather like to see larger symbols. and small
+ * text underneath"*).
+ *
+ * The icon-only version leaned entirely on `title=`, which means the bar could only be learned by
+ * hovering every control in it one at a time. A label under each symbol makes the whole bar
+ * readable at a glance, and it costs width the map can afford — the bar is one row on a full-width
+ * map, not a phone.
+ *
+ * The rotate and scale labels carry their STEP (`15°`, `5%`) rather than repeating the verb the
+ * icon already gives. Those are stepped rather than dragged so they are repeatable, and how big
+ * each press is was previously knowable only by pressing it and watching.
+ */
+const TILE: React.CSSProperties = {
   display: "flex",
+  flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  gap: 6,
-  height: ROW_H,
+  gap: 3,
+  minWidth: 52,
+  padding: "6px 7px 5px",
   borderRadius: 8,
   border: "none",
   background: "none",
   font: "inherit",
-  fontSize: 12.5,
-  lineHeight: 1,
   color: BAR_INK,
   cursor: "pointer",
   whiteSpace: "nowrap",
-  padding: "0 11px",
   transition: "background .12s ease, color .12s ease",
 };
 
-/** Square, because an icon has no reading direction to give it a natural width. */
-const ICON_BTN: React.CSSProperties = {
-  ...CONTROL,
-  width: ROW_H,
-  padding: 0,
-  color: BAR_MUTED,
+const TILE_LABEL: React.CSSProperties = {
+  fontSize: 10.5,
+  lineHeight: 1,
+  letterSpacing: ".01em",
 };
 
 function Group({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
+    <div style={{ display: "flex", alignItems: "stretch", gap: 1 }}>
       {children}
     </div>
   );
@@ -187,8 +271,8 @@ function Sep() {
       style={{
         flex: "0 0 auto",
         width: 1,
-        height: 18,
-        margin: "0 5px",
+        alignSelf: "stretch",
+        margin: "4px 5px",
         background: BAR_LINE,
       }}
     />
@@ -196,71 +280,53 @@ function Sep() {
 }
 
 /**
- * One of the three mutually exclusive modes. A track behind the set is what tells you they are
- * alternatives rather than three more buttons — and it is the only group in the bar that is.
+ * A plain tool: press it, it happens. `on` is for the one that is a toggle (Snap) and the three
+ * that are modes — a pressed tile is filled, because at this size an outline reads as a border
+ * rather than as a state.
  */
-function ModeButton({
+function Tile({
+  icon,
+  label,
+  title,
   on,
-  label,
-  title,
-  onClick,
-}: {
-  on: boolean;
-  label: string;
-  title: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      title={title}
-      onClick={onClick}
-      style={{
-        ...CONTROL,
-        height: ROW_H - 6,
-        borderRadius: 6,
-        padding: "0 12px",
-        background: on ? "#fff" : "transparent",
-        color: on ? BAR_ON_INK : BAR_INK,
-        fontWeight: on ? 500 : 400,
-        boxShadow: on ? "0 1px 3px rgba(16,24,40,.16)" : "none",
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
-function IconButton({
-  label,
-  title,
   disabled,
   onClick,
-  children,
 }: {
+  icon: React.ReactNode;
   label: string;
   title: string;
+  on?: boolean;
   disabled?: boolean;
   onClick: () => void;
-  children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      aria-label={label}
       title={title}
+      // The visible label is the accessible name; `title` adds the detail a tooltip is for.
+      aria-pressed={on === undefined ? undefined : on}
       disabled={disabled}
       onClick={onClick}
       style={{
-        ...ICON_BTN,
-        // 0.4 on a hairline glyph was invisible; on a drawn icon 0.3 still reads as "a control
+        ...TILE,
+        background: on ? BAR_ON_BG : "transparent",
+        color: on ? BAR_ON_INK : BAR_INK,
+        // 0.4 on a hairline glyph was invisible; on a drawn icon 0.32 still reads as "a control
         // that is here but not available", which is the thing a disabled state has to say.
-        opacity: disabled ? 0.3 : 1,
+        opacity: disabled ? 0.32 : 1,
         cursor: disabled ? "default" : "pointer",
       }}
     >
-      {children}
+      {icon}
+      <span
+        style={{
+          ...TILE_LABEL,
+          fontWeight: on ? 500 : 400,
+          color: on ? BAR_ON_INK : BAR_MUTED,
+        }}
+      >
+        {label}
+      </span>
     </button>
   );
 }
@@ -337,7 +403,7 @@ export function GeometryToolbar({
         aria-label="Geometry"
         style={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "stretch",
           padding: 5,
           borderRadius: 12,
           background: "#fff",
@@ -349,29 +415,40 @@ export function GeometryToolbar({
         <div
           style={{
             display: "flex",
-            alignItems: "center",
+            alignItems: "stretch",
             gap: 2,
             padding: 3,
-            borderRadius: 8,
+            borderRadius: 9,
             background: "var(--primitives-colors-background-100, #f2f3f5)",
           }}
         >
-          <ModeButton
+          {/**
+           * ⚠️ **"Points" is gone** (Olcay, 2026-08-15: *"Points doesn't mean much"*). It named the
+           * thing you manipulate rather than the thing you achieve — and it named it in the
+           * editor's vocabulary, not the reviewer's. Nobody opens a floor plan wanting points; they
+           * want the room to be the right shape. **Reshape** is the job; the points are how.
+           *
+           * Its two neighbours were already verbs, so it was also the odd one out in its own group.
+           */}
+          <Tile
+            icon={<Reshape />}
+            label="Reshape"
+            title="Drag a corner to move it · click a midpoint to add one · Alt-click to remove"
             on={state.mode === "vertices"}
-            label="Points"
-            title="Drag a point to move it · click a midpoint to add · Alt-click to remove"
             onClick={() => onCommand({ cmd: "mode", mode: "vertices" })}
           />
-          <ModeButton
-            on={state.mode === "move"}
+          <Tile
+            icon={<Move />}
             label="Move"
             title="Drag the shape to move the whole thing"
+            on={state.mode === "move"}
             onClick={() => onCommand({ cmd: "mode", mode: "move" })}
           />
-          <ModeButton
-            on={state.mode === "split"}
+          <Tile
+            icon={<Split />}
             label="Split"
             title="Click twice on the map to cut the shape in two · Escape to cancel"
+            on={state.mode === "split"}
             onClick={() => onCommand({ cmd: "split" })}
           />
         </div>
@@ -380,106 +457,75 @@ export function GeometryToolbar({
 
         {/* Transform — whole-shape, and stepped rather than dragged: a fixed increment is
             repeatable, and repeatability is what you want when squaring a room up to its
-            neighbours. */}
+            neighbours. The labels carry the step, which used to be discoverable only by pressing. */}
         <Group>
-          <IconButton
-            label="Rotate 15° left"
-            title="Rotate 15° left"
+          <Tile
+            icon={<RotateLeft />}
+            label="15°"
+            title="Rotate 15° anticlockwise"
             onClick={() => onCommand({ cmd: "rotate", deg: -15 })}
-          >
-            <RotateLeft />
-          </IconButton>
-          <IconButton
-            label="Rotate 15° right"
-            title="Rotate 15° right"
+          />
+          <Tile
+            icon={<RotateRight />}
+            label="15°"
+            title="Rotate 15° clockwise"
             onClick={() => onCommand({ cmd: "rotate", deg: 15 })}
-          >
-            <RotateRight />
-          </IconButton>
-          <IconButton
-            label="Scale up 5%"
-            title="Scale up 5%"
-            onClick={() => onCommand({ cmd: "scale", k: 1.05 })}
-          >
-            <ScaleUp />
-          </IconButton>
-          <IconButton
-            label="Scale down 5%"
+          />
+          <Tile
+            icon={<ScaleDown />}
+            label="5%"
             title="Scale down 5%"
             onClick={() => onCommand({ cmd: "scale", k: 1 / 1.05 })}
-          >
-            <ScaleDown />
-          </IconButton>
+          />
+          <Tile
+            icon={<ScaleUp />}
+            label="5%"
+            title="Scale up 5%"
+            onClick={() => onCommand({ cmd: "scale", k: 1.05 })}
+          />
         </Group>
 
         <Sep />
 
-        {/* Tidy. Snap is a toggle and has to look like one even when it is off, which is why it
-            keeps a filled shape rather than going flat like the buttons around it. */}
         <Group>
-          <button
-            type="button"
-            style={CONTROL}
-            onClick={() => onCommand({ cmd: "straighten" })}
+          <Tile
+            icon={<Straighten />}
+            label="Straighten"
             title="Drop points that already sit on the line between their neighbours"
-          >
-            Straighten
-          </button>
-          <button
-            type="button"
-            aria-pressed={!!state.snap}
-            style={{
-              ...CONTROL,
-              background: state.snap ? BAR_ON_BG : "transparent",
-              color: state.snap ? BAR_ON_INK : BAR_MUTED,
-              fontWeight: state.snap ? 500 : 400,
-            }}
-            onClick={() => onCommand({ cmd: "snap" })}
+            onClick={() => onCommand({ cmd: "straighten" })}
+          />
+          <Tile
+            icon={<Snap />}
+            label="Snap"
             title="Snap points to nearby corners of other features"
-          >
-            <span
-              aria-hidden
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: state.snap ? BAR_ON_INK : "transparent",
-                border: `1px solid ${state.snap ? BAR_ON_INK : BAR_MUTED}`,
-              }}
-            />
-            Snap
-          </button>
+            on={!!state.snap}
+            onClick={() => onCommand({ cmd: "snap" })}
+          />
         </Group>
 
         <Sep />
 
-        {/* History. Reset keeps its word — it is the destructive one, and an icon would ask you to
-            be sure you had guessed it right before throwing your work away. */}
         <Group>
-          <IconButton
+          <Tile
+            icon={<Undo />}
             label="Undo"
             title="Undo"
             disabled={!state.canUndo}
             onClick={() => onCommand({ cmd: "undo" })}
-          >
-            <Undo />
-          </IconButton>
-          <IconButton
+          />
+          <Tile
+            icon={<Redo />}
             label="Redo"
             title="Redo"
             disabled={!state.canRedo}
             onClick={() => onCommand({ cmd: "redo" })}
-          >
-            <Redo />
-          </IconButton>
-          <button
-            type="button"
-            style={{ ...CONTROL, color: BAR_MUTED }}
+          />
+          <Tile
+            icon={<Rewind />}
+            label="Reset"
+            title="Back to the published outline — discards every change to this shape"
             onClick={() => onCommand({ cmd: "reset" })}
-            title="Back to the published outline"
-          >
-            Reset
-          </button>
+          />
         </Group>
       </div>
     </div>
