@@ -345,6 +345,50 @@ export function getPeers(): Peer[] {
   );
 }
 
+/** One human, however many tabs they have open. */
+export interface Person {
+  /** Stable per human — the JWT's `userId` where present. */
+  key: string;
+  identity: Identity;
+  /** Every tab this person has open, so a cursor count is still available. */
+  tabs: Peer[];
+  /** Where to say they are: their tab on YOUR floor if they have one, else the most recent. */
+  at: Peer;
+}
+
+/**
+ * **The list is of people, not tabs** (2026-08-15). One person with three windows was three
+ * identical rows, and "6 online" counted browser tabs rather than colleagues — which is both wrong
+ * and unreadable once the rows look alike.
+ *
+ * Cursors stay per tab on purpose: two windows really are two pointers, and merging them would
+ * make one of them vanish. It is only the *roster* that should speak in people.
+ */
+export function getPeople(building?: string, level?: number): Person[] {
+  const byPerson = new Map<string, Person>();
+  for (const p of getPeers()) {
+    const key = p.identity.userId || p.identity.email || p.id;
+    const existing = byPerson.get(key);
+    if (!existing) {
+      byPerson.set(key, { key, identity: p.identity, tabs: [p], at: p });
+      continue;
+    }
+    existing.tabs.push(p);
+    // Prefer the tab that is with you; otherwise the one that spoke most recently.
+    const onYourFloor = (x: Peer) =>
+      building !== undefined && x.building === building && x.level === level;
+    if (onYourFloor(p) && !onYourFloor(existing.at)) existing.at = p;
+    else if (
+      onYourFloor(p) === onYourFloor(existing.at) &&
+      p.at > existing.at.at
+    )
+      existing.at = p;
+  }
+  return [...byPerson.values()].sort((a, b) =>
+    a.identity.name.localeCompare(b.identity.name),
+  );
+}
+
 /**
  * The peers whose cursor should be drawn: same building, same level, and actually pointing at
  * something. Everyone else stays in the top bar, where being elsewhere is the useful fact.
@@ -367,14 +411,15 @@ export function getPeersOnFloor(
  * A stable colour per person, so the same cursor is the same colour to everyone looking at it —
  * derived from the identity rather than assigned on arrival, which would differ per viewer.
  */
-export function peerColour(p: Peer): string {
+export function peerColour(p: { identity: Identity; id?: string }): string {
   /**
    * ⚠️ **Keyed on `userId` first.** This used to key on `email`, which was empty on every real
    * token (the address is in `upn` — see `identityFrom`) — so the key fell through to the shared
    * fallback name *"Signed in"* and **every person got the same colour**. The id is the one field
    * guaranteed to be present and guaranteed to differ.
    */
-  const key = p.identity.userId || p.identity.email || p.identity.name || p.id;
+  const key =
+    p.identity.userId || p.identity.email || p.identity.name || p.id || "";
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
   const palette = [

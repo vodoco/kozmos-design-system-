@@ -4,11 +4,11 @@ import {
   isCrossMachine,
   followPeer,
   getMyFloor,
-  getPeers,
+  getPeople,
   peerColour,
   presenceVersion,
   subscribePresence,
-  type Peer,
+  type Person,
 } from "../cloud/presence";
 
 /**
@@ -27,25 +27,25 @@ import {
  */
 export function OnlinePeople() {
   useSyncExternalStore(subscribePresence, presenceVersion);
-  const peers = getPeers();
-  // Read from presence rather than from props: it is the same fact the map scopes cursors on, and
-  // two copies of it is exactly how the badge ends up saying "elsewhere" about a visible cursor.
   const { building, level } = getMyFloor();
+  const people = getPeople(building, level);
   // Renders with nobody online too, when the transport is the same-browser one: "nobody is here"
   // and "this build cannot see anybody" look the same, and only one of them is worth acting on.
-  if (!peers.length && isCrossMachine()) return null;
+  if (!people.length && isCrossMachine()) return null;
 
-  const withYou = (p: Peer) =>
-    p.building !== undefined && p.building === building && p.level === level;
-  const placeOf = (p: Peer) =>
-    p.levelName
-      ? p.buildingName
-        ? `${p.buildingName} · ${p.levelName}`
-        : p.levelName
+  const withYou = (p: Person) =>
+    p.at.building !== undefined &&
+    p.at.building === building &&
+    p.at.level === level;
+  const placeOf = (p: Person) =>
+    p.at.levelName
+      ? p.at.buildingName
+        ? `${p.at.buildingName} · ${p.at.levelName}`
+        : p.at.levelName
       : "Not on a floor yet";
 
   // People on your own floor come first, so the useful ones are never the ones that overflow.
-  const ordered = [...peers].sort(
+  const ordered = [...people].sort(
     (a, b) => Number(withYou(b)) - Number(withYou(a)),
   );
   const shown = ordered.slice(0, 4);
@@ -60,7 +60,7 @@ export function OnlinePeople() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`${peers.length} ${peers.length === 1 ? "person" : "people"} online`}
+          aria-label={`${people.length} ${people.length === 1 ? "person" : "people"} online`}
           style={{
             display: "flex",
             alignItems: "center",
@@ -72,7 +72,7 @@ export function OnlinePeople() {
           }}
         >
           <span style={{ display: "flex", alignItems: "center" }}>
-            {!peers.length && (
+            {!people.length && (
               <span
                 style={{
                   width: 26,
@@ -90,7 +90,7 @@ export function OnlinePeople() {
             )}
             {shown.map((p, i) => (
               <span
-                key={p.id}
+                key={p.key}
                 style={{
                   width: 26,
                   height: 26,
@@ -137,18 +137,18 @@ export function OnlinePeople() {
             padding: "4px 8px 8px",
           }}
         >
-          {peers.length} online
+          {people.length} online
         </Text>
 
         {ordered.map((p) => {
           const here = withYou(p);
           const canFollow =
-            p.building !== undefined && p.level !== undefined && !here;
+            p.at.building !== undefined && p.at.level !== undefined && !here;
           return (
             <button
-              key={p.id}
+              key={p.key}
               type="button"
-              onClick={() => canFollow && followPeer(p)}
+              onClick={() => canFollow && followPeer(p.at)}
               disabled={!canFollow}
               title={
                 here
@@ -211,7 +211,8 @@ export function OnlinePeople() {
                     textOverflow: "ellipsis",
                   }}
                 >
-                  {here ? "On this floor with you" : placeOf(p)}
+                  {(here ? "On this floor with you" : placeOf(p)) +
+                    (p.tabs.length > 1 ? ` · ${p.tabs.length} windows` : "")}
                 </span>
               </span>
               {/* The affordance names the destination, and says nothing when there is nowhere to go */}
