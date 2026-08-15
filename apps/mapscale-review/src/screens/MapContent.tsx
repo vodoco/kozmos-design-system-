@@ -1,11 +1,30 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Button, Icon, Input, Popover, PopoverTrigger, PopoverContent, Text } from "@kozmos/react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import {
+  Button,
+  Icon,
+  Input,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  Text,
+} from "@kozmos/react";
 import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import {
   getFollowRequest,
   followVersion,
   subscribeFollow,
+  getEditorsOnFloor,
+  setPresenceEditing,
   getPeersOnFloor,
   peerColour,
   presenceVersion,
@@ -13,7 +32,18 @@ import {
   setPresenceFloor,
   subscribePresence,
 } from "../cloud/presence";
-import { BAND, EXPERT_HOLD, EXPERT_REVIEW_LEVEL, GRACE_DAYS, NEW_VERSION_LEVEL, decisionInk, expertReviewEnabled, isUnderExpertReview, seedVersions, type Change } from "../mock/diff";
+import {
+  BAND,
+  EXPERT_HOLD,
+  EXPERT_REVIEW_LEVEL,
+  GRACE_DAYS,
+  NEW_VERSION_LEVEL,
+  decisionInk,
+  expertReviewEnabled,
+  isUnderExpertReview,
+  seedVersions,
+  type Change,
+} from "../mock/diff";
 import { DecisionGlyph } from "../ui/ChangeReviewRow";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
@@ -134,13 +164,22 @@ const TAG_SUPERSEDES: Partial<Record<LevelTagKind, LevelTagKind[]>> = {
 /** How many tags a row shows before the rest collapse into a count. */
 const MAX_VISIBLE_TAGS = 3;
 
-export function resolveTags(tags: LevelTag[] | undefined): { shown: LevelTag[]; hidden: number } {
+export function resolveTags(tags: LevelTag[] | undefined): {
+  shown: LevelTag[];
+  hidden: number;
+} {
   if (!tags?.length) return { shown: [], hidden: 0 };
-  const sorted = [...tags].sort((a, b) => TAG_PRIORITY[b.kind] - TAG_PRIORITY[a.kind]);
+  const sorted = [...tags].sort(
+    (a, b) => TAG_PRIORITY[b.kind] - TAG_PRIORITY[a.kind],
+  );
   const beaten = new Set<LevelTagKind>();
-  for (const t of sorted) for (const k of TAG_SUPERSEDES[t.kind] ?? []) beaten.add(k);
+  for (const t of sorted)
+    for (const k of TAG_SUPERSEDES[t.kind] ?? []) beaten.add(k);
   const kept = sorted.filter((t) => !beaten.has(t.kind));
-  return { shown: kept.slice(0, MAX_VISIBLE_TAGS), hidden: Math.max(0, kept.length - MAX_VISIBLE_TAGS) };
+  return {
+    shown: kept.slice(0, MAX_VISIBLE_TAGS),
+    hidden: Math.max(0, kept.length - MAX_VISIBLE_TAGS),
+  };
 }
 
 interface Level {
@@ -169,9 +208,21 @@ const OUTDOOR = { id: "outdoor", name: "Outdoor Map Content", count: 13 };
 const TAG_TONE: Record<TagTone, { bg: string; border: string; ink: string }> = {
   info: { bg: "#eef3ff", border: "#cfdcff", ink: LINK },
   neutral: { bg: "#f2f3f5", border: LINE, ink: MUTED },
-  minor: { bg: BAND.minor.tint, border: BAND.minor.border, ink: BAND.minor.ink },
-  medium: { bg: BAND.medium.tint, border: BAND.medium.border, ink: BAND.medium.ink },
-  large: { bg: BAND.large.tint, border: BAND.large.border, ink: BAND.large.ink },
+  minor: {
+    bg: BAND.minor.tint,
+    border: BAND.minor.border,
+    ink: BAND.minor.ink,
+  },
+  medium: {
+    bg: BAND.medium.tint,
+    border: BAND.medium.border,
+    ink: BAND.medium.ink,
+  },
+  large: {
+    bg: BAND.large.tint,
+    border: BAND.large.border,
+    ink: BAND.large.ink,
+  },
 };
 
 function Tag({ tag, onAction }: { tag: LevelTag; onAction?: () => void }) {
@@ -195,7 +246,15 @@ function Tag({ tag, onAction }: { tag: LevelTag; onAction?: () => void }) {
   const inner = (
     <>
       {tag.kind === "new-version" && (
-        <span style={{ width: 6, height: 6, borderRadius: 3, background: t.ink, flex: "0 0 auto" }} />
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: 3,
+            background: t.ink,
+            flex: "0 0 auto",
+          }}
+        />
       )}
       {tag.label}
     </>
@@ -228,22 +287,50 @@ function Tag({ tag, onAction }: { tag: LevelTag; onAction?: () => void }) {
  */
 const LEVEL_TAGS: Record<number, LevelTag[]> = {
   [NEW_VERSION_LEVEL]: [
-    { kind: "needs-review", label: "Needs review", tone: "medium", title: "30% of floor area changed — publishes automatically in 6 days unless you review it" },
-    { kind: "new-version", label: "New version", tone: "info", action: "review", title: "Review the changes MapScale detected" },
+    {
+      kind: "needs-review",
+      label: "Needs review",
+      tone: "medium",
+      title:
+        "30% of floor area changed — publishes automatically in 6 days unless you review it",
+    },
+    {
+      kind: "new-version",
+      label: "New version",
+      tone: "info",
+      action: "review",
+      title: "Review the changes MapScale detected",
+    },
   ],
   // Red cause A (>50%): rejected outright (decision 9) — nothing to review, so the tag carries
   // no action; the title says the way out. Its supersede rule drops the "New version" tag.
   3: [
-    { kind: "rejected", label: "Rejected", tone: "large", title: "62% of floor area changed — a change this large is unrealistic, so the floor plan was rejected. Upload a corrected file, or contact our support team if this really is new construction" },
+    {
+      kind: "rejected",
+      label: "Rejected",
+      tone: "large",
+      title:
+        "62% of floor area changed — a change this large is unrealistic, so the floor plan was rejected. Upload a corrected file, or contact our support team if this really is new construction",
+    },
   ],
   // B4 carries no seeded tag any more. It used to say "2 flagged" as a hardcoded label with no
   // report behind it, so the map beside it drew nothing and the feature looked broken. The review
   // is seeded for real in App.tsx now, and `liveTagsFor` derives the tag from it like every other
   // level — the count is whatever is actually flagged, and it drops to nothing when you clear them.
   0: [
-    { kind: "auto-published", label: "Auto-published", tone: "minor", title: "Minor change (12% of floor area) — published automatically" },
+    {
+      kind: "auto-published",
+      label: "Auto-published",
+      tone: "minor",
+      title: "Minor change (12% of floor area) — published automatically",
+    },
     // Superseded by auto-published: the arrival is history once it is live.
-    { kind: "new-version", label: "New version", tone: "info", action: "review" },
+    {
+      kind: "new-version",
+      label: "New version",
+      tone: "info",
+      action: "review",
+    },
   ],
   1: [
     // Templated from GRACE_DAYS so the tag and the review screen's strip can't drift apart —
@@ -253,7 +340,9 @@ const LEVEL_TAGS: Record<number, LevelTag[]> = {
       kind: "grace",
       tone: "medium",
       get label(): string {
-        return GRACE_DAYS.demoLeft === 0 ? "Publishes today" : `Publishes in ${GRACE_DAYS.demoLeft}d`;
+        return GRACE_DAYS.demoLeft === 0
+          ? "Publishes today"
+          : `Publishes in ${GRACE_DAYS.demoLeft}d`;
       },
       get title(): string {
         return GRACE_DAYS.demoLeft === 0
@@ -266,7 +355,13 @@ const LEVEL_TAGS: Record<number, LevelTag[]> = {
   ],
   // keyed off the same constant the hold reads, so the tag and the held screen can't disagree
   [EXPERT_REVIEW_LEVEL]: [
-    { kind: "expert-review", label: "Expert Review", tone: "neutral", title: "Pointr's mapping team is checking this floor — changes you make may be overridden by their corrections" },
+    {
+      kind: "expert-review",
+      label: "Expert Review",
+      tone: "neutral",
+      title:
+        "Pointr's mapping team is checking this floor — changes you make may be overridden by their corrections",
+    },
   ],
 };
 
@@ -277,12 +372,22 @@ const LEVEL_TAGS: Record<number, LevelTag[]> = {
  */
 const CONCOURSE_A_TAGS: Record<number, LevelTag[]> = {
   4: [
-    { kind: "needs-decision", label: "Needs decision", tone: "large", action: "review", title: "MapScale couldn't match the new floor plan to the published one — review it, then publish when you're ready" },
+    {
+      kind: "needs-decision",
+      label: "Needs decision",
+      tone: "large",
+      action: "review",
+      title:
+        "MapScale couldn't match the new floor plan to the published one — review it, then publish when you're ready",
+    },
   ],
 };
 
 /** The building-aware lookup `seedVersions()` mirrors. Buildings with no demo state get none. */
-function levelTagsFor(buildingId: string, index: number): LevelTag[] | undefined {
+function levelTagsFor(
+  buildingId: string,
+  index: number,
+): LevelTag[] | undefined {
   if (buildingId === CONCOURSE_A_ID) return CONCOURSE_A_TAGS[index];
   if (buildingId !== T3_ID) return undefined;
   // The hold is a Settings flag now (S5), so the tag has to ask the same question the seed and
@@ -320,13 +425,20 @@ function levelTagsFor(buildingId: string, index: number): LevelTag[] | undefined
  * Version-matched like every other reader: ask for the newest version's report, so a fresh upload
  * doesn't inherit flags raised against a floor-plan that has since been replaced.
  */
-function flaggedNamesFor(buildingId: string, index: number, short: string): Set<string> {
+function flaggedNamesFor(
+  buildingId: string,
+  index: number,
+  short: string,
+): Set<string> {
   const key = levelKey(buildingId, index);
-  const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
+  const newest = getLevelVersions(key, () =>
+    seedVersions(short, index, buildingId),
+  )[0];
   const outcome = getReviewOutcome(key, newest?.n);
   if (!outcome) return EMPTY_FLAGS;
   const out = new Set<string>();
-  for (const c of outcome.changes) if (outcome.decisions[c.id] === "flag") out.add(c.name);
+  for (const c of outcome.changes)
+    if (outcome.decisions[c.id] === "flag") out.add(c.name);
   return out.size ? out : EMPTY_FLAGS;
 }
 
@@ -337,13 +449,24 @@ const EMPTY_FLAGS: Set<string> = new Set();
  * The note written against a flag on this feature, if there is one. Name-matched like every other
  * flag reader here — see `TypeRow`'s note on why the count is of flagged *things*, not rows.
  */
-function flagNoteFor(buildingId: string, index: number, short: string, name: string): string | undefined {
+function flagNoteFor(
+  buildingId: string,
+  index: number,
+  short: string,
+  name: string,
+): string | undefined {
   const key = levelKey(buildingId, index);
-  const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
+  const newest = getLevelVersions(key, () =>
+    seedVersions(short, index, buildingId),
+  )[0];
   const outcome = getReviewOutcome(key, newest?.n);
   if (!outcome?.notes) return undefined;
   for (const c of outcome.changes)
-    if (c.name === name && outcome.decisions[c.id] === "flag" && outcome.notes[c.id])
+    if (
+      c.name === name &&
+      outcome.decisions[c.id] === "flag" &&
+      outcome.notes[c.id]
+    )
       return outcome.notes[c.id];
   return undefined;
 }
@@ -360,15 +483,26 @@ function flagNoteFor(buildingId: string, index: number, short: string, name: str
  * review concluded and this version is live. Same version-matching as `flaggedNamesFor` — a flag
  * raised against a floor-plan that has since been replaced is not this floor's flag.
  */
-function flaggedChangesFor(buildingId: string, index: number, short: string): Change[] {
+function flaggedChangesFor(
+  buildingId: string,
+  index: number,
+  short: string,
+): Change[] {
   const key = levelKey(buildingId, index);
-  const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
+  const newest = getLevelVersions(key, () =>
+    seedVersions(short, index, buildingId),
+  )[0];
   const outcome = getReviewOutcome(key, newest?.n);
   if (!outcome) return NO_CHANGES;
   const out = outcome.changes
     .filter((c) => outcome.decisions[c.id] === "flag")
     // the note comes from the outcome, not the change: `changes` is the report as it arrived
-    .map((c) => ({ ...c, decision: "flag" as const, markOnly: true, note: outcome.notes?.[c.id] }));
+    .map((c) => ({
+      ...c,
+      decision: "flag" as const,
+      markOnly: true,
+      note: outcome.notes?.[c.id],
+    }));
   return out.length ? out : NO_CHANGES;
 }
 
@@ -379,7 +513,8 @@ function flaggedChangesFor(buildingId: string, index: number, short: string): Ch
  */
 function pickIdentity(props: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  for (const k of ["fid", "bid", "sid", "lvl", "mainType", "mapPersonas"]) if (k in props) out[k] = props[k];
+  for (const k of ["fid", "bid", "sid", "lvl", "mainType", "mapPersonas"])
+    if (k in props) out[k] = props[k];
   return out;
 }
 
@@ -396,22 +531,37 @@ function pickIdentity(props: Record<string, unknown>): Record<string, unknown> {
  * the same ambiguity D18 records: the review recorded a name, and a name cannot pick one of four.
  * The panel says so before you edit.
  */
-function clearFlagForName(buildingId: string, index: number, short: string, name: string) {
+function clearFlagForName(
+  buildingId: string,
+  index: number,
+  short: string,
+  name: string,
+) {
   const key = levelKey(buildingId, index);
-  const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
+  const newest = getLevelVersions(key, () =>
+    seedVersions(short, index, buildingId),
+  )[0];
   const outcome = getReviewOutcome(key, newest?.n);
   if (!outcome) return;
-  const ids = outcome.changes.filter((c) => c.name === name && outcome.decisions[c.id] === "flag");
+  const ids = outcome.changes.filter(
+    (c) => c.name === name && outcome.decisions[c.id] === "flag",
+  );
   if (!ids.length) return;
   const decisions = { ...outcome.decisions };
   for (const c of ids) decisions[c.id] = undefined;
   setReviewOutcome(key, { ...outcome, decisions });
 }
 
-function liveTagsFor(buildingId: string, index: number, short: string): LevelTag[] | undefined {
+function liveTagsFor(
+  buildingId: string,
+  index: number,
+  short: string,
+): LevelTag[] | undefined {
   const seeded = levelTagsFor(buildingId, index);
   const key = levelKey(buildingId, index);
-  const newest = getLevelVersions(key, () => seedVersions(short, index, buildingId))[0];
+  const newest = getLevelVersions(key, () =>
+    seedVersions(short, index, buildingId),
+  )[0];
   // asking by version is the supersede rule: a newer upload has no report of its own yet
   const outcome = getReviewOutcome(key, newest?.n);
   if (!outcome) return seeded;
@@ -428,7 +578,9 @@ function liveTagsFor(buildingId: string, index: number, short: string): LevelTag
    * every other surface reads, and an explicit publish moves it whatever the review is doing.
    */
   const live = newest.state === "published";
-  const flags = Object.values(outcome.decisions).filter((d) => d === "flag").length;
+  const flags = Object.values(outcome.decisions).filter(
+    (d) => d === "flag",
+  ).length;
   const tags: LevelTag[] = [];
 
   if (live)
@@ -532,7 +684,13 @@ function Chevron({ open }: { open: boolean }) {
 /** Three-dot affordance — @kozmos/icons has no ellipsis (see the DS gaps in the handoff). */
 function Ellipsis() {
   return (
-    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden focusable="false">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      aria-hidden
+      focusable="false"
+    >
       {[4.5, 9, 13.5].map((cx) => (
         <circle key={cx} cx={cx} cy="9" r="1.5" fill="currentColor" />
       ))}
@@ -542,7 +700,13 @@ function Ellipsis() {
 
 function Star() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" aria-label="Default level" role="img">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      aria-label="Default level"
+      role="img"
+    >
       <path
         d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.4 6.2 20.4l1.1-6.5-4.7-4.6 6.5-.95L12 2.5z"
         fill="#3B82F6"
@@ -627,14 +791,27 @@ const LevelTypesContext = createContext<{
    */
   focus: (buildingId: string, index: number, fid: string) => void;
   focused: string | null;
+  /** fid → who has it open in the editor, and in what colour. Marks the row, like a flag does. */
+  editors: Record<string, { who: string; colour: string }>;
   /**
    * What the cursor is over — lit on the map through the SDK's own selection layer. `null` on
    * leave, which falls back to whatever is selected rather than going dark.
    */
-  hover: (sel: { fid?: string; mainType?: string; subType?: string } | null) => void;
+  hover: (
+    sel: { fid?: string; mainType?: string; subType?: string } | null,
+  ) => void;
   /** Local edits by `fid`, so a rename in the panel shows in the tree too. In memory only (D3). */
   edits: Record<string, { name?: string; subType?: string }>;
-}>({ byLevel: {}, request: () => {}, sheet: null, focus: () => {}, focused: null, hover: () => {}, edits: {} });
+}>({
+  byLevel: {},
+  request: () => {},
+  sheet: null,
+  focus: () => {},
+  focused: null,
+  editors: {},
+  hover: () => {},
+  edits: {},
+});
 
 /**
  * One taxonomy icon, drawn straight from the published sprite sheet.
@@ -644,7 +821,13 @@ const LevelTypesContext = createContext<{
  * A type with no icon renders a neutral dot rather than a broken frame: `wall`, `section` and
  * `furniture` genuinely have none.
  */
-function TypeIcon({ mainType, subType }: { mainType: string; subType?: string }) {
+function TypeIcon({
+  mainType,
+  subType,
+}: {
+  mainType: string;
+  subType?: string;
+}) {
   const { sheet } = useContext(LevelTypesContext);
   const name = spriteName(sheet, mainType, subType);
   const f = name && sheet ? sheet[name] : null;
@@ -652,7 +835,16 @@ function TypeIcon({ mainType, subType }: { mainType: string; subType?: string })
     // The sprite has no generic marker (see spriteName) — the DS's neutral pin stands in, so a
     // type without artwork still reads as "a thing on the map" rather than as a missing image.
     return (
-      <span style={{ width: 16, height: 16, flex: "0 0 auto", display: "grid", placeItems: "center", color: "var(--primitives-colors-background-400)" }}>
+      <span
+        style={{
+          width: 16,
+          height: 16,
+          flex: "0 0 auto",
+          display: "grid",
+          placeItems: "center",
+          color: "var(--primitives-colors-background-400)",
+        }}
+      >
         <Icon name="marker-pin-01" />
       </span>
     );
@@ -694,7 +886,15 @@ const SPRITE_W = 2046;
  * the shape of the screen can be judged; none of them has a backend in this prototype. Wiring one
  * up means giving it something real to do, not just removing this note.
  */
-function RowMenu({ label, items, show }: { label: string; items: { label: string; danger?: boolean }[]; show: boolean }) {
+function RowMenu({
+  label,
+  items,
+  show,
+}: {
+  label: string;
+  items: { label: string; danger?: boolean }[];
+  show: boolean;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <span style={{ flex: "0 0 auto", display: "flex" }}>
@@ -718,9 +918,18 @@ function RowMenu({ label, items, show }: { label: string; items: { label: string
             <Ellipsis />
           </button>
         </PopoverTrigger>
-        <PopoverContent align="end" side="bottom" style={{ width: 200, padding: 6 }}>
+        <PopoverContent
+          align="end"
+          side="bottom"
+          style={{ width: 200, padding: 6 }}
+        >
           {items.map((i) => (
-            <MenuItem key={i.label} label={i.label} danger={i.danger} onClick={() => setOpen(false)} />
+            <MenuItem
+              key={i.label}
+              label={i.label}
+              danger={i.danger}
+              onClick={() => setOpen(false)}
+            />
           ))}
         </PopoverContent>
       </Popover>
@@ -770,7 +979,12 @@ function FlagMark({ title }: { title: string }) {
     <span
       title={title}
       aria-label={title}
-      style={{ flex: "0 0 auto", display: "grid", placeItems: "center", color: decisionInk("flag") }}
+      style={{
+        flex: "0 0 auto",
+        display: "grid",
+        placeItems: "center",
+        color: decisionInk("flag"),
+      }}
     >
       <DecisionGlyph kind="flag" size={14} />
     </span>
@@ -778,17 +992,47 @@ function FlagMark({ title }: { title: string }) {
 }
 
 /** A single feature under its type — the leaf of the tree, and the only row you edit. */
-function FeatureRow({ name, unnamed, fid, buildingId, index, flagged, sharing = 1 }: { name: string; unnamed: boolean; fid?: string; buildingId: string; index: number; flagged?: boolean; sharing?: number }) {
+function FeatureRow({
+  name,
+  unnamed,
+  fid,
+  buildingId,
+  index,
+  flagged,
+  sharing = 1,
+}: {
+  name: string;
+  unnamed: boolean;
+  fid?: string;
+  buildingId: string;
+  index: number;
+  flagged?: boolean;
+  sharing?: number;
+}) {
   const [hover, setHover] = useState(false);
-  const { focus, focused, hover: onHover, edits } = useContext(LevelTypesContext);
+  const {
+    focus,
+    focused,
+    editors,
+    hover: onHover,
+    edits,
+  } = useContext(LevelTypesContext);
+  /** Somebody else has this open. Shown, not enforced — see `Peer.editingFid`. */
+  const editor = fid ? editors[fid] : undefined;
   const selected = !!fid && focused === fid;
   // A rename in the panel shows here too — one edit, every surface. In memory only (D3).
   const edited = fid ? edits[fid]?.name : undefined;
   const shown = edited !== undefined && edited !== "" ? edited : name;
   return (
     <div
-      onMouseEnter={() => { setHover(true); if (fid) onHover({ fid }); }}
-      onMouseLeave={() => { setHover(false); onHover(null); }}
+      onMouseEnter={() => {
+        setHover(true);
+        if (fid) onHover({ fid });
+      }}
+      onMouseLeave={() => {
+        setHover(false);
+        onHover(null);
+      }}
       onClick={() => fid && focus(buildingId, index, fid)}
       title={fid ? "Show on the map" : undefined}
       style={{
@@ -804,13 +1048,46 @@ function FeatureRow({ name, unnamed, fid, buildingId, index, flagged, sharing = 
         color: unnamed ? MUTED : "var(--review-ink)",
         /* Selection is a ring and a tint, never a colour — the same rule the changelog follows:
            colour says what a thing IS, and being selected is not a property of the thing. */
-        background: selected ? "var(--primitives-colors-theme-0)" : hover ? "#f6f7f9" : undefined,
-        boxShadow: selected ? "inset 3px 0 0 var(--primitives-colors-theme-500)" : undefined,
+        background: selected
+          ? "var(--primitives-colors-theme-0)"
+          : hover
+            ? "#f6f7f9"
+            : undefined,
+        boxShadow: selected
+          ? "inset 3px 0 0 var(--primitives-colors-theme-500)"
+          : undefined,
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      <span
+        style={{
+          flex: 1,
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
         {shown}
       </span>
+      {/*
+        Somebody else has this open. A dot in THEIR colour, so the row, their cursor and their
+        avatar all agree about who — and a title that names them, because a coloured dot alone is
+        a puzzle. Visibility only: nothing here stops you opening it too.
+      */}
+      {editor && (
+        <span
+          title={`${editor.who} is editing this`}
+          aria-label={`${editor.who} is editing this`}
+          style={{
+            flex: "0 0 auto",
+            width: 7,
+            height: 7,
+            borderRadius: 999,
+            background: editor.colour,
+            boxShadow: "0 0 0 2px #fff",
+          }}
+        />
+      )}
       {flagged && (
         <FlagMark
           title={
@@ -843,7 +1120,19 @@ function FeatureRow({ name, unnamed, fid, buildingId, index, flagged, sharing = 
  * 2026-08-12). One indent step is chevron + gap, so a child that starts under its parent's *symbol*
  * rather than under its parent's chevron is the tree's existing rule; this row simply follows it.
  */
-function TypeRow({ row, all, buildingId, index, flagged }: { row: LevelTypeCount; all: LevelTypeCount[]; buildingId: string; index: number; flagged: Set<string> }) {
+function TypeRow({
+  row,
+  all,
+  buildingId,
+  index,
+  flagged,
+}: {
+  row: LevelTypeCount;
+  all: LevelTypeCount[];
+  buildingId: string;
+  index: number;
+  flagged: Set<string>;
+}) {
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
   const { hover: onHover } = useContext(LevelTypesContext);
@@ -863,14 +1152,24 @@ function TypeRow({ row, all, buildingId, index, flagged }: { row: LevelTypeCount
    * four for the same reason).
    */
   const flaggedHere = flagged.size
-    ? [...new Set(names.filter((n) => n.name && flagged.has(n.name)).map((n) => n.name))]
+    ? [
+        ...new Set(
+          names.filter((n) => n.name && flagged.has(n.name)).map((n) => n.name),
+        ),
+      ]
     : [];
   const flags = flaggedHere.length;
   return (
     <>
       <div
-        onMouseEnter={() => { setHover(true); onHover({ mainType: row.mainType, subType: row.subType }); }}
-        onMouseLeave={() => { setHover(false); onHover(null); }}
+        onMouseEnter={() => {
+          setHover(true);
+          onHover({ mainType: row.mainType, subType: row.subType });
+        }}
+        onMouseLeave={() => {
+          setHover(false);
+          onHover(null);
+        }}
         style={{
           display: "flex",
           alignItems: "center",
@@ -899,7 +1198,14 @@ function TypeRow({ row, all, buildingId, index, flagged }: { row: LevelTypeCount
           <Chevron open={open} />
         </button>
         <TypeIcon mainType={row.mainType} subType={row.subType} />
-        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span
+          style={{
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
           {label}
         </span>
         <CountChip n={row.count} />
@@ -926,7 +1232,11 @@ function TypeRow({ row, all, buildingId, index, flagged }: { row: LevelTypeCount
         <span style={{ flex: 1 }} />
         {/* A whole type is something you act on in bulk — pick it out on the map, or hand the lot
             to someone. Editing or deleting belongs to the individual feature, not to the type. */}
-        <RowMenu label={label} show={hover} items={[{ label: "Select" }, { label: "Assign to…" }]} />
+        <RowMenu
+          label={label}
+          show={hover}
+          items={[{ label: "Select" }, { label: "Assign to…" }]}
+        />
       </div>
       {open &&
         names.map((n, i) => (
@@ -961,21 +1271,43 @@ function TypeRow({ row, all, buildingId, index, flagged }: { row: LevelTypeCount
 }
 
 /** The expanded body of a level row: its feature types, grouped by taxonomy class. */
-function LevelTypes({ buildingId, index, flagged }: { buildingId: string; index: number; flagged: Set<string> }) {
+function LevelTypes({
+  buildingId,
+  index,
+  flagged,
+}: {
+  buildingId: string;
+  index: number;
+  flagged: Set<string>;
+}) {
   const { byLevel } = useContext(LevelTypesContext);
   const counts = byLevel[`${buildingId}:${index}`];
   const groups = useMemo(() => (counts ? groupByClass(counts) : []), [counts]);
 
   if (!counts) {
     return (
-      <div style={{ padding: `8px 12px 8px ${indent(2)}px`, borderBottom: `1px solid ${LINE}`, fontSize: 12.5, color: MUTED }}>
+      <div
+        style={{
+          padding: `8px 12px 8px ${indent(2)}px`,
+          borderBottom: `1px solid ${LINE}`,
+          fontSize: 12.5,
+          color: MUTED,
+        }}
+      >
         Reading this floor…
       </div>
     );
   }
   if (!groups.length) {
     return (
-      <div style={{ padding: `8px 12px 8px ${indent(2)}px`, borderBottom: `1px solid ${LINE}`, fontSize: 12.5, color: MUTED }}>
+      <div
+        style={{
+          padding: `8px 12px 8px ${indent(2)}px`,
+          borderBottom: `1px solid ${LINE}`,
+          fontSize: 12.5,
+          color: MUTED,
+        }}
+      >
         Nothing mapped on this floor yet.
       </div>
     );
@@ -994,13 +1326,29 @@ function LevelTypes({ buildingId, index, flagged }: { buildingId: string; index:
               background: "#fbfcfd",
             }}
           >
-            <span style={{ fontSize: 10.5, letterSpacing: 0.8, fontWeight: 700, color: "var(--primitives-colors-theme-700)" }}>
+            <span
+              style={{
+                fontSize: 10.5,
+                letterSpacing: 0.8,
+                fontWeight: 700,
+                color: "var(--primitives-colors-theme-700)",
+              }}
+            >
               {CLASS_LABEL[g.cls].toUpperCase()}
             </span>
-            <span style={{ fontSize: 10.5, color: MUTED }}>· {g.total} as loaded</span>
+            <span style={{ fontSize: 10.5, color: MUTED }}>
+              · {g.total} as loaded
+            </span>
           </div>
           {g.rows.map((r) => (
-            <TypeRow key={`${r.mainType}/${r.subType ?? ""}`} row={r} all={counts} buildingId={buildingId} index={index} flagged={flagged} />
+            <TypeRow
+              key={`${r.mainType}/${r.subType ?? ""}`}
+              row={r}
+              all={counts}
+              buildingId={buildingId}
+              index={index}
+              flagged={flagged}
+            />
           ))}
         </div>
       ))}
@@ -1024,8 +1372,10 @@ function LevelRow({
   /** Update floor-plan: opens the editor with the file browser already popped. */
   onUpdate: (l: LevelRef) => void;
 }) {
-  const { request: requestTypes, current: mapLevel } = useContext(LevelTypesContext);
-  const current = mapLevel?.building === buildingId && mapLevel?.level === level.index;
+  const { request: requestTypes, current: mapLevel } =
+    useContext(LevelTypesContext);
+  const current =
+    mapLevel?.building === buildingId && mapLevel?.level === level.index;
   /**
    * The level the map is already showing starts EXPANDED (Olcay, 2026-08-14) — the tree should
    * open on what you are looking at, not make you find it and click it open.
@@ -1051,7 +1401,13 @@ function LevelRow({
   useEffect(() => {
     if (current) setOpen(true);
   }, [current]);
-  const ref: LevelRef = { building, buildingId, index: level.index, name: level.name, short: level.short };
+  const ref: LevelRef = {
+    building,
+    buildingId,
+    index: level.index,
+    name: level.name,
+    short: level.short,
+  };
   /**
    * Derived at render, not read off `level.tags`.
    *
@@ -1089,7 +1445,10 @@ function LevelRow({
         }}
       >
         <button
-          onClick={(e) => { e.stopPropagation(); toggle(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggle();
+          }}
           style={{
             background: "none",
             border: "none",
@@ -1107,7 +1466,9 @@ function LevelRow({
           up. Right-alignment was making the indices agree with *each other*; agreeing with their
           own children matters more, and a negative index simply takes the first character slot.
         */}
-        <span style={{ width: 16, textAlign: "left", fontSize: 13, color: MUTED }}>
+        <span
+          style={{ width: 16, textAlign: "left", fontSize: 13, color: MUTED }}
+        >
           {level.index}
         </span>
         {/*
@@ -1115,8 +1476,23 @@ function LevelRow({
           uses for its `additionalInformation` slot (Figma node 2505:1249). Inline tags fight the
           name for width and force it to truncate; stacked, the name gets the whole row.
         */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0, flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            minWidth: 0,
+            flex: 1,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              minWidth: 0,
+            }}
+          >
             <span
               title={level.name}
               style={{
@@ -1139,12 +1515,28 @@ function LevelRow({
             states dropped (see TAG_PRIORITY / TAG_SUPERSEDES).
           */}
           {!!shownTags.length && (
-            <div data-tour="level-tags" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <div
+              data-tour="level-tags"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                flexWrap: "wrap",
+              }}
+            >
               {shownTags.map((t) => (
-                <Tag key={t.kind} tag={t} onAction={t.action === "review" ? () => onReview(ref) : undefined} />
+                <Tag
+                  key={t.kind}
+                  tag={t}
+                  onAction={
+                    t.action === "review" ? () => onReview(ref) : undefined
+                  }
+                />
               ))}
               {hiddenTags > 0 && (
-                <span style={{ fontSize: 11, color: MUTED }}>+{hiddenTags}</span>
+                <span style={{ fontSize: 11, color: MUTED }}>
+                  +{hiddenTags}
+                </span>
               )}
             </div>
           )}
@@ -1178,15 +1570,25 @@ function LevelRow({
             the held screen in the first place. Update floor-plan opens the editor AND pops the
             file browser (the menu click's user activation carries into the editor's mount).
           */}
-          <PopoverContent align="start" side="bottom" style={{ width: 232, padding: 6 }}>
+          <PopoverContent
+            align="start"
+            side="bottom"
+            style={{ width: 232, padding: 6 }}
+          >
             <MenuItem
               label="Update floor-plan"
               reason={lockedByExperts ? EXPERT_HOLD.upload : undefined}
-              onClick={() => { setMenuOpen(false); onUpdate(ref); }}
+              onClick={() => {
+                setMenuOpen(false);
+                onUpdate(ref);
+              }}
             />
             <MenuItem
               label="Edit level details"
-              onClick={() => { setMenuOpen(false); onEdit(ref); }}
+              onClick={() => {
+                setMenuOpen(false);
+                onEdit(ref);
+              }}
             />
             <MenuItem
               label="Delete level"
@@ -1210,7 +1612,13 @@ function LevelRow({
         so a floor whose far end has never been in view under-reports. Hence "as loaded" in the
         header rather than a bare total — the real dashboard reads these from the content API.
       */}
-      {open && <LevelTypes buildingId={buildingId} index={level.index} flagged={flagged} />}
+      {open && (
+        <LevelTypes
+          buildingId={buildingId}
+          index={level.index}
+          flagged={flagged}
+        />
+      )}
     </>
   );
 }
@@ -1271,7 +1679,9 @@ function BuildingRow({
         <span style={{ color: MUTED, display: "grid", placeItems: "center" }}>
           <Icon name="building-01" />
         </span>
-        <span style={{ fontSize: 13, color: "var(--review-ink)" }}>{building.name}</span>
+        <span style={{ fontSize: 13, color: "var(--review-ink)" }}>
+          {building.name}
+        </span>
         {building.status && (
           <span
             style={{
@@ -1311,12 +1721,23 @@ function BuildingRow({
               <Ellipsis />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" side="bottom" style={{ width: 232, padding: 6 }}>
+          <PopoverContent
+            align="start"
+            side="bottom"
+            style={{ width: 232, padding: 6 }}
+          >
             <MenuItem
               label="Edit building"
-              onClick={() => { setMenuOpen(false); onEditBuilding(building); }}
+              onClick={() => {
+                setMenuOpen(false);
+                onEditBuilding(building);
+              }}
             />
-            <MenuItem label="Delete building" danger onClick={() => setMenuOpen(false)} />
+            <MenuItem
+              label="Delete building"
+              danger
+              onClick={() => setMenuOpen(false)}
+            />
           </PopoverContent>
         </Popover>
       </div>
@@ -1353,21 +1774,32 @@ export function MapContent({
   /** "Add new" — opens the Building wizard (v9 10059:102926). */
   onAddBuilding: () => void;
   /** A building row's ⋯ → Edit building: the wizard re-entered with steps pre-completed. */
-  onEditBuilding: (b: { id: string; name: string; levels: { index: number; short: string; name: string }[] }) => void;
+  onEditBuilding: (b: {
+    id: string;
+    name: string;
+    levels: { index: number; short: string; name: string }[];
+  }) => void;
 }) {
   const [buildings, setBuildings] = useState<Building[] | null>(null);
   const [live, setLive] = useState<MapBuilding[]>([]);
   // What the map is showing — driven by the selector over the map, top-centre.
-  const [target, setTarget] = useState<{ building: string; level: number } | undefined>();
+  const [target, setTarget] = useState<
+    { building: string; level: number } | undefined
+  >();
 
   /**
    * The per-level type counts the map reports, cached so a floor you have already looked at stays
    * populated when you collapse and re-open it — and so switching away doesn't blank it.
    */
-  const [typesByLevel, setTypesByLevel] = useState<Record<string, LevelTypeCount[]>>({});
+  const [typesByLevel, setTypesByLevel] = useState<
+    Record<string, LevelTypeCount[]>
+  >({});
   const onTypes = useCallback(
     (forLevel: { building: string; level: number }, types: LevelTypeCount[]) =>
-      setTypesByLevel((prev) => ({ ...prev, [`${forLevel.building}:${forLevel.level}`]: types })),
+      setTypesByLevel((prev) => ({
+        ...prev,
+        [`${forLevel.building}:${forLevel.level}`]: types,
+      })),
     [],
   );
 
@@ -1381,36 +1813,57 @@ export function MapContent({
     let live = true;
     fetch(`${SPRITE_BASE}.json`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => { if (live && j) setSheet(j); })
-      .catch(() => {});      // no icons is a fine outcome; the rows still read
-    return () => { live = false; };
+      .then((j) => {
+        if (live && j) setSheet(j);
+      })
+      .catch(() => {}); // no icons is a fine outcome; the rows still read
+    return () => {
+      live = false;
+    };
   }, []);
 
   /** Expanding a floor shows it on the map, which is what makes its counts arrive. */
   const requestTypes = useCallback(
-    (building: string, level: number) => setTarget((t) => (t?.building === building && t?.level === level ? t : { building, level })),
+    (building: string, level: number) =>
+      setTarget((t) =>
+        t?.building === building && t?.level === level
+          ? t
+          : { building, level },
+      ),
     [],
   );
   /**
    * The feature the tree has centred the map on, plus a nonce that rises on every request — so
    * clicking the same row twice re-centres, which matters because you may have panned away since.
    */
-  const [focused, setFocused] = useState<{ fid: string; n: number } | null>(null);
-  const focusNow = useCallback((buildingId: string, index: number, fid: string) => {
-    // the floor first, then the feature — see the context's `focus` note
-    setTarget((t) => (t?.building === buildingId && t?.level === index ? t : { building: buildingId, level: index }));
-    setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
-    // Drop the previous feature's properties the moment a new one is picked. Keeping them until
-    // the replacement arrives would show the OLD feature's fid under the NEW feature's name for as
-    // long as the tiles take — and after a level switch that is seconds, not frames.
-    setProps((cur) => (cur && cur.fid === fid ? cur : null));
-  }, []);
+  const [focused, setFocused] = useState<{ fid: string; n: number } | null>(
+    null,
+  );
+  const focusNow = useCallback(
+    (buildingId: string, index: number, fid: string) => {
+      // the floor first, then the feature — see the context's `focus` note
+      setTarget((t) =>
+        t?.building === buildingId && t?.level === index
+          ? t
+          : { building: buildingId, level: index },
+      );
+      setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
+      // Drop the previous feature's properties the moment a new one is picked. Keeping them until
+      // the replacement arrives would show the OLD feature's fid under the NEW feature's name for as
+      // long as the tiles take — and after a level switch that is seconds, not frames.
+      setProps((cur) => (cur && cur.fid === fid ? cur : null));
+    },
+    [],
+  );
   /**
    * The focused feature's own properties, as the map reported them (§19). Held beside `focused`
    * rather than inside it because they arrive **later**: the map retries until the tiles carrying
    * that feature have landed.
    */
-  const [props, setProps] = useState<{ fid: string; props: Record<string, unknown> } | null>(null);
+  const [props, setProps] = useState<{
+    fid: string;
+    props: Record<string, unknown>;
+  } | null>(null);
   /**
    * Local feature edits, keyed by `fid` — the panel's edit mode writing back.
    *
@@ -1419,7 +1872,9 @@ export function MapContent({
    * with the panel, which is the whole design principle this app is arranged around. A reload
    * restores whatever the tiles say.
    */
-  const [edits, setEdits] = useState<Record<string, { name?: string; subType?: string }>>({});
+  const [edits, setEdits] = useState<
+    Record<string, { name?: string; subType?: string }>
+  >({});
   const onFeatureProps = useCallback(
     (fid: string, p: Record<string, unknown>) => setProps({ fid, props: p }),
     [],
@@ -1433,11 +1888,17 @@ export function MapContent({
    * moving the map under a cursor that just landed is disorienting. The nonce still rises so a
    * second click on the same feature re-opens a panel you had closed.
    */
-  const onFeatureClick = useCallback((fid: string, p: Record<string, unknown>) => {
-    if (dirtyRef.current) { setPendingPick({ kind: "map", fid, props: p }); return; }
-    setProps({ fid, props: p });
-    setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
-  }, []);
+  const onFeatureClick = useCallback(
+    (fid: string, p: Record<string, unknown>) => {
+      if (dirtyRef.current) {
+        setPendingPick({ kind: "map", fid, props: p });
+        return;
+      }
+      setProps({ fid, props: p });
+      setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
+    },
+    [],
+  );
   /**
    * **Unsaved edits guard** (Olcay, 2026-08-14: *"warn the user if they changed a POI then tried
    * to select some other POI"*).
@@ -1454,7 +1915,9 @@ export function MapContent({
     dirtyRef.current = d;
   }, []);
   const [pendingPick, setPendingPick] = useState<
-    { kind: "map"; fid: string; props: Record<string, unknown> } | { kind: "tree"; buildingId: string; index: number; fid: string } | null
+    | { kind: "map"; fid: string; props: Record<string, unknown> }
+    | { kind: "tree"; buildingId: string; index: number; fid: string }
+    | null
   >(null);
   /** The user chose to lose the edit — carry out whichever selection was waiting. */
   const applyPendingPick = useCallback(() => {
@@ -1472,7 +1935,10 @@ export function MapContent({
   /** The tree's selection, guarded the same way the map's is — one rule, both surfaces. */
   const focus = useCallback(
     (buildingId: string, index: number, fid: string) => {
-      if (dirtyRef.current) { setPendingPick({ kind: "tree", buildingId, index, fid }); return; }
+      if (dirtyRef.current) {
+        setPendingPick({ kind: "tree", buildingId, index, fid });
+        return;
+      }
       focusNow(buildingId, index, fid);
     },
     [focusNow],
@@ -1487,7 +1953,12 @@ export function MapContent({
   useEffect(() => {
     const b = live.find((x) => x.id === target?.building);
     const l = b?.levels.find((x) => x.index === target?.level);
-    setPresenceFloor(target?.building, target?.level, b?.name, l?.long ?? l?.short);
+    setPresenceFloor(
+      target?.building,
+      target?.level,
+      b?.name,
+      l?.long ?? l?.short,
+    );
   }, [target, live]);
   /**
    * Somebody chose to follow a colleague. The request comes through presence rather than a prop:
@@ -1503,8 +1974,29 @@ export function MapContent({
         ? t
         : { building: follow.building, level: follow.level },
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Keyed on the NONCE alone: following the same person twice must fire again, and the
+    // whole request object would re-run this on unrelated presence ticks.
   }, [follow?.n]);
+  /** Who else has something open on this floor — the map draws it, the tree marks the row. */
+  const editors = useMemo(
+    () =>
+      getEditorsOnFloor(target?.building, target?.level).map((p) => ({
+        fid: p.editingFid as string,
+        who: p.identity.name,
+        colour: peerColour(p),
+      })),
+    // `presenceVersion()` is read as a VALUE, so the memo recomputes whenever presence changes —
+    // the subscription above is what re-renders us. (No eslint-disable: this config has no
+    // `react-hooks/exhaustive-deps` rule, so the comment itself would be the error.)
+    [target, presenceVersion()],
+  );
+
+  const editorsByFid = useMemo(() => {
+    const out: Record<string, { who: string; colour: string }> = {};
+    for (const e of editors) out[e.fid] = { who: e.who, colour: e.colour };
+    return out;
+  }, [editors]);
+
   const peers = useMemo(
     () =>
       getPeersOnFloor(target?.building, target?.level).map((p) => ({
@@ -1517,14 +2009,28 @@ export function MapContent({
     // presenceVersion is the dependency in spirit; the subscription above re-renders us
     [target, presenceVersion()],
   );
-  /** Closing the panel clears the selection itself — the panel IS the selection made visible. */  /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
+  /** Closing the panel clears the selection itself — the panel IS the selection made visible. */ /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
   const closeProps = useCallback(() => {
     setFocused(null);
     setProps(null);
   }, []);
   // Only ever show properties for the feature currently selected: a late reply about a feature you
   // have already moved on from must not repaint the panel.
-  const shownProps = focused && props && props.fid === focused.fid ? props.props : null;
+  const shownProps =
+    focused && props && props.fid === focused.fid ? props.props : null;
+
+  /**
+   * Tell everyone what this tab has open. Driven by `shownProps` rather than `focused`, because a
+   * focus is only a request — the panel is not actually open on a feature until its properties
+   * have arrived, and announcing sooner would flag features nobody ended up editing.
+   */
+  useEffect(() => {
+    setPresenceEditing(
+      shownProps ? String(props?.fid ?? "") || undefined : undefined,
+      shownProps ? String(shownProps.name ?? "") || undefined : undefined,
+    );
+  }, [shownProps, props?.fid]);
+
   /**
    * Is the feature in the panel flagged? Read for the level the map is actually on, which is the
    * level the focused feature belongs to — `focus()` switches the target before it sets `focused`.
@@ -1540,7 +2046,9 @@ export function MapContent({
         ? flaggedChangesFor(
             target.building,
             target.level,
-            live.find((b) => b.id === target.building)?.levels.find((l) => l.index === target.level)?.short ?? "",
+            live
+              .find((b) => b.id === target.building)
+              ?.levels.find((l) => l.index === target.level)?.short ?? "",
           )
         : NO_CHANGES,
     [target, live],
@@ -1552,7 +2060,9 @@ export function MapContent({
     flaggedNamesFor(
       target.building,
       target.level,
-      live.find((b) => b.id === target.building)?.levels.find((l) => l.index === target.level)?.short ?? "",
+      live
+        .find((b) => b.id === target.building)
+        ?.levels.find((l) => l.index === target.level)?.short ?? "",
     ).has(String(shownProps.name));
   /**
    * How many features on this floor share the panelled feature's name — so the flag notice can
@@ -1562,7 +2072,10 @@ export function MapContent({
   const focusedSharing =
     shownProps && target
       ? (typesByLevel[`${target.building}:${target.level}`] ?? []).reduce(
-          (n, t) => n + (t.names ?? []).filter((x) => x.name && x.name === shownProps.name).length,
+          (n, t) =>
+            n +
+            (t.names ?? []).filter((x) => x.name && x.name === shownProps.name)
+              .length,
           0,
         )
       : 1;
@@ -1576,7 +2089,11 @@ export function MapContent({
     if (!shownProps || !target) return [];
     const rows = typesByLevel[`${target.building}:${target.level}`] ?? [];
     const mine = String(shownProps.mainType ?? "");
-    const set = new Set(rows.filter((r) => r.mainType === mine && r.subType).map((r) => r.subType!));
+    const set = new Set(
+      rows
+        .filter((r) => r.mainType === mine && r.subType)
+        .map((r) => r.subType!),
+    );
     if (shownProps.subType) set.add(String(shownProps.subType));
     return [...set].sort();
   }, [shownProps, target, typesByLevel]);
@@ -1597,17 +2114,48 @@ export function MapContent({
           : cur,
       );
       const short =
-        live.find((b) => b.id === target.building)?.levels.find((l) => l.index === target.level)?.short ?? "";
+        live
+          .find((b) => b.id === target.building)
+          ?.levels.find((l) => l.index === target.level)?.short ?? "";
       // Clear against the name it had when it was flagged — a rename would otherwise orphan the flag
       // under the old string, leaving it stuck on a feature that no longer answers to it.
-      if (shownProps?.name) clearFlagForName(target.building, target.level, short, String(shownProps.name));
+      if (shownProps?.name)
+        clearFlagForName(
+          target.building,
+          target.level,
+          short,
+          String(shownProps.name),
+        );
     },
     [focused, target, live, shownProps],
   );
-  const [hovered, setHovered] = useState<{ fid?: string; mainType?: string; subType?: string } | null>(null);
+  const [hovered, setHovered] = useState<{
+    fid?: string;
+    mainType?: string;
+    subType?: string;
+  } | null>(null);
   const typesCtx = useMemo(
-    () => ({ byLevel: typesByLevel, current: target, request: requestTypes, sheet, focus, focused: focused?.fid ?? null, hover: setHovered, edits }),
-    [typesByLevel, target, requestTypes, sheet, focus, focused, edits],
+    () => ({
+      byLevel: typesByLevel,
+      current: target,
+      request: requestTypes,
+      sheet,
+      focus,
+      focused: focused?.fid ?? null,
+      editors: editorsByFid,
+      hover: setHovered,
+      edits,
+    }),
+    [
+      typesByLevel,
+      target,
+      requestTypes,
+      sheet,
+      focus,
+      focused,
+      editorsByFid,
+      edits,
+    ],
   );
   /** Hover wins while it lasts; leaving falls back to the selection rather than going dark. */
   const highlight = useMemo(
@@ -1635,7 +2183,10 @@ export function MapContent({
   }, [live, mapLevel]);
   // Wizard-created buildings ride the store so they survive navigation; their levels carry no
   // index-keyed tags — a just-created building has no update story yet.
-  const created = useSyncExternalStore(subscribeCreatedBuildings, getCreatedBuildings);
+  const created = useSyncExternalStore(
+    subscribeCreatedBuildings,
+    getCreatedBuildings,
+  );
   // Concluding a review changes what the level's tags say — re-read when one lands. (Navigating
   // back here remounts the screen anyway; this covers a review concluded in another surface.)
   useSyncExternalStore(subscribeReviews, getReviewCount);
@@ -1645,7 +2196,11 @@ export function MapContent({
       id: b.id,
       name: b.name,
       count: b.levels.length,
-      levels: b.levels.map((l) => ({ index: l.index, name: l.long, short: l.short })),
+      levels: b.levels.map((l) => ({
+        index: l.index,
+        name: l.long,
+        short: l.short,
+      })),
     })),
   ];
   /**
@@ -1679,7 +2234,10 @@ export function MapContent({
   // A file dropped on the map, waiting for the confirmation overlay's answer. Ignored until the
   // map has booted — before that there is no honest building/level to prefill.
   const [dropped, setDropped] = useState<string | null>(null);
-  const onFileDrop = useCallback((f: { name: string }) => setDropped(f.name), []);
+  const onFileDrop = useCallback(
+    (f: { name: string }) => setDropped(f.name),
+    [],
+  );
   /** Remembered across navigation, so choosing to work on the map survives leaving the screen. */
   const [listOpen, setListOpen] = useState(() => {
     try {
@@ -1701,8 +2259,10 @@ export function MapContent({
 
   return (
     <LevelTypesContext.Provider value={typesCtx}>
-    <div style={{ flex: 1, display: "flex", minHeight: 0, position: "relative" }}>
-      {/*
+      <div
+        style={{ flex: 1, display: "flex", minHeight: 0, position: "relative" }}
+      >
+        {/*
         **The list collapses** (Olcay, 2026-08-14: *"maybe we could have a collapse listing feature.
         So I can click on the map and continue editing"*). Editing happens on the map with the panel
         on the right; the tree is how you *get* there, and once you have arrived it is 440px of the
@@ -1711,207 +2271,258 @@ export function MapContent({
         A remembered toggle, never automatic: collapsing the list out from under someone the moment
         they select a feature moves the ground they are standing on, which is worse than a click.
       */}
-      <div
-        style={{
-          width: listOpen ? PANEL_WIDTH : 0,
-          flex: `0 0 ${listOpen ? PANEL_WIDTH : 0}px`,
-          borderRight: listOpen ? `1px solid ${LINE}` : "none",
-          background: "#fff",
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          overflow: "hidden",
-          transition: "width .16s ease, flex-basis .16s ease",
-        }}
-      >
-        <div style={{ padding: "16px 16px 12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Text style={{ fontSize: 18, fontWeight: 600, color: INK }}>Map Content</Text>
-            <span style={{ color: MUTED, display: "grid", placeItems: "center" }}>
-              <Icon name="info-circle" />
-            </span>
-            <span style={{ flex: 1 }} />
-            <Button variant="outline" size="sm" onClick={onAddBuilding} data-tour="add-building">
-              Add new
-            </Button>
-          </div>
-          <Text style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>
-            You are viewing buildings for <b style={{ color: "var(--review-ink)" }}>Dubai International Airports</b>
-          </Text>
-          <div style={{ marginTop: 12 }}>
-            <Input placeholder="Search" aria-label="Search map content" />
-          </div>
-          <Text style={{ fontSize: 12, color: MUTED, marginTop: 8 }}>316 Map Content found.</Text>
-        </div>
-
-        <div data-tour="tree" style={{ overflow: "auto", flex: 1, borderTop: `1px solid ${LINE}` }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: `10px 12px 10px ${indent(0)}px`,
-              borderBottom: `1px solid ${LINE}`,
-            }}
-          >
-            <Chevron open={false} />
-            <span style={{ color: MUTED, display: "grid", placeItems: "center" }}>
-              <Icon name="map-01" />
-            </span>
-            <span style={{ fontSize: 13, color: "var(--review-ink)" }}>{OUTDOOR.name}</span>
-            <Count n={OUTDOOR.count} />
-          </div>
-          {tree.map((b) => (
-            <BuildingRow
-              key={b.id}
-              building={b}
-              open={openBuildings.has(b.id)}
-              onToggle={() => toggleBuilding(b.id)}
-              onEdit={onEditLevel}
-              onReview={onReviewLevel}
-              onUpdate={onUpdateLevel}
-              onEditBuilding={(bb) =>
-                onEditBuilding({
-                  id: bb.id,
-                  name: bb.name,
-                  levels: (bb.levels ?? []).map((l) => ({ index: l.index, short: l.short, name: l.name })),
-                })
-              }
-            />
-          ))}
-        </div>
-      </div>
-
-      <div style={{ position: "relative", flex: 1, background: "#EDEEF0", minWidth: 0 }}>
-        {/* On the map's own left edge, so it sits where the list's boundary is and reads as the
-            handle for it — the arrow points the way the list will move. */}
-        <button
-          type="button"
-          onClick={toggleList}
-          aria-expanded={listOpen}
-          aria-label={listOpen ? "Hide the content list" : "Show the content list"}
-          title={listOpen ? "Hide the list" : "Show the list"}
+        <div
           style={{
-            position: "absolute",
-            left: 0,
-            top: 16,
-            zIndex: 3,
-            width: 22,
-            height: 44,
-            display: "grid",
-            placeItems: "center",
-            padding: 0,
-            cursor: "pointer",
-            border: `1px solid ${LINE}`,
-            borderLeft: "none",
-            borderRadius: "0 8px 8px 0",
+            width: listOpen ? PANEL_WIDTH : 0,
+            flex: `0 0 ${listOpen ? PANEL_WIDTH : 0}px`,
+            borderRight: listOpen ? `1px solid ${LINE}` : "none",
             background: "#fff",
-            color: MUTED,
-            boxShadow: "0 1px 4px rgba(0,0,0,.10)",
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            overflow: "hidden",
+            transition: "width .16s ease, flex-basis .16s ease",
           }}
         >
-          <svg width="10" height="14" viewBox="0 0 10 14" aria-hidden focusable="false">
-            <path
-              d={listOpen ? "M7 2 L3 7 L7 12" : "M3 2 L7 7 L3 12"}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        {/*
+          <div style={{ padding: "16px 16px 12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Text style={{ fontSize: 18, fontWeight: 600, color: INK }}>
+                Map Content
+              </Text>
+              <span
+                style={{ color: MUTED, display: "grid", placeItems: "center" }}
+              >
+                <Icon name="info-circle" />
+              </span>
+              <span style={{ flex: 1 }} />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onAddBuilding}
+                data-tour="add-building"
+              >
+                Add new
+              </Button>
+            </div>
+            <Text style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>
+              You are viewing buildings for{" "}
+              <b style={{ color: "var(--review-ink)" }}>
+                Dubai International Airports
+              </b>
+            </Text>
+            <div style={{ marginTop: 12 }}>
+              <Input placeholder="Search" aria-label="Search map content" />
+            </div>
+            <Text style={{ fontSize: 12, color: MUTED, marginTop: 8 }}>
+              316 Map Content found.
+            </Text>
+          </div>
+
+          <div
+            data-tour="tree"
+            style={{
+              overflow: "auto",
+              flex: 1,
+              borderTop: `1px solid ${LINE}`,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: `10px 12px 10px ${indent(0)}px`,
+                borderBottom: `1px solid ${LINE}`,
+              }}
+            >
+              <Chevron open={false} />
+              <span
+                style={{ color: MUTED, display: "grid", placeItems: "center" }}
+              >
+                <Icon name="map-01" />
+              </span>
+              <span style={{ fontSize: 13, color: "var(--review-ink)" }}>
+                {OUTDOOR.name}
+              </span>
+              <Count n={OUTDOOR.count} />
+            </div>
+            {tree.map((b) => (
+              <BuildingRow
+                key={b.id}
+                building={b}
+                open={openBuildings.has(b.id)}
+                onToggle={() => toggleBuilding(b.id)}
+                onEdit={onEditLevel}
+                onReview={onReviewLevel}
+                onUpdate={onUpdateLevel}
+                onEditBuilding={(bb) =>
+                  onEditBuilding({
+                    id: bb.id,
+                    name: bb.name,
+                    levels: (bb.levels ?? []).map((l) => ({
+                      index: l.index,
+                      short: l.short,
+                      name: l.name,
+                    })),
+                  })
+                }
+              />
+            ))}
+          </div>
+        </div>
+
+        <div
+          style={{
+            position: "relative",
+            flex: 1,
+            background: "#EDEEF0",
+            minWidth: 0,
+          }}
+        >
+          {/* On the map's own left edge, so it sits where the list's boundary is and reads as the
+            handle for it — the arrow points the way the list will move. */}
+          <button
+            type="button"
+            onClick={toggleList}
+            aria-expanded={listOpen}
+            aria-label={
+              listOpen ? "Hide the content list" : "Show the content list"
+            }
+            title={listOpen ? "Hide the list" : "Show the list"}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 16,
+              zIndex: 3,
+              width: 22,
+              height: 44,
+              display: "grid",
+              placeItems: "center",
+              padding: 0,
+              cursor: "pointer",
+              border: `1px solid ${LINE}`,
+              borderLeft: "none",
+              borderRadius: "0 8px 8px 0",
+              background: "#fff",
+              color: MUTED,
+              boxShadow: "0 1px 4px rgba(0,0,0,.10)",
+            }}
+          >
+            <svg
+              width="10"
+              height="14"
+              viewBox="0 0 10 14"
+              aria-hidden
+              focusable="false"
+            >
+              <path
+                d={listOpen ? "M7 2 L3 7 L7 12" : "M3 2 L7 7 L3 12"}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          {/*
           Switching away from a half-edited feature. Three ways out and none of them auto-saves:
           keep editing (the default and the safe one), or discard and go where you were heading.
           "Discard" is the destructive branch, so it is the one the user has to ask for.
         */}
-        <ConfirmOverlay
-          open={!!pendingPick}
-          tone="warning"
-          title="You have unsaved changes"
-          confirmLabel="Discard changes"
-          cancelLabel="Keep editing"
-          onConfirm={applyPendingPick}
-          onCancel={() => setPendingPick(null)}
-        >
-          This feature has edits you have not saved. Opening another one will lose them.
-        </ConfirmOverlay>
-        <PointrMap
-          changes={mapFlagMarks}
-          prefs={prefs}
-          onBuildings={onBuildings}
-          onLevel={onLevel}
-          onTypes={onTypes}
-          onFileDrop={onFileDrop}
-          focusFeature={focused?.fid ?? null}
-          focusNonce={focused?.n ?? 0}
-          highlight={highlight}
-          onFeatureProps={onFeatureProps}
-          /**
-           * Clicking an editable feature on the map opens its panel, ready to edit — the same
-           * destination the tree's rows reach, from the other surface.
-           */
-          onFeatureClick={onFeatureClick}
-          onCursor={setPresenceCursor}
-          peers={peers}
-          // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
-          // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.
-          focusPadRight={focused ? FEATURE_PANEL_WIDTH + 24 : 0}
-          target={target}
-        />
-        {live.length > 0 && target && (
-          <LevelSelector
-            buildings={live}
-            buildingId={target.building}
-            levelIndex={target.level}
-            onChange={(building, level) => setTarget({ building, level })}
-            offsetRight={shownProps ? FEATURE_PANEL_WIDTH + 24 : 0}
+          <ConfirmOverlay
+            open={!!pendingPick}
+            tone="warning"
+            title="You have unsaved changes"
+            confirmLabel="Discard changes"
+            cancelLabel="Keep editing"
+            onConfirm={applyPendingPick}
+            onCancel={() => setPendingPick(null)}
+          >
+            This feature has edits you have not saved. Opening another one will
+            lose them.
+          </ConfirmOverlay>
+          <PointrMap
+            changes={mapFlagMarks}
+            prefs={prefs}
+            onBuildings={onBuildings}
+            onLevel={onLevel}
+            onTypes={onTypes}
+            onFileDrop={onFileDrop}
+            focusFeature={focused?.fid ?? null}
+            focusNonce={focused?.n ?? 0}
+            highlight={highlight}
+            onFeatureProps={onFeatureProps}
+            /**
+             * Clicking an editable feature on the map opens its panel, ready to edit — the same
+             * destination the tree's rows reach, from the other surface.
+             */
+            onFeatureClick={onFeatureClick}
+            onCursor={setPresenceCursor}
+            peers={peers}
+            editing={editors}
+            // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
+            // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.
+            focusPadRight={focused ? FEATURE_PANEL_WIDTH + 24 : 0}
+            target={target}
           />
-        )}
-        {shownProps && (
-          <FeaturePanel
-            props={shownProps}
-            icon={
-              <TypeIcon
-                mainType={String(shownProps.mainType ?? "")}
-                subType={shownProps.subType ? String(shownProps.subType) : undefined}
-              />
-            }
-            onDirtyChange={onDirtyChange}
-            flagged={focusedFlagged}
-            flagNote={
-              focusedFlagged && shownProps?.name && target
-                ? flagNoteFor(
-                    target.building,
-                    target.level,
-                    live.find((b) => b.id === target.building)?.levels.find((l) => l.index === target.level)?.short ?? "",
-                    String(shownProps.name),
-                  )
-                : undefined
-            }
-            flagShared={focusedSharing > 1 ? focusedSharing : undefined}
-            subTypeOptions={subTypeOptions}
-            onEdited={onEdited}
-            onClose={closeProps}
-          />
-        )}
-        <MapSettings prefs={prefs} onChange={setPrefs} />
-        {dropped && live.length > 0 && target && (
-          <UploadDropConfirm
-            file={dropped}
-            buildings={live}
-            initialBuildingId={target.building}
-            initialLevel={target.level}
-            onConfirm={(l, f) => {
-              setDropped(null);
-              onUploadLevel(l, f);
-            }}
-            onCancel={() => setDropped(null)}
-          />
-        )}
+          {live.length > 0 && target && (
+            <LevelSelector
+              buildings={live}
+              buildingId={target.building}
+              levelIndex={target.level}
+              onChange={(building, level) => setTarget({ building, level })}
+              offsetRight={shownProps ? FEATURE_PANEL_WIDTH + 24 : 0}
+            />
+          )}
+          {shownProps && (
+            <FeaturePanel
+              props={shownProps}
+              icon={
+                <TypeIcon
+                  mainType={String(shownProps.mainType ?? "")}
+                  subType={
+                    shownProps.subType ? String(shownProps.subType) : undefined
+                  }
+                />
+              }
+              onDirtyChange={onDirtyChange}
+              flagged={focusedFlagged}
+              flagNote={
+                focusedFlagged && shownProps?.name && target
+                  ? flagNoteFor(
+                      target.building,
+                      target.level,
+                      live
+                        .find((b) => b.id === target.building)
+                        ?.levels.find((l) => l.index === target.level)?.short ??
+                        "",
+                      String(shownProps.name),
+                    )
+                  : undefined
+              }
+              flagShared={focusedSharing > 1 ? focusedSharing : undefined}
+              subTypeOptions={subTypeOptions}
+              onEdited={onEdited}
+              onClose={closeProps}
+            />
+          )}
+          <MapSettings prefs={prefs} onChange={setPrefs} />
+          {dropped && live.length > 0 && target && (
+            <UploadDropConfirm
+              file={dropped}
+              buildings={live}
+              initialBuildingId={target.building}
+              initialLevel={target.level}
+              onConfirm={(l, f) => {
+                setDropped(null);
+                onUploadLevel(l, f);
+              }}
+              onCancel={() => setDropped(null)}
+            />
+          )}
+        </div>
       </div>
-    </div>
     </LevelTypesContext.Provider>
   );
 }

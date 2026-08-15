@@ -38,6 +38,13 @@
      between them is what turns a stutter into a glide. `will-change` keeps it on the compositor. */
   .peer { position: absolute; top: 0; left: 0; will-change: transform;
           transition: transform .12s linear; display: flex; align-items: flex-start; gap: 4px; }
+  /* Pinned to a feature's centre, and centred ON it — this marks an object, not a point. */
+  .editing-chip { position: absolute; top: 0; left: 0; will-change: transform;
+                  transition: transform .12s linear; margin: -10px 0 0 0;
+                  transform-origin: 0 0; font-size: 10.5px; line-height: 1; color: #fff;
+                  padding: 4px 7px; border-radius: 999px; white-space: nowrap;
+                  font-family: 'Readex Pro', system-ui, sans-serif;
+                  box-shadow: 0 1px 4px rgba(0,0,0,.25); }
   .peer-name { transform: translateY(12px); font-size: 10.5px; line-height: 1; color: #fff;
                padding: 3px 6px; border-radius: 999px; white-space: nowrap;
                font-family: 'Readex Pro', system-ui, sans-serif; }
@@ -699,6 +706,48 @@ function drawPeers() {
     node.style.transform = "translate3d(" + Math.round(pt.x) + "px," + Math.round(pt.y) + "px,0)";
   }
   // Anyone who left, or moved to another floor, goes with them.
+  for (const node of [...layer.children])
+    if (!seen.has(node.id.slice(5))) node.remove();
+}
+
+/**
+ * "Ege is editing this" — a chip pinned to the feature somebody else has open.
+ *
+ * Anchored to the FEATURE, not to their cursor: an editor's pointer wanders off to the panel on
+ * the right while the thing they are changing stays put, and a marker that follows the cursor
+ * would point at the wrong object precisely when it matters.
+ *
+ * Position comes from `scanFeature`, with the same `FEATURE_BOUNDS` cache the camera uses — so a
+ * feature that is off-screen or not yet in a loaded tile still resolves.
+ */
+function drawEditing() {
+  if (!map) return;
+  let layer = document.getElementById("editing");
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.id = "editing";
+    layer.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden";
+    document.body.appendChild(layer);
+  }
+  const seen = new Set();
+  for (const e of EDITING) {
+    if (!e || !e.fid) continue;
+    const hit = scanFeature(e.fid);
+    const bounds = (hit && hit.bounds) || FEATURE_BOUNDS[e.fid] || null;
+    if (!bounds) continue;                       // not on this floor, or no tile for it yet
+    seen.add(e.fid);
+    let node = document.getElementById("edit-" + e.fid);
+    if (!node) {
+      node = document.createElement("div");
+      node.id = "edit-" + e.fid;
+      node.className = "editing-chip";
+      layer.appendChild(node);
+    }
+    node.style.background = e.colour || "#0b369c";
+    node.textContent = e.who + " is editing";
+    const c = map.project([(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2]);
+    node.style.transform = "translate3d(" + Math.round(c.x) + "px," + Math.round(c.y) + "px,0)";
+  }
   for (const node of [...layer.children])
     if (!seen.has(node.id.slice(5))) node.remove();
 }
@@ -1774,6 +1823,7 @@ function start() {
   map.on("move", postCam);
   map.on("move", redraw);
   map.on("move", drawPeers);   // the cursor is at a coordinate, so panning must re-project it
+  map.on("move", drawEditing); // and so is the chip pinned to a feature
   map.on("idle", () => {
     ensureLevel();
     ensureIndoorVisible();
@@ -2005,6 +2055,9 @@ window.addEventListener("message", (ev) => {
   } else if (d.type === "peers") {
     PEERS = Array.isArray(d.peers) ? d.peers : [];
     drawPeers();
+  } else if (d.type === "editing") {
+    EDITING = Array.isArray(d.editing) ? d.editing : [];
+    drawEditing();
   } else if (d.type === "editabletypes") {
     BLOCKED_TYPES = new Set(d.types || []);
   } else if (d.type === "decidable") {
@@ -2045,6 +2098,8 @@ let CAN_DECIDE = true;
  * zoom and window size, and a pixel means nothing outside the viewport that produced it.
  */
 let PEERS = [];
+/** Features other people have open in the editor: [{ fid, who, colour }]. */
+let EDITING = [];
 
 /**
  * The `mainType`s the panel will NOT edit — posted by the app, which owns the taxonomy (this page

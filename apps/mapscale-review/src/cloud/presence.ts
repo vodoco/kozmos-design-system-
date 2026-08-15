@@ -41,6 +41,16 @@ export interface Peer {
    */
   buildingName?: string;
   levelName?: string;
+  /**
+   * What this person currently has open in the editor (Olcay, 2026-08-15: *"would be great if we
+   * could see what's user is editing on the map and on the listing too"*).
+   *
+   * Visibility, not a lock. Two people opening the same feature is allowed and always was — this
+   * only makes it *visible*, so the second one can decide for themselves. A lock is the natural
+   * next step and the 3D-to-GeoJSON server already models one; it is deliberately not this.
+   */
+  editingFid?: string;
+  editingName?: string;
   /** Map coordinates, so every viewer projects it into their own viewport. */
   lng?: number;
   lat?: number;
@@ -61,6 +71,7 @@ type Wire =
       levelName?: string;
       at: number;
     }
+  | { t: "edit"; id: string; fid?: string; name?: string; at: number }
   | { t: "bye"; id: string };
 
 export interface Transport {
@@ -205,6 +216,13 @@ function onMessage(m: Wire) {
     p.levelName = m.levelName;
     p.at = m.at;
     emit();
+  } else if (m.t === "edit") {
+    const p = peers.get(m.id);
+    if (!p) return;
+    p.editingFid = m.fid;
+    p.editingName = m.name;
+    p.at = m.at;
+    emit();
   } else if (m.t === "bye") {
     if (peers.delete(m.id)) emit();
   }
@@ -279,6 +297,32 @@ export function setPresenceFloor(
     levelName,
     at: me.at,
   });
+}
+
+/**
+ * Announce what this tab has open in the editor, or `undefined` when it closes.
+ *
+ * Sent only on change — opening a panel is rare next to moving a mouse — and folded into `me` so a
+ * newcomer learns it from the first heartbeat rather than waiting for the editor to be reopened.
+ */
+export function setPresenceEditing(fid?: string, name?: string) {
+  if (!me) return;
+  if (me.editingFid === fid) return;
+  me.editingFid = fid;
+  me.editingName = name;
+  me.at = Date.now();
+  transport?.send({ t: "edit", id: selfId, fid, name, at: me.at });
+}
+
+/** Everyone editing something on a given floor — the map and the tree both ask this. */
+export function getEditorsOnFloor(
+  building: string | undefined,
+  level: number | undefined,
+): Peer[] {
+  if (building === undefined || level === undefined) return [];
+  return getPeers().filter(
+    (p) => p.building === building && p.level === level && p.editingFid,
+  );
 }
 
 /** Report the cursor, in map coordinates. Throttled — this fires on every mouse move. */

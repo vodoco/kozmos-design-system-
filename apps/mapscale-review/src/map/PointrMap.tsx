@@ -49,97 +49,160 @@ export interface PointrMapHandle {
   setCamera: (cam: MapCamera) => void;
 }
 
-const PointrMap = forwardRef<PointrMapHandle, {
-  changes?: Change[];
-  prefs?: MapPrefs;
-  /** Which building/level the map should show. Omit to keep the page's own default. */
-  target?: { building: string; level: number };
-  onLevel?: (level: MapLevel) => void;
-  onBuildings?: (buildings: MapBuilding[]) => void;
-  /** Fired on every user/boot move — the feed Compare mirrors into its sibling pane. */
-  onCamera?: (cam: MapCamera) => void;
-  /**
-   * A floor-plan file was dropped on the map. Passing this ENABLES the pane's drop zone (the map
-   * page shows its veil and reports drops only when the app can take them) — upload surfaces
-   * pass it, review/Compare panes don't.
-   */
-  onFileDrop?: (file: { name: string; size: number }) => void;
-  /**
-   * The named polygons actually on the current floor, biggest first — the map answering "what is
-   * here?". Screens that draw a changelog use it to bind their rows to real geometry, so the list
-   * and the map correspond on EVERY level rather than only on the one the seeds were written for.
-   */
-  onFeatures?: (names: string[]) => void;
-  /**
-   * What kinds of feature the reported floor holds, and how many of each — the tree's expandable
-   * level rows read this. Arrives with `features`, from the same `ready`/`switched` moments.
-   */
-  onTypes?: (forLevel: { building: string; level: number }, types: LevelTypeCount[]) => void;
-  /**
-   * A decision taken on the map itself — the pinned card's ✓ / 🚩 / ✗ (Olcay, 2026-08-11). The
-   * map reports it and changes nothing; the app applies it and posts the result back down, so the
-   * centroid badge and the changelog row can never disagree about what you decided.
-   */
-  /** `null` clears it — a user override returning to its resting "Kept" (2026-08-11). */
-  onDecision?: (id: string, decision: "confirm" | "flag" | "reject" | null) => void;
-  /**
-   * The change currently selected, shared with the changelog — one selection, two surfaces.
-   * Setting it opens that feature's card and eases the camera onto it; `onSelect` reports the
-   * same thing happening from the map's side.
-   */
-  active?: string | null;
-  onSelect?: (id: string | null) => void;
-  /**
-   * Centre the map on one SDK feature by its `fid` — the tree's level expansion selecting a row.
-   * Distinct from `active`, which is about a *change* in a review; this is about a feature that
-   * simply exists.
-   */
-  focusFeature?: string | null;
-  /**
-   * Bumped by the caller on every focus request. Without it, clicking the same row twice is the
-   * same prop value and the effect never re-fires — so a row you'd panned away from would refuse
-   * to bring you back.
-   */
-  focusNonce?: number;
-  /**
-   * What to light up on the map, through the SDK's own selection layer: one feature by `fid`, or a
-   * whole type. `null` clears it. Hover drives this as well as selection, so it changes often —
-   * which is why it is its own prop rather than folded into `focusFeature`, whose job is to MOVE
-   * the camera and must not fire on every mouseover.
-   */
-  highlight?: { fid?: string; mainType?: string; subType?: string } | null;
-  /**
-   * The properties of the focused feature, as the vector tiles carry them — the POI panel's supply
-   * (§19). Arrives with the focus rather than on request: the map's focus scan already holds the
-   * bag, and it is the only path that waits for the tiles.
-   */
-  onFeatureProps?: (fid: string, props: Record<string, unknown>) => void;
-  /**
-   * An editable feature was clicked on the map (Olcay, 2026-08-14: *"click on a feature on the map
-   * and on the listing should show the details panel in edit mode"*). Distinct from `onSelect`,
-   * which is about a *change* in a review; this is about a feature that simply exists.
-   */
-  onFeatureClick?: (fid: string, props: Record<string, unknown>) => void;
-  /** This tab's cursor, in map coordinates — presence broadcasts it (see cloud/presence.ts). */
-  onCursor?: (lng: number, lat: number) => void;
-  /**
-   * Other people's cursors to draw. The APP decides who belongs here, because it is the app that
-   * knows which floor everyone is on — presence is scoped to the level, not the viewport.
-   */
-  peers?: { id: string; name: string; colour: string; lng?: number; lat?: number }[];
-  /**
-   * Screen space to keep clear on the RIGHT when framing a focused feature — the panel's own
-   * width. The map is not resized; the feature is simply framed in the part of it you can still
-   * see.
-   */
-  focusPadRight?: number;
-}>(function PointrMap({ changes, prefs, onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, active, onSelect, focusFeature, focusNonce, highlight, onFeatureProps, onFeatureClick, onCursor, peers, focusPadRight, target }, handle) {
+const PointrMap = forwardRef<
+  PointrMapHandle,
+  {
+    changes?: Change[];
+    prefs?: MapPrefs;
+    /** Which building/level the map should show. Omit to keep the page's own default. */
+    target?: { building: string; level: number };
+    onLevel?: (level: MapLevel) => void;
+    onBuildings?: (buildings: MapBuilding[]) => void;
+    /** Fired on every user/boot move — the feed Compare mirrors into its sibling pane. */
+    onCamera?: (cam: MapCamera) => void;
+    /**
+     * A floor-plan file was dropped on the map. Passing this ENABLES the pane's drop zone (the map
+     * page shows its veil and reports drops only when the app can take them) — upload surfaces
+     * pass it, review/Compare panes don't.
+     */
+    onFileDrop?: (file: { name: string; size: number }) => void;
+    /**
+     * The named polygons actually on the current floor, biggest first — the map answering "what is
+     * here?". Screens that draw a changelog use it to bind their rows to real geometry, so the list
+     * and the map correspond on EVERY level rather than only on the one the seeds were written for.
+     */
+    onFeatures?: (names: string[]) => void;
+    /**
+     * What kinds of feature the reported floor holds, and how many of each — the tree's expandable
+     * level rows read this. Arrives with `features`, from the same `ready`/`switched` moments.
+     */
+    onTypes?: (
+      forLevel: { building: string; level: number },
+      types: LevelTypeCount[],
+    ) => void;
+    /**
+     * A decision taken on the map itself — the pinned card's ✓ / 🚩 / ✗ (Olcay, 2026-08-11). The
+     * map reports it and changes nothing; the app applies it and posts the result back down, so the
+     * centroid badge and the changelog row can never disagree about what you decided.
+     */
+    /** `null` clears it — a user override returning to its resting "Kept" (2026-08-11). */
+    onDecision?: (
+      id: string,
+      decision: "confirm" | "flag" | "reject" | null,
+    ) => void;
+    /**
+     * The change currently selected, shared with the changelog — one selection, two surfaces.
+     * Setting it opens that feature's card and eases the camera onto it; `onSelect` reports the
+     * same thing happening from the map's side.
+     */
+    active?: string | null;
+    onSelect?: (id: string | null) => void;
+    /**
+     * Centre the map on one SDK feature by its `fid` — the tree's level expansion selecting a row.
+     * Distinct from `active`, which is about a *change* in a review; this is about a feature that
+     * simply exists.
+     */
+    focusFeature?: string | null;
+    /**
+     * Bumped by the caller on every focus request. Without it, clicking the same row twice is the
+     * same prop value and the effect never re-fires — so a row you'd panned away from would refuse
+     * to bring you back.
+     */
+    focusNonce?: number;
+    /**
+     * What to light up on the map, through the SDK's own selection layer: one feature by `fid`, or a
+     * whole type. `null` clears it. Hover drives this as well as selection, so it changes often —
+     * which is why it is its own prop rather than folded into `focusFeature`, whose job is to MOVE
+     * the camera and must not fire on every mouseover.
+     */
+    highlight?: { fid?: string; mainType?: string; subType?: string } | null;
+    /**
+     * The properties of the focused feature, as the vector tiles carry them — the POI panel's supply
+     * (§19). Arrives with the focus rather than on request: the map's focus scan already holds the
+     * bag, and it is the only path that waits for the tiles.
+     */
+    onFeatureProps?: (fid: string, props: Record<string, unknown>) => void;
+    /**
+     * An editable feature was clicked on the map (Olcay, 2026-08-14: *"click on a feature on the map
+     * and on the listing should show the details panel in edit mode"*). Distinct from `onSelect`,
+     * which is about a *change* in a review; this is about a feature that simply exists.
+     */
+    onFeatureClick?: (fid: string, props: Record<string, unknown>) => void;
+    /** This tab's cursor, in map coordinates — presence broadcasts it (see cloud/presence.ts). */
+    onCursor?: (lng: number, lat: number) => void;
+    /**
+     * Other people's cursors to draw. The APP decides who belongs here, because it is the app that
+     * knows which floor everyone is on — presence is scoped to the level, not the viewport.
+     */
+    peers?: {
+      id: string;
+      name: string;
+      colour: string;
+      lng?: number;
+      lat?: number;
+    }[];
+    /** Features other people currently have open in the editor, so the map can say so. */
+    editing?: { fid: string; who: string; colour: string }[];
+    /**
+     * Screen space to keep clear on the RIGHT when framing a focused feature — the panel's own
+     * width. The map is not resized; the feature is simply framed in the part of it you can still
+     * see.
+     */
+    focusPadRight?: number;
+  }
+>(function PointrMap(
+  {
+    changes,
+    prefs,
+    onLevel,
+    onBuildings,
+    onCamera,
+    onFileDrop,
+    onFeatures,
+    onTypes,
+    onDecision,
+    active,
+    onSelect,
+    focusFeature,
+    focusNonce,
+    highlight,
+    onFeatureProps,
+    onFeatureClick,
+    onCursor,
+    peers,
+    editing,
+    focusPadRight,
+    target,
+  },
+  handle,
+) {
   const ref = useRef<HTMLIFrameElement>(null);
-  useImperativeHandle(handle, () => ({
-    setCamera: (cam) => ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
-  }), []);
-  const latest = useRef({ changes, prefs, target, active, dropOn: !!onFileDrop, canDecide: !!onDecision, focusPadRight });
-  latest.current = { changes, prefs, target, active, dropOn: !!onFileDrop, canDecide: !!onDecision, focusPadRight };
+  useImperativeHandle(
+    handle,
+    () => ({
+      setCamera: (cam) =>
+        ref.current?.contentWindow?.postMessage({ type: "camera", cam }, "*"),
+    }),
+    [],
+  );
+  const latest = useRef({
+    changes,
+    prefs,
+    target,
+    active,
+    dropOn: !!onFileDrop,
+    canDecide: !!onDecision,
+    focusPadRight,
+  });
+  latest.current = {
+    changes,
+    prefs,
+    target,
+    active,
+    dropOn: !!onFileDrop,
+    canDecide: !!onDecision,
+    focusPadRight,
+  };
 
   // Its own effect: a focus is an EVENT, not state to re-send on every `ready` — re-posting it
   // with the rest would re-centre the map every time the iframe re-announced itself.
@@ -150,20 +213,38 @@ const PointrMap = forwardRef<PointrMapHandle, {
   useEffect(() => {
     if (focusFeature)
       ref.current?.contentWindow?.postMessage(
-        { type: "focusfeature", fid: focusFeature, padRight: latest.current.focusPadRight ?? 0 },
+        {
+          type: "focusfeature",
+          fid: focusFeature,
+          padRight: latest.current.focusPadRight ?? 0,
+        },
         "*",
       );
   }, [focusFeature, focusNonce]);
 
   useEffect(() => {
-    ref.current?.contentWindow?.postMessage({ type: "highlight", sel: highlight ?? null }, "*");
+    ref.current?.contentWindow?.postMessage(
+      { type: "highlight", sel: highlight ?? null },
+      "*",
+    );
   }, [highlight]);
 
   // Its own effect, and not part of `send()`: peers move ~20 times a second, and folding them in
   // would re-post the whole diff on every mouse twitch anyone else made.
   useEffect(() => {
-    ref.current?.contentWindow?.postMessage({ type: "peers", peers: peers ?? [] }, "*");
+    ref.current?.contentWindow?.postMessage(
+      { type: "peers", peers: peers ?? [] },
+      "*",
+    );
   }, [peers]);
+
+  // Its own effect: who is editing changes when a panel opens, not 20 times a second like a cursor.
+  useEffect(() => {
+    ref.current?.contentWindow?.postMessage(
+      { type: "editing", editing: editing ?? [] },
+      "*",
+    );
+  }, [editing]);
 
   const send = () => {
     const win = ref.current?.contentWindow;
@@ -182,7 +263,10 @@ const PointrMap = forwardRef<PointrMapHandle, {
      * told rather than left to guess — and until it is told it treats nothing as editable, which
      * is the safe direction.
      */
-    win.postMessage({ type: "editabletypes", types: NON_EDITABLE_MAIN_TYPES }, "*");
+    win.postMessage(
+      { type: "editabletypes", types: NON_EDITABLE_MAIN_TYPES },
+      "*",
+    );
     if (latest.current.changes)
       win.postMessage(
         {
@@ -192,21 +276,26 @@ const PointrMap = forwardRef<PointrMapHandle, {
           // `bindToFloor`, so name would be the wrong key even though it is the merge key here.
           // `markOnly` has to ride along too: this projection is a whitelist, so a field left out
           // here silently never reaches the map however carefully it was set upstream.
-          changes: latest.current.changes.map(({ id, name, type, detail, decision, markOnly, note }) => ({
-            id,
-            name,
-            type,
-            detail,
-            decision,
-            markOnly,
-            note,
-          })),
+          changes: latest.current.changes.map(
+            ({ id, name, type, detail, decision, markOnly, note }) => ({
+              id,
+              name,
+              type,
+              detail,
+              decision,
+              markOnly,
+              note,
+            }),
+          ),
         },
         "*",
       );
-    if (latest.current.prefs) win.postMessage({ type: "prefs", ...latest.current.prefs }, "*");
-    if (latest.current.target) win.postMessage({ type: "target", ...latest.current.target }, "*");
-    if (latest.current.active) win.postMessage({ type: "active", id: latest.current.active }, "*");
+    if (latest.current.prefs)
+      win.postMessage({ type: "prefs", ...latest.current.prefs }, "*");
+    if (latest.current.target)
+      win.postMessage({ type: "target", ...latest.current.target }, "*");
+    if (latest.current.active)
+      win.postMessage({ type: "active", id: latest.current.active }, "*");
   };
 
   // The map page announces itself when the level is up; anything posted before that is lost.
@@ -218,21 +307,40 @@ const PointrMap = forwardRef<PointrMapHandle, {
         if (ev.data.level) onLevel?.(ev.data.level);
         if (ev.data.buildings?.length) onBuildings?.(ev.data.buildings);
         if (ev.data.features?.length) onFeatures?.(ev.data.features);
-        if (ev.data.types?.length && ev.data.forLevel) onTypes?.(ev.data.forLevel, ev.data.types);
+        if (ev.data.types?.length && ev.data.forLevel)
+          onTypes?.(ev.data.forLevel, ev.data.types);
       } else if (ev.data.type === "cursor") {
-        if (ev.source === ref.current?.contentWindow && typeof ev.data.lng === "number")
+        if (
+          ev.source === ref.current?.contentWindow &&
+          typeof ev.data.lng === "number"
+        )
           onCursor?.(ev.data.lng, ev.data.lat);
       } else if (ev.data.type === "featureclick") {
-        if (ev.source === ref.current?.contentWindow && ev.data.fid && ev.data.props)
+        if (
+          ev.source === ref.current?.contentWindow &&
+          ev.data.fid &&
+          ev.data.props
+        )
           onFeatureClick?.(ev.data.fid, ev.data.props);
       } else if (ev.data.type === "featureprops") {
-        if (ev.source === ref.current?.contentWindow && ev.data.fid && ev.data.props)
+        if (
+          ev.source === ref.current?.contentWindow &&
+          ev.data.fid &&
+          ev.data.props
+        )
           onFeatureProps?.(ev.data.fid, ev.data.props);
       } else if (ev.data.type === "features") {
         // a switch settled on a new floor — its features replace the old floor's
-        if (ev.source === ref.current?.contentWindow && ev.data.features?.length)
+        if (
+          ev.source === ref.current?.contentWindow &&
+          ev.data.features?.length
+        )
           onFeatures?.(ev.data.features);
-        if (ev.source === ref.current?.contentWindow && ev.data.types?.length && ev.data.forLevel)
+        if (
+          ev.source === ref.current?.contentWindow &&
+          ev.data.types?.length &&
+          ev.data.forLevel
+        )
           onTypes?.(ev.data.forLevel, ev.data.types);
       } else if (ev.data.type === "switched" && ev.data.ok === false) {
         // Only failures are reported upward, and deliberately so. The app owns intent; the map
@@ -253,16 +361,32 @@ const PointrMap = forwardRef<PointrMapHandle, {
           onFileDrop?.({ name: ev.data.name, size: ev.data.size ?? 0 });
         // `"decision" in data`, not a truthiness test: `null` is a real value here — it clears a
         // user override's flag — and a falsy guard would have swallowed exactly that message.
-      } else if (ev.data.type === "decision" && ev.data.id && "decision" in ev.data) {
+      } else if (
+        ev.data.type === "decision" &&
+        ev.data.id &&
+        "decision" in ev.data
+      ) {
         // Compare renders two panes; only this one's iframe may decide for it.
-        if (ev.source === ref.current?.contentWindow) onDecision?.(ev.data.id, ev.data.decision);
+        if (ev.source === ref.current?.contentWindow)
+          onDecision?.(ev.data.id, ev.data.decision);
       } else if (ev.data.type === "select") {
-        if (ev.source === ref.current?.contentWindow) onSelect?.(ev.data.id ?? null);
+        if (ev.source === ref.current?.contentWindow)
+          onSelect?.(ev.data.id ?? null);
       }
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [onLevel, onBuildings, onCamera, onFileDrop, onFeatures, onTypes, onDecision, onSelect, onFeatureProps]);
+  }, [
+    onLevel,
+    onBuildings,
+    onCamera,
+    onFileDrop,
+    onFeatures,
+    onTypes,
+    onDecision,
+    onSelect,
+    onFeatureProps,
+  ]);
 
   /**
    * Its own effect, not part of `send()`: selection changes far more often than the diff does, and
@@ -270,7 +394,10 @@ const PointrMap = forwardRef<PointrMapHandle, {
    * time you clicked a row.
    */
   useEffect(() => {
-    ref.current?.contentWindow?.postMessage({ type: "active", id: active ?? null }, "*");
+    ref.current?.contentWindow?.postMessage(
+      { type: "active", id: active ?? null },
+      "*",
+    );
   }, [active]);
 
   useEffect(send, [changes, prefs, target]);
@@ -281,7 +408,10 @@ const PointrMap = forwardRef<PointrMapHandle, {
    * `onFileDrop`'s identity is enough: the app passes a stable useCallback or undefined.
    */
   useEffect(() => {
-    ref.current?.contentWindow?.postMessage({ type: "dropzone", on: !!onFileDrop }, "*");
+    ref.current?.contentWindow?.postMessage(
+      { type: "dropzone", on: !!onFileDrop },
+      "*",
+    );
   }, [onFileDrop]);
 
   return (
@@ -293,7 +423,13 @@ const PointrMap = forwardRef<PointrMapHandle, {
       src={pointrMapSrc()}
       // anything posted before the document exists is dropped, so send on load as well as on ready
       onLoad={send}
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        border: "none",
+      }}
     />
   );
 });
