@@ -836,31 +836,25 @@ export function FeaturePanel({
           can neither scroll away nor be pushed left by the scrollbar the body grows (§0). */}
       <div style={{ padding: PANEL_PAD, flex: "0 0 auto" }}>
         <PanelHeader
+          // Its own column, so the name and the line beneath it share a left edge — see the note
+          // on `leading`. It used to be folded into the title node, and only the title moved.
+          leading={icon}
           title={
-            <div
+            /* Wraps, never truncates — a feature's name is the one thing here you can't
+               reconstruct from anything else. */
+            <Text
               style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 8,
-                marginTop: 2,
+                display: "block",
+                fontSize: 16,
+                fontWeight: 600,
+                lineHeight: 1.3,
+                color: "var(--primitives-colors-theme-900)",
+                overflowWrap: "anywhere",
               }}
             >
-              <span style={{ flex: "0 0 auto", marginTop: 2 }}>{icon}</span>
-              {/* Wraps, never truncates — a feature's name is the one thing here you can't
-                  reconstruct from anything else. */}
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  lineHeight: 1.3,
-                  color: "var(--primitives-colors-theme-900)",
-                  overflowWrap: "anywhere",
-                }}
-              >
-                {(editing ? String(draft.name ?? "") : name) ||
-                  `Unnamed ${typeLabel(subType || mainType)}`}
-              </Text>
-            </div>
+              {(editing ? String(draft.name ?? "") : name) ||
+                `Unnamed ${typeLabel(subType || mainType)}`}
+            </Text>
           }
           subtitle={
             editing

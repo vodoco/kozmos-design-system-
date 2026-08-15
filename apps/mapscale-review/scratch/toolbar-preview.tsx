@@ -9,6 +9,72 @@ import "@kozmos/react/dist/style.css";
 import "../src/index.css";
 import { GeometryToolbar, type GeomState } from "../src/ui/GeometryToolbar";
 import { SavedNotice } from "../src/ui/SavedNotice";
+import { FeaturePanel } from "../src/ui/FeaturePanel";
+
+/**
+ * The real panel, with a realistic property bag — for measuring the header's alignment
+ * (Olcay, 2026-08-16: *"alignent issue at the feature header"*). Rendered twice: once with an icon
+ * the size `TypeIcon` produces, and once with none, because the title is a flex row with a `gap`
+ * and an absent icon still gets gapped away from the block's left edge.
+ */
+const DEMO_PROPS = {
+  fid: "a80b5862-1ae5-439c-b408-b0b49c8a3372",
+  bid: "51dd37d1-c2bc-4d9e-8e22-2ea1a15a626c",
+  sid: "c1126cb8-a192-4bd3-90f5-08fb70278862",
+  lvl: -2,
+  mainType: "Operational Space",
+  name: "Operational Space",
+};
+
+function HeaderBench() {
+  return (
+    <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+      {[
+        {
+          k: "with icon",
+          icon: (
+            <span
+              style={{
+                width: 16,
+                height: 16,
+                flex: "0 0 auto",
+                display: "block",
+                background: "#c9d3e6",
+                borderRadius: 3,
+              }}
+            />
+          ),
+        },
+        { k: "no icon", icon: undefined },
+      ].map(({ k, icon }) => (
+        <div
+          key={k}
+          style={{
+            position: "relative",
+            width: 400,
+            height: 340,
+            borderRadius: 12,
+            background: "#dfe4ec",
+            border: "1px solid #d3d9e3",
+            overflow: "hidden",
+          }}
+          data-case={k}
+        >
+          <div
+            style={{
+              font: "11px/1.4 system-ui",
+              color: "#5d626f",
+              padding: 4,
+            }}
+          >
+            {k}
+          </div>
+          <FeaturePanel props={DEMO_PROPS} icon={icon} onClose={() => {}} />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const BASE: GeomState = {
   editing: true,
@@ -102,6 +168,20 @@ function Bench() {
           </div>
         </div>
       ))}
+
+      <div style={{ marginBottom: 22 }}>
+        <div
+          style={{
+            font: "12px/1.4 system-ui",
+            color: "#5d626f",
+            marginBottom: 6,
+          }}
+        >
+          The feature panel header — title, subtitle and body must share one
+          left edge
+        </div>
+        <HeaderBench />
+      </div>
 
       {/* The bug found by driving the real app, 2026-08-15: the bar is 707px and was centred on the
           whole map, so the properties panel covered its right-hand end. The panel is only ever open

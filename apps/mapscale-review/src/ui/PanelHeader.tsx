@@ -25,6 +25,7 @@ export const PANEL_PAD = "16px 20px 8px";
  */
 export function PanelHeader({
   eyebrow,
+  leading,
   title,
   subtitle,
   onClose,
@@ -32,6 +33,20 @@ export function PanelHeader({
 }: {
   /** The small muted line above the title — a breadcrumb or the parent's name. */
   eyebrow?: string;
+  /**
+   * An icon before the text — its own column, deliberately (Olcay, 2026-08-16: *"alignent issue at
+   * the feature header"*).
+   *
+   * ⚠️ It used to be composed *into* the title node by the caller, which meant only the **title**
+   * carried the icon's width and gap while the eyebrow and subtitle stayed flush with the panel's
+   * padding. Measured: title at 45px, subtitle at 21px, body at 21px — the title alone hanging 24px
+   * to the right of its own subtitle. Worse when the sprite failed to load, because the box
+   * collapsed to nothing and left an 8px indent with visibly nothing to explain it.
+   *
+   * As its own column the icon leads the whole block, so title and subtitle share one left edge and
+   * the icon lines up with the body beneath.
+   */
+  leading?: React.ReactNode;
   /** A plain string gets the standard title type; pass a node to compose your own (S3 does). */
   title: string | React.ReactElement;
   /** The muted line below the title, where a screen explains itself. */
@@ -42,6 +57,9 @@ export function PanelHeader({
 }) {
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+      {leading != null && (
+        <span style={{ flex: "0 0 auto", marginTop: 3 }}>{leading}</span>
+      )}
       <div style={{ flex: 1, minWidth: 0 }}>
         {eyebrow != null && (
           <Text
