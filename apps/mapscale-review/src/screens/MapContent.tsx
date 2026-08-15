@@ -2540,6 +2540,10 @@ export function MapContent({
           <GeometryToolbar
             state={geom}
             notice={geomNotice}
+            // The same reservation the camera already makes — see `focusPadRight` below. Driven by
+            // `shownProps`, so it matches when the panel is actually on screen rather than when a
+            // focus has merely been requested.
+            padRight={shownProps ? FEATURE_PANEL_WIDTH + 24 : 0}
             onCommand={onGeomCommand}
           />
           {saved && <SavedNotice name={saved} />}

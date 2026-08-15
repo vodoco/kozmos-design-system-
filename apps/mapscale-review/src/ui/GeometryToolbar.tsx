@@ -334,11 +334,26 @@ function Tile({
 export function GeometryToolbar({
   state,
   notice,
+  padRight = 0,
   onCommand,
 }: {
   state: GeomState;
   /** The editor refusing something, in its own words. Transient — the app clears it. */
   notice?: string | null;
+  /**
+   * ⚠️ **Screen space the properties panel is covering on the right.**
+   *
+   * Measured in the real app 2026-08-15: the bar is 707px and was centred on the whole map, so
+   * with the panel open at x=1068 on a 1440 viewport, **five of the twelve tools** — Straighten,
+   * Snap, Undo, Redo and Reset — sat underneath it. They were in the DOM and reachable by keyboard,
+   * and completely invisible to a mouse.
+   *
+   * It could only be this way round: the panel is only ever open when the toolbar is (selecting a
+   * feature is edit mode), so the overlap is not an edge case — it is the *only* case. Centring on
+   * the map the user can actually see is the same correction `focusPadRight` already makes for the
+   * camera.
+   */
+  padRight?: number;
   onCommand: (c: GeomCommand) => void;
 }) {
   if (!state.editing) return null;
@@ -367,13 +382,17 @@ export function GeometryToolbar({
       style={{
         position: "absolute",
         bottom: 18,
-        left: "50%",
+        // Centre of the map you can SEE, not of the map element — see `padRight`.
+        left: `calc(50% - ${padRight / 2}px)`,
         transform: "translateX(-50%)",
         zIndex: 4,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         gap: 8,
+        // The bar is 707px. Once the panel takes 384 of a 1280 window there is not room for it, so
+        // it scrolls rather than hiding its right-hand end again — the failure it just came from.
+        maxWidth: `calc(100% - ${padRight + 32}px)`,
       }}
     >
       {/* Above the row and out of flow, so the longest refusal cannot widen the bar, shift a
@@ -409,6 +428,8 @@ export function GeometryToolbar({
           background: "#fff",
           border: `1px solid ${BAR_LINE}`,
           boxShadow: "0 8px 28px rgba(11,54,156,.16)",
+          maxWidth: "100%",
+          overflowX: "auto",
         }}
       >
         {/* Mode — the three that are alternatives, on their own track. */}

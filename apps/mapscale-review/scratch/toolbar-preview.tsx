@@ -93,6 +93,54 @@ function Bench() {
         </div>
       ))}
 
+      {/* The bug found by driving the real app, 2026-08-15: the bar is 707px and was centred on the
+          whole map, so the properties panel covered its right-hand end. The panel is only ever open
+          when the toolbar is, so this was not an edge case — it was the only case. */}
+      <div style={{ marginBottom: 22 }}>
+        <div
+          style={{
+            font: "12px/1.4 system-ui",
+            color: "#5d626f",
+            marginBottom: 6,
+          }}
+        >
+          With the properties panel open — the bar must centre on the map you
+          can still see
+        </div>
+        <div
+          style={{
+            position: "relative",
+            height: 132,
+            borderRadius: 12,
+            background:
+              "repeating-linear-gradient(45deg,#dfe4ec 0 10px,#e7ebf2 10px 20px)",
+            border: "1px solid #d3d9e3",
+            overflow: "hidden",
+          }}
+        >
+          <GeometryToolbar state={BASE} padRight={384} />
+          {/* Stand-in for FeaturePanel: same width, same inset, same z-order. */}
+          <div
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              bottom: 12,
+              width: 360,
+              zIndex: 5,
+              borderRadius: 10,
+              background: "#fff",
+              border: "1px solid #e3e4e8",
+              font: "12px/1.4 system-ui",
+              color: "#9AA0A6",
+              padding: 10,
+            }}
+          >
+            properties panel (360px)
+          </div>
+        </div>
+      </div>
+
       {/* 3× — the only way to actually judge whether an icon is drawn or merely present. */}
       <div style={{ marginBottom: 22 }}>
         <div
