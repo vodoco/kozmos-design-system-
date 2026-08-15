@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   AlertDescription,
@@ -591,10 +591,11 @@ export function FeaturePanel({
   onDirtyChange,
   geometryDirty,
   onCommitGeometry,
-  onRevertGeometry,
   subTypeOptions,
   onEdited,
   onSaved,
+  onCancelEdit,
+  saveSignal,
   onClose,
 }: {
   /** The tile's own property bag plus any local edits, exactly as the app holds it. */
@@ -615,7 +616,6 @@ export function FeaturePanel({
    */
   geometryDirty?: boolean;
   onCommitGeometry?: () => void;
-  onRevertGeometry?: () => void;
   subTypeOptions?: string[];
   /** An edit was saved. Carries the flag-clearing consequence (§18a) up. D3: nothing persists. */
   onEdited?: (next: Record<string, unknown>) => void;
@@ -626,6 +626,24 @@ export function FeaturePanel({
    * about. Carries the name so the confirmation can say which feature it means.
    */
   onSaved?: (name: string) => void;
+  /**
+   * **Cancel is the screen's to answer, not the panel's** (Olcay, 2026-08-15: *"Cancel edit should
+   * close the panel completely and close all the geometry edit. Ask user to confirm if they changed
+   * something"*).
+   *
+   * Cancel used to drop `editing` and leave the panel sitting there in its read view — with the
+   * geometry toolbar still up, because the toolbar follows the panel. You had cancelled and nothing
+   * looked cancelled. The panel cannot fix that itself: closing is the screen's job, and so is
+   * asking before throwing work away, because the screen already owns that conversation for
+   * feature switches and there should be exactly one of it.
+   */
+  onCancelEdit?: () => void;
+  /**
+   * Bumped by the screen to mean "save now, I am waiting on it" — the *Save changes* answer to the
+   * unsaved-work overlay. The draft lives in here, so the save has to happen in here; the screen
+   * can only ask.
+   */
+  saveSignal?: number;
   onClose: () => void;
 }) {
   const mainType = String(p.mainType ?? "");
@@ -649,12 +667,14 @@ export function FeaturePanel({
   /** Which optional properties the editor is showing — those with values, plus what you add. */
   const [fields, setFields] = useState<string[]>([]);
 
-  const reset = () => {
-    setDraft({ ...p });
-    setFields(Object.keys(p).filter((k) => !RESERVED.has(k)));
-  };
-  // Selecting a different feature must not carry the previous one's half-typed edit across —
-  // and it lands in edit mode like the first one did, because that is what selecting now means.
+  /**
+   * Selecting a different feature must not carry the previous one's half-typed edit across — and it
+   * lands in edit mode like the first one did, because that is what selecting now means.
+   *
+   * This is the only thing that seeds the draft. There used to be a `reset()` beside it saying the
+   * same two lines, for Cancel to call; Cancel now closes the panel instead of emptying it in
+   * place, so re-seeding on the way *in* is the whole story.
+   */
   useEffect(() => {
     setEditing(true);
     setDraft({ ...p });
@@ -775,6 +795,17 @@ export function FeaturePanel({
     onEdited?.(next);
     onSaved?.(String(draft.name ?? "").trim());
   };
+
+  /**
+   * The screen asking for a save. Guarded on a non-zero signal so the initial render never fires
+   * one, and keyed on the signal alone — `save` is redefined every render, and depending on it
+   * would save on every keystroke.
+   */
+  const saveRef = useRef(save);
+  saveRef.current = save;
+  useEffect(() => {
+    if (saveSignal) saveRef.current();
+  }, [saveSignal]);
 
   return (
     <Card
@@ -1213,11 +1244,16 @@ export function FeaturePanel({
             <Button
               variant="outline"
               style={{ flex: 1 }}
-              onClick={() => {
-                setEditing(false);
-                reset();
-                onRevertGeometry?.(); // Cancel means the shape too, not just the fields
-              }}
+              /**
+               * ⚠️ **Hands over without touching anything first.** It used to `reset()` the draft
+               * and revert the shape here and then ask — so choosing *Keep editing* in the
+               * confirmation returned you to a panel whose work had already been thrown away. The
+               * question has to be asked while the answer still matters.
+               *
+               * Nothing needs undoing on the way out either: closing unmounts this panel, draft and
+               * all, and drops `focused`, which sends the map `end` with `commit: false`.
+               */
+              onClick={() => onCancelEdit?.()}
             >
               Cancel
             </Button>

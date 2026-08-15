@@ -16,7 +16,10 @@ import { Button, Icon } from "@kozmos/react";
 export type OverlayTone = "info" | "neutral" | "warning";
 
 /** Header tint / border / icon ink per variant, straight off the v9 component's own exports. */
-const TONE: Record<OverlayTone, { tint: string; border: string; icon: string }> = {
+const TONE: Record<
+  OverlayTone,
+  { tint: string; border: string; icon: string }
+> = {
   info: { tint: "#ecf6fb", border: "#cae6f3", icon: "#2A92C6" },
   neutral: { tint: "#e3e4e8", border: "#e3e4e8", icon: "#5D626F" },
   warning: { tint: "#fffcf8", border: "#feeed0", icon: "#F9A707" },
@@ -29,8 +32,10 @@ export function ConfirmOverlay({
   children,
   confirmLabel,
   cancelLabel = "Cancel",
+  altLabel,
   onConfirm,
   onCancel,
+  onAlt,
 }: {
   open: boolean;
   tone?: OverlayTone;
@@ -38,8 +43,18 @@ export function ConfirmOverlay({
   children: React.ReactNode;
   confirmLabel: string;
   cancelLabel?: string;
+  /**
+   * A third way out, between "cancel" and "confirm" (Olcay, 2026-08-15: *"tell the user to discard
+   * or save current first"*). Unsaved work has three honest answers — save it, throw it away, or
+   * go back — and offering only two forces the destructive one on anyone who does not want to
+   * abandon what they were doing.
+   *
+   * Drawn as an outline button: it is a real choice, not the primary one.
+   */
+  altLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  onAlt?: () => void;
 }) {
   const confirmRef = useRef<HTMLButtonElement>(null);
 
@@ -53,7 +68,9 @@ export function ConfirmOverlay({
       // A modal owns the keyboard: Tab cycles inside the card instead of escaping into the page
       // beneath (which is inert to the mouse but not, by default, to the keyboard).
       if (e.key === "Tab" && cardRef.current) {
-        const focusables = cardRef.current.querySelectorAll<HTMLElement>("button, [href], [tabindex]");
+        const focusables = cardRef.current.querySelectorAll<HTMLElement>(
+          "button, [href], [tabindex]",
+        );
         if (focusables.length === 0) return;
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
@@ -135,7 +152,14 @@ export function ConfirmOverlay({
           >
             {title}
           </span>
-          <span style={{ color: t.icon, display: "grid", placeItems: "center", flex: "0 0 24px" }}>
+          <span
+            style={{
+              color: t.icon,
+              display: "grid",
+              placeItems: "center",
+              flex: "0 0 24px",
+            }}
+          >
             <Icon name="alert-triangle" size="lg" />
           </span>
         </div>
@@ -150,10 +174,22 @@ export function ConfirmOverlay({
         >
           {children}
         </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 16, padding: 24 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 12,
+            padding: 24,
+          }}
+        >
           <Button variant="ghost" onClick={onCancel}>
             {cancelLabel}
           </Button>
+          {altLabel && onAlt && (
+            <Button variant="outline" onClick={onAlt}>
+              {altLabel}
+            </Button>
+          )}
           <Button ref={confirmRef} onClick={onConfirm}>
             {confirmLabel}
           </Button>

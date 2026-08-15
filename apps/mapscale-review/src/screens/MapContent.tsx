@@ -1920,24 +1920,83 @@ export function MapContent({
   const onDirtyChange = useCallback((d: boolean) => {
     dirtyRef.current = d;
   }, []);
+  /**
+   * Closing the panel clears the selection itself — the panel IS the selection made visible.
+   *
+   * ⚠️ Declared HERE, above everything that calls it. It used to sit two hundred lines further
+   * down, which was harmless only for as long as nothing above it referred to it — a `useCallback`
+   * listing it as a dependency reads it at render time, and a `const` read before its declaration
+   * is a temporal dead zone, not `undefined`. The same shape of bug as the blank page in
+   * `cloud/session.ts`.
+   */
+  const closeProps = useCallback(() => {
+    setFocused(null);
+    setProps(null);
+  }, []);
   const [pendingPick, setPendingPick] = useState<
     | { kind: "map"; fid: string; props: Record<string, unknown> }
     | { kind: "tree"; buildingId: string; index: number; fid: string }
+    /** Cancel, on a panel with unsaved work — the third thing that has to ask before it acts. */
+    | { kind: "close" }
     | null
   >(null);
-  /** The user chose to lose the edit — carry out whichever selection was waiting. */
-  const applyPendingPick = useCallback(() => {
+  /**
+   * Carry out whichever thing was waiting on the answer. Shared by *Discard* and by *Save changes*,
+   * because what happens next is the same either way — only the fate of the edit differs, and that
+   * is settled before this runs.
+   */
+  const runPending = useCallback(
+    (pick: typeof pendingPick) => {
+      dirtyRef.current = false;
+      if (!pick) return;
+      if (pick.kind === "close") {
+        closeProps();
+      } else if (pick.kind === "map") {
+        setProps({ fid: pick.fid, props: pick.props });
+        setFocused((f) => ({ fid: pick.fid, n: (f?.n ?? 0) + 1 }));
+      } else {
+        focusNow(pick.buildingId, pick.index, pick.fid);
+      }
+    },
+    [closeProps, focusNow],
+  );
+  /**
+   * *Discard changes* — the edit is thrown away and the waiting thing happens.
+   *
+   * The geometry needs no explicit reset: whichever branch runs, the effect that watches
+   * `shownProps` sends the map either `begin` for the new feature — which rebuilds the outline
+   * from the source — or `end` with `commit: false`. An uncommitted shape cannot survive either.
+   */
+  const discardAndContinue = useCallback(() => {
     const pick = pendingPick;
     setPendingPick(null);
-    dirtyRef.current = false;
-    if (!pick) return;
-    if (pick.kind === "map") {
-      setProps({ fid: pick.fid, props: pick.props });
-      setFocused((f) => ({ fid: pick.fid, n: (f?.n ?? 0) + 1 }));
-    } else {
-      focusNow(pick.buildingId, pick.index, pick.fid);
+    runPending(pick);
+  }, [pendingPick, runPending]);
+  /**
+   * *Save changes* — ask the panel to save (the draft is its), and let `onSaved` carry on. The
+   * overlay stays up for that one render; the alternative is closing it and leaving the user
+   * looking at nothing while the save happens.
+   */
+  const [saveSignal, setSaveSignal] = useState(0);
+  const saveAndContinue = useCallback(() => setSaveSignal((n) => n + 1), []);
+  /**
+   * **Cancel closes the whole thing** (Olcay, 2026-08-15: *"Cancel edit should close the panel
+   * completely and close all the geometry edit. Ask user to confirm if they changed something."*).
+   *
+   * Closing clears `focused`, which drops the geometry editor with it — the effect below sends the
+   * map `end` with `commit: false`, so the outline goes back to the published one. One gesture,
+   * both halves, exactly as Update is one gesture for both halves.
+   *
+   * Only asks when there is something to lose. Cancelling an edit you never made should not open a
+   * dialog to tell you nothing will happen.
+   */
+  const onCancelEdit = useCallback(() => {
+    if (dirtyRef.current) {
+      setPendingPick({ kind: "close" });
+      return;
     }
-  }, [pendingPick]);
+    closeProps();
+  }, [closeProps]);
   /** The tree's selection, guarded the same way the map's is — one rule, both surfaces. */
   const focus = useCallback(
     (buildingId: string, index: number, fid: string) => {
@@ -2081,11 +2140,6 @@ export function MapContent({
     if (geom.cutting) setGeomNotice(null);
   }, [geom.cutting]);
 
-  /** Closing the panel clears the selection itself — the panel IS the selection made visible. */ /** Closing the panel clears the selection itself — the panel IS the selection made visible. */
-  const closeProps = useCallback(() => {
-    setFocused(null);
-    setProps(null);
-  }, []);
   // Only ever show properties for the feature currently selected: a late reply about a feature you
   // have already moved on from must not repaint the panel.
   const shownProps =
@@ -2225,10 +2279,19 @@ export function MapContent({
   const [saved, setSaved] = useState<string | null>(null);
   const onSaved = useCallback(
     (name: string) => {
-      closeProps();
       setSaved(name || "Feature");
+      /**
+       * Where to go afterwards depends on why we saved. Pressing **Update** closes the panel,
+       * because saving finished the task. Answering **Save changes** to the unsaved-work overlay
+       * means the task was interrupted — so it carries on to whatever was waiting: the other
+       * feature you clicked, or the close you asked for.
+       */
+      const pick = pendingPick;
+      setPendingPick(null);
+      if (pick) runPending(pick);
+      else closeProps();
     },
-    [closeProps],
+    [closeProps, pendingPick, runPending],
   );
   useEffect(() => {
     if (!saved) return;
@@ -2548,17 +2611,26 @@ export function MapContent({
           />
           {saved && <SavedNotice name={saved} />}
 
+          {/**
+           * One conversation for all three ways an unsaved edit can be interrupted — switching
+           * feature from the map, from the tree, or cancelling out of the panel. The primary is
+           * **Save changes**, not Discard: saving is the safe answer, and the destructive one
+           * should never be the button that has focus when you hit Enter.
+           */}
           <ConfirmOverlay
             open={!!pendingPick}
             tone="warning"
             title="You have unsaved changes"
-            confirmLabel="Discard changes"
+            confirmLabel="Save changes"
+            altLabel="Discard changes"
             cancelLabel="Keep editing"
-            onConfirm={applyPendingPick}
+            onConfirm={saveAndContinue}
+            onAlt={discardAndContinue}
             onCancel={() => setPendingPick(null)}
           >
-            This feature has edits you have not saved. Opening another one will
-            lose them.
+            {pendingPick?.kind === "close"
+              ? "This feature has edits you have not saved. Closing will lose them."
+              : "This feature has edits you have not saved. Opening another one will lose them."}
           </ConfirmOverlay>
           <PointrMap
             changes={mapFlagMarks}
@@ -2611,7 +2683,6 @@ export function MapContent({
               onDirtyChange={onDirtyChange}
               geometryDirty={!!geom.dirty}
               onCommitGeometry={() => sendGeom({ cmd: "commit" })}
-              onRevertGeometry={() => sendGeom({ cmd: "reset" })}
               flagged={focusedFlagged}
               flagNote={
                 focusedFlagged && shownProps?.name && target
@@ -2630,7 +2701,11 @@ export function MapContent({
               subTypeOptions={subTypeOptions}
               onEdited={onEdited}
               onSaved={onSaved}
-              onClose={closeProps}
+              onCancelEdit={onCancelEdit}
+              saveSignal={saveSignal}
+              // The ✕ is the same act as Cancel — it must ask the same question, or the guard is
+              // one click wide and the corner of the panel walks straight round it.
+              onClose={onCancelEdit}
             />
           )}
           <MapSettings prefs={prefs} onChange={setPrefs} />

@@ -1825,16 +1825,34 @@ function start() {
      * inviting a "Click to edit" on a feature you are already editing.
      */
     if (GEOM) {
-      if (HOVER_FEATURE) { HOVER_FEATURE = null; highlightFeatures(null); renderTip(); }
+      const dropCard = () => {
+        if (HOVER_FEATURE) { HOVER_FEATURE = null; highlightFeatures(null); renderTip(); }
+      };
       // Laying a cut: the far end follows the pointer. In lng/lat, like the rings — the map can be
       // panned mid-cut and the anchor has to stay on the floor, not on the screen.
       if (GEOM.mode === "split") {
+        dropCard();
         map.getCanvas().style.cursor = "crosshair";
         if (GEOM.cutA) { GEOM.cutB = [ev.lngLat.lng, ev.lngLat.lat]; geomDraw(); }
         return;
       }
-      map.getCanvas().style.cursor = "";
-      return;
+      /**
+       * **The feature being edited owns the pointer — but only its own.**
+       *
+       * Olcay, 2026-08-15: *"edit-geometry nodes should prevent any overlay to trigger"* — the card
+       * was drawing itself straight over the vertex handles you were reaching for. That is about
+       * the shape you are editing. Over a DIFFERENT feature the card is the only thing that says
+       * you may click it, and now that clicking one actually switches to it, suppressing it there
+       * would hide the feature behind an invisible affordance.
+       */
+      const over = editableAt(ev.point);
+      const overFid = over && over.properties && over.properties.fid;
+      if (!overFid || overFid === GEOM.fid) {
+        dropCard();
+        map.getCanvas().style.cursor = "";
+        return;
+      }
+      // …otherwise fall through and let the ordinary hover card do its job.
     }
     if (shown()) return;                              // a change's card owns the cursor
     const f = editableAt(ev.point);
@@ -1936,11 +1954,26 @@ function start() {
      * did nothing. `mouseup` + `isTap` is the pattern every other selection here uses; this one
      * was written against what ought to work instead of what does.
      */
-    else if (map && !shown() && !GEOM) {   // editing owns the pointer; see the mousemove note
+    /**
+     * ⚠️ **This used to be gated on `!GEOM`, which made it impossible to switch features.**
+     *
+     * Selecting a feature IS edit mode here, so `GEOM` is set from the moment a panel opens — and
+     * the guard therefore meant "once you have opened anything, clicking another feature does
+     * nothing at all". Olcay, 2026-08-15: *"clicking other feature should switch to that feature
+     * edit"*. Quite right; it never could.
+     *
+     * The gate it was reaching for is narrower, and is already handled elsewhere: a click on a
+     * vertex handle never arrives here, because the handles live in the `#geom` overlay rather than
+     * inside `#map`, and the guard above requires a release inside `#map`. A drag is excluded by
+     * `isTap`. What is left is a genuine click on bare floor — and the only one worth ignoring is
+     * one that lands on the feature already open.
+     */
+    else if (map && !shown()) {
       const rect = map.getCanvas().getBoundingClientRect();
       const f = editableAt([ev.clientX - rect.left, ev.clientY - rect.top]);
-      if (f && f.properties && f.properties.fid)
-        post("featureclick", { fid: f.properties.fid, props: plainProps(f.properties) });
+      const fid = f && f.properties && f.properties.fid;
+      if (fid && !(GEOM && GEOM.fid === fid))
+        post("featureclick", { fid, props: plainProps(f.properties) });
     }
   });
 
