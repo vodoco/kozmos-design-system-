@@ -157,9 +157,6 @@ function restore(): Session | null {
     return null;
   }
 }
-current = restore();
-if (current) scheduleRefresh(current); // a tab reloaded mid-session keeps its renewal
-
 function persist(s: Session | null) {
   try {
     if (s) sessionStorage.setItem(KEY, JSON.stringify(s));
@@ -354,3 +351,21 @@ export async function authFetch(
   if (res.status === 401) signOut();
   return res;
 }
+
+/* ── bootstrap ──────────────────────────────────────────────────────────────
+   ⚠️ **This has to be the LAST thing in the file, and it is not a style choice.**
+
+   It used to sit just under `restore()`, halfway up — which put a call to `scheduleRefresh()` at
+   module-evaluation time ABOVE the `let refreshTimer` on line 273. Function declarations hoist;
+   `let` does not. So the call reached into `refreshTimer`'s temporal dead zone and threw
+   `ReferenceError: Cannot access 'refreshTimer' before initialization` — during module evaluation,
+   which means the module never finished, React never mounted, and the page came up **blank**.
+
+   The condition was ugly: it fired only when `restore()` found a session, so signing in and then
+   RELOADING gave a white screen while a fresh tab was perfectly fine. Signing in worked. Coming
+   back to the tab did not.
+
+   Running the bootstrap last means module state is fully initialised before anything touches it,
+   whatever gets added between here and the top later. */
+current = restore();
+if (current) scheduleRefresh(current); // a tab reloaded mid-session keeps its renewal

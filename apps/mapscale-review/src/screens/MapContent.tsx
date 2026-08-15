@@ -54,6 +54,7 @@ import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { LevelSelector } from "../ui/LevelSelector";
 import { FeaturePanel, FEATURE_PANEL_WIDTH } from "../ui/FeaturePanel";
+import { SavedNotice } from "../ui/SavedNotice";
 import { UploadDropConfirm } from "../ui/UploadDropConfirm";
 import {
   getCreatedBuildings,
@@ -2212,6 +2213,29 @@ export function MapContent({
     },
     [focused, target, live, shownProps],
   );
+  /**
+   * **Update closes the panel and says so** (Olcay, 2026-08-15: *"update a feature should close the
+   * edit and save the changes … act like saved"*).
+   *
+   * ⚠️ **It reads as saved; nothing is written.** This is D3 — every edit here is in memory and dies
+   * with the tab, and the confirmation deliberately does not pretend otherwise in the wording: it
+   * says the change was *applied*, which is exactly what happened. The demo needs the gesture to
+   * complete; it does not need a lie about a round-trip.
+   */
+  const [saved, setSaved] = useState<string | null>(null);
+  const onSaved = useCallback(
+    (name: string) => {
+      closeProps();
+      setSaved(name || "Feature");
+    },
+    [closeProps],
+  );
+  useEffect(() => {
+    if (!saved) return;
+    const t = setTimeout(() => setSaved(null), 2600);
+    return () => clearTimeout(t);
+  }, [saved]);
+
   const [hovered, setHovered] = useState<{
     fid?: string;
     mainType?: string;
@@ -2518,6 +2542,7 @@ export function MapContent({
             notice={geomNotice}
             onCommand={onGeomCommand}
           />
+          {saved && <SavedNotice name={saved} />}
 
           <ConfirmOverlay
             open={!!pendingPick}
@@ -2600,6 +2625,7 @@ export function MapContent({
               flagShared={focusedSharing > 1 ? focusedSharing : undefined}
               subTypeOptions={subTypeOptions}
               onEdited={onEdited}
+              onSaved={onSaved}
               onClose={closeProps}
             />
           )}

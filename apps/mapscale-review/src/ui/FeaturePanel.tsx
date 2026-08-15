@@ -594,6 +594,7 @@ export function FeaturePanel({
   onRevertGeometry,
   subTypeOptions,
   onEdited,
+  onSaved,
   onClose,
 }: {
   /** The tile's own property bag plus any local edits, exactly as the app holds it. */
@@ -618,6 +619,13 @@ export function FeaturePanel({
   subTypeOptions?: string[];
   /** An edit was saved. Carries the flag-clearing consequence (§18a) up. D3: nothing persists. */
   onEdited?: (next: Record<string, unknown>) => void;
+  /**
+   * Update finished — the panel is done and the screen should close it. Separate from `onEdited`
+   * because they answer different questions: `onEdited` is *what changed*, and every surface that
+   * reads `edits` cares; this is *the task is over*, which only the screen owning the panel cares
+   * about. Carries the name so the confirmation can say which feature it means.
+   */
+  onSaved?: (name: string) => void;
   onClose: () => void;
 }) {
   const mainType = String(p.mainType ?? "");
@@ -743,6 +751,16 @@ export function FeaturePanel({
     [values],
   );
 
+  /**
+   * **Update saves and finishes.** (Olcay, 2026-08-15: *"update a feature should close the edit and
+   * save the changes"*.) Selecting a feature IS edit mode here, so leaving the panel open after
+   * Update left you in an edit you had already completed — with a primary button gone grey and
+   * nothing left to do but hunt for the ✕. Saving is the end of the task, so it ends the task.
+   *
+   * The order matters: commit the shape and the fields FIRST, then hand over to `onSaved`, which
+   * closes the panel. Closing tears the geometry editor down, and a teardown before the commit
+   * would discard the outline it was about to save.
+   */
   const save = () => {
     setEditing(false);
     // One Update commits both halves. The map keeps the shape and re-baselines, so the panel does
@@ -755,6 +773,7 @@ export function FeaturePanel({
     };
     for (const k of fields) next[k] = draft[k];
     onEdited?.(next);
+    onSaved?.(String(draft.name ?? "").trim());
   };
 
   return (

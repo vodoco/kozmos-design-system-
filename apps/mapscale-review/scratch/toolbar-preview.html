@@ -1,0 +1,24 @@
+<!doctype html>
+<!--
+  A bench for the geometry toolbar — MAP-566, 2026-08-15.
+
+  The toolbar only appears when a feature is selected on a signed-in map, which makes iterating on
+  its LOOK expensive: sign in, find a building, open a floor, click a unit, and hope. This mounts
+  the component on its own, in every state it has, against the app's real stylesheet — so layout
+  and colour can be measured instead of eyeballed.
+
+      npm run dev   →   http://localhost:5173/scratch/toolbar-preview.html
+
+  Not part of the app: nothing imports it and `vite build` only emits `index.html`.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Geometry toolbar — bench</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./toolbar-preview.tsx"></script>
+  </body>
+</html>
