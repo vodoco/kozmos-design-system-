@@ -158,6 +158,7 @@ function restore(): Session | null {
   }
 }
 current = restore();
+if (current) scheduleRefresh(current); // a tab reloaded mid-session keeps its renewal
 
 function persist(s: Session | null) {
   try {
@@ -253,11 +254,78 @@ export async function signIn(
   };
   current = session;
   persist(session);
+  scheduleRefresh(session);
   emit();
   return session;
 }
 
+/**
+ * **Keep the session alive rather than dropping someone mid-sentence.**
+ *
+ * ⚠️ The refresh token was captured from the first response and then never used, so a session
+ * simply died at `expires_in` — about two hours. `getSession()` signed you out, the app fell back
+ * to the login screen, and **any unsaved edit in the properties panel went with it**. The
+ * unsaved-changes guard protects you from switching features; it never protected you from this.
+ *
+ * Refreshed a minute before expiry, which is inside the headroom already subtracted when the
+ * session was built, so a request is never issued against a token that has just lapsed.
+ */
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleRefresh(s: Session) {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  if (!s.refreshToken) return; // nothing to refresh with — expiry is then terminal
+  const wait = Math.max(5_000, s.expiresAt - Date.now() - 60_000);
+  refreshTimer = setTimeout(() => void refreshSession(), wait);
+}
+
+async function refreshSession(): Promise<void> {
+  const s = current;
+  if (!s?.refreshToken) return;
+  try {
+    const res = await fetch(
+      `${POINTR.baseUrl}/api/v10/identity/clients/${POINTR.client}/auth/token`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          refresh_token: s.refreshToken,
+          grant_type: "refresh_token",
+        }),
+      },
+    );
+    if (!res.ok) throw new Error(String(res.status));
+    const body = (await res.json()) as {
+      access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
+    };
+    if (!body.access_token) throw new Error("no token");
+    const next: Session = {
+      accessToken: body.access_token,
+      // some servers rotate the refresh token and some do not; keep the old one if none came back
+      refreshToken: body.refresh_token ?? s.refreshToken,
+      expiresAt:
+        Date.now() + Math.max(60, (body.expires_in ?? 7200) - 60) * 1000,
+      identity: identityFrom(body.access_token),
+    };
+    current = next;
+    persist(next);
+    scheduleRefresh(next);
+    /**
+     * Deliberately NOT emitting. Nothing about the person changed, and every subscriber re-renders
+     * the whole app on a session change — a silent renewal must not blink the screen every 2 hours.
+     */
+  } catch {
+    // Refresh failed: let the existing expiry take its course rather than signing out early, in
+    // case the failure was a blip and a later attempt succeeds.
+    refreshTimer = setTimeout(() => void refreshSession(), 30_000);
+  }
+}
+
 export function signOut() {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = null;
   current = null;
   persist(null);
   emit();
