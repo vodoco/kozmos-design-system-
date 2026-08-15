@@ -72,22 +72,65 @@ function claims(token: string): Record<string, unknown> {
   }
 }
 
+/**
+ * ⚠️ **Read against a REAL token, not the Postman sample.**
+ *
+ * The sample in `docs/PointrCloudRestApiV10.postman_collection.json` shows `email`, `unique_name`
+ * and `user_id`. A token this instance actually issues carries **none of those**. Its claims are:
+ *
+ *     iss · idp · grant_type · userId · upn · clientIdentifiers · roles
+ *     permissions · aud · cdnBaseUrl · sasToken · publishedContentServer · nbf · exp · iat
+ *
+ * The address lives in **`upn`** and the id in **`userId`**. Written against the sample, every
+ * person came out as *"Signed in"* with the initials **SI** — and because the colour was keyed on
+ * the (empty) email, everyone was also the same colour. One wrong claim name, three symptoms.
+ *
+ * The sample names are kept as fallbacks: they are what the documentation promises, and a
+ * differently-configured instance may well send them.
+ */
 function identityFrom(token: string): Identity {
   const c = claims(token);
-  const email = String(c.email ?? c.unique_name ?? "");
+  // `upn` first — it is what this platform actually sends
+  const email = String(c.upn ?? c.email ?? c.unique_name ?? c.sub ?? "").trim();
+
+  /**
+   * **The local part is the username** (Olcay, 2026-08-15: *"let's strip before @ character so we
+   * can use that as user name"*). `olcay.kurtulus@pointr.tech` becomes *Olcay Kurtulus*: split on
+   * the separators people actually use in an address, and title-case, so it reads as a name and
+   * yields real initials instead of the first two letters of a sentence.
+   */
+  const local = email.includes("@")
+    ? email.slice(0, email.indexOf("@"))
+    : email;
+  const words = local
+    .split(/[._\-+]+/)
+    .map((w) => w.trim())
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1));
+
   const given = String(c.given_name ?? "").trim();
   const family = String(c.family_name ?? "").trim();
   const full = [given, family].filter(Boolean).join(" ");
-  const name = full || (email ? email.split("@")[0].replace(/[._-]+/g, " ") : "Signed in");
+
+  const name = full || (words.length ? words.join(" ") : "Signed in");
   const initials =
-    (full ? full.split(/\s+/).map((w) => w[0]) : name.split(/\s+/).map((w) => w[0]))
+    name
+      .split(/\s+/)
+      .map((w) => w[0])
+      .filter(Boolean)
       .slice(0, 2)
       .join("")
       .toUpperCase() || "?";
+
   return {
     email,
     name,
-    userId: c.user_id ? String(c.user_id) : undefined,
+    // `userId` is this platform's spelling; `user_id` is the documented one
+    userId: c.userId
+      ? String(c.userId)
+      : c.user_id
+        ? String(c.user_id)
+        : undefined,
     roles: c.roles ? String(c.roles) : undefined,
     initials,
   };
@@ -103,7 +146,13 @@ function restore(): Session | null {
       sessionStorage.removeItem(KEY);
       return null;
     }
-    return s;
+    /**
+     * **Re-derive the identity from the token rather than trusting the stored copy.** The token is
+     * the source of truth and the derivation is pure, so this costs nothing — and it means a fix to
+     * `identityFrom` reaches people who are already signed in, instead of waiting for them to sign
+     * out. Exactly that happened with `upn`: every open session would have kept saying "Signed in".
+     */
+    return { ...s, identity: identityFrom(s.accessToken) };
   } catch {
     return null;
   }
@@ -147,7 +196,10 @@ export class AuthError extends Error {
  * Exchange credentials for a token. Throws `AuthError` with a message fit to show a person —
  * the API's own `message` when it sends one, and something honest when it does not.
  */
-export async function signIn(username: string, password: string): Promise<Session> {
+export async function signIn(
+  username: string,
+  password: string,
+): Promise<Session> {
   if (!POINTR.baseUrl || !POINTR.client)
     throw new AuthError("This build has no Pointr connection configured.", 0);
 
@@ -164,7 +216,9 @@ export async function signIn(username: string, password: string): Promise<Sessio
     // A network failure and a rejected password must not read the same — one is your fault, the
     // other is the connection's, and telling them apart is the difference between retrying and
     // checking your typing.
-    throw new AuthError("Could not reach Pointr Cloud. Check your connection and try again.");
+    throw new AuthError(
+      "Could not reach Pointr Cloud. Check your connection and try again.",
+    );
   }
 
   if (!res.ok) {
@@ -175,7 +229,10 @@ export async function signIn(username: string, password: string): Promise<Sessio
       /* an error body that isn't JSON tells us nothing extra */
     }
     if (res.status === 400 || res.status === 401)
-      throw new AuthError(msg || "That email and password did not match.", res.status);
+      throw new AuthError(
+        msg || "That email and password did not match.",
+        res.status,
+      );
     throw new AuthError(msg || `Sign in failed (${res.status}).`, res.status);
   }
 
@@ -184,7 +241,8 @@ export async function signIn(username: string, password: string): Promise<Sessio
     refresh_token?: string;
     expires_in?: number;
   };
-  if (!body.access_token) throw new AuthError("Pointr Cloud returned no token.");
+  if (!body.access_token)
+    throw new AuthError("Pointr Cloud returned no token.");
 
   const session: Session = {
     accessToken: body.access_token,
@@ -209,14 +267,20 @@ export function signOut() {
  * `fetch` with the session's bearer token attached — the one door every authenticated call should
  * go through, so a 401 has a single place to be understood.
  */
-export async function authFetch(path: string, init: RequestInit = {}): Promise<Response> {
+export async function authFetch(
+  path: string,
+  init: RequestInit = {},
+): Promise<Response> {
   const s = getSession();
   const headers = new Headers(init.headers);
   if (s) headers.set("Authorization", `Bearer ${s.accessToken}`);
-  const res = await fetch(path.startsWith("http") ? path : `${POINTR.baseUrl}${path}`, {
-    ...init,
-    headers,
-  });
+  const res = await fetch(
+    path.startsWith("http") ? path : `${POINTR.baseUrl}${path}`,
+    {
+      ...init,
+      headers,
+    },
+  );
   // The token expired mid-session, or was revoked. Drop it: continuing to send it would fail every
   // request in the same silent way, and the screen would be full of empty states with no reason.
   if (res.status === 401) signOut();

@@ -368,7 +368,13 @@ export function getPeersOnFloor(
  * derived from the identity rather than assigned on arrival, which would differ per viewer.
  */
 export function peerColour(p: Peer): string {
-  const key = p.identity.email || p.identity.name || p.id;
+  /**
+   * ⚠️ **Keyed on `userId` first.** This used to key on `email`, which was empty on every real
+   * token (the address is in `upn` — see `identityFrom`) — so the key fell through to the shared
+   * fallback name *"Signed in"* and **every person got the same colour**. The id is the one field
+   * guaranteed to be present and guaranteed to differ.
+   */
+  const key = p.identity.userId || p.identity.email || p.identity.name || p.id;
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
   const palette = [
