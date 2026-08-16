@@ -3,10 +3,11 @@ import type { MapPrefs } from "../map/PointrMap";
 
 export type MapPrefsState = MapPrefs;
 
-const BASE_MAPS: { value: MapPrefs["basemap"]; label: string; src: string }[] = [
-  { value: "vector", label: "Vector", src: "/basemap-vector.png" },
-  { value: "satellite", label: "Satellite", src: "/basemap-satellite.png" },
-];
+const BASE_MAPS: { value: MapPrefs["basemap"]; label: string; src: string }[] =
+  [
+    { value: "vector", label: "Vector", src: "/basemap-vector.png" },
+    { value: "satellite", label: "Satellite", src: "/basemap-satellite.png" },
+  ];
 
 const SECTION_HEAD: React.CSSProperties = {
   fontSize: 10,
@@ -15,6 +16,58 @@ const SECTION_HEAD: React.CSSProperties = {
   fontWeight: 600,
   margin: "12px 0 2px",
 };
+
+/**
+ * A preference row: **name on the left, switch on the right** (Olcay, 2026-08-16: *"the toggles
+ * should be on the right side not left"*).
+ *
+ * ⚠️ The DS `Switch`'s own `label` prop renders the label *after* the control, so it is deliberately
+ * not used — this is the app's own row with the DS switch dropped into its right-hand end. Patching
+ * the DS component was the alternative and is the wrong lever: its order is a house convention for
+ * every product built on it, and one screen's preference is not grounds for changing that.
+ *
+ * The same shape as the properties panel's boolean fields, so the two agree.
+ */
+function PrefRow({
+  label,
+  checked,
+  onCheckedChange,
+}: {
+  label: string;
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
+}) {
+  const id = `pref-${label.replace(/\W+/g, "-").toLowerCase()}`;
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+      }}
+    >
+      <label
+        htmlFor={id}
+        style={{
+          fontSize: 14,
+          fontWeight: 500,
+          color: "var(--review-ink)",
+          cursor: "pointer",
+          minWidth: 0,
+        }}
+      >
+        {label}
+      </label>
+      {/* ⚠️ A span, because the DS wrapper is `w-full` and `wrapperClassName` cannot undo it —
+          this app runs no Tailwind over its own source, so an invented class is never compiled.
+          Shrink-to-fit resolves the inner `width: 100%` against the switch's own max-content. */}
+      <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+        <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+      </span>
+    </div>
+  );
+}
 
 /**
  * v9's "Map View Preferences" popover — every control here drives the live map.
@@ -63,21 +116,29 @@ export function MapSettings({
             gear, which is the wrong glyph. @kozmos/icons only ships settings-01, so this is a
             Figma export like the ai-* sparkles (DS gap D9: raise settings-04 with the icon set).
           */}
-          <img src="/icons/settings-04.svg" alt="" width={20} height={16} style={{ display: "block" }} />
+          <img
+            src="/icons/settings-04.svg"
+            alt=""
+            width={20}
+            height={16}
+            style={{ display: "block" }}
+          />
         </button>
       </PopoverTrigger>
       <PopoverContent side="top" align="start" style={{ width: 268 }}>
-        <div style={{ fontWeight: 600, color: "var(--review-ink)" }}>Map View Preferences</div>
+        <div style={{ fontWeight: 600, color: "var(--review-ink)" }}>
+          Map View Preferences
+        </div>
 
         {focus && (
           <>
             <div style={SECTION_HEAD}>FOCUS</div>
-            <Switch
+            <PrefRow
               label="Grey out unchanged"
               checked={prefs.greyscale}
               onCheckedChange={(v) => onChange({ ...prefs, greyscale: v })}
             />
-            <Switch
+            <PrefRow
               label="Hide POI labels"
               checked={prefs.hidePoiLabels}
               onCheckedChange={(v) => onChange({ ...prefs, hidePoiLabels: v })}
@@ -86,7 +147,7 @@ export function MapSettings({
         )}
 
         <div style={SECTION_HEAD}>FLOOR-PLAN OVERLAY</div>
-        <Switch
+        <PrefRow
           label="Show Floor-plan"
           checked={prefs.floorplan}
           onCheckedChange={(v) => onChange({ ...prefs, floorplan: v })}
@@ -134,7 +195,13 @@ export function MapSettings({
                     border: `2px solid ${selected ? "var(--review-ink)" : "#E7E9EE"}`,
                   }}
                 />
-                <div style={{ fontSize: 12, marginTop: 4, fontWeight: selected ? 600 : 400 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    marginTop: 4,
+                    fontWeight: selected ? 600 : 400,
+                  }}
+                >
                   {b.label}
                 </div>
               </button>

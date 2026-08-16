@@ -279,6 +279,9 @@ function MultiHint() {
         fontSize: 11,
         fontStyle: "italic",
         color: MUTED,
+        // Never broken across two lines — "Multiple / values" reads as two separate words about
+        // two separate things, which is the one thing this label must not do.
+        whiteSpace: "nowrap",
       }}
     >
       {MULTI_LABEL}
@@ -350,29 +353,60 @@ function PropertyField({
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         {def.valueType === "boolean" ? (
+          /**
+           * **Label first, switch at the right edge** (Olcay, 2026-08-16: *"the toggles should be
+           * on the right side not left"*).
+           *
+           * Not only a preference — it is what makes the column read. Every other field in this
+           * panel puts its name at the left edge and its control below or beside it, so a leading
+           * switch made the booleans the one row whose *text* started 44px in, and their labels
+           * lined up with nothing. Right-aligned controls also share one edge down the form, which
+           * is the thing that makes a settings list scannable.
+           *
+           * ⚠️ The DS `Switch`'s own `label` prop puts the label AFTER the control, so it is not
+           * used here — the label is the app's, and the switch is given the row's far end.
+           */
           <div
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "space-between",
               gap: 10,
               padding: "6px 0",
             }}
           >
-            {/* A switch has no third position, so a disagreement is said in the label instead —
-                and it reads OFF, which is the safe way round: nothing is written to any feature
-                until it is actually toggled. */}
-            <Switch
-              checked={isTruthy(shown)}
-              onCheckedChange={(c: boolean) => onChange(c)}
-              id={`f-${def.key}`}
-            />
             <label
               htmlFor={`f-${def.key}`}
-              style={{ fontSize: 13, color: INK, cursor: "pointer" }}
+              style={{
+                fontSize: 13,
+                color: INK,
+                cursor: "pointer",
+                minWidth: 0,
+              }}
             >
               {label}
+              {/* A switch has no third position, so a disagreement is said beside the label
+                  instead — and it reads OFF, which is the safe way round: nothing is written to
+                  any feature until it is actually toggled. */}
               {many && <MultiHint />}
             </label>
+            {/**
+             * ⚠️ **A span, because the DS wrapper is `w-full` and `wrapperClassName` cannot undo
+             * it.** Passing `!w-auto` looked like the fix and did nothing: this app does not run
+             * Tailwind over its own source, so a class it invents is never compiled and the
+             * attribute lands on an element with no rule behind it. Measured, not assumed — the
+             * wrapper was still 254px and the switch still sat where the label left it.
+             *
+             * Shrink-to-fit here resolves the inner `width: 100%` against the switch's own
+             * max-content, so the control ends up its natural width at the row's right edge.
+             */}
+            <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+              <Switch
+                checked={isTruthy(shown)}
+                onCheckedChange={(c: boolean) => onChange(c)}
+                id={`f-${def.key}`}
+              />
+            </span>
           </div>
         ) : def.valueType === "text" && def.inputType === "textArea" ? (
           <div>
