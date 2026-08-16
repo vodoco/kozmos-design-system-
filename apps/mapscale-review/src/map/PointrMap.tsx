@@ -192,6 +192,14 @@ const PointrMap = forwardRef<
      * of what "show the wayfinding network when Wayfinding Network is selected" costs on this side.
      */
     hiddenTypes?: string[];
+    /**
+     * The level's wayfinding nodes **with their adjacency** — see `cloud/levelPaths`. The map shell
+     * builds the edges from it, because an edge is geometry and geometry is the shell's job.
+     *
+     * Only fetched where the Wayfinding Network section can be selected; absent everywhere else,
+     * which draws no corridors and is what the map did before this existed.
+     */
+    levelPaths?: unknown[];
     /** Geometry-editor commands, and the state it reports back — see ui/GeometryToolbar. */
     geomCommands?: { seq: number; body: Record<string, unknown> }[];
     onGeomState?: (s: Record<string, unknown>) => void;
@@ -263,6 +271,7 @@ const PointrMap = forwardRef<
     peers,
     editing,
     levelGeometry,
+    levelPaths,
     geomCommands,
     onGeomState,
     onGeometry,
@@ -350,6 +359,17 @@ const PointrMap = forwardRef<
    * shell's current level instead would stamp whichever floor it had reached by the time a slow
    * fetch landed — the level that asked for these features is the only one that is right.
    */
+  /**
+   * The wayfinding graph, on its own effect for the same reason the geometry is: it arrives from a
+   * fetch that finishes long after the level switch which asked for it.
+   */
+  useEffect(() => {
+    ref.current?.contentWindow?.postMessage(
+      { type: "levelpaths", nodes: levelPaths ?? [] },
+      "*",
+    );
+  }, [levelPaths]);
+
   useEffect(() => {
     ref.current?.contentWindow?.postMessage(
       {

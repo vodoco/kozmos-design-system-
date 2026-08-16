@@ -115,6 +115,8 @@ export interface GeomState {
   kind?: "area" | "point";
   /** How many corners are selected, for the marquee's own feedback. */
   selected?: number;
+  /** …and how many whole EDGES those corners amount to — both ends selected. */
+  selectedEdges?: number;
 }
 
 export type GeomCommand =
@@ -480,6 +482,13 @@ export function GeometryToolbar({
   const pieces = state.pieces ?? 1;
   const isPoint = state.kind === "point";
   const selected = state.selected ?? 0;
+  /**
+   * How many whole edges that corner selection amounts to — an edge counts when both of its ends
+   * are selected (Olcay, 2026-08-16). It is a **description** of the same selection, not a second
+   * one, which is why the caption below prefers it rather than adding to it: having grabbed an
+   * edge, "2 edges" is what you did and "4 corners" is arithmetic you have to undo in your head.
+   */
+  const edges = state.selectedEdges ?? 0;
   const picked = state.picked ?? 0;
   const absorbed = state.absorbed ?? 0;
   /**
@@ -502,7 +511,10 @@ export function GeometryToolbar({
             // Short enough to stay on one line: the caption sits ABOVE the bar, and a wrapped one
             // grows upward into the map. Dragging the selection is discoverable by trying it;
             // Delete is not, so Delete is what the line spends its words on.
-            text: `${selected} corner${selected === 1 ? "" : "s"} selected · Delete to remove`,
+            text:
+              edges > 0
+                ? `${edges} edge${edges === 1 ? "" : "s"} selected · drag to move · Delete to remove`
+                : `${selected} corner${selected === 1 ? "" : "s"} selected · Delete to remove`,
             bad: false,
           }
         : isPoint

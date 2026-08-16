@@ -54,6 +54,7 @@ import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { LevelSelector } from "../ui/LevelSelector";
 import { levelGeometry, type LevelGeometry } from "../cloud/levelFeatures";
+import { levelPaths, type PathNode } from "../cloud/levelPaths";
 import {
   FeaturePanel,
   FEATURE_PANEL_WIDTH,
@@ -1972,6 +1973,28 @@ export function MapContent({
    * which is precisely how it behaved before this existed.
    */
   const [levelGeom, setLevelGeom] = useState<LevelGeometry[]>([]);
+  /**
+   * The level's **wayfinding graph** — nodes and the adjacency between them (Olcay, 2026-08-16:
+   * *"there should be lines with direction on the wayfinding network"*).
+   *
+   * Fetched only where it can be drawn: the Wayfinding Network section. A floor's network is
+   * hundreds of nodes and thousands of neighbour references, and pulling it for a screen that hides
+   * the whole type would be a megabyte spent to draw nothing.
+   */
+  const [pathNodes, setPathNodes] = useState<PathNode[]>([]);
+  useEffect(() => {
+    if (!target || section !== "wayfinding-network") {
+      setPathNodes([]);
+      return;
+    }
+    let live = true;
+    void levelPaths(target.building, target.level).then((n) => {
+      if (live) setPathNodes(n);
+    });
+    return () => {
+      live = false;
+    };
+  }, [target, section]);
   useEffect(() => {
     if (!target) return;
     let live = true;
@@ -3092,6 +3115,7 @@ export function MapContent({
             peers={peers}
             editing={editors}
             levelGeometry={levelGeom}
+            levelPaths={pathNodes}
             geomCommands={geomCommands}
             onGeomState={onGeomState}
             onGeometry={onGeometry}

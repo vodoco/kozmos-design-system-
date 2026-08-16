@@ -26,7 +26,8 @@ const src = readFileSync(join(here, "..", "public", "map", "index.html"), "utf8"
 const BLOCKS = ["SPLIT-ENGINE", "SNAP-ENGINE", "GUIDE-ENGINE", "COMBINE-ENGINE", "SQUARE-ENGINE",
                 "FOCUS-ENGINE",
                 "BOX-ENGINE",
-                "GJRENDER-ENGINE", "GJSWAP-ENGINE"];
+                "GJRENDER-ENGINE", "GJSWAP-ENGINE",
+                "EDGE-ENGINE", "PATHS-ENGINE"];
 const engine = BLOCKS.map((name) => {
   const from = src.indexOf(`/* ${name}-START`);
   const to = src.indexOf(`/* ${name}-END */`);
@@ -81,6 +82,7 @@ writeFileSync(
       `  GJ, GJ_SRC, GJ_LYR, gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,\n` +
       `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
       `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE,\n` +
+      `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
       `export function __setHidden(t) {\n` +
@@ -108,6 +110,7 @@ const {
   gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
   applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE,
+  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
   __setMap, __setLevelFeats, __setHidden, __env, TARGET, prefs, POSTED,
 } = mod;
 
@@ -1468,6 +1471,9 @@ function fakeMap(o) {
     addSource: (id, def) => sources.set(id, {
       ...def, setData(d) { this.data = d; },
     }),
+    // No canvas in node, so the runtime-generated arrowhead cannot be made here. That is the
+    // point of one of the checks below: a map that cannot hold the image must still draw the LINES.
+    hasImage: () => false,
     addLayer: (def, before) => {
       const i = before ? layers.findIndex((l) => l.id === before) : -1;
       if (i < 0) layers.push(def); else layers.splice(i, 0, def);
@@ -1861,6 +1867,147 @@ const SHOW_WF = ["geofence", "positioning-device"];   // the list a section pass
   __setHidden(null);
   HIDDEN_BY_TYPE.clear();
   wfRemove();
+}
+
+/* ══ EDGES — select an edge, push it out, move it in ════════════════════════
+   Olcay, 2026-08-16: "I also like edge edit, meaning I can select edges to push out or move in —
+   two nodes move accordingly. Multi edge select would be nice."
+
+   An edge IS its two ends. That one decision is why this needed almost no new machinery: selecting
+   an edge selects two corners, dragging it is the multi-corner drag that already existed, and
+   multi-edge selection is the same set with more in it. */
+console.log("\nedge select");
+
+{
+  // A square: four real corners, closed by a repeat of the first.
+  const ring = [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]];
+  const rings = [ring];
+
+  check("edge 0 runs between corners 0 and 1",
+        JSON.stringify(edgeKeys(0, 0, ring.length)) === JSON.stringify(["0:0", "0:1"]));
+  /**
+   * ⚠️ **The wrap is the whole subtlety.** The last edge runs to `ring[4]`, which IS `ring[0]` —
+   * and only the four REAL corners get a handle. Naming the closing index gives a key nothing
+   * draws and nothing drags: the edge would look selected at one end and move at one end.
+   */
+  check("the last edge wraps to corner 0, not to the closing point",
+        JSON.stringify(edgeKeys(0, 3, ring.length)) === JSON.stringify(["0:3", "0:0"]));
+
+  const sel = new Set();
+  check("nothing selected is no edges", selectedEdgeCount(rings, sel) === 0);
+  sel.add("0:0");
+  check("one end of an edge is not an edge", selectedEdgeCount(rings, sel) === 0);
+  sel.add("0:1");
+  check("both ends are", selectedEdgeCount(rings, sel) === 1);
+  // Two adjacent edges share a corner: three corners, two edges. This is also what a MARQUEE that
+  // happens to catch three corners in a row reports — correctly, and nobody wrote it.
+  sel.add("0:2");
+  check("three corners in a row are two edges", selectedEdgeCount(rings, sel) === 2);
+  sel.add("0:3");
+  check("the whole ring selected is four edges — the wrap included",
+        selectedEdgeCount(rings, sel) === 4);
+
+  // Opposite corners of a square are not an edge, however many of them you pick.
+  const across = new Set(["0:0", "0:2"]);
+  check("two corners with no edge between them are no edges",
+        selectedEdgeCount(rings, across) === 0);
+
+  // A second ring's corners cannot form an edge with the first's.
+  const two = [ring, [[20, 20], [30, 20], [30, 30], [20, 20]]];
+  check("keys are per ring", selectedEdgeCount(two, new Set(["0:1", "1:0"])) === 0);
+  check("…and the second ring's own edges count",
+        selectedEdgeCount(two, new Set(["1:0", "1:1"])) === 1);
+}
+
+/* ══ PATHS — the network's lines, and where the direction comes from ════════
+   Olcay: "there should be lines with direction on the wayfinding network."
+
+   ⚠️ Direction is not a property of anything. An adjacency list is directed by construction — A
+   naming B does not oblige B to name A — so a two-way edge is one both ends declare and a one-way
+   edge is one only its origin does. The arrows are the shape of the data, drawn. */
+console.log("\nnetwork paths");
+
+const node = (fid, at, nb, tr) => ({
+  fid, at,
+  neighbors: (nb || []).map((f) => (typeof f === "string" ? { fid: f } : f)),
+  transitionNeighbors: (tr || []).map((f) => ({ fid: f })),
+});
+
+/* P1. Reciprocated is two-way; one-sided is one-way. */
+{
+  const { edges, oneway } = networkEdges([
+    node("a", [0, 0], ["b"]),
+    node("b", [1, 0], ["a", "c"]),        // b↔a reciprocated, b→c is not
+    node("c", [2, 0], []),
+  ]);
+  check("two nodes that name each other make ONE line, not two", edges.length === 2);
+  check("…and it is two-way", edges.find((e) => e.properties.from === "a").properties.oneway === false);
+  check("a link only its origin declares is one-way",
+        edges.find((e) => e.properties.to === "c").properties.oneway === true);
+  check("counted", oneway === 1);
+  check("the line runs between the two nodes' coordinates",
+        JSON.stringify(edges[0].geometry.coordinates) === JSON.stringify([[0, 0], [1, 0]]));
+  check("…as a LineString", edges[0].geometry.type === "LineString");
+}
+
+/* P2. What must NOT be drawn, and must be counted instead. */
+{
+  const { edges, dangling, transitions } = networkEdges([
+    node("a", [0, 0], ["b", "ghost", "a"], ["upstairs"]),
+    node("b", [1, 0], ["a"]),
+  ]);
+  check("a neighbour that is not on this floor draws no line to nowhere", edges.length === 1);
+  check("…it is counted, so a partial collection cannot pass as a sparse network", dangling === 1);
+  check("a node linked to itself draws nothing", !edges.some((e) => e.properties.from === e.properties.to));
+  // transitionNeighbors point at another LEVEL, so they have no line on this one — the node itself
+  // already draws distinctly (the network's two tiers).
+  check("a transition off the floor is counted, not drawn", transitions === 1 && edges.length === 1);
+}
+
+/* P3. The same neighbour listed twice is one line. */
+{
+  const { edges } = networkEdges([node("a", [0, 0], ["b", "b"]), node("b", [1, 0], [])]);
+  check("a duplicated neighbour reference is still one line", edges.length === 1);
+}
+
+/* P4. `speed` rides the edge — it is per-neighbour in the API, not per-node. */
+{
+  const { edges } = networkEdges([
+    node("a", [0, 0], [{ fid: "b", speed: 0.5 }]),
+    node("b", [1, 0], []),
+  ]);
+  check("the edge carries its own speed", edges[0].properties.speed === 0.5);
+  const { edges: e2 } = networkEdges([node("a", [0, 0], ["b"]), node("b", [1, 0], [])]);
+  check("…and null where the API gave none", e2[0].properties.speed === null);
+}
+
+/* P5. Dragging a node takes its corridors with it — the half that makes it feel edited. */
+{
+  const { edges } = networkEdges([
+    node("a", [0, 0], ["b"]),
+    node("b", [1, 0], ["a", "c"]),
+    node("c", [2, 0], []),
+  ]);
+  const moved = moveNetworkNode(edges, "b", [1, 5]);
+  check("both lines touching the node move", moved === 2);
+  check("…at the end that names it",
+        JSON.stringify(edges[0].geometry.coordinates) === JSON.stringify([[0, 0], [1, 5]]));
+  check("…and at the other end where it is the origin",
+        JSON.stringify(edges[1].geometry.coordinates[0]) === JSON.stringify([1, 5]));
+  check("a node nothing links to moves nothing", moveNetworkNode(edges, "nobody", [9, 9]) === 0);
+  // ⚠️ A copy, not the array it was handed: the caller's node table must not be aliased into the
+  // geometry, or the next drag would mutate history.
+  const at = [7, 7];
+  moveNetworkNode(edges, "a", at);
+  at[0] = 99;
+  check("the coordinate is copied in, not aliased", edges[0].geometry.coordinates[0][0] === 7);
+}
+
+/* P6. Nothing in, nothing out — a level with no network is not an error. */
+{
+  const empty = networkEdges([]);
+  check("no nodes, no edges", empty.edges.length === 0 && empty.dangling === 0);
+  check("…and it does not throw on nothing at all", networkEdges(null).edges.length === 0);
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */

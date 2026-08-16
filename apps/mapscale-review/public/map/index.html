@@ -1607,6 +1607,83 @@ function cloneLayerDef(layer, cloneId, sourceId) {
 }
 /* GJRENDER-ENGINE-END */
 
+/* PATHS-ENGINE-START — extracted and tested by scratch/geometry.test.mjs. Pure: no map, no DOM.
+
+   Olcay, 2026-08-16: *"there should be lines with direction on the wayfinding network."* */
+
+/**
+ * The network's **edges**, from its nodes' adjacency lists.
+ *
+ * ⚠️ **Direction is not a property of anything — it is whether the adjacency is reciprocated.** An
+ * adjacency list is directed by construction: A naming B does not oblige B to name A. So an edge
+ * both ends declare is **two-way**, and one only its origin declares is **one-way** — an escalator,
+ * a one-way corridor, a lane you cannot walk back through. Nothing was invented to draw the arrows;
+ * they are the shape of the data.
+ *
+ * Each undirected pair is emitted **once**, not twice, or every two-way edge would be drawn on top
+ * of itself — invisible at rest and doubled wherever the line is translucent.
+ *
+ * `dangling` counts neighbour references to nodes that are not on this floor and are not declared
+ * transitions. It is reported rather than swallowed: a network full of them means the level's
+ * collection is partial, which is a data problem that would otherwise present as "some corridors
+ * just aren't drawn".
+ */
+function networkEdges(nodes) {
+  const at = new Map();
+  for (const n of nodes || []) if (n && n.fid && n.at) at.set(n.fid, n.at);
+  /** `a→b` seen, so the reverse can recognise it and merge rather than emit a second line. */
+  const seen = new Map();
+  const edges = [];
+  let dangling = 0, transitions = 0;
+  for (const n of nodes || []) {
+    if (!n || !n.fid || !at.has(n.fid)) continue;
+    transitions += (n.transitionNeighbors || []).length;
+    for (const nb of n.neighbors || []) {
+      if (!nb || !nb.fid) continue;
+      if (!at.has(nb.fid)) { dangling++; continue; }
+      if (nb.fid === n.fid) continue;                    // a node linking to itself draws nothing
+      const back = seen.get(nb.fid + " " + n.fid);
+      if (back !== undefined) {
+        // The other direction is already drawn: this reference makes the same line two-way.
+        edges[back].properties.oneway = false;
+        continue;
+      }
+      const key = n.fid + " " + nb.fid;
+      if (seen.has(key)) continue;                       // the same neighbour listed twice
+      seen.set(key, edges.length);
+      edges.push({
+        type: "Feature",
+        properties: {
+          from: n.fid, to: nb.fid, oneway: true,
+          speed: typeof nb.speed === "number" ? nb.speed : null,
+        },
+        geometry: { type: "LineString", coordinates: [at.get(n.fid).slice(), at.get(nb.fid).slice()] },
+      });
+    }
+  }
+  return { edges, dangling, transitions, oneway: edges.filter(e => e.properties.oneway).length };
+}
+
+/**
+ * Move one node and rebuild only the lines that touch it.
+ *
+ * The whole point is that dragging a node in the editor takes its corridors with it — a network
+ * whose edges lag behind the node you are moving is worse than one with no edges at all, because
+ * it looks like the edit failed. Rebuilding the entire collection per frame would be the obvious
+ * way and is O(all edges) on every mouse move; this is O(that node's degree), which on a wayfinding
+ * graph is about four.
+ */
+function moveNetworkNode(edges, fid, at) {
+  let n = 0;
+  for (const e of edges || []) {
+    const p = e.properties;
+    if (p.from === fid) { e.geometry.coordinates[0] = at.slice(); n++; }
+    else if (p.to === fid) { e.geometry.coordinates[1] = at.slice(); n++; }
+  }
+  return n;
+}
+/* PATHS-ENGINE-END */
+
 /* GJSWAP-ENGINE-START — the swap itself, extracted and tested by scratch/geometry.test.mjs.
    ⚠️ NOT pure: it drives `map` and reads `prefs`, `TARGET`, `FP_LAYERS`, `HIDDEN_FILTERS` and
    `post`, all of which the test supplies as stubs. That is the one soft spot in this harness — a
@@ -1745,7 +1822,9 @@ function applyHiddenTypes() {
  * section, so `applyHiddenTypes` leaves it alone; it is hidden by `WF_HIDE` below for its own
  * reason, which is that it is the pin storm.
  */
+
 const WF_NODE = "__wf_node", WF_TRANSITION = "__wf_transition";
+const WF_EDGE = "__wf_edge", WF_ARROW = "__wf_arrow", WF_EDGE_SRC = "__wf_edges";
 const WF_SL = "wayfindingnetwork";
 /** Mirrors `NETWORK_SUBTYPE` in the app's taxonomy — the one subType that is network, not exit. */
 const WF_NETWORK_SUBTYPE = "path-node";
@@ -1756,7 +1835,7 @@ const WF_NETWORK_SUBTYPE = "path-node";
  * them read as texture rather than as content, and the theme blue for a transition, which is the
  * thing you are actually looking for when you open this section.
  */
-const WF_COLOUR = { node: "#7A8699", transition: "#2563EB" };
+const WF_COLOUR = { node: "#7A8699", transition: "#2563EB", edge: "#9AA4B4", arrow: "#2563EB" };
 /** The SDK's own pin layer for this type: hidden while we draw the network ourselves. */
 const WF_HIDE = "symbol_wayfinding-network_ptr";
 let wfLevel = null, wfSource = null;
@@ -1783,10 +1862,78 @@ function wfFilter(network) {
 }
 
 function wfRemove() {
-  for (const id of [WF_NODE, WF_TRANSITION])
+  for (const id of [WF_ARROW, WF_EDGE, WF_NODE, WF_TRANSITION])
     try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
+  try { if (map.getSource(WF_EDGE_SRC)) map.removeSource(WF_EDGE_SRC); } catch (e) {}
   wfSource = null;
   wfLevel = null;
+  WF_EDGES = null;
+}
+
+/** The level's nodes, as the app fetched them, and the edges built from their adjacency. */
+let WF_NODES = [], WF_EDGES = null;
+
+/**
+ * A single arrowhead, drawn into a canvas and handed to the style at runtime.
+ *
+ * ⚠️ **Because there is no sprite to point at.** MapLibre draws a direction marker as an `icon-image`
+ * on a `symbol-placement: "line"` layer, and the icon has to come from the style's sprite sheet —
+ * which on this instance **404s** (§5), so every taxonomy icon in the app is already an empty box.
+ * An image added with `addImage` belongs to the map rather than to the sheet, so it works whatever
+ * the sprite is doing. Drawn at 2× and declared as such, so it stays crisp on a retina screen.
+ */
+function wfEnsureArrow() {
+  try {
+    if (!map || !map.hasImage) return false;
+    if (map.hasImage(WF_ARROW)) return true;
+    const s = 14, c = document.createElement("canvas");
+    c.width = c.height = s * 2;
+    const g = c.getContext("2d");
+    if (!g) return false;
+    g.scale(2, 2);
+    // Pointing +x, because MapLibre rotates a line-placed icon to the line's own bearing.
+    g.beginPath();
+    g.moveTo(s * 0.78, s / 2); g.lineTo(s * 0.30, s * 0.24); g.lineTo(s * 0.30, s * 0.76);
+    g.closePath();
+    g.fillStyle = WF_COLOUR.arrow;
+    g.fill();
+    g.lineWidth = 1;
+    g.strokeStyle = "rgba(255,255,255,.9)";
+    g.stroke();
+    map.addImage(WF_ARROW, { width: s * 2, height: s * 2,
+      data: new Uint8Array(g.getImageData(0, 0, s * 2, s * 2).data.buffer) }, { pixelRatio: 2 });
+    return true;
+  } catch (e) { post("error", { message: "wayfinding arrow: " + e.message }); return false; }
+}
+
+/** Rebuild the edge collection from the nodes the app last posted, and push it to the source. */
+function wfBuildEdges() {
+  const built = networkEdges(WF_NODES);
+  WF_EDGES = built.edges;
+  wfPushEdges();
+  console.info("[paths] level", TARGET.level, "network →", WF_NODES.length, "nodes ·",
+    built.edges.length, "edges (" + built.oneway + " one-way) ·",
+    built.transitions, "transition links off this floor",
+    built.dangling ? "· ⚠️ " + built.dangling + " neighbour(s) not on this level" : "");
+}
+
+function wfPushEdges() {
+  try {
+    const src = map && map.getSource(WF_EDGE_SRC);
+    if (src) src.setData({ type: "FeatureCollection", features: WF_EDGES || [] });
+  } catch (e) {}
+}
+
+/**
+ * Drag a network node and its corridors come with it (Olcay: *"easy to edit"*).
+ *
+ * Called from the editor's own draw pass, so it runs at pointer speed — which is why it moves the
+ * lines touching this node rather than rebuilding the graph. A network whose edges lag behind the
+ * node being moved looks like the edit failed.
+ */
+function wfNodeMoved(fid, at) {
+  if (!WF_EDGES || !fid || !at) return;
+  if (moveNetworkNode(WF_EDGES, fid, at)) wfPushEdges();
 }
 
 function applyWayfinding() {
@@ -1807,6 +1954,43 @@ function applyWayfinding() {
     if (!map.getLayer(WF_NODE)) {
       const base = { source: src.source, type: "circle" };
       if (src.sourceLayer) base["source-layer"] = src.sourceLayer;
+      /**
+       * **The edges go in first, so the nodes sit on top of them.** A corridor drawn over the node
+       * it ends at hides exactly the thing that tells you what kind of node it is.
+       *
+       * Their own GeoJSON source, not the tiles': an edge is not a feature anywhere in Pointr Cloud
+       * — it is the adjacency between two nodes, and this is the only place it exists as geometry.
+       */
+      if (!map.getSource(WF_EDGE_SRC))
+        map.addSource(WF_EDGE_SRC, { type: "geojson",
+          data: { type: "FeatureCollection", features: WF_EDGES || [] } });
+      map.addLayer({ id: WF_EDGE, type: "line", source: WF_EDGE_SRC,
+        layout: { "line-cap": "round" },
+        paint: {
+          "line-color": WF_COLOUR.edge,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 15, 0.6, 18, 1.4, 21, 2.4],
+          "line-opacity": 0.9,
+        } });
+      /**
+       * ⚠️ **Arrows on the ONE-WAY edges only.** Two-way is the ordinary case on a floor and
+       * marking it would put an arrowhead every 70px across the whole network — the same mistake as
+       * the pin storm, in a different shape. The exception is what needs saying, so an edge with no
+       * arrow reads as "you can walk this both ways", which is what it means.
+       */
+      if (wfEnsureArrow())
+        map.addLayer({ id: WF_ARROW, type: "symbol", source: WF_EDGE_SRC,
+          filter: ["==", ["get", "oneway"], true],
+          layout: {
+            "symbol-placement": "line",
+            "symbol-spacing": 70,
+            "icon-image": WF_ARROW,
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 15, 0.4, 18, 0.7, 21, 1],
+            // To the LINE's bearing, not the screen's — an arrow that stays upright while the map
+            // rotates is pointing at nothing.
+            "icon-rotation-alignment": "map",
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true,
+          } });
       map.addLayer(Object.assign({ id: WF_NODE, filter: wfFilter(true),
         paint: {
           "circle-radius": ["interpolate", ["linear"], ["zoom"], 15, 1.2, 18, 2.6, 21, 4.5],
@@ -3262,7 +3446,51 @@ function geomRestore(s) {
 
 /* ── selection ─────────────────────────────────────────────────────────────── */
 
+/* EDGE-ENGINE-START — extracted and tested by scratch/geometry.test.mjs. Pure: keys and indices.
+   Olcay, 2026-08-16: *"I also like edge edit, meaning I can select edges to push out or move in —
+   two nodes move accordingly. Multi edge select would be nice."* */
+
+/** A corner's key: which ring, which corner. The whole of the selection's vocabulary. */
 const selKey = (ri, ci) => ri + ":" + ci;
+
+/**
+ * The two corner keys an edge sits between — edge `ci` runs from corner `ci` to the next one.
+ *
+ * ⚠️ **The wrap is the whole subtlety.** A ring closes on a repeat of its first point, so the last
+ * real corner's edge runs to `ring[len-1]`, which *is* `ring[0]`. Selection keys index the REAL
+ * corners, and only those get a handle drawn — so the second key of the wrapping edge has to be
+ * `0`. Naming the closing index instead gives a key that nothing draws and nothing drags: the edge
+ * would look selected at one end and move at one end.
+ */
+function edgeKeys(ri, ci, ringLen) {
+  const last = ringLen - 1;                       // the closing point's index
+  return [selKey(ri, ci), selKey(ri, (ci + 1) % last)];
+}
+
+/**
+ * **An edge is selected when both of its ends are.** That is the entire model, and it is why edge
+ * editing needed almost no new machinery: selecting an edge selects two corners, dragging it is the
+ * multi-corner drag that already existed, and *multi*-edge selection is the same set with more in
+ * it. It also means a marquee that catches two adjacent corners correctly reports the edge between
+ * them, which nobody had to write.
+ */
+function selectedEdgeCount(rings, sel) {
+  let n = 0;
+  for (const [ri, ring] of (rings || []).entries()) {
+    const last = ring.length - 1;
+    for (let ci = 0; ci < last; ci++) {
+      const [a, b] = edgeKeys(ri, ci, ring.length);
+      if (sel.has(a) && sel.has(b)) n++;
+    }
+  }
+  return n;
+}
+/* EDGE-ENGINE-END */
+
+function geomSelectedEdges() {
+  return GEOM && GEOM.kind === "area" && GEOM.sel
+    ? selectedEdgeCount(GEOM.rings, GEOM.sel) : 0;
+}
 
 /**
  * Any structural change CLEARS the selection rather than trying to carry it.
@@ -3499,6 +3727,13 @@ function geomState() {
         // A point has no outline: the toolbar drops every tool that would be a lie on one.
         kind: GEOM.kind,
         selected: GEOM.sel.size,
+        /**
+         * How many whole EDGES the corner selection amounts to — an edge counts when **both** of
+         * its ends are selected, which is the whole of what edge selection is here. So a marquee
+         * that happens to catch two adjacent corners reports the edge between them, correctly and
+         * for free, and the toolbar can say "3 edges" where that is the more useful sentence.
+         */
+        selectedEdges: geomSelectedEdges(),
       }
     : { editing: false };
 }
@@ -5321,7 +5556,56 @@ function geomDraw() {
 
     if (GEOM.mode === "vertices") {
       /**
-       * Midpoints first, so a vertex always wins the click where the two overlap.
+       * **Edges first of all**, so both the midpoint that adds a corner and the corner handles
+       * themselves keep winning the click where they overlap it. An edge is the widest target on
+       * screen and the least precise thing you can mean by a click, so it goes at the bottom.
+       *
+       * Olcay, 2026-08-16: *"I can select edges to push out or move in — two nodes move
+       * accordingly. Multi edge select would be nice."* Both of those are the corner machinery
+       * already here: an edge IS its two ends, so selecting one selects two corners, dragging it is
+       * the multi-corner drag, and selecting several is the same set with more in it.
+       */
+      ring.slice(0, -1).forEach((c, ci) => {
+        const n = ring[ci + 1];
+        const a = map.project(c), b = map.project(n);
+        const [k0, k1] = edgeKeys(ri, ci, ring.length);
+        const on = GEOM.sel.has(k0) && GEOM.sel.has(k1);
+        // The visible mark and the hit target are two elements: one line cannot be both 4px of ink
+        // and 12px of catchment, and shrinking the target to the ink would make a selected edge
+        // harder to grab than an unselected one — backwards.
+        if (on)
+          l.appendChild(el("line", { x1:a.x, y1:a.y, x2:b.x, y2:b.y, stroke:"#0b369c",
+                                     "stroke-width":4.5, "stroke-linecap":"round", class:"geom-edge-on" }));
+        const hit = el("line", { x1:a.x, y1:a.y, x2:b.x, y2:b.y, stroke:"transparent",
+                                 "stroke-width":12, "stroke-linecap":"butt", class:"geom-edge" });
+        hit.setAttribute("style", "pointer-events:stroke;cursor:move");
+        hit.addEventListener("mousedown", ev => {
+          ev.stopPropagation();
+          if (ev.altKey) return;            // Alt removes a CORNER; on an edge it would be ambiguous
+          if (ev.shiftKey) {                // toggles the whole edge, and never starts a drag
+            if (on) { GEOM.sel.delete(k0); GEOM.sel.delete(k1); }
+            else { GEOM.sel.add(k0); GEOM.sel.add(k1); }
+            geomDraw(); post("geomstate", geomState());
+            return;
+          }
+          if (!on) { GEOM.sel.clear(); GEOM.sel.add(k0); GEOM.sel.add(k1); geomDraw(); }
+          /**
+           * **The end you grabbed nearer leads the drag**, and that is not cosmetic: the leading
+           * corner is the one Snap and the guides are computed for, so grabbing an edge near its
+           * left end snaps that end to the wall beside it — which is what you were aiming with.
+           * The other end follows by the same screen offset, so the edge keeps its length and angle.
+           */
+          // `clientX/Y` compared straight against `map.project()` output, which is what the drag
+          // loop itself does — the map canvas fills this iframe from its origin, so the two agree.
+          const lead = Math.hypot(ev.clientX - a.x, ev.clientY - a.y)
+                    <= Math.hypot(ev.clientX - b.x, ev.clientY - b.y)
+            ? ci : (ci + 1) % (ring.length - 1);
+          geomDown(ev, { kind: "vertex", ri, ci: lead });
+        });
+        l.appendChild(hit);
+      });
+      /**
+       * Midpoints next, so a vertex always wins the click where the two overlap.
        *
        * ⚠️ Over `slice(0, -1)`, not the whole ring. The closing point repeats the first, so the
        * full loop produced a midpoint between `p0` and `p0` — a zero-length "edge" sitting exactly
@@ -5691,6 +5975,14 @@ function geomDown(ev, what) {
       }
       const q = map.unproject(hit ? [hit.x, hit.y] : [px, py]);
       GEOM.point = [q.lng, q.lat];
+      /**
+       * **A wayfinding node drags its corridors with it** (Olcay, 2026-08-16: *"easy to edit"*).
+       *
+       * Here rather than on commit, and that is the point: a network whose edges catch up only when
+       * you let go looks like the edit failed while you are making it. It costs the node's own
+       * degree — about four — because `moveNetworkNode` touches only the lines that name it.
+       */
+      wfNodeMoved(GEOM.fid, GEOM.point);
 
     } else if (what.kind === "vertex") {
       const hit = snapAt(pt.x, pt.y);
@@ -5932,6 +6224,18 @@ window.addEventListener("message", (ev) => {
     BLOCKED_TYPES = new Set(d.types || []);
   } else if (d.type === "quiettypes") {
     QUIET_TYPES = new Set(d.types || []);
+  } else if (d.type === "levelpaths") {
+    /**
+     * The level's wayfinding nodes **and their adjacency** — see `cloud/levelPaths` in the app.
+     *
+     * The edges are built here rather than in the app because they are geometry, and geometry is
+     * this file's job: the app has no projection, no source and nothing to draw into. An empty list
+     * is not a failure — it means the section draws nodes and no corridors, which is what it did
+     * before this existed.
+     */
+    WF_NODES = Array.isArray(d.nodes) ? d.nodes : [];
+    wfBuildEdges();
+    applyWayfinding();
   } else if (d.type === "hiddentypes") {
     /**
      * What this screen may not **draw** — the wayfinding network, geofences and positioning
