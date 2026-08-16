@@ -1718,6 +1718,27 @@ function networkEdges(nodes) {
 }
 
 /**
+ * What a node is connected to: the edges that touch it, and the nodes at their far ends.
+ *
+ * ⚠️ **Both directions**, deliberately. A one-way edge *into* a node is still something that node
+ * is connected to, and hovering it to ask "what does this reach?" and being told only about the
+ * ways out would be a half-answer about a graph — the half most likely to be wrong, since one-way
+ * edges are the interesting ones.
+ */
+function nodeNeighbourhood(edges, fid) {
+  const fids = [];
+  let touching = 0;
+  for (const e of edges || []) {
+    const p = e.properties;
+    const other = p.from === fid ? p.to : p.to === fid ? p.from : null;
+    if (other === null) continue;
+    touching++;
+    if (fids.indexOf(other) < 0) fids.push(other);
+  }
+  return { fids, touching };
+}
+
+/**
  * Move one node and rebuild only the lines that touch it.
  *
  * The whole point is that dragging a node in the editor takes its corridors with it — a network
@@ -1878,6 +1899,8 @@ function applyHiddenTypes() {
 
 const WF_NODE = "__wf_node", WF_TRANSITION = "__wf_transition";
 const WF_EDGE = "__wf_edge", WF_ARROW = "__wf_arrow", WF_EDGE_SRC = "__wf_edges";
+/** The hover marks: the node under the pointer with its neighbours, and the edges between them. */
+const WF_EDGE_HL = "__wf_edge_hl", WF_NODE_HL = "__wf_node_hl";
 const WF_SL = "wayfindingnetwork";
 /** Mirrors `NETWORK_SUBTYPE` in the app's taxonomy — the one subType that is network, not exit. */
 const WF_NETWORK_SUBTYPE = "path-node";
@@ -1888,7 +1911,8 @@ const WF_NETWORK_SUBTYPE = "path-node";
  * them read as texture rather than as content, and the theme blue for a transition, which is the
  * thing you are actually looking for when you open this section.
  */
-const WF_COLOUR = { node: "#7A8699", transition: "#2563EB", edge: "#9AA4B4", arrow: "#2563EB" };
+const WF_COLOUR = { node: "#7A8699", transition: "#2563EB", edge: "#9AA4B4", arrow: "#2563EB",
+                    hl: "#0b369c" };
 /** The SDK's own pin layer for this type: hidden while we draw the network ourselves. */
 const WF_HIDE = "symbol_wayfinding-network_ptr";
 let wfLevel = null, wfSource = null;
@@ -1927,12 +1951,25 @@ function wfFilter(network) {
 }
 
 function wfRemove() {
-  for (const id of [WF_ARROW, WF_EDGE, WF_NODE, WF_TRANSITION])
+  for (const id of [WF_ARROW, WF_EDGE_HL, WF_EDGE, WF_NODE, WF_TRANSITION, WF_NODE_HL])
     try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
   try { if (map.getSource(WF_EDGE_SRC)) map.removeSource(WF_EDGE_SRC); } catch (e) {}
   wfSource = null;
   wfLevel = null;
-  WF_EDGES = null;
+  /**
+   * ⚠️ **`WF_EDGES` is NOT cleared here, and that one line was the bug** (Olcay, 2026-08-16:
+   * *"edges (lines) disappear after a while"*).
+   *
+   * This function runs whenever the layers have to be rebuilt — most often because the render swap
+   * went live and the nodes moved from the tiles to the GeoJSON source, which happens a few frames
+   * after load. *"After a while"* is exactly that. It used to throw the computed edges away with
+   * the layers, and the only thing that ever rebuilt them was a fresh `levelpaths` message — which
+   * does not come again for a level already fetched. So the layers came back, the nodes with them,
+   * and the lines were re-created **empty and stayed that way**.
+   *
+   * The edges are derived from `WF_NODES`, which is the app's data and still here. Removing a
+   * layer is not a reason to forget what it was drawing.
+   */
 }
 
 /** The level's nodes, as the app fetched them, and the edges built from their adjacency. */
@@ -1971,6 +2008,17 @@ function wfEnsureArrow() {
   } catch (e) { post("error", { message: "wayfinding arrow: " + e.message }); return false; }
 }
 
+/**
+ * The edges, building them from the nodes if they are not built yet.
+ *
+ * ⚠️ Never assume they survive a layer rebuild — see `wfRemove`. The nodes are the source of truth
+ * and the edges are derived from them, so this can always answer.
+ */
+function wfEnsureEdges() {
+  if (!WF_EDGES) WF_EDGES = networkEdges(WF_NODES).edges;
+  return WF_EDGES;
+}
+
 /** Rebuild the edge collection from the nodes the app last posted, and push it to the source. */
 function wfBuildEdges() {
   const built = networkEdges(WF_NODES);
@@ -2001,6 +2049,43 @@ function wfNodeMoved(fid, at) {
   if (moveNetworkNode(WF_EDGES, fid, at)) wfPushEdges();
 }
 
+/**
+ * **Hovering a node lights the node, its neighbours and the edges between them** — Olcay,
+ * 2026-08-16: *"let's not show selected marker onHover. Instead highlight the edges and nodes."*
+ *
+ * The SDK's own selection layer draws a **map pin** for a point feature: a green teardrop the size
+ * of a building, planted over the very corridors you are inspecting. It is the right mark for
+ * finding a shop on a floor and the wrong one for reading a graph — it answers *"where is it?"*
+ * when the question here is *"what does it connect to?"*.
+ *
+ * So the mark is the answer to that question instead. Neighbours as well as the node itself,
+ * because a node on its own is a dot you are already pointing at; the reach is the information.
+ *
+ * ⚠️ `any` of `==` rather than `["in", …]` — trap 10: `in` throws on a feature with no `fid`, and
+ * one throwing expression takes the entire layer down with it. Capped, because a filter is rebuilt
+ * on every hover and a node with fifty neighbours is not worth the frame.
+ */
+const WF_HL_CAP = 24;
+let wfHover = null;
+function wfHighlight(fid) {
+  if (wfHover === fid) return;
+  wfHover = fid || null;
+  try {
+    if (!map.getLayer(WF_EDGE_HL) || !map.getLayer(WF_NODE_HL)) return;
+    if (!wfHover) {
+      // `false` rather than removing the layer: a filter nothing matches is one setFilter, and the
+      // layer stays where it is in the draw order for the next hover.
+      map.setFilter(WF_EDGE_HL, ["==", ["get", "from"], " none"]);
+      map.setFilter(WF_NODE_HL, ["==", ["get", "fid"], " none"]);
+      return;
+    }
+    map.setFilter(WF_EDGE_HL, ["any", ["==", ["get", "from"], wfHover],
+                                      ["==", ["get", "to"], wfHover]]);
+    const near = nodeNeighbourhood(wfEnsureEdges(), wfHover).fids.slice(0, WF_HL_CAP);
+    map.setFilter(WF_NODE_HL, ["any", ...[wfHover].concat(near).map(f => ["==", ["get", "fid"], f])]);
+  } catch (e) {}
+}
+
 function applyWayfinding() {
   if (!map) return;
   try {
@@ -2028,13 +2113,24 @@ function applyWayfinding() {
        */
       if (!map.getSource(WF_EDGE_SRC))
         map.addSource(WF_EDGE_SRC, { type: "geojson",
-          data: { type: "FeatureCollection", features: WF_EDGES || [] } });
+          data: { type: "FeatureCollection", features: wfEnsureEdges() } });
       map.addLayer({ id: WF_EDGE, type: "line", source: WF_EDGE_SRC,
         layout: { "line-cap": "round" },
         paint: {
           "line-color": WF_COLOUR.edge,
           "line-width": ["interpolate", ["linear"], ["zoom"], 15, 0.6, 18, 1.4, 21, 2.4],
           "line-opacity": 0.9,
+        } });
+      /**
+       * The hover mark for the edges — above the plain ones so it reads as a highlight rather than
+       * a different kind of corridor, and below the nodes so it never covers one.
+       */
+      map.addLayer({ id: WF_EDGE_HL, type: "line", source: WF_EDGE_SRC,
+        filter: ["==", ["get", "from"], " none"],
+        layout: { "line-cap": "round" },
+        paint: {
+          "line-color": WF_COLOUR.hl,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 15, 1.8, 18, 3, 21, 4.5],
         } });
       /**
        * ⚠️ **Arrows on the ONE-WAY edges only.** Two-way is the ordinary case on a floor and
@@ -2070,6 +2166,18 @@ function applyWayfinding() {
           "circle-stroke-color": "#ffffff",
           "circle-stroke-width": 1.5,
         } }, base));
+      /**
+       * The hover mark for the nodes: the one under the pointer **and its neighbours**, drawn last
+       * so it sits over both tiers. A ring rather than a fill — the node's own colour still shows
+       * through it, so you can still tell a transition from a path node while it is lit.
+       */
+      map.addLayer(Object.assign({ id: WF_NODE_HL, filter: ["==", ["get", "fid"], " none"],
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 15, 3.5, 18, 6.5, 21, 10],
+          "circle-color": "rgba(0,0,0,0)",
+          "circle-stroke-color": WF_COLOUR.hl,
+          "circle-stroke-width": 2,
+        } }, base));
       wfSource = src.source;
       wfLevel = TARGET.level;
     } else if (wfLevel !== TARGET.level) {
@@ -2086,7 +2194,7 @@ function applyWayfinding() {
      * pass costs four reads and makes the promise literal: on this section the network is drawn,
      * whatever else the map has been told to hide.
      */
-    for (const id of [WF_EDGE, WF_ARROW, WF_NODE, WF_TRANSITION])
+    for (const id of [WF_EDGE, WF_EDGE_HL, WF_ARROW, WF_NODE, WF_TRANSITION, WF_NODE_HL])
       if (map.getLayer(id) && map.getLayoutProperty(id, "visibility") === "none")
         map.setLayoutProperty(id, "visibility", "visible");
     // The pin storm the product would otherwise draw for the same features.
@@ -2507,6 +2615,33 @@ function highlightFeatures(sel) {
 }
 
 /**
+ * **What a hover marks, and it is not always a pin.**
+ *
+ * Olcay, 2026-08-16: *"let's not show selected marker onHover. Instead highlight the edges and
+ * nodes."* The SDK's selection layer draws a map **pin** for a point feature — a green teardrop
+ * planted over the corridors you are inspecting. It answers *"where is it?"*, which is the right
+ * question on a floor of shops and the wrong one on a graph, where you are asking *"what does this
+ * connect to?"*.
+ *
+ * So a wayfinding node lights its own neighbourhood instead, and everything else keeps the mark it
+ * has always had. The decision is made on the feature's `mainType` rather than on the section,
+ * because it is a fact about **what the thing is**, not about which screen you happen to be on.
+ */
+function isNetworkNode(fid, props) {
+  if (!fid) return false;
+  // The property bag when there is one — a fact about the feature under the pointer. When there is
+  // not (the app hovering a TREE row sends a bare fid), the node table answers instead.
+  if (props) return props.mainType === "wayfinding-network";
+  return WF_NODES.some(n => n.fid === fid);
+}
+
+function hoverMark(fid, props) {
+  const network = isNetworkNode(fid, props);
+  wfHighlight(network ? fid : null);
+  highlightFeatures(network || !fid ? null : { fid });
+}
+
+/**
  * Centre the map on one feature — **and report its properties**, which is the POI panel's whole
  * supply (§19).
  *
@@ -2912,7 +3047,7 @@ function start() {
      */
     if (GEOM) {
       const dropCard = () => {
-        if (HOVER_FEATURE) { HOVER_FEATURE = null; highlightFeatures(null); renderTip(); }
+        if (HOVER_FEATURE) { HOVER_FEATURE = null; hoverMark(null); renderTip(); }
       };
       // Laying a cut: the far end follows the pointer. In lng/lat, like the rings — the map can be
       // panned mid-cut and the anchor has to stay on the floor, not on the screen.
@@ -2962,7 +3097,7 @@ function start() {
     const f = hoverableAt(ev.point);
     const fid = f && f.properties && f.properties.fid;
     if (!f) {
-      if (HOVER_FEATURE) { HOVER_FEATURE = null; highlightFeatures(null); renderTip(); }
+      if (HOVER_FEATURE) { HOVER_FEATURE = null; hoverMark(null); renderTip(); }
       map.getCanvas().style.cursor = "";
       return;
     }
@@ -2980,14 +3115,14 @@ function start() {
       y: ev.point.y + 18,
       below: true,
     };
-    highlightFeatures({ fid });                        // the SDK's own selection layer lights it
+    hoverMark(fid, f.properties);
     renderTip();
   });
 
   // Leaving the canvas has to clear it — the container listener below only covers the card.
   map.on("mouseout", () => {
     if (!HOVER_FEATURE) return;
-    HOVER_FEATURE = null; highlightFeatures(null); renderTip();
+    HOVER_FEATURE = null; hoverMark(null); renderTip();
     map.getCanvas().style.cursor = "";
   });
 
@@ -6205,7 +6340,17 @@ window.addEventListener("message", (ev) => {
     HOVERED = null;
     if (map) { resolveChanges(); redraw(); renderTip(); }
   } else if (d.type === "highlight") {
-    highlightFeatures(d.sel || null);
+    /**
+     * The app's own highlight — a tree row under the cursor, or the current selection. It goes
+     * through the same decision as a map hover: **a wayfinding node lights its neighbourhood, not a
+     * pin.** A row and a hover are two doors into the same act, and they should not disagree about
+     * what the mark for a node looks like.
+     *
+     * A whole-type highlight (`mainType`/`subType`, no fid) keeps the SDK's layer, which is exactly
+     * what it is good at — lighting 989 walls at once.
+     */
+    if (d.sel && d.sel.fid && !d.sel.fids && isNetworkNode(d.sel.fid, null)) hoverMark(d.sel.fid, null);
+    else { wfHighlight(null); highlightFeatures(d.sel || null); }
   } else if (d.type === "focusfeature") {
     /**
      * ⚠️ **The app repointing the panel after a combine must not move the camera.**

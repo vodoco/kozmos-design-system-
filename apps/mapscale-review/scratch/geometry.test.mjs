@@ -82,10 +82,13 @@ writeFileSync(
       `  GJ, GJ_SRC, GJ_LYR, gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,\n` +
       `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
       `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,\n` +
-      `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,\n` +
+      `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode, nodeNeighbourhood,\n` +
+      `  wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL, WF_NODES,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
+      `export function __setNodes(n) { WF_NODES = n; WF_EDGES = null; }\n` +
+      `export function __edges() { return WF_EDGES; }\n` +
       `export function __setReach(section, blocked, quiet) {\n` +
       `  SECTION_TYPE = section; BLOCKED_TYPES = blocked && new Set(blocked);\n` +
       `  QUIET_TYPES = quiet && new Set(quiet);\n` +
@@ -115,9 +118,11 @@ const {
   gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
   applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,
-  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
+  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode, nodeNeighbourhood,
+  wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL,
   editableAt, hoverableAt,
-  __setMap, __setLevelFeats, __setHidden, __setReach, __env, TARGET, prefs, POSTED,
+  __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __edges,
+  __env, TARGET, prefs, POSTED,
 } = mod;
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
@@ -2047,6 +2052,70 @@ const node = (fid, at, nb, tr) => ({
   const empty = networkEdges([]);
   check("no nodes, no edges", empty.edges.length === 0 && empty.dangling === 0);
   check("…and it does not throw on nothing at all", networkEdges(null).edges.length === 0);
+}
+
+/* P7. Hovering a node asks "what does this reach?" — so the mark is its neighbourhood. */
+{
+  const { edges } = networkEdges([
+    node("a", [0, 0], ["b"]),
+    node("b", [1, 0], ["a", "c"]),
+    node("c", [2, 0], []),                 // b→c only: one-way, INTO c
+    node("d", [9, 9], []),                 // connected to nothing
+  ]);
+  const at_b = nodeNeighbourhood(edges, "b");
+  check("both edges touching the node count", at_b.touching === 2);
+  check("…and both ends are named", at_b.fids.sort().join() === "a,c");
+  /**
+   * ⚠️ Both directions. A one-way edge INTO a node is still something it is connected to, and
+   * answering "what does this reach?" with only the ways out is a half-answer about a graph — the
+   * half most likely to be wrong, since the one-way edges are the interesting ones.
+   */
+  check("a node reached only by a ONE-WAY edge still knows about it",
+        nodeNeighbourhood(edges, "c").fids.join() === "b");
+  check("a node connected to nothing has an empty neighbourhood",
+        nodeNeighbourhood(edges, "d").fids.length === 0);
+  check("…and so does one nobody has heard of", nodeNeighbourhood(edges, "zz").fids.length === 0);
+  // Two edges to the same neighbour would light it twice in the filter for no gain.
+  const dup = networkEdges([node("a", [0, 0], ["b"]), node("b", [1, 0], ["a"])]).edges;
+  check("a two-way edge names its far end once", nodeNeighbourhood(dup, "a").fids.length === 1);
+}
+
+/* P8. ⚠️ The regression that made the lines vanish. Olcay: "edges (lines) disappear after a while."
+
+   `wfRemove` runs whenever the layers must be rebuilt — most often because the render swap went
+   live and the nodes moved from the tiles to the GeoJSON source, a few frames after load. "After a
+   while" is exactly that. It used to throw the computed edges away with the layers, and only a
+   fresh `levelpaths` message ever rebuilt them — which does not come again for a level already
+   fetched. So the layers came back, the nodes with them, and the lines came back EMPTY. */
+{
+  gjTeardown(null);
+  HIDDEN_BY_TYPE.clear();
+  const m = fakeMap();
+  __setMap(m);
+  __setNodes([node("a", [0, 0], ["b"]), node("b", [1, 0], ["a"])]);
+  __setHidden(SHOW_WF);
+  applyWayfinding();
+  const info = console.info; console.info = () => {};
+  wfBuildEdges();
+  console.info = info;
+  check("the edges are built", __edges().length === 1);
+  check("…and the source has them",
+        m.sources.get("__wf_edges").data.features.length === 1);
+
+  wfRemove();                                   // exactly what a source flip does
+  check("⚠️ removing the layers does NOT forget what they were drawing", __edges().length === 1);
+  applyWayfinding();                            // …and the rebuild has them again
+  check("the lines come back with the layers",
+        m.sources.get("__wf_edges").data.features.length === 1);
+
+  // Even from nothing: the nodes are the source of truth and the edges derive from them.
+  __setNodes([node("x", [0, 0], ["y"]), node("y", [1, 1], [])]);
+  check("edges rebuild themselves from the nodes on demand", wfEnsureEdges().length === 1);
+
+  __setHidden(null);
+  applyWayfinding();
+  wfRemove();
+  __setNodes([]);
 }
 
 /* ══ REACH — what a section lets you touch ══════════════════════════════════
