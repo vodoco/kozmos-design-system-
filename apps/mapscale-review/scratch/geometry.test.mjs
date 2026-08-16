@@ -44,7 +44,7 @@ writeFileSync(
       `  segClosest, buildSnapIndex, snapQuery, dominantAngle, squareRings,\n` +
       `  angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,\n` +
       `  guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,\n` +
-      `  segPairClosest, findBridge, bridgeRings, combineRings,\n` +
+      `  findBridge, bridgeRings, combineRings,\n` +
       `  ringGap, ringSetArea, largestSet, liesBetween,\n` +
       `  focusView, focusPan, FOCUS_MARGIN,\n` +
       `  unwrapGrid, orientedBox, geomResizeCursor };\n`,
@@ -61,7 +61,7 @@ const {
   segClosest, buildSnapIndex, snapQuery, dominantAngle, squareRings,
   angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,
   guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,
-  segPairClosest, findBridge, bridgeRings, combineRings,
+  findBridge, bridgeRings, combineRings,
   ringGap, ringSetArea, largestSet, liesBetween,
   focusView, focusPan, FOCUS_MARGIN,
   unwrapGrid, orientedBox, geomResizeCursor,
@@ -714,14 +714,10 @@ console.log("\ncombine engine");
 const roomL = close([[0, 0], [100, 0], [100, 60], [0, 60]]);
 const roomR = (gap) => close([[100 + gap, 0], [200 + gap, 0], [200 + gap, 60], [100 + gap, 60]]);
 
-/* C1. Closest approach between two segments, including the parallel case the closed form fumbles. */
-{
-  const c = segPairClosest([0, 0], [100, 0], [0, 10], [100, 10]);
-  check("parallel segments are 10 apart", c && Math.abs(c.d - 10) < 0.2, c ? c.d.toFixed(3) : "null");
-  const d = segPairClosest([0, 0], [10, 0], [50, 0], [60, 0]);
-  check("collinear but apart measures the end gap", d && Math.abs(d.d - 40) < 0.5,
-        d ? d.d.toFixed(3) : "null");
-}
+/* C1 is gone with `segPairClosest`. It measured the closest approach between two segments, which
+   `findBridge` used until the bridge learned to span the whole facing edge rather than touch at a
+   point (2026-08-16). A test kept for a function nobody calls is worse than no test: it reads as
+   coverage of the engine and covers something the engine no longer does. */
 
 /* C2. A wall-sized gap is bridged; a corridor-sized one is not. That threshold is the whole
        safeguard against combining two rooms that merely happen to be on the same floor. */

@@ -136,8 +136,3 @@ export async function levelGeometry(
   pending.set(k, run);
   return run;
 }
-
-/** Drop a level's cached geometry — call after writing a feature back to it. */
-export function forgetLevelGeometry(bid: string, lvl: number): void {
-  cache.delete(key(bid, lvl));
-}

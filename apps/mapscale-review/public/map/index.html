@@ -2476,8 +2476,8 @@ function geomBegin(fid) {
   GEOM = {
     fid,
     kind: f.kind,
-    // deep copies: the source stays untouched until commit
-    rings: f.kind === "area" ? JSON.parse(JSON.stringify(f.rings)) : [],
+    // `geomFind` already hands over rings this editor owns — see the note on it.
+    rings: f.kind === "area" ? f.rings : [],
     point: f.kind === "point" ? f.point.slice() : null,
     history: [],
     future: [],
@@ -2765,6 +2765,12 @@ function geomEnd(commit) {
  *
  * Rings win when a feature somehow has both: the outline is the editable thing.
  */
+/**
+ * ⚠️ **What this returns, the caller owns.** Both sources hand back shared structures otherwise —
+ * `LEVEL_GEOM` holds one object per feature for the life of the level, and a tile feature's
+ * coordinate arrays belong to the tile — so the copy has to happen somewhere, and one owner beats
+ * two. Callers used to copy again on top, which meant serialising a concourse twice to open it.
+ */
 function geomFind(fid) {
   /**
    * **Pointr Cloud first, tiles only if it cannot answer.**
@@ -2780,7 +2786,7 @@ function geomFind(fid) {
       return { kind: "point", point: whole.coordinates[0].slice(), tiles: 0, src: "geojson" };
     const rs = ringsOuter({ geometry: whole });
     // `tiles: 1` because it came whole — the seam warning is about tiles and does not apply here.
-    if (rs.length) return { kind: "area", rings: JSON.parse(JSON.stringify(rs)), tiles: 1, src: "geojson" };
+    if (rs.length) return { kind: "area", rings: rs.map(r => r.map(c => c.slice())), tiles: 1, src: "geojson" };
   }
   const rings = [];
   let point = null;
@@ -2806,7 +2812,8 @@ function geomFind(fid) {
     else if (g.type === "MultiPoint") { if (!point && g.coordinates[0]) point = g.coordinates[0].slice(); }
     else {
       const got = ringsOuter(f);
-      if (got.length) { tiles++; rings.push(...got); }
+      // Copied here, not by the caller — see the ownership note on this function.
+      if (got.length) { tiles++; rings.push(...got.map(r => r.map(c => c.slice()))); }
     }
   }
   if (rings.length) return { kind: "area", rings, tiles, src: "tiles" };
@@ -3473,26 +3480,6 @@ function geomWrapDeg(d) {
 /* COMBINE-ENGINE-START — extracted and tested by scratch/geometry.test.mjs; DOM- and map-free.
    Depends on `ringOpen`, `ringClose` and `ringSignedArea` from the split engine. */
 
-/**
- * The closest approach between two segments: the two points, one on each, that are nearest.
- *
- * Sampled along one segment rather than solved in closed form. The closed-form answer needs four
- * branches for the parallel and endpoint cases and is wrong in a different way in each; this is
- * exact for the perpendicular case, within a fraction of the gap threshold everywhere else, and
- * the threshold is a judgement call to within a few centimetres anyway.
- */
-function segPairClosest(a1, a2, b1, b2, samples) {
-  const n = Math.max(8, samples || 24);
-  let best = null;
-  for (let i = 0; i <= n; i++) {
-    const t = i / n;
-    const p = [a1[0] + (a2[0] - a1[0]) * t, a1[1] + (a2[1] - a1[1]) * t];
-    const q = segClosest(p[0], p[1], b1[0], b1[1], b2[0], b2[1]);
-    const d = Math.hypot(q[0] - p[0], q[1] - p[1]);
-    if (!best || d < best.d) best = { d, p, q, t };
-  }
-  return best;
-}
 
 /** How finely an edge is sampled to find where it faces another. 1/48 of an edge is under 2%. */
 const BRIDGE_SAMPLES = 48;
@@ -4368,7 +4355,7 @@ function geomSetSelection(fids) {
        * has been looking at, and re-querying would let a tile reload change it underneath them.
        */
       kind: g ? g.kind : null,
-      rings: g && g.kind === "area" ? JSON.parse(JSON.stringify(g.rings)) : [],
+      rings: g && g.kind === "area" ? g.rings : [],
       point: g && g.kind === "point" ? g.point.slice() : null,
     };
   });

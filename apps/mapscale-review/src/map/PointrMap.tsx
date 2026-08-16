@@ -461,6 +461,21 @@ const PointrMap = forwardRef<
           ev.data.props
         )
           onGeomIdentity?.(String(ev.data.fid), ev.data.props);
+      } else if (ev.data.type === "error") {
+        /**
+         * ⚠️ **The map shell has been reporting failures into the void.**
+         *
+         * Thirteen sites post one — the boot timing out, a level missing from the building,
+         * `applyLevel` throwing, the floor plan failing to build — and nothing on this side had
+         * ever listened, so a map that failed to start said so to nobody. Consoled rather than
+         * surfaced in the UI: these are engineering faults, not things a reviewer can act on, and
+         * a red banner about `openTarget` would only alarm somebody who cannot fix it.
+         *
+         * Its own branch, deliberately above the guard the others use: an error from a *sibling*
+         * pane's iframe is still worth hearing, and dropping it because it came from the wrong
+         * frame is how the silence started.
+         */
+        if (ev.data.message) console.error("[map]", String(ev.data.message));
       } else if (ev.data.type === "selectclear") {
         if (ev.source === ref.current?.contentWindow && ev.data.fid)
           onSelectClear?.(String(ev.data.fid));
