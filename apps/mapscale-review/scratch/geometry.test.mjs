@@ -83,7 +83,7 @@ writeFileSync(
       `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
       `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,\n` +
       `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,\n` +
-      `  networkComponents, networkRun, networkAdjacency,\n` +
+      `  networkComponents, networkRun, networkAdjacency, deleteNetworkNodes,\n` +
       `  wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL, WF_NODES,\n` +
       `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_CURRENT, WF_R,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
@@ -121,7 +121,7 @@ const {
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
   applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,
   edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
-  networkComponents, networkRun,
+  networkComponents, networkRun, deleteNetworkNodes,
   wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL,
   wfSetEditing, wfNetworkNodes, wfHighlight, WF_CURRENT, WF_R,
   editableAt, hoverableAt,
@@ -2263,6 +2263,97 @@ const node = (fid, at, nb, tr) => ({
   applyWayfinding();
   wfRemove();
   __setNodes([]);
+}
+
+/* P12. Deleting nodes. Olcay: "shift and lasso select should work to select multiple nodes and
+        delete too."
+
+        ⚠️ Not the same act as deleting a corner, and this is where that bites. A polygon with a
+        corner removed is still one polygon; a network with a node removed can be TWO networks, and
+        the corridor that ran through it now goes nowhere — routing stops working, silently, on a
+        floor that still looks fine. */
+{
+  const chain = [
+    node("a", [0, 0], [{ fid: "b", speed: 1 }]),
+    node("b", [1, 0], [{ fid: "a", speed: 1 }, { fid: "c", speed: 0.5 }]),
+    node("c", [2, 0], [{ fid: "b", speed: 0.5 }]),
+  ];
+  const out = deleteNetworkNodes(chain, ["b"]);
+  check("the node goes", out.nodes.length === 2 && !out.nodes.some((n) => n.fid === "b"));
+  /**
+   * ⚠️ The corridor survives. A node that merely carried the path on is CONTRACTED — its two sides
+   * are joined — which is the graph's version of what deleting a redundant corner does to a ring.
+   */
+  check("…and its two sides are joined to each other", out.bridged === 1);
+  check("a → c now exists", out.nodes[0].neighbors.some((n) => n.fid === "c"));
+  check("…and c → a, because both directions existed", out.nodes[1].neighbors.some((n) => n.fid === "a"));
+  // A corridor is no faster than its slowest half.
+  check("the joined edge keeps the slower speed",
+        out.nodes[0].neighbors.find((n) => n.fid === "c").speed === 0.5);
+  check("nothing dangles at a fid that has gone",
+        out.nodes.every((n) => n.neighbors.every((x) => x.fid !== "b")));
+}
+
+/* P13. ⚠️ Direction is preserved per direction: a one-way pair must not quietly become two-way
+        because the node between them went. */
+{
+  //  a → b → c   one-way throughout
+  const oneway = [
+    node("a", [0, 0], ["b"]),
+    node("b", [1, 0], ["c"]),
+    node("c", [2, 0], []),
+  ];
+  const out = deleteNetworkNodes(oneway, ["b"]);
+  check("a → c is made", out.nodes[0].neighbors.some((n) => n.fid === "c"));
+  check("⚠️ …and c → a is NOT — the walk never existed",
+        !out.nodes[1].neighbors.some((n) => n.fid === "a"));
+}
+
+/* P14. A junction cannot be contracted, and is not — joining every pair of its arms would invent
+        corridors nobody drew, through walls. It says so instead. */
+{
+  const star = [
+    node("j", [1, 1], ["a", "b", "c"]),
+    node("a", [0, 0], ["j"]),
+    node("b", [2, 0], ["j"]),
+    node("c", [1, 2], ["j"]),
+  ];
+  const out = deleteNetworkNodes(star, ["j"]);
+  check("the junction goes", out.nodes.length === 3);
+  check("…nothing is invented between its arms",
+        out.nodes.every((n) => n.neighbors.length === 0));
+  check("…and it is REPORTED rather than left to be discovered", out.refused === 1);
+  // Which is the honest outcome: the network is now three networks, and the count says so.
+  const { list } = networkComponents(out.nodes, networkEdges(out.nodes).edges);
+  check("the network really is in pieces now", list.length === 3);
+}
+
+/* P15. Several at once — the lasso's whole point — and the ends of the world. */
+{
+  const chain = [
+    node("a", [0, 0], ["b"]),
+    node("b", [1, 0], ["a", "c"]),
+    node("c", [2, 0], ["b", "d"]),
+    node("d", [3, 0], ["c"], ["upstairs"]),
+  ];
+  const out = deleteNetworkNodes(chain, ["b", "c"]);
+  check("both go at once", out.nodes.length === 2 && out.removed === 2);
+  /**
+   * ⚠️ Neither can be contracted, because each one's far side is the OTHER deleted node — a
+   * contraction has to land on something that survives. Two nodes with one link between them is not
+   * a corridor with a hole in it; it is two ends of a corridor that is gone.
+   */
+  check("…and nothing is invented across the gap they leave",
+        out.nodes.every((n) => n.neighbors.length === 0));
+
+  check("deleting nothing changes nothing", deleteNetworkNodes(chain, []).nodes.length === 4);
+  check("deleting a node nobody has heard of is harmless",
+        deleteNetworkNodes(chain, ["zz"]).nodes.length === 4);
+  // A transition to a node that has gone is a way out of the building that no longer exists.
+  const gone = deleteNetworkNodes(chain, ["d"]);
+  check("the whole network can be deleted", deleteNetworkNodes(chain, ["a", "b", "c", "d"]).nodes.length === 0);
+  check("…and a surviving node keeps its own way off the floor",
+        gone.nodes.every((n) => (n.transitionNeighbors || []).length === 0));
 }
 
 /* ══ REACH — what a section lets you touch ══════════════════════════════════

@@ -528,7 +528,14 @@ export function GeometryToolbar({
           }
         : isNetwork
           ? {
-              text: `Editing this network · ${nodes} node${nodes === 1 ? "" : "s"} · drag any of them`,
+              /**
+               * The selection is the thing most likely to be acted on next, so it outranks the
+               * standing fact about the network — the same order the corner caption follows.
+               */
+              text:
+                selected > 0
+                  ? `${selected} node${selected === 1 ? "" : "s"} selected · drag to move · Delete to remove`
+                  : `Editing this network · ${nodes} node${nodes === 1 ? "" : "s"} · shift-drag to lasso`,
               bad: false,
             }
           : isPoint

@@ -1824,6 +1824,87 @@ function networkRun(edges, fid) {
 }
 
 /**
+ * **Delete nodes from the network** — Olcay, 2026-08-16: *"shift and lasso select should work to
+ * select multiple nodes and delete too."*
+ *
+ * ⚠️ **Deleting a node is an edit to the ADJACENCY, not to a shape**, and that is what makes it
+ * different from deleting a corner. A polygon with a corner removed is still one polygon; a network
+ * with a node removed can be **two networks**, and the corridor that ran through it now goes
+ * nowhere. Routing would simply stop working, silently, on a floor that still looks fine.
+ *
+ * So a node that merely **carried the path on** is *contracted*: its two sides are joined to each
+ * other, in whichever directions the walk actually existed, and the corridor survives. That is the
+ * graph's version of what deleting a redundant corner does to a ring — the shape stays a shape.
+ *
+ * A **junction** cannot be contracted and is not: joining every pair of its arms would invent
+ * corridors nobody drew, through walls. It is removed and its arms are left as they fall, and the
+ * count of what happened is returned so the editor can say so rather than let you find out later.
+ *
+ * Direction is preserved per direction: `a→x` and `x→b` becomes `a→b`, and only that. A one-way
+ * pair does not quietly become two-way because the node between them went.
+ */
+function deleteNetworkNodes(nodes, fids) {
+  const gone = new Set(fids || []);
+  if (!gone.size) return { nodes: nodes || [], removed: 0, bridged: 0, refused: 0 };
+  const byFid = new Map();
+  for (const n of nodes || []) if (n && n.fid) byFid.set(n.fid, n);
+
+  /** `p → x` for every surviving p, so a contraction can be built per direction. */
+  const into = new Map();
+  for (const n of nodes || []) {
+    if (!n || !n.fid || gone.has(n.fid)) continue;
+    for (const nb of n.neighbors || []) {
+      if (!gone.has(nb.fid)) continue;
+      let l = into.get(nb.fid);
+      if (!l) into.set(nb.fid, (l = []));
+      l.push({ fid: n.fid, speed: nb.speed });
+    }
+  }
+
+  /** `x → q` for every surviving q. */
+  const outOf = new Map();
+  for (const f of gone) {
+    const n = byFid.get(f);
+    if (!n) continue;
+    outOf.set(f, (n.neighbors || []).filter(nb => !gone.has(nb.fid) && byFid.has(nb.fid)));
+  }
+
+  const add = new Map();                         // fid → [{fid, speed}] to graft on
+  let bridged = 0, refused = 0;
+  for (const f of gone) {
+    const ins = into.get(f) || [], outs = outOf.get(f) || [];
+    const around = new Set([...ins.map(x => x.fid), ...outs.map(x => x.fid)]);
+    if (around.size !== 2) { if (around.size > 2) refused++; continue; }
+    let made = 0;
+    for (const p of ins) for (const q of outs) {
+      if (p.fid === q.fid) continue;             // a→x→a is not a corridor
+      let l = add.get(p.fid);
+      if (!l) add.set(p.fid, (l = []));
+      // `speed` is per edge; the surviving one keeps the slower of the two it replaces, because a
+      // corridor is no faster than its slowest half.
+      const sp = [p.speed, q.speed].filter(v => typeof v === "number");
+      l.push({ fid: q.fid, speed: sp.length ? Math.min(...sp) : undefined });
+      made++;
+    }
+    if (made) bridged++;
+  }
+
+  const out = [];
+  for (const n of nodes || []) {
+    if (!n || !n.fid || gone.has(n.fid)) continue;
+    const keep = (n.neighbors || []).filter(nb => !gone.has(nb.fid));
+    for (const extra of add.get(n.fid) || [])
+      if (!keep.some(k => k.fid === extra.fid)) keep.push(extra);
+    out.push(Object.assign({}, n, {
+      neighbors: keep,
+      // A transition to a node that has gone is a way out of the building that no longer exists.
+      transitionNeighbors: (n.transitionNeighbors || []).filter(t => !gone.has(t.fid)),
+    }));
+  }
+  return { nodes: out, removed: gone.size, bridged, refused };
+}
+
+/**
  * Move one node and rebuild only the lines that touch it.
  *
  * The whole point is that dragging a node in the editor takes its corridors with it — a network
@@ -1997,7 +2078,7 @@ const WF_SL = "wayfindingnetwork";
 /** Mirrors `NETWORK_SUBTYPE` in the app's taxonomy — the one subType that is network, not exit. */
 const WF_NETWORK_SUBTYPE = "path-node";
 /** The node being edited, marked apart from the rest of its network. */
-const WF_CURRENT = "__wf_current";
+const WF_CURRENT = "__wf_current", WF_SELECTED = "__wf_selected";
 /**
  * How big a node draws, at rest and in edit mode — Olcay, 2026-08-16: *"onHover the dots should not
  * get larger… nodes should get larger in edit mode."*
@@ -2079,7 +2160,7 @@ function wfFilter(network) {
 
 function wfRemove() {
   for (const id of [WF_ARROW, WF_EDGE_HL, WF_EDGE_HIT, WF_EDGE, WF_NODE_HIT, WF_NODE,
-                    WF_TRANSITION, WF_NODE_HL, WF_CURRENT])
+                    WF_TRANSITION, WF_NODE_HL, WF_SELECTED, WF_CURRENT])
     try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
   for (const id of [WF_EDGE_SRC, WF_NODE_SRC])
     try { if (map.getSource(id)) map.removeSource(id); } catch (e) {}
@@ -2212,6 +2293,9 @@ function wfPushEdges() {
  */
 function wfNodeMoved(fid, at) {
   if (!WF_EDGES || !fid || !at) return;
+  // `WF_NODES` is the truth everything else is derived from, so it moves too — otherwise the next
+  // rebuild (a delete, a level pass) would put the node back where it started.
+  for (const n of WF_NODES || []) if (n.fid === fid) n.at = at.slice();
   let moved = moveNetworkNode(WF_EDGES, fid, at);
   // The node's own drawing is ours now too, so it has to move with its lines.
   if (WF_NODE_FC) for (const f of WF_NODE_FC.features)
@@ -2302,6 +2386,7 @@ function wfSetEditing(net, fid) {
     map.setPaintProperty(WF_TRANSITION, "circle-radius", on ? WF_R.transitionEdit : WF_R.transition);
     map.setPaintProperty(WF_NODE_HL, "circle-radius", on ? WF_R_MATCH_EDIT : WF_R_MATCH);
     map.setFilter(WF_CURRENT, on ? ["==", ["get", "fid"], wfEditing.fid] : WF_NONE);
+    if (!on) map.setFilter(WF_SELECTED, WF_NONE);
     // The network you are editing stays lit for as long as you are in it — hover cannot take the
     // mark away, because while editing the mark is no longer answering a question about the pointer.
     if (on) {
@@ -2316,13 +2401,48 @@ function wfSetEditing(net, fid) {
   } catch (e) {}
 }
 
+/**
+ * The selected nodes, marked. Filled rather than ringed, and the same size as the handle, for the
+ * reason the hover mark is: size says *"you can move this"*, and every node in edit mode already
+ * can. Selection is about **which** ones, so selection changes colour.
+ */
+function wfSetSelected() {
+  try {
+    if (!map.getLayer(WF_SELECTED)) return;
+    const sel = GEOM && GEOM.kind === "network" && GEOM.sel.size ? [...GEOM.sel] : [];
+    // ⚠️ `any` of `==` rather than `["in", …]` — trap 10: `in` throws on a feature with no `fid`,
+    // and one throwing expression takes the whole layer down with it.
+    map.setFilter(WF_SELECTED, sel.length
+      ? ["any", ...sel.map(f => ["==", ["get", "fid"], f])] : WF_NONE);
+  } catch (e) {}
+}
+
 /** Every node of one network, as the editor wants them: `{ fid, at }`, ready to drag. */
 function wfNetworkNodes(net) {
   if (!WF_NODE_FC) return [];
-  return WF_NODE_FC.features
-    .filter(f => f.properties.net === net)
-    .map(f => ({ fid: f.properties.fid, at: f.geometry.coordinates.slice(),
-                 subType: f.properties.subType, name: f.properties.name }));
+  const mine = new Set(WF_NODE_FC.features.filter(f => f.properties.net === net)
+                                          .map(f => f.properties.fid));
+  /**
+   * ⚠️ **The whole node, adjacency included** — not just where it is. Deleting one rewrites its
+   * neighbours' links, so the editor's undo has to be able to put those back; a snapshot of
+   * coordinates alone would restore the dots and leave the corridors wrong.
+   */
+  return (WF_NODES || []).filter(n => n && mine.has(n.fid))
+    .map(n => JSON.parse(JSON.stringify(n)));
+}
+
+/**
+ * Put a network's nodes back into the level and rebuild everything from them.
+ *
+ * `WF_NODES` is the single truth — the edges, the components and the collections the map draws are
+ * all derived from it — so a structural edit writes there and lets the rest fall out, rather than
+ * patching four things and hoping they agree.
+ */
+function wfReplaceNetwork(originalFids, nodes) {
+  const gone = new Set(originalFids || []);
+  const rest = (WF_NODES || []).filter(n => n && !gone.has(n.fid));
+  WF_NODES = rest.concat(nodes || []);
+  wfBuildEdges(true);
 }
 
 /** Which network a node belongs to, or `-1` when we do not know. */
@@ -2453,6 +2573,8 @@ function applyWayfinding() {
        * one of these allowed to be bigger than its neighbours, because it is the one the pointer
        * is about to move.
        */
+      map.addLayer(Object.assign({ id: WF_SELECTED, filter: WF_NONE,
+        paint: { "circle-radius": WF_R_MATCH_EDIT, "circle-color": WF_COLOUR.hl } }, base));
       map.addLayer(Object.assign({ id: WF_CURRENT, filter: WF_NONE,
         paint: {
           "circle-radius": WF_R_MATCH_EDIT,
@@ -2478,7 +2600,7 @@ function applyWayfinding() {
      * whatever else the map has been told to hide.
      */
     for (const id of [WF_EDGE, WF_EDGE_HL, WF_EDGE_HIT, WF_ARROW, WF_NODE_HIT, WF_NODE,
-                      WF_TRANSITION, WF_NODE_HL, WF_CURRENT])
+                      WF_TRANSITION, WF_NODE_HL, WF_SELECTED, WF_CURRENT])
       if (map.getLayer(id) && map.getLayoutProperty(id, "visibility") === "none")
         map.setLayoutProperty(id, "visibility", "visible");
     // The pin storm the product would otherwise draw for the same features.
@@ -3477,6 +3599,19 @@ function start() {
     const fid = hit && hit.properties && hit.properties.fid;
     if (!fid) return;
     ev.stopPropagation();
+    /**
+     * Shift toggles, and never starts a drag — the same rule a room's corners follow, so the one
+     * modifier means one thing across the whole editor.
+     */
+    if (ev.shiftKey) {
+      if (GEOM.sel.has(fid)) GEOM.sel.delete(fid); else GEOM.sel.add(fid);
+      wfSetSelected();
+      post("geomstate", geomState());
+      return;
+    }
+    // Dragging an unselected node is a fresh single selection; dragging one already in the
+    // selection takes the whole set with it.
+    if (!GEOM.sel.has(fid)) { GEOM.sel.clear(); GEOM.sel.add(fid); wfSetSelected(); }
     // The node you grab becomes the one the panel is about — you are editing the network, and this
     // is where in it you are.
     if (fid !== GEOM.fid) {
@@ -3594,10 +3729,10 @@ function start() {
      * document is the map and has no text input in it — the properties panel lives in the parent,
      * so typing a name there never reaches this listener.
      */
-    if ((ev.key === "Delete" || ev.key === "Backspace") &&
-        GEOM && GEOM.kind === "area" && GEOM.sel.size) {
+    if ((ev.key === "Delete" || ev.key === "Backspace") && GEOM && GEOM.sel.size &&
+        (GEOM.kind === "area" || GEOM.kind === "network")) {
       ev.preventDefault();
-      geomDeleteSelected();
+      if (GEOM.kind === "network") geomDeleteNodes(); else geomDeleteSelected();
       return;
     }
     /**
@@ -3656,8 +3791,10 @@ function start() {
    * shift-click ON a corner reaches its toggle and never starts a marquee.
    */
   document.addEventListener("mousedown", ev => {
-    // Reshape only: corners are the subject of that mode and of no other.
-    if (!GEOM || GEOM.kind !== "area" || GEOM.mode !== "vertices") return;
+    // Reshape only for a shape — corners are the subject of that mode and of no other. A network
+    // has one mode and its nodes are always the subject, so it marquees whenever it is open.
+    const net = GEOM && GEOM.kind === "network";
+    if (!GEOM || (!net && (GEOM.kind !== "area" || GEOM.mode !== "vertices"))) return;
     if (!ev.shiftKey || ev.button !== 0) return;
     if (!document.getElementById("map").contains(ev.target)) return;
     ev.preventDefault();
@@ -3675,7 +3812,8 @@ function start() {
       try { map.dragPan.enable(); } catch (e) {}
       if (!GEOM || !GEOM.band) return;
       // Additive: shift is already down, and shift-to-add is what it means everywhere else.
-      geomSelectIn(GEOM.band.a, GEOM.band.b, true);
+      if (GEOM.kind === "network") { wfSelectIn(GEOM.band.a, GEOM.band.b, true); wfSetSelected(); }
+      else geomSelectIn(GEOM.band.a, GEOM.band.b, true);
       GEOM.band = null;
       geomDraw(); post("geomstate", geomState());
     };
@@ -3992,10 +4130,18 @@ function geomSnap() {
 function geomRestore(s) {
   GEOM.rings = JSON.parse(JSON.stringify(s.rings));
   GEOM.point = s.point ? s.point.slice() : null;
-  GEOM.nodes = s.nodes ? JSON.parse(JSON.stringify(s.nodes)) : null;
-  // The map draws the network from its own collection, so an undo has to put the nodes back there
-  // too — otherwise the outline rewinds and the lines on screen do not.
-  if (GEOM.nodes) for (const n of GEOM.nodes) wfNodeMoved(n.fid, n.at);
+  /**
+   * ⚠️ **A network's undo puts the NODES back, not just their positions** — deleting one rewrites
+   * its neighbours' links, so restoring coordinates alone would return the dots and leave the
+   * corridors wrong. `wfReplaceNetwork` writes them into the level and everything else — the edges,
+   * the components, the collections the map draws — is rebuilt from there.
+   */
+  if (s.nodes) {
+    const now = (GEOM.nodes || []).map(n => n.fid);
+    GEOM.nodes = JSON.parse(JSON.stringify(s.nodes));
+    wfReplaceNetwork(now, GEOM.nodes);
+    wfSetSelected();
+  }
   GEOM.pieceOf = s.pieceOf.slice();
   GEOM.nextPiece = s.nextPiece;
   GEOM.absorbed = s.absorbed.slice();
@@ -4086,6 +4232,59 @@ function geomSelectIn(a, b, additive) {
       if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) GEOM.sel.add(selKey(ri, ci));
     }
   });
+}
+
+/**
+ * The lasso, over a network's nodes. Keyed by `fid` rather than by `ring:corner`, because a network
+ * has no rings and its nodes have names of their own — which also means a selection survives a
+ * delete, where a ring's indices would all have shifted under it.
+ */
+function wfSelectIn(a, b, additive) {
+  if (!GEOM || GEOM.kind !== "network") return;
+  if (!additive) GEOM.sel.clear();
+  const p0 = map.project(a), p1 = map.project(b);
+  const x0 = Math.min(p0.x, p1.x), x1 = Math.max(p0.x, p1.x);
+  const y0 = Math.min(p0.y, p1.y), y1 = Math.max(p0.y, p1.y);
+  for (const n of GEOM.nodes || []) {
+    const p = map.project(n.at);
+    if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) GEOM.sel.add(n.fid);
+  }
+}
+
+/**
+ * **Delete the selected nodes from the network.**
+ *
+ * ⚠️ Not the same act as deleting a corner, and the difference is worth stating: a polygon with a
+ * corner removed is still one polygon, while a network with a node removed can be **two networks**
+ * and a corridor that ran through it now goes nowhere. `deleteNetworkNodes` contracts the ones that
+ * merely carried a path on, so the corridor survives; a junction cannot be contracted without
+ * inventing corridors through walls, so it is removed and what happened is **said**.
+ */
+function geomDeleteNodes() {
+  if (!GEOM || GEOM.kind !== "network" || !GEOM.sel.size) return;
+  geomPush();
+  const before = GEOM.nodes.map(n => n.fid);
+  const res = deleteNetworkNodes(GEOM.nodes, [...GEOM.sel]);
+  wfReplaceNetwork(before, res.nodes);
+  GEOM.nodes = res.nodes.map(n => JSON.parse(JSON.stringify(n)));
+  GEOM.sel.clear();
+  /**
+   * ⚠️ **The panel may have been on one of them.** If the node the editor is anchored to has just
+   * been deleted, the editor moves to whatever is left of the network rather than pointing at
+   * nothing — and if nothing is left, the edit is over.
+   */
+  if (!res.nodes.some(n => n.fid === GEOM.fid)) {
+    if (!res.nodes.length) return geomEnd(false);
+    geomTakeIdentity(res.nodes[0].fid);
+  }
+  wfSetEditing(GEOM.net, GEOM.fid);
+  wfSetSelected();
+  post("geomerror", { fid: GEOM.fid, message:
+    res.removed + " node" + (res.removed === 1 ? "" : "s") + " removed" +
+    (res.bridged ? " · " + res.bridged + " corridor" + (res.bridged === 1 ? "" : "s") + " joined up" : "") +
+    (res.refused ? " · ⚠️ " + res.refused + " junction" + (res.refused === 1 ? "" : "s") +
+                   " could not be joined — the network may be in pieces" : "") });
+  post("geomstate", geomState());
 }
 
 /**
@@ -6474,6 +6673,12 @@ function geomDown(ev, what) {
   const origRings = JSON.parse(JSON.stringify(GEOM.rings));
   const origPoint = GEOM.point ? GEOM.point.slice() : null;
   /**
+   * Where every node of the network stood when the gesture began, by `fid`. Same reason as
+   * `origRings`: every frame is computed from the START, not from the frame before it, so a slow
+   * drag and a fast one end in the same place.
+   */
+  const origNodes = new Map((GEOM.nodes || []).map(n => [n.fid, n.at.slice()]));
+  /**
    * Built once, here, for the life of the gesture — the map cannot move while a shape is being
    * dragged, so these screen coordinates stay true, and rebuilding per frame would cost more than
    * the frame has. Null when Snap is off, which turns every query below into a no-op.
@@ -6578,11 +6783,31 @@ function geomDown(ev, what) {
         GEOM.guides = GEOM.guideAt = null;
       }
       const q = map.unproject(hit ? [hit.x, hit.y] : [px, py]);
-      const n = GEOM.nodes && GEOM.nodes.find(x => x.fid === what.fid);
-      if (n) {
-        n.at = [q.lng, q.lat];
-        // The corridors follow the node while it moves — see `wfNodeMoved`.
-        wfNodeMoved(what.fid, n.at);
+      const lead = GEOM.nodes && GEOM.nodes.find(x => x.fid === what.fid);
+      if (lead) {
+        /**
+         * **The node you grabbed goes where the pointer is; the rest of the selection follows by
+         * the same screen offset** — the same rule a room's selected corners follow, so a selection
+         * keeps its shape and simply moves. Snapping applies to the one under the cursor only:
+         * snapping each of them to its own nearest neighbour would deform the group into whatever
+         * happened to be lying about.
+         */
+        const p0 = map.project(origNodes.get(what.fid));
+        const p1 = map.project([q.lng, q.lat]);
+        const dx = p1.x - p0.x, dy = p1.y - p0.y;
+        for (const n of GEOM.nodes) {
+          if (n.fid !== what.fid && !(GEOM.sel.has(n.fid) && GEOM.sel.has(what.fid))) continue;
+          const from = origNodes.get(n.fid);
+          if (!from) continue;
+          const at = n.fid === what.fid ? [q.lng, q.lat] : (() => {
+            const p = map.project(from);
+            const to = map.unproject([p.x + dx, p.y + dy]);
+            return [to.lng, to.lat];
+          })();
+          n.at = at;
+          // The corridors follow each node while it moves — see `wfNodeMoved`.
+          wfNodeMoved(n.fid, at);
+        }
       }
 
     } else if (what.kind === "vertex") {
