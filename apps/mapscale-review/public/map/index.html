@@ -2419,7 +2419,7 @@ function geomBegin(fid) {
     sel: new Set(),
     /** The marquee being dragged, in lng/lat: `{ a, b }`. */
     band: null,
-    /** The live rotate/scale readout while a transform handle is down: `{ text, snapped, x, y }`. */
+    /** The live rotate/scale readout while a transform handle is down: `{ text, x, y }`. */
     xform: null,
     /** What snapping has caught this frame, for the indicator: `{ x, y, kind }` in screen space. */
     snapHit: null,
@@ -4437,12 +4437,18 @@ function geomDraw() {
       /**
        * The live readout, beside the pointer rather than pinned to the box — your eye is on the
        * handle you are dragging, and a number in the corner of the shape is a number you have to go
-       * and find. It says when the modifier is holding it, because "37°" and "35° because I am
-       * holding Shift" are different facts.
+       * and find.
+       *
+       * ⚠️ **The word "snap" used to trail the number and is gone** (Olcay, 2026-08-16: *"we don't
+       * need to add 'snap' next to angle"*). The argument for it was that "37°" and "35° because I
+       * am holding Shift" are different facts — but the person reading it is the person holding the
+       * key, so it was telling them something they were in the middle of doing. It also made the
+       * label change width mid-drag, which is the one thing a number pinned to a moving cursor
+       * should not do.
        */
       if (GEOM.xform) {
         const tx = GEOM.xform.x + 16, ty = GEOM.xform.y - 12;
-        const label = GEOM.xform.text + (GEOM.xform.snapped ? "  snap" : "");
+        const label = GEOM.xform.text;
         const w = label.length * 7.1 + 14;
         l.appendChild(el("rect", { x: tx, y: ty - 12, width: w, height: 21, rx: 5,
                                    fill: "#0b369c" }));
@@ -4757,8 +4763,7 @@ function geomDown(ev, what) {
         const q = map.unproject([cx + dx * cos - dy * sin, cy + dx * sin + dy * cos]);
         return [q.lng, q.lat];
       });
-      GEOM.xform = { text: (deg > 0 ? "+" : "") + Math.round(deg) + "°",
-                     snapped: geomSnapping(e), x: pt.x, y: pt.y };
+      GEOM.xform = { text: (deg > 0 ? "+" : "") + Math.round(deg) + "°", x: pt.x, y: pt.y };
 
     } else if (what.kind === "scale") {
       let k = Math.hypot(pt.x - cx, pt.y - cy) / d0;
@@ -4770,8 +4775,7 @@ function geomDown(ev, what) {
         const q = map.unproject([cx + (p.x - cx) * k, cy + (p.y - cy) * k]);
         return [q.lng, q.lat];
       });
-      GEOM.xform = { text: Math.round(k * 100) + "%",
-                     snapped: geomSnapping(e), x: pt.x, y: pt.y };
+      GEOM.xform = { text: Math.round(k * 100) + "%", x: pt.x, y: pt.y };
 
     } else {
       let dx = pt.x - start.x, dy = pt.y - start.y;
