@@ -1866,6 +1866,7 @@ function start() {
           const q = map.unproject([g.x, g.y]);
           GEOM.cutB = [q.lng, q.lat];
           GEOM.guides = g.guides;
+          GEOM.guideAt = [g.x, g.y];
           geomDraw();
         }
         return;
@@ -2272,6 +2273,8 @@ function geomBegin(fid) {
     snapHit: null,
     /** The guides in force this frame — see the guide engine. Drawn, never persisted. */
     guides: null,
+    /** Where the guides put the point, in screen space — what the tracking line runs to. */
+    guideAt: null,
     /**
      * Which piece each ring belongs to, parallel to `rings`. Everything starts as piece 0 — one
      * feature, one piece, however many rings it arrived with — and `geomApplyCut` mints new ids.
@@ -2507,7 +2510,7 @@ function geomSetMode(mode) {
   GEOM.cutA = GEOM.cutB = null;
   GEOM.cutRefs = null;
   GEOM.cutBases = null;
-  GEOM.guides = null;
+  GEOM.guides = GEOM.guideAt = null;
   geomDraw(); post("geomstate", geomState());
 }
 function geomToggleSnap() { if (GEOM) { GEOM.snap = !GEOM.snap; post("geomstate", geomState()); } }
@@ -3051,15 +3054,18 @@ function findBridge(ringA, ringB, maxGap) {
  * traversed the same way round; mixing them produces a figure-of-eight.
  */
 function bridgeRings(ringA, ringB, maxGap) {
-  const br = findBridge(ringA, ringB, maxGap);
-  if (!br) return null;
+  /**
+   * ⚠️ **Winding is normalised BEFORE the bridge is found, not after.** The first version searched
+   * the originals, reversed them, and searched again so the indices would still line up — twice the
+   * work, and two chances for the two searches to disagree about which opening was widest. Reverse
+   * first and there is one search and one answer.
+   */
   const sameWinding = r =>
     ringSignedArea(ringOpen(r)) < 0 ? ringOpen(r).slice().reverse() : ringOpen(r).slice();
   const A = sameWinding(ringA), B = sameWinding(ringB);
-  // findBridge indexed the ORIGINAL rings; re-find on the normalised ones so the feet still match.
-  const br2 = findBridge(ringClose(A), ringClose(B), maxGap);
-  if (!br2) return null;
-  const { i, j, at } = br2;
+  const br = findBridge(ringClose(A), ringClose(B), maxGap);
+  if (!br) return null;
+  const { i, j, at } = br;
   const out = [];
   // A, from just after the bridge foot, all the way round to the foot itself.
   for (let k = 0; k < A.length; k++) out.push(A[(i + 1 + k) % A.length].slice());
@@ -3544,7 +3550,7 @@ function geomCutClick(lngLat) {
   GEOM.cutA = GEOM.cutB = null;
   GEOM.cutRefs = null;
   GEOM.cutBases = null;
-  GEOM.guides = null;
+  GEOM.guides = GEOM.guideAt = null;
   // A refused cut stays in split mode, because the message it just posted says "try again" — being
   // dropped back into Points would contradict it. A cut that landed goes to Points, where the new
   // outlines can be tidied up.
@@ -3558,7 +3564,7 @@ function geomCancelCut() {
   GEOM.cutA = GEOM.cutB = null;
   GEOM.cutRefs = null;
   GEOM.cutBases = null;
-  GEOM.guides = null;
+  GEOM.guides = GEOM.guideAt = null;
   geomDraw(); post("geomstate", geomState());
   return true;
 }
@@ -3764,13 +3770,22 @@ function geomDraw() {
         t.textContent = label;
         l.appendChild(t);
       } else {
-        // A tracking guide runs from the corner it is tracking, so you can see WHICH one you agree
-        // with — an unattached line only tells you that something, somewhere, lines up.
-        l.appendChild(el("line", { x1: g.ref[0], y1: g.ref[1],
-                                   x2: g.axis === "x" ? g.ref[0] : (GEOM.snapHit ? GEOM.snapHit.x : g.ref[0]),
-                                   y2: g.axis === "y" ? g.ref[1] : (GEOM.snapHit ? GEOM.snapHit.y : g.ref[1]),
-                                   stroke: "#00875a", "stroke-width": 1,
-                                   "stroke-dasharray": "3 4", "stroke-opacity": .9 }));
+        /**
+         * The stretch between the corner being tracked and where the point actually went — the bit
+         * that says WHICH corner you agree with, rather than merely that something somewhere lines
+         * up.
+         *
+         * ⚠️ It used to reach for `GEOM.snapHit`, which is **always null here**: guides only run
+         * when snapping caught nothing. Every ternary fell through to the reference's own
+         * coordinates, so the line was drawn from the corner to itself — zero-length, invisible,
+         * and silently doing nothing since the day it was written. It reads the resolved point now.
+         */
+        const to = GEOM.guideAt;
+        if (to) {
+          l.appendChild(el("line", { x1: g.ref[0], y1: g.ref[1], x2: to[0], y2: to[1],
+                                     stroke: "#00875a", "stroke-width": 1.5,
+                                     "stroke-dasharray": "3 4", "stroke-opacity": .95 }));
+        }
         l.appendChild(el("line", {
           x1: g.axis === "x" ? g.ref[0] : g.ref[0] - far,
           y1: g.axis === "x" ? g.ref[1] - far : g.ref[1],
@@ -3929,7 +3944,21 @@ function geomDown(ev, what) {
     if (what.kind === "point") {
       const hit = snapAt(pt.x, pt.y);
       GEOM.snapHit = hit;
-      const q = map.unproject(hit ? [hit.x, hit.y] : [pt.x, pt.y]);
+      /**
+       * A point has no neighbours, so there is no edge to take an angle from — but it can still be
+       * lined up with the corners around it, which is most of what placing a POI *is*. Alignment
+       * guides only; `resolveGuides` handles a null anchor by simply not offering an angle.
+       */
+      let px = pt.x, py = pt.y;
+      if (!hit && GEOM.snap) {
+        const g = resolveGuides(null, pt.x, pt.y, guideRefs, geomSnapping(e));
+        px = g.x; py = g.y;
+        GEOM.guides = g.guides;
+        GEOM.guideAt = [g.x, g.y];
+      } else {
+        GEOM.guides = GEOM.guideAt = null;
+      }
+      const q = map.unproject(hit ? [hit.x, hit.y] : [px, py]);
       GEOM.point = [q.lng, q.lat];
 
     } else if (what.kind === "vertex") {
@@ -3956,8 +3985,9 @@ function geomDown(ev, what) {
                                 pt.x, pt.y, guideRefs, geomSnapping(e));
         gx = g.x; gy = g.y;
         GEOM.guides = g.guides;
+        GEOM.guideAt = [g.x, g.y];
       } else {
-        GEOM.guides = null;
+        GEOM.guides = GEOM.guideAt = null;
       }
       const q = map.unproject(hit ? [hit.x, hit.y] : [gx, gy]);
       /**
@@ -4049,7 +4079,7 @@ function geomDown(ev, what) {
   const up = () => {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
-    if (GEOM) { GEOM.xform = null; GEOM.snapHit = null; GEOM.guides = null; }
+    if (GEOM) { GEOM.xform = null; GEOM.snapHit = null; GEOM.guides = GEOM.guideAt = null; }
     if (moved) { geomDraw(); post("geomstate", geomState()); }
   };
   document.addEventListener("mousemove", move);
