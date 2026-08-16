@@ -1858,9 +1858,11 @@ function start() {
            * The anchor is the cut's first click, so the angle guide measures the cut itself.
            */
           const a = map.project(GEOM.cutA);
-          const g = resolveGuides([a.x, a.y], ev.point.x, ev.point.y,
-                                  GEOM.cutRefs || [], geomSnapping(ev.originalEvent),
-                                  GEOM.cutBases || []);
+          const g = GEOM.snap
+            ? resolveGuides([a.x, a.y], ev.point.x, ev.point.y,
+                            GEOM.cutRefs || [], geomSnapping(ev.originalEvent),
+                            GEOM.cutBases || [])
+            : { x: ev.point.x, y: ev.point.y, guides: [] };
           const q = map.unproject([g.x, g.y]);
           GEOM.cutB = [q.lng, q.lat];
           GEOM.guides = g.guides;
@@ -2630,10 +2632,33 @@ function snapQuery(idx, px, py, radius) {
 
 /** Guides every this many degrees. 15 gives 30/45/60/90 without crowding. */
 const GUIDE_STEP_DEG = 15;
-/** Caught without asking — tight, so you have to have been aiming for it. */
-const GUIDE_TIGHT_DEG = 2.5;
-/** Caught with Shift/⌥ held: half a step, so the nearest guide cannot be missed. */
+/**
+ * ⚠️ **Not every guide deserves the same magnet** (Olcay, 2026-08-16: *"sometimes we miss 90 when
+ * it's 95 or 85"*). Measured: at 2.5° flat, a corner sitting at 85° or 95° is 5° from the guide and
+ * misses it — and 85–95° is exactly where a traced or auto-extracted floor plan lands. The one
+ * angle everybody is reaching for was the one hardest to catch.
+ *
+ * **90° and 0° are not like 75°.** Square, and carries-straight-on, are what a building is made of;
+ * 75° is a number you would have had to mean. So the important ones get a wider magnet and the
+ * incidental ones stay tight — which is also what keeps the wide ones from being noise.
+ *
+ * Nothing may exceed half a step: past that a guide starts stealing from its neighbour.
+ */
+const GUIDE_TOLS = { cardinal: 6, half: 4, other: 2.5 };
+/** With Shift/⌥ every guide gets the maximum — half a step, so the nearest cannot be missed. */
 const GUIDE_WIDE_DEG = GUIDE_STEP_DEG / 2;
+const GUIDE_WIDE_TOLS = {
+  cardinal: GUIDE_WIDE_DEG, half: GUIDE_WIDE_DEG, other: GUIDE_WIDE_DEG,
+};
+
+/** How much slack this particular angle gets: square and straight-on earn the most. */
+function guideTolFor(relDeg, tols) {
+  const q = Math.abs(((relDeg % 90) + 90) % 90);
+  if (Math.min(q, 90 - q) < 1e-9) return tols.cardinal;
+  const h = Math.abs(((relDeg % 45) + 45) % 45);
+  if (Math.min(h, 45 - h) < 1e-9) return tols.half;
+  return tols.other;
+}
 /** How near an alignment has to be, in pixels. */
 const GUIDE_ALIGN_PX = 6;
 
@@ -2681,12 +2706,17 @@ function angleGuide(ax, ay, px, py, stepDeg, tolDeg, baseDeg) {
  * An empty `bases` falls back to `[0]`, i.e. screen axes. That is only right when there is no
  * geometry to refer to — the first edge of a shape being drawn from nothing.
  */
-function bestAngleGuide(ax, ay, px, py, stepDeg, tolDeg, bases) {
+function bestAngleGuide(ax, ay, px, py, stepDeg, tols, bases) {
   const list = bases && bases.length ? bases : [0];
+  // A number still means a flat tolerance — the engine stays usable at one fixed value.
+  const t = typeof tols === "number" ? { cardinal: tols, half: tols, other: tols } : tols;
+  const ceiling = Math.max(t.cardinal, t.half, t.other);
   let best = null;
   for (const b of list) {
-    const g = angleGuide(ax, ay, px, py, stepDeg, tolDeg, b);
-    if (g && (!best || g.off < best.off)) best = g;
+    // Found at the widest any guide may claim, then held to what THIS angle has earned.
+    const g = angleGuide(ax, ay, px, py, stepDeg, ceiling, b);
+    if (!g || g.off > guideTolFor(g.rel, t)) continue;
+    if (!best || g.off < best.off) best = g;
   }
   return best;
 }
@@ -2753,7 +2783,7 @@ function resolveGuides(anchors, px, py, refs, wide, bases) {
 
   if (list.length && wide) {
     const hits = list
-      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_DEG, GUIDE_WIDE_DEG, an.bases))
+      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_DEG, GUIDE_WIDE_TOLS, an.bases))
       .filter(Boolean);
     if (hits.length >= 2) {
       const dir = g => [Math.cos(g.deg * Math.PI / 180), Math.sin(g.deg * Math.PI / 180)];
@@ -2772,7 +2802,7 @@ function resolveGuides(anchors, px, py, refs, wide, bases) {
     // Unmodified, the same two-ray crossing is still allowed — it just has to be earned at the
     // tight tolerance rather than handed over by the modifier.
     const hits = list
-      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_DEG, GUIDE_TIGHT_DEG, an.bases))
+      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_DEG, GUIDE_TOLS, an.bases))
       .filter(Boolean);
     if (hits.length >= 2) {
       const dir = g => [Math.cos(g.deg * Math.PI / 180), Math.sin(g.deg * Math.PI / 180)];
@@ -3756,7 +3786,13 @@ function geomDown(ev, what) {
        * you are dragging — which is the edge you want straight.
        */
       let gx = pt.x, gy = pt.y;
-      if (!hit) {
+      /**
+       * ⚠️ **Guides obey the Snap toggle**, so the toggle means one thing — *the tool holds you to
+       * something* — and turning it off is the way to place a corner at a deliberate 85°, which a
+       * 6° magnet on 90° would otherwise make unreachable. Without an escape, a helpful magnet is
+       * just a tool overruling you.
+       */
+      if (!hit && GEOM.snap) {
         const ring = origScreen[what.ri] || [];
         const g = resolveGuides(geomVertexAnchors(ring, what.ci, gridDeg),
                                 pt.x, pt.y, guideRefs, geomSnapping(e));
