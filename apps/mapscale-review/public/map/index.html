@@ -2104,8 +2104,6 @@ const WF_NODE_HIT = "__wf_node_hit", WF_EDGE_HIT = "__wf_edge_hit";
 const WF_SL = "wayfindingnetwork";
 /** Mirrors `NETWORK_SUBTYPE` in the app's taxonomy — the one subType that is network, not exit. */
 const WF_NETWORK_SUBTYPE = "path-node";
-/** The node being edited, marked apart from the rest of its network. */
-const WF_CURRENT = "__wf_current", WF_SELECTED = "__wf_selected";
 /** The edge under the pointer while editing: what Delete would unlink. */
 const WF_CUT = "__wf_cut";
 /**
@@ -2122,15 +2120,9 @@ const WF_R = {
   node: wfR(1.2, 2.6, 4.5), nodeEdit: wfR(3, 5, 7),
   transition: wfR(2.5, 5, 8), transitionEdit: wfR(4, 7, 10),
 };
-/** The highlight matches whichever tier it is over, so lighting a network never resizes it. */
-const WF_R_MATCH = ["case", ["==", ["get", "subType"], WF_NETWORK_SUBTYPE], WF_R.node, WF_R.transition];
-const WF_R_MATCH_EDIT = ["case", ["==", ["get", "subType"], WF_NETWORK_SUBTYPE],
-                         WF_R.nodeEdit, WF_R.transitionEdit];
 const WF_HIT_R = 11, WF_HIT_W = 14;
 /** Our own node source: the only one that can carry which network a node belongs to. */
 const WF_NODE_SRC = "__wf_nodes";
-/** The hover marks: the node under the pointer with its neighbours, and the edges between them. */
-const WF_EDGE_HL = "__wf_edge_hl", WF_NODE_HL = "__wf_node_hl";
 /**
  * ⚠️ Invented, and the only colours in this file that are. Every other colour here is either the
  * diff palette or the product's own, and these have neither: the DS has no token for a wayfinding
@@ -2202,8 +2194,8 @@ function wfFilter(network) {
 }
 
 function wfRemove() {
-  for (const id of [WF_ARROW, WF_EDGE_HL, WF_EDGE_HIT, WF_EDGE, WF_NODE_HIT, WF_NODE,
-                    WF_TRANSITION, WF_NODE_HL, WF_SELECTED, WF_CURRENT, WF_CUT])
+  for (const id of [WF_ARROW, WF_EDGE_HIT, WF_EDGE, WF_NODE_HIT, WF_NODE,
+                    WF_TRANSITION, WF_CUT])
     try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
   for (const id of [WF_EDGE_SRC, WF_NODE_SRC])
     try { if (map.getSource(id)) map.removeSource(id); } catch (e) {}
@@ -2347,6 +2339,70 @@ function wfNodeMoved(fid, at) {
 }
 
 /**
+ * **What colour every node and edge is, right now** — Olcay, 2026-08-16, twice: *"there should be a
+ * color change"*, then *"hover and selected states not working on the nodes."*
+ *
+ * ⚠️ **This replaced three layers stacked over the nodes, and the layers were the bug.** The hover
+ * mark, the selection and the current node were each a separate circle layer above `WF_NODE`,
+ * filtered to the right features. Every filter was provably right — a harness set them and read
+ * them back — and on screen nothing changed, twice. Stacking a layer over another at the same
+ * radius depends on draw order, on both layers surviving every rebuild, and on nothing in the SDK's
+ * re-assertion passes touching either: three things to be right, none of them visible when wrong.
+ *
+ * A **paint expression on the layer you can already see** has none of that. There is one layer, it
+ * is the one drawing the dot, and its colour is a function of the state.
+ *
+ * The states, in the order they win — most specific first, which is how `case` evaluates:
+ *
+ * | | |
+ * |---|---|
+ * | the node you are **on** while editing | white with a navy ring — you are about to move this one |
+ * | **selected** | navy with a white collar |
+ * | in the **lit** network | sky: a different **hue** from the slate, not a shade of it |
+ * | otherwise | slate for a path node, blue for a transition |
+ */
+const WF_SEL_CAP = 300;
+let wfHoverNet = -1;
+function wfPaint() {
+  if (!map || !map.getLayer(WF_NODE)) return;
+  try {
+    const sel = GEOM && GEOM.kind === "network" && GEOM.sel.size
+      ? [...GEOM.sel].slice(0, WF_SEL_CAP) : [];
+    /**
+     * ⚠️ `any` of `==` rather than `["in", …]` — trap 10: `in` throws on a feature with no `fid`,
+     * and one throwing expression takes the whole layer down, so selecting one node would cost you
+     * the network.
+     */
+    const isSel = sel.length ? ["any", ...sel.map(f => ["==", ["get", "fid"], f])] : false;
+    const isCur = wfEditing && wfEditing.fid ? ["==", ["get", "fid"], wfEditing.fid] : false;
+    /**
+     * While editing, the **corridors** carry the lit state and the nodes do not: lighting all 926 of
+     * them paints over the two states that matter in there — which is selected, and which you are
+     * on. Hovering, where there is no selection to bury, lights both.
+     */
+    const litNet = wfEditing ? wfEditing.net : wfHoverNet;
+    const isLit = litNet >= 0 ? ["==", ["get", "net"], litNet] : false;
+    const nodeLit = wfEditing ? false : isLit;
+
+    for (const [id, base] of [[WF_NODE, WF_COLOUR.node], [WF_TRANSITION, WF_COLOUR.transition]]) {
+      if (!map.getLayer(id)) continue;
+      map.setPaintProperty(id, "circle-color",
+        ["case", isCur, "#ffffff", isSel, WF_COLOUR.sel, nodeLit, WF_COLOUR.hl, base]);
+      map.setPaintProperty(id, "circle-stroke-color",
+        ["case", isCur, WF_COLOUR.sel, "#ffffff"]);
+      map.setPaintProperty(id, "circle-stroke-width",
+        ["case", isCur, 2.5, isSel, 1.5, id === WF_TRANSITION ? 1.5 : 0]);
+    }
+    if (map.getLayer(WF_EDGE)) {
+      map.setPaintProperty(WF_EDGE, "line-color", ["case", isLit, WF_COLOUR.hl, WF_COLOUR.edge]);
+      map.setPaintProperty(WF_EDGE, "line-width", ["case", isLit,
+        ["interpolate", ["linear"], ["zoom"], 15, 1.4, 18, 2.4, 21, 3.6],
+        ["interpolate", ["linear"], ["zoom"], 15, 0.6, 18, 1.4, 21, 2.4]]);
+    }
+  } catch (e) {}
+}
+
+/**
  * **Hovering lights the whole network** — Olcay, 2026-08-16: *"the whole network should highlight
  * when hovered."*
  *
@@ -2375,29 +2431,15 @@ function wfHighlight(from) {
   if (wfHover === fid) return;
   wfHover = fid;
   try {
-    if (!map.getLayer(WF_EDGE_HL) || !map.getLayer(WF_NODE_HL)) return;
-    if (!fid) {
-      // A filter nothing matches, rather than removing the layer: one `setFilter`, and the layer
-      // keeps its place in the draw order for the next hover.
-      map.setFilter(WF_EDGE_HL, WF_NONE);
-      map.setFilter(WF_NODE_HL, WF_NONE);
-      return;
-    }
-    const net = wfNetOf(fid);
-    if (net >= 0) {
-      map.setFilter(WF_EDGE_HL, ["==", ["get", "net"], net]);
-      map.setFilter(WF_NODE_HL, ["==", ["get", "net"], net]);
-      return;
-    }
+    if (!fid) { wfHoverNet = -1; wfPaint(); highlightFeatures(null); return; }
+    wfHoverNet = fid ? wfNetOf(fid) : -1;
+    wfPaint();
     /**
-     * No network id, which means the nodes are coming from the tiles because the paths fetch could
-     * not answer. Naming the fids is slower and the graph is only partly known — and it is still a
-     * better answer than no mark at all.
+     * No network id means the nodes are coming from the **tiles**, because the paths fetch could not
+     * answer — there is no graph to light. The SDK's own mark on the one node under the pointer is
+     * at least honest about how much is known.
      */
-    const run = networkRun(wfEnsureEdges(), fid);
-    map.setFilter(WF_EDGE_HL, ["any", ...run.pairs.map(([x, y]) =>
-      ["all", ["==", ["get", "from"], x], ["==", ["get", "to"], y]])]);
-    map.setFilter(WF_NODE_HL, ["any", ...run.fids.map(f => ["==", ["get", "fid"], f])]);
+    highlightFeatures(fid && wfHoverNet < 0 ? { fid } : null);
   } catch (e) {}
 }
 
@@ -2427,26 +2469,16 @@ function wfSetEditing(net, fid) {
     const on = !!wfEditing;
     map.setPaintProperty(WF_NODE, "circle-radius", on ? WF_R.nodeEdit : WF_R.node);
     map.setPaintProperty(WF_TRANSITION, "circle-radius", on ? WF_R.transitionEdit : WF_R.transition);
-    map.setPaintProperty(WF_NODE_HL, "circle-radius", on ? WF_R_MATCH_EDIT : WF_R_MATCH);
-    map.setFilter(WF_CURRENT, on ? ["==", ["get", "fid"], wfEditing.fid] : WF_NONE);
-    if (!on) { map.setFilter(WF_SELECTED, WF_NONE); map.setFilter(WF_CUT, WF_NONE); }
+    if (!on) {
+      wfHover = null; wfHoverNet = -1;
+      try { map.setFilter(WF_CUT, WF_NONE); } catch (e) {}
+    }
     // The network you are editing stays lit for as long as you are in it — hover cannot take the
     // mark away, because while editing the mark is no longer answering a question about the pointer.
-    if (on) {
-      wfHover = "editing";
-      /**
-       * ⚠️ **The EDGES stay lit, the nodes do not.** Lighting every node of the network you are
-       * editing paints over the two states that actually matter while you are in it — which node is
-       * selected, and which one you are on — and 926 identical lit dots say nothing anyway. The lit
-       * corridors are what say "this network"; the nodes are left to say something more useful.
-       */
-      map.setFilter(WF_EDGE_HL, ["==", ["get", "net"], wfEditing.net]);
-      map.setFilter(WF_NODE_HL, WF_NONE);
-    } else {
-      wfHover = null;
-      map.setFilter(WF_EDGE_HL, WF_NONE);
-      map.setFilter(WF_NODE_HL, WF_NONE);
-    }
+    // Hover cannot take the mark away from an edit in progress.
+    if (on) wfHover = "editing";
+    // Lit, selected and current are all one expression per layer now — see `wfPaint`.
+    wfPaint();
   } catch (e) {}
 }
 
@@ -2455,16 +2487,7 @@ function wfSetEditing(net, fid) {
  * reason the hover mark is: size says *"you can move this"*, and every node in edit mode already
  * can. Selection is about **which** ones, so selection changes colour.
  */
-function wfSetSelected() {
-  try {
-    if (!map.getLayer(WF_SELECTED)) return;
-    const sel = GEOM && GEOM.kind === "network" && GEOM.sel.size ? [...GEOM.sel] : [];
-    // ⚠️ `any` of `==` rather than `["in", …]` — trap 10: `in` throws on a feature with no `fid`,
-    // and one throwing expression takes the whole layer down with it.
-    map.setFilter(WF_SELECTED, sel.length
-      ? ["any", ...sel.map(f => ["==", ["get", "fid"], f])] : WF_NONE);
-  } catch (e) {}
-}
+function wfSetSelected() { wfPaint(); }
 
 /**
  * The edge under the pointer while editing, held so Delete knows what it would unlink.
@@ -2574,17 +2597,6 @@ function applyWayfinding() {
           "line-opacity": 0.9,
         } });
       /**
-       * The hover mark for the edges — above the plain ones so it reads as a highlight rather than
-       * a different kind of corridor, and below the nodes so it never covers one.
-       */
-      map.addLayer({ id: WF_EDGE_HL, type: "line", source: WF_EDGE_SRC,
-        filter: ["==", ["get", "from"], " none"],
-        layout: { "line-cap": "round" },
-        paint: {
-          "line-color": WF_COLOUR.hl,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 15, 1.8, 18, 3, 21, 4.5],
-        } });
-      /**
        * ⚠️ **Arrows on the ONE-WAY edges only.** Two-way is the ordinary case on a floor and
        * marking it would put an arrowhead every 70px across the whole network — the same mistake as
        * the pin storm, in a different shape. The exception is what needs saying, so an edge with no
@@ -2641,36 +2653,11 @@ function applyWayfinding() {
           "circle-stroke-width": 1.5,
         } }, base));
       /**
-       * The mark for the nodes, drawn last so it sits over both tiers.
-       *
-       * ⚠️ **The same size as the node it marks** (Olcay, 2026-08-16: *"onHover the dots should not
-       * get larger"*). It used to be a ring two pixels wider, which meant hovering a network made
-       * four hundred dots swell at once — a whole floor breathing at you for asking a question. It
-       * recolours in place instead, matching whichever tier it lands on, so a transition stays the
-       * bigger mark even while it is lit.
+       * ⚠️ **No mark layers above these two.** The hover, the selection and the current node
+       * used to be three more circle layers stacked here, each filtered to the right features —
+       * and twice they were reported as simply not working, with every filter provably correct.
+       * They are paint expressions on these layers now: see `wfPaint`.
        */
-      map.addLayer(Object.assign({ id: WF_NODE_HL, filter: WF_NONE,
-        paint: { "circle-radius": WF_R_MATCH, "circle-color": WF_COLOUR.hl } }, base));
-      /**
-       * The node you are actually editing, marked apart from the rest of its network — the only
-       * one of these allowed to be bigger than its neighbours, because it is the one the pointer
-       * is about to move.
-       */
-      map.addLayer(Object.assign({ id: WF_SELECTED, filter: WF_NONE,
-        paint: {
-          "circle-radius": WF_R_MATCH_EDIT,
-          "circle-color": WF_COLOUR.sel,
-          // A white collar, so a selected node separates from its neighbours AND from the floor.
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 1.5,
-        } }, base));
-      map.addLayer(Object.assign({ id: WF_CURRENT, filter: WF_NONE,
-        paint: {
-          "circle-radius": WF_R_MATCH_EDIT,
-          "circle-color": "#ffffff",
-          "circle-stroke-color": WF_COLOUR.hl,
-          "circle-stroke-width": 2.5,
-        } }, base));
       wfSource = src.source;
       wfLevel = TARGET.level;
       /**
@@ -2696,8 +2683,8 @@ function applyWayfinding() {
      * pass costs four reads and makes the promise literal: on this section the network is drawn,
      * whatever else the map has been told to hide.
      */
-    for (const id of [WF_EDGE, WF_EDGE_HL, WF_EDGE_HIT, WF_ARROW, WF_NODE_HIT, WF_NODE,
-                      WF_TRANSITION, WF_NODE_HL, WF_SELECTED, WF_CURRENT, WF_CUT])
+    for (const id of [WF_EDGE, WF_EDGE_HIT, WF_ARROW, WF_NODE_HIT, WF_NODE,
+                      WF_TRANSITION, WF_CUT])
       if (map.getLayer(id) && map.getLayoutProperty(id, "visibility") === "none")
         map.setLayoutProperty(id, "visibility", "visible");
     // The pin storm the product would otherwise draw for the same features.

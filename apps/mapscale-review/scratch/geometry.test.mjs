@@ -50,6 +50,13 @@ const engine = BLOCKS.map((name) => {
  */
 const PRELUDE = `
 let map = null;
+/**
+ * ⚠️ **The editor's state, which the paint expressions read.** Leaving it out of these stubs is not
+ * a missing convenience: every one of these helpers wraps its body in try/catch, so an undeclared
+ * global becomes a silent no-op — the map draws nothing new and says nothing about why. That is
+ * precisely the failure that was reported twice as "the highlight isn't working".
+ */
+let GEOM = null;
 const TARGET = { level: 0, building: "B2", site: "S" };
 const prefs = { floorplan: true, hidePoiLabels: false, geojsonFloor: true };
 const FP_LAYERS = [];
@@ -85,12 +92,16 @@ writeFileSync(
       `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,\n` +
       `  networkComponents, networkRun, networkAdjacency, deleteNetworkNodes,\n` +
       `  unlinkNetworkNodes,\n` +
-      `  wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL, WF_NODES,\n` +
-      `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_CURRENT, WF_R,\n` +
+      `  wfBuildEdges, wfEnsureEdges, WF_NODES, wfPaint,\n` +
+      `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
       `export function __setNodes(n) { WF_NODES = n; WF_EDGES = null; }\n` +
+      `export function __sel(f) {\n` +
+      `  GEOM = f.length ? { kind: "network", sel: new Set(f), nodes: [], net: 0 } : null;\n` +
+      `  wfPaint();\n` +
+      `}\n` +
       `export function __edges() { return WF_EDGES; }\n` +
       `export function __setReach(section, blocked, quiet) {\n` +
       `  SECTION_TYPE = section; BLOCKED_TYPES = blocked && new Set(blocked);\n` +
@@ -123,10 +134,10 @@ const {
   applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,
   edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
   networkComponents, networkRun, deleteNetworkNodes, unlinkNetworkNodes,
-  wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL,
-  wfSetEditing, wfNetworkNodes, wfHighlight, WF_CURRENT, WF_R,
+  wfBuildEdges, wfEnsureEdges, wfPaint,
+  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R,
   editableAt, hoverableAt,
-  __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __edges,
+  __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __sel, __edges,
   __env, TARGET, prefs, POSTED,
 } = mod;
 
@@ -2203,12 +2214,15 @@ const node = (fid, at, nb, tr) => ({
   __setNodes([]);
 }
 
-/* P11. Edit mode. Olcay: "onHover the dots should not get larger… I should be able to edit the
-        whole network. Once in edit mode we should keep it highlighted. Nodes should get larger in
-        edit mode when I'm editing each. Now highlight the current node while editing."
+/* P11. The three states, and the ONE mechanism that draws them. Olcay: "onHover the dots should not
+        get larger… nodes should get larger in edit mode… there should be a color change…" and then,
+        twice over: "hover and selected states not working on the nodes."
 
-        Three states, three marks, and each says a different thing: at rest the network is texture,
-        hovered it recolours IN PLACE, and edited every node of it grows into a handle. */
+        ⚠️ They were three circle layers stacked over the nodes, each filtered to the right features.
+        Every filter was provably correct — this harness set them and read them back — and on screen
+        nothing changed. Stacking depends on draw order, on both layers surviving every rebuild, and
+        on nothing else touching either: three things to be right, none visible when wrong. A paint
+        expression on the layer you can already SEE has none of that. */
 {
   gjTeardown(null);
   HIDDEN_BY_TYPE.clear();
@@ -2222,51 +2236,58 @@ const node = (fid, at, nb, tr) => ({
   console.info = info;
 
   const R = (id) => JSON.stringify(m.getPaintProperty(id, "circle-radius"));
+  const C = (id) => JSON.stringify(m.getPaintProperty(id, "circle-color"));
   const rest = R(WF_NODE);
+  const plain = C(WF_NODE);
 
-  // ⚠️ A hover must not resize anything: the mark matches whatever tier it lands on.
+  // ⚠️ Only one layer draws a node, so a colour change lands where you are looking.
+  check("nothing is stacked over the nodes",
+        !m.getLayer("__wf_node_hl") && !m.getLayer("__wf_selected") && !m.getLayer("__wf_current"));
+
   wfHighlight("a");
-  check("hovering leaves the dots exactly the size they were", R(WF_NODE) === rest);
-  check("…and the mark is the same size as the node it marks",
-        R(WF_NODE_HL).indexOf("case") > 0);
+  check("hovering changes the node's own colour", C(WF_NODE) !== plain);
+  check("…and does NOT change its size", R(WF_NODE) === rest);
+  check("…lighting the whole network by its id, not by naming every node",
+        C(WF_NODE).indexOf('"net"') > 0);
+  check("…and the corridors with it",
+        JSON.stringify(m.getPaintProperty(WF_EDGE, "line-color")).indexOf('"net"') > 0);
   wfHighlight(null);
+  /**
+   * Not "the colour is the literal again" — it is a `case` that now falls THROUGH to the base,
+   * which is the same pixel and a different expression. What must be true is that nothing is
+   * singled out any more.
+   */
+  check("leaving stops singling anything out",
+        C(WF_NODE).indexOf('"net"') < 0 && C(WF_NODE).indexOf('"fid"') < 0);
+  check("…and the base colour is still what it falls back to", C(WF_NODE).indexOf(plain.slice(1, -1)) > 0);
 
   // Editing is a state, not a question — and only the state changes what you can DO with a node.
   wfSetEditing(0, "a");
   check("every node of the network grows into a handle", R(WF_NODE) !== rest);
-  check("…and so do the transitions", JSON.stringify(m.getPaintProperty(WF_TRANSITION, "circle-radius"))
-        === JSON.stringify(WF_R.transitionEdit));
-  /**
-   * ⚠️ The **edges** stay lit and the nodes do not. Lighting every node of the network you are
-   * editing paints over the two states that actually matter while you are in it — which node is
-   * selected and which one you are on — and 926 identical lit dots say nothing anyway.
-   */
-  check("the network stays lit for as long as you are in it — by its corridors",
-        JSON.stringify(m.getFilter(WF_EDGE_HL)) === JSON.stringify(["==", ["get", "net"], 0]));
-  check("…and its nodes are left free to say something more useful",
-        JSON.stringify(m.getFilter(WF_NODE_HL)) === JSON.stringify(["==", ["get", "fid"], " none"]));
-  check("…and the node you are on is marked apart from it",
-        JSON.stringify(m.getFilter(WF_CURRENT)) === JSON.stringify(["==", ["get", "fid"], "a"]));
+  check("…and so do the transitions",
+        JSON.stringify(m.getPaintProperty(WF_TRANSITION, "circle-radius"))
+          === JSON.stringify(WF_R.transitionEdit));
+  check("the network stays lit by its corridors",
+        JSON.stringify(m.getPaintProperty(WF_EDGE, "line-color")).indexOf('"net"') > 0);
+  check("the node you are on is marked apart", C(WF_NODE).indexOf('"a"') > 0);
 
-  // ⚠️ Hover cannot take the mark away while editing: the mark is no longer about the pointer.
-  wfHighlight("z");
-  check("hovering elsewhere does not steal the edit's highlight",
-        JSON.stringify(m.getFilter(WF_EDGE_HL)) === JSON.stringify(["==", ["get", "net"], 0]));
-
-  wfSetEditing(0, "b");
-  check("moving to another node moves the current mark",
-        JSON.stringify(m.getFilter(WF_CURRENT)) === JSON.stringify(["==", ["get", "fid"], "b"]));
+  // Selection is a colour on the node itself, so it cannot be hidden behind anything.
+  __sel(["a", "b"]);
+  check("selected nodes change colour", C(WF_NODE).indexOf('"b"') > 0);
+  check("…without changing size", R(WF_NODE) === JSON.stringify(WF_R.nodeEdit));
+  __sel([]);
 
   wfSetEditing(null);
   check("leaving edit mode puts the dots back", R(WF_NODE) === rest);
-  check("…and clears every mark",
-        [WF_CURRENT, WF_NODE_HL, WF_EDGE_HL].every(
-          (id) => JSON.stringify(m.getFilter(id)) === JSON.stringify(["==", ["get", "fid"], " none"])));
+  check("…and stops singling anything out",
+        C(WF_NODE).indexOf('"net"') < 0 && C(WF_NODE).indexOf('"fid"') < 0);
 
   // The editor is handed the whole network, not the node that was clicked.
   const netNodes = wfNetworkNodes(0);
   check("the editor gets every node of the network", netNodes.length === 2);
   check("…each with somewhere to be dragged to", netNodes.every((n) => n.fid && n.at.length === 2));
+  check("…and its adjacency, so undo can put a deleted one back",
+        netNodes.every((n) => Array.isArray(n.neighbors)));
 
   __setHidden(null);
   applyWayfinding();
