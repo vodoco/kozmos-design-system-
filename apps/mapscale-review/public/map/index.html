@@ -1739,6 +1739,77 @@ function nodeNeighbourhood(edges, fid) {
 }
 
 /**
+ * Who is next to whom, ignoring direction.
+ *
+ * Direction is about whether you may *walk* it; this is about what the corridor is *shaped* like,
+ * and a one-way corridor is still one corridor.
+ */
+function networkAdjacency(edges) {
+  const adj = new Map();
+  const add = (a, b, e) => {
+    let l = adj.get(a);
+    if (!l) adj.set(a, (l = []));
+    if (!l.some(x => x.fid === b)) l.push({ fid: b, edge: e });
+  };
+  for (const e of edges || []) { add(e.properties.from, e.properties.to, e); add(e.properties.to, e.properties.from, e); }
+  return adj;
+}
+
+/**
+ * **The whole path through a node or an edge** — Olcay, 2026-08-16: *"line or path should highlight
+ * the whole path. Not just the neighbouring nodes and lines."*
+ *
+ * Walk outward in every direction and **keep going through any node that merely carries the path
+ * on** — one in, one out — stopping at a junction or a dead end. That is what a person means by a
+ * path here: the corridor between two places where you could have chosen differently. A node's
+ * immediate neighbours are one hop of it, which is why lighting only those looked so thin against a
+ * network of long straight runs.
+ *
+ * ⚠️ **One rule, no special case for junctions.** Hovering a junction walks out along every run
+ * that meets there and stops at the next junctions — so it lights the paths that junction joins,
+ * which is the useful answer to "what is this?" for a junction. Special-casing it to "just its own
+ * edges" would make the mark mean two different things depending on where the pointer happened to
+ * land, and you cannot tell a junction from a corridor node by looking before you hover it.
+ *
+ * Capped, and it says when it hit the cap: a filter is rebuilt on every hover, and a run of
+ * thousands is not worth the frame it would cost.
+ */
+function pathRun(edges, startFids, cap) {
+  const limit = cap || 400;
+  const adj = networkAdjacency(edges);
+  const fids = new Set();
+  const pairs = [];
+  const seenEdge = new Set();
+  let capped = false;
+  /** A node that only carries the path on: exactly two ways out of it. */
+  const carriesOn = f => (adj.get(f) || []).length === 2;
+
+  const queue = [];
+  // The start is always in, edges or not: a node with nothing attached is still the node you are
+  // pointing at, and a hover that lights nothing reads as a hover that failed.
+  for (const f of startFids || []) if (f) { fids.add(f); queue.push(f); }
+  while (queue.length) {
+    const at = queue.shift();
+    // Walk THROUGH a node only if it carries the path on. A start node is always walked out of —
+    // that is the hover — and a junction reached later is where this run ends.
+    const isStart = (startFids || []).indexOf(at) >= 0;
+    if (!isStart && !carriesOn(at)) continue;
+    for (const step of adj.get(at) || []) {
+      const key = step.edge.properties.from + " " + step.edge.properties.to;
+      if (!seenEdge.has(key)) {
+        seenEdge.add(key);
+        pairs.push([step.edge.properties.from, step.edge.properties.to]);
+      }
+      if (fids.has(step.fid)) continue;
+      if (fids.size >= limit) { capped = true; continue; }
+      fids.add(step.fid);
+      queue.push(step.fid);
+    }
+  }
+  return { fids: [...fids], pairs, capped };
+}
+
+/**
  * Move one node and rebuild only the lines that touch it.
  *
  * The whole point is that dragging a node in the editor takes its corridors with it — a network
@@ -2050,40 +2121,68 @@ function wfNodeMoved(fid, at) {
 }
 
 /**
- * **Hovering a node lights the node, its neighbours and the edges between them** — Olcay,
- * 2026-08-16: *"let's not show selected marker onHover. Instead highlight the edges and nodes."*
+ * **Hovering lights the whole path** — Olcay, 2026-08-16: *"let's not show selected marker onHover.
+ * Instead highlight the edges and nodes."* Then, seeing it: *"line or path should highlight the
+ * whole path. Not just the neighbouring nodes and lines."*
  *
  * The SDK's own selection layer draws a **map pin** for a point feature: a green teardrop the size
  * of a building, planted over the very corridors you are inspecting. It is the right mark for
  * finding a shop on a floor and the wrong one for reading a graph — it answers *"where is it?"*
- * when the question here is *"what does it connect to?"*.
+ * when the question here is *"what does this connect to?"*.
  *
- * So the mark is the answer to that question instead. Neighbours as well as the node itself,
- * because a node on its own is a dot you are already pointing at; the reach is the information.
+ * And the answer to that question is a **path**, not a hop. One node's immediate neighbours are one
+ * step of a corridor that runs the length of a terminal; lighting only those looked thin against a
+ * network of long straight runs, which is exactly what Olcay saw. `pathRun` walks the run out to
+ * the junctions at both ends.
  *
- * ⚠️ `any` of `==` rather than `["in", …]` — trap 10: `in` throws on a feature with no `fid`, and
- * one throwing expression takes the entire layer down with it. Capped, because a filter is rebuilt
- * on every hover and a node with fifty neighbours is not worth the frame.
+ * A line and a node are two ways of pointing at the same path, so they take the same route in:
+ * `from` is one node's `fid`, or an edge as `[fromFid, toFid]`.
  */
-const WF_HL_CAP = 24;
+const WF_HL_CAP = 400;
+const WF_NONE = ["==", ["get", "fid"], " none"];
 let wfHover = null;
-function wfHighlight(fid) {
-  if (wfHover === fid) return;
-  wfHover = fid || null;
+function wfHighlight(from) {
+  const key = Array.isArray(from) ? from.join(" ") : from || null;
+  if (wfHover === key) return;
+  wfHover = key;
   try {
     if (!map.getLayer(WF_EDGE_HL) || !map.getLayer(WF_NODE_HL)) return;
-    if (!wfHover) {
-      // `false` rather than removing the layer: a filter nothing matches is one setFilter, and the
-      // layer stays where it is in the draw order for the next hover.
-      map.setFilter(WF_EDGE_HL, ["==", ["get", "from"], " none"]);
-      map.setFilter(WF_NODE_HL, ["==", ["get", "fid"], " none"]);
+    if (!key) {
+      // A filter nothing matches, rather than removing the layer: one `setFilter`, and the layer
+      // keeps its place in the draw order for the next hover.
+      map.setFilter(WF_EDGE_HL, WF_NONE);
+      map.setFilter(WF_NODE_HL, WF_NONE);
       return;
     }
-    map.setFilter(WF_EDGE_HL, ["any", ["==", ["get", "from"], wfHover],
-                                      ["==", ["get", "to"], wfHover]]);
-    const near = nodeNeighbourhood(wfEnsureEdges(), wfHover).fids.slice(0, WF_HL_CAP);
-    map.setFilter(WF_NODE_HL, ["any", ...[wfHover].concat(near).map(f => ["==", ["get", "fid"], f])]);
+    const run = pathRun(wfEnsureEdges(), Array.isArray(from) ? from : [from], WF_HL_CAP);
+    /**
+     * ⚠️ `any` of `==` rather than `["in", …]` — trap 10: `in` throws on a feature with no `fid`,
+     * and one throwing expression takes the whole layer down with it, so the cost of a highlight
+     * would be a floor with no network on it.
+     *
+     * ⚠️ Edges are matched on the **pair**, not on either end: two junctions can be joined directly
+     * as well as through the run between them, and matching one end would light that shortcut too.
+     */
+    map.setFilter(WF_EDGE_HL, ["any", ...run.pairs.map(([a, b]) =>
+      ["all", ["==", ["get", "from"], a], ["==", ["get", "to"], b]])]);
+    map.setFilter(WF_NODE_HL, ["any", ...run.fids.map(f => ["==", ["get", "fid"], f])]);
   } catch (e) {}
+}
+
+/**
+ * The edge under the pointer, as `[from, to]`, or `null`.
+ *
+ * Queried on the highlight layer's twin rather than on everything: `queryRenderedFeatures` at a
+ * point is source-agnostic and would happily return a room, and an edge is the one thing here with
+ * no `fid` to tell it apart by.
+ */
+function wfEdgeAt(point) {
+  try {
+    if (!map.getLayer(WF_EDGE)) return null;
+    const hit = (map.queryRenderedFeatures(point, { layers: [WF_EDGE] }) || [])[0];
+    const p = hit && hit.properties;
+    return p && p.from && p.to ? [p.from, p.to] : null;
+  } catch (e) { return null; }
 }
 
 function applyWayfinding() {
@@ -3097,7 +3196,21 @@ function start() {
     const f = hoverableAt(ev.point);
     const fid = f && f.properties && f.properties.fid;
     if (!f) {
-      if (HOVER_FEATURE) { HOVER_FEATURE = null; hoverMark(null); renderTip(); }
+      /**
+       * **A line is a way of pointing at a path too** (Olcay, 2026-08-16: *"line or path should
+       * highlight the whole path"*). Nodes win where they overlap — they are the smaller, more
+       * deliberate target, and they are what you can actually edit — so this only asks once
+       * `hoverableAt` has found nothing.
+       *
+       * No card: an edge has no `fid`, so *"Click to edit"* would be a promise nothing here keeps.
+       * The highlight is the whole of what a line has to say.
+       */
+      const line = wfEdgeAt(ev.point);
+      if (HOVER_FEATURE) { HOVER_FEATURE = null; renderTip(); }
+      wfHighlight(line);
+      if (!line) highlightFeatures(null);
+      // Not a pointer cursor: nothing here answers a click on a line, and a cursor that says
+      // otherwise is a promise the map does not keep. The highlight is the feedback.
       map.getCanvas().style.cursor = "";
       return;
     }

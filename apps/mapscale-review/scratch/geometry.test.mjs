@@ -83,6 +83,7 @@ writeFileSync(
       `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
       `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,\n` +
       `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode, nodeNeighbourhood,\n` +
+      `  pathRun, networkAdjacency,\n` +
       `  wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL, WF_NODES,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
@@ -119,6 +120,7 @@ const {
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
   applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,
   edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode, nodeNeighbourhood,
+  pathRun,
   wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL,
   editableAt, hoverableAt,
   __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __edges,
@@ -2078,6 +2080,70 @@ const node = (fid, at, nb, tr) => ({
   // Two edges to the same neighbour would light it twice in the filter for no gain.
   const dup = networkEdges([node("a", [0, 0], ["b"]), node("b", [1, 0], ["a"])]).edges;
   check("a two-way edge names its far end once", nodeNeighbourhood(dup, "a").fids.length === 1);
+}
+
+/* P9. The whole path, not one hop. Olcay, seeing the neighbourhood mark: "line or path should
+       highlight the whole path. Not just the neighbouring nodes and lines."
+
+       Walk out in every direction and keep going through any node that merely carries the path on —
+       one in, one out — stopping at a junction or a dead end. That is what a person means by a path
+       here: the corridor between two places where you could have chosen differently. */
+{
+  //  a — b — c — d — e        a straight run, with a spur off c to f
+  //          |
+  //          f
+  const chain = networkEdges([
+    node("a", [0, 0], ["b"]),
+    node("b", [1, 0], ["a", "c"]),
+    node("c", [2, 0], ["b", "d", "f"]),      // a junction: three ways out
+    node("d", [3, 0], ["c", "e"]),
+    node("e", [4, 0], ["d"]),
+    node("f", [2, 1], ["c"]),
+  ]).edges;
+
+  const fromB = pathRun(chain, ["b"]);
+  check("hovering a corridor node reaches the dead end one way…", fromB.fids.indexOf("a") >= 0);
+  check("…and the junction the other way", fromB.fids.indexOf("c") >= 0);
+  // ⚠️ It STOPS at the junction: past it are other paths, and lighting them would be the network.
+  check("…and stops there", fromB.fids.indexOf("d") < 0 && fromB.fids.indexOf("f") < 0);
+  check("the run is a,b,c", fromB.fids.slice().sort().join() === "a,b,c");
+  check("with the edges between them", fromB.pairs.length === 2);
+
+  // The whole point of the change: one hop would have been b's neighbours only.
+  const hop = nodeNeighbourhood(chain, "b");
+  check("…which is more than the one hop it replaced", fromB.fids.length > hop.fids.length + 0);
+
+  /**
+   * ⚠️ One rule, no special case for junctions: hovering one walks out along every run that meets
+   * there and stops at the next junctions. Special-casing it would make the mark mean two different
+   * things depending on where the pointer landed — and you cannot tell a junction from a corridor
+   * node by looking, before you hover it.
+   */
+  const fromC = pathRun(chain, ["c"]);
+  check("hovering a junction lights the paths it joins",
+        fromC.fids.slice().sort().join() === "a,b,c,d,e,f");
+
+  // A line is the other way of pointing at the same path.
+  const fromEdge = pathRun(chain, ["a", "b"]);
+  check("hovering the LINE lights the same run as hovering its node",
+        fromEdge.fids.slice().sort().join() === fromB.fids.slice().sort().join());
+
+  // A lone node with nothing attached is its own path: a hover that lights NOTHING reads as a
+  // hover that failed, so the node you are pointing at is always in.
+  check("a node connected to nothing is just itself", pathRun(chain, ["zz"]).fids.join() === "zz");
+  check("…and no edges at all is not an error", pathRun([], ["a"]).fids.join() === "a");
+}
+
+/* P10. Capped, and it says so — the filter is rebuilt on every hover. */
+{
+  // A long chain: 60 nodes, every one of them carrying the path on.
+  const many = [];
+  for (let i = 0; i < 60; i++) many.push(node("n" + i, [i, 0], i < 59 ? ["n" + (i + 1)] : []));
+  const all = networkEdges(many).edges;
+  check("a long corridor is walked to its end", pathRun(all, ["n30"]).fids.length === 60);
+  const cut = pathRun(all, ["n30"], 10);
+  check("…but not past the cap", cut.fids.length <= 10);
+  check("…and it says it was cut short rather than looking like a short corridor", cut.capped);
 }
 
 /* P8. ⚠️ The regression that made the lines vanish. Olcay: "edges (lines) disappear after a while."
