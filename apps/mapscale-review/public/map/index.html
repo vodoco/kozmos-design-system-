@@ -1851,7 +1851,20 @@ function start() {
       if (GEOM.mode === "split") {
         dropCard();
         map.getCanvas().style.cursor = "crosshair";
-        if (GEOM.cutA) { GEOM.cutB = [ev.lngLat.lng, ev.lngLat.lat]; geomDraw(); }
+        if (GEOM.cutA) {
+          /**
+           * The cut gets the same guides as everything else — a wall is laid at a right angle far
+           * more often than at 37°, and until now the only way to cut squarely was to aim by eye.
+           * The anchor is the cut's first click, so the angle guide measures the cut itself.
+           */
+          const a = map.project(GEOM.cutA);
+          const g = resolveGuides([a.x, a.y], ev.point.x, ev.point.y,
+                                  GEOM.cutRefs || [], geomSnapping(ev.originalEvent));
+          const q = map.unproject([g.x, g.y]);
+          GEOM.cutB = [q.lng, q.lat];
+          GEOM.guides = g.guides;
+          geomDraw();
+        }
         return;
       }
       /**
@@ -2254,6 +2267,8 @@ function geomBegin(fid) {
     xform: null,
     /** What snapping has caught this frame, for the indicator: `{ x, y, kind }` in screen space. */
     snapHit: null,
+    /** The guides in force this frame — see the guide engine. Drawn, never persisted. */
+    guides: null,
     /**
      * Which piece each ring belongs to, parallel to `rings`. Everything starts as piece 0 — one
      * feature, one piece, however many rings it arrived with — and `geomApplyCut` mints new ids.
@@ -2487,6 +2502,8 @@ function geomSetMode(mode) {
   if (!GEOM) return;
   GEOM.mode = mode;
   GEOM.cutA = GEOM.cutB = null;
+  GEOM.cutRefs = null;
+  GEOM.guides = null;
   geomDraw(); post("geomstate", geomState());
 }
 function geomToggleSnap() { if (GEOM) { GEOM.snap = !GEOM.snap; post("geomstate", geomState()); } }
@@ -2590,6 +2607,112 @@ function snapQuery(idx, px, py, radius) {
   return null;
 }
 /* SNAP-ENGINE-END */
+
+/* ── guides ────────────────────────────────────────────────────────────────────
+   Olcay, 2026-08-16: *"we should have guidelines (like split) for angles and tracking guides
+   towards the next destination following cursor."*
+
+   Two different things, and they answer two different questions:
+
+   **Angle guides** answer *"is this edge straight?"* — a ray from the anchor at every 15°, so a wall
+   can be laid at exactly 90° or 45° instead of 89.4°.
+
+   **Tracking guides** answer *"does this line up with that?"* — a dashed line to another feature's
+   corner when the cursor shares its x or y. This is the one that makes a new room agree with the
+   one next door, and it is worth more than the angles on a real floor plan.
+
+   ⚠️ **Both can apply at once and that is the good case**: x from one corner, y from another, and
+   the cursor lands exactly on their intersection — a point neither guide could have given alone. */
+
+/* GUIDE-ENGINE-START — extracted and tested by scratch/geometry.test.mjs; keep DOM- and map-free. */
+
+/** Guides every this many degrees. 15 gives 30/45/60/90 without crowding. */
+const GUIDE_STEP_DEG = 15;
+/** Caught without asking — tight, so you have to have been aiming for it. */
+const GUIDE_TIGHT_DEG = 2.5;
+/** Caught with Shift/⌥ held: half a step, so the nearest guide cannot be missed. */
+const GUIDE_WIDE_DEG = GUIDE_STEP_DEG / 2;
+/** How near an alignment has to be, in pixels. */
+const GUIDE_ALIGN_PX = 6;
+
+/**
+ * The cursor projected onto the nearest ray of `stepDeg` from the anchor, if it is within `tolDeg`.
+ *
+ * Perpendicular projection rather than "same distance, new angle" — the point should slide onto the
+ * guide from where it is, not jump along it.
+ */
+function angleGuide(ax, ay, px, py, stepDeg, tolDeg) {
+  const dx = px - ax, dy = py - ay;
+  if (Math.hypot(dx, dy) < 1e-6) return null;
+  const deg = Math.atan2(dy, dx) * 180 / Math.PI;
+  const snapped = Math.round(deg / stepDeg) * stepDeg;
+  let diff = (deg - snapped) % 360;
+  if (diff > 180) diff -= 360;
+  if (diff <= -180) diff += 360;
+  if (Math.abs(diff) > tolDeg) return null;
+  const a = snapped * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+  const t = dx * ca + dy * sa;
+  return { x: ax + ca * t, y: ay + sa * t, deg: ((snapped % 360) + 360) % 360, from: [ax, ay] };
+}
+
+/**
+ * Reference points the cursor shares an axis with — at most one per axis, the nearest.
+ *
+ * Returned separately rather than resolved, because x and y are independent: catching both is how
+ * you land on the corner of a room that does not exist yet.
+ */
+function alignGuides(px, py, refs, tolPx) {
+  let bx = null, bxd = tolPx, by = null, byd = tolPx;
+  for (const r of refs) {
+    const dx = Math.abs(r[0] - px);
+    if (dx < bxd) { bxd = dx; bx = r; }
+    const dy = Math.abs(r[1] - py);
+    if (dy < byd) { byd = dy; by = r; }
+  }
+  const out = [];
+  if (bx) out.push({ axis: "x", ref: bx });
+  if (by) out.push({ axis: "y", ref: by });
+  return out;
+}
+
+/**
+ * Where the point should actually go, and what to draw to explain it.
+ *
+ * The order is the rule: **the modifier means "on the angle", so it wins outright.** Otherwise
+ * alignment is preferred — on a floor plan, agreeing with the room next door matters more than a
+ * round number of degrees — and a tight angle guide is the fallback when nothing lines up.
+ */
+function resolveGuides(anchor, px, py, refs, wide) {
+  const out = { x: px, y: py, guides: [] };
+  if (anchor && wide) {
+    const a = angleGuide(anchor[0], anchor[1], px, py, GUIDE_STEP_DEG, GUIDE_WIDE_DEG);
+    if (a) return { x: a.x, y: a.y, guides: [{ kind: "angle", deg: a.deg, from: a.from }] };
+  }
+  const al = alignGuides(px, py, refs, GUIDE_ALIGN_PX);
+  for (const g of al) {
+    if (g.axis === "x") out.x = g.ref[0]; else out.y = g.ref[1];
+    out.guides.push({ kind: "align", axis: g.axis, ref: g.ref });
+  }
+  if (!al.length && anchor) {
+    const a = angleGuide(anchor[0], anchor[1], px, py, GUIDE_STEP_DEG, GUIDE_TIGHT_DEG);
+    if (a) { out.x = a.x; out.y = a.y; out.guides.push({ kind: "angle", deg: a.deg, from: a.from }); }
+  }
+  return out;
+}
+/* GUIDE-ENGINE-END */
+
+/**
+ * Corners worth lining up with: every other feature's, from the snap index, plus this feature's own.
+ *
+ * Read back out of the index rather than collected again — it already holds exactly these points,
+ * and gathering them twice is two chances to disagree.
+ */
+function geomGuideRefs(idx, ownScreen) {
+  const out = [];
+  if (idx) for (const arr of idx.g.values()) for (const it of arr) if (it.v) out.push(it.v);
+  for (const ring of ownScreen || []) for (const p of ring) out.push(p);
+  return out;
+}
 
 /** Every other feature's corners AND edges on screen, indexed. Built once per gesture. */
 function geomSnapIndex() {
@@ -3085,11 +3208,17 @@ function geomCutClick(lngLat) {
   if (!GEOM.cutA) {
     GEOM.cutA = [lngLat.lng, lngLat.lat];
     GEOM.cutB = [lngLat.lng, lngLat.lat];
+    // Gathered once per cut, for the same reason the snap index is: the map holds still between
+    // the two clicks, so these screen positions stay true for as long as they are needed.
+    GEOM.cutRefs = geomGuideRefs(geomSnapIndex(),
+      GEOM.rings.map(r => r.slice(0, -1).map(c => { const p = map.project(c); return [p.x, p.y]; })));
     geomDraw(); post("geomstate", geomState());
     return;
   }
   const a = GEOM.cutA, b = [lngLat.lng, lngLat.lat];
   GEOM.cutA = GEOM.cutB = null;
+  GEOM.cutRefs = null;
+  GEOM.guides = null;
   // A refused cut stays in split mode, because the message it just posted says "try again" — being
   // dropped back into Points would contradict it. A cut that landed goes to Points, where the new
   // outlines can be tidied up.
@@ -3101,6 +3230,8 @@ function geomCutClick(lngLat) {
 function geomCancelCut() {
   if (!GEOM || !GEOM.cutA) return false;
   GEOM.cutA = GEOM.cutB = null;
+  GEOM.cutRefs = null;
+  GEOM.guides = null;
   geomDraw(); post("geomstate", geomState());
   return true;
 }
@@ -3261,6 +3392,49 @@ function geomDraw() {
   }
 
   /**
+   * The guides in force. Drawn in the snap green rather than the edit blue, because they belong to
+   * the same family of "the tool is holding you to something" as the snap marks — and the blue is
+   * already spoken for by the shape itself.
+   */
+  if (GEOM.guides && GEOM.guides.length) {
+    const far = (window.innerWidth + window.innerHeight) * 2;
+    for (const g of GEOM.guides) {
+      if (g.kind === "angle") {
+        const a = g.deg * Math.PI / 180;
+        const ux = Math.cos(a) * far, uy = Math.sin(a) * far;
+        l.appendChild(el("line", { x1: g.from[0] - ux, y1: g.from[1] - uy,
+                                   x2: g.from[0] + ux, y2: g.from[1] + uy,
+                                   stroke: "#00875a", "stroke-width": 1,
+                                   "stroke-dasharray": "6 5", "stroke-opacity": .8 }));
+        // The angle, at the anchor — where the turn it describes actually is.
+        const label = Math.round(g.deg % 180) + "°";
+        l.appendChild(el("rect", { x: g.from[0] + 10, y: g.from[1] - 22, width: label.length * 7.5 + 12,
+                                   height: 19, rx: 5, fill: "#00875a" }));
+        const t = el("text", { x: g.from[0] + 16, y: g.from[1] - 8, fill: "#fff",
+                               "font-family": "system-ui, sans-serif", "font-size": 11.5 });
+        t.textContent = label;
+        l.appendChild(t);
+      } else {
+        // A tracking guide runs from the corner it is tracking, so you can see WHICH one you agree
+        // with — an unattached line only tells you that something, somewhere, lines up.
+        l.appendChild(el("line", { x1: g.ref[0], y1: g.ref[1],
+                                   x2: g.axis === "x" ? g.ref[0] : (GEOM.snapHit ? GEOM.snapHit.x : g.ref[0]),
+                                   y2: g.axis === "y" ? g.ref[1] : (GEOM.snapHit ? GEOM.snapHit.y : g.ref[1]),
+                                   stroke: "#00875a", "stroke-width": 1,
+                                   "stroke-dasharray": "3 4", "stroke-opacity": .9 }));
+        l.appendChild(el("line", {
+          x1: g.axis === "x" ? g.ref[0] : g.ref[0] - far,
+          y1: g.axis === "x" ? g.ref[1] - far : g.ref[1],
+          x2: g.axis === "x" ? g.ref[0] : g.ref[0] + far,
+          y2: g.axis === "x" ? g.ref[1] + far : g.ref[1],
+          stroke: "#00875a", "stroke-width": 1, "stroke-dasharray": "3 4", "stroke-opacity": .55 }));
+        l.appendChild(el("rect", { x: g.ref[0] - 3.5, y: g.ref[1] - 3.5, width: 7, height: 7,
+                                   fill: "#00875a" }));
+      }
+    }
+  }
+
+  /**
    * What snapping has caught, right now.
    *
    * Without this a snap is indistinguishable from a slightly inaccurate drag — the shape lands
@@ -3370,6 +3544,12 @@ function geomDown(ev, what) {
   }));
   const origPointScreen = origPoint ? (() => { const p = map.project(origPoint); return [p.x, p.y]; })() : null;
   const snapAt = (x, y) => snapQuery(snapIdx, x, y, SNAP_PX);
+  /**
+   * What tracking guides may line up with: every OTHER feature's corner near the drag, plus this
+   * feature's own corners. Its own matter as much as its neighbours' — squaring a room against
+   * itself is the commonest alignment there is.
+   */
+  const guideRefs = geomGuideRefs(snapIdx, origScreen);
   /** The transform pivot, fixed at gesture start — the box moves as you drag, the pivot must not. */
   const box = geomBox();
   const cx = box ? box.cx : 0, cy = box ? box.cy : 0;
@@ -3402,7 +3582,25 @@ function geomDown(ev, what) {
     } else if (what.kind === "vertex") {
       const hit = snapAt(pt.x, pt.y);
       GEOM.snapHit = hit;
-      const q = map.unproject(hit ? [hit.x, hit.y] : [pt.x, pt.y]);
+      /**
+       * Guides only when snapping caught nothing. A snap is a point that actually exists on another
+       * feature; a guide is a line you might want to be on. Letting a guide override a snap would
+       * pull you off the very corner you had just met.
+       *
+       * The anchor is the corner BEFORE this one in the ring, so the angle guide measures the edge
+       * you are dragging — which is the edge you want straight.
+       */
+      let gx = pt.x, gy = pt.y;
+      if (!hit) {
+        const ring = origScreen[what.ri] || [];
+        const prev = ring.length ? ring[(what.ci - 1 + ring.length) % ring.length] : null;
+        const g = resolveGuides(prev, pt.x, pt.y, guideRefs, geomSnapping(e));
+        gx = g.x; gy = g.y;
+        GEOM.guides = g.guides;
+      } else {
+        GEOM.guides = null;
+      }
+      const q = map.unproject(hit ? [hit.x, hit.y] : [gx, gy]);
       /**
        * **The dragged corner goes where the pointer is; the rest of the selection follows by the
        * same screen offset.** Not "every selected corner to the pointer", which would collapse
@@ -3492,7 +3690,7 @@ function geomDown(ev, what) {
   const up = () => {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
-    if (GEOM) { GEOM.xform = null; GEOM.snapHit = null; }
+    if (GEOM) { GEOM.xform = null; GEOM.snapHit = null; GEOM.guides = null; }
     if (moved) { geomDraw(); post("geomstate", geomState()); }
   };
   document.addEventListener("mousemove", move);

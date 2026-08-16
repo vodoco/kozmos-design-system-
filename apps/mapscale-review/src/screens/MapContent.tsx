@@ -944,6 +944,77 @@ function RowMenu({
 }
 
 /**
+ * **Add new** — a menu, not a button (Olcay, 2026-08-16: *"add new should show a dropdown, Building
+ * then seperation then Map Content"*).
+ *
+ * It used to go straight to the Building wizard, which quietly made "add" mean "add a building".
+ * There are two things you can add here and they are different sizes of act: a **building** is
+ * structure, a piece of **map content** is a thing inside one. The separator says so — it is not
+ * decoration, it is the boundary between those two kinds.
+ *
+ * ⚠️ **Map Content is deliberately disabled, not hidden.** Drawing a feature from scratch is not
+ * built — there is no draw mode in the geometry editor, only Reshape, Transform and Split. Hiding
+ * it would misrepresent the shape of the product; showing it greyed with a reason says what exists,
+ * what does not, and what is coming. The guide engine it will need is already built and running in
+ * Split and Reshape.
+ */
+function AddNewMenu({ onAddBuilding }: { onAddBuilding: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" data-tour="add-building">
+          Add new
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        side="bottom"
+        style={{ width: 232, padding: 6 }}
+      >
+        <MenuItem
+          label="Building"
+          onClick={() => {
+            setOpen(false);
+            onAddBuilding();
+          }}
+        />
+        <div
+          role="separator"
+          style={{
+            height: 1,
+            margin: "5px 6px",
+            background: "var(--primitives-colors-background-900)",
+          }}
+        />
+        <span
+          style={{
+            display: "block",
+            padding: "8px 10px 4px",
+            fontSize: 13,
+            color: "var(--primitives-colors-background-400)",
+            cursor: "default",
+          }}
+        >
+          Map Content
+        </span>
+        <span
+          style={{
+            display: "block",
+            padding: "0 10px 8px",
+            fontSize: 11.5,
+            lineHeight: 1.35,
+            color: "var(--primitives-colors-background-400)",
+          }}
+        >
+          Drawing a feature is not built yet
+        </span>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/**
  * A count in a circle, sitting **beside its word** rather than pinned to the far right (Olcay,
  * 2026-08-12). Right-aligned numbers put a column of digits an inch away from the labels they
  * belong to, and the eye has to travel to pair them up; a chip reads as part of the phrase.
@@ -2480,14 +2551,7 @@ export function MapContent({
                 <Icon name="info-circle" />
               </span>
               <span style={{ flex: 1 }} />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onAddBuilding}
-                data-tour="add-building"
-              >
-                Add new
-              </Button>
+              <AddNewMenu onAddBuilding={onAddBuilding} />
             </div>
             <Text style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>
               You are viewing buildings for{" "}
