@@ -542,11 +542,13 @@ export function GeometryToolbar({
                * would be deleted instead.
                */
               text:
-                selected > 0
-                  ? `${selected} node${selected === 1 ? "" : "s"} selected · drag to move · Delete to remove`
-                  : onEdge
-                    ? "Delete to unlink these two nodes"
-                    : `Editing this network · ${nodes} node${nodes === 1 ? "" : "s"} · shift-drag to lasso`,
+                edges > 0
+                  ? `${edges} edge${edges === 1 ? "" : "s"} selected · drag to move both ends`
+                  : selected > 0
+                    ? `${selected} node${selected === 1 ? "" : "s"} selected · drag to move · Delete to remove`
+                    : onEdge
+                      ? "Delete to unlink these two nodes"
+                      : `Editing this network · ${nodes} node${nodes === 1 ? "" : "s"} · shift-drag to lasso`,
               bad: false,
             }
           : isPoint

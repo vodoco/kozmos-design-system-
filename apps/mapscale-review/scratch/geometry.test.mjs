@@ -93,7 +93,7 @@ writeFileSync(
       `  networkComponents, networkRun, networkAdjacency, deleteNetworkNodes,\n` +
       `  unlinkNetworkNodes,\n` +
       `  wfBuildEdges, wfEnsureEdges, WF_NODES, wfPaint,\n` +
-      `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R,\n` +
+      `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, wfNodeAt,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
@@ -135,7 +135,7 @@ const {
   edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
   networkComponents, networkRun, deleteNetworkNodes, unlinkNetworkNodes,
   wfBuildEdges, wfEnsureEdges, wfPaint,
-  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R,
+  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd,
   editableAt, hoverableAt,
   __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __sel, __edges,
   __env, TARGET, prefs, POSTED,
@@ -1501,6 +1501,13 @@ function fakeMap(o) {
     // No canvas in node, so the runtime-generated arrowhead cannot be made here. That is the
     // point of one of the checks below: a map that cannot hold the image must still draw the LINES.
     hasImage: () => false,
+    /**
+     * ⚠️ A projection, because without one every helper that measures on screen fails into its own
+     * try/catch and returns its fallback — which reads as "the answer is always the first one" and
+     * is indistinguishable from working. Flat and scaled: enough for "which of these is nearer".
+     */
+    project: (c) => ({ x: c[0] * 100, y: -c[1] * 100 }),
+    unproject: (p) => ({ lng: p[0] / 100, lat: -p[1] / 100 }),
     addLayer: (def, before) => {
       const i = before ? layers.findIndex((l) => l.id === before) : -1;
       if (i < 0) layers.push(def); else layers.splice(i, 0, def);
@@ -2288,6 +2295,45 @@ const node = (fid, at, nb, tr) => ({
   check("…each with somewhere to be dragged to", netNodes.every((n) => n.fid && n.at.length === 2));
   check("…and its adjacency, so undo can put a deleted one back",
         netNodes.every((n) => Array.isArray(n.neighbors)));
+
+  __setHidden(null);
+  applyWayfinding();
+  wfRemove();
+  __setNodes([]);
+}
+
+/* P11b. An edge is grabbable, and it is the SAME sentence that did the job for a room's edges:
+         an edge IS its two ends. Olcay: "I should be able to click an edge and it should be
+         highlighted as selected — I should then be able to move it which moves all the connected
+         nodes to it too." */
+{
+  gjTeardown(null);
+  HIDDEN_BY_TYPE.clear();
+  const m = fakeMap();
+  __setMap(m);
+  __setNodes([node("a", [0, 0], ["b"]), node("b", [1, 0], ["a"]), node("z", [5, 5], [])]);
+  __setHidden(SHOW_WF);
+  const info = console.info; console.info = () => {};
+  wfBuildEdges();
+  applyWayfinding();
+  console.info = info;
+
+  // Selecting an edge is selecting its two nodes — so the edge draws selected for free.
+  __sel(["a", "b"]);
+  const C = JSON.stringify(m.getPaintProperty(WF_EDGE, "line-color"));
+  check("an edge whose both ends are selected draws selected", C.indexOf('"from"') > 0);
+  check("…on the same expression that lights the network, not a second layer",
+        C.indexOf('"case"') === 1, C.slice(0, 40));
+  __sel([]);
+  check("nothing selected singles out no edge",
+        JSON.stringify(m.getPaintProperty(WF_EDGE, "line-color")).indexOf('"from"') < 0);
+
+  /**
+   * The end you grabbed nearer leads the drag — the same rule a room's edges follow, and not
+   * cosmetic: the leading node is the one Snap and the guides are computed for.
+   */
+  check("the near end leads", wfNearerEnd(["a", "b"], [2, 0]) === "a");
+  check("…and so does the other one, from the other side", wfNearerEnd(["a", "b"], [900, 0]) === "b");
 
   __setHidden(null);
   applyWayfinding();

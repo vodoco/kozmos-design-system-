@@ -2394,12 +2394,51 @@ function wfPaint() {
         ["case", isCur, 2.5, isSel, 1.5, id === WF_TRANSITION ? 1.5 : 0]);
     }
     if (map.getLayer(WF_EDGE)) {
-      map.setPaintProperty(WF_EDGE, "line-color", ["case", isLit, WF_COLOUR.hl, WF_COLOUR.edge]);
-      map.setPaintProperty(WF_EDGE, "line-width", ["case", isLit,
-        ["interpolate", ["linear"], ["zoom"], 15, 1.4, 18, 2.4, 21, 3.6],
+      /**
+       * ⚠️ **An edge is selected when both of its ends are** — the same rule a room's edges follow,
+       * and it costs nothing: the selection is already the two nodes. It also means a lasso that
+       * happens to catch both ends of a corridor reports that corridor as selected, correctly, with
+       * nobody having written it.
+       */
+      const selEdge = sel.length
+        ? ["all", ["any", ...sel.map(f => ["==", ["get", "from"], f])],
+                  ["any", ...sel.map(f => ["==", ["get", "to"], f])]] : false;
+      map.setPaintProperty(WF_EDGE, "line-color",
+        ["case", selEdge, WF_COLOUR.sel, isLit, WF_COLOUR.hl, WF_COLOUR.edge]);
+      map.setPaintProperty(WF_EDGE, "line-width", ["case",
+        selEdge, ["interpolate", ["linear"], ["zoom"], 15, 2, 18, 3.2, 21, 4.8],
+        isLit, ["interpolate", ["linear"], ["zoom"], 15, 1.4, 18, 2.4, 21, 3.6],
         ["interpolate", ["linear"], ["zoom"], 15, 0.6, 18, 1.4, 21, 2.4]]);
     }
   } catch (e) {}
+}
+
+/** Which end of an edge the pointer is nearer — the one you were actually pointing at. */
+function wfNearerEnd(line, point) {
+  try {
+    const a = wfNodeAt(line[0]), b = wfNodeAt(line[1]);
+    if (!a) return line[1];
+    if (!b) return line[0];
+    const pa = map.project(a), pb = map.project(b);
+    const [x, y] = Array.isArray(point) ? point : [point.x, point.y];
+    return Math.hypot(pa.x - x, pa.y - y) <= Math.hypot(pb.x - x, pb.y - y) ? line[0] : line[1];
+  } catch (e) { return line[0]; }
+}
+
+/** Where a node is, from our own collection. */
+function wfNodeAt(fid) {
+  if (!WF_NODE_FC) return null;
+  for (const f of WF_NODE_FC.features)
+    if (f.properties.fid === fid) return f.geometry.coordinates;
+  return null;
+}
+
+/** A node's property bag, for a click that arrived by way of one of its edges. */
+function wfPropsOf(fid) {
+  if (!WF_NODE_FC) return {};
+  for (const f of WF_NODE_FC.features)
+    if (f.properties.fid === fid) return Object.assign({}, f.properties);
+  return {};
 }
 
 /**
@@ -3698,7 +3737,38 @@ function start() {
         { layers: map.getLayer(WF_NODE_HIT) ? [WF_NODE_HIT] : [] }) || [])[0];
     } catch (e) {}
     const fid = hit && hit.properties && hit.properties.fid;
-    if (!fid) return;
+    if (!fid) {
+      /**
+       * **An edge is grabbable too** (Olcay, 2026-08-17: *"I should be able to click an edge and it
+       * should be highlighted as selected — I should then be able to move it which moves all the
+       * connected nodes to it too."*).
+       *
+       * It needs no machinery of its own, because **an edge IS its two ends** — the same sentence
+       * that did the whole job for a room's edges. Clicking one selects both nodes, which is what
+       * makes it look selected; dragging it is the multi-node drag that already existed, so the
+       * corridor keeps its length and angle and both ends come along.
+       *
+       * Only where no node was hit: a node is the smaller, more deliberate target and wins the
+       * click where the two overlap.
+       */
+      const line = wfEdgeAt([ev.clientX, ev.clientY]);
+      if (!line) return;
+      ev.stopPropagation();
+      const both = GEOM.sel.has(line[0]) && GEOM.sel.has(line[1]);
+      if (ev.shiftKey) {                       // toggles the whole edge, and never starts a drag
+        if (both) { GEOM.sel.delete(line[0]); GEOM.sel.delete(line[1]); }
+        else { GEOM.sel.add(line[0]); GEOM.sel.add(line[1]); }
+        wfSetSelected();
+        post("geomstate", geomState());
+        return;
+      }
+      if (!both) { GEOM.sel.clear(); GEOM.sel.add(line[0]); GEOM.sel.add(line[1]); wfSetSelected(); }
+      // The end you grabbed nearer leads, so Snap and the guides answer for the end you aimed at.
+      const lead = wfNearerEnd(line, [ev.clientX, ev.clientY]);
+      if (lead !== GEOM.fid) { GEOM.fid = lead; wfSetEditing(GEOM.net, lead); post("geomstate", geomState()); }
+      geomDown(ev, { kind: "netnode", fid: lead });
+      return;
+    }
     ev.stopPropagation();
     /**
      * Shift toggles, and never starts a drag — the same rule a room's corners follow, so the one
@@ -3777,8 +3847,25 @@ function start() {
      */
     else if (map && !shown()) {
       const rect = map.getCanvas().getBoundingClientRect();
-      const f = editableAt([ev.clientX - rect.left, ev.clientY - rect.top]);
-      const fid = f && f.properties && f.properties.fid;
+      const pt = [ev.clientX - rect.left, ev.clientY - rect.top];
+      const f = editableAt(pt);
+      /**
+       * ⚠️ **A line opens the editor too** (Olcay, 2026-08-17: *"edit only activates when I click on
+       * node — it should also be triggered if I click on edge (line)"*).
+       *
+       * An edge has no `fid` of its own, so `editableAt` can never return one — but it does not need
+       * to. **The thing being edited is the network**, and an edge names two of its nodes; opening
+       * either of them opens the same network. The **nearer end** is the one taken, for the same
+       * reason it leads a drag: it is the end you were pointing at.
+       *
+       * Only where there was no feature under the pointer, so a node always wins over the line it
+       * sits on — the node is the smaller, more deliberate target.
+       */
+      let fid = f && f.properties && f.properties.fid;
+      if (!fid) {
+        const line = wfEdgeAt(pt);
+        if (line) fid = wfNearerEnd(line, pt);
+      }
       /**
        * ⚠️ **Shift means "add this to what I already have"**, and the check on the feature already
        * open has to be skipped for it (Olcay, 2026-08-16: *"shift click on the selected item would
@@ -3789,8 +3876,16 @@ function start() {
        * The app decides what to do with it, because the app owns the selection. This side only
        * reports the click and which modifier was down.
        */
-      if (fid && (ev.shiftKey || !(GEOM && GEOM.fid === fid)))
-        post("featureclick", { fid, props: plainProps(f.properties), additive: !!ev.shiftKey });
+      /**
+       * A click on a line while its own network is already open should not re-post — the editor is
+       * where it needs to be. `GEOM.net` answers that for every node of it, where `GEOM.fid` only
+       * ever answered for one.
+       */
+      const already = GEOM && (GEOM.fid === fid ||
+        (GEOM.kind === "network" && GEOM.net >= 0 && wfNetOf(fid) === GEOM.net && !f));
+      if (fid && (ev.shiftKey || !already))
+        post("featureclick", { fid, props: plainProps(f ? f.properties : wfPropsOf(fid)),
+                               additive: !!ev.shiftKey });
     }
   });
 
@@ -4314,8 +4409,15 @@ function selectedEdgeCount(rings, sel) {
 /* EDGE-ENGINE-END */
 
 function geomSelectedEdges() {
-  return GEOM && GEOM.kind === "area" && GEOM.sel
-    ? selectedEdgeCount(GEOM.rings, GEOM.sel) : 0;
+  if (!GEOM || !GEOM.sel) return 0;
+  if (GEOM.kind === "area") return selectedEdgeCount(GEOM.rings, GEOM.sel);
+  /**
+   * The same rule for a network — **an edge is selected when both of its ends are** — counted off
+   * the edge list rather than off ring indices, because that is where a network's edges live.
+   */
+  if (GEOM.kind === "network" && WF_EDGES)
+    return WF_EDGES.filter(e => GEOM.sel.has(e.properties.from) && GEOM.sel.has(e.properties.to)).length;
+  return 0;
 }
 
 /**
@@ -6453,9 +6555,21 @@ function geomDraw() {
    * because a concourse network has hundreds of nodes and four hundred SVG handles re-projected on
    * every frame is not a thing a browser does twice.
    */
-  if (GEOM.kind === "network") return;
-  if (GEOM.kind === "point") {
-    if (!GEOM.point) return;
+  /**
+   * ⚠️ **These used to `return`, and that is why Snap and the guides existed only for rooms.**
+   *
+   * Olcay, 2026-08-17: *"I want the guidelines for rotation and snap in all lenses — map content ✓,
+   * wayfinding network, geofence, beacons."* Every one of those drags **already computed** its
+   * guides and its snap catch: the point branch and the network branch of the drag both call
+   * `snapAt` and `resolveGuides` and write to `GEOM.guides`. They were simply never drawn, because
+   * the two early returns above sat between the handles and the block at the bottom of this
+   * function that draws them.
+   *
+   * So a beacon and a point POI have never shown a guide either, on any screen. The lenses did not
+   * differ; the **geometry kinds** did, and a lens is mostly one kind. Drawing the handles per kind
+   * and then falling through to the guides is the whole fix.
+   */
+  if (GEOM.kind === "point" && GEOM.point) {
     const p = map.project(GEOM.point);
     l.appendChild(el("circle", { cx: p.x, cy: p.y, r: 13, fill: "#0b369c", "fill-opacity": .12 }));
     const h = el("circle", { cx: p.x, cy: p.y, r: HANDLE_R + 2, fill: "#fff",
@@ -6463,8 +6577,12 @@ function geomDraw() {
     h.setAttribute("style", "pointer-events:auto;cursor:grab");
     h.addEventListener("mousedown", ev => { ev.stopPropagation(); geomDown(ev, { kind: "point" }); });
     l.appendChild(h);
-    return;
   }
+  /**
+   * A network draws no handles here: its nodes and its lines are map LAYERS (see `wfPaint`), because
+   * a concourse network has hundreds of nodes and four hundred SVG handles re-projected on every
+   * frame is not a thing a browser does twice. Its guides, though, are drawn like everything else.
+   */
 
   for (const [ri, ring] of GEOM.rings.entries()) {
     const d = ring.map((c, i) => { const p = map.project(c); return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ") + " Z";
