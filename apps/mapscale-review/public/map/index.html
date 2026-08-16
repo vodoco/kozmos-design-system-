@@ -2466,6 +2466,11 @@ function geomBegin(fid) {
      * answers with. It stops the camera flying to a shape that no longer exists.
      */
     skipFocus: false,
+    /**
+     * The transform box's angle, carried between frames so it can be unwrapped rather than
+     * recomputed from scratch — see `unwrapGrid`. `null` until the box is first drawn.
+     */
+    boxTheta: null,
   };
   GEOM.pieceOf = GEOM.rings.map(() => 0);
   // The subject's own properties, kept for the same reason a picked feature's are: undoing back
@@ -3166,20 +3171,98 @@ function geomSnapIndex() {
    the default and the modifier CONSTRAINS, which is the way round Olcay asked for — the opposite of
    tools that snap unless told otherwise. */
 
-/** The transform box, in SCREEN space. `null` when there is nothing with corners to transform. */
+/**
+ * The transform box, in SCREEN space — **oriented to the shape's own grid, not to the screen's**.
+ *
+ * Olcay, 2026-08-16: *"Can we hug the geometry much better instead of putting the control points
+ * relative to the view?"* It was an axis-aligned bounding box, which is fine for a room that
+ * happens to sit square to north and badly wrong for every other one: a floor plan rotated 30° gets
+ * a box far larger than itself, and its handles sit out in the corridor with nothing under them.
+ * The corner you reach for should be *on the shape*.
+ *
+ * The angle is `dominantAngle` — the very measure Straighten squares onto — so the box lines up
+ * with the walls rather than with a guess.
+ *
+ * Returns the four corners in order, plus the centre, which is all the rest of the transform needs:
+ * rotate and scale both work about that centre and are indifferent to how the box is turned.
+ */
 function geomBox() {
   if (!GEOM || GEOM.kind !== "area" || !GEOM.rings.length) return null;
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const r of GEOM.rings) for (const c of r) {
-    const p = map.project(c);
-    if (p.x < minX) minX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y > maxY) maxY = p.y;
-  }
-  if (!isFinite(minX)) return null;
-  return { minX, minY, maxX, maxY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
+  const rings = GEOM.rings.map(r => r.map(c => { const p = map.project(c); return [p.x, p.y]; }));
+  const pts = [].concat(...rings);
+  if (!pts.length) return null;
+
+  const raw = dominantAngle(rings.map(r => (r.length && r[0] !== r[r.length - 1]) ? r.concat([r[0]]) : r));
+  const th = unwrapGrid(raw, GEOM.boxTheta);
+  GEOM.boxTheta = th;
+  return orientedBox(pts, th, BOX_PAD, BOX_STEM);
 }
+
+/* BOX-ENGINE-START — extracted and tested by scratch/geometry.test.mjs; keep DOM- and map-free. */
+
+/**
+ * Keep a grid angle on the same branch as the one before it.
+ *
+ * ⚠️ **Without this the transform box flips 90° mid-rotation.** `dominantAngle` is a *grid* angle —
+ * modulo 90°, because a rectangle's edges are. Turn a room past 45° and the raw answer jumps to the
+ * other side of zero. The rectangle it describes is the same one, but its width and height swap, so
+ * the rotate knob teleports to a different edge while you are still dragging it. Choosing the
+ * representative nearest the previous angle is continuous through the wrap and costs nothing.
+ */
+function unwrapGrid(raw, prev) {
+  if (typeof prev !== "number") return raw;
+  return raw + Math.round((prev - raw) / (Math.PI / 2)) * (Math.PI / 2);
+}
+
+/**
+ * The smallest box **at angle `th`** containing `pts`, padded, as four corners and a centre.
+ *
+ * The padding is applied in the box's own frame, so it is even around the *shape* rather than even
+ * around the screen — which is the whole difference between a box that hugs and a box that merely
+ * contains.
+ */
+function orientedBox(pts, th, pad, stem) {
+  const cos = Math.cos(th), sin = Math.sin(th);
+  let u0 = Infinity, v0 = Infinity, u1 = -Infinity, v1 = -Infinity;
+  for (const p of pts) {
+    const u = p[0] * cos + p[1] * sin, v = -p[0] * sin + p[1] * cos;
+    if (u < u0) u0 = u;
+    if (u > u1) u1 = u;
+    if (v < v0) v0 = v;
+    if (v > v1) v1 = v;
+  }
+  if (!isFinite(u0)) return null;
+  u0 -= pad || 0; v0 -= pad || 0; u1 += pad || 0; v1 += pad || 0;
+  const back = (u, v) => [u * cos - v * sin, u * sin + v * cos];
+  const mid = (u0 + u1) / 2;
+  const c = back(mid, (v0 + v1) / 2);
+  return {
+    th,
+    cx: c[0], cy: c[1],
+    w: u1 - u0, h: v1 - v0,
+    // Clockwise from the box's own top-left, in its own frame — the order the handles are drawn in.
+    corners: [back(u0, v0), back(u1, v0), back(u1, v1), back(u0, v1)],
+    // The midpoint of the box's top edge, and the knob out along that edge's own outward normal.
+    topMid: back(mid, v0),
+    knob: back(mid, v0 - (stem || 0)),
+  };
+}
+
+/**
+ * The resize cursor that actually points along a handle's direction.
+ *
+ * Once the box can be turned, `nwse` on the top-left is a lie for most angles — the handle sits
+ * where the shape put it, and the cursor should agree with the eye rather than with the box's
+ * abstract corner names. Symmetric about 180°, because a resize arrow is double-headed.
+ */
+function geomResizeCursor(dx, dy) {
+  const a = ((Math.atan2(dy, dx) * 180 / Math.PI) % 180 + 180) % 180;
+  if (a < 22.5 || a >= 157.5) return "ew";
+  if (a < 67.5) return "nwse";
+  if (a < 112.5) return "ns";
+  return "nesw";
+}
+/* BOX-ENGINE-END */
 
 /** How far the box's furniture sits outside the outline, so a handle never covers a corner. */
 const BOX_PAD = 12;
@@ -4315,32 +4398,41 @@ function geomDraw() {
   if (GEOM.mode === "transform") {
     const box = geomBox();
     if (box) {
-      const x0 = box.minX - BOX_PAD, y0 = box.minY - BOX_PAD;
-      const x1 = box.maxX + BOX_PAD, y1 = box.maxY + BOX_PAD;
-      l.appendChild(el("rect", { x: x0, y: y0, width: x1 - x0, height: y1 - y0,
-                                 fill: "none", stroke: "#0b369c", "stroke-width": 1,
-                                 "stroke-dasharray": "5 4", "stroke-opacity": .7 }));
-      // the rotate knob, on a stem above the top edge
-      const kx = (x0 + x1) / 2, ky = y0 - BOX_STEM;
-      l.appendChild(el("line", { x1: kx, y1: y0, x2: kx, y2: ky,
+      /**
+       * A polygon, not a `rect` — the box is turned to the shape's own grid now, and an SVG rect
+       * can only ever be square to the screen. Its four corners come back already rotated.
+       */
+      l.appendChild(el("polygon", {
+        points: box.corners.map(p => p[0] + "," + p[1]).join(" "),
+        fill: "none", stroke: "#0b369c", "stroke-width": 1,
+        "stroke-dasharray": "5 4", "stroke-opacity": .7,
+      }));
+      // The rotate knob, on a stem out along the top edge's own normal rather than straight up.
+      l.appendChild(el("line", { x1: box.topMid[0], y1: box.topMid[1],
+                                 x2: box.knob[0], y2: box.knob[1],
                                  stroke: "#0b369c", "stroke-width": 1, "stroke-opacity": .7 }));
-      const knob = el("circle", { cx: kx, cy: ky, r: 7, fill: "#fff",
+      const knob = el("circle", { cx: box.knob[0], cy: box.knob[1], r: 7, fill: "#fff",
                                   stroke: "#0b369c", "stroke-width": 2, class: "geom-rot" });
       knob.setAttribute("style", "pointer-events:auto;cursor:grab");
       knob.addEventListener("mousedown", e => { e.stopPropagation(); geomDown(e, { kind: "rotate" }); });
       l.appendChild(knob);
 
-      // the four scale corners — square, so they are never mistaken for a vertex handle
+      /**
+       * The four scale corners — square, so they are never mistaken for a vertex handle, and
+       * **not** rotated with the box: a tilted 9px square reads as a smudge, and the handle's job
+       * is to be hit, not to echo the geometry. Its *position* is what hugs the shape.
+       */
       const S = 9;
-      [[x0, y0, "nwse"], [x1, y0, "nesw"], [x1, y1, "nwse"], [x0, y1, "nesw"]]
-        .forEach(([hx, hy, dir]) => {
-          const h = el("rect", { x: hx - S / 2, y: hy - S / 2, width: S, height: S, rx: 2,
-                                 fill: "#fff", stroke: "#0b369c", "stroke-width": 2,
-                                 class: "geom-scale" });
-          h.setAttribute("style", "pointer-events:auto;cursor:" + dir + "-resize");
-          h.addEventListener("mousedown", e => { e.stopPropagation(); geomDown(e, { kind: "scale" }); });
-          l.appendChild(h);
-        });
+      box.corners.forEach(([hx, hy]) => {
+        const h = el("rect", { x: hx - S / 2, y: hy - S / 2, width: S, height: S, rx: 2,
+                               fill: "#fff", stroke: "#0b369c", "stroke-width": 2,
+                               class: "geom-scale" });
+        // Measured from the centre, so the arrow agrees with the eye at any angle — see the note.
+        h.setAttribute("style", "pointer-events:auto;cursor:" +
+          geomResizeCursor(hx - box.cx, hy - box.cy) + "-resize");
+        h.addEventListener("mousedown", e => { e.stopPropagation(); geomDown(e, { kind: "scale" }); });
+        l.appendChild(h);
+      });
 
       /**
        * The live readout, beside the pointer rather than pinned to the box — your eye is on the

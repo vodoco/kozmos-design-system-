@@ -24,7 +24,8 @@ const src = readFileSync(join(here, "..", "public", "map", "index.html"), "utf8"
 
 /** Every marker-delimited engine in the map shell, in the order they must be defined. */
 const BLOCKS = ["SPLIT-ENGINE", "SNAP-ENGINE", "GUIDE-ENGINE", "COMBINE-ENGINE", "SQUARE-ENGINE",
-                "FOCUS-ENGINE"];
+                "FOCUS-ENGINE",
+                "BOX-ENGINE"];
 const engine = BLOCKS.map((name) => {
   const from = src.indexOf(`/* ${name}-START`);
   const to = src.indexOf(`/* ${name}-END */`);
@@ -45,7 +46,8 @@ writeFileSync(
       `  guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,\n` +
       `  segPairClosest, findBridge, bridgeRings, combineRings,\n` +
       `  ringGap, ringSetArea, largestSet, wallBetween,\n` +
-      `  focusView, focusPan, FOCUS_MARGIN };\n`,
+      `  focusView, focusPan, FOCUS_MARGIN,\n` +
+      `  unwrapGrid, orientedBox, geomResizeCursor };\n`,
 );
 
 let mod;
@@ -62,6 +64,7 @@ const {
   segPairClosest, findBridge, bridgeRings, combineRings,
   ringGap, ringSetArea, largestSet, wallBetween,
   focusView, focusPan, FOCUS_MARGIN,
+  unwrapGrid, orientedBox, geomResizeCursor,
 } = mod;
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
@@ -1011,6 +1014,109 @@ const at = (x, y, w, h) => ({ x0: x, x1: x + w, y0: y, y1: y + h });
 {
   check("no usable map means no view", focusView(300, 900, 400) === null);
   check("…and no pan", focusPan(at(0, 0, 10, 10), focusView(300, 900, 400)) === null);
+}
+
+/* ══ box engine ════════════════════════════════════════════════════════════════
+   The transform box hugs the SHAPE's grid, not the screen's (Olcay, 2026-08-16: *"Can we hug the
+   geometry much better instead of putting the control points relative to the view?"*). The claim
+   is a measurement, so these measure it. */
+
+console.log("\nbox engine");
+
+const rot = (pts, deg, ox = 0, oy = 0) => {
+  const a = (deg * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a);
+  return pts.map(([x, y]) => [
+    ox + (x - ox) * c - (y - oy) * s,
+    oy + (x - ox) * s + (y - oy) * c,
+  ]);
+};
+/** The screen-aligned box, i.e. exactly what this replaced. */
+const aabbArea = (pts) => {
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  return (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
+};
+const side = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+
+/* B1. Square to the screen, the box is the bounding box — the case that already worked. */
+{
+  const r = [[0, 0], [200, 0], [200, 100], [0, 100]];
+  const b = orientedBox(r, 0, 0, 0);
+  check("an unrotated box is 200 wide", Math.abs(b.w - 200) < 1e-9, String(b.w));
+  check("…and 100 high", Math.abs(b.h - 100) < 1e-9, String(b.h));
+  check("…centred on the shape", Math.abs(b.cx - 100) < 1e-9 && Math.abs(b.cy - 50) < 1e-9,
+        `${b.cx}, ${b.cy}`);
+  check("…with its corners in clockwise order from the top-left",
+        b.corners[0][0] === 0 && b.corners[0][1] === 0 && b.corners[2][0] === 200,
+        JSON.stringify(b.corners));
+}
+
+/* B2. Padding is applied in the BOX's frame, so it is even around the shape rather than around
+       the screen — the difference that makes a rotated box hug rather than merely contain. */
+{
+  const r = [[0, 0], [200, 0], [200, 100], [0, 100]];
+  const b = orientedBox(r, 0, 12, 0);
+  check("padding widens both sides", Math.abs(b.w - 224) < 1e-9, String(b.w));
+  check("…and both ends", Math.abs(b.h - 124) < 1e-9, String(b.h));
+  check("…without moving the centre", Math.abs(b.cx - 100) < 1e-9 && Math.abs(b.cy - 50) < 1e-9);
+}
+
+/* B3. ⚠️ THE POINT. A room turned 30° gets a box the size of the ROOM, not the size of its
+       screen shadow — which for this one is nearly twice the area. */
+{
+  const room = rot([[0, 0], [200, 0], [200, 100], [0, 100]], 30, 100, 50);
+  const b = orientedBox(room, (30 * Math.PI) / 180, 0, 0);
+  check("a 30° room still measures 200 across", Math.abs(b.w - 200) < 1e-6, String(b.w));
+  check("…and 100 deep", Math.abs(b.h - 100) < 1e-6, String(b.h));
+  const hugged = b.w * b.h, screenBox = aabbArea(room);
+  check("…and the screen-aligned box it replaced was far bigger",
+        screenBox > hugged * 1.6, `hugged ${hugged.toFixed(0)}, screen ${screenBox.toFixed(0)}`);
+  // Every corner of the room is ON the box, not somewhere inside it.
+  for (const p of room) {
+    const near = b.corners.some((q) => side(p, q) < 1e-6);
+    check("…and each of the room's corners is a box corner", near, JSON.stringify(p));
+  }
+}
+
+/* B4. The knob comes off the box's own top edge, not off the screen's up. */
+{
+  const room = rot([[0, 0], [200, 0], [200, 100], [0, 100]], 30, 100, 50);
+  const b = orientedBox(room, (30 * Math.PI) / 180, 0, 26);
+  check("the knob stands 26 off the top edge", Math.abs(side(b.topMid, b.knob) - 26) < 1e-6,
+        String(side(b.topMid, b.knob)));
+  // Perpendicular to the top edge: the stem dotted with that edge is zero.
+  const ex = b.corners[1][0] - b.corners[0][0], ey = b.corners[1][1] - b.corners[0][1];
+  const sx = b.knob[0] - b.topMid[0], sy = b.knob[1] - b.topMid[1];
+  check("…square to it", Math.abs(ex * sx + ey * sy) < 1e-6, String(ex * sx + ey * sy));
+  check("…and away from the shape, not into it",
+        side(b.knob, [b.cx, b.cy]) > side(b.topMid, [b.cx, b.cy]));
+}
+
+/* B5. ⚠️ The wrap. A grid angle is modulo 90°, so without unwrapping the box flips — and the
+       rotate knob teleports to another edge — as a shape turns past 45°. */
+{
+  const Q = Math.PI / 2;
+  check("the first angle is taken as it comes", unwrapGrid(0.3, undefined) === 0.3);
+  // Raw jumped from +44° to -44°; the continuous answer is +46°, not a 90° leap.
+  const raw = (-44 * Math.PI) / 180, prev = (44 * Math.PI) / 180;
+  const out = unwrapGrid(raw, prev);
+  check("a wrap past 45° stays continuous", Math.abs(out - (46 * Math.PI) / 180) < 1e-9,
+        `${((out * 180) / Math.PI).toFixed(2)}°`);
+  check("…and is still the same grid", Math.abs(((out - raw) % Q)) < 1e-9);
+  check("no wrap leaves it alone", Math.abs(unwrapGrid(0.1, 0.12) - 0.1) < 1e-9);
+  // Several turns in, it keeps following rather than snapping back to the principal branch.
+  check("it follows a shape round more than one quarter turn",
+        Math.abs(unwrapGrid(0.05, 3 * Q + 0.05) - (3 * Q + 0.05)) < 1e-9);
+}
+
+/* B6. The cursor points along the handle, since the box's corners no longer have fixed compasses. */
+{
+  check("a handle down-right is the nwse diagonal", geomResizeCursor(10, 10) === "nwse");
+  check("a handle down-left is the nesw diagonal", geomResizeCursor(-10, 10) === "nesw");
+  check("a handle straight out to the side is ew", geomResizeCursor(10, 0) === "ew");
+  check("a handle straight up is ns", geomResizeCursor(0, -10) === "ns");
+  // Double-headed: opposite corners of a box must offer the same arrow.
+  check("opposite corners agree", geomResizeCursor(10, 10) === geomResizeCursor(-10, -10));
+  check("…on the other diagonal too", geomResizeCursor(-10, 10) === geomResizeCursor(10, -10));
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */
