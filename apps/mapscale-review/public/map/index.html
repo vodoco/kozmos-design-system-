@@ -1380,6 +1380,61 @@ function ensureSatellite() {
 // outright (Olcay, 2026-08-10). Exact ids, not a pattern: osm2-buildings-flat is the basemap's
 // own and stays. Re-applied from applyPrefs() and the idle pass, because the SDK re-shows its
 // layers after level switches and 3D-mode recoveries.
+/**
+ * **Can the floor be re-rendered from a GeoJSON source, with the vector tiles switched off?**
+ *
+ * Olcay, 2026-08-16: *"tell me when we see render the map features from geojson source and disable
+ * vector tile source. It requires style processing."* It does, and the processing worth doing is
+ * **derivation, not authorship**: clone each of the SDK's own `source_ptr` layers, repoint it at a
+ * GeoJSON source, and keep its paint and layout exactly. Hand-writing a lookalike style would be
+ * inventing colours the product already has — the thing this project refuses to do everywhere else.
+ *
+ * ⚠️ **One unknown decides whether that clone is cheap or hard.** A vector layer selects its rows
+ * with `source-layer`; a GeoJSON source has no such thing, so each cloned layer needs an equivalent
+ * *filter*. If `source-layer` names are `mainType` values, the substitution is one filter clause
+ * and the job is small. If they are not, every layer needs a mapping nobody has, and the job is a
+ * different size entirely.
+ *
+ * So this measures it rather than guessing, once, and prints the answer. Runs on the first `idle`
+ * with features rendered and never again — it is a report, not a monitor.
+ */
+let styleReported = false;
+function reportStyleShape() {
+  if (styleReported || !map) return;
+  try {
+    const layers = map.getStyle().layers || [];
+    const ptr = layers.filter(l => l.source === "source_ptr");
+    if (!ptr.length) return;                       // the indoor style has not arrived yet
+    const feats = map.queryRenderedFeatures() || [];
+    if (!feats.length) return;                     // nothing painted yet; try again next idle
+    styleReported = true;
+
+    const srcLayers = [...new Set(ptr.map(l => l["source-layer"]).filter(Boolean))];
+    const mainTypes = new Set();
+    for (const f of feats) if (f.properties && f.properties.mainType) mainTypes.add(f.properties.mainType);
+    const matched = srcLayers.filter(n => mainTypes.has(n));
+    const byType = {};
+    for (const l of ptr) byType[l.type] = (byType[l.type] || 0) + 1;
+
+    console.info(
+      "%c[style] can we render this floor from GeoJSON?",
+      "font-weight:bold",
+      "\n  layers total:            ", layers.length,
+      "\n  on source_ptr:           ", ptr.length, byType,
+      "\n  distinct source-layers:  ", srcLayers.length,
+      "\n  …that are also mainTypes:", matched.length + "/" + srcLayers.length,
+      matched.length === srcLayers.length
+        ? "— ✅ every source-layer IS a mainType, so a cloned layer needs one filter clause"
+        : "— ⚠️ NOT all match; these have no mainType and would each need a mapping: " +
+          JSON.stringify(srcLayers.filter(n => !mainTypes.has(n)).slice(0, 12)),
+      "\n  mainTypes rendered:      ", mainTypes.size,
+      "\n  sample source-layers:    ", JSON.stringify(srcLayers.slice(0, 8)),
+    );
+  } catch (e) {
+    console.info("[style] report failed —", e && e.message);
+  }
+}
+
 function hideBuildingChrome() {
   try {
     ["fill_building-outline_ptr", "symbol_building-outline_ptr"].forEach(id => {
@@ -2052,6 +2107,7 @@ function start() {
   map.on("move", drawEditing); // and so is the chip pinned to a feature
   map.on("move", geomDraw);    // the outline is in lng/lat, so panning re-projects it
   map.on("idle", () => {
+    reportStyleShape();     // once, then never again — see the note on it
     ensureLevel();
     ensureIndoorVisible();
     hideBuildingChrome(); // the SDK re-shows its layers after switches and 3D recoveries
@@ -4546,7 +4602,16 @@ function geomUncombine(fid) {
  */
 function geomUnhide(fid) {
   if (!GEOM || GEOM.hidden.fids.indexOf(fid) < 0) return;
+  /**
+   * ⚠️ **Kept across the push, because this changes no rings.** `geomPush` dissolves the
+   * composition — the right default, since almost everything that pushes does rewrite the shape —
+   * and putting a wall back is the exception: the room's outline is untouched, so the members go on
+   * describing it exactly as before. Without this, restoring one wall silently made every joined
+   * row's ✕ dead, which is the opposite of what the comment below promises.
+   */
+  const composition = GEOM.combine;
   geomPush();
+  GEOM.combine = composition;
   GEOM.hidden = {
     fids: GEOM.hidden.fids.filter(f => f !== fid),
     labels: GEOM.hidden.labels.filter(l => l.fid !== fid),
@@ -4972,7 +5037,21 @@ function geomDown(ev, what) {
 
   const move = e => {
     if (!GEOM) return;
-    if (!moved) { moved = true; GEOM.history.push(snapshot); GEOM.future = []; }
+    if (!moved) {
+      moved = true;
+      GEOM.history.push(snapshot);
+      GEOM.future = [];
+      /**
+       * ⚠️ **A drag rewrites the rings, so a combine's members stop describing them.**
+       *
+       * This is the one mutation that does NOT go through `geomPush` — it pushes its own snapshot
+       * once, at the first move — so it did not inherit the dissolve and the composition survived a
+       * reshape. Taking a member out afterwards would then have recomputed from the members and
+       * silently thrown the drag away: exactly the failure the whole mechanism exists to prevent,
+       * reached by the one door that did not have the lock on it.
+       */
+      GEOM.combine = null;
+    }
     const pt = { x: e.clientX, y: e.clientY };
 
     if (what.kind === "point") {
