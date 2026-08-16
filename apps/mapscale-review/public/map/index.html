@@ -2712,27 +2712,75 @@ function alignGuides(px, py, refs, tolPx) {
 }
 
 /**
+ * Where two rays cross, or `null` if they are too near parallel to trust.
+ *
+ * The tolerance is on the cross product of the directions: as two rays approach parallel their
+ * meeting point runs away to infinity, and a "snap" that teleports the corner off the floor is
+ * worse than no snap.
+ */
+function rayIntersect(a1, d1, a2, d2) {
+  const den = d1[0] * d2[1] - d1[1] * d2[0];
+  if (Math.abs(den) < 0.05) return null;             // ~3° apart or less
+  const t = ((a2[0] - a1[0]) * d2[1] - (a2[1] - a1[1]) * d2[0]) / den;
+  return [a1[0] + d1[0] * t, a1[1] + d1[1] * t];
+}
+
+/** How far from the cursor an intersection may land before it stops being a snap. */
+const GUIDE_CROSS_PX = 90;
+
+/**
  * Where the point should actually go, and what to draw to explain it.
+ *
+ * `anchors` is a list of `{ at, bases }` — a corner to measure from, and the wall bearings to
+ * measure against. **Two of them is the interesting case** (Olcay, 2026-08-16: *"snapping and
+ * highlighting to the next node's 90 degree … Before and after 90 degree?"*): the corner before the
+ * one being dragged, and the corner after it. Each offers a ray; when both catch, the point goes to
+ * **where the two rays cross** — the single position that squares the outline at *both* ends at
+ * once, which neither guide could have found alone and no amount of aiming would reliably hit.
  *
  * The order is the rule: **the modifier means "on the angle", so it wins outright.** Otherwise
  * alignment is preferred — on a floor plan, agreeing with the room next door matters more than a
  * round number of degrees — and a tight angle guide is the fallback when nothing lines up.
  */
-function resolveGuides(anchor, px, py, refs, wide, bases) {
+function resolveGuides(anchors, px, py, refs, wide, bases) {
   const out = { x: px, y: py, guides: [] };
   const asGuide = a => ({ kind: "angle", deg: a.deg, rel: a.rel, from: a.from });
-  if (anchor && wide) {
-    const a = bestAngleGuide(anchor[0], anchor[1], px, py, GUIDE_STEP_DEG, GUIDE_WIDE_DEG, bases);
-    if (a) return { x: a.x, y: a.y, guides: [asGuide(a)] };
+  // One anchor may still be passed as a bare point, with its bases alongside — the cut does that.
+  const list = !anchors ? []
+    : Array.isArray(anchors[0]) || typeof anchors[0] === "number"
+      ? [{ at: anchors, bases }]
+      : anchors;
+
+  if (list.length && wide) {
+    const hits = list
+      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_DEG, GUIDE_WIDE_DEG, an.bases))
+      .filter(Boolean);
+    if (hits.length >= 2) {
+      const dir = g => [Math.cos(g.deg * Math.PI / 180), Math.sin(g.deg * Math.PI / 180)];
+      const X = rayIntersect(hits[0].from, dir(hits[0]), hits[1].from, dir(hits[1]));
+      if (X && Math.hypot(X[0] - px, X[1] - py) <= GUIDE_CROSS_PX)
+        return { x: X[0], y: X[1], guides: hits.map(asGuide), crossed: true };
+    }
+    if (hits.length) return { x: hits[0].x, y: hits[0].y, guides: [asGuide(hits[0])] };
   }
   const al = alignGuides(px, py, refs, GUIDE_ALIGN_PX);
   for (const g of al) {
     if (g.axis === "x") out.x = g.ref[0]; else out.y = g.ref[1];
     out.guides.push({ kind: "align", axis: g.axis, ref: g.ref });
   }
-  if (!al.length && anchor) {
-    const a = bestAngleGuide(anchor[0], anchor[1], px, py, GUIDE_STEP_DEG, GUIDE_TIGHT_DEG, bases);
-    if (a) { out.x = a.x; out.y = a.y; out.guides.push(asGuide(a)); }
+  if (!al.length && list.length) {
+    // Unmodified, the same two-ray crossing is still allowed — it just has to be earned at the
+    // tight tolerance rather than handed over by the modifier.
+    const hits = list
+      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_DEG, GUIDE_TIGHT_DEG, an.bases))
+      .filter(Boolean);
+    if (hits.length >= 2) {
+      const dir = g => [Math.cos(g.deg * Math.PI / 180), Math.sin(g.deg * Math.PI / 180)];
+      const X = rayIntersect(hits[0].from, dir(hits[0]), hits[1].from, dir(hits[1]));
+      if (X && Math.hypot(X[0] - px, X[1] - py) <= GUIDE_CROSS_PX)
+        return { x: X[0], y: X[1], guides: hits.map(asGuide), crossed: true };
+    }
+    if (hits.length) { out.x = hits[0].x; out.y = hits[0].y; out.guides.push(asGuide(hits[0])); }
   }
   return out;
 }
@@ -2747,27 +2795,30 @@ function geomBearing(a, b) {
 }
 
 /**
- * The bearings a dragged corner should be guided against: **the walls either side of it.**
+ * The two anchors a dragged corner is guided from: **the corner before it and the corner after it**,
+ * each measured against the wall that meets it.
  *
- * For corner `ci`, the edge *arriving* at the previous corner and the edge *leaving* the next one —
- * the two pieces of the outline that are NOT moving, and therefore the two things the new edge has
- * to agree with. Guiding against the screen instead would offer a right angle to the monitor, which
- * is not a fact about the building.
+ * ⚠️ Both, not one. The first version put every ray on the *previous* corner and merely used the
+ * next wall as a bearing — which offers "square to the wall behind you" and can never offer "square
+ * to the wall ahead", because that right angle lives at the *other* corner. A ray from each is what
+ * makes both reachable, and what lets `resolveGuides` cross them: the one position that squares the
+ * outline at both ends at once.
  *
- * The shape's own dominant grid goes in last as a general fallback, so a corner with degenerate
- * neighbours still has something to square to.
+ * The shape's own dominant grid rides along on each, so a corner with degenerate neighbours still
+ * has something to square to.
  */
-function geomVertexBases(ring, ci, gridDeg) {
-  const out = [];
+function geomVertexAnchors(ring, ci, gridDeg) {
   const n = ring.length;
-  if (n >= 3) {
-    const at = i => ring[((i % n) + n) % n];
-    const before = geomBearing(at(ci - 2), at(ci - 1));   // the wall arriving at the anchor
-    const after = geomBearing(at(ci + 1), at(ci + 2));    // the wall leaving the far neighbour
-    if (before !== null) out.push(before);
-    if (after !== null) out.push(after);
-  }
-  if (typeof gridDeg === "number") out.push(gridDeg);
+  if (n < 3) return [];
+  const at = i => ring[((i % n) + n) % n];
+  const grid = typeof gridDeg === "number" ? [gridDeg] : [];
+  const out = [];
+  // Before: a ray from the previous corner, square to the wall arriving at it.
+  const before = geomBearing(at(ci - 2), at(ci - 1));
+  out.push({ at: at(ci - 1), bases: (before === null ? [] : [before]).concat(grid) });
+  // After: a ray from the next corner, square to the wall leaving it.
+  const after = geomBearing(at(ci + 1), at(ci + 2));
+  out.push({ at: at(ci + 1), bases: (after === null ? [] : [after]).concat(grid) });
   return out;
 }
 
@@ -3500,6 +3551,24 @@ function geomDraw() {
          * a number about the monitor.
          */
         const label = Math.round((g.rel ?? g.deg) % 180) + "°";
+        /**
+         * A right angle gets the draughtsman's square mark, drawn **at the corner it belongs to**
+         * (Olcay, 2026-08-16: *"snapping and highlighting to the next node's 90 degree"*). 90° is
+         * the one people are actually reaching for, and a number in a box is a weaker signal than
+         * the symbol every floor plan already uses for it. Set in the corner between the wall it is
+         * measured from and the guide ray, so it says which two lines are square.
+         */
+        if (Math.abs(((g.rel ?? 0) % 180) - 90) < 1e-6) {
+          const R = 13;
+          const a1 = g.deg * Math.PI / 180;
+          const a2 = (g.deg - (g.rel > 180 ? -90 : 90)) * Math.PI / 180;
+          const p1 = [g.from[0] + Math.cos(a1) * R, g.from[1] + Math.sin(a1) * R];
+          const p2 = [g.from[0] + Math.cos(a2) * R, g.from[1] + Math.sin(a2) * R];
+          l.appendChild(el("path", {
+            d: `M${p1[0]} ${p1[1]} L${p1[0] + p2[0] - g.from[0]} ${p1[1] + p2[1] - g.from[1]} L${p2[0]} ${p2[1]}`,
+            fill: "none", stroke: "#00875a", "stroke-width": 2,
+          }));
+        }
         l.appendChild(el("rect", { x: g.from[0] + 10, y: g.from[1] - 22, width: label.length * 7.5 + 12,
                                    height: 19, rx: 5, fill: "#00875a" }));
         const t = el("text", { x: g.from[0] + 16, y: g.from[1] - 8, fill: "#fff",
@@ -3689,9 +3758,8 @@ function geomDown(ev, what) {
       let gx = pt.x, gy = pt.y;
       if (!hit) {
         const ring = origScreen[what.ri] || [];
-        const prev = ring.length ? ring[(what.ci - 1 + ring.length) % ring.length] : null;
-        const g = resolveGuides(prev, pt.x, pt.y, guideRefs, geomSnapping(e),
-                                geomVertexBases(ring, what.ci, gridDeg));
+        const g = resolveGuides(geomVertexAnchors(ring, what.ci, gridDeg),
+                                pt.x, pt.y, guideRefs, geomSnapping(e));
         gx = g.x; gy = g.y;
         GEOM.guides = g.guides;
       } else {
