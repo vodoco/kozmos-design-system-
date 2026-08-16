@@ -159,7 +159,7 @@ const PointrMap = forwardRef<
     /** Features other people currently have open in the editor, so the map can say so. */
     editing?: { fid: string; who: string; colour: string }[];
     /** Geometry-editor commands, and the state it reports back — see ui/GeometryToolbar. */
-    geomCommand?: { seq: number; body: Record<string, unknown> } | null;
+    geomCommands?: { seq: number; body: Record<string, unknown> }[];
     onGeomState?: (s: Record<string, unknown>) => void;
     /**
      * A committed outline, in lng/lat rings. Local to the prototype, like every other edit.
@@ -228,7 +228,7 @@ const PointrMap = forwardRef<
     onCursor,
     peers,
     editing,
-    geomCommand,
+    geomCommands,
     onGeomState,
     onGeometry,
     onGeomIdentity,
@@ -302,16 +302,30 @@ const PointrMap = forwardRef<
   }, [peers]);
 
   /**
-   * Commands carry a `seq` so the same one twice — two taps of Rotate — still fires. Without it the
+   * Every geometry command the app has queued, posted in order and each exactly once.
+   *
+   * Commands carry a `seq` so the same one twice — two taps of Undo — still fires. Without it the
    * prop is identical and the effect never re-runs, which is the same trap `focusNonce` exists for.
+   *
+   * ⚠️ **It is a queue because `seq` alone was not enough.** The app used to hand over one command
+   * at a time, and two sent in the same React commit collapsed to the last one — opening a feature
+   * fires `begin` and `select` together, so `begin` was dropped and the geometry editor never
+   * appeared at all. `seq` answers "the same command twice"; it says nothing about two *different*
+   * commands colliding, and that is a different failure with the same shape.
+   *
+   * `sentSeq` is the high-water mark, so a re-render, a trimmed queue or a remount can never replay
+   * a command — and replaying `begin` would discard whatever the user had already edited.
    */
+  const sentSeq = useRef(0);
   useEffect(() => {
-    if (!geomCommand) return;
-    ref.current?.contentWindow?.postMessage(
-      { type: "geom", ...geomCommand.body },
-      "*",
-    );
-  }, [geomCommand?.seq]);
+    const win = ref.current?.contentWindow;
+    if (!win || !geomCommands?.length) return;
+    for (const c of geomCommands) {
+      if (c.seq <= sentSeq.current) continue;
+      sentSeq.current = c.seq;
+      win.postMessage({ type: "geom", ...c.body }, "*");
+    }
+  }, [geomCommands]);
 
   // Its own effect: who is editing changes when a panel opens, not 20 times a second like a cursor.
   useEffect(() => {

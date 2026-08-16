@@ -2236,14 +2236,28 @@ export function MapContent({
    * side owns only the toolbar and the state the map reports back.
    */
   const [geom, setGeom] = useState<GeomState>({ editing: false });
-  const [geomCommand, setGeomCommand] = useState<{
-    seq: number;
-    body: Record<string, unknown>;
-  } | null>(null);
+  /**
+   * ⚠️ **A QUEUE, not one slot — because two commands can be sent in the same commit.**
+   *
+   * This was a single `{ seq, body }` and it silently ate commands. Opening a feature fires two
+   * effects on one commit — `begin` for the editor and `select` for the multi-selection — and two
+   * plain `setState` calls in one batch are last-write-wins, so **`begin` never reached the map**.
+   * The panel opened, the map was never told, and the whole geometry editor simply failed to
+   * appear. The `seq` was already there and did not help: it makes the *same* command twice fire
+   * twice, which is a different problem from two *different* commands colliding.
+   *
+   * Bounded, because it is append-only: the consumer tracks the last `seq` it posted (see
+   * PointrMap), so trimming can never replay anything, and no realistic burst reaches 32 — every
+   * send causes the render that drains it.
+   */
+  const [geomCommands, setGeomCommands] = useState<
+    { seq: number; body: Record<string, unknown> }[]
+  >([]);
   const geomSeq = useRef(0);
   const sendGeom = useCallback((body: Record<string, unknown>) => {
     geomSeq.current += 1;
-    setGeomCommand({ seq: geomSeq.current, body });
+    const seq = geomSeq.current;
+    setGeomCommands((cur) => [...cur.slice(-31), { seq, body }]);
   }, []);
   const onGeomCommand = useCallback(
     (c: GeomCommand) => sendGeom(c as unknown as Record<string, unknown>),
@@ -2976,7 +2990,7 @@ export function MapContent({
             onCursor={setPresenceCursor}
             peers={peers}
             editing={editors}
-            geomCommand={geomCommand}
+            geomCommands={geomCommands}
             onGeomState={onGeomState}
             onGeometry={onGeometry}
             onGeomIdentity={onGeomIdentity}
