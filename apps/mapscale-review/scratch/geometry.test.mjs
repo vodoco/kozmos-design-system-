@@ -45,7 +45,7 @@ writeFileSync(
       `  angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,\n` +
       `  guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,\n` +
       `  segPairClosest, findBridge, bridgeRings, combineRings,\n` +
-      `  ringGap, ringSetArea, largestSet, wallBetween,\n` +
+      `  ringGap, ringSetArea, largestSet, liesBetween,\n` +
       `  focusView, focusPan, FOCUS_MARGIN,\n` +
       `  unwrapGrid, orientedBox, geomResizeCursor };\n`,
 );
@@ -62,7 +62,7 @@ const {
   angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,
   guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,
   segPairClosest, findBridge, bridgeRings, combineRings,
-  ringGap, ringSetArea, largestSet, wallBetween,
+  ringGap, ringSetArea, largestSet, liesBetween,
   focusView, focusPan, FOCUS_MARGIN,
   unwrapGrid, orientedBox, geomResizeCursor,
 } = mod;
@@ -837,18 +837,18 @@ function inRing(ring, p) {
 }
 
 /* C12. Which walls a combine swallows. The rule is BETWEEN, not inside — see the note on
-        `wallBetween` for why a point-in-polygon test answers "no" for exactly these walls. */
+        `liesBetween` for why a point-in-polygon test answers "no" for exactly these walls. */
 {
   const dividing = close([[100, 0], [106, 0], [106, 60], [100, 60]]);   // the wall in the gap
   const outer = close([[-6, 0], [0, 0], [0, 60], [-6, 60]]);            // roomL's far side
   const sets = [[roomL], [roomR(6)]];
-  check("the wall between two rooms goes", wallBetween([dividing], sets, 1) === true);
-  check("the wall on the outside stays", wallBetween([outer], sets, 1) === false);
+  check("the wall between two rooms goes", liesBetween([dividing], sets, 1) === true);
+  check("the wall on the outside stays", liesBetween([outer], sets, 1) === false);
   // The threshold is the whole safeguard: a wall that touches both only because the tolerance is
   // absurd is not a wall between them.
   const distant = close([[300, 0], [306, 0], [306, 60], [300, 60]]);
-  check("a wall nowhere near either stays", wallBetween([distant], sets, 1) === false);
-  check("…and no threshold reaches it", wallBetween([distant], sets, 50) === false);
+  check("a wall nowhere near either stays", liesBetween([distant], sets, 1) === false);
+  check("…and no threshold reaches it", liesBetween([distant], sets, 50) === false);
 }
 
 /* C13. Three rooms in a row: the middle two walls go, the two end walls stay. The case Olcay
@@ -861,9 +861,9 @@ function inRing(ring, p) {
   const between1 = close([[100, 0], [106, 0], [106, 60], [100, 60]]);
   const between2 = close([[206, 0], [212, 0], [212, 60], [206, 60]]);
   const endWall = close([[312, 0], [318, 0], [318, 60], [312, 60]]);
-  check("the first interior wall goes", wallBetween([between1], sets, 1) === true);
-  check("the second interior wall goes", wallBetween([between2], sets, 1) === true);
-  check("the end wall stays", wallBetween([endWall], sets, 1) === false);
+  check("the first interior wall goes", liesBetween([between1], sets, 1) === true);
+  check("the second interior wall goes", liesBetween([between2], sets, 1) === true);
+  check("the end wall stays", liesBetween([endWall], sets, 1) === false);
   // …and the shape they leave behind is one room.
   const r = combineRings([a, b, c], 12);
   check("and the three become one", r.rings.length === 1 && r.joined === 2,

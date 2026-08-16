@@ -2473,6 +2473,23 @@ function geomBegin(fid) {
     boxTheta: null,
   };
   GEOM.pieceOf = GEOM.rings.map(() => 0);
+  /**
+   * ⚠️ **Say so when the outline is partly the tile grid.** The editor still opens — refusing would
+   * make "edit all geometries" hollow for exactly the big structural features it was opened for,
+   * and the *properties* are perfectly editable either way — but the person dragging a corner is
+   * entitled to know that some of these corners are seams rather than walls.
+   *
+   * The real fix is to read the feature's true geometry from Pointr Cloud rather than from the
+   * rendered tiles; see the standing item in the hand-off.
+   */
+  GEOM.clipped = f.kind === "area" && f.tiles > 1;
+  if (GEOM.clipped) {
+    console.warn("[geometry]", fid, "arrives in", f.tiles,
+                 "tile-clipped pieces — its outline includes tile seams, not just walls");
+    post("geomerror", { fid,
+      message: "This feature is larger than one map tile, so its outline here is cut at the tile "
+             + "seams. Those corners are not walls — editing the shape will write them in." });
+  }
   // The subject's own properties, kept for the same reason a picked feature's are: undoing back
   // past a combine has to be able to put the panel back on this feature.
   const own = scanFeature(fid);
@@ -2661,14 +2678,33 @@ function geomEnd(commit) {
 function geomFind(fid) {
   const rings = [];
   let point = null;
+  /**
+   * ⚠️ **How many TILES carried this feature** — not how many rings it has, which is a different
+   * and innocent thing (a genuine MultiPolygon).
+   *
+   * `querySourceFeatures` returns one copy of a feature **per tile it touches**, and each copy is
+   * **clipped to its own tile**. So a feature larger than a tile arrives in pieces with dead
+   * straight edges along the seams, and accumulating them — which is what this does, and what
+   * `scanFeature` documents itself doing — builds an outline that is partly the tile grid rather
+   * than the building. Those false corners are draggable, they inflate the piece count, and a
+   * commit would write the seams into the shape.
+   *
+   * It went unnoticed for as long as only POIs were editable, because a POI fits in one tile.
+   * Opening every geometry to the editor (2026-08-16) made concourse-sized structural features
+   * reachable, and they are exactly the ones that span tiles.
+   */
+  let tiles = 0;
   for (const f of featuresWithFid(fid)) {
     const g = f.geometry;
     if (g.type === "Point") { if (!point) point = g.coordinates.slice(); }
     else if (g.type === "MultiPoint") { if (!point && g.coordinates[0]) point = g.coordinates[0].slice(); }
-    else rings.push(...ringsOuter(f));
+    else {
+      const got = ringsOuter(f);
+      if (got.length) { tiles++; rings.push(...got); }
+    }
   }
-  if (rings.length) return { kind: "area", rings };
-  if (point) return { kind: "point", point };
+  if (rings.length) return { kind: "area", rings, tiles };
+  if (point) return { kind: "point", point, tiles: 0 };
   return null;
 }
 
@@ -2685,9 +2721,6 @@ function geomState() {
         pieces: geomPieces(),
         // Has the first click of a cut landed? The toolbar says what the next click will do.
         cutting: GEOM.mode === "split" && !!GEOM.cutA,
-        // Every selected feature, this one first — the app pairs these with the properties it
-        // already holds to build the "3 features selected" list.
-        selection: [GEOM.fid].concat(GEOM.pick.map(p => p.fid)),
         /**
          * How many features are selected *besides* this one — so `selected + 1` is what the toast
          * and the panel count. Reported rather than assumed by the app: the app knows which fids it
@@ -3524,18 +3557,22 @@ function largestSet(sets) {
 }
 
 /**
- * Is this wall **between** the features being combined?
+ * Does this feature lie **between** the features being combined?
  *
  * ⚠️ Deliberately NOT "is it inside the combined ring". The stitch bridges through the *nearest*
  * facing points, so the joined outline swallows a wedge of the gap rather than the whole of it —
  * a wall in the opening is only partly enclosed, and a point-in-polygon test would answer "no" for
  * exactly the walls this is for.
  *
- * Between is the thing that is actually meant, and it is directly testable: a wall that comes within
- * the gap threshold of **two or more** of the combined features is standing between two of them. A
- * wall on the outside edge touches one and stays.
+ * Between is the thing that is actually meant, and it is directly testable: anything that comes
+ * within the gap threshold of **two or more** of the combined features is standing between two of
+ * them. Something on the outside edge touches one and stays.
+ *
+ * ⚠️ Named for the test, not for walls. It judged only `mainType === "wall"` until 2026-08-16, and
+ * the old name outlived that by long enough to be misleading — a threshold or a strip of
+ * circulation space between two rooms is just as much in the way.
  */
-function wallBetween(wallRings, sets, maxGap) {
+function liesBetween(wallRings, sets, maxGap) {
   let touching = 0;
   for (const set of sets) {
     let near = false;
@@ -4128,7 +4165,7 @@ function geomInteriorFeatures(sets, gapPx, exclude) {
       if (!verdict.has(p.fid)) {
         const rings = ringsOuter(f)
           .map(r => r.map(c => { const q = map.project(c); return [q.x, q.y]; }));
-        verdict.set(p.fid, rings.length ? wallBetween(rings, sets, gapPx) : false);
+        verdict.set(p.fid, rings.length ? liesBetween(rings, sets, gapPx) : false);
         /**
          * ⚠️ **Named here or never.** The app has no properties for these — it never clicked them,
          * they are walls and thresholds it was not even offering to select. And the moment they are
@@ -4201,8 +4238,17 @@ function geomSetSelection(fids) {
     const g = geomFind(fid);
     return {
       fid,
-      // `rings` empty means a point feature — carried anyway, because it is genuinely selected and
-      // the panel is editing it. It is Combine that cannot use it, and Combine says so itself.
+      /**
+       * ⚠️ **`kind` is carried, and `null` is a third answer.** A point feature and a feature whose
+       * tiles have not loaded both arrive with no rings, and they are not the same problem — one
+       * cannot be combined at all, the other merely cannot be combined *yet*. Told apart by name,
+       * because Combine's refusal is read by a person deciding what to do next, and "this is a
+       * single point" about a room they can see is worse than saying nothing.
+       *
+       * The outline is kept rather than re-read on every selection change: it is the one the user
+       * has been looking at, and re-querying would let a tile reload change it underneath them.
+       */
+      kind: g ? g.kind : null,
       rings: g && g.kind === "area" ? JSON.parse(JSON.stringify(g.rings)) : [],
       point: g && g.kind === "point" ? g.point.slice() : null,
     };
@@ -4233,7 +4279,11 @@ function geomCombinable() {
   if (!GEOM.pick.length) {
     return { ok: false, why: "Shift-click another feature on the map to combine this one with it." };
   }
-  if (GEOM.kind !== "area" || GEOM.pick.some(p => !p.rings.length)) {
+  if (GEOM.pick.some(p => p.kind === null)) {
+    return { ok: false,
+      why: "One of these has not loaded yet — pan so it is on screen, then try again." };
+  }
+  if (GEOM.kind !== "area" || GEOM.pick.some(p => p.kind !== "area")) {
     return { ok: false, why: "One of these is a single point — a point has no outline to join." };
   }
   try {
