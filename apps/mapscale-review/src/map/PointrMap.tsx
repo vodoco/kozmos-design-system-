@@ -44,6 +44,21 @@ export interface MapLevel {
   building: string;
 }
 
+/**
+ * One **network** on a floor: a connected component of the wayfinding graph (Olcay, 2026-08-16:
+ * *"we should have entity per network"*). `transitions` are the links that leave it — to another
+ * level, or to another network on this same one — which is precisely what makes it an entity with a
+ * boundary rather than an arbitrary slice of a graph.
+ */
+export interface MapNetwork {
+  /** Its index, biggest first — so 0 is the concourse, not a stub in a plant room. */
+  n: number;
+  size: number;
+  transitions: number;
+  /** How many of its nodes carry those links. */
+  gateways: number;
+}
+
 /** A building on the active site, straight from the SDK's site/building manager. */
 export interface MapBuilding {
   id: string;
@@ -159,6 +174,17 @@ const PointrMap = forwardRef<
        */
       additive?: boolean,
     ) => void;
+    /**
+     * The **networks** on the reported floor — Olcay, 2026-08-16: *"we should have entity per
+     * network. networks are connected to other levels' networks and this level's other networks
+     * through transitions."*
+     *
+     * A network is a connected component of the level's wayfinding adjacency, and the map works it
+     * out: it holds the graph, and the app would otherwise have to write the same walk a second
+     * time. The same division as `onFeatures` and `onTypes` — the map reports what is on the floor,
+     * the app displays it.
+     */
+    onNetworks?: (forLevel: number, networks: MapNetwork[]) => void;
     /** This tab's cursor, in map coordinates — presence broadcasts it (see cloud/presence.ts). */
     onCursor?: (lng: number, lat: number) => void;
     /**
@@ -270,6 +296,7 @@ const PointrMap = forwardRef<
     onFeatureProps,
     onFeatureClick,
     onCursor,
+    onNetworks,
     peers,
     editing,
     levelGeometry,
@@ -569,6 +596,9 @@ const PointrMap = forwardRef<
           ev.data.props
         )
           onGeomIdentity?.(String(ev.data.fid), ev.data.props);
+      } else if (ev.data.type === "networks") {
+        if (ev.source === ref.current?.contentWindow)
+          onNetworks?.(ev.data.level, ev.data.networks ?? []);
       } else if (ev.data.type === "error") {
         /**
          * ⚠️ **The map shell has been reporting failures into the void.**
@@ -673,6 +703,7 @@ const PointrMap = forwardRef<
     onDecision,
     onSelect,
     onFeatureProps,
+    onNetworks,
   ]);
 
   /**

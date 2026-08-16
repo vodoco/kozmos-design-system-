@@ -1718,31 +1718,11 @@ function networkEdges(nodes) {
 }
 
 /**
- * What a node is connected to: the edges that touch it, and the nodes at their far ends.
- *
- * ⚠️ **Both directions**, deliberately. A one-way edge *into* a node is still something that node
- * is connected to, and hovering it to ask "what does this reach?" and being told only about the
- * ways out would be a half-answer about a graph — the half most likely to be wrong, since one-way
- * edges are the interesting ones.
- */
-function nodeNeighbourhood(edges, fid) {
-  const fids = [];
-  let touching = 0;
-  for (const e of edges || []) {
-    const p = e.properties;
-    const other = p.from === fid ? p.to : p.to === fid ? p.from : null;
-    if (other === null) continue;
-    touching++;
-    if (fids.indexOf(other) < 0) fids.push(other);
-  }
-  return { fids, touching };
-}
-
-/**
  * Who is next to whom, ignoring direction.
  *
- * Direction is about whether you may *walk* it; this is about what the corridor is *shaped* like,
- * and a one-way corridor is still one corridor.
+ * Direction is about whether you may *walk* an edge; this is about what the graph is *shaped* like,
+ * and a one-way corridor is still one corridor. Both the component walk and the highlight rest on
+ * it, so it is stated once.
  */
 function networkAdjacency(edges) {
   const adj = new Map();
@@ -1751,62 +1731,96 @@ function networkAdjacency(edges) {
     if (!l) adj.set(a, (l = []));
     if (!l.some(x => x.fid === b)) l.push({ fid: b, edge: e });
   };
-  for (const e of edges || []) { add(e.properties.from, e.properties.to, e); add(e.properties.to, e.properties.from, e); }
+  for (const e of edges || []) {
+    add(e.properties.from, e.properties.to, e);
+    add(e.properties.to, e.properties.from, e);
+  }
   return adj;
 }
 
 /**
- * **The whole path through a node or an edge** — Olcay, 2026-08-16: *"line or path should highlight
- * the whole path. Not just the neighbouring nodes and lines."*
+ * **The networks on this floor.** Olcay, 2026-08-16: *"we should have entity per network. networks
+ * are connected to other levels' networks and this level's other networks through transitions."*
  *
- * Walk outward in every direction and **keep going through any node that merely carries the path
- * on** — one in, one out — stopping at a junction or a dead end. That is what a person means by a
- * path here: the corridor between two places where you could have chosen differently. A node's
- * immediate neighbours are one hop of it, which is why lighting only those looked so thin against a
- * network of long straight runs.
+ * A network is a **connected component of the same-floor adjacency** — everything you can reach
+ * without leaving the floor. That is not a definition anybody chose: it is what the data already
+ * is, and Olcay's sentence names its boundary precisely. `neighbors` stay inside a network;
+ * `transitionNeighbors` are how one network reaches another, whether that other is upstairs or is
+ * simply a separate network on this same floor.
  *
- * ⚠️ **One rule, no special case for junctions.** Hovering a junction walks out along every run
- * that meets there and stops at the next junctions — so it lights the paths that junction joins,
- * which is the useful answer to "what is this?" for a junction. Special-casing it to "just its own
- * edges" would make the mark mean two different things depending on where the pointer happened to
- * land, and you cannot tell a junction from a corridor node by looking before you hover it.
+ * ⚠️ **A transition is the boundary, not a member.** The node at a lift belongs to the network it
+ * stands in; the transition is the thing that leaves. Walking transitions as ordinary edges would
+ * fuse every network in the building into one, and the entity would mean nothing.
  *
- * Capped, and it says when it hit the cap: a filter is rebuilt on every hover, and a run of
- * thousands is not worth the frame it would cost.
+ * Ordered biggest first, so network 1 is the concourse rather than a two-node stub in a plant room.
+ * Isolated nodes are networks of one — they are real, and a floor with forty of them is a floor
+ * with a problem somebody should see, not a list quietly filtered.
  */
-function pathRun(edges, startFids, cap) {
-  const limit = cap || 400;
+function networkComponents(nodes, edges) {
   const adj = networkAdjacency(edges);
-  const fids = new Set();
+  const seen = new Set();
+  const groups = [];
+  for (const n of nodes || []) {
+    const fid = n && n.fid;
+    if (!fid || seen.has(fid)) continue;
+    const fids = [];
+    const queue = [fid];
+    seen.add(fid);
+    while (queue.length) {
+      const at = queue.shift();
+      fids.push(at);
+      for (const step of adj.get(at) || []) {
+        if (seen.has(step.fid)) continue;
+        seen.add(step.fid);
+        queue.push(step.fid);
+      }
+    }
+    groups.push(fids);
+  }
+  groups.sort((a, z) => z.length - a.length);
+
+  const byFid = new Map();
+  for (const n of nodes || []) if (n && n.fid) byFid.set(n.fid, n);
+  const of = new Map();
+  const list = groups.map((fids, i) => {
+    let transitions = 0, gateways = 0;
+    for (const f of fids) {
+      of.set(f, i);
+      const t = (byFid.get(f) || {}).transitionNeighbors || [];
+      if (t.length) { transitions += t.length; gateways++; }
+    }
+    return { n: i, size: fids.length, fids, transitions, gateways };
+  });
+  return { of, list };
+}
+
+/**
+ * Every node and edge of the network a node belongs to.
+ *
+ * ⚠️ **This replaced a walk that stopped at junctions**, within the hour and on purpose. That walk
+ * answered *"what corridor is this?"* — the right answer to the question being asked at the time,
+ * *"highlight the whole path"* — and stopped being right the moment the network became an
+ * **entity**. You do not highlight part of an entity because there is a fork in it.
+ *
+ * Kept for the case where the network ids are not available: see `wfHighlight`.
+ */
+function networkRun(edges, fid) {
+  const adj = networkAdjacency(edges);
+  const fids = new Set([fid]);
+  const queue = [fid];
   const pairs = [];
   const seenEdge = new Set();
-  let capped = false;
-  /** A node that only carries the path on: exactly two ways out of it. */
-  const carriesOn = f => (adj.get(f) || []).length === 2;
-
-  const queue = [];
-  // The start is always in, edges or not: a node with nothing attached is still the node you are
-  // pointing at, and a hover that lights nothing reads as a hover that failed.
-  for (const f of startFids || []) if (f) { fids.add(f); queue.push(f); }
   while (queue.length) {
     const at = queue.shift();
-    // Walk THROUGH a node only if it carries the path on. A start node is always walked out of —
-    // that is the hover — and a junction reached later is where this run ends.
-    const isStart = (startFids || []).indexOf(at) >= 0;
-    if (!isStart && !carriesOn(at)) continue;
     for (const step of adj.get(at) || []) {
       const key = step.edge.properties.from + " " + step.edge.properties.to;
-      if (!seenEdge.has(key)) {
-        seenEdge.add(key);
-        pairs.push([step.edge.properties.from, step.edge.properties.to]);
-      }
+      if (!seenEdge.has(key)) { seenEdge.add(key); pairs.push([step.edge.properties.from, step.edge.properties.to]); }
       if (fids.has(step.fid)) continue;
-      if (fids.size >= limit) { capped = true; continue; }
       fids.add(step.fid);
       queue.push(step.fid);
     }
   }
-  return { fids: [...fids], pairs, capped };
+  return { fids: [...fids], pairs };
 }
 
 /**
@@ -1970,6 +1984,18 @@ function applyHiddenTypes() {
 
 const WF_NODE = "__wf_node", WF_TRANSITION = "__wf_transition";
 const WF_EDGE = "__wf_edge", WF_ARROW = "__wf_arrow", WF_EDGE_SRC = "__wf_edges";
+/**
+ * **The buffer** — Olcay, 2026-08-16: *"We need a bit of buffer so it's easy to click and edit."*
+ *
+ * A path node draws two or three pixels across: enough to read as texture, nowhere near enough to
+ * hit. The **ink and the target are two layers**, exactly as they are for a polygon's edges — the
+ * mark stays small and honest about where the corridor runs, and an invisible one sits under it at
+ * a size the hand can actually manage.
+ */
+const WF_NODE_HIT = "__wf_node_hit", WF_EDGE_HIT = "__wf_edge_hit";
+const WF_HIT_R = 11, WF_HIT_W = 14;
+/** Our own node source: the only one that can carry which network a node belongs to. */
+const WF_NODE_SRC = "__wf_nodes";
 /** The hover marks: the node under the pointer with its neighbours, and the edges between them. */
 const WF_EDGE_HL = "__wf_edge_hl", WF_NODE_HL = "__wf_node_hl";
 const WF_SL = "wayfindingnetwork";
@@ -1990,6 +2016,16 @@ let wfLevel = null, wfSource = null;
 
 /** Which source holds the nodes — the GeoJSON one once the render has swapped, else the tiles. */
 function wfSourceOf() {
+  /**
+   * **Our own, built from the `/paths` fetch, whenever we have it.** It is the only source that
+   * carries the network id each node belongs to — and a highlight that must name four hundred fids
+   * in a filter rather than compare one number is a highlight that costs a frame on every hover.
+   *
+   * ⚠️ The tiles stay the fallback and that matters: if the paths fetch fails there are still nodes
+   * in the vector tiles, and a section drawing nothing at all is a worse answer than one drawing
+   * nodes it cannot group.
+   */
+  if (WF_NODE_FC && WF_NODE_FC.features.length) return { source: WF_NODE_SRC, sourceLayer: null };
   const gj = GJ_SRC + WF_SL;
   /**
    * ⚠️ **Only if that source actually holds nodes** (Olcay, 2026-08-16: *"wayfinding network path
@@ -2022,9 +2058,11 @@ function wfFilter(network) {
 }
 
 function wfRemove() {
-  for (const id of [WF_ARROW, WF_EDGE_HL, WF_EDGE, WF_NODE, WF_TRANSITION, WF_NODE_HL])
+  for (const id of [WF_ARROW, WF_EDGE_HL, WF_EDGE_HIT, WF_EDGE, WF_NODE_HIT, WF_NODE,
+                    WF_TRANSITION, WF_NODE_HL])
     try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
-  try { if (map.getSource(WF_EDGE_SRC)) map.removeSource(WF_EDGE_SRC); } catch (e) {}
+  for (const id of [WF_EDGE_SRC, WF_NODE_SRC])
+    try { if (map.getSource(id)) map.removeSource(id); } catch (e) {}
   wfSource = null;
   wfLevel = null;
   /**
@@ -2045,6 +2083,8 @@ function wfRemove() {
 
 /** The level's nodes, as the app fetched them, and the edges built from their adjacency. */
 let WF_NODES = [], WF_EDGES = null;
+/** The same nodes as GeoJSON this file can draw, and the networks they fall into. */
+let WF_NODE_FC = null, WF_NETS = null;
 
 /**
  * A single arrowhead, drawn into a canvas and handed to the style at runtime.
@@ -2086,25 +2126,60 @@ function wfEnsureArrow() {
  * and the edges are derived from them, so this can always answer.
  */
 function wfEnsureEdges() {
-  if (!WF_EDGES) WF_EDGES = networkEdges(WF_NODES).edges;
+  if (!WF_EDGES) wfBuildEdges(true);
   return WF_EDGES;
 }
 
 /** Rebuild the edge collection from the nodes the app last posted, and push it to the source. */
-function wfBuildEdges() {
+function wfBuildEdges(quiet) {
   const built = networkEdges(WF_NODES);
   WF_EDGES = built.edges;
+  const comp = networkComponents(WF_NODES, WF_EDGES);
+  WF_NETS = comp.list;
+  /**
+   * ⚠️ **The network id is stamped onto every node and every edge**, and that is what makes
+   * hovering a whole network one comparison — `net == 3` — instead of a filter naming every fid in
+   * it, rebuilt on every mouse move.
+   */
+  const netOf = f => (comp.of.has(f) ? comp.of.get(f) : -1);
+  for (const e of WF_EDGES) e.properties.net = netOf(e.properties.from);
+  WF_NODE_FC = { type: "FeatureCollection",
+    features: (WF_NODES || []).filter(n => n && n.fid && n.at).map(n => ({
+      type: "Feature",
+      properties: {
+        fid: n.fid, name: n.name || "", subType: n.subType || "",
+        // `mainType`, because everything downstream asks a feature what it is — the hover card, the
+        // section rule, the panel — and these features are ours rather than the platform's.
+        mainType: "wayfinding-network",
+        lvl: LEVEL_FEATS_LVL == null ? TARGET.level : LEVEL_FEATS_LVL,
+        net: netOf(n.fid),
+        transitions: (n.transitionNeighbors || []).length,
+      },
+      geometry: { type: "Point", coordinates: n.at.slice() },
+    })) };
   wfPushEdges();
+  if (quiet) return;
   console.info("[paths] level", TARGET.level, "network →", WF_NODES.length, "nodes ·",
     built.edges.length, "edges (" + built.oneway + " one-way) ·",
-    built.transitions, "transition links off this floor",
+    WF_NETS.length, "network" + (WF_NETS.length === 1 ? "" : "s"),
+    WF_NETS.length ? "of " + WF_NETS.slice(0, 8).map(n => n.size).join(", ") + " nodes" : "",
+    "·", built.transitions, "transition links off this floor",
     built.dangling ? "· ⚠️ " + built.dangling + " neighbour(s) not on this level" : "");
+  /**
+   * The app lists the networks as entities in the tree. **The map reports what is on the floor and
+   * the app displays it** — the same division `onFeatures` and `onTypes` already follow, and the
+   * reason the component walk lives here rather than being written a second time in the app.
+   */
+  post("networks", { level: TARGET.level,
+    networks: WF_NETS.map(({ n, size, transitions, gateways }) => ({ n, size, transitions, gateways })) });
 }
 
 function wfPushEdges() {
   try {
-    const src = map && map.getSource(WF_EDGE_SRC);
-    if (src) src.setData({ type: "FeatureCollection", features: WF_EDGES || [] });
+    const e = map && map.getSource(WF_EDGE_SRC);
+    if (e) e.setData({ type: "FeatureCollection", features: WF_EDGES || [] });
+    const n = map && map.getSource(WF_NODE_SRC);
+    if (n && WF_NODE_FC) n.setData(WF_NODE_FC);
   } catch (e) {}
 }
 
@@ -2117,69 +2192,80 @@ function wfPushEdges() {
  */
 function wfNodeMoved(fid, at) {
   if (!WF_EDGES || !fid || !at) return;
-  if (moveNetworkNode(WF_EDGES, fid, at)) wfPushEdges();
+  let moved = moveNetworkNode(WF_EDGES, fid, at);
+  // The node's own drawing is ours now too, so it has to move with its lines.
+  if (WF_NODE_FC) for (const f of WF_NODE_FC.features)
+    if (f.properties.fid === fid) { f.geometry.coordinates = at.slice(); moved++; }
+  if (moved) wfPushEdges();
 }
 
 /**
- * **Hovering lights the whole path** — Olcay, 2026-08-16: *"let's not show selected marker onHover.
- * Instead highlight the edges and nodes."* Then, seeing it: *"line or path should highlight the
- * whole path. Not just the neighbouring nodes and lines."*
+ * **Hovering lights the whole network** — Olcay, 2026-08-16: *"the whole network should highlight
+ * when hovered."*
  *
- * The SDK's own selection layer draws a **map pin** for a point feature: a green teardrop the size
- * of a building, planted over the very corridors you are inspecting. It is the right mark for
- * finding a shop on a floor and the wrong one for reading a graph — it answers *"where is it?"*
- * when the question here is *"what does this connect to?"*.
+ * It began as the SDK's own mark, which draws a **map pin** for a point feature: a green teardrop
+ * the size of a building, planted over the very corridors you are inspecting. That is the right
+ * mark for finding a shop on a floor and the wrong one for reading a graph — it answers *"where is
+ * it?"* when the question here is *"what is this part of?"*.
  *
- * And the answer to that question is a **path**, not a hop. One node's immediate neighbours are one
- * step of a corridor that runs the length of a terminal; lighting only those looked thin against a
- * network of long straight runs, which is exactly what Olcay saw. `pathRun` walks the run out to
- * the junctions at both ends.
+ * Then it lit one hop, then the run between junctions, and it is now the whole network — which is
+ * where it should have started. The network is the **entity**; you do not highlight part of an
+ * entity because there is a fork in it.
  *
- * A line and a node are two ways of pointing at the same path, so they take the same route in:
+ * ⚠️ **One comparison, not four hundred.** Every node and edge carries the id of the network it
+ * belongs to (see `wfBuildEdges`), so the filter is `net == n`. Naming every fid would rebuild a
+ * four-hundred-term expression on every mouse move across a concourse.
+ *
+ * A line and a node are two ways of pointing at the same network, so they take the same route in:
  * `from` is one node's `fid`, or an edge as `[fromFid, toFid]`.
  */
-const WF_HL_CAP = 400;
 const WF_NONE = ["==", ["get", "fid"], " none"];
 let wfHover = null;
 function wfHighlight(from) {
-  const key = Array.isArray(from) ? from.join(" ") : from || null;
-  if (wfHover === key) return;
-  wfHover = key;
+  const fid = Array.isArray(from) ? from[0] : from || null;
+  if (wfHover === fid) return;
+  wfHover = fid;
   try {
     if (!map.getLayer(WF_EDGE_HL) || !map.getLayer(WF_NODE_HL)) return;
-    if (!key) {
+    if (!fid) {
       // A filter nothing matches, rather than removing the layer: one `setFilter`, and the layer
       // keeps its place in the draw order for the next hover.
       map.setFilter(WF_EDGE_HL, WF_NONE);
       map.setFilter(WF_NODE_HL, WF_NONE);
       return;
     }
-    const run = pathRun(wfEnsureEdges(), Array.isArray(from) ? from : [from], WF_HL_CAP);
+    const net = wfNetOf(fid);
+    if (net >= 0) {
+      map.setFilter(WF_EDGE_HL, ["==", ["get", "net"], net]);
+      map.setFilter(WF_NODE_HL, ["==", ["get", "net"], net]);
+      return;
+    }
     /**
-     * ⚠️ `any` of `==` rather than `["in", …]` — trap 10: `in` throws on a feature with no `fid`,
-     * and one throwing expression takes the whole layer down with it, so the cost of a highlight
-     * would be a floor with no network on it.
-     *
-     * ⚠️ Edges are matched on the **pair**, not on either end: two junctions can be joined directly
-     * as well as through the run between them, and matching one end would light that shortcut too.
+     * No network id, which means the nodes are coming from the tiles because the paths fetch could
+     * not answer. Naming the fids is slower and the graph is only partly known — and it is still a
+     * better answer than no mark at all.
      */
-    map.setFilter(WF_EDGE_HL, ["any", ...run.pairs.map(([a, b]) =>
-      ["all", ["==", ["get", "from"], a], ["==", ["get", "to"], b]])]);
+    const run = networkRun(wfEnsureEdges(), fid);
+    map.setFilter(WF_EDGE_HL, ["any", ...run.pairs.map(([x, y]) =>
+      ["all", ["==", ["get", "from"], x], ["==", ["get", "to"], y]])]);
     map.setFilter(WF_NODE_HL, ["any", ...run.fids.map(f => ["==", ["get", "fid"], f])]);
   } catch (e) {}
 }
 
-/**
- * The edge under the pointer, as `[from, to]`, or `null`.
- *
- * Queried on the highlight layer's twin rather than on everything: `queryRenderedFeatures` at a
- * point is source-agnostic and would happily return a room, and an edge is the one thing here with
- * no `fid` to tell it apart by.
- */
+/** Which network a node belongs to, or `-1` when we do not know. */
+function wfNetOf(fid) {
+  if (!WF_NODE_FC) return -1;
+  for (const f of WF_NODE_FC.features) if (f.properties.fid === fid) return f.properties.net;
+  return -1;
+}
+
 function wfEdgeAt(point) {
   try {
-    if (!map.getLayer(WF_EDGE)) return null;
-    const hit = (map.queryRenderedFeatures(point, { layers: [WF_EDGE] }) || [])[0];
+    // The HIT layer, not the visible one — the buffer is the whole point, and a 1px line is not
+    // something anybody can point at.
+    const id = map.getLayer(WF_EDGE_HIT) ? WF_EDGE_HIT : WF_EDGE;
+    if (!map.getLayer(id)) return null;
+    const hit = (map.queryRenderedFeatures(point, { layers: [id] }) || [])[0];
     const p = hit && hit.properties;
     return p && p.from && p.to ? [p.from, p.to] : null;
   } catch (e) { return null; }
@@ -2203,6 +2289,9 @@ function applyWayfinding() {
     if (!map.getLayer(WF_NODE)) {
       const base = { source: src.source, type: "circle" };
       if (src.sourceLayer) base["source-layer"] = src.sourceLayer;
+      if (src.source === WF_NODE_SRC && !map.getSource(WF_NODE_SRC))
+        map.addSource(WF_NODE_SRC, { type: "geojson",
+          data: WF_NODE_FC || { type: "FeatureCollection", features: [] } });
       /**
        * **The edges go in first, so the nodes sit on top of them.** A corridor drawn over the node
        * it ends at hides exactly the thing that tells you what kind of node it is.
@@ -2251,6 +2340,16 @@ function applyWayfinding() {
             "icon-allow-overlap": true,
             "icon-ignore-placement": true,
           } });
+      /**
+       * ⚠️ **The buffer, and it goes UNDER the ink.** Invisible (0.001 opacity, because a layer at
+       * zero is not hit-tested), wider than what you can see, and beneath the marks so it never
+       * changes what the floor looks like. What you can hit becomes a target the hand can manage
+       * while what you see stays honest about where the corridor actually runs.
+       */
+      map.addLayer({ id: WF_EDGE_HIT, type: "line", source: WF_EDGE_SRC,
+        paint: { "line-color": "#000", "line-opacity": 0.001, "line-width": WF_HIT_W } });
+      map.addLayer(Object.assign({ id: WF_NODE_HIT, filter: ["any", wfFilter(true), wfFilter(false)],
+        paint: { "circle-radius": WF_HIT_R, "circle-color": "#000", "circle-opacity": 0.001 } }, base));
       map.addLayer(Object.assign({ id: WF_NODE, filter: wfFilter(true),
         paint: {
           "circle-radius": ["interpolate", ["linear"], ["zoom"], 15, 1.2, 18, 2.6, 21, 4.5],
@@ -2284,6 +2383,7 @@ function applyWayfinding() {
       // to re-set them or the last floor's network keeps drawing under this one.
       map.setFilter(WF_NODE, wfFilter(true));
       map.setFilter(WF_TRANSITION, wfFilter(false));
+      map.setFilter(WF_NODE_HIT, ["any", wfFilter(true), wfFilter(false)]);
       wfLevel = TARGET.level;
     }
     /**
@@ -2293,7 +2393,8 @@ function applyWayfinding() {
      * pass costs four reads and makes the promise literal: on this section the network is drawn,
      * whatever else the map has been told to hide.
      */
-    for (const id of [WF_EDGE, WF_EDGE_HL, WF_ARROW, WF_NODE, WF_TRANSITION, WF_NODE_HL])
+    for (const id of [WF_EDGE, WF_EDGE_HL, WF_EDGE_HIT, WF_ARROW, WF_NODE_HIT, WF_NODE,
+                      WF_TRANSITION, WF_NODE_HL])
       if (map.getLayer(id) && map.getLayoutProperty(id, "visibility") === "none")
         map.setLayoutProperty(id, "visibility", "visible");
     // The pin storm the product would otherwise draw for the same features.

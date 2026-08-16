@@ -82,8 +82,8 @@ writeFileSync(
       `  GJ, GJ_SRC, GJ_LYR, gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,\n` +
       `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
       `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,\n` +
-      `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode, nodeNeighbourhood,\n` +
-      `  pathRun, networkAdjacency,\n` +
+      `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,\n` +
+      `  networkComponents, networkRun, networkAdjacency,\n` +
       `  wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL, WF_NODES,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
@@ -119,8 +119,8 @@ const {
   gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
   applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,
-  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode, nodeNeighbourhood,
-  pathRun,
+  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
+  networkComponents, networkRun,
   wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL,
   editableAt, hoverableAt,
   __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __edges,
@@ -2056,94 +2056,108 @@ const node = (fid, at, nb, tr) => ({
   check("…and it does not throw on nothing at all", networkEdges(null).edges.length === 0);
 }
 
-/* P7. Hovering a node asks "what does this reach?" — so the mark is its neighbourhood. */
+/* P7. ⚠️ A NETWORK is a connected component, and a transition is its boundary — not a member.
+       Olcay: "we should have entity per network. networks are connected to other levels' networks
+       and this level's other networks through transitions." */
 {
+  //  a—b—c   is one network;   x—y   is another on the same floor, reached only by a transition
+  const nodes = [
+    node("a", [0, 0], ["b"]),
+    node("b", [1, 0], ["a", "c"]),
+    node("c", [2, 0], ["b"], ["upstairs"]),      // c also leaves the floor
+    node("x", [9, 9], ["y"], ["c"]),             // …and x reaches c only as a TRANSITION
+    node("y", [9, 8], ["x"]),
+    node("lonely", [5, 5], []),
+  ];
+  const { edges } = networkEdges(nodes);
+  const { of, list } = networkComponents(nodes, edges);
+
+  check("three networks on this floor", list.length === 3, String(list.length));
+  check("…biggest first, so 0 is the concourse and not a stub",
+        list[0].size === 3 && list[1].size === 2 && list[2].size === 1);
+  /**
+   * ⚠️ The whole point. `x` names `c` as a TRANSITION, not as a neighbour — walking that as an
+   * ordinary edge would fuse every network in the building into one and the entity would mean
+   * nothing.
+   */
+  check("a transition does NOT join two networks", of.get("a") !== of.get("x"));
+  check("…and both ends still belong to their own", of.get("a") === of.get("c") && of.get("x") === of.get("y"));
+  check("a node with nothing attached is a network of one — real, not filtered away",
+        list[2].fids.join() === "lonely");
+  check("the links off a network are counted", list[0].transitions === 1 && list[0].gateways === 1);
+  check("…and a network with none says so", list[2].transitions === 0);
+  check("nothing at all is no networks", networkComponents([], []).list.length === 0);
+}
+
+/* P9. Hovering lights the whole network — not one hop, and not the run between junctions.
+       Olcay: "the whole network should highlight when hovered." */
+{
+  //  a — b — c — d — e   with a spur off c: one network, one highlight, fork or no fork
   const { edges } = networkEdges([
     node("a", [0, 0], ["b"]),
     node("b", [1, 0], ["a", "c"]),
-    node("c", [2, 0], []),                 // b→c only: one-way, INTO c
-    node("d", [9, 9], []),                 // connected to nothing
-  ]);
-  const at_b = nodeNeighbourhood(edges, "b");
-  check("both edges touching the node count", at_b.touching === 2);
-  check("…and both ends are named", at_b.fids.sort().join() === "a,c");
-  /**
-   * ⚠️ Both directions. A one-way edge INTO a node is still something it is connected to, and
-   * answering "what does this reach?" with only the ways out is a half-answer about a graph — the
-   * half most likely to be wrong, since the one-way edges are the interesting ones.
-   */
-  check("a node reached only by a ONE-WAY edge still knows about it",
-        nodeNeighbourhood(edges, "c").fids.join() === "b");
-  check("a node connected to nothing has an empty neighbourhood",
-        nodeNeighbourhood(edges, "d").fids.length === 0);
-  check("…and so does one nobody has heard of", nodeNeighbourhood(edges, "zz").fids.length === 0);
-  // Two edges to the same neighbour would light it twice in the filter for no gain.
-  const dup = networkEdges([node("a", [0, 0], ["b"]), node("b", [1, 0], ["a"])]).edges;
-  check("a two-way edge names its far end once", nodeNeighbourhood(dup, "a").fids.length === 1);
-}
-
-/* P9. The whole path, not one hop. Olcay, seeing the neighbourhood mark: "line or path should
-       highlight the whole path. Not just the neighbouring nodes and lines."
-
-       Walk out in every direction and keep going through any node that merely carries the path on —
-       one in, one out — stopping at a junction or a dead end. That is what a person means by a path
-       here: the corridor between two places where you could have chosen differently. */
-{
-  //  a — b — c — d — e        a straight run, with a spur off c to f
-  //          |
-  //          f
-  const chain = networkEdges([
-    node("a", [0, 0], ["b"]),
-    node("b", [1, 0], ["a", "c"]),
-    node("c", [2, 0], ["b", "d", "f"]),      // a junction: three ways out
+    node("c", [2, 0], ["b", "d", "f"]),
     node("d", [3, 0], ["c", "e"]),
     node("e", [4, 0], ["d"]),
     node("f", [2, 1], ["c"]),
-  ]).edges;
-
-  const fromB = pathRun(chain, ["b"]);
-  check("hovering a corridor node reaches the dead end one way…", fromB.fids.indexOf("a") >= 0);
-  check("…and the junction the other way", fromB.fids.indexOf("c") >= 0);
-  // ⚠️ It STOPS at the junction: past it are other paths, and lighting them would be the network.
-  check("…and stops there", fromB.fids.indexOf("d") < 0 && fromB.fids.indexOf("f") < 0);
-  check("the run is a,b,c", fromB.fids.slice().sort().join() === "a,b,c");
-  check("with the edges between them", fromB.pairs.length === 2);
-
-  // The whole point of the change: one hop would have been b's neighbours only.
-  const hop = nodeNeighbourhood(chain, "b");
-  check("…which is more than the one hop it replaced", fromB.fids.length > hop.fids.length + 0);
-
+  ]);
+  const run = networkRun(edges, "b");
+  check("the whole network lights, junctions and all",
+        run.fids.slice().sort().join() === "a,b,c,d,e,f");
+  check("…with every edge in it", run.pairs.length === 5);
   /**
-   * ⚠️ One rule, no special case for junctions: hovering one walks out along every run that meets
-   * there and stops at the next junctions. Special-casing it would make the mark mean two different
-   * things depending on where the pointer landed — and you cannot tell a junction from a corridor
-   * node by looking, before you hover it.
+   * ⚠️ This replaced a walk that stopped at junctions, within the hour. That walk answered "what
+   * corridor is this?" — right for "highlight the whole path", wrong the moment the network became
+   * an entity. You do not highlight part of an entity because there is a fork in it.
    */
-  const fromC = pathRun(chain, ["c"]);
-  check("hovering a junction lights the paths it joins",
-        fromC.fids.slice().sort().join() === "a,b,c,d,e,f");
-
-  // A line is the other way of pointing at the same path.
-  const fromEdge = pathRun(chain, ["a", "b"]);
-  check("hovering the LINE lights the same run as hovering its node",
-        fromEdge.fids.slice().sort().join() === fromB.fids.slice().sort().join());
-
-  // A lone node with nothing attached is its own path: a hover that lights NOTHING reads as a
-  // hover that failed, so the node you are pointing at is always in.
-  check("a node connected to nothing is just itself", pathRun(chain, ["zz"]).fids.join() === "zz");
-  check("…and no edges at all is not an error", pathRun([], ["a"]).fids.join() === "a");
+  check("hovering the far end lights the same network",
+        networkRun(edges, "e").fids.length === run.fids.length);
+  check("a node nobody has heard of is still itself", networkRun(edges, "zz").fids.join() === "zz");
 }
 
-/* P10. Capped, and it says so — the filter is rebuilt on every hover. */
+/* P10. The buffer, and the node source it needs. Olcay: "we need a bit of buffer so it's easy to
+        click and edit." A path node draws 2–3px across: enough to read as texture, nowhere near
+        enough to hit. */
 {
-  // A long chain: 60 nodes, every one of them carrying the path on.
-  const many = [];
-  for (let i = 0; i < 60; i++) many.push(node("n" + i, [i, 0], i < 59 ? ["n" + (i + 1)] : []));
-  const all = networkEdges(many).edges;
-  check("a long corridor is walked to its end", pathRun(all, ["n30"]).fids.length === 60);
-  const cut = pathRun(all, ["n30"], 10);
-  check("…but not past the cap", cut.fids.length <= 10);
-  check("…and it says it was cut short rather than looking like a short corridor", cut.capped);
+  gjTeardown(null);
+  HIDDEN_BY_TYPE.clear();
+  const m = fakeMap();
+  __setMap(m);
+  __setNodes([node("a", [0, 0], ["b"]), node("b", [1, 0], ["a"]), node("z", [5, 5], [])]);
+  __setHidden(SHOW_WF);
+  const info = console.info; console.info = () => {};
+  wfBuildEdges();
+  applyWayfinding();
+  console.info = info;
+
+  check("the nodes are drawn from our own source, which is the only one that can carry a network id",
+        m.getLayer(WF_NODE).source === "__wf_nodes");
+  check("…and the hit target is one layer, the ink another",
+        !!m.getLayer("__wf_node_hit") && !!m.getLayer("__wf_edge_hit"));
+  // ⚠️ Under the ink, so a buffer never changes what the floor looks like.
+  const ids = m.layers.map((l) => l.id);
+  check("the buffer sits UNDER the marks it is for",
+        ids.indexOf("__wf_node_hit") < ids.indexOf(WF_NODE) &&
+        ids.indexOf("__wf_edge_hit") < ids.indexOf(WF_NODE));
+  const hit = m.getLayer("__wf_node_hit");
+  check("…and is far bigger than what you can see", hit.paint["circle-radius"] >= 8);
+  // Invisible, but NOT at zero opacity: a layer at zero is not hit-tested at all.
+  check("invisible without being absent", hit.paint["circle-opacity"] > 0 && hit.paint["circle-opacity"] < 0.01);
+
+  const fc = m.sources.get("__wf_nodes").data;
+  check("every node carries the network it belongs to", fc.features.every((f) => f.properties.net >= 0));
+  check("…and the two connected ones share it",
+        fc.features[0].properties.net === fc.features[1].properties.net);
+  check("…while the lone one does not", fc.features[2].properties.net !== fc.features[0].properties.net);
+  check("the edges carry it too, so one comparison lights a whole network",
+        m.sources.get("__wf_edges").data.features.every((f) => f.properties.net >= 0));
+  check("and the map reported the networks up for the tree",
+        POSTED.some((p) => p.type === "networks" && p.networks.length === 2));
+
+  __setHidden(null);
+  applyWayfinding();
+  wfRemove();
+  __setNodes([]);
 }
 
 /* P8. ⚠️ The regression that made the lines vanish. Olcay: "edges (lines) disappear after a while."

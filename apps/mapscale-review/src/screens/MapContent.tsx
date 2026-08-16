@@ -17,7 +17,11 @@ import {
   PopoverContent,
   Text,
 } from "@kozmos/react";
-import PointrMap, { type MapBuilding, type MapLevel } from "../map/PointrMap";
+import PointrMap, {
+  type MapNetwork,
+  type MapBuilding,
+  type MapLevel,
+} from "../map/PointrMap";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import {
   GeometryToolbar,
@@ -817,6 +821,8 @@ const LevelTypesContext = createContext<{
   edits: Record<string, { name?: string; subType?: string }>;
   /** The rail's selected layer group — the tree lists that section's rows and no others. */
   section: MapSection;
+  /** The networks the map found, by level — the Wayfinding section's entities. */
+  networks: Record<number, MapNetwork[]>;
 }>({
   byLevel: {},
   request: () => {},
@@ -827,6 +833,7 @@ const LevelTypesContext = createContext<{
   hover: () => {},
   edits: {},
   section: "content",
+  networks: {},
 });
 
 /**
@@ -1981,6 +1988,18 @@ export function MapContent({
    * the whole type would be a megabyte spent to draw nothing.
    */
   const [pathNodes, setPathNodes] = useState<PathNode[]>([]);
+  /**
+   * The **networks** on the shown floor, as the map works them out — one entity per connected
+   * component (Olcay, 2026-08-16). Keyed by level, because the tree can have several floors open.
+   */
+  const [netsByLevel, setNetsByLevel] = useState<Record<number, MapNetwork[]>>(
+    {},
+  );
+  const onNetworks = useCallback(
+    (forLevel: number, nets: MapNetwork[]) =>
+      setNetsByLevel((prev) => ({ ...prev, [forLevel]: nets })),
+    [],
+  );
   useEffect(() => {
     if (!target || section !== "wayfinding-network") {
       setPathNodes([]);
@@ -2758,6 +2777,7 @@ export function MapContent({
       hover: setHovered,
       edits,
       section,
+      networks: netsByLevel,
     }),
     [
       typesByLevel,
@@ -2769,6 +2789,7 @@ export function MapContent({
       editorsByFid,
       edits,
       section,
+      netsByLevel,
     ],
   );
   /**
@@ -3113,6 +3134,7 @@ export function MapContent({
              * this one value, so they cannot disagree with each other or with the tree.
              */
             section={section}
+            onNetworks={onNetworks}
             peers={peers}
             editing={editors}
             levelGeometry={levelGeom}
