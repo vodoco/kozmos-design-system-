@@ -1506,6 +1506,13 @@ function highlightFeatures(sel) {
   if (!src) return;
   const feats = [];
   if (sel) {
+    /**
+     * `fids` is the multi-selection (Olcay, 2026-08-16) and `fid` the single one, kept so hover —
+     * which lights exactly one feature and calls this on every mouse move — needs no array
+     * allocated per frame. A Set, because a selection of five is five membership tests per feature
+     * across every source layer on the floor.
+     */
+    const many = Array.isArray(sel.fids) && sel.fids.length ? new Set(sel.fids) : null;
     try {
       const layers = [...new Set(map.getStyle().layers
         .filter(l => l.source === "source_ptr" && l["source-layer"])
@@ -1514,7 +1521,8 @@ function highlightFeatures(sel) {
       for (const L of layers) {
         for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L })) {
           const p = f.properties; if (!p) continue;
-          if (sel.fid != null ? p.fid !== sel.fid
+          if (many ? !many.has(p.fid)
+                   : sel.fid != null ? p.fid !== sel.fid
                               : (p.mainType !== sel.mainType || (sel.subType || "") !== (p.subType || ""))) continue;
           if (p.lvl !== TARGET.level) continue;
           // a feature split across tiles arrives once per tile; the same fid twice is one shape
@@ -2068,16 +2076,6 @@ function start() {
       geomCutClick(map.unproject([ev.clientX - rect.left, ev.clientY - rect.top]));
       return;
     }
-    /**
-     * **Picking features for a combine takes the release too**, and before the branch below can
-     * read it as a dismissal. Same shape as a cut: the mode is armed from the toolbar and the map
-     * clicks do the choosing.
-     */
-    if (GEOM && GEOM.mode === "combine" && map) {
-      const rect = map.getCanvas().getBoundingClientRect();
-      geomCombineClick([ev.clientX - rect.left, ev.clientY - rect.top]);
-      return;
-    }
     // A plain click on bare floor drops the corner selection — the counterpart to shift-marquee,
     // and the only way out of one besides Escape.
     if (GEOM && GEOM.sel && GEOM.sel.size && !ev.shiftKey) {
@@ -2112,8 +2110,18 @@ function start() {
       const rect = map.getCanvas().getBoundingClientRect();
       const f = editableAt([ev.clientX - rect.left, ev.clientY - rect.top]);
       const fid = f && f.properties && f.properties.fid;
-      if (fid && !(GEOM && GEOM.fid === fid))
-        post("featureclick", { fid, props: plainProps(f.properties) });
+      /**
+       * ⚠️ **Shift means "add this to what I already have"**, and the check on the feature already
+       * open has to be skipped for it (Olcay, 2026-08-16: *"shift click on the selected item would
+       * deselect it"*). Shift-clicking the open feature is the gesture for taking it back OUT of a
+       * selection — the one click the plain path is right to ignore is the one the additive path
+       * exists for.
+       *
+       * The app decides what to do with it, because the app owns the selection. This side only
+       * reports the click and which modifier was down.
+       */
+      if (fid && (ev.shiftKey || !(GEOM && GEOM.fid === fid)))
+        post("featureclick", { fid, props: plainProps(f.properties), additive: !!ev.shiftKey });
     }
   });
 
@@ -2160,17 +2168,16 @@ function start() {
       return;
     }
     /**
-     * **Enter applies a combine.** The one operation here that needs a confirming keystroke: a cut
-     * is finished by its own second click, but a combine can take any number of features and so has
-     * no click that is self-evidently the last one. Safe to bind bare for the same reason Delete is
-     * — this document is the map and contains no text input.
+     * **Enter combines the selection**, as a shortcut for the toolbar button rather than as the
+     * only way in — that was true while Combine was an armed mode and is not any more.
      *
-     * The toolbar's caption is where it is written down, because a keystroke nobody mentions is a
-     * keystroke nobody uses.
+     * Safe to bind bare for the same reason Delete is: this document is the map and contains no
+     * text input. The properties panel lives in the parent, so Enter in a name field never reaches
+     * here.
      */
-    if (ev.key === "Enter" && GEOM && GEOM.mode === "combine") {
+    if (ev.key === "Enter" && GEOM && GEOM.pick.length) {
       ev.preventDefault();
-      geomApplyCombine();
+      geomApplyCombine();                          // refuses in its own words if it cannot
       return;
     }
     if (ev.key !== "Escape") return;
@@ -2180,9 +2187,17 @@ function start() {
       if (!geomCancelCut()) geomSetMode("vertices");
       return;
     }
-    // The same peel: the features you have chosen first, then the mode itself.
-    if (GEOM && GEOM.mode === "combine") {
-      if (!geomCancelCombine()) geomSetMode("vertices");
+    /**
+     * **Escape drops the extra features first** (Olcay, 2026-08-16: *"escape would deselect it"*),
+     * leaving the one you started from — and a second Escape then closes the panel, which is what
+     * Escape has always done.
+     *
+     * Peeling rather than clearing outright, like every other Escape in this file. Closing the
+     * whole panel because somebody wanted to undo one shift-click would take the other feature's
+     * unsaved edits with it.
+     */
+    if (GEOM && GEOM.pick.length) {
+      post("selectclear", { fid: GEOM.fid });
       return;
     }
     if (GEOM && GEOM.sel && GEOM.sel.size) {
@@ -2651,6 +2666,8 @@ function geomFind(fid) {
 }
 
 function geomState() {
+  // Once, not once per field: it runs the combine engine, which is real work.
+  const can = GEOM ? geomCombinable() : null;
   return GEOM
     ? {
         editing: true, fid: GEOM.fid, mode: GEOM.mode, snap: GEOM.snap,
@@ -2661,9 +2678,21 @@ function geomState() {
         pieces: geomPieces(),
         // Has the first click of a cut landed? The toolbar says what the next click will do.
         cutting: GEOM.mode === "split" && !!GEOM.cutA,
-        // How many features are waiting to be combined in. `0` while the mode is merely armed —
-        // the toolbar says "click some" then, and "Enter to combine" once there are any.
+        // Every selected feature, this one first — the app pairs these with the properties it
+        // already holds to build the "3 features selected" list.
+        selection: [GEOM.fid].concat(GEOM.pick.map(p => p.fid)),
+        /**
+         * How many features are selected *besides* this one — so `selected + 1` is what the toast
+         * and the panel count. Reported rather than assumed by the app: the app knows which fids it
+         * asked for, but only this side knows which of them the map could actually find.
+         */
         picked: GEOM.pick.length,
+        /**
+         * Whether Combine can run on the current selection, and the sentence to show when it
+         * cannot. Computed here because only this side has the outlines — see `geomCombinable`.
+         */
+        combinable: can.ok,
+        combineWhy: can.why,
         // What this session's combines have swallowed, so the panel can be honest about the rows
         // in the tree that are now part of something else.
         absorbed: GEOM.absorbed.length,
@@ -2704,14 +2733,16 @@ function geomReset() {
 }
 
 /**
- * Changing mode always abandons a half-laid cut — a dangling anchor is a trap on the next click —
- * and, for the same reason, a half-made combine. A set of features highlighted for a combine you
- * have walked away from would be applied by the next Enter, whenever that came.
+ * Changing mode always abandons a half-laid cut — a dangling anchor is a trap on the next click.
+ *
+ * ⚠️ **It does NOT touch the selection.** It did for a few hours, while Combine was an armed mode
+ * and the picks belonged to it. They belong to the user now: which features you are working on is
+ * not a fact about whether you are reshaping or transforming, and dropping four selected rooms
+ * because somebody glanced at Transform would be indefensible.
  */
 function geomSetMode(mode) {
   if (!GEOM) return;
   GEOM.mode = mode;
-  GEOM.pick = [];
   GEOM.cutA = GEOM.cutB = null;
   GEOM.cutRefs = null;
   GEOM.cutBases = null;
@@ -3984,46 +4015,85 @@ function geomTakeIdentity(fid) {
 }
 
 /**
- * Pick a feature to combine in, or unpick one already chosen.
+ * The features selected alongside the one being edited, told to the map by the app.
  *
- * `mouseup` + `isTap`, like every other selection on this map — a press that travelled was a pan,
- * and panning between picks is exactly what you want to be able to do when the rooms are not all
- * on screen at once.
+ * ⚠️ **The app owns the selection, not this file** (Olcay, 2026-08-16: *"I should be able to press
+ * shift and multi select features"*). It has to: the selection drives the properties panel, the
+ * count indicator and the toast, all of which live in React, and a second copy of the truth here
+ * would be one more thing to keep in step. This side is asked *"here are the fids"* and answers
+ * with what only it can know — their outlines, and whether they can actually be joined.
+ *
+ * This **replaced Combine's armed pick mode**, built earlier the same day. Arming a mode and then
+ * clicking features was a second selection mechanism sitting beside the one the map already had,
+ * and it could only ever feed Combine. Shift-click selects features for *everything*; Combine is
+ * now simply an act you can perform on a selection, which is why it is a button and not a mode.
  */
-function geomCombineClick(point) {
-  if (!GEOM || GEOM.mode !== "combine") return;
-  const f = editableAt(point);
-  const fid = f && f.properties && f.properties.fid;
-  // Bare floor, or a wall. Silent: a miss in an armed mode is a miss, and a refusal for every one
-  // of them would make the caption flash red while somebody looked for the room they wanted.
-  if (!fid) return;
-  if (fid === GEOM.fid) {
-    post("geomerror", { fid: GEOM.fid, message: "this is the feature you are combining into" });
-    return;
-  }
-  const at = GEOM.pick.findIndex(p => p.fid === fid);
-  if (at >= 0) {                                   // clicking a chosen one again takes it back out
-    GEOM.pick.splice(at, 1);
-    geomDraw(); post("geomstate", geomState());
-    return;
-  }
-  const g = geomFind(fid);
-  if (!g || g.kind !== "area") {
-    post("geomerror", { fid: GEOM.fid,
-      message: "that feature is a single point — there is no outline to combine" });
-    return;
-  }
-  GEOM.pick.push({
-    fid,
-    // A deep copy, like the subject's own rings: nothing is read back off the map after this, so a
-    // tile reloading mid-gesture cannot change what is about to be combined.
-    rings: JSON.parse(JSON.stringify(g.rings)),
-    name: (f.properties && f.properties.name) || "",
+function geomSetSelection(fids) {
+  if (!GEOM) return;
+  const want = (fids || []).filter(f => f && f !== GEOM.fid);
+  const have = new Map(GEOM.pick.map(p => [p.fid, p]));
+  GEOM.pick = want.map(fid => {
+    // Kept rather than re-read: the outline in hand is the one the user has been looking at, and
+    // re-querying on every selection change would let a tile reload change it underneath them.
+    if (have.has(fid)) return have.get(fid);
+    const g = geomFind(fid);
+    return {
+      fid,
+      // `rings` empty means a point feature — carried anyway, because it is genuinely selected and
+      // the panel is editing it. It is Combine that cannot use it, and Combine says so itself.
+      rings: g && g.kind === "area" ? JSON.parse(JSON.stringify(g.rings)) : [],
+      point: g && g.kind === "point" ? g.point.slice() : null,
+    };
   });
-  // Kept against the moment this feature turns out to be the largest and the panel has to move onto
-  // it — see geomTakeIdentity, which cannot make the switch without them.
-  GEOM.propsOf[fid] = plainProps(f.properties);
-  geomDraw(); post("geomstate", geomState());
+  geomDraw();
+  post("geomstate", geomState());
+}
+
+/**
+ * Can everything selected actually be joined, and if not, **why not in words a person can act on**?
+ *
+ * Olcay, 2026-08-16: *"Combine should activate if there are more than one item selected that are
+ * combinable ... If disabled ... Combine should show a custom tooltip explaining why."* A control
+ * that is simply grey invites you to work out what you did wrong; the reason is the whole point of
+ * disabling it rather than letting it fail.
+ *
+ * The test is the operation itself — run the engine and see whether one ring comes out. Anything
+ * cheaper would be a second, approximate answer that could disagree with the real one, and the
+ * disagreement would show up as a button that was enabled and then refused.
+ */
+function geomCombinable() {
+  if (!GEOM) return { ok: false, why: null };
+  /**
+   * ⚠️ These sentences live in a **tooltip**, which is 244px wide — so they are kept to two or
+   * three lines. The first draft ran to five, and a five-line explanation of a greyed-out button is
+   * something people dismiss rather than read. Each says the state, the rule, and the number.
+   */
+  if (!GEOM.pick.length) {
+    return { ok: false, why: "Shift-click another feature on the map to combine this one with it." };
+  }
+  if (GEOM.kind !== "area" || GEOM.pick.some(p => !p.rings.length)) {
+    return { ok: false, why: "One of these is a single point — a point has no outline to join." };
+  }
+  try {
+    const toScreen = c => { const p = map.project(c); return [p.x, p.y]; };
+    const sets = [GEOM.rings].concat(GEOM.pick.map(p => p.rings))
+      .map(rs => rs.map(r => r.map(toScreen)));
+    const gapPx = COMBINE_GAP_M * geomPxPerMetre(GEOM.rings[0] && GEOM.rings[0][0]);
+    const res = combineRings([].concat(...sets), gapPx);
+    if (res.rings.length === 1) return { ok: true, why: null };
+    /**
+     * The engine hands back whatever it could not reach, so the count is exact rather than a guess
+     * — and saying the threshold is what turns "no" into something the user can do about it: move
+     * the shapes, or pick the neighbour instead of the room across the corridor.
+     */
+    return {
+      ok: false,
+      why: "Too far apart. Combine bridges gaps up to " + COMBINE_GAP_M +
+           " m — a wall's width — and these fall into " + res.rings.length + " separate groups.",
+    };
+  } catch (e) {
+    return { ok: false, why: "The outlines could not be read just now — try again in a moment." };
+  }
 }
 
 /**
@@ -4039,9 +4109,15 @@ function geomCombineClick(point) {
  * 5. **The walls between them go**, for the session.
  */
 function geomApplyCombine() {
-  if (!GEOM || GEOM.mode !== "combine") return;
-  if (!GEOM.pick.length) {
-    post("geomerror", { fid: GEOM.fid, message: "click the features to combine with this one first" });
+  if (!GEOM) return;
+  /**
+   * Asked again here rather than trusted from the toolbar's disabled state. The button is one way
+   * in and the app's state is a copy that can lag by a frame; the refusal has to live where the
+   * operation does, or a stale `combinable` would run a combine the map had already ruled out.
+   */
+  const can = geomCombinable();
+  if (!can.ok) {
+    post("geomerror", { fid: GEOM.fid, message: can.why });
     return;
   }
   const toScreen = c => { const p = map.project(c); return [p.x, p.y]; };
@@ -4084,6 +4160,13 @@ function geomApplyCombine() {
 
   GEOM.pick = [];
   geomClearSel();                                  // the rings are wholly rebuilt, as after a cut
+  /**
+   * ⚠️ **The app's selection has to collapse with the map's.** The absorbed features are part of
+   * this shape now — leaving them selected would keep them in the panel's "3 features selected"
+   * list and in the next metadata edit, writing properties to rows that no longer have an outline
+   * of their own. The survivor is the whole selection, and the app is told so.
+   */
+  post("selectclear", { fid: GEOM.fid });
   // A combine that landed goes back to Reshape, where the new outline can be tidied up — the same
   // place a cut that landed leaves you.
   GEOM.mode = "vertices";
@@ -4092,14 +4175,6 @@ function geomApplyCombine() {
     post("geomerror", { fid: GEOM.fid,
       message: res.rings.length + " pieces — some of them were too far apart to join" });
   }
-}
-
-/** Drop the picks, leaving combine mode armed for another go. */
-function geomCancelCombine() {
-  if (!GEOM || !GEOM.pick.length) return false;
-  GEOM.pick = [];
-  geomDraw(); post("geomstate", geomState());
-  return true;
 }
 
 /* ── drawing and interaction ───────────────────────────────────────────────────────────────── */
@@ -4121,6 +4196,36 @@ function geomDraw() {
   if (!GEOM || !map) return;
 
   /**
+   * The other features in the selection.
+   *
+   * Drawn **first**, so the one whose outline you are actually editing stays on top of them — and
+   * dashed, because they are still separate features. A solid fill would look like one shape, and
+   * this is the moment it matters most that it does not: a selection you are about to Combine looks
+   * exactly like the thing it will become, right up until it becomes it.
+   *
+   * ⚠️ Above the point-feature branch, not below it, because that branch RETURNS. Underneath, a
+   * selection anchored on a POI would have drawn nothing at all — the one case where you most need
+   * to see what else you have picked, since the panel is editing all of them.
+   *
+   * Not gated on any mode: features are selected in Reshape, Transform and Split alike, because
+   * selection is about *which features you are working on* rather than about one operation.
+   */
+  for (const p of GEOM.pick) {
+    for (const ring of p.rings) {
+      const d = ring.map((c, i) => { const q = map.project(c); return (i ? "L" : "M") + q.x + " " + q.y; })
+        .join(" ") + " Z";
+      l.appendChild(el("path", { d, fill: "#0b369c", "fill-opacity": .16, stroke: "#0b369c",
+                                 "stroke-width": 2, "stroke-dasharray": "6 4" }));
+    }
+    // A selected POINT feature has no outline to dash, and would otherwise be selected invisibly.
+    if (p.point) {
+      const q = map.project(p.point);
+      l.appendChild(el("circle", { cx: q.x, cy: q.y, r: HANDLE_R + 5, fill: "none",
+                                   stroke: "#0b369c", "stroke-width": 2, "stroke-dasharray": "3 3" }));
+    }
+  }
+
+  /**
    * A point feature: one handle, and that is the whole of it. Drawn larger than a vertex handle
    * because it IS the feature rather than a corner of one, and there is nothing else to aim at.
    */
@@ -4134,24 +4239,6 @@ function geomDraw() {
     h.addEventListener("mousedown", ev => { ev.stopPropagation(); geomDown(ev, { kind: "point" }); });
     l.appendChild(h);
     return;
-  }
-
-  /**
-   * The features waiting to be combined in.
-   *
-   * Drawn first, so the shape you actually opened stays on top of them — and **dashed**, because
-   * until Enter they are still separate features. A solid fill would promise the join had happened;
-   * the whole value of an armed mode is that you can see what you have chosen and change your mind.
-   */
-  if (GEOM.mode === "combine") {
-    for (const p of GEOM.pick) {
-      for (const ring of p.rings) {
-        const d = ring.map((c, i) => { const q = map.project(c); return (i ? "L" : "M") + q.x + " " + q.y; })
-          .join(" ") + " Z";
-        l.appendChild(el("path", { d, fill: "#0b369c", "fill-opacity": .16, stroke: "#0b369c",
-                                   "stroke-width": 2, "stroke-dasharray": "6 4" }));
-      }
-    }
   }
 
   for (const [ri, ring] of GEOM.rings.entries()) {
@@ -4720,10 +4807,17 @@ window.addEventListener("message", (ev) => {
     // the transform box now (see geomBox), so there is nothing left for the app to command.
     // Split is a MODE, not an act: the toolbar arms it, the two clicks on the map do the cutting.
     else if (d.cmd === "split") geomSetMode(GEOM && GEOM.mode === "split" ? "vertices" : "split");
-    // Combine is a mode for the same reason. Enter applies it rather than a toolbar button: an
-    // Apply that only existed while features were picked would change the bar's width between
-    // states, which is the one thing the toolbar's layout is built not to do.
-    else if (d.cmd === "combine") geomSetMode(GEOM && GEOM.mode === "combine" ? "vertices" : "combine");
+    /**
+     * ⚠️ **Combine is an ACT, not a mode** — the one place it differs from Split.
+     *
+     * It was a mode for a few hours, with its own armed pick list, until shift-click made selection
+     * a thing the whole editor has. There is nothing left for a Combine mode to do: the features
+     * are already chosen before you reach for it, and the button's job is to say whether they can
+     * be joined and then join them.
+     */
+    else if (d.cmd === "combine") geomApplyCombine();
+    // The app owns the selection and tells the map what is in it — see geomSetSelection.
+    else if (d.cmd === "select") geomSetSelection(d.fids);
   } else if (d.type === "editing") {
     EDITING = Array.isArray(d.editing) ? d.editing : [];
     drawEditing();

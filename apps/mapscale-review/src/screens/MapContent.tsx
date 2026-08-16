@@ -53,7 +53,11 @@ import { DecisionGlyph } from "../ui/ChangeReviewRow";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { LevelSelector } from "../ui/LevelSelector";
-import { FeaturePanel, FEATURE_PANEL_WIDTH } from "../ui/FeaturePanel";
+import {
+  FeaturePanel,
+  FEATURE_PANEL_WIDTH,
+  mergeForEditing,
+} from "../ui/FeaturePanel";
 import { SavedNotice } from "../ui/SavedNotice";
 import { UploadDropConfirm } from "../ui/UploadDropConfirm";
 import {
@@ -73,6 +77,7 @@ import {
   groupByClass,
   spriteName,
   rowLabel,
+  typeLabel,
   type LevelTypeCount,
   type SpriteSheet,
 } from "../mock/taxonomy";
@@ -1916,6 +1921,40 @@ export function MapContent({
   const [focused, setFocused] = useState<{ fid: string; n: number } | null>(
     null,
   );
+  /**
+   * **The rest of the selection** — every feature shift-clicked alongside `focused`, which is
+   * always the first of them (Olcay, 2026-08-16: *"I should be able to press shift and multi select
+   * features"*).
+   *
+   * ⚠️ Held *beside* `focused` rather than turning it into a list. `focused` is the anchor for a
+   * great deal of machinery — the camera, presence, the flag lookup, the geometry editor — every
+   * bit of which acts on exactly one feature and always will. Making it an array would have forced
+   * all of them to answer "which one?", and the honest answer everywhere is "the one the panel is
+   * anchored to". So the anchor stays a scalar and the extras live here.
+   *
+   * ⚠️ Declared **above** `focusNow` and everything else that clears it. A `const` read before its
+   * declaration is a temporal dead zone, not `undefined` — the same shape of bug as the blank page
+   * in `cloud/session.ts` and the one `closeProps` carries a warning about.
+   */
+  const [also, setAlso] = useState<string[]>([]);
+  /**
+   * Every selected feature's property bag, by fid — what the panel merges to decide whether a field
+   * shows one value or *Multiple values*, and what a multi-edit writes back into.
+   *
+   * A **ref**, not state: it is filled by the very click that selects a feature, so `also` changing
+   * is what re-renders and it always changes in the same breath.
+   */
+  const propsOfRef = useRef<Record<string, Record<string, unknown>>>({});
+  /**
+   * ⚠️ The primary's fid, for handlers that cannot see state. `onFeatureClick` is memoised with an
+   * empty dependency list — it must be, or every keystroke would re-post it to the iframe — so it
+   * cannot read `focused` and would forever compare against the first feature ever opened.
+   */
+  const focusedRef = useRef<string | null>(null);
+  focusedRef.current = focused?.fid ?? null;
+  /** The same, for the rest of the selection — `onEdited` is memoised on `focused` alone. */
+  const alsoRef = useRef<string[]>([]);
+  alsoRef.current = also;
   const focusNow = useCallback(
     (buildingId: string, index: number, fid: string) => {
       // the floor first, then the feature — see the context's `focus` note
@@ -1925,6 +1964,9 @@ export function MapContent({
           : { building: buildingId, level: index },
       );
       setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
+      // A tree row picks ONE feature, so it replaces the selection rather than joining it. Shift
+      // adds only from the map, where you can see which rooms are next to which.
+      setAlso([]);
       // Drop the previous feature's properties the moment a new one is picked. Keeping them until
       // the replacement arrives would show the OLD feature's fid under the NEW feature's name for as
       // long as the tiles take — and after a level switch that is seconds, not frames.
@@ -1966,11 +2008,42 @@ export function MapContent({
    * second click on the same feature re-opens a panel you had closed.
    */
   const onFeatureClick = useCallback(
-    (fid: string, p: Record<string, unknown>) => {
+    (fid: string, p: Record<string, unknown>, additive?: boolean) => {
+      /**
+       * ⚠️ **Shift-click never asks about unsaved work.** The guard exists because opening another
+       * feature *replaces* what the panel is editing and would lose it; adding one does the
+       * opposite — the edit stays open and now covers one more feature. Asking "you have unsaved
+       * changes" while extending the very selection those changes belong to would be nonsense.
+       */
+      if (additive) {
+        setAlso((cur) => {
+          const at = cur.indexOf(fid);
+          // Shift-clicking something already in the selection takes it back out (Olcay, 2026-08-16).
+          if (at >= 0) return cur.filter((f) => f !== fid);
+          // Shift-clicking the PRIMARY is the same gesture, but the primary cannot simply be
+          // dropped — the panel is anchored to it. Promote the first of the others and carry the
+          // rest, so the selection shrinks by one exactly as it does everywhere else.
+          if (focusedRef.current === fid) {
+            if (!cur.length) return cur; // the last one standing: nothing to promote to
+            const [next, ...rest] = cur;
+            const bag = propsOfRef.current[next];
+            if (bag) setProps({ fid: next, props: bag });
+            setFocused((f) => ({ fid: next, n: f?.n ?? 0 }));
+            return rest;
+          }
+          propsOfRef.current[fid] = p;
+          return [...cur, fid];
+        });
+        propsOfRef.current[fid] = p;
+        return;
+      }
       if (dirtyRef.current) {
         setPendingPick({ kind: "map", fid, props: p });
         return;
       }
+      // A plain click REPLACES the selection — the counterpart to shift adding to it.
+      setAlso([]);
+      propsOfRef.current = { [fid]: p };
       setProps({ fid, props: p });
       setFocused((f) => ({ fid, n: (f?.n ?? 0) + 1 }));
     },
@@ -2010,6 +2083,7 @@ export function MapContent({
   const closeProps = useCallback(() => {
     setFocused(null);
     setProps(null);
+    setAlso([]);
   }, []);
   const [pendingPick, setPendingPick] = useState<
     | { kind: "map"; fid: string; props: Record<string, unknown> }
@@ -2032,6 +2106,10 @@ export function MapContent({
       } else if (pick.kind === "map") {
         setProps({ fid: pick.fid, props: pick.props });
         setFocused((f) => ({ fid: pick.fid, n: (f?.n ?? 0) + 1 }));
+        // Only a PLAIN click is ever held here — shift-click skips the guard entirely, because
+        // adding to a selection cannot lose the edit the guard is protecting.
+        setAlso([]);
+        propsOfRef.current = { [pick.fid]: pick.props };
       } else {
         focusNow(pick.buildingId, pick.index, pick.fid);
       }
@@ -2277,6 +2355,86 @@ export function MapContent({
     else sendGeom({ cmd: "end", commit: false });
   }, [shownProps, props?.fid, sendGeom]);
 
+  /**
+   * **The map is told what is selected; it answers with what it alone knows.**
+   *
+   * The app owns the selection because the panel, the count and the toast all live here. What it
+   * cannot know is whether these features are close enough to Combine — that needs their outlines,
+   * which only the map shell has. So this posts the fids and the shell reports `combinable` back in
+   * `geomstate`.
+   *
+   * ⚠️ After `begin`, never before: the shell hangs the selection off the open editor, so a
+   * selection sent while nothing is open is dropped on the floor. Both effects run in order on the
+   * same commit, which is exactly the ordering needed and the reason this sits directly below.
+   */
+  useEffect(() => {
+    if (shownProps) sendGeom({ cmd: "select", fids: also });
+  }, [also, shownProps, props?.fid, sendGeom]);
+
+  /**
+   * The whole selection, primary first — the order the panel lists them in and the order the map
+   * highlights them in. Memoised because it is a prop the map diffs against its previous value.
+   */
+  const selection = useMemo(
+    () => (focused ? [focused.fid, ...also] : []),
+    [focused, also],
+  );
+  /**
+   * **The property bags for everything selected**, primary first.
+   *
+   * The primary's comes from `shownProps` — which carries local edits merged in — while the others
+   * come from the click that selected them. `null` entries are skipped rather than treated as an
+   * empty bag: a feature whose properties have not arrived would otherwise make every field read
+   * *Multiple values* for no reason the user could see.
+   */
+  const selectionProps = useMemo(() => {
+    if (!focused || !shownProps) return [];
+    const out = [shownProps];
+    for (const fid of also) {
+      const bag = propsOfRef.current[fid];
+      if (bag) out.push({ ...bag, ...(edits[fid] ?? {}) });
+    }
+    return out;
+  }, [focused, shownProps, also, edits]);
+  /** One bag standing for all of them — see `mergeForEditing`. */
+  const mergedProps = useMemo(
+    () => (selectionProps.length ? mergeForEditing(selectionProps) : null),
+    [selectionProps],
+  );
+  /** The list the panel prints when you expand the count. */
+  const selectionList = useMemo(
+    () =>
+      selectionProps.map((b) => ({
+        fid: String(b.fid ?? ""),
+        name: String(b.name ?? ""),
+        typeLabel: typeLabel(
+          String(b.subType ?? "") || String(b.mainType ?? ""),
+        ),
+      })),
+    [selectionProps],
+  );
+  /** Take one feature out of the selection, from the panel's list. */
+  const onDeselect = useCallback((fid: string) => {
+    setAlso((cur) => {
+      if (cur.includes(fid)) return cur.filter((f) => f !== fid);
+      // The primary, dropped from the list: promote the next, exactly as shift-clicking it does.
+      const [next, ...rest] = cur;
+      if (!next) return cur;
+      const bag = propsOfRef.current[next];
+      if (bag) setProps({ fid: next, props: bag });
+      setFocused((f) => ({ fid: next, n: f?.n ?? 0 }));
+      return rest;
+    });
+  }, []);
+  /**
+   * The map peeling the selection back to one — Escape, or a Combine that has absorbed the rest.
+   * It names the survivor because a combine can change which feature that is.
+   */
+  const onSelectClear = useCallback((fid: string) => {
+    setAlso([]);
+    setFocused((f) => (f && f.fid === fid ? f : { fid, n: f?.n ?? 0 }));
+  }, []);
+
   useEffect(() => {
     setPresenceEditing(
       shownProps ? String(props?.fid ?? "") || undefined : undefined,
@@ -2356,16 +2514,54 @@ export function MapContent({
    * — §18a, implicit on edit.
    */
   const onEdited = useCallback(
-    (next: Record<string, unknown>) => {
+    (next: Record<string, unknown>, removed?: string[]) => {
       if (!focused || !target) return;
-      setEdits((cur) => ({ ...cur, [focused.fid]: next }));
+      /**
+       * ⚠️ **A multi-edit MERGES; a single edit REPLACES.** They cannot share one rule.
+       *
+       * Editing one feature, the panel hands back its whole bag, so replacing is right and is what
+       * makes a removed field actually disappear. Editing several, it hands back only the fields
+       * that were settled — everything the features disagreed about and nobody touched is
+       * deliberately absent — so replacing would wipe four different descriptions the moment
+       * somebody renamed a room. Removal is therefore said out loud instead of inferred from what
+       * is missing.
+       */
+      const alsoFids = alsoRef.current;
+      setEdits((cur) => {
+        if (!alsoFids.length) return { ...cur, [focused.fid]: next };
+        const out = { ...cur };
+        for (const fid of [focused.fid, ...alsoFids]) {
+          const base = {
+            ...(propsOfRef.current[fid] ?? {}),
+            ...(cur[fid] ?? {}),
+          };
+          for (const k of removed ?? []) delete base[k as keyof typeof base];
+          out[fid] = { ...base, ...next };
+        }
+        return out;
+      });
       // Replace rather than merge the property bag: a field REMOVED in the editor has to disappear,
       // and a spread would keep resurrecting it from the tile's original values.
       setProps((cur) =>
         cur && cur.fid === focused.fid
-          ? { ...cur, props: { ...pickIdentity(cur.props), ...next } }
+          ? {
+              ...cur,
+              props: alsoFids.length
+                ? (() => {
+                    const base = { ...cur.props };
+                    for (const k of removed ?? []) delete base[k];
+                    return { ...base, ...next };
+                  })()
+                : { ...pickIdentity(cur.props), ...next },
+            }
           : cur,
       );
+      // Everything else selected keeps its own bag, with the settled fields written over it.
+      for (const fid of alsoFids) {
+        const base = { ...(propsOfRef.current[fid] ?? {}) };
+        for (const k of removed ?? []) delete base[k];
+        propsOfRef.current[fid] = { ...base, ...next };
+      }
       const short =
         live
           .find((b) => b.id === target.building)
@@ -2442,10 +2638,22 @@ export function MapContent({
       edits,
     ],
   );
-  /** Hover wins while it lasts; leaving falls back to the selection rather than going dark. */
+  /**
+   * Hover wins while it lasts; leaving falls back to the selection rather than going dark.
+   *
+   * The SDK's own selection layer lights **all** of them (Olcay, 2026-08-16) — the geometry
+   * overlay's dashed outlines are a second, finer mark on top, and only exist while a panel is
+   * open. This is what makes a multi-selection legible at a glance.
+   */
   const highlight = useMemo(
-    () => hovered ?? (focused ? { fid: focused.fid } : null),
-    [hovered, focused],
+    () =>
+      hovered ??
+      (selection.length
+        ? selection.length > 1
+          ? { fids: selection }
+          : { fid: selection[0] }
+        : null),
+    [hovered, selection],
   );
   const [mapLevel, setMapLevel] = useState<MapLevel | null>(null);
   const onBuildings = useCallback((b: MapBuilding[]) => {
@@ -2772,6 +2980,7 @@ export function MapContent({
             onGeomState={onGeomState}
             onGeometry={onGeometry}
             onGeomIdentity={onGeomIdentity}
+            onSelectClear={onSelectClear}
             onGeomError={onGeomError}
             // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
             // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.
@@ -2789,7 +2998,11 @@ export function MapContent({
           )}
           {shownProps && (
             <FeaturePanel
-              props={shownProps}
+              // The merged bag when several are selected, and the plain one when it is just this
+              // feature — `mergeForEditing` returns the single bag untouched, so there is one path.
+              props={mergedProps ?? shownProps}
+              selection={selectionList}
+              onDeselect={onDeselect}
               icon={
                 <TypeIcon
                   mainType={String(shownProps.mainType ?? "")}

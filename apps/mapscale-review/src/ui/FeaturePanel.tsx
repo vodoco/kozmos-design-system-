@@ -228,6 +228,91 @@ function DerivedSections({ values }: { values: Record<string, unknown> }) {
   );
 }
 
+/* ── editing several features at once ─────────────────────────────────────────
+   Olcay, 2026-08-16: *"edit metadata panel would update based on the combined information (e.g.
+   multiple values - or a value if same for both POIs) ... changing metadata or values would affect
+   all selected."* */
+
+/**
+ * The value of a field the selected features **disagree** about.
+ *
+ * A sentinel rather than `undefined`, and this is the whole reason it exists: "they differ" and
+ * "nobody has set it" have to stay distinguishable all the way to the save. Blank them together and
+ * an untouched *Multiple values* field would be written back as empty to every feature in the
+ * selection — silently erasing four descriptions because somebody renamed a room.
+ *
+ * A ` `-prefixed string, so it survives the `JSON.stringify` comparisons the dirty check and
+ * the merge both use, and can never collide with anything a person could type.
+ */
+export const MULTIPLE = " multiple";
+
+/**
+ * Fields that belong to one feature and are never merged — the panel shows the primary's.
+ *
+ * Wider than `IDENTITY` above, which is only the four the read view prints: `mainType` classifies
+ * the feature and drives the icon and the sub-type list, and `mapPersonas` has no control here.
+ * None of the three is editable, so merging them could only ever produce a sentinel nobody could
+ * clear.
+ */
+const PER_FEATURE = new Set([
+  "fid",
+  "bid",
+  "sid",
+  "lvl",
+  "mainType",
+  "mapPersonas",
+]);
+
+/** What a differing field says where it has room to say it. */
+const MULTI_LABEL = "Multiple values";
+
+/**
+ * The same thing where there is no placeholder to put it in — a switch has no third position, and
+ * a chip row's emptiness would otherwise read as "none of them have any".
+ */
+function MultiHint() {
+  return (
+    <Text
+      as="span"
+      style={{
+        marginLeft: 8,
+        fontSize: 11,
+        fontStyle: "italic",
+        color: MUTED,
+      }}
+    >
+      {MULTI_LABEL}
+    </Text>
+  );
+}
+
+/**
+ * One property bag standing for the whole selection: a shared value where they agree, `MULTIPLE`
+ * where they do not.
+ *
+ * A key missing from one bag counts as a disagreement, because it is one — three features with a
+ * description and one without do not share a description.
+ */
+export function mergeForEditing(
+  bags: Record<string, unknown>[],
+): Record<string, unknown> {
+  if (bags.length <= 1) return bags[0] ?? {};
+  const keys = new Set<string>();
+  for (const b of bags) for (const k of Object.keys(b)) keys.add(k);
+  const out: Record<string, unknown> = {};
+  for (const k of keys) {
+    if (PER_FEATURE.has(k)) {
+      out[k] = bags[0][k];
+      continue;
+    }
+    const first = JSON.stringify(bags[0][k] ?? null);
+    out[k] = bags.every((b) => JSON.stringify(b[k] ?? null) === first)
+      ? bags[0][k]
+      : MULTIPLE;
+  }
+  return out;
+}
+
 /* ── editing: the dashboard's field editor ───────────────────────────────────── */
 
 /** One editable property, drawn by the control its taxonomy `inputType` asks for. */
@@ -244,7 +329,15 @@ function PropertyField({
 }) {
   const label = propertyLabel(def.key);
   const [pick, setPick] = useState(false);
-  const chips = toArray(value);
+  /**
+   * ⚠️ **A field the selection disagrees about shows as EMPTY with a placeholder, never as its
+   * sentinel.** Every control below reads `shown` rather than `value`, so the sentinel exists only
+   * between the merge and the save and is never something a person can see or type over by
+   * accident. Typing replaces it outright, which is exactly "changing it affects all selected".
+   */
+  const many = value === MULTIPLE;
+  const shown = many ? undefined : value;
+  const chips = toArray(shown);
 
   return (
     <div
@@ -265,8 +358,11 @@ function PropertyField({
               padding: "6px 0",
             }}
           >
+            {/* A switch has no third position, so a disagreement is said in the label instead —
+                and it reads OFF, which is the safe way round: nothing is written to any feature
+                until it is actually toggled. */}
             <Switch
-              checked={isTruthy(value)}
+              checked={isTruthy(shown)}
               onCheckedChange={(c: boolean) => onChange(c)}
               id={`f-${def.key}`}
             />
@@ -275,6 +371,7 @@ function PropertyField({
               style={{ fontSize: 13, color: INK, cursor: "pointer" }}
             >
               {label}
+              {many && <MultiHint />}
             </label>
           </div>
         ) : def.valueType === "text" && def.inputType === "textArea" ? (
@@ -290,7 +387,8 @@ function PropertyField({
               {label}
             </Text>
             <textarea
-              value={String(value ?? "")}
+              value={String(shown ?? "")}
+              placeholder={many ? MULTI_LABEL : undefined}
               onChange={(e) => onChange(e.target.value)}
               rows={3}
               aria-label={label}
@@ -320,6 +418,9 @@ function PropertyField({
               }}
             >
               {label}
+              {/* An empty chip row would otherwise read as "none of them have any", which is a
+                  different and wronger claim than "they differ". */}
+              {many && <MultiHint />}
             </Text>
             <div
               style={{
@@ -423,10 +524,16 @@ function PropertyField({
         ) : (
           <Input
             label={label}
-            value={String(value ?? "")}
+            value={String(shown ?? "")}
             onChange={(e) => onChange(e.target.value)}
             type={def.valueType === "integer" ? "number" : "text"}
-            placeholder={def.valueType === "hyperlink" ? "https://" : undefined}
+            placeholder={
+              many
+                ? MULTI_LABEL
+                : def.valueType === "hyperlink"
+                  ? "https://"
+                  : undefined
+            }
             aria-label={label}
           />
         )}
@@ -592,6 +699,8 @@ export function FeaturePanel({
   geometryDirty,
   onCommitGeometry,
   subTypeOptions,
+  selection,
+  onDeselect,
   onEdited,
   onSaved,
   onCancelEdit,
@@ -617,8 +726,26 @@ export function FeaturePanel({
   geometryDirty?: boolean;
   onCommitGeometry?: () => void;
   subTypeOptions?: string[];
-  /** An edit was saved. Carries the flag-clearing consequence (§18a) up. D3: nothing persists. */
-  onEdited?: (next: Record<string, unknown>) => void;
+  /**
+   * **Everything selected, primary first** (Olcay, 2026-08-16). One entry is the ordinary case and
+   * changes nothing; more than one turns on the count strip, the *Multiple values* placeholders,
+   * and a save that writes to all of them.
+   *
+   * The panel is given the whole list rather than just a number because it has to be able to *show*
+   * which features they are — a count alone leaves you unable to check what you are about to edit.
+   */
+  selection?: { fid: string; name: string; typeLabel: string }[];
+  /** Take one feature back out of the selection, from the expanded list. */
+  onDeselect?: (fid: string) => void;
+  /**
+   * An edit was saved. Carries the flag-clearing consequence (§18a) up. D3: nothing persists.
+   *
+   * ⚠️ `next` holds **only the fields the editor actually settled** — a field the selection
+   * disagreed about and nobody touched is left out entirely, so it is not flattened onto every
+   * feature. `removed` is the fields binned, which cannot be inferred from `next` for the same
+   * reason: absent means "leave alone", and only this says "take it away".
+   */
+  onEdited?: (next: Record<string, unknown>, removed?: string[]) => void;
   /**
    * Update finished — the panel is done and the screen should close it. Separate from `onEdited`
    * because they answer different questions: `onEdited` is *what changed*, and every surface that
@@ -663,6 +790,10 @@ export function FeaturePanel({
    * changes — so a look still costs nothing, exactly as it did before.
    */
   const [editing, setEditing] = useState(true);
+  /** More than one feature is selected, and everything below behaves differently because of it. */
+  const multi = (selection?.length ?? 1) > 1;
+  /** The list of what is selected, collapsed by default — a count you can check when you want to. */
+  const [listOpen, setListOpen] = useState(false);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
   /** Which optional properties the editor is showing — those with values, plus what you add. */
   const [fields, setFields] = useState<string[]>([]);
@@ -675,14 +806,24 @@ export function FeaturePanel({
    * same two lines, for Cancel to call; Cancel now closes the panel instead of emptying it in
    * place, so re-seeding on the way *in* is the whole story.
    */
+  /**
+   * ⚠️ **The seed key is the whole SELECTION, not the primary's fid.**
+   *
+   * Shift-clicking a second feature does not change which feature is primary, so keying on
+   * `p.fid` alone left the draft holding the first feature's values while the merged bag beside it
+   * said *Multiple values* — and Update would then have written those stale values to everything
+   * selected. Any change to who is selected re-seeds.
+   */
+  const seed =
+    (selection ?? []).map((s) => s.fid).join(",") || String(p.fid ?? "");
   useEffect(() => {
     setEditing(true);
     setDraft({ ...p });
     setFields(Object.keys(p).filter((k) => !RESERVED.has(k)));
-    // Keyed on `p.fid` alone: re-seeding on every property change would wipe a half-typed
+    // Keyed on the seed alone: re-seeding on every property change would wipe a half-typed
     // edit. (No eslint-disable — this config has no `react-hooks/exhaustive-deps` rule, so
     // the directive is itself an error and fails the pre-commit hook.)
-  }, [p.fid]);
+  }, [seed]);
 
   /**
    * Has anything actually been changed? Both halves count: a value edited, and a field added or
@@ -799,8 +940,30 @@ export function FeaturePanel({
       subType: draft.subType,
     };
     for (const k of fields) next[k] = draft[k];
-    onEdited?.(next);
-    onSaved?.(String(draft.name ?? "").trim());
+    /**
+     * ⚠️ **A field still showing its sentinel was never settled, so it is not saved.**
+     *
+     * This is the line that stops a multi-edit from flattening everything it did not touch:
+     * rename four rooms and their four different descriptions must survive it. Dropped rather than
+     * sent as `undefined`, because absent means "leave this alone" to the caller and `undefined`
+     * would mean "make it empty".
+     */
+    for (const k of Object.keys(next)) if (next[k] === MULTIPLE) delete next[k];
+    /**
+     * Fields the editor binned. They cannot be read off `next` — absent there means "leave alone" —
+     * so removal has to be said out loud, or taking a property away would silently do nothing to
+     * every feature but the one whose bag happened to be shown.
+     */
+    const removed = Object.keys(p).filter(
+      (k) => !RESERVED.has(k) && !fields.includes(k),
+    );
+    onEdited?.(next, removed);
+    /**
+     * What the confirmation calls this. With several selected the name is either shared or a
+     * sentinel, and neither is worth announcing — the count is what happened.
+     */
+    const n = selection?.length ?? 1;
+    onSaved?.(n > 1 ? `${n} features` : String(draft.name ?? "").trim());
   };
 
   /**
@@ -852,20 +1015,24 @@ export function FeaturePanel({
                 overflowWrap: "anywhere",
               }}
             >
-              {(editing ? String(draft.name ?? "") : name) ||
-                `Unnamed ${typeLabel(subType || mainType)}`}
+              {multi
+                ? `${selection!.length} features`
+                : (editing ? String(draft.name ?? "") : name) ||
+                  `Unnamed ${typeLabel(subType || mainType)}`}
             </Text>
           }
           subtitle={
-            editing
-              ? "You are editing this feature’s properties."
-              : [
-                  CLASS_LABEL[cls],
-                  category ? categoryLabel(category) : null,
-                  typeLabel(subType || mainType),
-                ]
-                  .filter(Boolean)
-                  .join(" · ")
+            multi
+              ? "Editing all of them — a change here is a change to every one."
+              : editing
+                ? "You are editing this feature’s properties."
+                : [
+                    CLASS_LABEL[cls],
+                    category ? categoryLabel(category) : null,
+                    typeLabel(subType || mainType),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")
           }
           onClose={onClose}
           closeLabel="Close feature properties"
@@ -882,6 +1049,137 @@ export function FeaturePanel({
           padding: "14px 20px 16px",
         }}
       >
+        {/**
+         * **What is selected, and the way to check it** (Olcay, 2026-08-16: *"There should be an
+         * indicator of multiple items selected and upon expand the items should be listed to show
+         * which ones."*).
+         *
+         * Collapsed by default and at the very top of the body: a count is enough almost always,
+         * and the moment it is not — you are about to rename all of them — the answer is one click
+         * away rather than a trip back to the map to count outlines.
+         *
+         * Each row can drop itself out. Shift-clicking the outline does the same thing, but only if
+         * you can still find it on screen; a selection you built by panning around cannot always be
+         * unpicked the way it was picked.
+         */}
+        {multi && (
+          <div
+            style={{
+              marginBottom: 16,
+              borderRadius: 10,
+              border: `1px solid ${LINE}`,
+              background: "var(--primitives-colors-background-50, #f7f8fa)",
+              overflow: "hidden",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setListOpen((o) => !o)}
+              aria-expanded={listOpen}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                padding: "9px 12px",
+                border: "none",
+                background: "none",
+                font: "inherit",
+                fontSize: 12.5,
+                color: INK,
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  display: "inline-block",
+                  transition: "transform .15s ease",
+                  transform: listOpen ? "rotate(90deg)" : "none",
+                  fontSize: 10,
+                  color: MUTED,
+                }}
+              >
+                ▶
+              </span>
+              <span style={{ fontWeight: 500 }}>
+                {selection!.length} features selected
+              </span>
+              <span style={{ marginLeft: "auto", fontSize: 11, color: MUTED }}>
+                {listOpen ? "Hide" : "Show"}
+              </span>
+            </button>
+            {listOpen && (
+              <ul
+                style={{
+                  listStyle: "none",
+                  margin: 0,
+                  padding: "0 0 4px",
+                  maxHeight: 180,
+                  overflow: "auto",
+                }}
+              >
+                {selection!.map((s, i) => (
+                  <li
+                    key={s.fid}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "5px 12px 5px 30px",
+                    }}
+                  >
+                    <span style={{ minWidth: 0, flex: 1 }}>
+                      <Text
+                        style={{
+                          display: "block",
+                          fontSize: 12.5,
+                          color: INK,
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        {s.name || `Unnamed ${s.typeLabel}`}
+                        {/* The first one is the anchor: the panel's identity, the shape the
+                            geometry tools act on, and the one Escape leaves behind. Saying so
+                            costs a word and explains why the list has an order at all. */}
+                        {i === 0 && (
+                          <Text
+                            as="span"
+                            style={{
+                              marginLeft: 6,
+                              fontSize: 10.5,
+                              color: MUTED,
+                            }}
+                          >
+                            primary
+                          </Text>
+                        )}
+                      </Text>
+                      <Text
+                        style={{ display: "block", fontSize: 11, color: MUTED }}
+                      >
+                        {s.typeLabel}
+                      </Text>
+                    </span>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDeselect?.(s.fid)}
+                      aria-label={`Remove ${s.name || "this feature"} from the selection`}
+                      title="Remove from selection"
+                    >
+                      <span aria-hidden style={{ fontSize: 13 }}>
+                        ✕
+                      </span>
+                    </IconButton>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         {/* A DS `Alert` in its default (neutral) variant, deliberately not `warning`: §3 reserves
             traffic-light for magnitude, and being flagged is something *you* did, not a size. */}
         {flagged && !editing && (
@@ -1149,11 +1447,15 @@ export function FeaturePanel({
                 {typeLabel(mainType)}
               </Text>
               <Select
-                value={String(draft.subType ?? "")}
+                value={
+                  draft.subType === MULTIPLE ? "" : String(draft.subType ?? "")
+                }
                 onValueChange={(v) => setDraft((d) => ({ ...d, subType: v }))}
               >
                 <SelectTrigger aria-label="Sub type">
-                  <SelectValue placeholder="—" />
+                  <SelectValue
+                    placeholder={draft.subType === MULTIPLE ? MULTI_LABEL : "—"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {options.map((o) => (
@@ -1168,11 +1470,14 @@ export function FeaturePanel({
             <div style={{ marginTop: 12 }}>
               <Input
                 label="Name *"
-                value={String(draft.name ?? "")}
+                value={draft.name === MULTIPLE ? "" : String(draft.name ?? "")}
                 onChange={(e) =>
                   setDraft((d) => ({ ...d, name: e.target.value }))
                 }
-                placeholder="Unnamed"
+                /* ⚠️ Typing here renames EVERY selected feature — leaving it be keeps their own
+                   names, which is why the placeholder has to say what is in there rather than
+                   look like an empty required field. */
+                placeholder={draft.name === MULTIPLE ? MULTI_LABEL : "Unnamed"}
                 aria-label="Feature name"
               />
             </div>

@@ -115,7 +115,13 @@ const PointrMap = forwardRef<
      * which is why it is its own prop rather than folded into `focusFeature`, whose job is to MOVE
      * the camera and must not fire on every mouseover.
      */
-    highlight?: { fid?: string; mainType?: string; subType?: string } | null;
+    highlight?: {
+      fid?: string;
+      /** A whole multi-selection. Takes precedence over `fid` in the map shell. */
+      fids?: string[];
+      mainType?: string;
+      subType?: string;
+    } | null;
     /**
      * The properties of the focused feature, as the vector tiles carry them — the POI panel's supply
      * (§19). Arrives with the focus rather than on request: the map's focus scan already holds the
@@ -127,7 +133,16 @@ const PointrMap = forwardRef<
      * and on the listing should show the details panel in edit mode"*). Distinct from `onSelect`,
      * which is about a *change* in a review; this is about a feature that simply exists.
      */
-    onFeatureClick?: (fid: string, props: Record<string, unknown>) => void;
+    onFeatureClick?: (
+      fid: string,
+      props: Record<string, unknown>,
+      /**
+       * Shift was down: **add this feature to the selection, or take it back out if it is already
+       * in** (Olcay, 2026-08-16). The map reports the modifier and nothing more — the app owns the
+       * selection, so the app decides what adding means.
+       */
+      additive?: boolean,
+    ) => void;
     /** This tab's cursor, in map coordinates — presence broadcasts it (see cloud/presence.ts). */
     onCursor?: (lng: number, lat: number) => void;
     /**
@@ -175,6 +190,11 @@ const PointrMap = forwardRef<
      */
     onGeomIdentity?: (fid: string, props: Record<string, unknown>) => void;
     /**
+     * The map asking for the selection to collapse to one feature — Escape peeling the extras off,
+     * or a Combine that has just absorbed them. Distinct from a click, because nothing was clicked.
+     */
+    onSelectClear?: (fid: string) => void;
+    /**
      * The editor refusing something, in words meant for the user — a cut that misses the shape, or
      * one laid exactly along an edge. Posted since the editor was written and, until 2026-08-15,
      * listened to by nobody: the map said why and the message went nowhere.
@@ -212,6 +232,7 @@ const PointrMap = forwardRef<
     onGeomState,
     onGeometry,
     onGeomIdentity,
+    onSelectClear,
     onGeomError,
     focusPadRight,
     target,
@@ -386,6 +407,9 @@ const PointrMap = forwardRef<
           ev.data.props
         )
           onGeomIdentity?.(String(ev.data.fid), ev.data.props);
+      } else if (ev.data.type === "selectclear") {
+        if (ev.source === ref.current?.contentWindow && ev.data.fid)
+          onSelectClear?.(String(ev.data.fid));
       } else if (ev.data.type === "geomerror") {
         if (ev.source === ref.current?.contentWindow && ev.data.message)
           onGeomError?.(String(ev.data.fid ?? ""), String(ev.data.message));
@@ -401,7 +425,7 @@ const PointrMap = forwardRef<
           ev.data.fid &&
           ev.data.props
         )
-          onFeatureClick?.(ev.data.fid, ev.data.props);
+          onFeatureClick?.(ev.data.fid, ev.data.props, !!ev.data.additive);
       } else if (ev.data.type === "featureprops") {
         if (
           ev.source === ref.current?.contentWindow &&

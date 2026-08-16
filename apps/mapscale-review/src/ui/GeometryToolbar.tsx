@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 /**
  * The geometry toolbar — bottom centre of the map, the v9 *Map Content Geometry* position
  * (Olcay, 2026-08-14, against `b8dqhE3CPxitYfqlXuQJTC` node `465:7046`).
@@ -43,7 +45,13 @@
 export interface GeomState {
   editing: boolean;
   fid?: string;
-  mode?: "vertices" | "transform" | "split" | "combine";
+  /**
+   * ⚠️ **Combine is not in here**, and that is the point of it. It was a mode for a few hours on
+   * 2026-08-16, with its own armed pick list, until shift-click made selection something the whole
+   * editor has. There is nothing left for a Combine mode to do: the features are chosen before you
+   * reach for it, so it is an act you perform on a selection — a button, like Straighten.
+   */
+  mode?: "vertices" | "transform" | "split";
   snap?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
@@ -58,12 +66,21 @@ export interface GeomState {
   /** The first click of a cut has landed and the second is awaited. */
   cutting?: boolean;
   /**
-   * How many features are waiting to be combined into this one. `0` while Combine is merely armed.
-   *
-   * Combine has no self-evidently final click the way a cut does — it takes any number of features
-   * — so it is confirmed with **Enter**, and the caption is the only place that says so.
+   * How many features are selected **besides** the one the panel is anchored to — so `picked + 1`
+   * is what the toast counts. Shift-click on the map is what fills it.
    */
   picked?: number;
+  /**
+   * Can Combine actually run on what is selected? Decided by the map shell, which is the only side
+   * holding the outlines — see `geomCombinable` there.
+   */
+  combinable?: boolean;
+  /**
+   * ⚠️ **Why not, in a sentence.** Olcay, 2026-08-16: *"If disabled ... Combine should show a
+   * custom tooltip explaining why."* A grey button with no reason makes the user guess what they
+   * did wrong; this is the entire justification for disabling it rather than letting it fail.
+   */
+  combineWhy?: string | null;
   /**
    * How many features this session's combines have swallowed. They still have rows in the tree and
    * nothing here can remove them, so the count is reported rather than dressed up.
@@ -284,6 +301,62 @@ const TILE_LABEL: React.CSSProperties = {
   letterSpacing: ".01em",
 };
 
+/**
+ * A tooltip that works on a **disabled** control — which the native one cannot.
+ *
+ * ⚠️ A disabled `<button>` fires no pointer events at all, so `title=` on it is silently dead. The
+ * listeners therefore live on a wrapper, and the button underneath keeps its real `disabled` so it
+ * stays unclickable and out of the tab order. That is the whole reason this exists: the one tooltip
+ * in the bar that genuinely matters is the one explaining why a control is unavailable.
+ *
+ * It is also focus-triggered, not hover-only. A reason a keyboard user cannot reach is not a reason.
+ */
+function WhyTip({
+  text,
+  children,
+}: {
+  text?: string | null;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  if (!text) return <>{children}</>;
+  return (
+    <span
+      style={{ position: "relative", display: "inline-flex" }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+    >
+      {children}
+      {open && (
+        <span
+          role="tooltip"
+          style={{
+            position: "absolute",
+            // Above the bar, which sits at the bottom of the map — below would be off-screen.
+            bottom: "calc(100% + 8px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 244,
+            padding: "8px 10px",
+            borderRadius: 8,
+            background: "var(--review-ink, #1d2433)",
+            color: "#fff",
+            font: "12px/1.4 inherit",
+            textAlign: "left",
+            boxShadow: "0 6px 20px rgba(11,54,156,.22)",
+            pointerEvents: "none",
+            zIndex: 3,
+          }}
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function Group({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: 1 }}>
@@ -405,66 +478,53 @@ export function GeometryToolbar({
             : "Click one side of the cut · Esc to cancel",
           bad: false,
         }
-      : state.mode === "combine"
+      : selected > 0
         ? {
-            /**
-             * The one caption that has to teach a keystroke. Split ends itself on its second click;
-             * a combine takes any number of features, so nothing about the clicking says when you
-             * have finished — **Enter** does, and this line is where it is written down.
-             */
-            text:
-              picked === 0
-                ? "Click the features to combine with this one · Esc to cancel"
-                : `${picked} feature${picked === 1 ? "" : "s"} chosen · Enter to combine · Esc to cancel`,
+            // Short enough to stay on one line: the caption sits ABOVE the bar, and a wrapped one
+            // grows upward into the map. Dragging the selection is discoverable by trying it;
+            // Delete is not, so Delete is what the line spends its words on.
+            text: `${selected} corner${selected === 1 ? "" : "s"} selected · Delete to remove`,
             bad: false,
           }
-        : selected > 0
+        : isPoint
           ? {
-              // Short enough to stay on one line: the caption sits ABOVE the bar, and a wrapped one
-              // grows upward into the map. Dragging the selection is discoverable by trying it;
-              // Delete is not, so Delete is what the line spends its words on.
-              text: `${selected} corner${selected === 1 ? "" : "s"} selected · Delete to remove`,
+              text: "This feature is a single point — drag it to move it",
               bad: false,
             }
-          : isPoint
+          : /**
+             * The standing facts about the shape, and they have to compose: a combine that could
+             * only reach two of the three rooms leaves a feature that is BOTH combined and in more
+             * than one piece. Reporting only the piece count there would say "Split into 2 pieces"
+             * about a shape somebody had just combined, which is exactly backwards.
+             *
+             * All three are careful about what they claim. "Holds" says the shape covers those
+             * features and stops short of saying they are gone — they are still in Pointr Cloud and
+             * still have rows in the tree, because nothing in this prototype deletes a feature.
+             */
+            absorbed > 0 && pieces > 1
             ? {
-                text: "This feature is a single point — drag it to move it",
+                text: `Holds ${absorbed + 1} features, in ${pieces} pieces`,
                 bad: false,
               }
-            : /**
-               * The standing facts about the shape, and they have to compose: a combine that could
-               * only reach two of the three rooms leaves a feature that is BOTH combined and in more
-               * than one piece. Reporting only the piece count there would say "Split into 2 pieces"
-               * about a shape somebody had just combined, which is exactly backwards.
-               *
-               * All three are careful about what they claim. "Holds" says the shape covers those
-               * features and stops short of saying they are gone — they are still in Pointr Cloud and
-               * still have rows in the tree, because nothing in this prototype deletes a feature.
-               */
-              absorbed > 0 && pieces > 1
+            : absorbed > 0
               ? {
-                  text: `Holds ${absorbed + 1} features, in ${pieces} pieces`,
+                  text: `Holds ${absorbed + 1} combined features`,
                   bad: false,
                 }
-              : absorbed > 0
-                ? {
-                    text: `Holds ${absorbed + 1} combined features`,
-                    bad: false,
-                  }
-                : pieces > 1
-                  ? { text: `Split into ${pieces} pieces`, bad: false }
-                  : // Each mode gets the one hint that mode needs, and nothing gets a standing one — an
-                    // always-on line is permanent chrome for something you learn once.
-                    state.mode === "vertices"
-                    ? { text: "Shift-drag to select corners", bad: false }
-                    : state.mode === "transform"
-                      ? {
-                          // The transform handles have no toolbar buttons any more, so this line is the
-                          // only place the modifier is written down.
-                          text: "Drag to move · corners scale, knob rotates · Shift or ⌥ snaps",
-                          bad: false,
-                        }
-                      : null;
+              : pieces > 1
+                ? { text: `Split into ${pieces} pieces`, bad: false }
+                : // Each mode gets the one hint that mode needs, and nothing gets a standing one — an
+                  // always-on line is permanent chrome for something you learn once.
+                  state.mode === "vertices"
+                  ? { text: "Shift-drag to select corners", bad: false }
+                  : state.mode === "transform"
+                    ? {
+                        // The transform handles have no toolbar buttons any more, so this line is the
+                        // only place the modifier is written down.
+                        text: "Drag to move · corners scale, knob rotates · Shift or ⌥ snaps",
+                        bad: false,
+                      }
+                    : null;
 
   return (
     <div
@@ -484,6 +544,59 @@ export function GeometryToolbar({
         maxWidth: `calc(100% - ${padRight + 32}px)`,
       }}
     >
+      {/**
+       * **How many features are selected, on the map, above the toolbar** (Olcay, 2026-08-16:
+       * *"On the map above toolbar - toast states how many items are selected as long as they are
+       * selected too."*).
+       *
+       * Above the caption rather than instead of it: they answer different questions and both stay
+       * true at once. The caption is about the **tool** — what your next click will do — and it
+       * changes constantly; this is about the **subject**, and it stands as long as the selection
+       * does. Folding them together would mean losing one of them every time the other had
+       * something to say.
+       *
+       * Filled rather than outlined, so it reads as a state you are in rather than as another hint.
+       */}
+      {picked > 0 && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            padding: "5px 12px",
+            borderRadius: 999,
+            background: BAR_ON_INK,
+            color: "#fff",
+            font: "12px/1.35 inherit",
+            fontWeight: 500,
+            boxShadow: "0 4px 14px rgba(11,54,156,.28)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: 999,
+              background: "#fff",
+              opacity: 0.9,
+              flex: "0 0 auto",
+            }}
+          />
+          <span>{picked + 1} features selected</span>
+          {/* Escape is the way out and nothing else says so — the panel's list has an ✕ per row,
+              but that is a trip to the panel to undo one shift-click. */}
+          {/* Braced, so the leading space survives — JSX trims literal whitespace between
+              elements, and without it a screen reader reads "…selectedEsc to clear". */}
+          <span style={{ fontWeight: 400, opacity: 0.72 }}>
+            {" · Esc to clear"}
+          </span>
+        </div>
+      )}
+
       {/* Above the row and out of flow, so the longest refusal cannot widen the bar, shift a
           button under the cursor, or push either end of the toolbar off the map. */}
       {caption && (
@@ -594,13 +707,15 @@ export function GeometryToolbar({
              * the only rule that does not depend on the order things were clicked in, which is
              * invisible the moment it is over.
              */}
-            <Tile
-              icon={<Combine />}
-              label="Combine"
-              title="Click other features on the map to join them to this one · Enter to combine · Escape to cancel. Walls between them are hidden, and the largest keeps its name."
-              on={state.mode === "combine"}
-              onClick={() => onCommand({ cmd: "combine" })}
-            />
+            <WhyTip text={state.combinable ? null : state.combineWhy}>
+              <Tile
+                icon={<Combine />}
+                label="Combine"
+                title="Join the selected features into one · walls between them are hidden, and the largest keeps its name"
+                disabled={!state.combinable}
+                onClick={() => onCommand({ cmd: "combine" })}
+              />
+            </WhyTip>
           </Group>
         )}
 

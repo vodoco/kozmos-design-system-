@@ -9,7 +9,7 @@ import "@kozmos/react/dist/style.css";
 import "../src/index.css";
 import { GeometryToolbar, type GeomState } from "../src/ui/GeometryToolbar";
 import { SavedNotice } from "../src/ui/SavedNotice";
-import { FeaturePanel } from "../src/ui/FeaturePanel";
+import { FeaturePanel, mergeForEditing } from "../src/ui/FeaturePanel";
 
 /**
  * The real panel, with a realistic property bag — for measuring the header's alignment
@@ -25,6 +25,25 @@ const DEMO_PROPS = {
   mainType: "Operational Space",
   name: "Operational Space",
 };
+
+/**
+ * Three features whose properties partly agree — put through the real `mergeForEditing`, not a
+ * hand-written "what it probably produces". The merge is the thing under test.
+ */
+const DEMO_SELECTION = [
+  {
+    fid: DEMO_PROPS.fid,
+    name: "Operational Space",
+    typeLabel: "Operational Space",
+  },
+  { fid: "b2", name: "Store Room 4", typeLabel: "Operational Space" },
+  { fid: "c3", name: "", typeLabel: "Operational Space" },
+];
+const MERGED = mergeForEditing([
+  { ...DEMO_PROPS, description: "Back of house", hasAssistance: true },
+  { ...DEMO_PROPS, fid: "b2", name: "Store Room 4", description: "Deliveries" },
+  { ...DEMO_PROPS, fid: "c3", name: "", hasAssistance: true },
+]);
 
 function HeaderBench() {
   return (
@@ -46,7 +65,14 @@ function HeaderBench() {
           ),
         },
         { k: "no icon", icon: undefined },
-      ].map(({ k, icon }) => (
+        /**
+         * ⚠️ **Several features selected** — the count strip, and every field the selection
+         * disagrees about reading *Multiple values* rather than one feature's answer. This is the
+         * case the bench exists for: it is the only place to see that a merged panel still reads as
+         * one coherent form rather than a page of empty boxes.
+         */
+        { k: "3 selected", icon: undefined, multi: true },
+      ].map(({ k, icon, multi }) => (
         <div
           key={k}
           style={{
@@ -69,7 +95,12 @@ function HeaderBench() {
           >
             {k}
           </div>
-          <FeaturePanel props={DEMO_PROPS} icon={icon} onClose={() => {}} />
+          <FeaturePanel
+            props={multi ? MERGED : DEMO_PROPS}
+            selection={multi ? DEMO_SELECTION : undefined}
+            icon={icon}
+            onClose={() => {}}
+          />
         </div>
       ))}
     </div>
@@ -86,6 +117,13 @@ const BASE: GeomState = {
   dirty: false,
   pieces: 1,
 };
+
+/* The two refusals the map shell actually posts, verbatim — the bench is where their LENGTH gets
+   judged, and a paraphrase here would be judging the wrong string. */
+const COMBINE_ALONE =
+  "Shift-click another feature on the map to combine this one with it.";
+const COMBINE_FAR =
+  "Too far apart. Combine bridges gaps up to 0.6 m — a wall's width — and these fall into 2 separate groups.";
 
 const CASES: { title: string; state: GeomState; notice?: string }[] = [
   { title: "Points — as it opens, nothing done yet", state: BASE },
@@ -118,17 +156,23 @@ const CASES: { title: string; state: GeomState; notice?: string }[] = [
     state: { ...BASE, canUndo: true, canRedo: true, dirty: true, pieces: 3 },
   },
   {
-    title: "Combine armed — nothing picked yet",
-    state: { ...BASE, mode: "combine" },
+    title:
+      "Nothing else selected — Combine is dark, and hovering it says what to do",
+    state: { ...BASE, combinable: false, combineWhy: COMBINE_ALONE },
   },
   {
     title:
-      "Combine — two features chosen. The only caption that has to teach a keystroke",
-    state: { ...BASE, mode: "combine", picked: 2 },
+      "Three features selected and adjacent — the toast counts them and Combine lights up",
+    state: { ...BASE, picked: 2, combinable: true },
   },
   {
-    title: "Combine refused — nothing was close enough to join",
-    state: { ...BASE, mode: "combine", picked: 2 },
+    title:
+      "Three selected but scattered — Combine stays dark, and the tooltip says why (hover it)",
+    state: { ...BASE, picked: 2, combinable: false, combineWhy: COMBINE_FAR },
+  },
+  {
+    title: "Combine refused after the fact — the map's own words",
+    state: { ...BASE, picked: 2, combinable: true },
     notice: "nothing was close enough to join — they must be within 0.6 m",
   },
   {
@@ -180,7 +224,10 @@ function Bench() {
           <div
             style={{
               position: "relative",
-              height: 132,
+              // Tall enough for the toast AND the caption AND the bar stacked, plus the tooltip
+              // that opens above a disabled control. At 132 the toast was clipped clean off — the
+              // bench was hiding the very thing it exists to show.
+              height: 210,
               borderRadius: 12,
               // A stand-in for the floor plan: enough texture to judge contrast
               // and the drop shadow against, without pretending to be a map.
@@ -226,7 +273,7 @@ function Bench() {
         <div
           style={{
             position: "relative",
-            height: 132,
+            height: 210,
             borderRadius: 12,
             background:
               "repeating-linear-gradient(45deg,#dfe4ec 0 10px,#e7ebf2 10px 20px)",
