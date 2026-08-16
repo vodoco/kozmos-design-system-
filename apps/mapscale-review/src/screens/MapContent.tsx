@@ -2485,8 +2485,8 @@ export function MapContent({
     }
     return rows;
   }, [selectionProps, geom.joined, geom.removed]);
-  /** Take one feature out of the selection, from the panel's list. */
-  const onDeselect = useCallback((fid: string) => {
+  /** The ordinary case: a live selection shrinking by one. */
+  const onDeselectLive = useCallback((fid: string) => {
     setAlso((cur) => {
       if (cur.includes(fid)) return cur.filter((f) => f !== fid);
       // The primary, dropped from the list: promote the next, exactly as shift-clicking it does.
@@ -2498,6 +2498,26 @@ export function MapContent({
       return rest;
     });
   }, []);
+  /**
+   * A row's ✕ — and **which of three things it means depends on what the row is** (Olcay,
+   * 2026-08-16: *"removing from the selected list it should update the geometry. Also removing the
+   * wall removal should bring the wall back."*).
+   *
+   * - **selected** → drop it from the selection, nothing else changes.
+   * - **joined** → take it back out of the combined shape, which *recomputes the geometry*.
+   * - **removed** → put it back on the map. Not an undo of the join: the room stays combined and
+   *   the wall stands over it again, which is a coherent thing to want and exactly what was asked.
+   *
+   * The last two are the map's to do, because only it has the geometry.
+   */
+  const onDeselect = useCallback(
+    (fid: string, fate?: "joined" | "removed") => {
+      if (fate === "joined") return sendGeom({ cmd: "uncombine", fid });
+      if (fate === "removed") return sendGeom({ cmd: "unhide", fid });
+      onDeselectLive(fid);
+    },
+    [sendGeom],
+  );
   /**
    * The map peeling the selection back to one — Escape, or a Combine that has absorbed the rest.
    * It names the survivor because a combine can change which feature that is.
@@ -3076,6 +3096,7 @@ export function MapContent({
               props={mergedProps ?? shownProps}
               selection={selectionList}
               onDeselect={onDeselect}
+              recomposable={!!geom.recomposable}
               icon={
                 <TypeIcon
                   mainType={String(shownProps.mainType ?? "")}

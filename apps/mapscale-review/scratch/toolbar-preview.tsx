@@ -123,6 +123,8 @@ function HeaderBench() {
             selection={
               combined ? COMBINED_SELECTION : multi ? DEMO_SELECTION : undefined
             }
+            /* The combine is still a composition here, so a joined row can be taken back out. */
+            recomposable={combined}
             icon={icon}
             onClose={() => {}}
           />

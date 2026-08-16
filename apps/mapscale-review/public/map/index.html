@@ -2492,6 +2492,12 @@ function geomBegin(fid) {
      * recomputed from scratch — see `unwrapGrid`. `null` until the box is first drawn.
      */
     boxTheta: null,
+    /**
+     * A live combine, as **what it was made of** rather than only what it produced:
+     * `{ members: [{ fid, rings }] }`. Null once anything else has edited the shape — see
+     * `geomPush`. It is what lets a row be taken back out of the combined result.
+     */
+    combine: null,
   };
   GEOM.pieceOf = GEOM.rings.map(() => 0);
   /**
@@ -2543,6 +2549,10 @@ function geomSnap() {
     absorbed: GEOM.absorbed.slice(),
     hidden: { fids: GEOM.hidden.fids.slice(), labels: GEOM.hidden.labels.slice(),
               layers: GEOM.hidden.layers.slice() },
+    // Carried so undo restores a composition that is still recomposable, rather than a shape that
+    // merely looks the same and has forgotten what it was made of.
+    combine: GEOM.combine
+      ? { members: JSON.parse(JSON.stringify(GEOM.combine.members)) } : null,
   };
 }
 
@@ -2552,6 +2562,7 @@ function geomRestore(s) {
   GEOM.pieceOf = s.pieceOf.slice();
   GEOM.nextPiece = s.nextPiece;
   GEOM.absorbed = s.absorbed.slice();
+  GEOM.combine = s.combine ? { members: JSON.parse(JSON.stringify(s.combine.members)) } : null;
   GEOM.hidden = { fids: s.hidden.fids.slice(), labels: s.hidden.labels.slice(),
                   layers: s.hidden.layers.slice() };
   // Every wall filter is rebuilt from `hidden` rather than patched, so undo and redo need no
@@ -2784,6 +2795,12 @@ function geomState() {
          */
         absorbed: GEOM.absorbed.length,
         joined: GEOM.absorbed.slice(),
+        /**
+         * Can a member still be taken back out? False once the shape has been hand-edited, because
+         * recomputing from fewer members would discard that work — the panel disables the row's ✕
+         * and says why rather than doing it silently.
+         */
+        recomposable: !!GEOM.combine,
         removed: GEOM.hidden.labels.slice(),
         // A point has no outline: the toolbar drops every tool that would be a lie on one.
         kind: GEOM.kind,
@@ -2795,6 +2812,13 @@ function geomState() {
 /** Snapshot before a change. Redo is dropped, as it is in every editor that has ever felt right. */
 function geomPush() {
   if (!GEOM) return;
+  /**
+   * ⚠️ **Any change dissolves a combine's composition**, and this is the one place that can say so
+   * for all of them. Once a corner has been dragged the rings are no longer a function of the
+   * members, so recomputing from a smaller set would quietly throw that work away. Combine sets it
+   * again immediately after its own push — see `geomApplyCombine`.
+   */
+  GEOM.combine = null;
   GEOM.history.push(geomSnap());
   if (GEOM.history.length > 50) GEOM.history.shift();
   GEOM.future = [];
@@ -4382,6 +4406,24 @@ function geomApplyCombine() {
     return;                                        // still armed: the message says to try again
   }
   geomPush();
+  /**
+   * ⚠️ **The members are remembered, and that is what makes the result editable afterwards**
+   * (Olcay, 2026-08-16: *"removing from the selected list it should update the geometry"*).
+   *
+   * A combine used to be a one-shot mutation: it produced rings and forgot what they were made of,
+   * so the only way back was Undo, all of it at once. Kept as a **composition** — the members and
+   * the threshold — the result can be recomputed from a smaller set, which is exactly what taking
+   * one row out of the list means.
+   *
+   * Set *after* `geomPush`, because `geomPush` clears it. That is the whole mechanism for "the
+   * shape has been hand-edited since": every other mutation goes through `geomPush` too, so the
+   * composition dissolves the moment the rings stop being a function of its members — and the
+   * panel's ✕ goes quiet with a reason rather than silently discarding the edit.
+   */
+  GEOM.combine = {
+    members: [{ fid: GEOM.fid, rings: JSON.parse(JSON.stringify(GEOM.rings)) }].concat(
+      GEOM.pick.map(p => ({ fid: p.fid, rings: JSON.parse(JSON.stringify(p.rings)) }))),
+  };
 
   /**
    * Measured on the inputs, not on the result. After the stitch there is one ring holding all of
@@ -4429,6 +4471,91 @@ function geomApplyCombine() {
     post("geomerror", { fid: GEOM.fid,
       message: res.rings.length + " pieces — some of them were too far apart to join" });
   }
+}
+
+/**
+ * Rebuild the combined shape from whatever members remain.
+ *
+ * The composition is the source of truth here, not the rings: recomputing is how removing one row
+ * from the list changes the geometry (Olcay, 2026-08-16). One member left is not a combine at all —
+ * the shape becomes that feature's own outline again and the composition dissolves.
+ */
+function geomRecombine() {
+  if (!GEOM || !GEOM.combine || !GEOM.combine.members.length) return false;
+  const ms = GEOM.combine.members;
+  const toScreen = c => { const p = map.project(c); return [p.x, p.y]; };
+  const back = ([x, y]) => { const q = map.unproject([x, y]); return [q.lng, q.lat]; };
+
+  if (ms.length === 1) {
+    GEOM.rings = JSON.parse(JSON.stringify(ms[0].rings));
+    GEOM.pieceOf = GEOM.rings.map((_, i) => i);
+    GEOM.nextPiece = GEOM.rings.length;
+    GEOM.absorbed = [];
+    geomTakeIdentity(ms[0].fid);
+    GEOM.combine = null;                 // one feature is not a composition
+    return true;
+  }
+
+  const sets = ms.map(m => m.rings.map(r => r.map(toScreen)));
+  const gapPx = COMBINE_GAP_M * geomPxPerMetre(ms[0].rings[0] && ms[0].rings[0][0]);
+  const res = combineRings([].concat(...sets), gapPx);
+  GEOM.rings = res.rings.map(r => r.map(back));
+  GEOM.pieceOf = GEOM.rings.map((_, i) => i);
+  GEOM.nextPiece = GEOM.rings.length;
+  // Identity is re-decided, not carried: take the biggest member away and the largest is a
+  // different room, so keeping the old winner would leave the panel on a feature that is no longer
+  // the one this shape mostly is.
+  geomTakeIdentity(ms[largestSet(sets)].fid);
+  GEOM.absorbed = ms.map(m => m.fid).filter(f => f !== GEOM.fid);
+  return true;
+}
+
+/**
+ * Take one feature back out of a combined shape.
+ *
+ * ⚠️ Only while the combine is still a composition. Once the shape has been hand-edited `combine`
+ * is null (see `geomPush`) and this refuses rather than recomputing — recomputing would silently
+ * discard the edit, and Undo is the honest way back from there.
+ */
+function geomUncombine(fid) {
+  if (!GEOM) return;
+  if (!GEOM.combine) {
+    post("geomerror", { fid: GEOM.fid,
+      message: "The shape has been edited since it was combined — undo to take a feature back out." });
+    return;
+  }
+  const left = GEOM.combine.members.filter(m => m.fid !== fid);
+  if (left.length === GEOM.combine.members.length) return;
+  geomPush();                              // …which clears `combine`, so it is put back next line
+  GEOM.combine = { members: left };
+  geomRecombine();
+  geomClearSel();
+  geomDraw(); post("geomstate", geomState());
+}
+
+/**
+ * Put back something a combine took off the map.
+ *
+ * Olcay, 2026-08-16: *"removing the wall removal should bring the wall back. Meaning the user wants
+ * a wall on top of the geometry."* — so this is not an undo of the join, only of the hiding. The
+ * combined room keeps its shape and the wall is drawn over it again, which is a perfectly coherent
+ * thing to want: two rooms that are now one, with the old partition still standing.
+ *
+ * Independent of the composition on purpose, and therefore available even after the shape has been
+ * hand-edited: nothing about a hidden feature depends on how the rings were arrived at.
+ */
+function geomUnhide(fid) {
+  if (!GEOM || GEOM.hidden.fids.indexOf(fid) < 0) return;
+  geomPush();
+  GEOM.hidden = {
+    fids: GEOM.hidden.fids.filter(f => f !== fid),
+    labels: GEOM.hidden.labels.filter(l => l.fid !== fid),
+    // The layer list is left alone: another hidden feature may still need it, and a layer with
+    // nothing left to hide is put back whole by `geomApplyHiddenFilter` anyway.
+    layers: GEOM.hidden.layers.slice(),
+  };
+  geomApplyHiddenFilter();
+  geomDraw(); post("geomstate", geomState());
 }
 
 /* ── drawing and interaction ───────────────────────────────────────────────────────────────── */
@@ -5085,6 +5212,10 @@ window.addEventListener("message", (ev) => {
     else if (d.cmd === "combine") geomApplyCombine();
     // The app owns the selection and tells the map what is in it — see geomSetSelection.
     else if (d.cmd === "select") geomSetSelection(d.fids);
+    // The combined result is editable from the panel's list: take a member out, or put back
+    // something the combine removed from the map.
+    else if (d.cmd === "uncombine") geomUncombine(d.fid);
+    else if (d.cmd === "unhide") geomUnhide(d.fid);
   } else if (d.type === "editing") {
     EDITING = Array.isArray(d.editing) ? d.editing : [];
     drawEditing();

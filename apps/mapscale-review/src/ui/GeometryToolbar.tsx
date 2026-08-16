@@ -96,6 +96,11 @@ export interface GeomState {
   /** The fids this session's combines have joined into this shape. */
   joined?: string[];
   /**
+   * Is a combine still a *composition* — can a member be taken back out and the shape recomputed?
+   * False once anything else has edited it. Feeds the panel's row control, not the toolbar.
+   */
+  recomposable?: boolean;
+  /**
    * What was standing between them and has been taken off the map — named by the map shell,
    * because the app has never seen these features and cannot look them up once they are hidden.
    */

@@ -737,6 +737,7 @@ export function FeaturePanel({
   subTypeOptions,
   selection,
   onDeselect,
+  recomposable,
   onEdited,
   onSaved,
   onCancelEdit,
@@ -785,8 +786,17 @@ export function FeaturePanel({
      */
     fate?: "joined" | "removed";
   }[];
-  /** Take one feature back out of the selection, from the expanded list. */
-  onDeselect?: (fid: string) => void;
+  /**
+   * A row's ✕. **What it means depends on the row's fate** — drop from the selection, take back out
+   * of the combined shape (which recomputes the geometry), or put back on the map.
+   */
+  onDeselect?: (fid: string, fate?: "joined" | "removed") => void;
+  /**
+   * Can a joined row still be taken back out? False once the shape has been hand-edited since the
+   * combine, because recomputing from fewer members would discard that work. The row says so rather
+   * than offering a ✕ that would either lie or destroy something.
+   */
+  recomposable?: boolean;
   /**
    * An edit was saved. Carries the flag-clearing consequence (§18a) up. D3: nothing persists.
    *
@@ -1256,16 +1266,38 @@ export function FeaturePanel({
                         {s.typeLabel}
                       </Text>
                     </span>
-                    {/* Only a live selection can be dropped. A joined or removed row is a record
-                        of something that already happened — Undo is what reverses that, and an ✕
-                        here would promise it could be picked apart one row at a time. */}
+                    {/**
+                     * ⚠️ **Three meanings, one control.** Dropping a *selected* row changes only
+                     * the selection; taking a *joined* one out **recomputes the shape**; putting a
+                     * *removed* one back draws it over the combined room again — which is a
+                     * coherent thing to want, and what was asked for.
+                     *
+                     * A joined row is only offered while the combine is still a composition. Once
+                     * the shape has been hand-edited, recomputing from fewer members would throw
+                     * that work away, so the control goes quiet and the title says why instead of
+                     * doing it silently.
+                     */}
                     <IconButton
                       variant="ghost"
                       size="sm"
-                      disabled={!!s.fate}
-                      onClick={() => onDeselect?.(s.fid)}
-                      aria-label={`Remove ${s.name || "this feature"} from the selection`}
-                      title="Remove from selection"
+                      disabled={s.fate === "joined" && !recomposable}
+                      title={
+                        s.fate === "joined"
+                          ? recomposable
+                            ? "Take this feature back out of the combined shape"
+                            : "The shape has been edited since it was combined — undo to take this back out"
+                          : s.fate === "removed"
+                            ? "Put this back on the map, over the combined shape"
+                            : "Remove from selection"
+                      }
+                      onClick={() => onDeselect?.(s.fid, s.fate)}
+                      aria-label={
+                        s.fate === "joined"
+                          ? `Take ${s.name || "this feature"} back out of the combined shape`
+                          : s.fate === "removed"
+                            ? `Put ${s.name || "this feature"} back on the map`
+                            : `Remove ${s.name || "this feature"} from the selection`
+                      }
                     >
                       <span aria-hidden style={{ fontSize: 13 }}>
                         ✕
