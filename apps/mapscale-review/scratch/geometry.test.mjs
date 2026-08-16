@@ -41,7 +41,7 @@ writeFileSync(
     `${engine}\nexport { splitRingsByLine, ringSignedArea, ringOpen,\n` +
       `  segClosest, buildSnapIndex, snapQuery, dominantAngle, squareRings,\n` +
       `  angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,\n` +
-      `  guideTolFor, GUIDE_TOLS,\n` +
+      `  guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,\n` +
       `  segPairClosest, findBridge, bridgeRings, combineRings };\n`,
 );
 
@@ -55,7 +55,7 @@ const {
   splitRingsByLine, ringSignedArea, ringOpen,
   segClosest, buildSnapIndex, snapQuery, dominantAngle, squareRings,
   angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,
-  guideTolFor, GUIDE_TOLS,
+  guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,
   segPairClosest, findBridge, bridgeRings, combineRings,
 } = mod;
 
@@ -585,45 +585,74 @@ const bearingOf = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI
 }
 
 
-/* G16. ⚠️ THE ONE OLCAY REPORTED: "sometimes we miss 90 when it's 95 or 85".
-        Measured before the fix — at a flat 2.5°, a corner at 85° or 95° is 5° from the guide and
-        missed it. 85–95° is exactly where a traced floor plan lands, so the one angle everybody
-        reaches for was the hardest to catch. Square and straight-on earn a wider magnet now. */
+/* G16. ⚠️ FREE MODE MUST BE FINE. Olcay: "still ignores less then 15 and tags them as 90 or 0."
+        A corner at 86° is not a right angle, and a tool that rounds it to one and then prints
+        "90°" has stopped reporting and started deciding. Every 5° is its own answer, and anything
+        between them is left alone. */
 {
-  for (const actual of [85, 87, 90, 93, 95]) {
-    const a = actual * Math.PI / 180;
-    const g = bestAngleGuide(0, 0, Math.cos(a) * 100, Math.sin(a) * 100, 15, GUIDE_TOLS, [0]);
-    check(`${actual}° catches the right angle`, g && Math.abs(g.rel - 90) < 1e-9,
-          g ? `caught ${g.rel}°` : "MISSED");
+  const at = (d, step, tols) => {
+    const a = d * Math.PI / 180;
+    return bestAngleGuide(0, 0, Math.cos(a) * 100, Math.sin(a) * 100, step, tols, [0]);
+  };
+  const free = (d) => at(d, GUIDE_STEP_FREE, GUIDE_TOLS);
+
+  check("85° is its own guide, not a rounding of 90°",
+        free(85) && Math.abs(free(85).rel - 85) < 1e-9,
+        free(85) ? `${free(85).rel}°` : "MISSED");
+  check("95° likewise", free(95) && Math.abs(free(95).rel - 95) < 1e-9,
+        free(95) ? `${free(95).rel}°` : "MISSED");
+  check("86° is nobody's guide and is left free", free(86) === null,
+        free(86) ? `dragged to ${free(86).rel}°` : "free");
+  check("87° too", free(87) === null, free(87) ? `dragged to ${free(87).rel}°` : "free");
+  check("88° is left alone rather than called square", free(88) === null,
+        free(88) ? `dragged to ${free(88).rel}°` : "free");
+  check("90° still catches when you are all but on it",
+        free(89.5) && Math.abs(free(89.5).rel - 90) < 1e-9,
+        free(89.5) ? `${free(89.5).rel}°` : "MISSED");
+  /**
+   * ⚠️ The guarantee that matters is not how much of the circle is magnetised — it is **how far
+   * anything is moved**. "Tagged as 90 or 0" was a complaint about corners being dragged up to 6°
+   * onto a round number. Free mode may now nudge by at most `cardinal`, and by less than a degree
+   * for an ordinary angle, so the readout never disagrees with the shape by more than a whisker.
+   */
+  let worst = 0, worstAt = null;
+  for (let d = 0; d < 360; d += 0.1) {
+    const g = free(d);
+    if (!g) continue;
+    let off = Math.abs(((g.rel - d) % 360 + 540) % 360 - 180);
+    if (off > worst) { worst = off; worstAt = d; }
   }
-  // …and it works from a reference wall, not just from the screen.
-  const base = 23, actual = base + 95;
-  const a = actual * Math.PI / 180;
-  const g = bestAngleGuide(0, 0, Math.cos(a) * 100, Math.sin(a) * 100, 15, GUIDE_TOLS, [base]);
-  check("95° off a 23° wall still catches square", g && Math.abs(g.rel - 90) < 1e-9,
-        g ? `rel ${g.rel}` : "MISSED");
+  check("nothing is pulled further than the cardinal tolerance",
+        worst <= GUIDE_TOLS.cardinal + 1e-6, `${worst.toFixed(2)}° at ${worstAt}°`);
+  check("…and an ordinary angle by under a degree",
+        GUIDE_TOLS.other < 1, `${GUIDE_TOLS.other}°`);
 }
 
-/* G17. The widening is EARNED, not general — an incidental angle stays tight, or every guide
-        becomes noise and none of them means anything. */
+/* G17. ⚠️ AND SHIFT MUST BE COARSE — that is what Olcay asked for the round before: "when pressing
+        shift … 90 degree". 85° and 95° land on square, because that is what the modifier is for. */
 {
-  const at = (d) => {
+  const held = (d) => {
     const a = d * Math.PI / 180;
-    return bestAngleGuide(0, 0, Math.cos(a) * 100, Math.sin(a) * 100, 15, GUIDE_TOLS, [0]);
+    return bestAngleGuide(0, 0, Math.cos(a) * 100, Math.sin(a) * 100,
+                          GUIDE_STEP_SNAP, GUIDE_WIDE_TOLS, [0]);
   };
-  check("75° keeps its tight magnet: 5° off is a miss", at(70) === null);
-  check("…and 2° off is still a catch", at(73) !== null && Math.abs(at(73).rel - 75) < 1e-9);
-  check("45° gets the middle magnet", at(48) !== null && Math.abs(at(48).rel - 45) < 1e-9);
-  check("…but not the full one", at(51) === null);
-  check("0° is as important as 90°", at(5) !== null && Math.abs(at(5).rel) < 1e-9);
+  for (const d of [85, 87, 90, 93, 95])
+    check(`${d}° lands on square under the modifier`, held(d) && Math.abs(held(d).rel - 90) < 1e-9,
+          held(d) ? `${held(d).rel}°` : "MISSED");
+  check("…and the modifier still respects the 15° grid", held(75) && Math.abs(held(75).rel - 75) < 1e-9);
 }
 
 /* G18. No magnet may exceed half a step, or it steals from its neighbour and two guides claim the
         same cursor. */
 {
   for (const k of ["cardinal", "half", "other"])
-    check(`the ${k} tolerance stays inside half a step`, GUIDE_TOLS[k] <= 15 / 2 + 1e-9,
-          `${GUIDE_TOLS[k]}°`);
+    check(`the free ${k} tolerance stays inside half a FREE step`,
+          GUIDE_TOLS[k] <= GUIDE_STEP_FREE / 2 + 1e-9, `${GUIDE_TOLS[k]}° vs ${GUIDE_STEP_FREE / 2}°`);
+  for (const k of ["cardinal", "half", "other"])
+    check(`the modifier's ${k} tolerance stays inside half a SNAP step`,
+          GUIDE_WIDE_TOLS[k] <= GUIDE_STEP_SNAP / 2 + 1e-9, `${GUIDE_WIDE_TOLS[k]}°`);
+  check("the modifier's grid is coarser than the free one", GUIDE_STEP_SNAP > GUIDE_STEP_FREE,
+        `${GUIDE_STEP_SNAP} vs ${GUIDE_STEP_FREE}`);
   check("grading picks cardinal for 90", guideTolFor(90, GUIDE_TOLS) === GUIDE_TOLS.cardinal);
   check("grading picks cardinal for 0", guideTolFor(0, GUIDE_TOLS) === GUIDE_TOLS.cardinal);
   check("grading picks half for 45", guideTolFor(45, GUIDE_TOLS) === GUIDE_TOLS.half);

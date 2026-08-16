@@ -2630,8 +2630,27 @@ function snapQuery(idx, px, py, radius) {
 
 /* GUIDE-ENGINE-START — extracted and tested by scratch/geometry.test.mjs; keep DOM- and map-free. */
 
-/** Guides every this many degrees. 15 gives 30/45/60/90 without crowding. */
-const GUIDE_STEP_DEG = 15;
+/**
+ * ⚠️ **Two tiers, and putting them on one was the bug** (Olcay, 2026-08-16: *"still ignores less
+ * then 15 and tags them as 90 or 0. we should be more fine here."*).
+ *
+ * The previous round widened the magnet on 90° so that 85° and 95° would catch it — but it widened
+ * the **free** tolerance, so *any* corner within 6° of square was dragged onto 90 and then labelled
+ * `90°`. A corner at 86° is not a right angle, and a tool that says it is has stopped reporting and
+ * started deciding. Olcay's words the time before were *"when pressing **shift**"* — the coarse
+ * snapping was always meant to live under the modifier, and I put it on the wrong tier.
+ *
+ * **Free: fine and quiet.** Guides every 5°, and caught only when you are all but *on* one — under
+ * a degree for an ordinary angle. A 5° grid with a generous magnet would pull nearly half of all
+ * angles onto a round number, which is the same fault in smaller clothing; free mode should
+ * **confirm** that you are square, never decide it for you. So 85°, 87° and 90° are three different
+ * answers, and the readout tells the truth about which one you are at.
+ *
+ * **Shift/⌥: coarse and decisive.** Guides every 15° with half a step of pull, so square is
+ * unmissable and 85° or 95° lands on 90° — which is what the modifier is *for*.
+ */
+const GUIDE_STEP_FREE = 5;
+const GUIDE_STEP_SNAP = 15;
 /**
  * ⚠️ **Not every guide deserves the same magnet** (Olcay, 2026-08-16: *"sometimes we miss 90 when
  * it's 95 or 85"*). Measured: at 2.5° flat, a corner sitting at 85° or 95° is 5° from the guide and
@@ -2644,14 +2663,19 @@ const GUIDE_STEP_DEG = 15;
  *
  * Nothing may exceed half a step: past that a guide starts stealing from its neighbour.
  */
-const GUIDE_TOLS = { cardinal: 6, half: 4, other: 2.5 };
+const GUIDE_TOLS = { cardinal: 1.2, half: 1, other: 0.8 };
 /** With Shift/⌥ every guide gets the maximum — half a step, so the nearest cannot be missed. */
-const GUIDE_WIDE_DEG = GUIDE_STEP_DEG / 2;
+const GUIDE_WIDE_DEG = GUIDE_STEP_SNAP / 2;
 const GUIDE_WIDE_TOLS = {
   cardinal: GUIDE_WIDE_DEG, half: GUIDE_WIDE_DEG, other: GUIDE_WIDE_DEG,
 };
 
-/** How much slack this particular angle gets: square and straight-on earn the most. */
+/**
+ * How much slack this particular angle gets: square and straight-on earn the most.
+ *
+ * Still graded on the free tier — 90° is worth more than 85° even when both are guides — but the
+ * spread is now small enough that it never swallows a neighbouring 5° guide.
+ */
 function guideTolFor(relDeg, tols) {
   const q = Math.abs(((relDeg % 90) + 90) % 90);
   if (Math.min(q, 90 - q) < 1e-9) return tols.cardinal;
@@ -2783,7 +2807,7 @@ function resolveGuides(anchors, px, py, refs, wide, bases) {
 
   if (list.length && wide) {
     const hits = list
-      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_DEG, GUIDE_WIDE_TOLS, an.bases))
+      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_SNAP, GUIDE_WIDE_TOLS, an.bases))
       .filter(Boolean);
     if (hits.length >= 2) {
       const dir = g => [Math.cos(g.deg * Math.PI / 180), Math.sin(g.deg * Math.PI / 180)];
@@ -2802,7 +2826,7 @@ function resolveGuides(anchors, px, py, refs, wide, bases) {
     // Unmodified, the same two-ray crossing is still allowed — it just has to be earned at the
     // tight tolerance rather than handed over by the modifier.
     const hits = list
-      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_DEG, GUIDE_TOLS, an.bases))
+      .map(an => bestAngleGuide(an.at[0], an.at[1], px, py, GUIDE_STEP_FREE, GUIDE_TOLS, an.bases))
       .filter(Boolean);
     if (hits.length >= 2) {
       const dir = g => [Math.cos(g.deg * Math.PI / 180), Math.sin(g.deg * Math.PI / 180)];
