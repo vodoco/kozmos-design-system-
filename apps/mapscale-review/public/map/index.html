@@ -1859,7 +1859,8 @@ function start() {
            */
           const a = map.project(GEOM.cutA);
           const g = resolveGuides([a.x, a.y], ev.point.x, ev.point.y,
-                                  GEOM.cutRefs || [], geomSnapping(ev.originalEvent));
+                                  GEOM.cutRefs || [], geomSnapping(ev.originalEvent),
+                                  GEOM.cutBases || []);
           const q = map.unproject([g.x, g.y]);
           GEOM.cutB = [q.lng, q.lat];
           GEOM.guides = g.guides;
@@ -2503,6 +2504,7 @@ function geomSetMode(mode) {
   GEOM.mode = mode;
   GEOM.cutA = GEOM.cutB = null;
   GEOM.cutRefs = null;
+  GEOM.cutBases = null;
   GEOM.guides = null;
   geomDraw(); post("geomstate", geomState());
 }
@@ -2636,23 +2638,57 @@ const GUIDE_WIDE_DEG = GUIDE_STEP_DEG / 2;
 const GUIDE_ALIGN_PX = 6;
 
 /**
- * The cursor projected onto the nearest ray of `stepDeg` from the anchor, if it is within `tolDeg`.
+ * The cursor projected onto the nearest ray of `stepDeg` **measured from `baseDeg`**, if within
+ * `tolDeg`.
+ *
+ * ⚠️ **`baseDeg` is the whole point** (Olcay, 2026-08-16: *"the angles should show based on the
+ * previous and next nodes and edges not relative to the screen"*). The first version snapped to
+ * multiples of 15° from screen east, which is only useful for a building that happens to face the
+ * monitor. A wall meets its neighbour at a right angle **to that neighbour** — so the reference is
+ * the edge already there, and 90° means "square to this wall", not "square to your screen". It is
+ * the same reasoning that makes Straighten square to the shape's own grid rather than to north.
  *
  * Perpendicular projection rather than "same distance, new angle" — the point should slide onto the
  * guide from where it is, not jump along it.
  */
-function angleGuide(ax, ay, px, py, stepDeg, tolDeg) {
+function angleGuide(ax, ay, px, py, stepDeg, tolDeg, baseDeg) {
+  const base = baseDeg || 0;
   const dx = px - ax, dy = py - ay;
   if (Math.hypot(dx, dy) < 1e-6) return null;
   const deg = Math.atan2(dy, dx) * 180 / Math.PI;
-  const snapped = Math.round(deg / stepDeg) * stepDeg;
-  let diff = (deg - snapped) % 360;
+  const rel = deg - base;
+  const snappedRel = Math.round(rel / stepDeg) * stepDeg;
+  let diff = (rel - snappedRel) % 360;
   if (diff > 180) diff -= 360;
   if (diff <= -180) diff += 360;
   if (Math.abs(diff) > tolDeg) return null;
-  const a = snapped * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+  const abs = base + snappedRel;
+  const a = abs * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
   const t = dx * ca + dy * sa;
-  return { x: ax + ca * t, y: ay + sa * t, deg: ((snapped % 360) + 360) % 360, from: [ax, ay] };
+  return {
+    x: ax + ca * t, y: ay + sa * t,
+    deg: ((abs % 360) + 360) % 360,          // absolute, for drawing the ray
+    rel: ((snappedRel % 360) + 360) % 360,   // relative to the reference, for the label
+    base, from: [ax, ay], off: Math.abs(diff),
+  };
+}
+
+/**
+ * The best guide across several reference bearings — the edge before, the edge after, the shape's
+ * own grid. Whichever the cursor is nearest to wins, so the guides that appear are the ones the
+ * geometry actually justifies.
+ *
+ * An empty `bases` falls back to `[0]`, i.e. screen axes. That is only right when there is no
+ * geometry to refer to — the first edge of a shape being drawn from nothing.
+ */
+function bestAngleGuide(ax, ay, px, py, stepDeg, tolDeg, bases) {
+  const list = bases && bases.length ? bases : [0];
+  let best = null;
+  for (const b of list) {
+    const g = angleGuide(ax, ay, px, py, stepDeg, tolDeg, b);
+    if (g && (!best || g.off < best.off)) best = g;
+  }
+  return best;
 }
 
 /**
@@ -2682,11 +2718,12 @@ function alignGuides(px, py, refs, tolPx) {
  * alignment is preferred — on a floor plan, agreeing with the room next door matters more than a
  * round number of degrees — and a tight angle guide is the fallback when nothing lines up.
  */
-function resolveGuides(anchor, px, py, refs, wide) {
+function resolveGuides(anchor, px, py, refs, wide, bases) {
   const out = { x: px, y: py, guides: [] };
+  const asGuide = a => ({ kind: "angle", deg: a.deg, rel: a.rel, from: a.from });
   if (anchor && wide) {
-    const a = angleGuide(anchor[0], anchor[1], px, py, GUIDE_STEP_DEG, GUIDE_WIDE_DEG);
-    if (a) return { x: a.x, y: a.y, guides: [{ kind: "angle", deg: a.deg, from: a.from }] };
+    const a = bestAngleGuide(anchor[0], anchor[1], px, py, GUIDE_STEP_DEG, GUIDE_WIDE_DEG, bases);
+    if (a) return { x: a.x, y: a.y, guides: [asGuide(a)] };
   }
   const al = alignGuides(px, py, refs, GUIDE_ALIGN_PX);
   for (const g of al) {
@@ -2694,12 +2731,45 @@ function resolveGuides(anchor, px, py, refs, wide) {
     out.guides.push({ kind: "align", axis: g.axis, ref: g.ref });
   }
   if (!al.length && anchor) {
-    const a = angleGuide(anchor[0], anchor[1], px, py, GUIDE_STEP_DEG, GUIDE_TIGHT_DEG);
-    if (a) { out.x = a.x; out.y = a.y; out.guides.push({ kind: "angle", deg: a.deg, from: a.from }); }
+    const a = bestAngleGuide(anchor[0], anchor[1], px, py, GUIDE_STEP_DEG, GUIDE_TIGHT_DEG, bases);
+    if (a) { out.x = a.x; out.y = a.y; out.guides.push(asGuide(a)); }
   }
   return out;
 }
 /* GUIDE-ENGINE-END */
+
+/** Screen bearing of a→b, in degrees, or null for a degenerate edge. */
+function geomBearing(a, b) {
+  if (!a || !b) return null;
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  if (Math.hypot(dx, dy) < 1e-6) return null;
+  return Math.atan2(dy, dx) * 180 / Math.PI;
+}
+
+/**
+ * The bearings a dragged corner should be guided against: **the walls either side of it.**
+ *
+ * For corner `ci`, the edge *arriving* at the previous corner and the edge *leaving* the next one —
+ * the two pieces of the outline that are NOT moving, and therefore the two things the new edge has
+ * to agree with. Guiding against the screen instead would offer a right angle to the monitor, which
+ * is not a fact about the building.
+ *
+ * The shape's own dominant grid goes in last as a general fallback, so a corner with degenerate
+ * neighbours still has something to square to.
+ */
+function geomVertexBases(ring, ci, gridDeg) {
+  const out = [];
+  const n = ring.length;
+  if (n >= 3) {
+    const at = i => ring[((i % n) + n) % n];
+    const before = geomBearing(at(ci - 2), at(ci - 1));   // the wall arriving at the anchor
+    const after = geomBearing(at(ci + 1), at(ci + 2));    // the wall leaving the far neighbour
+    if (before !== null) out.push(before);
+    if (after !== null) out.push(after);
+  }
+  if (typeof gridDeg === "number") out.push(gridDeg);
+  return out;
+}
 
 /**
  * Corners worth lining up with: every other feature's, from the snap index, plus this feature's own.
@@ -3210,14 +3280,31 @@ function geomCutClick(lngLat) {
     GEOM.cutB = [lngLat.lng, lngLat.lat];
     // Gathered once per cut, for the same reason the snap index is: the map holds still between
     // the two clicks, so these screen positions stay true for as long as they are needed.
-    GEOM.cutRefs = geomGuideRefs(geomSnapIndex(),
-      GEOM.rings.map(r => r.slice(0, -1).map(c => { const p = map.project(c); return [p.x, p.y]; })));
+    const own = GEOM.rings.map(r => r.map(c => { const p = map.project(c); return [p.x, p.y]; }));
+    GEOM.cutRefs = geomGuideRefs(geomSnapIndex(), own.map(r => r.slice(0, -1)));
+    /**
+     * A cut is guided against **the walls it is cutting through**, so it can be laid square to the
+     * room rather than square to the screen. Every distinct edge bearing of the shape, plus its
+     * dominant grid — a wall you are cutting perpendicular to is usually one you can see.
+     */
+    const seenB = new Set();
+    GEOM.cutBases = [];
+    for (const r of own) {
+      for (let i = 0; i + 1 < r.length; i++) {
+        const b = geomBearing(r[i], r[i + 1]);
+        if (b === null) continue;
+        const k = Math.round(b * 2) / 2;              // half a degree is as fine as this needs
+        if (!seenB.has(k)) { seenB.add(k); GEOM.cutBases.push(b); }
+      }
+    }
+    GEOM.cutBases.push(dominantAngle(own) * 180 / Math.PI);
     geomDraw(); post("geomstate", geomState());
     return;
   }
   const a = GEOM.cutA, b = [lngLat.lng, lngLat.lat];
   GEOM.cutA = GEOM.cutB = null;
   GEOM.cutRefs = null;
+  GEOM.cutBases = null;
   GEOM.guides = null;
   // A refused cut stays in split mode, because the message it just posted says "try again" — being
   // dropped back into Points would contradict it. A cut that landed goes to Points, where the new
@@ -3231,6 +3318,7 @@ function geomCancelCut() {
   if (!GEOM || !GEOM.cutA) return false;
   GEOM.cutA = GEOM.cutB = null;
   GEOM.cutRefs = null;
+  GEOM.cutBases = null;
   GEOM.guides = null;
   geomDraw(); post("geomstate", geomState());
   return true;
@@ -3406,8 +3494,12 @@ function geomDraw() {
                                    x2: g.from[0] + ux, y2: g.from[1] + uy,
                                    stroke: "#00875a", "stroke-width": 1,
                                    "stroke-dasharray": "6 5", "stroke-opacity": .8 }));
-        // The angle, at the anchor — where the turn it describes actually is.
-        const label = Math.round(g.deg % 180) + "°";
+        /**
+         * The angle **to the wall it is measured from**, not to the screen — so `0°` reads "carries
+         * straight on from that wall" and `90°` reads "square to it". An absolute bearing would be
+         * a number about the monitor.
+         */
+        const label = Math.round((g.rel ?? g.deg) % 180) + "°";
         l.appendChild(el("rect", { x: g.from[0] + 10, y: g.from[1] - 22, width: label.length * 7.5 + 12,
                                    height: 19, rx: 5, fill: "#00875a" }));
         const t = el("text", { x: g.from[0] + 16, y: g.from[1] - 8, fill: "#fff",
@@ -3550,6 +3642,10 @@ function geomDown(ev, what) {
    * itself is the commonest alignment there is.
    */
   const guideRefs = geomGuideRefs(snapIdx, origScreen);
+  /** This shape's own grid, as Straighten measures it — the last-resort reference bearing. */
+  const gridDeg = origScreen.length
+    ? dominantAngle(origScreen.map(r => r.concat([r[0]]))) * 180 / Math.PI
+    : 0;
   /** The transform pivot, fixed at gesture start — the box moves as you drag, the pivot must not. */
   const box = geomBox();
   const cx = box ? box.cx : 0, cy = box ? box.cy : 0;
@@ -3594,7 +3690,8 @@ function geomDown(ev, what) {
       if (!hit) {
         const ring = origScreen[what.ri] || [];
         const prev = ring.length ? ring[(what.ci - 1 + ring.length) % ring.length] : null;
-        const g = resolveGuides(prev, pt.x, pt.y, guideRefs, geomSnapping(e));
+        const g = resolveGuides(prev, pt.x, pt.y, guideRefs, geomSnapping(e),
+                                geomVertexBases(ring, what.ci, gridDeg));
         gx = g.x; gy = g.y;
         GEOM.guides = g.guides;
       } else {
