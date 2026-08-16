@@ -1973,6 +1973,16 @@ function start() {
       geomCutClick(map.unproject([ev.clientX - rect.left, ev.clientY - rect.top]));
       return;
     }
+    /**
+     * **Picking features for a combine takes the release too**, and before the branch below can
+     * read it as a dismissal. Same shape as a cut: the mode is armed from the toolbar and the map
+     * clicks do the choosing.
+     */
+    if (GEOM && GEOM.mode === "combine" && map) {
+      const rect = map.getCanvas().getBoundingClientRect();
+      geomCombineClick([ev.clientX - rect.left, ev.clientY - rect.top]);
+      return;
+    }
     // A plain click on bare floor drops the corner selection — the counterpart to shift-marquee,
     // and the only way out of one besides Escape.
     if (GEOM && GEOM.sel && GEOM.sel.size && !ev.shiftKey) {
@@ -2054,11 +2064,30 @@ function start() {
       geomDeleteSelected();
       return;
     }
+    /**
+     * **Enter applies a combine.** The one operation here that needs a confirming keystroke: a cut
+     * is finished by its own second click, but a combine can take any number of features and so has
+     * no click that is self-evidently the last one. Safe to bind bare for the same reason Delete is
+     * — this document is the map and contains no text input.
+     *
+     * The toolbar's caption is where it is written down, because a keystroke nobody mentions is a
+     * keystroke nobody uses.
+     */
+    if (ev.key === "Enter" && GEOM && GEOM.mode === "combine") {
+      ev.preventDefault();
+      geomApplyCombine();
+      return;
+    }
     if (ev.key !== "Escape") return;
     // Escape peels one layer at a time, innermost first — and never the edit itself: dropping the
     // panel because somebody thought better of one click would take every unsaved change with it.
     if (GEOM && GEOM.mode === "split") {
       if (!geomCancelCut()) geomSetMode("vertices");
+      return;
+    }
+    // The same peel: the features you have chosen first, then the mode itself.
+    if (GEOM && GEOM.mode === "combine") {
+      if (!geomCancelCombine()) geomSetMode("vertices");
       return;
     }
     if (GEOM && GEOM.sel && GEOM.sel.size) {
@@ -2225,6 +2254,19 @@ const SNAP_PX = 10;
 const HANDLE_R = 5;
 
 function geomBegin(fid) {
+  /**
+   * ⚠️ **Opening the feature that is already open does nothing at all.**
+   *
+   * Without this, a combine could never move the identity: the largest-by-area rule repoints the
+   * panel at the surviving feature (see `geomApplyCombine`), the app's panel effect answers with a
+   * fresh `begin` for that fid, and this function would rebuild the outline from the *published*
+   * geometry — throwing the combine away in the same breath that reported it.
+   *
+   * It is the right rule regardless of Combine. `begin` is the app saying "the panel is on this
+   * feature", which it may say more than once for the same feature; discarding an edit in progress
+   * because the panel restated where it already was would be indefensible.
+   */
+  if (GEOM && GEOM.fid === fid && (GEOM.rings.length || GEOM.point)) return;
   const f = geomFind(fid);
   if (!f) {
     /**
@@ -2285,8 +2327,41 @@ function geomBegin(fid) {
     /** The cut being laid, both ends in lng/lat. `cutB` tracks the pointer until the second click. */
     cutA: null,
     cutB: null,
+    /**
+     * The features picked to be combined **into** this one: `[{ fid, rings, name }]`.
+     *
+     * The subject is never in here — it is always part of the combine by virtue of being open, so
+     * listing it would let it be toggled off, and there is no combine without it.
+     */
+    pick: [],
+    /**
+     * Every fid this session's combines have absorbed. Reported on commit, because the app's tree
+     * still shows those rows and somebody has to be told they are now part of something else.
+     */
+    absorbed: [],
+    /**
+     * Walls hidden because a combine put them between two rooms that are now one — `fids` is what
+     * is hidden, `layers` is which of the SDK's layers were drawing them. Both are needed: once a
+     * wall is filtered out it stops being a rendered feature, so the layer can never be found again.
+     */
+    hidden: { fids: [], layers: [] },
+    /**
+     * Properties by fid, for every feature this edit has touched — the subject and everything a
+     * combine has picked. `geomTakeIdentity` needs them to move the panel, and the moment it needs
+     * them is the moment the feature may no longer be worth querying for.
+     */
+    propsOf: {},
+    /**
+     * Set when a combine has just moved the identity, and consumed by the `focusfeature` the app
+     * answers with. It stops the camera flying to a shape that no longer exists.
+     */
+    skipFocus: false,
   };
   GEOM.pieceOf = GEOM.rings.map(() => 0);
+  // The subject's own properties, kept for the same reason a picked feature's are: undoing back
+  // past a combine has to be able to put the panel back on this feature.
+  const own = scanFeature(fid);
+  if (own && own.props) GEOM.propsOf[fid] = own.props;
   GEOM.original = geomSnap();
   geomDraw();
   post("geomstate", geomState());
@@ -2304,6 +2379,14 @@ function geomSnap() {
     // The counter travels with the state, so undo rewinds it and redo replays it — otherwise a
     // split, an undo and another split would hand the same id to two different pieces.
     nextPiece: GEOM.nextPiece,
+    /**
+     * ⚠️ **The identity is part of the state, because a combine can move it** — the largest of the
+     * combined rooms keeps its fid. Undoing back past that combine has to put the fid back too, or
+     * the outline returns to one room while the panel goes on showing another.
+     */
+    fid: GEOM.fid,
+    absorbed: GEOM.absorbed.slice(),
+    hidden: { fids: GEOM.hidden.fids.slice(), layers: GEOM.hidden.layers.slice() },
   };
 }
 
@@ -2312,6 +2395,12 @@ function geomRestore(s) {
   GEOM.point = s.point ? s.point.slice() : null;
   GEOM.pieceOf = s.pieceOf.slice();
   GEOM.nextPiece = s.nextPiece;
+  GEOM.absorbed = s.absorbed.slice();
+  GEOM.hidden = { fids: s.hidden.fids.slice(), layers: s.hidden.layers.slice() };
+  // Every wall filter is rebuilt from `hidden` rather than patched, so undo and redo need no
+  // bookkeeping of their own — see geomApplyWallFilter.
+  geomApplyWallFilter();
+  if (s.fid !== GEOM.fid) geomTakeIdentity(s.fid);
   // Indices move under a restore, so a kept selection would highlight the wrong corners.
   GEOM.sel.clear();
 }
@@ -2415,7 +2504,8 @@ function geomPieces() {
  */
 function geomCommit() {
   if (!GEOM) return;
-  post("geometry", { fid: GEOM.fid, rings: GEOM.rings, point: GEOM.point, pieces: geomPieces() });
+  post("geometry", { fid: GEOM.fid, rings: GEOM.rings, point: GEOM.point, pieces: geomPieces(),
+                     absorbed: GEOM.absorbed.slice() });
   GEOM.original = geomSnap();
   GEOM.history = [];
   GEOM.future = [];
@@ -2424,7 +2514,16 @@ function geomCommit() {
 
 function geomEnd(commit) {
   if (!GEOM) return;
-  if (commit) post("geometry", { fid: GEOM.fid, rings: GEOM.rings, point: GEOM.point, pieces: geomPieces() });
+  if (commit) post("geometry", { fid: GEOM.fid, rings: GEOM.rings, point: GEOM.point,
+                                 pieces: geomPieces(), absorbed: GEOM.absorbed.slice() });
+  /**
+   * ⚠️ **Every hidden wall comes back.** They were hidden for the session's sake — nothing here is
+   * persisted, and a floor plan permanently missing walls because somebody opened a panel once and
+   * closed it would be a lie about the published map. Restoring runs whether or not the edit was
+   * committed, because even a committed combine is local.
+   */
+  GEOM.hidden = { fids: [], layers: [] };
+  geomApplyWallFilter();
   GEOM = null;
   // Shift+drag goes back to being MapLibre's box zoom — see geomBegin.
   try { map.boxZoom.enable(); } catch (e) {}
@@ -2467,6 +2566,12 @@ function geomState() {
         pieces: geomPieces(),
         // Has the first click of a cut landed? The toolbar says what the next click will do.
         cutting: GEOM.mode === "split" && !!GEOM.cutA,
+        // How many features are waiting to be combined in. `0` while the mode is merely armed —
+        // the toolbar says "click some" then, and "Enter to combine" once there are any.
+        picked: GEOM.pick.length,
+        // What this session's combines have swallowed, so the panel can be honest about the rows
+        // in the tree that are now part of something else.
+        absorbed: GEOM.absorbed.length,
         // A point has no outline: the toolbar drops every tool that would be a lie on one.
         kind: GEOM.kind,
         selected: GEOM.sel.size,
@@ -2503,10 +2608,15 @@ function geomReset() {
   geomDraw(); post("geomstate", geomState());
 }
 
-/** Changing mode always abandons a half-laid cut — a dangling anchor is a trap on the next click. */
+/**
+ * Changing mode always abandons a half-laid cut — a dangling anchor is a trap on the next click —
+ * and, for the same reason, a half-made combine. A set of features highlighted for a combine you
+ * have walked away from would be applied by the next Enter, whenever that came.
+ */
 function geomSetMode(mode) {
   if (!GEOM) return;
   GEOM.mode = mode;
+  GEOM.pick = [];
   GEOM.cutA = GEOM.cutB = null;
   GEOM.cutRefs = null;
   GEOM.cutBases = null;
@@ -3106,6 +3216,71 @@ function combineRings(rings, maxGap) {
   }
   return { rings: pool, joined };
 }
+
+/** The shortest distance between two closed rings, in whatever space they are given. */
+function ringGap(ringA, ringB) {
+  const A = ringClose(ringOpen(ringA)), B = ringClose(ringOpen(ringB));
+  let best = Infinity;
+  // Both ways round: a vertex of A may be far from every vertex of B and still sit on one of its
+  // edges. Checking one direction only is the classic way to miss a T-junction.
+  const scan = (P, Q) => {
+    for (const p of P) {
+      for (let i = 0; i + 1 < Q.length; i++) {
+        const c = segClosest(p[0], p[1], Q[i][0], Q[i][1], Q[i + 1][0], Q[i + 1][1]);
+        const d = Math.hypot(c[0] - p[0], c[1] - p[1]);
+        if (d < best) best = d;
+      }
+    }
+  };
+  scan(A, B); scan(B, A);
+  return best;
+}
+
+/** The total area of a set of rings — what "largest by area" is measured on. */
+function ringSetArea(rings) {
+  let a = 0;
+  for (const r of rings) a += Math.abs(ringSignedArea(ringOpen(r)));
+  return a;
+}
+
+/**
+ * Which of these features keeps its identity after a combine: **the largest by area**.
+ *
+ * Olcay, 2026-08-16. Deterministic and explicable — the result is mostly that room — and with no
+ * dependence on the order the features happened to be clicked in, which is invisible afterwards.
+ * Ties go to the earlier set, which is the feature already open.
+ */
+function largestSet(sets) {
+  const areas = sets.map(ringSetArea);
+  let best = 0;
+  for (let i = 1; i < areas.length; i++) if (areas[i] > areas[best]) best = i;
+  return best;
+}
+
+/**
+ * Is this wall **between** the features being combined?
+ *
+ * ⚠️ Deliberately NOT "is it inside the combined ring". The stitch bridges through the *nearest*
+ * facing points, so the joined outline swallows a wedge of the gap rather than the whole of it —
+ * a wall in the opening is only partly enclosed, and a point-in-polygon test would answer "no" for
+ * exactly the walls this is for.
+ *
+ * Between is the thing that is actually meant, and it is directly testable: a wall that comes within
+ * the gap threshold of **two or more** of the combined features is standing between two of them. A
+ * wall on the outside edge touches one and stays.
+ */
+function wallBetween(wallRings, sets, maxGap) {
+  let touching = 0;
+  for (const set of sets) {
+    let near = false;
+    for (const w of wallRings) {
+      for (const r of set) if (ringGap(w, r) <= maxGap) { near = true; break; }
+      if (near) break;
+    }
+    if (near && ++touching >= 2) return true;
+  }
+  return false;
+}
 /* COMBINE-ENGINE-END */
 
 /* ── straighten: square the shape up ───────────────────────────────────────────
@@ -3569,6 +3744,269 @@ function geomCancelCut() {
   return true;
 }
 
+/* ── combine: the interaction ──────────────────────────────────────────────────
+   The geometry is above, behind the COMBINE-ENGINE markers, and was built and tested first. This
+   is the half a person touches: arming the mode, picking features, and what happens on Enter.
+
+   Olcay, 2026-08-16: *"user selects two or more features to combine, edge case is we should fill
+   the small gaps like walls and remove the combined walls from wall type."* Four decisions were put
+   to him before any of it was built, and all four are honoured here — armed selection like Split,
+   the largest by area keeps the identity, the interior walls are hidden for the session, and the
+   gap threshold is a fixed distance in metres. */
+
+/**
+ * ⚠️ **A guess, and the only number in the editor that is one.**
+ *
+ * 0.6 m is a plausible interior wall. The right way to set it is to hover a real wall on this floor
+ * and read its thickness, which needs the signed-in map — see the open question in the hand-off. It
+ * is a constant rather than a literal precisely so that answer costs one line when it arrives.
+ */
+const COMBINE_GAP_M = 0.6;
+
+/**
+ * How many screen pixels a metre of ground is, here and now.
+ *
+ * The engine works in screen space like every other operation in this file, so a threshold given in
+ * metres has to be converted per gesture. Measured rather than derived from the zoom: one metre due
+ * north of the shape itself, projected, which stays true under rotation and is close enough under
+ * pitch for a threshold that is itself a judgement call.
+ */
+function geomPxPerMetre(anchor) {
+  const c = anchor || (() => { const m = map.getCenter(); return [m.lng, m.lat]; })();
+  const a = map.project(c), b = map.project([c[0], c[1] + 1 / 111320]);
+  const px = Math.hypot(b.x - a.x, b.y - a.y);
+  return px > 1e-6 ? px : 1;
+}
+
+/**
+ * The layer filters a combine has rewritten, so they can be put back exactly.
+ *
+ * Module-level rather than on `GEOM`, because the restore has to be able to run *after* the editor
+ * is gone — `geomEnd` clears the shape and the filters in the same breath.
+ */
+const WALL_FILTERS = new Map();
+
+/**
+ * Rebuild every wall filter from `GEOM.hidden`, from scratch.
+ *
+ * Restore-then-reapply rather than patch: undo, redo and reset all move `hidden` wholesale, and a
+ * function that only ever composes deltas would need to know which direction it was going in. This
+ * one is idempotent and needs to know nothing.
+ *
+ * ⚠️ **The SDK owns these layers.** `MapViewController.updateLayersForCurrentLevel()` rewrites the
+ * filter of everything whose id contains `_ptr`, so a hidden wall reappears on a level switch. That
+ * is survivable — the level switch closes the editor anyway — but it is why this is composed onto
+ * the SDK's own filter rather than replacing it: losing the level filter would draw every floor's
+ * walls at once for as long as the editor stayed open.
+ */
+function geomApplyWallFilter() {
+  if (!map) return;
+  try {
+    for (const [id, orig] of WALL_FILTERS)
+      if (map.getLayer(id)) map.setFilter(id, orig === undefined ? null : orig);
+    WALL_FILTERS.clear();
+    const h = GEOM && GEOM.hidden;
+    if (!h || !h.fids.length) return;
+    /**
+     * ⚠️ **`any` of `==`, not `["in", …]`.** `in` is fussy about its needle: a feature in one of
+     * these layers with no `fid` at all evaluates it against `null`, which is a type error rather
+     * than a miss — and an expression that throws takes the *whole layer* down, so the fix for one
+     * hidden wall would be a floor with no walls on it. `==` against null is simply false. There
+     * are only ever a handful of walls in here, so the longer expression costs nothing.
+     */
+    const hide = ["!", ["any", ...h.fids.map(f => ["==", ["get", "fid"], f])]];
+    const byId = new Map(map.getStyle().layers.map(l => [l.id, l]));
+    for (const id of h.layers) {
+      const l = byId.get(id);
+      if (!l) continue;
+      // Read AFTER the restore above, so what is stored is the SDK's filter and never one of ours.
+      WALL_FILTERS.set(id, l.filter);
+      map.setFilter(id, l.filter ? ["all", l.filter, hide] : hide);
+    }
+  } catch (e) {}
+}
+
+/**
+ * The walls standing between the features being combined, and the layers drawing them.
+ *
+ * Both halves are needed and only one of them is obvious: once a wall is filtered out it stops
+ * being a rendered feature, so the layer that drew it can never be found again. They are collected
+ * together, in the one pass where both are still visible.
+ *
+ * ⚠️ A wall that spans a tile boundary arrives once per tile with a different piece of its
+ * geometry. The verdict is taken from the first piece seen and memoised — enough for a wall between
+ * two rooms, which is short and lives inside one tile far more often than not.
+ */
+function geomInteriorWalls(sets, gapPx) {
+  const verdict = new Map();
+  const layers = new Set();
+  try {
+    for (const f of map.queryRenderedFeatures()) {
+      const p = f.properties;
+      if (!p || p.mainType !== "wall" || !p.fid) continue;
+      if (!verdict.has(p.fid)) {
+        const rings = ringsOuter(f)
+          .map(r => r.map(c => { const q = map.project(c); return [q.x, q.y]; }));
+        verdict.set(p.fid, rings.length ? wallBetween(rings, sets, gapPx) : false);
+      }
+      if (verdict.get(p.fid) && f.layer && f.layer.id) layers.add(f.layer.id);
+    }
+  } catch (e) {}
+  const fids = [];
+  for (const [fid, yes] of verdict) if (yes) fids.push(fid);
+  return { fids, layers: [...layers] };
+}
+
+/**
+ * Move the editor onto a different feature, and take the panel with it. Returns whether it happened.
+ *
+ * The app is *told*, not asked. This is not the user switching feature — that path guards against
+ * unsaved work, and would greet a combine with "you have unsaved changes", which is both true and
+ * completely beside the point. The editor already holds the merged shape; the panel is simply
+ * catching up with whose it now is.
+ *
+ * ⚠️ **The properties travel WITH the identity, in one message, and the switch is refused without
+ * them.** They cannot follow in a second message: the app decides the panel is open by testing that
+ * its properties and its focus name the same feature, so an identity that arrived first would leave
+ * one render where they disagree — and the effect watching that would read it as "no feature is
+ * open" and send `end`, destroying the very combine that caused this. One message is one React
+ * update. Refusing is the safe failure: the panel stays where it was and the shape is still merged.
+ *
+ * `skipFocus` stops the camera flying: the app repointing the panel changes `focusFeature`, which
+ * would otherwise frame the surviving feature's *published* bounds — moving the map out from under
+ * a gesture that has only just finished, and framing the wrong shape while it did.
+ */
+function geomTakeIdentity(fid) {
+  if (!GEOM || GEOM.fid === fid) return false;
+  let props = GEOM.propsOf[fid];
+  if (!props) { const hit = scanFeature(fid); props = (hit && hit.props) || null; }
+  if (!props) return false;
+  GEOM.propsOf[fid] = props;
+  GEOM.fid = fid;
+  GEOM.skipFocus = true;
+  post("geomidentity", { fid, props });
+  return true;
+}
+
+/**
+ * Pick a feature to combine in, or unpick one already chosen.
+ *
+ * `mouseup` + `isTap`, like every other selection on this map — a press that travelled was a pan,
+ * and panning between picks is exactly what you want to be able to do when the rooms are not all
+ * on screen at once.
+ */
+function geomCombineClick(point) {
+  if (!GEOM || GEOM.mode !== "combine") return;
+  const f = editableAt(point);
+  const fid = f && f.properties && f.properties.fid;
+  // Bare floor, or a wall. Silent: a miss in an armed mode is a miss, and a refusal for every one
+  // of them would make the caption flash red while somebody looked for the room they wanted.
+  if (!fid) return;
+  if (fid === GEOM.fid) {
+    post("geomerror", { fid: GEOM.fid, message: "this is the feature you are combining into" });
+    return;
+  }
+  const at = GEOM.pick.findIndex(p => p.fid === fid);
+  if (at >= 0) {                                   // clicking a chosen one again takes it back out
+    GEOM.pick.splice(at, 1);
+    geomDraw(); post("geomstate", geomState());
+    return;
+  }
+  const g = geomFind(fid);
+  if (!g || g.kind !== "area") {
+    post("geomerror", { fid: GEOM.fid,
+      message: "that feature is a single point — there is no outline to combine" });
+    return;
+  }
+  GEOM.pick.push({
+    fid,
+    // A deep copy, like the subject's own rings: nothing is read back off the map after this, so a
+    // tile reloading mid-gesture cannot change what is about to be combined.
+    rings: JSON.parse(JSON.stringify(g.rings)),
+    name: (f.properties && f.properties.name) || "",
+  });
+  // Kept against the moment this feature turns out to be the largest and the panel has to move onto
+  // it — see geomTakeIdentity, which cannot make the switch without them.
+  GEOM.propsOf[fid] = plainProps(f.properties);
+  geomDraw(); post("geomstate", geomState());
+}
+
+/**
+ * Combine the subject with everything picked.
+ *
+ * The pieces, in the order they matter:
+ *
+ * 1. **Everything into screen space**, and the gap threshold with it.
+ * 2. **The engine**, which is greedy and order-independent — it joins the widest opening it can
+ *    find, over and over, and hands back whatever could not be reached as separate rings.
+ * 3. **Refuse a combine that joined nothing**, rather than quietly returning the shape unchanged.
+ * 4. **The largest by area keeps the identity**, measured on the shapes as they went in.
+ * 5. **The walls between them go**, for the session.
+ */
+function geomApplyCombine() {
+  if (!GEOM || GEOM.mode !== "combine") return;
+  if (!GEOM.pick.length) {
+    post("geomerror", { fid: GEOM.fid, message: "click the features to combine with this one first" });
+    return;
+  }
+  const toScreen = c => { const p = map.project(c); return [p.x, p.y]; };
+  const sets = [GEOM.rings].concat(GEOM.pick.map(p => p.rings))
+    .map(rs => rs.map(r => r.map(toScreen)));
+  const gapPx = COMBINE_GAP_M * geomPxPerMetre(GEOM.rings[0] && GEOM.rings[0][0]);
+  const res = combineRings([].concat(...sets), gapPx);
+  if (!res.joined) {
+    post("geomerror", { fid: GEOM.fid,
+      message: "nothing was close enough to join — they must be within " + COMBINE_GAP_M + " m" });
+    return;                                        // still armed: the message says to try again
+  }
+  geomPush();
+
+  /**
+   * Measured on the inputs, not on the result. After the stitch there is one ring holding all of
+   * them, so there is nothing left to be largest — the question has to be asked before the answer
+   * is destroyed.
+   */
+  const all = [GEOM.fid].concat(GEOM.pick.map(p => p.fid));
+  const want = all[largestSet(sets)];
+  const walls = geomInteriorWalls(sets, gapPx);
+
+  GEOM.rings = res.rings.map(r =>
+    r.map(([x, y]) => { const q = map.unproject([x, y]); return [q.lng, q.lat]; }));
+  // One id per surviving ring. Everything that joined is one ring and therefore one piece; anything
+  // too far to reach comes back as its own, which is exactly what the piece count should say.
+  GEOM.pieceOf = GEOM.rings.map((_, i) => i);
+  GEOM.nextPiece = GEOM.rings.length;
+  GEOM.hidden = {
+    fids: [...new Set(GEOM.hidden.fids.concat(walls.fids))],
+    layers: [...new Set(GEOM.hidden.layers.concat(walls.layers))],
+  };
+  geomApplyWallFilter();
+  // The switch can decline — see geomTakeIdentity. `GEOM.fid` afterwards is the truth either way,
+  // so the absorbed list is built from THAT and never from what was merely wanted; a list that
+  // included the feature the panel is actually on would be a lie in the one place it matters.
+  geomTakeIdentity(want);
+  GEOM.absorbed = [...new Set(GEOM.absorbed.concat(all.filter(f => f !== GEOM.fid)))];
+
+  GEOM.pick = [];
+  geomClearSel();                                  // the rings are wholly rebuilt, as after a cut
+  // A combine that landed goes back to Reshape, where the new outline can be tidied up — the same
+  // place a cut that landed leaves you.
+  GEOM.mode = "vertices";
+  geomDraw(); post("geomstate", geomState());
+  if (res.rings.length > 1) {
+    post("geomerror", { fid: GEOM.fid,
+      message: res.rings.length + " pieces — some of them were too far apart to join" });
+  }
+}
+
+/** Drop the picks, leaving combine mode armed for another go. */
+function geomCancelCombine() {
+  if (!GEOM || !GEOM.pick.length) return false;
+  GEOM.pick = [];
+  geomDraw(); post("geomstate", geomState());
+  return true;
+}
+
 /* ── drawing and interaction ───────────────────────────────────────────────────────────────── */
 
 function geomLayer() {
@@ -3601,6 +4039,24 @@ function geomDraw() {
     h.addEventListener("mousedown", ev => { ev.stopPropagation(); geomDown(ev, { kind: "point" }); });
     l.appendChild(h);
     return;
+  }
+
+  /**
+   * The features waiting to be combined in.
+   *
+   * Drawn first, so the shape you actually opened stays on top of them — and **dashed**, because
+   * until Enter they are still separate features. A solid fill would promise the join had happened;
+   * the whole value of an armed mode is that you can see what you have chosen and change your mind.
+   */
+  if (GEOM.mode === "combine") {
+    for (const p of GEOM.pick) {
+      for (const ring of p.rings) {
+        const d = ring.map((c, i) => { const q = map.project(c); return (i ? "L" : "M") + q.x + " " + q.y; })
+          .join(" ") + " Z";
+        l.appendChild(el("path", { d, fill: "#0b369c", "fill-opacity": .16, stroke: "#0b369c",
+                                   "stroke-width": 2, "stroke-dasharray": "6 4" }));
+      }
+    }
   }
 
   for (const [ri, ring] of GEOM.rings.entries()) {
@@ -4107,6 +4563,20 @@ window.addEventListener("message", (ev) => {
   } else if (d.type === "highlight") {
     highlightFeatures(d.sel || null);
   } else if (d.type === "focusfeature") {
+    /**
+     * ⚠️ **The app repointing the panel after a combine must not move the camera.**
+     *
+     * `geomTakeIdentity` tells the app the edit now belongs to a different feature; the app moves
+     * its panel, which changes `focusFeature`, which arrives back here as an ordinary focus. Flown,
+     * it would frame the surviving feature's *published* bounds — the map jumping, right after a
+     * gesture finished, to a shape that no longer exists. The flag is consumed once, so a genuine
+     * focus on the same feature a moment later still flies.
+     */
+    if (GEOM && GEOM.fid === d.fid && GEOM.skipFocus) {
+      GEOM.skipFocus = false;
+      sendFeatureProps(d.fid);
+      return;
+    }
     // Two jobs, two retry budgets — see sendFeatureProps.
     focusFeature(d.fid, 0, d.padRight);
     sendFeatureProps(d.fid);
@@ -4154,6 +4624,10 @@ window.addEventListener("message", (ev) => {
     // the transform box now (see geomBox), so there is nothing left for the app to command.
     // Split is a MODE, not an act: the toolbar arms it, the two clicks on the map do the cutting.
     else if (d.cmd === "split") geomSetMode(GEOM && GEOM.mode === "split" ? "vertices" : "split");
+    // Combine is a mode for the same reason. Enter applies it rather than a toolbar button: an
+    // Apply that only existed while features were picked would change the bar's width between
+    // states, which is the one thing the toolbar's layout is built not to do.
+    else if (d.cmd === "combine") geomSetMode(GEOM && GEOM.mode === "combine" ? "vertices" : "combine");
   } else if (d.type === "editing") {
     EDITING = Array.isArray(d.editing) ? d.editing : [];
     drawEditing();

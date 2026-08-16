@@ -42,7 +42,8 @@ writeFileSync(
       `  segClosest, buildSnapIndex, snapQuery, dominantAngle, squareRings,\n` +
       `  angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,\n` +
       `  guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,\n` +
-      `  segPairClosest, findBridge, bridgeRings, combineRings };\n`,
+      `  segPairClosest, findBridge, bridgeRings, combineRings,\n` +
+      `  ringGap, ringSetArea, largestSet, wallBetween };\n`,
 );
 
 let mod;
@@ -57,6 +58,7 @@ const {
   angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,
   guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,
   segPairClosest, findBridge, bridgeRings, combineRings,
+  ringGap, ringSetArea, largestSet, wallBetween,
 } = mod;
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
@@ -751,6 +753,79 @@ const roomR = (gap) => close([[100 + gap, 0], [200 + gap, 0], [200 + gap, 60], [
   check("a vertical wall bridges too", out !== null);
   const a = out ? Math.abs(ringSignedArea(ringOpen(out))) : 0;
   check("…with the same area logic", Math.abs(a - 12600) < 400, a.toFixed(0));
+}
+
+/* ── the interaction's own rules ──────────────────────────────────────────────
+   Everything above answers "what shape comes out". These four answer the questions the
+   INTERACTION asks — which feature survives, and which walls are now inside — and they are
+   engine code for the same reason the rest is: they are decisions, and a decision that is not
+   tested is a decision somebody will quietly change. */
+
+/* C10. The gap between two rings, both ways round. The second case is the one a vertex-to-vertex
+        measure gets wrong: the nearest point is in the MIDDLE of an edge, not on a corner. */
+{
+  check("side-by-side rooms measure their wall",
+        Math.abs(ringGap(roomL, roomR(6)) - 6) < 1e-6, String(ringGap(roomL, roomR(6))));
+  // A ring whose only near point is mid-edge: a stub poking at the middle of roomL's right wall.
+  const stub = close([[106, 28], [130, 28], [130, 32], [106, 32]]);
+  check("a mid-edge approach is found", Math.abs(ringGap(roomL, stub) - 6) < 1e-6,
+        String(ringGap(roomL, stub)));
+  check("touching rings measure zero", ringGap(roomL, roomR(0)) < 1e-9);
+}
+
+/* C11. Area, and the identity rule built on it. ⚠️ If this ever silently returns 0 the rule
+        degenerates to "whichever was clicked first", which is the exact thing it exists to avoid. */
+{
+  check("a 100×60 room is 6000", Math.abs(ringSetArea([roomL]) - 6000) < 1e-6);
+  const big = close([[106, 0], [400, 0], [400, 60], [106, 60]]);
+  check("the larger room keeps the identity", largestSet([[roomL], [big]]) === 1);
+  check("…whichever order it arrives in", largestSet([[big], [roomL]]) === 0);
+  // A tie goes to the first, which is the feature already open — the least surprising answer, and
+  // the only one that does not depend on click order.
+  check("a tie goes to the feature already open", largestSet([[roomL], [roomR(6)]]) === 0);
+  /**
+   * Two rings for one feature: a room and its annexe both count towards "largest". Sized so the
+   * point is actually made — 6000 + 6000 beats 10000, while either ring ALONE would lose to it.
+   */
+  const mid = close([[500, 0], [600, 0], [600, 100], [500, 100]]);
+  check("a multi-ring feature counts all of its rings",
+        largestSet([[roomL, roomR(6)], [mid]]) === 0);
+  check("…and one of those rings alone would not",
+        largestSet([[roomL], [mid]]) === 1);
+}
+
+/* C12. Which walls a combine swallows. The rule is BETWEEN, not inside — see the note on
+        `wallBetween` for why a point-in-polygon test answers "no" for exactly these walls. */
+{
+  const dividing = close([[100, 0], [106, 0], [106, 60], [100, 60]]);   // the wall in the gap
+  const outer = close([[-6, 0], [0, 0], [0, 60], [-6, 60]]);            // roomL's far side
+  const sets = [[roomL], [roomR(6)]];
+  check("the wall between two rooms goes", wallBetween([dividing], sets, 1) === true);
+  check("the wall on the outside stays", wallBetween([outer], sets, 1) === false);
+  // The threshold is the whole safeguard: a wall that touches both only because the tolerance is
+  // absurd is not a wall between them.
+  const distant = close([[300, 0], [306, 0], [306, 60], [300, 60]]);
+  check("a wall nowhere near either stays", wallBetween([distant], sets, 1) === false);
+  check("…and no threshold reaches it", wallBetween([distant], sets, 50) === false);
+}
+
+/* C13. Three rooms in a row: the middle two walls go, the two end walls stay. The case Olcay
+        described — *"remove the combined walls from wall type"* — with more than one wall in it. */
+{
+  const a = close([[0, 0], [100, 0], [100, 60], [0, 60]]);
+  const b = close([[106, 0], [206, 0], [206, 60], [106, 60]]);
+  const c = close([[212, 0], [312, 0], [312, 60], [212, 60]]);
+  const sets = [[a], [b], [c]];
+  const between1 = close([[100, 0], [106, 0], [106, 60], [100, 60]]);
+  const between2 = close([[206, 0], [212, 0], [212, 60], [206, 60]]);
+  const endWall = close([[312, 0], [318, 0], [318, 60], [312, 60]]);
+  check("the first interior wall goes", wallBetween([between1], sets, 1) === true);
+  check("the second interior wall goes", wallBetween([between2], sets, 1) === true);
+  check("the end wall stays", wallBetween([endWall], sets, 1) === false);
+  // …and the shape they leave behind is one room.
+  const r = combineRings([a, b, c], 12);
+  check("and the three become one", r.rings.length === 1 && r.joined === 2,
+        `${r.rings.length} ring(s)`);
 }
 
 /* ══ square engine ═════════════════════════════════════════════════════════════ */

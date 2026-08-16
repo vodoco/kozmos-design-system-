@@ -43,7 +43,7 @@
 export interface GeomState {
   editing: boolean;
   fid?: string;
-  mode?: "vertices" | "transform" | "split";
+  mode?: "vertices" | "transform" | "split" | "combine";
   snap?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
@@ -57,6 +57,18 @@ export interface GeomState {
   pieces?: number;
   /** The first click of a cut has landed and the second is awaited. */
   cutting?: boolean;
+  /**
+   * How many features are waiting to be combined into this one. `0` while Combine is merely armed.
+   *
+   * Combine has no self-evidently final click the way a cut does — it takes any number of features
+   * — so it is confirmed with **Enter**, and the caption is the only place that says so.
+   */
+  picked?: number;
+  /**
+   * How many features this session's combines have swallowed. They still have rows in the tree and
+   * nothing here can remove them, so the count is reported rather than dressed up.
+   */
+  absorbed?: number;
   /**
    * ⚠️ **`"point"` means there is no outline** (Olcay, 2026-08-15: *"if the geometry is point -
    * there is no way to reshape it"*). A great many POIs are a single coordinate: you can move it,
@@ -77,7 +89,8 @@ export type GeomCommand =
   | { cmd: "reset" }
   | { cmd: "simplify" }
   | { cmd: "square" }
-  | { cmd: "split" };
+  | { cmd: "split" }
+  | { cmd: "combine" };
 
 /* ── icons ────────────────────────────────────────────────────────────────────
    One 24×24 grid, one 1.6 stroke, `currentColor` throughout — so a button's own
@@ -130,6 +143,28 @@ function Split() {
       <path d="M9.5 5H5.5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4" />
       <path d="M14.5 5h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4" />
       <path d="M12 3v3M12 9v3M12 15v3M12 21v0" strokeDasharray="0.1 0" />
+    </svg>
+  );
+}
+
+/**
+ * Combine — two rooms that are now one, and the wall that used to divide them.
+ *
+ * **Deliberately the exact inverse of `Split`, drawn on the same two boxes.** Split's outline is
+ * *broken* at the middle and its cut is the strong mark that runs past the shape; this one's
+ * outline is *whole* around both rooms and the seam is the faint remnant left inside it. They are
+ * the only pair in the bar that undo one another and they sit side by side, so the contrast between
+ * them is doing as much work as either icon alone.
+ *
+ * ⚠️ The first attempt was these boxes with arrows closing on the seam. At 5× on the bench the
+ * arrowheads, the seam and the box edges all landed inside two pixels of each other and the middle
+ * read as a smudge — the exact failure the 22px size was chosen to expose.
+ */
+function Combine() {
+  return (
+    <svg {...ICON} aria-hidden>
+      <path d="M5.5 5h13a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+      <path d="M12 5.8v12.4" strokeOpacity=".3" strokeDasharray="2 2.5" />
     </svg>
   );
 }
@@ -353,6 +388,8 @@ export function GeometryToolbar({
   const pieces = state.pieces ?? 1;
   const isPoint = state.kind === "point";
   const selected = state.selected ?? 0;
+  const picked = state.picked ?? 0;
+  const absorbed = state.absorbed ?? 0;
   /**
    * The caption, in priority order. A refusal outranks everything, because it is about the click
    * you just made rather than the one you are about to. Then the instruction for the mode you are
@@ -368,33 +405,66 @@ export function GeometryToolbar({
             : "Click one side of the cut · Esc to cancel",
           bad: false,
         }
-      : selected > 0
+      : state.mode === "combine"
         ? {
-            // Short enough to stay on one line: the caption sits ABOVE the bar, and a wrapped one
-            // grows upward into the map. Dragging the selection is discoverable by trying it;
-            // Delete is not, so Delete is what the line spends its words on.
-            text: `${selected} corner${selected === 1 ? "" : "s"} selected · Delete to remove`,
+            /**
+             * The one caption that has to teach a keystroke. Split ends itself on its second click;
+             * a combine takes any number of features, so nothing about the clicking says when you
+             * have finished — **Enter** does, and this line is where it is written down.
+             */
+            text:
+              picked === 0
+                ? "Click the features to combine with this one · Esc to cancel"
+                : `${picked} feature${picked === 1 ? "" : "s"} chosen · Enter to combine · Esc to cancel`,
             bad: false,
           }
-        : isPoint
+        : selected > 0
           ? {
-              text: "This feature is a single point — drag it to move it",
+              // Short enough to stay on one line: the caption sits ABOVE the bar, and a wrapped one
+              // grows upward into the map. Dragging the selection is discoverable by trying it;
+              // Delete is not, so Delete is what the line spends its words on.
+              text: `${selected} corner${selected === 1 ? "" : "s"} selected · Delete to remove`,
               bad: false,
             }
-          : pieces > 1
-            ? { text: `Split into ${pieces} pieces`, bad: false }
-            : // Each mode gets the one hint that mode needs, and nothing gets a standing one — an
-              // always-on line is permanent chrome for something you learn once.
-              state.mode === "vertices"
-              ? { text: "Shift-drag to select corners", bad: false }
-              : state.mode === "transform"
+          : isPoint
+            ? {
+                text: "This feature is a single point — drag it to move it",
+                bad: false,
+              }
+            : /**
+               * The standing facts about the shape, and they have to compose: a combine that could
+               * only reach two of the three rooms leaves a feature that is BOTH combined and in more
+               * than one piece. Reporting only the piece count there would say "Split into 2 pieces"
+               * about a shape somebody had just combined, which is exactly backwards.
+               *
+               * All three are careful about what they claim. "Holds" says the shape covers those
+               * features and stops short of saying they are gone — they are still in Pointr Cloud and
+               * still have rows in the tree, because nothing in this prototype deletes a feature.
+               */
+              absorbed > 0 && pieces > 1
+              ? {
+                  text: `Holds ${absorbed + 1} features, in ${pieces} pieces`,
+                  bad: false,
+                }
+              : absorbed > 0
                 ? {
-                    // The transform handles have no toolbar buttons any more, so this line is the
-                    // only place the modifier is written down.
-                    text: "Drag to move · corners scale, knob rotates · Shift or ⌥ snaps",
+                    text: `Holds ${absorbed + 1} combined features`,
                     bad: false,
                   }
-                : null;
+                : pieces > 1
+                  ? { text: `Split into ${pieces} pieces`, bad: false }
+                  : // Each mode gets the one hint that mode needs, and nothing gets a standing one — an
+                    // always-on line is permanent chrome for something you learn once.
+                    state.mode === "vertices"
+                    ? { text: "Shift-drag to select corners", bad: false }
+                    : state.mode === "transform"
+                      ? {
+                          // The transform handles have no toolbar buttons any more, so this line is the
+                          // only place the modifier is written down.
+                          text: "Drag to move · corners scale, knob rotates · Shift or ⌥ snaps",
+                          bad: false,
+                        }
+                      : null;
 
   return (
     <div
@@ -499,8 +569,11 @@ export function GeometryToolbar({
         {/**
          * **Divide** — its own group (Olcay, 2026-08-16). Splitting is not a way of editing this
          * shape; it changes **how many features there are**, which is a different kind of act from
-         * reshaping one, and it belongs with Combine rather than with the modes. Combine is not
-         * built yet — see the hand-off for the questions it is waiting on.
+         * reshaping one, and it belongs with Combine rather than with the modes.
+         *
+         * The two are armed modes rather than buttons, and they are mutually exclusive with each
+         * other and with Reshape and Transform — but they are deliberately NOT on the mode track.
+         * That track is "how am I editing this shape"; these two change how many shapes there are.
          */}
         {!isPoint && (
           <Group>
@@ -510,6 +583,23 @@ export function GeometryToolbar({
               title="Click twice on the map to cut the shape in two · Escape to cancel"
               on={state.mode === "split"}
               onClick={() => onCommand({ cmd: "split" })}
+            />
+            {/**
+             * **Combine** (Olcay, 2026-08-16: *"user selects two or more features to combine, edge
+             * case is we should fill the small gaps like walls and remove the combined walls from
+             * wall type"*).
+             *
+             * The largest of the combined rooms keeps its identity, so the panel may well end up on
+             * a *different* feature than the one you opened. That is deliberate and decided — it is
+             * the only rule that does not depend on the order things were clicked in, which is
+             * invisible the moment it is over.
+             */}
+            <Tile
+              icon={<Combine />}
+              label="Combine"
+              title="Click other features on the map to join them to this one · Enter to combine · Escape to cancel. Walls between them are hidden, and the largest keeps its name."
+              on={state.mode === "combine"}
+              onClick={() => onCommand({ cmd: "combine" })}
             />
           </Group>
         )}

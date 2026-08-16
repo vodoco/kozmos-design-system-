@@ -118,13 +118,32 @@ const CASES: { title: string; state: GeomState; notice?: string }[] = [
     state: { ...BASE, canUndo: true, canRedo: true, dirty: true, pieces: 3 },
   },
   {
+    title: "Combine armed — nothing picked yet",
+    state: { ...BASE, mode: "combine" },
+  },
+  {
+    title:
+      "Combine — two features chosen. The only caption that has to teach a keystroke",
+    state: { ...BASE, mode: "combine", picked: 2 },
+  },
+  {
+    title: "Combine refused — nothing was close enough to join",
+    state: { ...BASE, mode: "combine", picked: 2 },
+    notice: "nothing was close enough to join — they must be within 0.6 m",
+  },
+  {
+    title:
+      "After a combine — the shape holds three features, and says so without claiming they are gone",
+    state: { ...BASE, canUndo: true, dirty: true, absorbed: 2 },
+  },
+  {
     title:
       "Corners marquee-selected — drag moves them together, Delete removes them",
     state: { ...BASE, selected: 4, canUndo: true, dirty: true },
   },
   {
     title:
-      "A POINT feature — no outline, so Reshape / Transform / Split / Straighten all go",
+      "A POINT feature — no outline, so Reshape / Transform / Split / Combine / Straighten all go",
     state: { ...BASE, kind: "point" },
   },
 ];

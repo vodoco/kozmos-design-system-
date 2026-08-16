@@ -2193,6 +2193,7 @@ export function MapContent({
       rings: number[][][],
       pieces: number,
       point?: [number, number] | null,
+      absorbed?: string[],
     ) => {
       console.info(
         "[geometry] edited",
@@ -2203,7 +2204,35 @@ export function MapContent({
           ? `point ${point[0].toFixed(6)}, ${point[1].toFixed(6)}`
           : `${rings.length} ring(s)`,
         pieces > 1 ? `· split into ${pieces} pieces` : "",
+        // ⚠️ The absorbed features are NOT deleted — they are still in Pointr Cloud and still have
+        // rows in the tree. Saying "absorbed" rather than "removed" is the whole of the honesty
+        // available here; a real merge needs a write path this prototype does not have.
+        absorbed?.length ? `· absorbed ${absorbed.join(", ")}` : "",
       );
+    },
+    [],
+  );
+  /**
+   * **The editor moved the edit onto another feature** — a Combine, where the largest of the
+   * combined rooms keeps its identity (Olcay, 2026-08-16).
+   *
+   * ⚠️ **Deliberately not `onFeatureClick`.** That path guards against unsaved work, and by
+   * definition there is unsaved work here — the combine that caused this. It would greet the
+   * gesture with "You have unsaved changes", about the change the user just made on purpose.
+   *
+   * The nonce is deliberately NOT bumped: the map is already looking at the result, and the map
+   * shell ignores the resulting focus anyway (see `skipFocus` there).
+   *
+   * ⚠️ **Both state updates must happen here, in one handler.** `shownProps` is only non-null while
+   * `props.fid` and `focused.fid` agree, and the effect below it sends the map `end` whenever it is
+   * null — so setting the focus in one message and waiting for the properties in another would put
+   * a render between them in which the app tears down the editor holding the combine. React batches
+   * within a handler; two `postMessage`s are two handlers.
+   */
+  const onGeomIdentity = useCallback(
+    (fid: string, p: Record<string, unknown>) => {
+      setProps({ fid, props: p });
+      setFocused((f) => ({ fid, n: f?.n ?? 0 }));
     },
     [],
   );
@@ -2742,6 +2771,7 @@ export function MapContent({
             geomCommand={geomCommand}
             onGeomState={onGeomState}
             onGeometry={onGeometry}
+            onGeomIdentity={onGeomIdentity}
             onGeomError={onGeomError}
             // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
             // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.

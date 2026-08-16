@@ -156,7 +156,24 @@ const PointrMap = forwardRef<
       pieces: number,
       /** A point feature's single coordinate — `rings` is empty for those. */
       point?: [number, number] | null,
+      /**
+       * The fids a Combine has swallowed into this one. They still exist in Pointr Cloud and still
+       * have rows in the tree — nothing in this prototype deletes a feature — so this is a report
+       * of what the shape now covers, not a list of things that have gone.
+       */
+      absorbed?: string[],
     ) => void;
+    /**
+     * ⚠️ **The editor says the edit now belongs to a DIFFERENT feature.**
+     *
+     * Only Combine does this, and only because the rule is that the largest of the combined rooms
+     * keeps its identity. It is not the user switching feature: the unsaved-changes guard must not
+     * fire, because the change being guarded is the very thing that caused this.
+     *
+     * The properties come WITH it and must be applied in the same update — see the note on
+     * `geomTakeIdentity` in the map shell for what a second message would cost.
+     */
+    onGeomIdentity?: (fid: string, props: Record<string, unknown>) => void;
     /**
      * The editor refusing something, in words meant for the user — a cut that misses the shape, or
      * one laid exactly along an edge. Posted since the editor was written and, until 2026-08-15,
@@ -194,6 +211,7 @@ const PointrMap = forwardRef<
     geomCommand,
     onGeomState,
     onGeometry,
+    onGeomIdentity,
     onGeomError,
     focusPadRight,
     target,
@@ -357,7 +375,17 @@ const PointrMap = forwardRef<
             ev.data.rings ?? [],
             Number(ev.data.pieces) || 1,
             ev.data.point ?? null,
+            Array.isArray(ev.data.absorbed) ? ev.data.absorbed.map(String) : [],
           );
+      } else if (ev.data.type === "geomidentity") {
+        // `props` is required, not optional: the shell refuses to send an identity it cannot also
+        // describe, precisely so this side never has to handle half of one.
+        if (
+          ev.source === ref.current?.contentWindow &&
+          ev.data.fid &&
+          ev.data.props
+        )
+          onGeomIdentity?.(String(ev.data.fid), ev.data.props);
       } else if (ev.data.type === "geomerror") {
         if (ev.source === ref.current?.contentWindow && ev.data.message)
           onGeomError?.(String(ev.data.fid ?? ""), String(ev.data.message));
