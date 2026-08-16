@@ -227,7 +227,10 @@ const shown = () => SELECTED || HOVERED;
 let RESOLVED = [];                 // [{ change, rings:[[lnglat,…]], centroid:[lng,lat] }]
 // Greyscale is the *review* mode — a level being edited or simply viewed stays in full colour.
 // The screen that shows changes turns it on; nothing else does.
-const prefs = { greyscale: false, hidePoiLabels: false, floorplan: true, basemap: "vector" };
+// `geojsonFloor` is the render swap (see the GJ block): draw the floor from the level's GeoJSON
+// with the SDK's tiles off. Defaults to ON, and costs nothing on a screen that never sends any
+// GeoJSON — `gjWanted()` also requires features to draw.
+const prefs = { greyscale: false, hidePoiLabels: false, floorplan: true, basemap: "vector", geojsonFloor: true };
 
 function post(type, extra) { try { parent.postMessage(Object.assign({ source:"mapscale-map", type }, extra||{}), "*"); } catch(e){} }
 function el(tag, attrs){ const e=document.createElementNS(SVGNS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
@@ -375,8 +378,16 @@ function ensureLevel() {
 
 function ensureIndoorVisible() {
   try {
-    if (!map.getLayer("fill_retail-space_ptr")) return;
-    if (map.getLayoutProperty("fill_retail-space_ptr", "visibility") === "none") applyLevel();
+    /**
+     * ⚠️ **Probe whichever layer is actually meant to be drawing.** With the floor rendered from
+     * GeoJSON the SDK's own `fill_retail-space_ptr` is hidden **on purpose**, so probing it would
+     * read "the SDK has hidden the indoor layers" on every single idle and call `applyLevel()` —
+     * which re-shows them — for ever. The tiles would flicker back under the GeoJSON a few times a
+     * second and ~600 filters would be rewritten each time.
+     */
+    const id = gjLive() ? GJ_LYR + "fill_retail-space_ptr" : "fill_retail-space_ptr";
+    if (!map.getLayer(id)) return;
+    if (map.getLayoutProperty(id, "visibility") === "none") applyLevel();
   } catch(e){}
 }
 
@@ -385,8 +396,11 @@ function ensureIndoorVisible() {
 // until MapLibre has drawn a frame, so this is a boot-time signal only, never a gate (see below).
 function levelIsRendering() {
   try {
+    // Either source counts: once the floor is drawn from GeoJSON, `source_ptr` paints nothing by
+    // design, and a boot signal that can only ever say "no" is worse than none.
     return map.queryRenderedFeatures().some(f =>
-      f.source === "source_ptr" && f.properties && f.properties.lvl === TARGET.level);
+      (f.source === "source_ptr" || String(f.source).indexOf(GJ_SRC) === 0) &&
+      f.properties && f.properties.lvl === TARGET.level);
   } catch(e) { return false; }
 }
 
@@ -452,7 +466,7 @@ function ensureTiles(cb, tries) {
 // SDK's layer filters pass through a transient level-0 state at boot), so a name-only match can
 // permanently cache a polygon from the wrong floor — it then draws in open space.
 function pickFeature(name, all, center) {
-  const cs = all.filter(f => f.properties && f.properties.name === name && f.sourceLayer !== "wall" &&
+  const cs = all.filter(f => f.properties && f.properties.name === name && srcLayerOf(f) !== "wall" &&
     f.properties.lvl === TARGET.level &&
     (!f.properties.bid || f.properties.bid === TARGET.building) &&
     f.geometry && (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon"));
@@ -502,11 +516,12 @@ function candidateFeatures() {
   };
   try { map.queryRenderedFeatures().forEach(push); } catch(e){}
   try {
-    const layers = [...new Set(map.getStyle().layers
-      .filter(l => l.source === "source_ptr" && l["source-layer"])
-      .map(l => l["source-layer"]))];
-    layers.forEach(L => {
-      try { map.querySourceFeatures("source_ptr", { sourceLayer: L }).forEach(f => push({ ...f, sourceLayer: L })); } catch(e){}
+    // Both sources, always — see `indoorPairs`. The tiles keep answering while the floor is drawn
+    // from GeoJSON (a source is queryable whether or not any layer on it is visible), so a change
+    // resolves off whichever of the two happens to hold the feature.
+    indoorPairs().forEach(({ source, sourceLayer, name }) => {
+      try { map.querySourceFeatures(source, sourceLayer ? { sourceLayer } : undefined)
+        .forEach(f => push({ ...f, sourceLayer: f.sourceLayer || name })); } catch(e){}
     });
   } catch(e){}
   return out;
@@ -578,12 +593,10 @@ function levelTypeCounts() {
   try {
     const seen = new Set();
     const tally = new Map();
-    const layers = [...new Set(map.getStyle().layers
-      .filter(l => l.source === "source_ptr" && l["source-layer"])
-      .map(l => l["source-layer"]))];
-    for (const L of layers) {
+    for (const { source, sourceLayer, name: L } of indoorPairs()) {
       let fs = [];
-      try { fs = map.querySourceFeatures("source_ptr", { sourceLayer: L }); } catch (e) { continue; }
+      try { fs = map.querySourceFeatures(source, sourceLayer ? { sourceLayer } : undefined); }
+      catch (e) { continue; }
       for (const f of fs) {
         const p = f.properties;
         if (!p || p.lvl !== TARGET.level) continue;
@@ -618,7 +631,10 @@ function levelFeatureNames(limit) {
     const seen = new Map();
     candidateFeatures().forEach(f => {
       const p = f.properties;
-      if (!p || !p.name || f.sourceLayer === "wall" || FP_SKIP[f.sourceLayer]) return;
+      // `srcLayerOf`, not `f.sourceLayer`: a GeoJSON feature has none, and reading the raw field
+      // would let every wall on the floor into the app's feature list the moment the render swaps.
+      const sl = srcLayerOf(f);
+      if (!p || !p.name || sl === "wall" || FP_SKIP[sl]) return;
       if (p.lvl !== TARGET.level) return;
       if (p.bid && p.bid !== TARGET.building) return;
       if (!f.geometry || (f.geometry.type !== "Polygon" && f.geometry.type !== "MultiPolygon")) return;
@@ -1344,16 +1360,29 @@ function addFloorplan() {
       FP_LAYERS.forEach(id => { if (map.getLayer(id)) map.setFilter(id, fpFilter()); });
       fpLevel = TARGET.level;
     }
-    const layers = [...new Set(map.queryRenderedFeatures()
-      .filter(f => f.source === "source_ptr" && !FP_SKIP[f.sourceLayer])
-      .map(f => f.sourceLayer))];
+    /**
+     * ⚠️ **Discovered from whichever source is drawing the floor.** This read rendered features and
+     * kept the ones on `source_ptr`, which answers *nothing* once the tiles are hidden — so on a
+     * GeoJSON-rendered floor no outline layer would ever be created, and the overlay would simply
+     * stop appearing on levels reached after the swap. When the render is live the names come from
+     * the GeoJSON sources instead, and the outline is then drawn from the same collection as the
+     * fills — the draft, not the last publish, which is the point of the swap.
+     */
+    const gj = gjLive();
+    const layers = gj
+      ? GJ.sources.filter(n => !FP_SKIP[n])
+      : [...new Set(map.queryRenderedFeatures()
+          .filter(f => f.source === "source_ptr" && !FP_SKIP[srcLayerOf(f)])
+          .map(f => srcLayerOf(f)))].filter(Boolean);
     layers.forEach(L => {
-      const id = "__fp_" + L;
+      const id = (gj ? "__fp_gj_" : "__fp_") + L;
       if (map.getLayer(id)) return;
-      map.addLayer({ id, type:"line", source:"source_ptr", "source-layer":L,
+      const def = { id, type:"line", source: gj ? GJ_SRC + L : "source_ptr",
         filter: fpFilter(),
         layout:{ visibility: prefs.floorplan ? "visible" : "none" },
-        paint:{ "line-color":"#33425c", "line-width":1, "line-opacity":0.5 } });
+        paint:{ "line-color":"#33425c", "line-width":1, "line-opacity":0.5 } };
+      if (!gj) def["source-layer"] = L;
+      map.addLayer(def);
       FP_LAYERS.push(id);
     });
   } catch(e){ post("error", { message: "floorplan: " + e.message }); }
@@ -1369,7 +1398,10 @@ function ensureSatellite() {
     if (!key) return false;
     map.addSource("__sat", { type:"raster", tileSize:256,
       tiles:["https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=" + key] });
-    const firstIndoor = (map.getStyle().layers.find(l => l.source === "source_ptr") || {}).id;
+    // Beneath the first INDOOR layer, whichever source is drawing it — the clones are inserted
+    // above the satellite otherwise, and a raster basemap over the floor plan hides the lot.
+    const firstIndoor = (map.getStyle().layers
+      .find(l => l.source === "source_ptr" || gjIsClone(l.id)) || {}).id;
     map.addLayer({ id:"__sat", type:"raster", source:"__sat", paint:{ "raster-opacity":1 } }, firstIndoor);
     return true;
   } catch(e) { post("error", { message: "satellite: " + e.message }); return false; }
@@ -1449,6 +1481,370 @@ function reportStyleShape() {
   }
 }
 
+/* ── the floor, drawn from GeoJSON instead of from the vector tiles ──────── */
+
+/**
+ * **Render the floor from the level's GeoJSON and switch the vector tiles off.**
+ *
+ * Olcay, 2026-08-16: *"tell me when we see render the map features from geojson source and disable
+ * vector tile source. It requires style processing."*
+ *
+ * ## The one rule: derivation, not authorship
+ *
+ * Every layer here is a **clone of one of the SDK's own** `source_ptr` layers, with its paint,
+ * layout, filter and zoom range copied verbatim and only two things changed — the source it reads,
+ * and the `source-layer` it no longer has. Hand-writing a lookalike style was the alternative and
+ * is the wrong lever: it would mean inventing colours the product already ships, and they would
+ * drift the first time the platform restyled a floor.
+ *
+ * A vector layer picks its rows with `source-layer`, and a GeoJSON source has none. **A source
+ * layer is its `mainType` with the hyphens stripped** — observed from the style's own complaints
+ * (`fill_industrial-space_ptr` selects `industrialspace`) — so the substitution is not a filter at
+ * all: the features are **split into one source per source-layer** up front, and each clone reads
+ * the source that holds exactly the rows its original selected. That keeps the original's own
+ * filter untouched rather than composing onto it, which matters more than it looks: the SDK writes
+ * those filters in legacy syntax in places, and `["all", <expression>, <legacy>]` is not a thing.
+ *
+ * ## Why it is worth the trouble
+ *
+ * ⚠️ **An edit was invisible on the map.** The editor drew its own overlay while the floor
+ * underneath stayed the last published tile, so committing a reshape changed nothing you could
+ * see. Drawing from the same collection the editor edits is the only way an edit is a thing you
+ * can look at.
+ *
+ * It also retires the wall-hiding filter hack: "remove the wall" becomes *do not put it in the
+ * source*, instead of composing a filter onto an SDK layer that `updateLayersForCurrentLevel`
+ * rewrites behind our back on every level switch.
+ *
+ * ## It refuses rather than guesses
+ *
+ * The Pointr Cloud fetch had never returned a single feature when this was written, so nothing
+ * here assumes it will. The swap runs in three steps across three frames and **measures at each
+ * one**: take a baseline of what the tiles are painting; add the sources and the clones with the
+ * tiles still on; and only if the clones actually painted something, hide the tiles. If they
+ * painted nothing, everything is torn down, the tiles were never off, and it says so — once, not
+ * on a loop. A floor is either drawn twice for one frame or drawn the old way; it is never blank.
+ */
+
+/* GJRENDER-ENGINE-START — extracted and tested by scratch/geometry.test.mjs.
+   Pure: no map, no DOM, no globals. Everything map-bound lives below the END marker. */
+
+/** Clone ids and source ids, prefixed so nothing else in the shell can collide with them. */
+const GJ_SRC = "__gj_";       // one GeoJSON source per source-layer: `__gj_wall`, `__gj_room`, …
+const GJ_LYR = "__gjl_";      // the clone of `fill_wall_ptr` is `__gjl_fill_wall_ptr`
+
+/**
+ * A source-layer name from a `mainType`, or the other way about — hyphens stripped, lower case.
+ *
+ * ⚠️ Testing raw equality was the mistake this exists to avoid: it reports a flat zero and makes a
+ * one-line transform look like a mapping problem nobody has the table for.
+ */
+function flatType(t) { return String(t == null ? "" : t).replace(/-/g, "").toLowerCase(); }
+
+/** De-hyphenated name → the style's own spelling of that source-layer. */
+function sourceLayerIndex(names) {
+  const ix = new Map();
+  for (const n of names || []) ix.set(flatType(n), n);
+  return ix;
+}
+
+/**
+ * A level's features, split into one FeatureCollection per source-layer.
+ *
+ * `lvl` is **stamped** onto anything that arrived without one, because the endpoint is per level
+ * and the SDK's own filters select on `lvl`. Without it every cloned layer filters its own rows
+ * out and the floor renders empty — which looks exactly like "the fetch returned nothing".
+ *
+ * `__sl` is stamped too: a GeoJSON feature has no `sourceLayer`, and four places in this file ask a
+ * feature which one it came from (to skip walls, chiefly). See `srcLayerOf`.
+ *
+ * Features whose `mainType` matches no source-layer are counted, not dropped silently — that count
+ * is the difference between "the draft has types this style does not draw" and a broken mapping.
+ */
+function groupBySourceLayer(names, feats, lvl) {
+  const ix = sourceLayerIndex(names);
+  const groups = new Map();
+  for (const n of names || []) groups.set(n, []);
+  const unmatched = new Map();
+  let kept = 0;
+  for (const f of feats || []) {
+    if (!f || !f.geometry) continue;
+    const p = Object.assign({}, f.properties || {});
+    if (p.fid == null && f.fid != null) p.fid = f.fid;
+    if (p.lvl == null && lvl != null) p.lvl = lvl;
+    const name = ix.get(flatType(p.mainType));
+    if (!name) {
+      const k = String(p.mainType == null ? "(none)" : p.mainType);
+      unmatched.set(k, (unmatched.get(k) || 0) + 1);
+      continue;
+    }
+    p.__sl = name;
+    groups.get(name).push({ type: "Feature", properties: p, geometry: f.geometry });
+    kept++;
+  }
+  return { groups, unmatched, kept };
+}
+
+/**
+ * The GeoJSON twin of one vector-tile layer: the same layer, reading somewhere else.
+ *
+ * A deep clone rather than a hand-built object on purpose — `paint`, `layout`, `filter`, `minzoom`,
+ * `maxzoom` and anything the platform adds later come across untouched and unenumerated. Only the
+ * id, the source, and the `source-layer` that no longer applies are touched.
+ */
+function cloneLayerDef(layer, cloneId, sourceId) {
+  const def = JSON.parse(JSON.stringify(layer));
+  delete def["source-layer"];
+  def.id = cloneId;
+  def.source = sourceId;
+  return def;
+}
+/* GJRENDER-ENGINE-END */
+
+/* GJSWAP-ENGINE-START — the swap itself, extracted and tested by scratch/geometry.test.mjs.
+   ⚠️ NOT pure: it drives `map` and reads `prefs`, `TARGET`, `FP_LAYERS`, `HIDDEN_FILTERS` and
+   `post`, all of which the test supplies as stubs. That is the one soft spot in this harness — a
+   dependency added here and not added to the stubs is tested against a fiction — and it is worth
+   it, because the alternative is that the three-frame swap, whose failure mode is a BLANK FLOOR,
+   is checked by nothing at all until somebody signs in and looks. */
+
+/**
+ * The two layers the shell hides outright anyway (see `hideBuildingChrome`) — cloning them would
+ * mean re-hiding them under a second set of ids for no gain.
+ */
+const GJ_SKIP = { "fill_building-outline_ptr": 1, "symbol_building-outline_ptr": 1 };
+
+/** The app's last `levelgeom` payload, whole, and the level it was fetched for. */
+let LEVEL_FEATS = [], LEVEL_FEATS_LVL = null;
+
+/**
+ * `off` → `built` → `live`, or `failed`, and never past `failed` for the data it holds.
+ *
+ * `tileRows` / `gjRows` are the measurement the swap turns on: what the tiles were painting when
+ * the clones went in, and what the clones painted a frame later.
+ */
+let GJ = { phase: "off", clones: [], sources: [], lvl: null, tileRows: 0, gjRows: 0, unmatched: null, kept: 0 };
+
+const gjLive = () => GJ.phase === "live";
+const gjIsClone = id => String(id).indexOf(GJ_LYR) === 0;
+/** Wanted where there is something to draw and nobody has switched it off. */
+const gjWanted = () => prefs.geojsonFloor !== false && LEVEL_FEATS.length > 0;
+
+/** Which source-layer a feature came from — `__sl` for a clone's, which has no `sourceLayer`. */
+function srcLayerOf(f) {
+  return f.sourceLayer || (f.properties && f.properties.__sl) || undefined;
+}
+
+/** The style's own source-layer names, whatever their layers' visibility. */
+function ptrSourceLayers() {
+  try {
+    return [...new Set(map.getStyle().layers
+      .filter(l => l.source === "source_ptr" && l["source-layer"])
+      .map(l => l["source-layer"]))];
+  } catch (e) { return []; }
+}
+
+/**
+ * Every `{source, sourceLayer}` pair holding indoor content — the tiles' source layers, plus the
+ * GeoJSON sources once they exist.
+ *
+ * The four places that used to enumerate `source_ptr`'s source-layers by hand now ask this instead,
+ * so switching the tiles off does not quietly empty the change resolver, the type census, the
+ * highlight or the feature scan. `querySourceFeatures` reads a source whether or not any layer on
+ * it is visible, so **both** halves keep answering while the swap is in either position.
+ */
+function indoorPairs() {
+  const out = [];
+  for (const L of ptrSourceLayers()) out.push({ source: "source_ptr", sourceLayer: L, name: L });
+  for (const n of GJ.sources) out.push({ source: GJ_SRC + n, sourceLayer: null, name: n });
+  return out;
+}
+
+/** What the SDK's own tile layers are painting right now. The baseline the verdict needs. */
+function gjTileRows() {
+  try {
+    return map.queryRenderedFeatures().filter(f => f.source === "source_ptr").length;
+  } catch (e) { return 0; }
+}
+
+/** Add the sources and the clones. The tiles stay on for one more frame — see `gjVerify`. */
+function gjBuild() {
+  const names = ptrSourceLayers();
+  if (!names.length) return;
+  const { groups, unmatched, kept } = groupBySourceLayer(names, LEVEL_FEATS, LEVEL_FEATS_LVL);
+  GJ.unmatched = unmatched;
+  GJ.kept = kept;
+  GJ.sources = [];
+  GJ.clones = [];
+  try {
+    for (const [name, feats] of groups) {
+      const id = GJ_SRC + name;
+      const data = { type: "FeatureCollection", features: feats };
+      if (map.getSource(id)) map.getSource(id).setData(data);
+      else map.addSource(id, { type: "geojson", data });
+      GJ.sources.push(name);
+    }
+    /**
+     * Each clone is inserted **directly before its original**, so the clones' order among
+     * themselves is the SDK's order exactly. Draw order on a floor plan is not decoration: get it
+     * wrong and the circulation space paints over the rooms inside it.
+     */
+    for (const l of map.getStyle().layers) {
+      if (l.source !== "source_ptr" || GJ_SKIP[l.id]) continue;
+      const sl = l["source-layer"];
+      if (!sl || !groups.has(sl)) continue;
+      const id = GJ_LYR + l.id;
+      if (map.getLayer(id)) continue;
+      try {
+        map.addLayer(cloneLayerDef(l, id, GJ_SRC + sl), l.id);
+        GJ.clones.push({ id, from: l.id, vis: null });
+      } catch (e) { post("error", { message: "geojson floor: " + l.id + " — " + e.message }); }
+    }
+  } catch (e) {
+    post("error", { message: "geojson floor: " + e.message });
+    return gjTeardown("threw while building");
+  }
+  GJ.lvl = TARGET.level;
+  GJ.phase = "built";
+}
+
+/**
+ * Did the clones actually paint? The whole swap turns on this one count.
+ *
+ * Nothing rendered means the level's draft content does not carry what this style draws — a wrong
+ * `lvl`, a `mainType` nobody matched, a bag missing whatever the SDK's filters test. Every one of
+ * those would otherwise present as a **blank floor**, which is the single worst outcome available
+ * here and the reason the tiles were left on for this frame.
+ */
+function gjVerify() {
+  const ids = GJ.clones.map(c => c.id).filter(id => map.getLayer(id));
+  let rows = 0;
+  try { rows = (map.queryRenderedFeatures({ layers: ids }) || []).length; } catch (e) {}
+  GJ.gjRows = rows;
+  if (!rows) {
+    const missed = GJ.unmatched && GJ.unmatched.size
+      ? " · mainTypes matching no source-layer: " + JSON.stringify([...GJ.unmatched.keys()].slice(0, 8)) : "";
+    post("error", { message: "geojson floor: the cloned layers painted nothing — staying on the tiles" });
+    console.info("%c[geojson-render] NOT switched on", "font-weight:bold",
+      "\n  the " + GJ.clones.length + " cloned layers painted 0 features, so the vector tiles stay on.",
+      "\n  features grouped into a source: ", GJ.kept, "of", LEVEL_FEATS.length, missed,
+      "\n  likeliest causes, in order: the stamped `lvl` (" + LEVEL_FEATS_LVL + ") is not what the",
+      "\n  SDK's filters select on; or the draft bags lack a field one of those filters tests.");
+    gjTeardown("painted nothing");
+    GJ.phase = "failed";
+    return;
+  }
+  GJ.phase = "live";
+  gjHideTiles();
+  applyPrefs();          // the POI-label preference now belongs to the clones
+  addFloorplan();        // and so does the floor-plan outline
+  const missed = GJ.unmatched && GJ.unmatched.size
+    ? [...GJ.unmatched.entries()].map(([k, v]) => k + "×" + v).slice(0, 8) : "none";
+  console.info("%c[geojson-render] the floor is drawn from Pointr Cloud", "font-weight:bold",
+    "\n  vector tiles:       off (" + GJ.clones.length + " SDK layers hidden, cloned onto " +
+      GJ.sources.length + " GeoJSON sources)",
+    "\n  rows painted:       ", GJ.tileRows, "from the tiles →", rows, "from the GeoJSON",
+    "\n  features placed:    ", GJ.kept, "of", LEVEL_FEATS.length, "· level stamped", LEVEL_FEATS_LVL,
+    "\n  mainTypes unmatched:", missed,
+    "\n  ⚠️ this is the DRAFT scope — a difference you can see against the tiles is a real",
+    "\n     difference between the draft content and the last publish.");
+}
+
+/**
+ * Hide the SDK's own tile layers — the ones we cloned, and only those.
+ *
+ * Re-asserted on every idle rather than done once, for the same reason `hideBuildingChrome` is:
+ * `updateLayersForCurrentLevel()` re-shows the layers it rewrites, so a level switch would bring
+ * the tiles back underneath the GeoJSON and draw the floor twice.
+ */
+function gjHideTiles() {
+  for (const c of GJ.clones) {
+    try {
+      if (!map.getLayer(c.from)) continue;
+      const vis = map.getLayoutProperty(c.from, "visibility");
+      if (vis === "none") continue;
+      if (c.vis === null) c.vis = vis || "visible";   // what to put back on teardown
+      map.setLayoutProperty(c.from, "visibility", "none");
+    } catch (e) {}
+  }
+}
+
+/**
+ * Keep each clone's filter identical to its original's.
+ *
+ * ⚠️ **The SDK rewrites those filters behind us.** `updateLayersForCurrentLevel()` walks ~600
+ * layers on every level switch and writes the level clause itself; a clone that kept the filter it
+ * was born with would go on drawing the floor you left. Mirroring is also why the clone's filter is
+ * never composed onto — there is nothing of ours in it to preserve.
+ */
+function gjSyncFilters() {
+  for (const c of GJ.clones) {
+    try {
+      if (!map.getLayer(c.id) || !map.getLayer(c.from)) continue;
+      /**
+       * ⚠️ **Never over a Combine's hide filter.** `geomApplyHiddenFilter` composes onto whichever
+       * layer is drawing the wall between two combined rooms — which, once the render has swapped,
+       * is one of these clones. Mirroring the original's filter over it would put the wall straight
+       * back, on the very next idle, with the combine still showing as done. `HIDDEN_FILTERS` holds
+       * exactly the ids it has rewritten, and hands them back itself when the combine is undone.
+       */
+      if (HIDDEN_FILTERS.has(c.id)) continue;
+      const want = map.getFilter(c.from);
+      // setFilter() invalidates the layer, so only when it has actually moved.
+      if (JSON.stringify(want ?? null) !== JSON.stringify(map.getFilter(c.id) ?? null))
+        map.setFilter(c.id, want);
+    } catch (e) {}
+  }
+}
+
+/** Back to the tiles, leaving the style as it was found. */
+function gjTeardown(why) {
+  for (const c of GJ.clones) {
+    try { if (map.getLayer(c.id)) map.removeLayer(c.id); } catch (e) {}
+    // Put back what was there, not a blanket "visible": a layer the POI-label preference had
+    // already hidden must stay hidden.
+    try {
+      if (c.vis && map.getLayer(c.from)) map.setLayoutProperty(c.from, "visibility", c.vis);
+    } catch (e) {}
+  }
+  // The floor-plan outline follows the source it was built on, so it goes with the clones.
+  for (const id of FP_LAYERS.slice()) {
+    if (id.indexOf("__fp_gj_") !== 0) continue;
+    try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
+    FP_LAYERS.splice(FP_LAYERS.indexOf(id), 1);
+  }
+  for (const n of GJ.sources) {
+    try { if (map.getSource(GJ_SRC + n)) map.removeSource(GJ_SRC + n); } catch (e) {}
+  }
+  GJ = { phase: "off", clones: [], sources: [], lvl: null, tileRows: 0, gjRows: 0, unmatched: null, kept: 0 };
+  if (why) console.info("[geojson-render] back on the vector tiles —", why);
+  try { applyPrefs(); addFloorplan(); } catch (e) {}
+}
+
+/**
+ * One step per idle: baseline, build, verdict. Called from the idle pass, which is also what
+ * re-asserts the hidden tiles and the mirrored filters once it is live.
+ */
+function gjTick() {
+  if (!map) return;
+  const wanted = gjWanted();
+  if (GJ.phase === "live" || GJ.phase === "built") {
+    // The level moved out from under the data we hold, or somebody switched it off. Either way the
+    // clones are now describing a floor nobody is looking at.
+    if (!wanted || GJ.lvl !== TARGET.level) return gjTeardown(wanted ? "level changed" : "switched off");
+  }
+  if (GJ.phase === "live") { gjHideTiles(); gjSyncFilters(); return; }
+  if (GJ.phase === "built") return gjVerify();
+  if (GJ.phase === "failed" || !wanted) return;
+  // `off`, and wanted: take the baseline. No rows means the camera is not over anything painted
+  // yet — which is not the same as the clones failing, and is exactly the confusion this avoids.
+  const rows = gjTileRows();
+  if (!rows) return;
+  GJ.tileRows = rows;
+  gjBuild();
+}
+/* GJSWAP-ENGINE-END */
+
 function hideBuildingChrome() {
   try {
     ["fill_building-outline_ptr", "symbol_building-outline_ptr"].forEach(id => {
@@ -1494,16 +1890,28 @@ function applyPrefs() {
   if (c) c.classList.toggle("grey", !!prefs.greyscale);
   try {
     const satellite = prefs.basemap === "satellite" && ensureSatellite();
+    const gj = gjLive();
     map.getStyle().layers.forEach(l => {
-      if (l.id.indexOf("__fp_") === 0)
-        map.setLayoutProperty(l.id, "visibility", prefs.floorplan ? "visible" : "none");
+      if (l.id.indexOf("__fp_") === 0) {
+        // Two sets can exist for one frame around a swap — the tiles' outline and the GeoJSON's.
+        // Only the set belonging to the source currently drawing the floor may show, or the outline
+        // is drawn twice, in two slightly different places, which reads as a rendering bug.
+        const mine = l.id.indexOf("__fp_gj_") === 0 ? gj : !gj;
+        map.setLayoutProperty(l.id, "visibility", prefs.floorplan && mine ? "visible" : "none");
+      }
       else if (l.id === "__sat")
         map.setLayoutProperty(l.id, "visibility", satellite ? "visible" : "none");
       // Review focus: the SDK's POI pins and labels sit on top of the diff highlights and are the
       // single biggest source of visual noise when comparing floors. Symbol layers only — hiding
       // the fills would take the floor plan with them.
-      else if (l.type === "symbol" && l.source === "source_ptr")
-        map.setLayoutProperty(l.id, "visibility", prefs.hidePoiLabels ? "none" : "visible");
+      //
+      // ⚠️ The preference now belongs to whichever set is drawing. Left as it was, this branch
+      // would re-show every hidden tile symbol layer on the next pass — applyPrefs runs on every
+      // idle that resolves — and the labels would come back underneath the GeoJSON ones.
+      else if (l.type === "symbol" && (l.source === "source_ptr" || gjIsClone(l.id))) {
+        const mine = gjIsClone(l.id) ? gj : !gj;
+        map.setLayoutProperty(l.id, "visibility", prefs.hidePoiLabels || !mine ? "none" : "visible");
+      }
       // the vector base (streets/outdoor) would show through the satellite raster
       else if (l.source === "openmaptiles" || l.source === "outdoor-tiles")
         map.setLayoutProperty(l.id, "visibility", satellite ? "none" : "visible");
@@ -1603,12 +2011,9 @@ function highlightFeatures(sel) {
      */
     const many = Array.isArray(sel.fids) && sel.fids.length ? new Set(sel.fids) : null;
     try {
-      const layers = [...new Set(map.getStyle().layers
-        .filter(l => l.source === "source_ptr" && l["source-layer"])
-        .map(l => l["source-layer"]))];
       const seen = new Set();
-      for (const L of layers) {
-        for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L })) {
+      for (const { source, sourceLayer } of indoorPairs()) {
+        for (const f of map.querySourceFeatures(source, sourceLayer ? { sourceLayer } : undefined)) {
           const p = f.properties; if (!p) continue;
           if (many ? !many.has(p.fid)
                    : sel.fid != null ? p.fid !== sel.fid
@@ -1656,11 +2061,8 @@ function scanFeature(fid) {
     } else coords.forEach(eat);
   };
   try {
-    const layers = [...new Set(map.getStyle().layers
-      .filter(l => l.source === "source_ptr" && l["source-layer"])
-      .map(l => l["source-layer"]))];
-    for (const L of layers) {
-      for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L })) {
+    for (const { source, sourceLayer } of indoorPairs()) {
+      for (const f of map.querySourceFeatures(source, sourceLayer ? { sourceLayer } : undefined)) {
         if (!f.properties || f.properties.fid !== fid) continue;
         // A feature split across tiles arrives once per tile with the same properties, so the
         // first bag is as good as any; the geometry still accumulates over all of them.
@@ -2126,6 +2528,9 @@ function start() {
     ensureIndoorVisible();
     hideBuildingChrome(); // the SDK re-shows its layers after switches and 3D recoveries
     relaxPtrMinzoom();
+    // One step of the render swap per idle — and, once it is live, the re-assertion that keeps the
+    // tiles off and the clones' filters in step with the SDK's. See the GJ block.
+    gjTick();
     if (resolveChanges()) { addFloorplan(); applyPrefs(); redraw(); }
   });
   // The SDK treats a map click as wayfinding navigation — clicking anywhere on the building
@@ -5257,6 +5662,18 @@ window.addEventListener("message", (ev) => {
     if ("hidePoiLabels" in d) prefs.hidePoiLabels = !!d.hidePoiLabels;
     if ("floorplan" in d) prefs.floorplan = !!d.floorplan;
     if ("basemap" in d) prefs.basemap = d.basemap;
+    /**
+     * ⚠️ **Absent means "yes, if you can"**, not "no". Four of the five screens build a `MapPrefs`
+     * without this field — only Map Content fetches any GeoJSON — so treating a missing key as
+     * `false` would switch the render off everywhere the app never had an opinion. `gjWanted()`
+     * requires features as well, so the permissive default costs nothing where there are none.
+     */
+    if ("geojsonFloor" in d) {
+      prefs.geojsonFloor = d.geojsonFloor !== false;
+      // Off is immediate: the tiles come back on this frame rather than at the next idle, because
+      // this one is a switch somebody just flicked and watched.
+      if (!prefs.geojsonFloor && GJ.phase !== "off") gjTeardown("switched off");
+    }
     applyPrefs();
   } else if (d.type === "dropzone") {
     // The app says whether this pane accepts file drops (upload surfaces only — a Compare pane
@@ -5314,7 +5731,21 @@ window.addEventListener("message", (ev) => {
      */
     LEVEL_GEOM = new Map();
     for (const f of (d.features || [])) if (f && f.fid && f.geometry) LEVEL_GEOM.set(f.fid, f.geometry);
-    console.info("[geojson] map shell holds", LEVEL_GEOM.size, "unclipped feature geometries");
+    /**
+     * The same payload, kept whole, because the **render** wants what the editor does not: the
+     * property bags the SDK's cloned layers filter and label on. `level` comes with it and is not
+     * read off `TARGET` — a slow fetch can land after the floor has moved on, and stamping these
+     * features with the level they are actually from is the difference between them rendering and
+     * being filtered out by the SDK's own `lvl` clause.
+     */
+    LEVEL_FEATS = Array.isArray(d.features) ? d.features : [];
+    LEVEL_FEATS_LVL = typeof d.level === "number" ? d.level : TARGET.level;
+    // A new level's features invalidate everything the last verdict was about, including a `failed`
+    // one: the next floor is a fresh question and deserves to be asked again.
+    if (GJ.phase !== "off") gjTeardown("new level geometry arrived");
+    GJ.phase = "off";
+    console.info("[geojson] map shell holds", LEVEL_GEOM.size, "unclipped feature geometries",
+      LEVEL_FEATS.length ? "· level " + LEVEL_FEATS_LVL : "");
   } else if (d.type === "decidable") {
     CAN_DECIDE = !!d.on;
     renderTip();          // a card already open must lose its control immediately

@@ -19,6 +19,16 @@ export interface MapPrefs {
   hidePoiLabels: boolean;
   floorplan: boolean;
   basemap: "vector" | "satellite";
+  /**
+   * Draw the floor from the **GeoJSON** the app fetched, with the SDK's vector tiles switched off
+   * (Olcay, 2026-08-16). Defaults to on where there is GeoJSON to draw — the map falls back to the
+   * tiles by itself when the fetch returned nothing, or when the cloned layers paint nothing.
+   *
+   * ⚠️ **Optional on purpose.** Five screens build a `MapPrefs` literal and only Map Content fetches
+   * level geometry at all; a required field would make the other four state a preference about
+   * something they cannot do. Absent means "yes, if you can".
+   */
+  geojsonFloor?: boolean;
 }
 
 export interface MapLevel {
@@ -163,7 +173,12 @@ const PointrMap = forwardRef<
      * from the tiles — see `cloud/levelFeatures`. Empty or absent means the editor falls back to
      * the tiles, which is what it always did.
      */
-    levelGeometry?: { fid: string; geometry: unknown }[];
+    levelGeometry?: {
+      fid: string;
+      geometry: unknown;
+      /** The bag the cloned render layers filter and label on — see `cloud/levelFeatures`. */
+      properties?: Record<string, unknown>;
+    }[];
     /** Geometry-editor commands, and the state it reports back — see ui/GeometryToolbar. */
     geomCommands?: { seq: number; body: Record<string, unknown> }[];
     onGeomState?: (s: Record<string, unknown>) => void;
@@ -312,10 +327,20 @@ const PointrMap = forwardRef<
    * The level's true geometry, posted on its own because it arrives **asynchronously** — the fetch
    * finishes long after the level switch that asked for it, and folding it into `send()` would make
    * it wait for the next unrelated prop change.
+   *
+   * ⚠️ **The level rides with it**, read from the ref so it is never a dependency. The features come
+   * from a per-level endpoint and carry no level of their own, and the shell has to stamp one on
+   * them for the SDK's own `lvl` filters to select them once they are being rendered. Taking the
+   * shell's current level instead would stamp whichever floor it had reached by the time a slow
+   * fetch landed — the level that asked for these features is the only one that is right.
    */
   useEffect(() => {
     ref.current?.contentWindow?.postMessage(
-      { type: "levelgeom", features: levelGeometry ?? [] },
+      {
+        type: "levelgeom",
+        features: levelGeometry ?? [],
+        level: latest.current.target?.level ?? null,
+      },
       "*",
     );
   }, [levelGeometry]);

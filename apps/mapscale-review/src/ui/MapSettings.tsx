@@ -81,6 +81,7 @@ export function MapSettings({
   prefs,
   onChange,
   focus = false,
+  geojson = false,
 }: {
   prefs: MapPrefs;
   onChange: (p: MapPrefs) => void;
@@ -90,6 +91,12 @@ export function MapSettings({
    * would only be offering to grey out nothing.
    */
   focus?: boolean;
+  /**
+   * Show the FLOOR SOURCE switch. Set by the screens that actually **fetch** the level's GeoJSON —
+   * only Map Content does today. The same rule as `focus`: a screen that has no GeoJSON would be
+   * offering a choice with one real option, and the switch would look broken rather than absent.
+   */
+  geojson?: boolean;
 }) {
   return (
     <Popover>
@@ -142,6 +149,28 @@ export function MapSettings({
               label="Hide POI labels"
               checked={prefs.hidePoiLabels}
               onCheckedChange={(v) => onChange({ ...prefs, hidePoiLabels: v })}
+            />
+          </>
+        )}
+
+        {geojson && (
+          <>
+            <div style={SECTION_HEAD}>FLOOR SOURCE</div>
+            {/*
+              The A/B for the render swap (Olcay, 2026-08-16). On, the floor is drawn from the
+              level's GeoJSON with the vector tiles switched off; off, it is the SDK's tiles, exactly
+              as it has always been. Both draw with the SAME paint — the layers are clones of the
+              SDK's own — so a difference you can see between the two positions is a difference in
+              the DATA, which is the honest thing this switch is for: the tiles are the last publish
+              and the GeoJSON is the draft.
+
+              Defaulting to on where it is offered, and `?? true` rather than a required field,
+              because the map already refuses by itself when there is nothing to draw.
+            */}
+            <PrefRow
+              label="Draw floor from GeoJSON"
+              checked={prefs.geojsonFloor ?? true}
+              onCheckedChange={(v) => onChange({ ...prefs, geojsonFloor: v })}
             />
           </>
         )}

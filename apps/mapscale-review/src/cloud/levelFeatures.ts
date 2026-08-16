@@ -21,27 +21,36 @@
  * can legitimately differ from the one drawn underneath it**, because the tiles are the last
  * publish and this is what has happened since.
  *
- * ## What it deliberately does not do
+ * ## It renders now, too — and that is why the properties come with it
  *
- * It does not render anything. The SDK's tiles remain what you look at — basemap, floor plan,
- * labels, the lot — and they are good at that. Only the *editor* takes its geometry from here.
- * Replacing the rendering as well would mean re-implementing the SDK's styling for no gain the
- * editor can use.
+ * This began as the editor's geometry supply and nothing else, on the reasoning that the tiles are
+ * good at drawing floors and re-implementing their styling would buy nothing. That held until
+ * Olcay, 2026-08-16: *"tell me when we see render the map features from geojson source and disable
+ * vector tile source."* The map shell now clones the SDK's own `source_ptr` layers onto this
+ * collection — **derivation, not authorship**: the paint and layout are the product's, untouched.
+ *
+ * ⚠️ **A cloned layer styles on properties, so the property bag can no longer be stripped.** It was
+ * (`fid` + `geometry` only) to keep the `postMessage` small, and that was right while only the
+ * editor read this. A layer that filters on `mainType` and labels on `name` needs the bag, and
+ * hand-picking a whitelist would silently blank whichever layer filtered on the field left out. So
+ * the bag travels whole and the **size is measured and logged**, rather than guessed at either way.
  */
 import { authFetch } from "./session";
 import { POINTR } from "../mock/pointrConfig";
 
-/**
- * One feature's true geometry, and nothing else.
- *
- * ⚠️ Stripped to `fid` + `geometry` on purpose. The whole collection crosses into the map iframe by
- * `postMessage`, which structured-clones it, and a floor carries enough features that shipping
- * every property bag twice — the tiles already have them — is a real cost for no use. Properties
- * still come from the tiles; only the shape comes from here.
- */
+/** One feature's true geometry and its own property bag. */
 export interface LevelGeometry {
   fid: string;
   geometry: unknown;
+  /**
+   * The feature's properties, **whole and unfiltered**.
+   *
+   * ⚠️ Not a whitelist, deliberately. The map shell's cloned layers carry the SDK's own filters,
+   * and those name fields this file has no list of — drop the one a layer filters on and that layer
+   * renders nothing, with no error anywhere. The cost is a bigger `postMessage`; the size is logged
+   * below so it is a number somebody has seen rather than an assumption.
+   */
+  properties: Record<string, unknown>;
 }
 
 /** `sid/bid/lvl` — one level's worth, keyed for the cache. */
@@ -102,21 +111,32 @@ export async function levelGeometry(
        * level has no features", which is a silent, plausible, wrong answer.
        */
       const feats = (body?.result?.features ?? body?.features ?? []) as {
-        properties?: { fid?: string };
+        properties?: Record<string, unknown> & { fid?: string };
         geometry?: unknown;
       }[];
       const out: LevelGeometry[] = [];
       for (const f of feats) {
         const fid = f?.properties?.fid;
         if (fid && f.geometry)
-          out.push({ fid: String(fid), geometry: f.geometry });
+          out.push({
+            fid: String(fid),
+            geometry: f.geometry,
+            properties: f.properties ?? {},
+          });
       }
+      /**
+       * ⚠️ **The one measurement that sizes the render swap.** A whole level now crosses the iframe
+       * boundary by `postMessage`, which structured-clones it, and "is a floor small enough to send
+       * comfortably?" was an open question with nothing behind it. This is that number. A megabyte
+       * is fine and a hundred is not; nobody has to guess which this is any more.
+       */
+      const kb = Math.round(JSON.stringify(out).length / 1024);
       console.info(
         "[geojson] level",
         lvl,
         "→",
         out.length,
-        "features with geometry, unclipped, from the draft content",
+        `features with geometry, unclipped, from the draft content · ${kb} KB to the map shell`,
       );
       cache.set(k, out);
       return out;
