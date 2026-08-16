@@ -112,11 +112,13 @@ export interface GeomState {
    * straightening and snapping all need corners. The tools that cannot apply are not shown rather
    * than shown disabled: a row of greyed-out buttons invites you to work out why.
    */
-  kind?: "area" | "point";
+  kind?: "area" | "point" | "network";
   /** How many corners are selected, for the marquee's own feedback. */
   selected?: number;
   /** …and how many whole EDGES those corners amount to — both ends selected. */
   selectedEdges?: number;
+  /** How many nodes the network being edited holds. */
+  nodes?: number;
 }
 
 export type GeomCommand =
@@ -481,6 +483,13 @@ export function GeometryToolbar({
 
   const pieces = state.pieces ?? 1;
   const isPoint = state.kind === "point";
+  /**
+   * A **network** is being edited — every node of it is a handle (Olcay, 2026-08-16: *"I should be
+   * able to edit the whole network"*). It has no ring, so it drops the same tools a point does:
+   * there is nothing to straighten, simplify, split or combine about a graph.
+   */
+  const isNetwork = state.kind === "network";
+  const nodes = state.nodes ?? 0;
   const selected = state.selected ?? 0;
   /**
    * How many whole edges that corner selection amounts to — an edge counts when both of its ends
@@ -517,45 +526,50 @@ export function GeometryToolbar({
                 : `${selected} corner${selected === 1 ? "" : "s"} selected · Delete to remove`,
             bad: false,
           }
-        : isPoint
+        : isNetwork
           ? {
-              text: "This feature is a single point — drag it to move it",
+              text: `Editing this network · ${nodes} node${nodes === 1 ? "" : "s"} · drag any of them`,
               bad: false,
             }
-          : /**
-             * The standing facts about the shape, and they have to compose: a combine that could
-             * only reach two of the three rooms leaves a feature that is BOTH combined and in more
-             * than one piece. Reporting only the piece count there would say "Split into 2 pieces"
-             * about a shape somebody had just combined, which is exactly backwards.
-             *
-             * All three are careful about what they claim. "Holds" says the shape covers those
-             * features and stops short of saying they are gone — they are still in Pointr Cloud and
-             * still have rows in the tree, because nothing in this prototype deletes a feature.
-             */
-            absorbed > 0 && pieces > 1
+          : isPoint
             ? {
-                text: `Holds ${absorbed + 1} features, in ${pieces} pieces`,
+                text: "This feature is a single point — drag it to move it",
                 bad: false,
               }
-            : absorbed > 0
+            : /**
+               * The standing facts about the shape, and they have to compose: a combine that could
+               * only reach two of the three rooms leaves a feature that is BOTH combined and in more
+               * than one piece. Reporting only the piece count there would say "Split into 2 pieces"
+               * about a shape somebody had just combined, which is exactly backwards.
+               *
+               * All three are careful about what they claim. "Holds" says the shape covers those
+               * features and stops short of saying they are gone — they are still in Pointr Cloud and
+               * still have rows in the tree, because nothing in this prototype deletes a feature.
+               */
+              absorbed > 0 && pieces > 1
               ? {
-                  text: `Holds ${absorbed + 1} combined features`,
+                  text: `Holds ${absorbed + 1} features, in ${pieces} pieces`,
                   bad: false,
                 }
-              : pieces > 1
-                ? { text: `Split into ${pieces} pieces`, bad: false }
-                : // Each mode gets the one hint that mode needs, and nothing gets a standing one — an
-                  // always-on line is permanent chrome for something you learn once.
-                  state.mode === "vertices"
-                  ? { text: "Shift-drag to select corners", bad: false }
-                  : state.mode === "transform"
-                    ? {
-                        // The transform handles have no toolbar buttons any more, so this line is the
-                        // only place the modifier is written down.
-                        text: "Drag to move · corners scale, knob rotates · Shift or ⌥ snaps",
-                        bad: false,
-                      }
-                    : null;
+              : absorbed > 0
+                ? {
+                    text: `Holds ${absorbed + 1} combined features`,
+                    bad: false,
+                  }
+                : pieces > 1
+                  ? { text: `Split into ${pieces} pieces`, bad: false }
+                  : // Each mode gets the one hint that mode needs, and nothing gets a standing one — an
+                    // always-on line is permanent chrome for something you learn once.
+                    state.mode === "vertices"
+                    ? { text: "Shift-drag to select corners", bad: false }
+                    : state.mode === "transform"
+                      ? {
+                          // The transform handles have no toolbar buttons any more, so this line is the
+                          // only place the modifier is written down.
+                          text: "Drag to move · corners scale, knob rotates · Shift or ⌥ snaps",
+                          bad: false,
+                        }
+                      : null;
 
   return (
     <div

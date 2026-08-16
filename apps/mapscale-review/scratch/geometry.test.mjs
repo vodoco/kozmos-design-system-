@@ -85,6 +85,7 @@ writeFileSync(
       `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,\n` +
       `  networkComponents, networkRun, networkAdjacency,\n` +
       `  wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL, WF_NODES,\n` +
+      `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_CURRENT, WF_R,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
@@ -122,6 +123,7 @@ const {
   edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
   networkComponents, networkRun,
   wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL,
+  wfSetEditing, wfNetworkNodes, wfHighlight, WF_CURRENT, WF_R,
   editableAt, hoverableAt,
   __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __edges,
   __env, TARGET, prefs, POSTED,
@@ -1496,6 +1498,8 @@ function fakeMap(o) {
     getLayoutProperty: (id, k) => ((at(id) || {}).layout || {})[k],
     setLayoutProperty: (id, k, v) => { const l = at(id); if (l) { l.layout = { ...(l.layout || {}) }; l.layout[k] = v; } },
     getFilter: (id) => (at(id) || {}).filter,
+    getPaintProperty: (id, k) => ((at(id) || {}).paint || {})[k],
+    setPaintProperty: (id, k, v) => { const l = at(id); if (l) { l.paint = { ...(l.paint || {}) }; l.paint[k] = v; } },
     setFilter: (id, f) => { const l = at(id); if (l) l.filter = f; },
     queryRenderedFeatures: (q) => {
       // The clone query names its layers; anything else is "what is on screen", which is the tiles.
@@ -2191,6 +2195,69 @@ const node = (fid, at, nb, tr) => ({
   // Even from nothing: the nodes are the source of truth and the edges derive from them.
   __setNodes([node("x", [0, 0], ["y"]), node("y", [1, 1], [])]);
   check("edges rebuild themselves from the nodes on demand", wfEnsureEdges().length === 1);
+
+  __setHidden(null);
+  applyWayfinding();
+  wfRemove();
+  __setNodes([]);
+}
+
+/* P11. Edit mode. Olcay: "onHover the dots should not get larger… I should be able to edit the
+        whole network. Once in edit mode we should keep it highlighted. Nodes should get larger in
+        edit mode when I'm editing each. Now highlight the current node while editing."
+
+        Three states, three marks, and each says a different thing: at rest the network is texture,
+        hovered it recolours IN PLACE, and edited every node of it grows into a handle. */
+{
+  gjTeardown(null);
+  HIDDEN_BY_TYPE.clear();
+  const m = fakeMap();
+  __setMap(m);
+  __setNodes([node("a", [0, 0], ["b"]), node("b", [1, 0], ["a"]), node("z", [5, 5], [])]);
+  __setHidden(SHOW_WF);
+  const info = console.info; console.info = () => {};
+  wfBuildEdges();
+  applyWayfinding();
+  console.info = info;
+
+  const R = (id) => JSON.stringify(m.getPaintProperty(id, "circle-radius"));
+  const rest = R(WF_NODE);
+
+  // ⚠️ A hover must not resize anything: the mark matches whatever tier it lands on.
+  wfHighlight("a");
+  check("hovering leaves the dots exactly the size they were", R(WF_NODE) === rest);
+  check("…and the mark is the same size as the node it marks",
+        R(WF_NODE_HL).indexOf("case") > 0);
+  wfHighlight(null);
+
+  // Editing is a state, not a question — and only the state changes what you can DO with a node.
+  wfSetEditing(0, "a");
+  check("every node of the network grows into a handle", R(WF_NODE) !== rest);
+  check("…and so do the transitions", JSON.stringify(m.getPaintProperty(WF_TRANSITION, "circle-radius"))
+        === JSON.stringify(WF_R.transitionEdit));
+  check("the network stays lit for as long as you are in it",
+        JSON.stringify(m.getFilter(WF_NODE_HL)) === JSON.stringify(["==", ["get", "net"], 0]));
+  check("…and the node you are on is marked apart from it",
+        JSON.stringify(m.getFilter(WF_CURRENT)) === JSON.stringify(["==", ["get", "fid"], "a"]));
+
+  // ⚠️ Hover cannot take the mark away while editing: the mark is no longer about the pointer.
+  wfHighlight("z");
+  check("hovering elsewhere does not steal the edit's highlight",
+        JSON.stringify(m.getFilter(WF_NODE_HL)) === JSON.stringify(["==", ["get", "net"], 0]));
+
+  wfSetEditing(0, "b");
+  check("moving to another node moves the current mark",
+        JSON.stringify(m.getFilter(WF_CURRENT)) === JSON.stringify(["==", ["get", "fid"], "b"]));
+
+  wfSetEditing(null);
+  check("leaving edit mode puts the dots back", R(WF_NODE) === rest);
+  check("…and clears both marks",
+        JSON.stringify(m.getFilter(WF_CURRENT)) === JSON.stringify(m.getFilter(WF_NODE_HL)));
+
+  // The editor is handed the whole network, not the node that was clicked.
+  const netNodes = wfNetworkNodes(0);
+  check("the editor gets every node of the network", netNodes.length === 2);
+  check("…each with somewhere to be dragged to", netNodes.every((n) => n.fid && n.at.length === 2));
 
   __setHidden(null);
   applyWayfinding();

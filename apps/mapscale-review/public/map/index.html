@@ -1993,14 +1993,34 @@ const WF_EDGE = "__wf_edge", WF_ARROW = "__wf_arrow", WF_EDGE_SRC = "__wf_edges"
  * a size the hand can actually manage.
  */
 const WF_NODE_HIT = "__wf_node_hit", WF_EDGE_HIT = "__wf_edge_hit";
+const WF_SL = "wayfindingnetwork";
+/** Mirrors `NETWORK_SUBTYPE` in the app's taxonomy — the one subType that is network, not exit. */
+const WF_NETWORK_SUBTYPE = "path-node";
+/** The node being edited, marked apart from the rest of its network. */
+const WF_CURRENT = "__wf_current";
+/**
+ * How big a node draws, at rest and in edit mode — Olcay, 2026-08-16: *"onHover the dots should not
+ * get larger… nodes should get larger in edit mode."*
+ *
+ * ⚠️ **Size means one thing here, and it is not "you are pointing at this".** A hover is a question
+ * and an edit is a state, and only the state changes what you can *do* with a node — so only the
+ * state changes its size. Hovering recolours in place; editing makes every node of the network a
+ * handle big enough to grab, which is what the buffer was already quietly promising.
+ */
+const wfR = (a, b, c) => ["interpolate", ["linear"], ["zoom"], 15, a, 18, b, 21, c];
+const WF_R = {
+  node: wfR(1.2, 2.6, 4.5), nodeEdit: wfR(3, 5, 7),
+  transition: wfR(2.5, 5, 8), transitionEdit: wfR(4, 7, 10),
+};
+/** The highlight matches whichever tier it is over, so lighting a network never resizes it. */
+const WF_R_MATCH = ["case", ["==", ["get", "subType"], WF_NETWORK_SUBTYPE], WF_R.node, WF_R.transition];
+const WF_R_MATCH_EDIT = ["case", ["==", ["get", "subType"], WF_NETWORK_SUBTYPE],
+                         WF_R.nodeEdit, WF_R.transitionEdit];
 const WF_HIT_R = 11, WF_HIT_W = 14;
 /** Our own node source: the only one that can carry which network a node belongs to. */
 const WF_NODE_SRC = "__wf_nodes";
 /** The hover marks: the node under the pointer with its neighbours, and the edges between them. */
 const WF_EDGE_HL = "__wf_edge_hl", WF_NODE_HL = "__wf_node_hl";
-const WF_SL = "wayfindingnetwork";
-/** Mirrors `NETWORK_SUBTYPE` in the app's taxonomy — the one subType that is network, not exit. */
-const WF_NETWORK_SUBTYPE = "path-node";
 /**
  * ⚠️ Invented, and the only colours in this file that are. Every other colour here is either the
  * diff palette or the product's own, and these have neither: the DS has no token for a wayfinding
@@ -2059,7 +2079,7 @@ function wfFilter(network) {
 
 function wfRemove() {
   for (const id of [WF_ARROW, WF_EDGE_HL, WF_EDGE_HIT, WF_EDGE, WF_NODE_HIT, WF_NODE,
-                    WF_TRANSITION, WF_NODE_HL])
+                    WF_TRANSITION, WF_NODE_HL, WF_CURRENT])
     try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
   for (const id of [WF_EDGE_SRC, WF_NODE_SRC])
     try { if (map.getSource(id)) map.removeSource(id); } catch (e) {}
@@ -2222,6 +2242,8 @@ function wfNodeMoved(fid, at) {
 const WF_NONE = ["==", ["get", "fid"], " none"];
 let wfHover = null;
 function wfHighlight(from) {
+  // While a network is being edited the mark belongs to the edit, not to the pointer.
+  if (wfEditing) return;
   const fid = Array.isArray(from) ? from[0] : from || null;
   if (wfHover === fid) return;
   wfHover = fid;
@@ -2250,6 +2272,57 @@ function wfHighlight(from) {
       ["all", ["==", ["get", "from"], x], ["==", ["get", "to"], y]])]);
     map.setFilter(WF_NODE_HL, ["any", ...run.fids.map(f => ["==", ["get", "fid"], f])]);
   } catch (e) {}
+}
+
+/**
+ * **Edit mode for a whole network** — Olcay, 2026-08-16: *"I should be able to edit the whole
+ * network. Once in edit mode we should keep it highlighted. Nodes should get larger in edit mode
+ * when I'm editing each. Now highlight the current node while editing."*
+ *
+ * Three states, three marks, and each says a different thing:
+ *
+ * | | |
+ * |---|---|
+ * | at rest | the network draws small — texture you can read a floor through |
+ * | hovered | it **recolours in place**, because a hover is a question and asking one should not resize the answer |
+ * | edited | every node of it **grows into a handle**, the network stays lit for as long as you are in it, and the node you are on wears a white collar |
+ *
+ * ⚠️ **The growing happens on the map's own layers, not by drawing four hundred SVG handles.** The
+ * editor draws a room's corners as SVG because there are eight of them; a concourse network has
+ * hundreds, and one `setPaintProperty` is the difference between a handle you can grab and a
+ * browser you cannot use.
+ */
+let wfEditing = null;
+function wfSetEditing(net, fid) {
+  wfEditing = net == null || net < 0 ? null : { net, fid };
+  try {
+    if (!map.getLayer(WF_NODE)) return;
+    const on = !!wfEditing;
+    map.setPaintProperty(WF_NODE, "circle-radius", on ? WF_R.nodeEdit : WF_R.node);
+    map.setPaintProperty(WF_TRANSITION, "circle-radius", on ? WF_R.transitionEdit : WF_R.transition);
+    map.setPaintProperty(WF_NODE_HL, "circle-radius", on ? WF_R_MATCH_EDIT : WF_R_MATCH);
+    map.setFilter(WF_CURRENT, on ? ["==", ["get", "fid"], wfEditing.fid] : WF_NONE);
+    // The network you are editing stays lit for as long as you are in it — hover cannot take the
+    // mark away, because while editing the mark is no longer answering a question about the pointer.
+    if (on) {
+      wfHover = "editing";
+      map.setFilter(WF_EDGE_HL, ["==", ["get", "net"], wfEditing.net]);
+      map.setFilter(WF_NODE_HL, ["==", ["get", "net"], wfEditing.net]);
+    } else {
+      wfHover = null;
+      map.setFilter(WF_EDGE_HL, WF_NONE);
+      map.setFilter(WF_NODE_HL, WF_NONE);
+    }
+  } catch (e) {}
+}
+
+/** Every node of one network, as the editor wants them: `{ fid, at }`, ready to drag. */
+function wfNetworkNodes(net) {
+  if (!WF_NODE_FC) return [];
+  return WF_NODE_FC.features
+    .filter(f => f.properties.net === net)
+    .map(f => ({ fid: f.properties.fid, at: f.geometry.coordinates.slice(),
+                 subType: f.properties.subType, name: f.properties.name }));
 }
 
 /** Which network a node belongs to, or `-1` when we do not know. */
@@ -2365,16 +2438,27 @@ function applyWayfinding() {
           "circle-stroke-width": 1.5,
         } }, base));
       /**
-       * The hover mark for the nodes: the one under the pointer **and its neighbours**, drawn last
-       * so it sits over both tiers. A ring rather than a fill — the node's own colour still shows
-       * through it, so you can still tell a transition from a path node while it is lit.
+       * The mark for the nodes, drawn last so it sits over both tiers.
+       *
+       * ⚠️ **The same size as the node it marks** (Olcay, 2026-08-16: *"onHover the dots should not
+       * get larger"*). It used to be a ring two pixels wider, which meant hovering a network made
+       * four hundred dots swell at once — a whole floor breathing at you for asking a question. It
+       * recolours in place instead, matching whichever tier it lands on, so a transition stays the
+       * bigger mark even while it is lit.
        */
-      map.addLayer(Object.assign({ id: WF_NODE_HL, filter: ["==", ["get", "fid"], " none"],
+      map.addLayer(Object.assign({ id: WF_NODE_HL, filter: WF_NONE,
+        paint: { "circle-radius": WF_R_MATCH, "circle-color": WF_COLOUR.hl } }, base));
+      /**
+       * The node you are actually editing, marked apart from the rest of its network — the only
+       * one of these allowed to be bigger than its neighbours, because it is the one the pointer
+       * is about to move.
+       */
+      map.addLayer(Object.assign({ id: WF_CURRENT, filter: WF_NONE,
         paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 15, 3.5, 18, 6.5, 21, 10],
-          "circle-color": "rgba(0,0,0,0)",
+          "circle-radius": WF_R_MATCH_EDIT,
+          "circle-color": "#ffffff",
           "circle-stroke-color": WF_COLOUR.hl,
-          "circle-stroke-width": 2,
+          "circle-stroke-width": 2.5,
         } }, base));
       wfSource = src.source;
       wfLevel = TARGET.level;
@@ -2394,7 +2478,7 @@ function applyWayfinding() {
      * whatever else the map has been told to hide.
      */
     for (const id of [WF_EDGE, WF_EDGE_HL, WF_EDGE_HIT, WF_ARROW, WF_NODE_HIT, WF_NODE,
-                      WF_TRANSITION, WF_NODE_HL])
+                      WF_TRANSITION, WF_NODE_HL, WF_CURRENT])
       if (map.getLayer(id) && map.getLayoutProperty(id, "visibility") === "none")
         map.setLayoutProperty(id, "visibility", "visible");
     // The pin storm the product would otherwise draw for the same features.
@@ -3373,6 +3457,35 @@ function start() {
    * releasing on bare map dismisses a pinned card, which is the "click out" exit.
    */
   document.addEventListener("mousedown", ev => { DOWN_AT = [ev.clientX, ev.clientY]; }, true);
+  /**
+   * **Grabbing a node of the network being edited.**
+   *
+   * On the map's own canvas rather than on an SVG handle, because there are no SVG handles here:
+   * a room has eight corners and a concourse network has hundreds, so the nodes are drawn by the
+   * map's layers and hit-tested through the **buffer** layer — which is what the buffer was for.
+   *
+   * ⚠️ In the capture phase and stopping propagation, so MapLibre's own drag-pan never sees it.
+   * Without that, dragging a node pans the floor underneath it and the node appears not to move.
+   */
+  map.getCanvas().addEventListener("mousedown", ev => {
+    if (!GEOM || GEOM.kind !== "network" || ev.button !== 0) return;
+    let hit = null;
+    try {
+      hit = (map.queryRenderedFeatures([ev.clientX, ev.clientY],
+        { layers: map.getLayer(WF_NODE_HIT) ? [WF_NODE_HIT] : [] }) || [])[0];
+    } catch (e) {}
+    const fid = hit && hit.properties && hit.properties.fid;
+    if (!fid) return;
+    ev.stopPropagation();
+    // The node you grab becomes the one the panel is about — you are editing the network, and this
+    // is where in it you are.
+    if (fid !== GEOM.fid) {
+      GEOM.fid = fid;
+      wfSetEditing(GEOM.net, fid);
+      post("geomstate", geomState());
+    }
+    geomDown(ev, { kind: "netnode", fid });
+  }, true);
   document.addEventListener("mouseup", ev => {
     const tap = isTap(ev);
     DOWN_AT = null;                      // consumed either way
@@ -3696,8 +3809,18 @@ function geomBegin(fid) {
    * feature", which it may say more than once for the same feature; discarding an edit in progress
    * because the panel restated where it already was would be indefensible.
    */
-  if (GEOM && GEOM.fid === fid && (GEOM.rings.length || GEOM.point)) return;
-  const f = geomFind(fid);
+  if (GEOM && GEOM.fid === fid && (GEOM.rings.length || GEOM.point || GEOM.nodes)) return;
+  /**
+   * ⚠️ **A wayfinding node opens its whole NETWORK, not itself** — Olcay, 2026-08-16: *"I should be
+   * able to edit the whole network."*
+   *
+   * It is the same reasoning that made the network an entity in the first place. A path node on its
+   * own is not a thing anybody wants to edit: it has no name worth changing and no shape, and its
+   * only meaning is where it sits relative to the nodes around it. The thing being edited is the
+   * network; the node you clicked is merely where in it you are.
+   */
+  const net = wfNetOf(fid);
+  const f = net >= 0 ? { kind: "network", net, nodes: wfNetworkNodes(net) } : geomFind(fid);
   if (!f) {
     /**
      * ⚠️ Clear the editor rather than just refusing. This used to `return` with `GEOM` untouched,
@@ -3716,12 +3839,21 @@ function geomBegin(fid) {
    * taken away for as long as the editor is open and given straight back in `geomEnd`.
    */
   try { map.boxZoom.disable(); } catch (e) {}
+  // The network stays lit for as long as you are in it, and its nodes grow into handles.
+  if (f.kind === "network") wfSetEditing(f.net, fid); else wfSetEditing(null);
   GEOM = {
     fid,
     kind: f.kind,
     // `geomFind` already hands over rings this editor owns — see the note on it.
     rings: f.kind === "area" ? f.rings : [],
     point: f.kind === "point" ? f.point.slice() : null,
+    /**
+     * A network's nodes: `[{ fid, at }]`, every one of them a handle. Not rings — a network is a
+     * **graph**, so there is no order to walk and nothing to close. The lines between them are
+     * drawn by the map's own layers from the same data, which is why they follow a drag for free.
+     */
+    nodes: f.kind === "network" ? f.nodes : null,
+    net: f.kind === "network" ? f.net : -1,
     history: [],
     future: [],
     snap: true,
@@ -3835,6 +3967,8 @@ function geomSnap() {
   return {
     rings: JSON.parse(JSON.stringify(GEOM.rings)),
     point: GEOM.point ? GEOM.point.slice() : null,
+    // A network's nodes are its geometry, so undo has to carry them like any other shape.
+    nodes: GEOM.nodes ? JSON.parse(JSON.stringify(GEOM.nodes)) : null,
     pieceOf: GEOM.pieceOf.slice(),
     // The counter travels with the state, so undo rewinds it and redo replays it — otherwise a
     // split, an undo and another split would hand the same id to two different pieces.
@@ -3858,6 +3992,10 @@ function geomSnap() {
 function geomRestore(s) {
   GEOM.rings = JSON.parse(JSON.stringify(s.rings));
   GEOM.point = s.point ? s.point.slice() : null;
+  GEOM.nodes = s.nodes ? JSON.parse(JSON.stringify(s.nodes)) : null;
+  // The map draws the network from its own collection, so an undo has to put the nodes back there
+  // too — otherwise the outline rewinds and the lines on screen do not.
+  if (GEOM.nodes) for (const n of GEOM.nodes) wfNodeMoved(n.fid, n.at);
   GEOM.pieceOf = s.pieceOf.slice();
   GEOM.nextPiece = s.nextPiece;
   GEOM.absorbed = s.absorbed.slice();
@@ -4016,7 +4154,7 @@ function geomPieces() {
 function geomCommit() {
   if (!GEOM) return;
   post("geometry", { fid: GEOM.fid, rings: GEOM.rings, point: GEOM.point, pieces: geomPieces(),
-                     absorbed: GEOM.absorbed.slice() });
+                     nodes: GEOM.nodes, absorbed: GEOM.absorbed.slice() });
   GEOM.original = geomSnap();
   GEOM.history = [];
   GEOM.future = [];
@@ -4026,7 +4164,8 @@ function geomCommit() {
 function geomEnd(commit) {
   if (!GEOM) return;
   if (commit) post("geometry", { fid: GEOM.fid, rings: GEOM.rings, point: GEOM.point,
-                                 pieces: geomPieces(), absorbed: GEOM.absorbed.slice() });
+                                 pieces: geomPieces(), nodes: GEOM.nodes,
+                                 absorbed: GEOM.absorbed.slice() });
   /**
    * ⚠️ **Every hidden wall comes back.** They were hidden for the session's sake — nothing here is
    * persisted, and a floor plan permanently missing walls because somebody opened a panel once and
@@ -4035,6 +4174,7 @@ function geomEnd(commit) {
    */
   GEOM.hidden = { fids: [], labels: [], layers: [] };
   geomApplyHiddenFilter();
+  wfSetEditing(null);          // the nodes go back to being texture
   GEOM = null;
   // Shift+drag goes back to being MapLibre's box zoom — see geomBegin.
   try { map.boxZoom.enable(); } catch (e) {}
@@ -4152,8 +4292,11 @@ function geomState() {
          */
         recomposable: !!GEOM.combine,
         removed: GEOM.hidden.labels.slice(),
-        // A point has no outline: the toolbar drops every tool that would be a lie on one.
+        // A point has no outline and a network has no ring: the toolbar drops every tool that
+        // would be a lie on either.
         kind: GEOM.kind,
+        /** How many nodes the network being edited has, for the toolbar to say so. */
+        nodes: GEOM.nodes ? GEOM.nodes.length : 0,
         selected: GEOM.sel.size,
         /**
          * How many whole EDGES the corner selection amounts to — an edge counts when **both** of
@@ -5956,6 +6099,12 @@ function geomDraw() {
    * A point feature: one handle, and that is the whole of it. Drawn larger than a vertex handle
    * because it IS the feature rather than a corner of one, and there is nothing else to aim at.
    */
+  /**
+   * A network draws nothing here. Its nodes and its lines are map LAYERS — see `wfSetEditing` —
+   * because a concourse network has hundreds of nodes and four hundred SVG handles re-projected on
+   * every frame is not a thing a browser does twice.
+   */
+  if (GEOM.kind === "network") return;
   if (GEOM.kind === "point") {
     if (!GEOM.point) return;
     const p = map.project(GEOM.point);
@@ -6411,6 +6560,30 @@ function geomDown(ev, what) {
        * degree — about four — because `moveNetworkNode` touches only the lines that name it.
        */
       wfNodeMoved(GEOM.fid, GEOM.point);
+
+    } else if (what.kind === "netnode") {
+      /**
+       * One node of a network, dragged. The same Snap and the same guides a room's corner gets —
+       * a node lines up with the wall beside it far more often than with nothing.
+       */
+      const hit = snapAt(pt.x, pt.y);
+      GEOM.snapHit = hit;
+      let px = pt.x, py = pt.y;
+      if (!hit && GEOM.snap) {
+        const g = resolveGuides(null, pt.x, pt.y, guideRefs, geomSnapping(e));
+        px = g.x; py = g.y;
+        GEOM.guides = g.guides;
+        GEOM.guideAt = [g.x, g.y];
+      } else {
+        GEOM.guides = GEOM.guideAt = null;
+      }
+      const q = map.unproject(hit ? [hit.x, hit.y] : [px, py]);
+      const n = GEOM.nodes && GEOM.nodes.find(x => x.fid === what.fid);
+      if (n) {
+        n.at = [q.lng, q.lat];
+        // The corridors follow the node while it moves — see `wfNodeMoved`.
+        wfNodeMoved(what.fid, n.at);
+      }
 
     } else if (what.kind === "vertex") {
       const hit = snapAt(pt.x, pt.y);
