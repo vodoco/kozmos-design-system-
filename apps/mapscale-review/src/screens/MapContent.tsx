@@ -74,7 +74,6 @@ import {
 } from "../mock/store";
 import { CONCOURSE_A_ID, SITE_SNAPSHOT, T3_ID } from "../mock/site";
 import {
-  hiddenForSection,
   type MapSection,
   SPRITE_BASE,
   groupForSection,
@@ -1988,6 +1987,9 @@ export function MapContent({
       return;
     }
     let live = true;
+    // ⚠️ Cleared first, for the same reason the geometry is: leaving the last floor's corridors on
+    // screen while the next floor's arrive draws a network over a building it does not belong to.
+    setPathNodes([]);
     void levelPaths(target.building, target.level).then((n) => {
       if (live) setPathNodes(n);
     });
@@ -2744,7 +2746,6 @@ export function MapContent({
     mainType?: string;
     subType?: string;
   } | null>(null);
-  const hiddenTypes = useMemo(() => hiddenForSection(section), [section]);
   const typesCtx = useMemo(
     () => ({
       byLevel: typesByLevel,
@@ -3107,11 +3108,11 @@ export function MapContent({
             onFeatureClick={onFeatureClick}
             onCursor={setPresenceCursor}
             /**
-             * Every system type except this section's own — so the wayfinding network draws under
-             * *Wayfinding Network* and nowhere else, and Map Content is map content again.
-             * Memoised: an array literal here is a new value every render, and `send` depends on it.
+             * The rail's section, and the only thing the map is told about it. What may be drawn,
+             * what may answer a click and what stays quiet under the pointer are all derived from
+             * this one value, so they cannot disagree with each other or with the tree.
              */
-            hiddenTypes={hiddenTypes}
+            section={section}
             peers={peers}
             editing={editors}
             levelGeometry={levelGeom}

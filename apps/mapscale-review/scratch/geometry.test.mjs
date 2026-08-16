@@ -27,7 +27,7 @@ const BLOCKS = ["SPLIT-ENGINE", "SNAP-ENGINE", "GUIDE-ENGINE", "COMBINE-ENGINE",
                 "FOCUS-ENGINE",
                 "BOX-ENGINE",
                 "GJRENDER-ENGINE", "GJSWAP-ENGINE",
-                "EDGE-ENGINE", "PATHS-ENGINE"];
+                "EDGE-ENGINE", "PATHS-ENGINE", "REACH-ENGINE"];
 const engine = BLOCKS.map((name) => {
   const from = src.indexOf(`/* ${name}-START`);
   const to = src.indexOf(`/* ${name}-END */`);
@@ -81,10 +81,15 @@ writeFileSync(
       `  flatType, sourceLayerIndex, groupBySourceLayer, cloneLayerDef,\n` +
       `  GJ, GJ_SRC, GJ_LYR, gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,\n` +
       `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
-      `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE,\n` +
+      `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,\n` +
       `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,\n` +
+      `  featureAt, editableAt, hoverableAt,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
+      `export function __setReach(section, blocked, quiet) {\n` +
+      `  SECTION_TYPE = section; BLOCKED_TYPES = blocked && new Set(blocked);\n` +
+      `  QUIET_TYPES = quiet && new Set(quiet);\n` +
+      `}\n` +
       `export function __setHidden(t) {\n` +
       `  HIDDEN_TYPES = t && new Set(t);\n` +
       `  HIDDEN_FLAT = t && new Set(t.map(flatType));\n` +
@@ -109,9 +114,10 @@ const {
   flatType, sourceLayerIndex, groupBySourceLayer, cloneLayerDef,
   gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
-  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE,
+  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,
   edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
-  __setMap, __setLevelFeats, __setHidden, __env, TARGET, prefs, POSTED,
+  editableAt, hoverableAt,
+  __setMap, __setLevelFeats, __setHidden, __setReach, __env, TARGET, prefs, POSTED,
 } = mod;
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
@@ -1851,21 +1857,54 @@ const SHOW_WF = ["geofence", "positioning-device"];   // the list a section pass
   __setHidden(null);
 }
 
-/* W4. It follows the render swap: a layer's source is fixed once added, so it is rebuilt. */
+/* W4. ⚠️ It follows the render swap only where the swap has something to show it.
+       Olcay: "wayfinding network path should be always visible when wayfinding network section is
+       selected." The floor's GeoJSON and the network's come from DIFFERENT endpoints — /features
+       and /paths — so the floor render can succeed on a collection with no nodes in it. Repointing
+       at that would make the whole network vanish at the exact moment the floor render worked. */
 {
   __setHidden(SHOW_WF);
-  const m = swap();
+  const m = swap();                                   // FEATS has walls and a room, no nodes
   check("the floor is on the GeoJSON", gjLive());
   applyWayfinding();
-  check("the nodes come off the GeoJSON source too",
-        m.getLayer(WF_NODE).source === "__gj_wayfindingnetwork");
-  check("…with no source-layer, which a GeoJSON source has none of",
-        !m.getLayer(WF_NODE)["source-layer"]);
+  check("⚠️ the nodes stay on the TILES, because the GeoJSON has none of them",
+        m.getLayer(WF_NODE).source === "source_ptr");
+  check("…so the section still draws its network", !!m.getLayer(WF_NODE) && !!m.getLayer(WF_EDGE));
   check("and the CLONE of the pin layer is hidden as well as the original",
         m.getLayoutProperty("__gjl_symbol_wayfinding-network_ptr", "visibility") === "none");
   gjTeardown(null);
+  wfRemove();
+
+  // …and where the GeoJSON DOES hold nodes, that is what it reads: one source for the whole floor.
+  const withNodes = FEATS.concat([
+    { fid: "n1", geometry: { type: "Point", coordinates: [0, 0] },
+      properties: { mainType: "wayfinding-network", subType: "path-node" } },
+  ]);
+  const m2 = swap({}, withNodes, -2);
+  applyWayfinding();
+  check("with nodes in the collection, the layers read it",
+        m2.getLayer(WF_NODE).source === "__gj_wayfindingnetwork");
+  check("…with no source-layer, which a GeoJSON source has none of",
+        !m2.getLayer(WF_NODE)["source-layer"]);
+  gjTeardown(null);
   __setHidden(null);
   HIDDEN_BY_TYPE.clear();
+  wfRemove();
+}
+
+/* W5. The promise is re-asserted, not assumed: on this section the network is drawn. */
+{
+  const m = fakeMap();
+  __setMap(m);
+  __setHidden(SHOW_WF);
+  applyWayfinding();
+  for (const id of [WF_NODE, WF_TRANSITION, WF_EDGE]) m.setLayoutProperty(id, "visibility", "none");
+  applyWayfinding();
+  check("anything that hides the network gets it back on the next pass",
+        [WF_NODE, WF_TRANSITION, WF_EDGE].every(
+          (id) => m.getLayoutProperty(id, "visibility") === "visible"));
+  __setHidden(null);
+  applyWayfinding();
   wfRemove();
 }
 
@@ -2008,6 +2047,71 @@ const node = (fid, at, nb, tr) => ({
   const empty = networkEdges([]);
   check("no nodes, no edges", empty.edges.length === 0 && empty.dangling === 0);
   check("…and it does not throw on nothing at all", networkEdges(null).edges.length === 0);
+}
+
+/* ══ REACH — what a section lets you touch ══════════════════════════════════
+   Olcay, 2026-08-16: "Clicking would only edit the network and transitions but not POIs and other
+   indoor data. Similar approach with Geofences and IoT Devices."
+
+   Three lists meet in one function, and every hover, click, panel and editor comes through it. */
+console.log("\nreach");
+
+/** A map that returns a fixed stack of features under the pointer, topmost first. */
+function reachMap(feats) {
+  return { queryRenderedFeatures: () => feats };
+}
+const F = (fid, mainType, subType) => ({ properties: { fid, mainType, subType } });
+
+const ROOM = F("r1", "retail-space");
+const WALL = F("w1", "wall");
+const NODE = F("n1", "wayfinding-network", "path-node");
+const LIFT = F("n2", "wayfinding-network", "elevator-node");
+
+/* R1. Map Content: everything answers, less the quiet types under a hover. */
+{
+  __setMap(reachMap([ROOM, WALL]));
+  __setReach(null, [], ["wall"]);
+  check("a room answers a click", editableAt([0, 0]) === ROOM);
+  check("…and a hover", hoverableAt([0, 0]) === ROOM);
+
+  __setMap(reachMap([WALL, ROOM]));
+  check("a wall answers a click — structural click works", editableAt([0, 0]) === WALL);
+  // ⚠️ Silence is not inertness: the wall is skipped for a HOVER and the room behind it answers.
+  check("…but not a hover, so 700 walls do not bury the POI cards", hoverableAt([0, 0]) === ROOM);
+}
+
+/* R2. A section: only its own content answers, whatever is drawn underneath. */
+{
+  __setMap(reachMap([ROOM, NODE]));
+  __setReach("wayfinding-network", [], ["wall", "wayfinding-network"]);
+  check("⚠️ a room does NOT answer on the wayfinding section", editableAt([0, 0]) === NODE);
+  check("a network node does", editableAt([0, 0]).properties.fid === "n1");
+
+  __setMap(reachMap([LIFT]));
+  check("…and so does a transition — both are the same mainType",
+        editableAt([0, 0]) === LIFT);
+
+  __setMap(reachMap([ROOM, WALL]));
+  check("a section with none of its own content under the pointer answers nothing",
+        editableAt([0, 0]) === null);
+
+  // The floor plan is still DRAWN — this is about what answers, not about what is on screen.
+  __setMap(reachMap([ROOM, NODE]));
+  __setReach("geofence", [], []);
+  check("the geofence section ignores the network too, not just POIs", editableAt([0, 0]) === null);
+}
+
+/* R3. The three rules compose, and the order they compose in is a decision.
+      A blocked type is unreachable even inside its own section — that is what locking will mean. */
+{
+  __setMap(reachMap([NODE]));
+  __setReach("wayfinding-network", ["wayfinding-network"], []);
+  check("a locked type stays unreachable in its own section", editableAt([0, 0]) === null);
+
+  // "Not told yet" is the safe direction: nothing is touchable until the app has said so.
+  __setReach(null, null, null);
+  __setMap(reachMap([ROOM]));
+  check("told nothing, nothing is touchable", editableAt([0, 0]) === null);
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */

@@ -1,9 +1,11 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { Change } from "../mock/diff";
 import {
+  hiddenForSection,
   NON_EDITABLE_MAIN_TYPES,
   SYSTEM_MAIN_TYPES,
   type LevelTypeCount,
+  type MapSection,
 } from "../mock/taxonomy";
 import { pointrMapSrc } from "../mock/pointrConfig";
 
@@ -184,14 +186,14 @@ const PointrMap = forwardRef<
       properties?: Record<string, unknown>;
     }[];
     /**
-     * The `mainType`s this screen does not want **drawn**. Omit for the default — every `system`
-     * type, i.e. the wayfinding network, geofences and positioning devices, each of which has its
-     * own section of the left rail and none of which is map content.
+     * Which of the left rail's sections is on screen. It decides three things, all derived here so
+     * they cannot disagree: what the map may **draw**, what may **answer** a hover or a click, and
+     * what stays quiet under the pointer.
      *
-     * A rail section that becomes real passes this list **minus its own type**; that is the whole
-     * of what "show the wayfinding network when Wayfinding Network is selected" costs on this side.
+     * Omit for `content` — Map Content, where the system types are hidden and everything else is
+     * reachable, which is what every other screen in the app wants too.
      */
-    hiddenTypes?: string[];
+    section?: MapSection;
     /**
      * The level's wayfinding nodes **with their adjacency** — see `cloud/levelPaths`. The map shell
      * builds the edges from it, because an edge is geometry and geometry is the shell's job.
@@ -279,7 +281,7 @@ const PointrMap = forwardRef<
     onSelectClear,
     onGeomError,
     focusPadRight,
-    hiddenTypes,
+    section = "content",
     target,
   },
   handle,
@@ -301,7 +303,7 @@ const PointrMap = forwardRef<
     dropOn: !!onFileDrop,
     canDecide: !!onDecision,
     focusPadRight,
-    hiddenTypes,
+    section,
   });
   latest.current = {
     changes,
@@ -311,7 +313,7 @@ const PointrMap = forwardRef<
     dropOn: !!onFileDrop,
     canDecide: !!onDecision,
     focusPadRight,
-    hiddenTypes,
+    section,
   };
 
   // Its own effect: a focus is an EVENT, not state to re-send on every `ready` — re-posting it
@@ -462,7 +464,8 @@ const PointrMap = forwardRef<
      * Derived from `hiddentypes` rather than taking a prop of its own: a system type that is NOT
      * hidden is, by construction, the section on screen.
      */
-    const hidden = latest.current.hiddenTypes ?? SYSTEM_MAIN_TYPES;
+    const sect = latest.current.section ?? "content";
+    const hidden = hiddenForSection(sect);
     win.postMessage(
       {
         type: "quiettypes",
@@ -481,12 +484,26 @@ const PointrMap = forwardRef<
      * `quiettypes` withholds the hover card, and this withholds the feature. A hidden layer is not
      * in `queryRenderedFeatures`, so the other two follow from it for free.
      *
-     * Defaulting to **every `system` type** — the wayfinding network, geofences and positioning
-     * devices — because each has its own section in the left rail and none of them is map content.
-     * `hiddenTypes` overrides it, which is how a rail section that becomes real will show its own
-     * layer: it passes the list **without** its own type in it.
+     * Every `system` type except the section's own — the wayfinding network, geofences and
+     * positioning devices each have their own section of the left rail, and none of them is map
+     * content. `hiddenForSection` is that whole sentence.
      */
     win.postMessage({ type: "hiddentypes", types: hidden }, "*");
+    /**
+     * ⚠️ **What may ANSWER, which is not the same as what is drawn** (Olcay, 2026-08-16: *"Clicking
+     * would only edit the network and transitions but not POIs and other indoor data. Similar
+     * approach with Geofences and IoT Devices."*).
+     *
+     * The floor plan stays on screen in every section — a corridor drawn over a void tells you
+     * nothing about where it goes — but on a section it is **context, not content**: it does not
+     * raise a card, it does not open a panel, and it does not open the editor.
+     *
+     * `null` on Map Content, where everything answers.
+     */
+    win.postMessage(
+      { type: "section", mainType: sect === "content" ? null : sect },
+      "*",
+    );
     if (latest.current.changes)
       win.postMessage(
         {
@@ -670,10 +687,10 @@ const PointrMap = forwardRef<
     );
   }, [active]);
 
-  // `hiddenTypes` is in here rather than in an effect of its own because switching which layer
-  // group is drawn is not something that happens at pointer speed — it is a rail section changing,
-  // which is exactly the kind of whole-state change `send` exists for.
-  useEffect(send, [changes, prefs, target, hiddenTypes]);
+  // `section` is in here rather than in an effect of its own because switching which layer group is
+  // drawn is not something that happens at pointer speed — it is a rail section changing, which is
+  // exactly the kind of whole-state change `send` exists for.
+  useEffect(send, [changes, prefs, target, section]);
   /**
    * The drop-zone flag needs its own effect: it isn't in `send`'s dep list, so a pane that turns
    * its drop zone OFF mid-session (the expert hold, or a job starting) never told the iframe — it
