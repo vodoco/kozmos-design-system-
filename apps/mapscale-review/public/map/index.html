@@ -635,6 +635,9 @@ function levelFeatureNames(limit) {
       // would let every wall on the floor into the app's feature list the moment the render swaps.
       const sl = srcLayerOf(f);
       if (!p || !p.name || sl === "wall" || FP_SKIP[sl]) return;
+      // A type this screen does not draw is not one of its features either — a geofence carries a
+      // perfectly good name ("Shops and Food") and would otherwise be listed as content.
+      if (HIDDEN_FLAT && HIDDEN_FLAT.has(flatType(p.mainType))) return;
       if (p.lvl !== TARGET.level) return;
       if (p.bid && p.bid !== TARGET.building) return;
       if (!f.geometry || (f.geometry.type !== "Polygon" && f.geometry.type !== "MultiPolygon")) return;
@@ -1369,10 +1372,13 @@ function addFloorplan() {
      * fills — the draft, not the last publish, which is the point of the swap.
      */
     const gj = gjLive();
+    // `typeHidden` here too: the outline is drawn by layers of OUR making, so nothing else would
+    // ever hide them — a geofence zone would keep its outline after its fill had gone.
+    const keep = n => n && !FP_SKIP[n] && !typeHidden({ "source-layer": n });
     const layers = gj
-      ? GJ.sources.filter(n => !FP_SKIP[n])
+      ? GJ.sources.filter(keep)
       : [...new Set(map.queryRenderedFeatures()
-          .filter(f => f.source === "source_ptr" && !FP_SKIP[srcLayerOf(f)])
+          .filter(f => f.source === "source_ptr" && keep(srcLayerOf(f)))
           .map(f => srcLayerOf(f)))].filter(Boolean);
     layers.forEach(L => {
       const id = (gj ? "__fp_gj_" : "__fp_") + L;
@@ -1633,6 +1639,90 @@ const gjWanted = () => prefs.geojsonFloor !== false && LEVEL_FEATS.length > 0;
 /** Which source-layer a feature came from — `__sl` for a clone's, which has no `sourceLayer`. */
 function srcLayerOf(f) {
   return f.sourceLayer || (f.properties && f.properties.__sl) || undefined;
+}
+
+/* ── what this screen may DRAW ───────────────────────────────────────────────
+ *
+ * Olcay, 2026-08-16: *"Wayfinding Network should show in when wayfinding network is selected.
+ * Geofences when geofence selected and beacons when beacon selected."*
+ *
+ * ⚠️ **The map had been drawing what the tree deliberately excludes.** The app's `groupByClass`
+ * has always dropped the `system` classes as *plumbing, not content*; the map drew them anyway, so
+ * a floor arrived with several hundred wayfinding path-nodes and its geofence zones painted over
+ * the content the screen is for — none of which had a row in the panel beside it. Each of those
+ * belongs to its own section of the left rail.
+ *
+ * Told by the app, never inferred, and **null until told** means nothing is hidden: the cautious
+ * answer for "may I draw this?" is yes, unlike `BLOCKED_TYPES`, because a map that hides things
+ * nobody asked it to hide is a map with content missing and no way to find out why.
+ */
+let HIDDEN_TYPES = null, HIDDEN_FLAT = null;
+
+/**
+ * The type group a LAYER draws — its `source-layer` on the tiles, or the group name off the source
+ * on a GeoJSON clone. Both are the **de-hyphenated `mainType`**, which is what makes one rule cover
+ * both render paths (see the GJ block).
+ */
+function layerTypeGroup(l) {
+  if (!l) return null;
+  /**
+   * ⚠️ **Both spellings.** `getStyle().layers` hands back the layer **spec**, where the key is
+   * `source-layer`; `map.getLayer(id)` hands back the live `StyleLayer`, where the same thing is
+   * `sourceLayer`. This function is called with each in different places, and reading only the
+   * hyphenated one made every layer look like it belonged to no type at all — which fails as
+   * "nothing was ever hidden", quietly.
+   */
+  const sl = l["source-layer"] || l.sourceLayer;
+  if (sl) return sl;
+  const s = String(l.source || "");
+  if (s.indexOf(GJ_SRC) === 0) return s.slice(GJ_SRC.length);
+  return null;
+}
+
+/** Is this layer drawing a type this screen is not showing? */
+function typeHidden(l) {
+  if (!HIDDEN_FLAT || !HIDDEN_FLAT.size) return false;
+  const g = layerTypeGroup(l);
+  return !!g && HIDDEN_FLAT.has(flatType(g));
+}
+
+/**
+ * What this function itself hid, and what that layer's visibility was beforehand.
+ *
+ * ⚠️ **It restores only what it hid.** A rail section showing its own type has to *un*-hide, and
+ * three other things in this file hide layers for reasons of their own — the POI-label preference,
+ * `hideBuildingChrome`, and the GeoJSON swap turning the tiles off. A blanket "set them visible"
+ * would undo any of those and the damage would look like a rendering bug in whichever of them was
+ * unlucky. Same bookkeeping as `gjHideTiles`, for the same reason.
+ */
+const HIDDEN_BY_TYPE = new Map();
+
+/**
+ * Hide every layer drawing a hidden type, on both render paths — and give back the ones that are
+ * no longer hidden.
+ *
+ * Re-asserted from the idle pass and from `applyPrefs`, for the same reason `hideBuildingChrome`
+ * is: `updateLayersForCurrentLevel()` re-shows the layers it rewrites, so a level switch would
+ * bring several hundred path-nodes back without anything having asked for them.
+ */
+function applyHiddenTypes() {
+  if (!map) return;
+  try {
+    for (const [id, was] of [...HIDDEN_BY_TYPE]) {
+      const l = map.getLayer(id);
+      if (l && typeHidden(l)) continue;                 // still hidden; leave it alone
+      HIDDEN_BY_TYPE.delete(id);
+      try { if (l) map.setLayoutProperty(id, "visibility", was); } catch (e) {}
+    }
+    if (!HIDDEN_FLAT || !HIDDEN_FLAT.size) return;
+    for (const l of map.getStyle().layers) {
+      if (!typeHidden(l)) continue;
+      const vis = map.getLayoutProperty(l.id, "visibility");
+      if (vis === "none") continue;
+      HIDDEN_BY_TYPE.set(l.id, vis || "visible");
+      map.setLayoutProperty(l.id, "visibility", "none");
+    }
+  } catch (e) {}
 }
 
 /** The style's own source-layer names, whatever their layers' visibility. */
@@ -1910,12 +2000,19 @@ function applyPrefs() {
       // idle that resolves — and the labels would come back underneath the GeoJSON ones.
       else if (l.type === "symbol" && (l.source === "source_ptr" || gjIsClone(l.id))) {
         const mine = gjIsClone(l.id) ? gj : !gj;
-        map.setLayoutProperty(l.id, "visibility", prefs.hidePoiLabels || !mine ? "none" : "visible");
+        // ⚠️ `typeHidden` belongs in this expression, not in a pass afterwards. The wayfinding
+        // network and the geofence pins are SYMBOL layers on `source_ptr`, so this branch would
+        // put every one of them back on the next idle that resolves — which is most of them.
+        const hide = prefs.hidePoiLabels || !mine || typeHidden(l);
+        map.setLayoutProperty(l.id, "visibility", hide ? "none" : "visible");
       }
       // the vector base (streets/outdoor) would show through the satellite raster
       else if (l.source === "openmaptiles" || l.source === "outdoor-tiles")
         map.setLayoutProperty(l.id, "visibility", satellite ? "none" : "visible");
     });
+    // The fills — a geofence's zone and its hatch overlay are `fill` layers, which no branch above
+    // touches. Last, so nothing can re-show what it has just hidden.
+    applyHiddenTypes();
   } catch(e){}
 }
 
@@ -2527,6 +2624,7 @@ function start() {
     ensureLevel();
     ensureIndoorVisible();
     hideBuildingChrome(); // the SDK re-shows its layers after switches and 3D recoveries
+    applyHiddenTypes();   // …and it re-shows the wayfinding network and geofences with them
     relaxPtrMinzoom();
     // One step of the render swap per idle — and, once it is live, the re-assertion that keeps the
     // tiles off and the clones' filters in step with the SDK's. See the GJ block.
@@ -5720,6 +5818,26 @@ window.addEventListener("message", (ev) => {
     BLOCKED_TYPES = new Set(d.types || []);
   } else if (d.type === "quiettypes") {
     QUIET_TYPES = new Set(d.types || []);
+  } else if (d.type === "hiddentypes") {
+    /**
+     * What this screen may not **draw** — the wayfinding network, geofences and positioning
+     * devices, each of which has its own section of the left rail (Olcay, 2026-08-16).
+     *
+     * Kept de-hyphenated alongside the raw list because that is the form both render paths compare
+     * in: a layer selects its rows by `source-layer`, which is the `mainType` with the hyphens
+     * stripped, and doing that conversion per layer per idle would be the same answer computed a
+     * few hundred times a second.
+     */
+    HIDDEN_TYPES = new Set(d.types || []);
+    HIDDEN_FLAT = new Set([...HIDDEN_TYPES].map(flatType));
+    applyHiddenTypes();
+    // Rebuild the outline: a type that has just been hidden leaves its `__fp_` layer behind, and a
+    // type that has just been SHOWN has no outline layer yet — `addFloorplan` only ever adds.
+    for (const id of FP_LAYERS.slice()) {
+      try { if (map && map.getLayer(id)) map.removeLayer(id); } catch (e) {}
+      FP_LAYERS.splice(FP_LAYERS.indexOf(id), 1);
+    }
+    try { addFloorplan(); applyPrefs(); } catch (e) {}
   } else if (d.type === "levelgeom") {
     /**
      * The level's TRUE geometry, from Pointr Cloud — see `cloud/levelFeatures` in the app.

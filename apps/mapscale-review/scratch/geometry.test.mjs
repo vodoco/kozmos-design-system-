@@ -79,8 +79,13 @@ writeFileSync(
       `  unwrapGrid, orientedBox, geomResizeCursor,\n` +
       `  flatType, sourceLayerIndex, groupBySourceLayer, cloneLayerDef,\n` +
       `  GJ, GJ_SRC, GJ_LYR, gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,\n` +
+      `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
-      `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n`,
+      `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
+      `export function __setHidden(t) {\n` +
+      `  HIDDEN_TYPES = t && new Set(t);\n` +
+      `  HIDDEN_FLAT = t && new Set(t.map(flatType));\n` +
+      `}\n`,
 );
 
 let mod;
@@ -100,7 +105,8 @@ const {
   unwrapGrid, orientedBox, geomResizeCursor,
   flatType, sourceLayerIndex, groupBySourceLayer, cloneLayerDef,
   gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,
-  __setMap, __setLevelFeats, __env, TARGET, prefs, POSTED,
+  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
+  __setMap, __setLevelFeats, __setHidden, __env, TARGET, prefs, POSTED,
 } = mod;
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
@@ -1439,6 +1445,15 @@ function fakeMap(o) {
       layout: { visibility: "visible" } },
     { id: "fill_building-outline_ptr", type: "fill", source: "source_ptr",
       "source-layer": "buildingoutline" },
+    /* The three `system` types, with the layer ids and source-layers the taxonomy service names.
+       Each belongs to its own section of the left rail and none of them is map content. */
+    { id: "symbol_wayfinding-network_ptr", type: "symbol", source: "source_ptr",
+      "source-layer": "wayfindingnetwork" },
+    { id: "fill_geofence_ptr", type: "fill", source: "source_ptr", "source-layer": "geofence" },
+    { id: "fill_geofence_hatch_ptr", type: "fill", source: "source_ptr", "source-layer": "geofence" },
+    { id: "symbol_geofence_ptr", type: "symbol", source: "source_ptr", "source-layer": "geofence" },
+    { id: "symbol_positioning-device_ptr", type: "symbol", source: "source_ptr",
+      "source-layer": "positioningdevice" },
   ];
   const sources = new Map();
   const at = id => layers.find((l) => l.id === id);
@@ -1645,6 +1660,107 @@ function swap(mapOpts, feats, lvl, frames) {
   check("…and a GeoJSON one, which has no such field, says it from `__sl`",
         srcLayerOf({ properties: { __sl: "wall" } }) === "wall");
   gjTeardown(null);
+}
+
+/* ══ HIDDEN TYPES — each thing shows in its own section ═════════════════════
+   Olcay, 2026-08-16: "Wayfinding Network should show in when wayfinding network is selected.
+   Geofences when geofence selected and beacons when beacon selected." The tree had always dropped
+   these (groupByClass: `system` is plumbing, not content); the map drew them anyway. */
+console.log("\nhidden types");
+
+const SYSTEM = ["wayfinding-network", "geofence", "positioning-device"];
+
+/* H1. Which type a LAYER draws — the one lookup everything else here rests on. */
+{
+  // ⚠️ Both spellings: getStyle() gives the spec (`source-layer`), getLayer() the live StyleLayer
+  // (`sourceLayer`). Reading one made every layer look like it belonged to no type at all.
+  check("the spec's hyphenated key is read",
+        layerTypeGroup({ "source-layer": "geofence" }) === "geofence");
+  check("…and the live layer's camelCase one",
+        layerTypeGroup({ sourceLayer: "geofence" }) === "geofence");
+  check("a GeoJSON clone says it with its source", layerTypeGroup({ source: "__gj_wall" }) === "wall");
+  check("a layer belonging to no type says so", layerTypeGroup({ source: "__sat" }) === null);
+  check("…and so does nothing at all", layerTypeGroup(null) === null);
+
+  __setHidden(SYSTEM);
+  // The de-hyphenation is the whole join: `wayfinding-network` is drawn by source-layer
+  // `wayfindingnetwork`, and comparing them raw would hide nothing while looking correct.
+  check("a hyphenated mainType matches its de-hyphenated source-layer",
+        typeHidden({ "source-layer": "wayfindingnetwork" }));
+  check("…and a clone of the same type", typeHidden({ source: "__gj_wayfindingnetwork" }));
+  check("content is not hidden", !typeHidden({ "source-layer": "retailspace" }));
+  __setHidden(null);
+  check("told nothing, nothing is hidden — the cautious answer for 'may I draw?' is yes",
+        !typeHidden({ "source-layer": "wayfindingnetwork" }));
+}
+
+/* H2. The screenshot's actual complaint: a floor buried under path-nodes and geofence zones. */
+{
+  gjTeardown(null);
+  HIDDEN_BY_TYPE.clear();
+  __setHidden(null);
+  const m = fakeMap();
+  __setMap(m);
+  const vis = (id) => m.getLayoutProperty(id, "visibility") !== "none";
+
+  __setHidden(SYSTEM);
+  applyHiddenTypes();
+  check("the wayfinding network goes", !vis("symbol_wayfinding-network_ptr"));
+  check("the geofence fill goes", !vis("fill_geofence_ptr"));
+  check("…its hatch overlay too — a fill no other branch in applyPrefs touches",
+        !vis("fill_geofence_hatch_ptr"));
+  check("…and its pin", !vis("symbol_geofence_ptr"));
+  check("beacons go", !vis("symbol_positioning-device_ptr"));
+
+  check("the rooms stay", vis("fill_retail-space_ptr"));
+  check("the walls stay", vis("fill_wall_ptr"));
+  check("the POI labels stay", vis("symbol_poi_ptr"));
+  check("and the basemap is none of its business", vis("__sat"));
+}
+
+/* H3. ⚠️ It restores only what it hid. A rail section showing its own type has to un-hide, and
+       three other things in the shell hide layers for reasons of their own. */
+{
+  const m = fakeMap();
+  __setMap(m);
+  HIDDEN_BY_TYPE.clear();
+  // Something else got there first — the POI-label preference, say.
+  m.setLayoutProperty("symbol_poi_ptr", "visibility", "none");
+
+  __setHidden(SYSTEM);
+  applyHiddenTypes();
+  check("it took a note of what it hid", HIDDEN_BY_TYPE.has("fill_geofence_ptr"));
+  check("…and none of what it did not", !HIDDEN_BY_TYPE.has("symbol_poi_ptr"));
+
+  // Geofences selected: the section shows its own type by passing the list without it.
+  __setHidden(["wayfinding-network", "positioning-device"]);
+  applyHiddenTypes();
+  check("the geofence comes back", m.getLayoutProperty("fill_geofence_ptr", "visibility") === "visible");
+  check("…all three of its layers", m.getLayoutProperty("symbol_geofence_ptr", "visibility") === "visible" &&
+        m.getLayoutProperty("fill_geofence_hatch_ptr", "visibility") === "visible");
+  check("the wayfinding network stays hidden",
+        m.getLayoutProperty("symbol_wayfinding-network_ptr", "visibility") === "none");
+  check("⚠️ and a layer somebody ELSE hid is still hidden",
+        m.getLayoutProperty("symbol_poi_ptr", "visibility") === "none");
+  check("the note is cleared as it goes", !HIDDEN_BY_TYPE.has("fill_geofence_ptr"));
+  __setHidden(null);
+  applyHiddenTypes();
+  HIDDEN_BY_TYPE.clear();
+}
+
+/* H4. It reaches the GeoJSON clones as well — the swap must not put back what a section hid. */
+{
+  __setHidden(SYSTEM);
+  const m = swap();
+  check("live", gjLive());
+  applyHiddenTypes();
+  check("a clone of a hidden type is hidden too",
+        m.getLayoutProperty("__gjl_symbol_wayfinding-network_ptr", "visibility") === "none");
+  check("…and a clone of content is not",
+        m.getLayoutProperty("__gjl_fill_retail-space_ptr", "visibility") !== "none");
+  gjTeardown(null);
+  __setHidden(null);
+  HIDDEN_BY_TYPE.clear();
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */

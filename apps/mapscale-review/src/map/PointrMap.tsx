@@ -1,6 +1,10 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { Change } from "../mock/diff";
-import { NON_EDITABLE_MAIN_TYPES, type LevelTypeCount } from "../mock/taxonomy";
+import {
+  NON_EDITABLE_MAIN_TYPES,
+  SYSTEM_MAIN_TYPES,
+  type LevelTypeCount,
+} from "../mock/taxonomy";
 import { pointrMapSrc } from "../mock/pointrConfig";
 
 /**
@@ -179,6 +183,15 @@ const PointrMap = forwardRef<
       /** The bag the cloned render layers filter and label on — see `cloud/levelFeatures`. */
       properties?: Record<string, unknown>;
     }[];
+    /**
+     * The `mainType`s this screen does not want **drawn**. Omit for the default — every `system`
+     * type, i.e. the wayfinding network, geofences and positioning devices, each of which has its
+     * own section of the left rail and none of which is map content.
+     *
+     * A rail section that becomes real passes this list **minus its own type**; that is the whole
+     * of what "show the wayfinding network when Wayfinding Network is selected" costs on this side.
+     */
+    hiddenTypes?: string[];
     /** Geometry-editor commands, and the state it reports back — see ui/GeometryToolbar. */
     geomCommands?: { seq: number; body: Record<string, unknown> }[];
     onGeomState?: (s: Record<string, unknown>) => void;
@@ -257,6 +270,7 @@ const PointrMap = forwardRef<
     onSelectClear,
     onGeomError,
     focusPadRight,
+    hiddenTypes,
     target,
   },
   handle,
@@ -278,6 +292,7 @@ const PointrMap = forwardRef<
     dropOn: !!onFileDrop,
     canDecide: !!onDecision,
     focusPadRight,
+    hiddenTypes,
   });
   latest.current = {
     changes,
@@ -287,6 +302,7 @@ const PointrMap = forwardRef<
     dropOn: !!onFileDrop,
     canDecide: !!onDecision,
     focusPadRight,
+    hiddenTypes,
   };
 
   // Its own effect: a focus is an EVENT, not state to re-send on every `ready` — re-posting it
@@ -419,6 +435,27 @@ const PointrMap = forwardRef<
      */
     win.postMessage(
       { type: "quiettypes", types: NON_EDITABLE_MAIN_TYPES },
+      "*",
+    );
+    /**
+     * What the map may not **draw** (Olcay, 2026-08-16: *"Wayfinding Network should show in when
+     * wayfinding network is selected. Geofences when geofence selected and beacons when beacon
+     * selected."*).
+     *
+     * The third and last of these lists, and the strongest: `editabletypes` withholds the editor,
+     * `quiettypes` withholds the hover card, and this withholds the feature. A hidden layer is not
+     * in `queryRenderedFeatures`, so the other two follow from it for free.
+     *
+     * Defaulting to **every `system` type** — the wayfinding network, geofences and positioning
+     * devices — because each has its own section in the left rail and none of them is map content.
+     * `hiddenTypes` overrides it, which is how a rail section that becomes real will show its own
+     * layer: it passes the list **without** its own type in it.
+     */
+    win.postMessage(
+      {
+        type: "hiddentypes",
+        types: latest.current.hiddenTypes ?? SYSTEM_MAIN_TYPES,
+      },
       "*",
     );
     if (latest.current.changes)
@@ -604,7 +641,10 @@ const PointrMap = forwardRef<
     );
   }, [active]);
 
-  useEffect(send, [changes, prefs, target]);
+  // `hiddenTypes` is in here rather than in an effect of its own because switching which layer
+  // group is drawn is not something that happens at pointer speed — it is a rail section changing,
+  // which is exactly the kind of whole-state change `send` exists for.
+  useEffect(send, [changes, prefs, target, hiddenTypes]);
   /**
    * The drop-zone flag needs its own effect: it isn't in `send`'s dep list, so a pane that turns
    * its drop zone OFF mid-session (the expert hold, or a job starting) never told the iframe — it

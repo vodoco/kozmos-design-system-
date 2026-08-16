@@ -21,7 +21,12 @@
  * all. A full pass against the taxonomy service is the proper fix when this stops being a mock.
  */
 
-export type FeatureClass = "poi" | "structural" | "virtual" | "system" | "interior-asset";
+export type FeatureClass =
+  | "poi"
+  | "structural"
+  | "virtual"
+  | "system"
+  | "interior-asset";
 
 /** Read from the taxonomy service (`class` per mainType, where the whole mainType agrees). */
 const MAIN_CLASS: Record<string, FeatureClass> = {
@@ -30,7 +35,26 @@ const MAIN_CLASS: Record<string, FeatureClass> = {
   "entrance-exit": "structural",
   "circulation-space": "structural",
   "virtual-obstacle": "virtual",
+  /**
+   * The three `system` types, and the reason this table now names all of them.
+   *
+   * Each belongs to its **own section of the dashboard** — the left rail's *Wayfinding Network*,
+   * *Geofences* and *IoT Devices* — and none of them is map content. Read from the taxonomy
+   * service, 2026-08-16, together with the layers that draw them:
+   *
+   * | type | subTypes | style layers |
+   * |---|---|---|
+   * | `wayfinding-network` | path-node · building-entrance-exit · custom-transition · elevator-node · escalator-node · stairs-node | `symbol_wayfinding-network_ptr` |
+   * | `geofence` | gps-geofence · beacon-geofence | `fill_geofence_ptr` · `fill_geofence_hatch_ptr` · `symbol_geofence_ptr` |
+   * | `positioning-device` | beacon | `symbol_positioning-device_ptr` |
+   *
+   * All three are `isPoi=false` and have **no sprite of their own**, so every one of them falls
+   * through the icon cascade to `default-poi` — which is why a floor's several hundred path-nodes
+   * and its geofence pins arrive as the same anonymous blue marker, in quantity.
+   */
   "wayfinding-network": "system",
+  geofence: "system",
+  "positioning-device": "system",
   furniture: "interior-asset",
   equipment: "poi",
   "operational-space": "poi",
@@ -62,7 +86,8 @@ const SUBTYPE_CLASS: Record<string, FeatureClass> = {
 };
 
 export function classOf(mainType: string, subType?: string): FeatureClass {
-  if (subType && SUBTYPE_CLASS[`${mainType}/${subType}`]) return SUBTYPE_CLASS[`${mainType}/${subType}`];
+  if (subType && SUBTYPE_CLASS[`${mainType}/${subType}`])
+    return SUBTYPE_CLASS[`${mainType}/${subType}`];
   return MAIN_CLASS[mainType] ?? "poi";
 }
 
@@ -80,7 +105,36 @@ export const NON_EDITABLE_MAIN_TYPES: string[] = Object.entries(MAIN_CLASS)
   .filter(([, cls]) => cls !== "poi" && cls !== "interior-asset")
   .map(([mainType]) => mainType);
 
-export const CLASS_ORDER: FeatureClass[] = ["poi", "structural", "interior-asset", "virtual"];
+/**
+ * The `mainType`s the map must NOT **draw** on Map Content — Olcay, 2026-08-16: *"Wayfinding
+ * Network should show in when wayfinding network is selected. Geofences when geofence selected and
+ * beacons when beacon selected."*
+ *
+ * ⚠️ **The tree and the map had disagreed about what map content IS.** `groupByClass` has always
+ * dropped `system` — *plumbing, not content* — while the map went on drawing every one of them, so
+ * a floor arrived with several hundred wayfinding path-nodes and its geofence zones painted over
+ * the content the screen is actually for, none of which had a row anywhere in the panel beside it.
+ * The tree was right. This is the same sentence said to the map.
+ *
+ * Derived from `MAIN_CLASS`, deliberately, exactly as `NON_EDITABLE_MAIN_TYPES` is: each of these
+ * belongs to its own section of the left rail, and a section that becomes real takes its own type
+ * **out** of this list rather than adding a lookup somewhere new.
+ *
+ * ⚠️ Not the same channel as `editabletypes`, and they must not be merged. That one says *may I
+ * touch this?* and is the hook layer-locking will hang off; this one says *may I draw it at all?*
+ * — and drawing is the stronger claim, because a hidden layer is not in `queryRenderedFeatures` at
+ * all, so it cannot be hovered, clicked or selected either.
+ */
+export const SYSTEM_MAIN_TYPES: string[] = Object.entries(MAIN_CLASS)
+  .filter(([, cls]) => cls === "system")
+  .map(([mainType]) => mainType);
+
+export const CLASS_ORDER: FeatureClass[] = [
+  "poi",
+  "structural",
+  "interior-asset",
+  "virtual",
+];
 export const CLASS_LABEL: Record<FeatureClass, string> = {
   poi: "POI",
   structural: "Structural",
@@ -110,7 +164,13 @@ export function typeLabel(slug: string): string {
 export const SPRITE_BASE =
   "https://pointrmapstorage.blob.core.windows.net/taxonomy/10.upcoming-rc/icons/sprites/sprite";
 
-export interface SpriteEntry { x: number; y: number; width: number; height: number; pixelRatio?: number }
+export interface SpriteEntry {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  pixelRatio?: number;
+}
 export type SpriteSheet = Record<string, SpriteEntry>;
 
 /**
@@ -122,7 +182,11 @@ export type SpriteSheet = Record<string, SpriteEntry>;
  * with nothing. So a type with no icon of its own falls back to the DS's `marker-pin-01`, which is
  * genuinely neutral; `wall`, `section` and `furniture` are the ones that need it.
  */
-export function spriteName(sheet: SpriteSheet | null, mainType: string, subType?: string): string | null {
+export function spriteName(
+  sheet: SpriteSheet | null,
+  mainType: string,
+  subType?: string,
+): string | null {
   if (!sheet) return null;
   if (subType && sheet[subType]) return subType;
   if (sheet[mainType]) return mainType;
@@ -153,13 +217,58 @@ export function spriteName(sheet: SpriteSheet | null, mainType: string, subType?
  * properties"), not a gap in this table, and the panel says so in words.
  */
 const MAIN_SUGGESTED: Record<string, string[]> = {
-  "food-beverage-space": ["cuisines", "description", "dietaryOptions", "hasAlcoholService", "hasWifi", "isPetFriendly", "phoneNumber", "priceRange", "serviceOptions", "websiteUrl"],
-  "retail-space": ["description", "hasAssistance", "isAnchor", "isFeatured", "productTypes", "websiteUrl"],
-  "service-space": ["description", "hasAssistance", "openingHours", "phoneNumber", "serviceTypes", "websiteUrl"],
-  "restroom-space": ["genderDesignation", "hasChangingFacilities", "hasLockers", "hasRestrooms", "isFamilyFriendly", "isWheelchairAccessible"],
+  "food-beverage-space": [
+    "cuisines",
+    "description",
+    "dietaryOptions",
+    "hasAlcoholService",
+    "hasWifi",
+    "isPetFriendly",
+    "phoneNumber",
+    "priceRange",
+    "serviceOptions",
+    "websiteUrl",
+  ],
+  "retail-space": [
+    "description",
+    "hasAssistance",
+    "isAnchor",
+    "isFeatured",
+    "productTypes",
+    "websiteUrl",
+  ],
+  "service-space": [
+    "description",
+    "hasAssistance",
+    "openingHours",
+    "phoneNumber",
+    "serviceTypes",
+    "websiteUrl",
+  ],
+  "restroom-space": [
+    "genderDesignation",
+    "hasChangingFacilities",
+    "hasLockers",
+    "hasRestrooms",
+    "isFamilyFriendly",
+    "isWheelchairAccessible",
+  ],
   "amenity-space": ["hasAssistance", "openingHours", "serviceTypes"],
-  "activity-space": ["accessRestrictions", "crowdLevel", "description", "hasChangingFacilities", "occupancyStatus", "openingHours", "sportTypes"],
-  "entrance-exit": ["description", "hasAssistance", "isWheelchairAccessible", "waitTime"],
+  "activity-space": [
+    "accessRestrictions",
+    "crowdLevel",
+    "description",
+    "hasChangingFacilities",
+    "occupancyStatus",
+    "openingHours",
+    "sportTypes",
+  ],
+  "entrance-exit": [
+    "description",
+    "hasAssistance",
+    "isWheelchairAccessible",
+    "waitTime",
+  ],
   "circulation-space": ["hasWifi", "isPetFriendly", "isWheelchairAccessible"],
   "faith-worship-space": ["description", "genderDesignation", "hasAssistance"],
   "entertainment-space": ["accessRestrictions", "description"],
@@ -186,8 +295,25 @@ const MAIN_SUGGESTED: Record<string, string[]> = {
 
 /** The handful of subTypes whose suggestions genuinely differ from their mainType's. */
 const SUBTYPE_SUGGESTED: Record<string, string[]> = {
-  "service-space/lounge": ["accessRestrictions", "description", "hasAssistance", "openingHours", "phoneNumber", "serviceTypes", "websiteUrl"],
-  "activity-space/play-area": ["accessRestrictions", "ageRestriction", "crowdLevel", "description", "hasChangingFacilities", "occupancyStatus", "openingHours", "sportTypes"],
+  "service-space/lounge": [
+    "accessRestrictions",
+    "description",
+    "hasAssistance",
+    "openingHours",
+    "phoneNumber",
+    "serviceTypes",
+    "websiteUrl",
+  ],
+  "activity-space/play-area": [
+    "accessRestrictions",
+    "ageRestriction",
+    "crowdLevel",
+    "description",
+    "hasChangingFacilities",
+    "occupancyStatus",
+    "openingHours",
+    "sportTypes",
+  ],
 };
 
 /** The taxonomy's own `category` — a second axis beside `class`, and the one a POI card names. */
@@ -249,13 +375,18 @@ const SUBTYPE_CATEGORY: Record<string, string> = {
  * naming the property is the useful half, and a "suggested default" is a claim about content this
  * prototype has no way to check.
  */
-export function suggestedFor(mainType: string, subType?: string): string[] | null {
-  if (subType && SUBTYPE_SUGGESTED[`${mainType}/${subType}`]) return SUBTYPE_SUGGESTED[`${mainType}/${subType}`];
+export function suggestedFor(
+  mainType: string,
+  subType?: string,
+): string[] | null {
+  if (subType && SUBTYPE_SUGGESTED[`${mainType}/${subType}`])
+    return SUBTYPE_SUGGESTED[`${mainType}/${subType}`];
   return MAIN_SUGGESTED[mainType] ?? null;
 }
 
 export function categoryOf(mainType: string, subType?: string): string | null {
-  if (subType && SUBTYPE_CATEGORY[`${mainType}/${subType}`]) return SUBTYPE_CATEGORY[`${mainType}/${subType}`];
+  if (subType && SUBTYPE_CATEGORY[`${mainType}/${subType}`])
+    return SUBTYPE_CATEGORY[`${mainType}/${subType}`];
   return MAIN_CATEGORY[mainType] ?? null;
 }
 
@@ -305,7 +436,10 @@ export interface ClassGroup {
 export function rowLabel(row: LevelTypeCount, all: LevelTypeCount[]): string {
   const base = typeLabel(row.subType || row.mainType);
   const clash = all.some(
-    (o) => o !== row && typeLabel(o.subType || o.mainType) === base && o.mainType !== row.mainType,
+    (o) =>
+      o !== row &&
+      typeLabel(o.subType || o.mainType) === base &&
+      o.mainType !== row.mainType,
   );
   return clash ? `${base} · ${typeLabel(row.mainType)}` : base;
 }
@@ -314,7 +448,7 @@ export function groupByClass(counts: LevelTypeCount[]): ClassGroup[] {
   const byClass = new Map<FeatureClass, LevelTypeCount[]>();
   for (const c of counts) {
     const cls = classOf(c.mainType, c.subType);
-    if (cls === "system") continue;                 // plumbing, not content
+    if (cls === "system") continue; // plumbing, not content
     const list = byClass.get(cls) ?? [];
     list.push(c);
     byClass.set(cls, list);
