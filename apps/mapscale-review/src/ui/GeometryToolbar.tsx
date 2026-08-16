@@ -43,7 +43,7 @@
 export interface GeomState {
   editing: boolean;
   fid?: string;
-  mode?: "vertices" | "move" | "split";
+  mode?: "vertices" | "transform" | "split";
   snap?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
@@ -70,7 +70,7 @@ export interface GeomState {
 }
 
 export type GeomCommand =
-  | { cmd: "mode"; mode: "vertices" | "move" }
+  | { cmd: "mode"; mode: "vertices" | "transform" }
   | { cmd: "snap" }
   | { cmd: "undo" }
   | { cmd: "redo" }
@@ -387,7 +387,7 @@ export function GeometryToolbar({
               // always-on line is permanent chrome for something you learn once.
               state.mode === "vertices"
               ? { text: "Shift-drag to select corners", bad: false }
-              : state.mode === "move"
+              : state.mode === "transform"
                 ? {
                     // The transform handles have no toolbar buttons any more, so this line is the
                     // only place the modifier is written down.
@@ -479,13 +479,31 @@ export function GeometryToolbar({
               on={state.mode === "vertices"}
               onClick={() => onCommand({ cmd: "mode", mode: "vertices" })}
             />
+            {/**
+             * **Move → Transform** (Olcay, 2026-08-16). The mode moves, rotates AND scales the
+             * whole shape — it has done since the handles replaced the stepped buttons — so "Move"
+             * had become the name of just one of the three things it does.
+             */}
             <Tile
               icon={<Move />}
-              label="Move"
-              title="Drag the shape to move the whole thing"
-              on={state.mode === "move"}
-              onClick={() => onCommand({ cmd: "mode", mode: "move" })}
+              label="Transform"
+              title="Drag to move · corners scale · the knob rotates · Shift or ⌥ snaps to 5° and 5%"
+              on={state.mode === "transform"}
+              onClick={() => onCommand({ cmd: "mode", mode: "transform" })}
             />
+          </div>
+        )}
+
+        {!isPoint && <Sep />}
+
+        {/**
+         * **Divide** — its own group (Olcay, 2026-08-16). Splitting is not a way of editing this
+         * shape; it changes **how many features there are**, which is a different kind of act from
+         * reshaping one, and it belongs with Combine rather than with the modes. Combine is not
+         * built yet — see the hand-off for the questions it is waiting on.
+         */}
+        {!isPoint && (
+          <Group>
             <Tile
               icon={<Split />}
               label="Split"
@@ -493,7 +511,7 @@ export function GeometryToolbar({
               on={state.mode === "split"}
               onClick={() => onCommand({ cmd: "split" })}
             />
-          </div>
+          </Group>
         )}
 
         {!isPoint && <Sep />}

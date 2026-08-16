@@ -90,8 +90,15 @@ const BASE: GeomState = {
 const CASES: { title: string; state: GeomState; notice?: string }[] = [
   { title: "Points — as it opens, nothing done yet", state: BASE },
   {
-    title: "Move — history available, snap off",
-    state: { ...BASE, mode: "move", snap: false, canUndo: true, dirty: true },
+    title:
+      "Transform — the box with its rotate knob is on the map, not in the bar",
+    state: {
+      ...BASE,
+      mode: "transform",
+      snap: false,
+      canUndo: true,
+      dirty: true,
+    },
   },
   {
     title: "Split armed — waiting for the first click",
@@ -117,7 +124,7 @@ const CASES: { title: string; state: GeomState; notice?: string }[] = [
   },
   {
     title:
-      "A POINT feature — no outline, so Reshape / Move / Split / rotate / scale / Straighten all go",
+      "A POINT feature — no outline, so Reshape / Transform / Split / Straighten all go",
     state: { ...BASE, kind: "point" },
   },
 ];

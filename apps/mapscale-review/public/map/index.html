@@ -3114,7 +3114,7 @@ function geomDraw() {
      */
     const face = el("path", { d, fill: "#0b369c", "fill-opacity": .10, stroke: "#0b369c",
                               "stroke-width": 2, class: "geom-face" });
-    if (GEOM.mode === "move") face.setAttribute("style", "pointer-events:auto;cursor:move");
+    if (GEOM.mode === "transform") face.setAttribute("style", "pointer-events:auto;cursor:move");
     face.addEventListener("mousedown", ev => geomDown(ev, { kind: "move" }));
     l.appendChild(face);
 
@@ -3169,13 +3169,13 @@ function geomDraw() {
   }
 
   /**
-   * The transform box — Move mode only, where the subject is the whole shape.
+   * The transform box — Transform mode only, where the subject is the whole shape.
    *
    * Four corners scale about the box's centre and a knob on a stem rotates. Not shown in Reshape,
    * where the corners of the *outline* are the subject and a second set of squares nearby would be
    * a coin toss every time you reached for one.
    */
-  if (GEOM.mode === "move") {
+  if (GEOM.mode === "transform") {
     const box = geomBox();
     if (box) {
       const x0 = box.minX - BOX_PAD, y0 = box.minY - BOX_PAD;
