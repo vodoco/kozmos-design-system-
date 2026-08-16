@@ -82,6 +82,42 @@ function check(name, cond, detail) {
 const area = (ring) => Math.abs(ringSignedArea(ringOpen(ring)));
 const areaOf = (rings) => rings.reduce((n, r) => n + area(r), 0);
 
+/** Do two segments *properly* cross — not merely touch at a shared endpoint? */
+function segsCross(p1, p2, p3, p4) {
+  const d = (a, b, c) =>
+    (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+  const d1 = d(p3, p4, p1), d2 = d(p3, p4, p2);
+  const d3 = d(p1, p2, p3), d4 = d(p1, p2, p4);
+  const E = 1e-9;
+  // Touching counts as collinear-or-through-an-endpoint, which rings do legitimately: a bridge
+  // jamb lands exactly on a corner, and `bridgeRings` closes back onto its own first point.
+  if (Math.abs(d1) < E || Math.abs(d2) < E || Math.abs(d3) < E || Math.abs(d4) < E) return false;
+  return d1 > 0 !== d2 > 0 && d3 > 0 !== d4 > 0;
+}
+
+/**
+ * ⚠️ **Does this ring's boundary cross itself?**
+ *
+ * The check the suite did not have, and the one that matters most for Combine: a bridge walked the
+ * wrong way round produces a ring with the right area, the right point count and a perfectly
+ * well-formed look — and renders as a self-crossing mess. `wellFormed` would pass it, every area
+ * assertion would pass it, and only a human looking at the map would ever have caught it.
+ *
+ * O(n²) and only ever run over test shapes, so the naive pair scan is the right one.
+ */
+function selfIntersects(ring) {
+  const r = ringOpen(ring);
+  const n = r.length;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 2; j < n; j++) {
+      if (i === 0 && j === n - 1) continue; // the closing pair shares a vertex by construction
+      if (segsCross(r[i], r[(i + 1) % n], r[j], r[(j + 1) % n]))
+        return `segments ${i} and ${j} cross`;
+    }
+  }
+  return null;
+}
+
 /** Is this a ring anyone can trust? Closed, at least a triangle, no repeated neighbours. */
 function wellFormed(ring) {
   if (ring.length < 4) return "fewer than 3 distinct points";
@@ -868,6 +904,83 @@ function inRing(ring, p) {
   const r = combineRings([a, b, c], 12);
   check("and the three become one", r.rings.length === 1 && r.joined === 2,
         `${r.rings.length} ring(s)`);
+}
+
+/* C13b. ⚠️ **The detector must be able to fail**, or C14's thirty green assertions prove nothing.
+         A bow-tie is the canonical crossing ring; a plain square is the canonical clean one. */
+{
+  const bowtie = close([[0, 0], [100, 100], [100, 0], [0, 100]]);
+  check("a bow-tie is caught", !!selfIntersects(bowtie), String(selfIntersects(bowtie)));
+  check("a square is not", !selfIntersects(close([[0, 0], [10, 0], [10, 10], [0, 10]])));
+  /**
+   * A ring that merely **touches** itself at a point is legitimate here — a bridge jamb lands
+   * exactly on a corner — so the test must not report those, or every real combine would fail it.
+   * Two squares meeting at one vertex, which is the shape that distinction is about.
+   *
+   * ⚠️ The first attempt at this case was itself a crossing ring, and the detector said so: proof
+   * from the other direction that it is not merely returning `null`.
+   */
+  const touching = close([
+    [0, 0], [10, 0], [10, 10], [20, 10], [20, 20], [10, 20], [10, 10], [0, 10],
+  ]);
+  check("a ring that only touches itself is allowed", !selfIntersects(touching),
+        String(selfIntersects(touching)));
+}
+
+/* C14. ⚠️ **The shapes a real floor has, each checked for SELF-INTERSECTION** — the failure mode
+        that has the right area, the right point count, and renders as a crossed mess. A screenshot
+        of a terminal-sized shape with a straight line through it (Olcay, 2026-08-16) is what sent
+        the engine back for this; it turned out to be clean and the fault was in its INPUTS, but the
+        suite had no way of saying so, which is why these live here now. */
+{
+  const rotate = (pts, deg, ox, oy) => {
+    const a = (deg * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a);
+    return pts.map(([x, y]) => [
+      ox + (x - ox) * c - (y - oy) * s,
+      oy + (x - ox) * s + (y - oy) * c,
+    ]);
+  };
+  const ring = (n, ox) =>
+    close(
+      Array.from({ length: n }, (_, i) => {
+        const t = (i / n) * Math.PI * 2;
+        return [ox + 50 + 48 * Math.cos(t), 30 + 28 * Math.sin(t)];
+      }),
+    );
+  const cases = [
+    ["a small room against a long wall",
+      [close([[0, 0], [400, 0], [400, 200], [0, 200]]),
+       close([[406, 20], [446, 20], [446, 60], [406, 60]])], 1],
+    ["an L beside a box",
+      [close([[0, 0], [100, 0], [100, 40], [40, 40], [40, 100], [0, 100]]),
+       close([[106, 0], [206, 0], [206, 100], [106, 100]])], 1],
+    ["a notched room",
+      [close([[0, 0], [100, 0], [100, 25], [80, 30], [100, 35], [100, 60], [0, 60]]),
+       roomR(6)], 1],
+    ["the same pair turned 37°",
+      [close(rotate(ringOpen(roomL), 37, 100, 30)),
+       close(rotate(ringOpen(roomR(6)), 37, 100, 30))], 1],
+    ["a corner-only touch",
+      [roomL, close([[100, 60], [200, 60], [200, 120], [100, 120]])], 1],
+    ["two 40-sided rooms", [ring(40, 0), ring(40, 104)], 1],
+    // …and the one that must NOT join, so a permissive bridge cannot pass by joining everything.
+    ["rooms across the building", [roomL, roomR(500)], 2],
+  ];
+  for (const [name, rings, expect] of cases) {
+    const res = combineRings(rings, 12);
+    check(`${name}: ${expect} ring(s)`, res.rings.length === expect,
+          `${res.rings.length}`);
+    for (const r of res.rings) {
+      const bad = wellFormed(r);
+      check(`${name}: well formed`, !bad, bad || "");
+      const x = selfIntersects(r);
+      check(`${name}: does not cross itself`, !x, x || "");
+    }
+    // A join neither creates nor destroys floor beyond the gaps it fills.
+    const before = areaOf(rings), after = areaOf(res.rings);
+    check(`${name}: area stays sane`, after >= before - 1e-6 && after < before * 1.25,
+          `${before.toFixed(0)} → ${after.toFixed(0)}`);
+  }
 }
 
 /* ══ square engine ═════════════════════════════════════════════════════════════ */
