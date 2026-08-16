@@ -475,7 +475,13 @@ const PointrMap = forwardRef<
          * pane's iframe is still worth hearing, and dropping it because it came from the wrong
          * frame is how the silence started.
          */
-        if (ev.data.message) console.error("[map]", String(ev.data.message));
+        /**
+         * ⚠️ `warn`, not `error`. Several of these sites are **transient and retried** — the
+         * boot racing the style, a source that does not exist yet — so a red line for each
+         * would be crying wolf, and a console that cries wolf is one nobody reads. Visible,
+         * not alarming.
+         */
+        if (ev.data.message) console.warn("[map]", String(ev.data.message));
       } else if (ev.data.type === "selectclear") {
         if (ev.source === ref.current?.contentWindow && ev.data.fid)
           onSelectClear?.(String(ev.data.fid));

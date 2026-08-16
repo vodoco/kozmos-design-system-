@@ -1412,7 +1412,19 @@ function reportStyleShape() {
     const srcLayers = [...new Set(ptr.map(l => l["source-layer"]).filter(Boolean))];
     const mainTypes = new Set();
     for (const f of feats) if (f.properties && f.properties.mainType) mainTypes.add(f.properties.mainType);
-    const matched = srcLayers.filter(n => mainTypes.has(n));
+    /**
+     * ⚠️ **Compared with the hyphens stripped, because that is the actual relationship.**
+     *
+     * Observed 2026-08-16 from the style's own complaints — `fill_industrial-space_ptr` selects
+     * source layer `industrialspace`, `fill_accommodation-space_ptr` selects `accommodationspace`.
+     * So a source layer is its `mainType` **de-hyphenated**, not equal to it. Testing raw equality
+     * would have reported a flat zero and made a one-line transform look like a mapping problem —
+     * the wrong answer, arrived at confidently, which is the failure this report exists to avoid.
+     */
+    const flat = t => String(t).replace(/-/g, "").toLowerCase();
+    const flatTypes = new Set([...mainTypes].map(flat));
+    const matched = srcLayers.filter(n => flatTypes.has(flat(n)));
+    const exact = srcLayers.filter(n => mainTypes.has(n)).length;
     const byType = {};
     for (const l of ptr) byType[l.type] = (byType[l.type] || 0) + 1;
 
@@ -1422,11 +1434,13 @@ function reportStyleShape() {
       "\n  layers total:            ", layers.length,
       "\n  on source_ptr:           ", ptr.length, byType,
       "\n  distinct source-layers:  ", srcLayers.length,
-      "\n  …that are also mainTypes:", matched.length + "/" + srcLayers.length,
+      "\n  …matching a mainType:    ", matched.length + "/" + srcLayers.length,
+      "(" + exact + " of them exactly; the rest differ only by hyphens)",
       matched.length === srcLayers.length
-        ? "— ✅ every source-layer IS a mainType, so a cloned layer needs one filter clause"
-        : "— ⚠️ NOT all match; these have no mainType and would each need a mapping: " +
-          JSON.stringify(srcLayers.filter(n => !mainTypes.has(n)).slice(0, 12)),
+        ? "— ✅ every source-layer maps to a mainType, so a cloned layer needs one filter clause " +
+          "on a de-hyphenated mainType"
+        : "— ⚠️ NOT all map; these have no mainType even de-hyphenated, and would each need one: " +
+          JSON.stringify(srcLayers.filter(n => !flatTypes.has(flat(n))).slice(0, 12)),
       "\n  mainTypes rendered:      ", mainTypes.size,
       "\n  sample source-layers:    ", JSON.stringify(srcLayers.slice(0, 8)),
     );
