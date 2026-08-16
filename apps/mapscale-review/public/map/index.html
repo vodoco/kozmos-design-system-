@@ -1460,16 +1460,32 @@ function frameChanges() {
  *
  * `easeTo` rather than `flyTo` on purpose: fly's zoom-out-and-back arc is a lovely gesture across a
  * city and a nauseating one across thirty metres.
+ *
+ * ⚠️ **This is now the rule for a CHANGE only.** Selecting a feature deliberately does not reframe
+ * at all — see `focusFeature`. The two look like the same act and are not: a change is put in front
+ * of you to be judged, so framing it is the service being performed; a feature is one you went and
+ * picked, and you had already chosen how close you wanted to be.
  */
 var FOCUS_MAX_ZOOM = 19.5;
 
 /**
- * Centre the map on ONE feature, found by its `fid` — what clicking a row in the tree's level
+ * Bring ONE feature into view, found by its `fid` — what clicking a row in the tree's level
  * expansion does (Olcay, 2026-08-12).
  *
- * Same framing rule as `focusChange`: fit the feature's own bounds but **cap the zoom**, because
- * filling the pane with a single toilet tells you its shape and nothing about where it is. Padding
- * is even all round here — unlike a change, a tree selection opens no card to make room for.
+ * ⚠️ **The zoom is the user's and this no longer touches it** (Olcay, 2026-08-16: *"when a feature
+ * is selected don't zoom out or in - respect the user's zoom choice but center it if it's off
+ * screen"*).
+ *
+ * It used to `fitBounds` the feature's own extent, capped at `FOCUS_MAX_ZOOM` — the same rule
+ * `focusChange` still follows. That framing is right for a *change*, which you are being shown for
+ * the first time and have to judge. It is wrong for a feature you went and picked: you had already
+ * chosen how close you wanted to be, and every click threw it away — a small room slammed you to
+ * z19.5, a concourse pulled you back out, and the zoom was never yours for more than one selection.
+ *
+ * So the move is a **pan and nothing else**, in screen space. `panBy` keeps zoom, bearing and pitch
+ * exactly as they were; an `easeTo({ center })` would have to re-derive the centre for every
+ * rotation, and would be one arithmetic slip away from quietly changing the zoom it was written to
+ * preserve.
  */
 /**
  * Highlight features on the map using **the SDK's own selection layer** (Olcay, 2026-08-12: *"we
@@ -1606,12 +1622,91 @@ function focusFeature(fid, tries, padRight) {
     return;
   }
   try {
-    map.fitBounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]], {
-      padding: { top: 120, bottom: 120, left: 120, right: 120 + padRight },
-      maxZoom: FOCUS_MAX_ZOOM, duration: 650, essential: true,
-    });
+    /**
+     * ⚠️ **All four corners, not two.** A lng/lat box's opposite corners project to opposite
+     * corners of the SCREEN box only while the bearing is zero; rotate the map and the two you
+     * picked are a diagonal of something else entirely.
+     */
+    const pts = [[bounds[0], bounds[1]], [bounds[2], bounds[1]],
+                 [bounds[2], bounds[3]], [bounds[0], bounds[3]]].map(c => map.project(c));
+    const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs);
+    const y0 = Math.min(...ys), y1 = Math.max(...ys);
+
+    /**
+     * The part of the map you can actually see and work in: the canvas, less whatever the
+     * properties panel is covering on the right, less a margin — a feature pressed against the
+     * bezel is technically visible and practically not.
+     */
+    const cv = map.getCanvas();
+    const pan = focusPan({ x0, x1, y0, y1 }, focusView(cv.clientWidth, cv.clientHeight, padRight));
+    if (!pan) return;                            // already where you can see it — leave the camera
+    /**
+     * A long slide at close zoom is a smear, and the usual cure — `flyTo`'s zoom-out-and-back arc —
+     * is the very thing this must not do. So a move of more than about three screens is a **cut**
+     * instead: arriving is less disorienting than being dragged.
+     */
+    const far = Math.hypot(pan[0], pan[1]) > 3 * Math.max(cv.clientWidth, cv.clientHeight);
+    /**
+     * ⚠️ **The sign, because getting it backwards sends the feature the other way** — and read out
+     * of the shipped bundle rather than remembered: `panBy(p)` is `panTo(center, { offset: -p })`,
+     * and `handleEaseTo` lands `center` at `centerPoint + offset`. So the content shifts by `-p`,
+     * and a feature at screen `cx` ends at `cx - p`. `focusPan` therefore returns
+     * `featureCentre - viewCentre`, which is what lands it in the middle.
+     */
+    map.panBy(pan, { duration: far ? 0 : 650, essential: true });
   } catch(e){}
 }
+
+/* FOCUS-ENGINE-START — extracted and tested by scratch/geometry.test.mjs; keep DOM- and map-free. */
+
+/**
+ * How close to the edge a feature may sit and still count as visible.
+ *
+ * A shape pressed against the bezel is technically on screen and practically not — you cannot see
+ * what is around it, which is half of knowing where it is.
+ */
+const FOCUS_MARGIN = 48;
+
+/**
+ * The part of the map you can actually see and work in: the canvas, less whatever the properties
+ * panel is covering on the right, less the margin. `null` when the panel leaves no usable map at
+ * all, which is the one case where there is nothing sensible to do.
+ */
+function focusView(width, height, padRight) {
+  const v = {
+    x0: FOCUS_MARGIN, x1: width - (padRight || 0) - FOCUS_MARGIN,
+    y0: FOCUS_MARGIN, y1: height - FOCUS_MARGIN,
+  };
+  return v.x1 > v.x0 && v.y1 > v.y0 ? v : null;
+}
+
+/**
+ * How far to pan to bring `box` into `view`, or **`null` when the camera should not move at all**.
+ *
+ * That null is the point of the whole function. The best answer to "show me this" is very often no
+ * movement, and moving anyway is how a map stops feeling like the user's — which is exactly the
+ * complaint that produced this (Olcay, 2026-08-16).
+ *
+ * ⚠️ **A feature too big to fit is judged on its CENTRE, not its edges.** A concourse can never sit
+ * inside the viewport, so the containment test says "not visible" every time and it would pan on
+ * every single click — including the clicks where you were already looking straight at it.
+ *
+ * Screen space throughout, so it is indifferent to bearing and pitch: the caller projects the
+ * feature's four corners and hands over the box they make.
+ */
+function focusPan(box, view) {
+  if (!view) return null;
+  const cx = (box.x0 + box.x1) / 2, cy = (box.y0 + box.y1) / 2;
+  const fits = (box.x1 - box.x0) <= (view.x1 - view.x0) &&
+               (box.y1 - box.y0) <= (view.y1 - view.y0);
+  const settled = fits
+    ? box.x0 >= view.x0 && box.x1 <= view.x1 && box.y0 >= view.y0 && box.y1 <= view.y1
+    : cx >= view.x0 && cx <= view.x1 && cy >= view.y0 && cy <= view.y1;
+  if (settled) return null;
+  return [cx - (view.x0 + view.x1) / 2, cy - (view.y0 + view.y1) / 2];
+}
+/* FOCUS-ENGINE-END */
 
 function focusChange(change) {
   if (!map) return;
@@ -3872,9 +3967,9 @@ function geomInteriorWalls(sets, gapPx) {
  * open" and send `end`, destroying the very combine that caused this. One message is one React
  * update. Refusing is the safe failure: the panel stays where it was and the shape is still merged.
  *
- * `skipFocus` stops the camera flying: the app repointing the panel changes `focusFeature`, which
- * would otherwise frame the surviving feature's *published* bounds — moving the map out from under
- * a gesture that has only just finished, and framing the wrong shape while it did.
+ * `skipFocus` stops the camera moving: the app repointing the panel changes `focusFeature`, which
+ * would otherwise centre the surviving feature's *published* bounds — moving the map out from under
+ * a gesture that has only just finished, to fit a shape that no longer exists.
  */
 function geomTakeIdentity(fid) {
   if (!GEOM || GEOM.fid === fid) return false;
@@ -4567,10 +4662,11 @@ window.addEventListener("message", (ev) => {
      * ⚠️ **The app repointing the panel after a combine must not move the camera.**
      *
      * `geomTakeIdentity` tells the app the edit now belongs to a different feature; the app moves
-     * its panel, which changes `focusFeature`, which arrives back here as an ordinary focus. Flown,
-     * it would frame the surviving feature's *published* bounds — the map jumping, right after a
-     * gesture finished, to a shape that no longer exists. The flag is consumed once, so a genuine
-     * focus on the same feature a moment later still flies.
+     * its panel, which changes `focusFeature`, which arrives back here as an ordinary focus. Acted
+     * on, it would centre the survivor's *published* bounds — the map moving, right after a gesture
+     * finished, to fit a shape that no longer exists. Less violent since focusing stopped changing
+     * the zoom, but still a camera move nobody asked for. The flag is consumed once, so a genuine
+     * selection of the same feature a moment later behaves normally.
      */
     if (GEOM && GEOM.fid === d.fid && GEOM.skipFocus) {
       GEOM.skipFocus = false;

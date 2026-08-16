@@ -23,7 +23,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const src = readFileSync(join(here, "..", "public", "map", "index.html"), "utf8");
 
 /** Every marker-delimited engine in the map shell, in the order they must be defined. */
-const BLOCKS = ["SPLIT-ENGINE", "SNAP-ENGINE", "GUIDE-ENGINE", "COMBINE-ENGINE", "SQUARE-ENGINE"];
+const BLOCKS = ["SPLIT-ENGINE", "SNAP-ENGINE", "GUIDE-ENGINE", "COMBINE-ENGINE", "SQUARE-ENGINE",
+                "FOCUS-ENGINE"];
 const engine = BLOCKS.map((name) => {
   const from = src.indexOf(`/* ${name}-START`);
   const to = src.indexOf(`/* ${name}-END */`);
@@ -43,7 +44,8 @@ writeFileSync(
       `  angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,\n` +
       `  guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,\n` +
       `  segPairClosest, findBridge, bridgeRings, combineRings,\n` +
-      `  ringGap, ringSetArea, largestSet, wallBetween };\n`,
+      `  ringGap, ringSetArea, largestSet, wallBetween,\n` +
+      `  focusView, focusPan, FOCUS_MARGIN };\n`,
 );
 
 let mod;
@@ -59,6 +61,7 @@ const {
   guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,
   segPairClosest, findBridge, bridgeRings, combineRings,
   ringGap, ringSetArea, largestSet, wallBetween,
+  focusView, focusPan, FOCUS_MARGIN,
 } = mod;
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
@@ -934,6 +937,80 @@ function worstOffGrid(rings) {
   const out = squareRings([a, b], 20, 60);
   check("both rings come out square", worstOffGrid(out) < 0.01, `${worstOffGrid(out).toFixed(4)}°`);
   check("both rings survive", out.length === 2, String(out.length));
+}
+
+/* ══ focus engine ══════════════════════════════════════════════════════════════
+   Selecting a feature must NOT change the zoom (Olcay, 2026-08-16: *"respect the user's zoom
+   choice but center it if it's off screen"*), so the whole decision is "does the camera move at
+   all, and if so by how much" — and the answer that matters most is `null`. */
+
+console.log("\nfocus engine");
+
+const M = FOCUS_MARGIN;
+/** A 1440×900 map with no panel, and the same with the 384px properties panel open. */
+const bare = focusView(1440, 900, 0);
+const withPanel = focusView(1440, 900, 384);
+const at = (x, y, w, h) => ({ x0: x, x1: x + w, y0: y, y1: y + h });
+
+/* F1. The whole point: a feature you can already see does not move the camera. */
+{
+  check("a feature in the middle does not move the map",
+        focusPan(at(600, 400, 120, 90), bare) === null);
+  // Right up against the margin, and still left alone — the test is inclusive on purpose, or a
+  // feature that has JUST been centred would be nudged again by the next click.
+  check("a feature exactly on the margin is left alone",
+        focusPan(at(M, M, 100, 100), bare) === null);
+}
+
+/* F2. Off screen, and it comes back to the middle of the map you can SEE. */
+{
+  const p = focusPan(at(2000, 400, 100, 100), bare);
+  check("a feature off to the right pans", !!p);
+  // Its centre is at x=2050; the visible centre is 720. Nothing about zoom enters into it.
+  check("…by exactly the offset to the visible centre", p && Math.abs(p[0] - (2050 - 720)) < 1e-9,
+        p ? String(p[0]) : "null");
+  check("…and not vertically, since it was already level",
+        p && Math.abs(p[1] - (450 - 450)) < 1e-9, p ? String(p[1]) : "null");
+  check("a feature above the top pans too", !!focusPan(at(600, -500, 100, 100), bare));
+}
+
+/* F3. ⚠️ One corner poking out is still off screen. The margin is what stops this being a nuisance
+       — a shape merely near the edge is fine; one crossing the margin is not. */
+{
+  check("a feature straddling the right edge pans",
+        !!focusPan(at(1380, 400, 100, 100), bare));
+  check("a feature comfortably inside does not",
+        focusPan(at(1200, 400, 100, 100), bare) === null);
+}
+
+/* F4. The properties panel is not map you can use, so "centre" means centre of what is left. */
+{
+  const p = focusPan(at(1000, 400, 60, 60), withPanel);
+  // The panel starts at 1440-384=1056, so the usable strip is 48..1008 and its centre is 528.
+  check("with the panel open a feature under it is moved out", !!p);
+  check("…to the centre of the map that is still visible",
+        p && Math.abs(p[0] - (1030 - 528)) < 1e-9, p ? String(p[0]) : "null");
+  // The same feature, same place, with no panel: comfortably visible and nothing happens.
+  check("…and the very same feature is fine without the panel",
+        focusPan(at(1000, 400, 60, 60), bare) === null);
+}
+
+/* F5. ⚠️ A feature too big to fit is judged on its CENTRE. Containment would say "not visible"
+       for a concourse every single time, and pan on every click — including the clicks where you
+       were already looking straight at it. */
+{
+  const huge = at(-2000, -1000, 6000, 3000);       // far larger than the viewport, centred on it
+  check("a feature larger than the map does not pan when you are inside it",
+        focusPan(huge, bare) === null);
+  const away = at(-6000, -1000, 6000, 3000);       // same size, its centre now off to the left
+  check("…but does when its centre has gone off screen", !!focusPan(away, bare));
+}
+
+/* F6. A panel wider than the map leaves nothing to centre into, and saying so beats dividing by a
+       negative width and panning somewhere arbitrary. */
+{
+  check("no usable map means no view", focusView(300, 900, 400) === null);
+  check("…and no pan", focusPan(at(0, 0, 10, 10), focusView(300, 900, 400)) === null);
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */
