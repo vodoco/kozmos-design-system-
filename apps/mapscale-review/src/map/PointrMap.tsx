@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { Change } from "../mock/diff";
-import { type LevelTypeCount } from "../mock/taxonomy";
+import { NON_EDITABLE_MAIN_TYPES, type LevelTypeCount } from "../mock/taxonomy";
 import { pointrMapSrc } from "../mock/pointrConfig";
 
 /**
@@ -158,6 +158,12 @@ const PointrMap = forwardRef<
     }[];
     /** Features other people currently have open in the editor, so the map can say so. */
     editing?: { fid: string; who: string; colour: string }[];
+    /**
+     * The level's features as **true GeoJSON**, for the editor to take its geometry from instead of
+     * from the tiles — see `cloud/levelFeatures`. Empty or absent means the editor falls back to
+     * the tiles, which is what it always did.
+     */
+    levelGeometry?: { fid: string; geometry: unknown }[];
     /** Geometry-editor commands, and the state it reports back — see ui/GeometryToolbar. */
     geomCommands?: { seq: number; body: Record<string, unknown> }[];
     onGeomState?: (s: Record<string, unknown>) => void;
@@ -228,6 +234,7 @@ const PointrMap = forwardRef<
     onCursor,
     peers,
     editing,
+    levelGeometry,
     geomCommands,
     onGeomState,
     onGeometry,
@@ -302,6 +309,18 @@ const PointrMap = forwardRef<
   }, [peers]);
 
   /**
+   * The level's true geometry, posted on its own because it arrives **asynchronously** — the fetch
+   * finishes long after the level switch that asked for it, and folding it into `send()` would make
+   * it wait for the next unrelated prop change.
+   */
+  useEffect(() => {
+    ref.current?.contentWindow?.postMessage(
+      { type: "levelgeom", features: levelGeometry ?? [] },
+      "*",
+    );
+  }, [levelGeometry]);
+
+  /**
    * Every geometry command the app has queued, posted in order and each exactly once.
    *
    * Commands carry a `seq` so the same one twice — two taps of Undo — still fires. Without it the
@@ -364,6 +383,19 @@ const PointrMap = forwardRef<
      * hand-off.
      */
     win.postMessage({ type: "editabletypes", types: [] }, "*");
+    /**
+     * What raises no hover card. **Silent, not inert** (Olcay, 2026-08-16: *"structural click should
+     * work though"*) — these open on a click like anything else.
+     *
+     * It is the list that used to be `editabletypes`, doing the job it was always really for: a
+     * floor has hundreds of walls and circulation strips, and a card that follows the pointer across
+     * every one of them is never off and buries the POI cards the hover exists for. Making them
+     * *unclickable* was the part that was wrong, and that part has gone.
+     */
+    win.postMessage(
+      { type: "quiettypes", types: NON_EDITABLE_MAIN_TYPES },
+      "*",
+    );
     if (latest.current.changes)
       win.postMessage(
         {

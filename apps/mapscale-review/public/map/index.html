@@ -1154,18 +1154,38 @@ function renderTip() {
  * No decision control — there is no change here to decide about — and no close button, because it
  * only ever exists under the cursor.
  */
-/** The topmost EDITABLE feature under a point, or null. Structural geometry is deliberately inert. */
-function editableAt(point) {
+/**
+ * The topmost feature under a point that this gesture is allowed to have, or `null`.
+ *
+ * ⚠️ **Two different questions, and they now have two different answers** (Olcay, 2026-08-16:
+ * *"structural click should work though"*).
+ *
+ * - **Clicking** may reach anything — every geometry is editable, walls included.
+ * - **Hovering** may not, because a hover card is *unsolicited*. Lighting up all ~715 walls on a
+ *   floor as the pointer crosses them is noise nobody asked for, and it buries the POI cards the
+ *   hover exists for. `quiet` types stay silent under the pointer and open perfectly on a click.
+ *
+ * That asymmetry is the whole point: **silence is not the same as inert.** The old single rule made
+ * structural geometry unhoverable *and* unclickable, which is why it had to go.
+ */
+function featureAt(point, quiet) {
   let hits = [];
   try { hits = map.queryRenderedFeatures(point) || []; } catch (e) { return null; }
   for (const f of hits) {
     const p = f && f.properties;
     if (!p || !p.fid) continue;
+    // "Not told yet" means nothing is touchable, which is the safe direction — see `editabletypes`.
     if (!BLOCKED_TYPES || BLOCKED_TYPES.has(p.mainType)) continue;
+    if (quiet && QUIET_TYPES && QUIET_TYPES.has(p.mainType)) continue;
     return f;
   }
   return null;
 }
+
+/** What a CLICK may reach: anything the app has not blocked outright. */
+const editableAt = point => featureAt(point, false);
+/** What a HOVER may reach: the same, less the types that would be noise. */
+const hoverableAt = point => featureAt(point, true);
 
 /** "Retail Space · Cafe" from the tile's own type fields — Title Case, no taxonomy needed here. */
 function prettyType(p) {
@@ -1983,7 +2003,8 @@ function start() {
        * you may click it, and now that clicking one actually switches to it, suppressing it there
        * would hide the feature behind an invisible affordance.
        */
-      const over = editableAt(ev.point);
+      // Hover only — a wall must not raise a card, but must still open on a click.
+      const over = hoverableAt(ev.point);
       const overFid = over && over.properties && over.properties.fid;
       if (!overFid || overFid === GEOM.fid) {
         dropCard();
@@ -1993,7 +2014,7 @@ function start() {
       // …otherwise fall through and let the ordinary hover card do its job.
     }
     if (shown()) return;                              // a change's card owns the cursor
-    const f = editableAt(ev.point);
+    const f = hoverableAt(ev.point);
     const fid = f && f.properties && f.properties.fid;
     if (!f) {
       if (HOVER_FEATURE) { HOVER_FEATURE = null; highlightFeatures(null); renderTip(); }
@@ -2482,7 +2503,9 @@ function geomBegin(fid) {
    * The real fix is to read the feature's true geometry from Pointr Cloud rather than from the
    * rendered tiles; see the standing item in the hand-off.
    */
-  GEOM.clipped = f.kind === "area" && f.tiles > 1;
+  GEOM.clipped = f.kind === "area" && f.src === "tiles" && f.tiles > 1;
+  console.info("[geometry] editing", fid, "· outline from",
+               f.src === "geojson" ? "Pointr Cloud (whole)" : "the tiles (" + f.tiles + " piece(s))");
   if (GEOM.clipped) {
     console.warn("[geometry]", fid, "arrives in", f.tiles,
                  "tile-clipped pieces — its outline includes tile seams, not just walls");
@@ -2676,6 +2699,22 @@ function geomEnd(commit) {
  * Rings win when a feature somehow has both: the outline is the editable thing.
  */
 function geomFind(fid) {
+  /**
+   * **Pointr Cloud first, tiles only if it cannot answer.**
+   *
+   * The whole reason this branch exists is that a tile carries a feature *clipped to that tile*, so
+   * a feature larger than one tile has no true outline in the tiles at all — see the note below and
+   * `cloud/levelFeatures` in the app. This geometry is whole, arrives once, and has no seams.
+   */
+  const whole = LEVEL_GEOM.get(fid);
+  if (whole) {
+    if (whole.type === "Point") return { kind: "point", point: whole.coordinates.slice(), tiles: 0, src: "geojson" };
+    if (whole.type === "MultiPoint" && whole.coordinates[0])
+      return { kind: "point", point: whole.coordinates[0].slice(), tiles: 0, src: "geojson" };
+    const rs = ringsOuter({ geometry: whole });
+    // `tiles: 1` because it came whole — the seam warning is about tiles and does not apply here.
+    if (rs.length) return { kind: "area", rings: JSON.parse(JSON.stringify(rs)), tiles: 1, src: "geojson" };
+  }
   const rings = [];
   let point = null;
   /**
@@ -2703,8 +2742,8 @@ function geomFind(fid) {
       if (got.length) { tiles++; rings.push(...got); }
     }
   }
-  if (rings.length) return { kind: "area", rings, tiles };
-  if (point) return { kind: "point", point, tiles: 0 };
+  if (rings.length) return { kind: "area", rings, tiles, src: "tiles" };
+  if (point) return { kind: "point", point, tiles: 0, src: "tiles" };
   return null;
 }
 
@@ -5051,6 +5090,20 @@ window.addEventListener("message", (ev) => {
     drawEditing();
   } else if (d.type === "editabletypes") {
     BLOCKED_TYPES = new Set(d.types || []);
+  } else if (d.type === "quiettypes") {
+    QUIET_TYPES = new Set(d.types || []);
+  } else if (d.type === "levelgeom") {
+    /**
+     * The level's TRUE geometry, from Pointr Cloud — see `cloud/levelFeatures` in the app.
+     *
+     * ⚠️ This is the fix for the tile seam. A tile carries a feature **clipped to itself**, so a
+     * feature bigger than a tile has no true outline anywhere in the tiles; this does, once, whole.
+     * An empty list is not a failure — it means the fetch could not answer and `geomFind` should go
+     * on reading the tiles, exactly as it always did.
+     */
+    LEVEL_GEOM = new Map();
+    for (const f of (d.features || [])) if (f && f.fid && f.geometry) LEVEL_GEOM.set(f.fid, f.geometry);
+    console.info("[geojson] map shell holds", LEVEL_GEOM.size, "unclipped feature geometries");
   } else if (d.type === "decidable") {
     CAN_DECIDE = !!d.on;
     renderTip();          // a card already open must lose its control immediately
@@ -5101,6 +5154,25 @@ let EDITING = [];
  * to `poi`, so the editable side is open-ended; the floor-plan side is short and finite.
  */
 let BLOCKED_TYPES = null;
+
+/**
+ * The `mainType`s that raise no hover card — the floor plan itself, chiefly.
+ *
+ * ⚠️ **Silent, not inert.** These open on a click like anything else (Olcay, 2026-08-16:
+ * *"structural click should work though"*); they simply do not announce themselves as the pointer
+ * crosses them, because there are hundreds of them on a floor and the card would never be off.
+ *
+ * `null` means "not told yet", which here means *nothing* is quiet — the opposite default from
+ * `BLOCKED_TYPES`, and right for the same reason: the cautious answer for "may I touch this?" is
+ * no, and the cautious answer for "may I mention this?" is yes.
+ */
+let QUIET_TYPES = null;
+
+/**
+ * `fid` → the feature's **whole** geometry, as Pointr Cloud holds it, when the app has managed to
+ * fetch it. Empty means "ask the tiles", which is what this file did on its own for two days.
+ */
+let LEVEL_GEOM = new Map();
 
 /**
  * The feature under the cursor that is NOT part of a review — Olcay, 2026-08-14: *"when hovered we

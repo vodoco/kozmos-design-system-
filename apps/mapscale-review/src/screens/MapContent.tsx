@@ -53,6 +53,7 @@ import { DecisionGlyph } from "../ui/ChangeReviewRow";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { LevelSelector } from "../ui/LevelSelector";
+import { levelGeometry, type LevelGeometry } from "../cloud/levelFeatures";
 import {
   FeaturePanel,
   FEATURE_PANEL_WIDTH,
@@ -1946,6 +1947,31 @@ export function MapContent({
    */
   const propsOfRef = useRef<Record<string, Record<string, unknown>>>({});
   /**
+   * **The level's true geometry**, fetched from Pointr Cloud rather than scraped from the tiles —
+   * see `cloud/levelFeatures` for why the tiles cannot answer this.
+   *
+   * Held here and handed to the map, because the *app* owns the session and the map shell has no
+   * token. The same division of labour as `editabletypes`: the app knows who you are, the map knows
+   * where things are.
+   *
+   * Empty until it arrives, and empty forever if it fails — the editor falls back to the tiles,
+   * which is precisely how it behaved before this existed.
+   */
+  const [levelGeom, setLevelGeom] = useState<LevelGeometry[]>([]);
+  useEffect(() => {
+    if (!target) return;
+    let live = true;
+    // Cleared first: leaving one floor's geometry on screen while another loads would let the
+    // editor open a shape from the level you have just left.
+    setLevelGeom([]);
+    void levelGeometry(target.building, target.level).then((g) => {
+      if (live) setLevelGeom(g);
+    });
+    return () => {
+      live = false;
+    };
+  }, [target]);
+  /**
    * ⚠️ The primary's fid, for handlers that cannot see state. `onFeatureClick` is memoised with an
    * empty dependency list — it must be, or every keystroke would re-post it to the iframe — so it
    * cannot read `focused` and would forever compare against the first feature ever opened.
@@ -3022,6 +3048,7 @@ export function MapContent({
             onCursor={setPresenceCursor}
             peers={peers}
             editing={editors}
+            levelGeometry={levelGeom}
             geomCommands={geomCommands}
             onGeomState={onGeomState}
             onGeometry={onGeometry}
