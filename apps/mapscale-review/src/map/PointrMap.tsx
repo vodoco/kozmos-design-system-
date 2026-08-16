@@ -150,7 +150,13 @@ const PointrMap = forwardRef<
      * A committed outline, in lng/lat rings. Local to the prototype, like every other edit.
      * `pieces` is how many separate pieces the feature is now in — `1` if nobody has split it.
      */
-    onGeometry?: (fid: string, rings: number[][][], pieces: number) => void;
+    onGeometry?: (
+      fid: string,
+      rings: number[][][],
+      pieces: number,
+      /** A point feature's single coordinate — `rings` is empty for those. */
+      point?: [number, number] | null,
+    ) => void;
     /**
      * The editor refusing something, in words meant for the user — a cut that misses the shape, or
      * one laid exactly along an edge. Posted since the editor was written and, until 2026-08-15,
@@ -342,12 +348,16 @@ const PointrMap = forwardRef<
       } else if (ev.data.type === "geomstate") {
         if (ev.source === ref.current?.contentWindow) onGeomState?.(ev.data);
       } else if (ev.data.type === "geometry") {
-        if (
-          ev.source === ref.current?.contentWindow &&
-          ev.data.fid &&
-          ev.data.rings
-        )
-          onGeometry?.(ev.data.fid, ev.data.rings, Number(ev.data.pieces) || 1);
+        // ⚠️ `rings` is an EMPTY array for a point feature, so it cannot be the test for whether
+        // there is geometry here — an empty array is truthy, but a point committed through this
+        // branch used to arrive with its coordinate dropped and be logged as "0 ring(s)".
+        if (ev.source === ref.current?.contentWindow && ev.data.fid)
+          onGeometry?.(
+            ev.data.fid,
+            ev.data.rings ?? [],
+            Number(ev.data.pieces) || 1,
+            ev.data.point ?? null,
+          );
       } else if (ev.data.type === "geomerror") {
         if (ev.source === ref.current?.contentWindow && ev.data.message)
           onGeomError?.(String(ev.data.fid ?? ""), String(ev.data.message));

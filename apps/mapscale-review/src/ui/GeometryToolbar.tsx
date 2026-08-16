@@ -25,10 +25,17 @@
  * 2. **`⟲ ⟳ ⤢ ⤡ ↶ ↷` are not icons.** As text they rendered hairline-thin and half a size too
  *    small, and at 0.4 opacity for disabled they vanished outright. They are drawn now, at the
  *    house 1.6 stroke.
- * 3. **Eleven controls in one undifferentiated row is a list, not a toolbar.** They are four
- *    groups doing four jobs: pick a MODE, TRANSFORM the whole shape, TIDY it, or step through
- *    HISTORY. The mode group is a real segmented control on a track, because those three are
- *    mutually exclusive and nothing else in the bar is.
+ * 3. **Eleven controls in one undifferentiated row is a list, not a toolbar.** They are groups
+ *    doing distinct jobs: pick a MODE, TIDY the outline, or step through HISTORY. The mode group
+ *    is a real segmented control on a track, because those three are mutually exclusive and
+ *    nothing else in the bar is.
+ *
+ * ⚠️ **Rotate and scale are NOT in here** (Olcay, 2026-08-16: *"Instead of adding multiple rotation
+ * and scale buttons use control points and shortcuts"*). Four stepped buttons — ⟲ ⟳ ±5% — could
+ * only ever offer increments somebody guessed in advance. They are handles on the transform box in
+ * Move mode now: free by default, Shift or ⌥ snapping to 5° and 5%, with the angle or percentage
+ * read out beside the pointer. The caption below carries the only written mention of the modifier,
+ * which is why it exists at all.
  *
  * The word "Geometry" used to sit at the left end. It was spending the bar's scarcest resource —
  * width — to say what the bar's presence already says.
@@ -69,9 +76,7 @@ export type GeomCommand =
   | { cmd: "redo" }
   | { cmd: "reset" }
   | { cmd: "straighten" }
-  | { cmd: "split" }
-  | { cmd: "rotate"; deg: number }
-  | { cmd: "scale"; k: number };
+  | { cmd: "split" };
 
 /* ── icons ────────────────────────────────────────────────────────────────────
    One 24×24 grid, one 1.6 stroke, `currentColor` throughout — so a button's own
@@ -124,44 +129,6 @@ function Split() {
       <path d="M9.5 5H5.5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4" />
       <path d="M14.5 5h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4" />
       <path d="M12 3v3M12 9v3M12 15v3M12 21v0" strokeDasharray="0.1 0" />
-    </svg>
-  );
-}
-
-function RotateLeft() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M5 8.6A8 8 0 1 1 4 12" />
-      <path d="M4 4v4.6h4.6" />
-    </svg>
-  );
-}
-
-function RotateRight() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M19 8.6A8 8 0 1 0 20 12" />
-      <path d="M20 4v4.6h-4.6" />
-    </svg>
-  );
-}
-
-/** Scale up — corners pushed outward. */
-function ScaleUp() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M13.8 10.2 20 4M20 4h-5M20 4v5" />
-      <path d="M10.2 13.8 4 20M4 20h5M4 20v-5" />
-    </svg>
-  );
-}
-
-/** Scale down — corners pulled in. */
-function ScaleDown() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M20 4l-6.2 6.2M13.8 10.2h5M13.8 10.2v-5" />
-      <path d="M4 20l6.2-6.2M10.2 13.8h-5M10.2 13.8v5" />
     </svg>
   );
 }
@@ -401,11 +368,18 @@ export function GeometryToolbar({
             }
           : pieces > 1
             ? { text: `Split into ${pieces} pieces`, bad: false }
-            : // Only while reshaping, because that is the only mode where corners are the subject.
-              // An always-on hint would be permanent chrome for something you learn once.
+            : // Each mode gets the one hint that mode needs, and nothing gets a standing one — an
+              // always-on line is permanent chrome for something you learn once.
               state.mode === "vertices"
               ? { text: "Shift-drag to select corners", bad: false }
-              : null;
+              : state.mode === "move"
+                ? {
+                    // The transform handles have no toolbar buttons any more, so this line is the
+                    // only place the modifier is written down.
+                    text: "Drag to move · corners scale, knob rotates · Shift or ⌥ snaps",
+                    bad: false,
+                  }
+                : null;
 
   return (
     <div
@@ -505,41 +479,6 @@ export function GeometryToolbar({
               onClick={() => onCommand({ cmd: "split" })}
             />
           </div>
-        )}
-
-        {!isPoint && <Sep />}
-
-        {/* Transform — whole-shape, and stepped rather than dragged: a fixed increment is
-            repeatable, and repeatability is what you want when squaring a room up to its
-            neighbours. The labels carry the step, which used to be discoverable only by pressing.
-            Rotating or scaling a single coordinate about itself is a no-op, so a point skips it. */}
-        {!isPoint && (
-          <Group>
-            <Tile
-              icon={<RotateLeft />}
-              label="15°"
-              title="Rotate 15° anticlockwise"
-              onClick={() => onCommand({ cmd: "rotate", deg: -15 })}
-            />
-            <Tile
-              icon={<RotateRight />}
-              label="15°"
-              title="Rotate 15° clockwise"
-              onClick={() => onCommand({ cmd: "rotate", deg: 15 })}
-            />
-            <Tile
-              icon={<ScaleDown />}
-              label="5%"
-              title="Scale down 5%"
-              onClick={() => onCommand({ cmd: "scale", k: 1 / 1.05 })}
-            />
-            <Tile
-              icon={<ScaleUp />}
-              label="5%"
-              title="Scale up 5%"
-              onClick={() => onCommand({ cmd: "scale", k: 1.05 })}
-            />
-          </Group>
         )}
 
         {!isPoint && <Sep />}

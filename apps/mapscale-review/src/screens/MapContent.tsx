@@ -2117,12 +2117,20 @@ export function MapContent({
    * hand-off. Naming the second room is the unbuilt half of this.
    */
   const onGeometry = useCallback(
-    (fid: string, rings: number[][][], pieces: number) => {
+    (
+      fid: string,
+      rings: number[][][],
+      pieces: number,
+      point?: [number, number] | null,
+    ) => {
       console.info(
         "[geometry] edited",
         fid,
-        rings.length,
-        "ring(s)",
+        // A point feature has no rings at all — reporting "0 ring(s)" for a POI somebody just
+        // dragged said nothing about what happened to it.
+        point
+          ? `point ${point[0].toFixed(6)}, ${point[1].toFixed(6)}`
+          : `${rings.length} ring(s)`,
         pieces > 1 ? `· split into ${pieces} pieces` : "",
       );
     },

@@ -2191,7 +2191,19 @@ const HANDLE_R = 5;
 
 function geomBegin(fid) {
   const f = geomFind(fid);
-  if (!f) { post("geomerror", { fid, message: "no geometry on this floor yet" }); return; }
+  if (!f) {
+    /**
+     * ⚠️ Clear the editor rather than just refusing. This used to `return` with `GEOM` untouched,
+     * so opening a feature whose tiles had not loaded left the PREVIOUS feature's handles on the
+     * map while the panel showed the new one — every drag then edited a shape nobody had selected.
+     */
+    GEOM = null;
+    try { map.boxZoom.enable(); } catch (e) {}
+    geomDraw();
+    post("geomerror", { fid, message: "no geometry on this floor yet" });
+    post("geomstate", { editing: false });
+    return;
+  }
   /**
    * ⚠️ **MapLibre owns shift+drag** — it is bound to `boxZoom`. The marquee needs it, so it is
    * taken away for as long as the editor is open and given straight back in `geomEnd`.
@@ -2220,6 +2232,8 @@ function geomBegin(fid) {
     sel: new Set(),
     /** The marquee being dragged, in lng/lat: `{ a, b }`. */
     band: null,
+    /** The live rotate/scale readout while a transform handle is down: `{ text, snapped, x, y }`. */
+    xform: null,
     /**
      * Which piece each ring belongs to, parallel to `rings`. Everything starts as piece 0 — one
      * feature, one piece, however many rings it arrived with — and `geomApplyCut` mints new ids.
@@ -2457,20 +2471,6 @@ function geomSetMode(mode) {
 }
 function geomToggleSnap() { if (GEOM) { GEOM.snap = !GEOM.snap; post("geomstate", geomState()); } }
 
-/** Every vertex of the shape, flattened — the unit most operations work on. */
-function geomAllPoints() {
-  const out = [];
-  GEOM.rings.forEach((r, ri) => r.forEach((c, ci) => out.push({ ri, ci, c })));
-  return out;
-}
-
-function geomCentroid() {
-  if (GEOM.kind === "point") return GEOM.point.slice();
-  let x = 0, y = 0, n = 0;
-  GEOM.rings.forEach(r => r.forEach(c => { x += c[0]; y += c[1]; n++; }));
-  return [x / n, y / n];
-}
-
 /**
  * The nearest vertex of ANOTHER feature, within `SNAP_PX` on screen.
  *
@@ -2494,29 +2494,48 @@ function geomSnapTarget(pt) {
   return best;
 }
 
-function geomTransform(fn) {
-  geomPush();
-  GEOM.rings = GEOM.rings.map(r => r.map(fn));
-  geomDraw(); post("geomstate", geomState());
+/* ── transform: rotate and scale by handle ─────────────────────────────────────
+   Replaced four stepped toolbar buttons (⟲ ⟳ ±5%) on 2026-08-16 — Olcay: *"Instead of adding
+   multiple rotation and scale buttons use control points and shortcuts … if shift or option is
+   pressed while rotating it snaps to every 5 deg. otherwise free."*
+
+   The buttons could only ever offer the increments somebody had guessed in advance; a handle offers
+   every angle, and the modifier gives the repeatable ones back on demand. Note the polarity: FREE is
+   the default and the modifier CONSTRAINS, which is the way round Olcay asked for — the opposite of
+   tools that snap unless told otherwise. */
+
+/** The transform box, in SCREEN space. `null` when there is nothing with corners to transform. */
+function geomBox() {
+  if (!GEOM || GEOM.kind !== "area" || !GEOM.rings.length) return null;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const r of GEOM.rings) for (const c of r) {
+    const p = map.project(c);
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+  if (!isFinite(minX)) return null;
+  return { minX, minY, maxX, maxY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
 }
 
-function geomRotate(deg) {
-  const c = map.project(geomCentroid());
-  const a = (deg * Math.PI) / 180, cos = Math.cos(a), sin = Math.sin(a);
-  geomTransform(coord => {
-    const p = map.project(coord), dx = p.x - c.x, dy = p.y - c.y;
-    const q = map.unproject([c.x + dx * cos - dy * sin, c.y + dx * sin + dy * cos]);
-    return [q.lng, q.lat];
-  });
-}
+/** How far the box's furniture sits outside the outline, so a handle never covers a corner. */
+const BOX_PAD = 12;
+/** The rotate knob's stem length above the top edge. */
+const BOX_STEM = 26;
+/** What the modifier snaps to: whole degrees of turn, and whole percents of size. */
+const SNAP_DEG = 5;
+const SNAP_PCT = 0.05;
 
-function geomScale(k) {
-  const c = map.project(geomCentroid());
-  geomTransform(coord => {
-    const p = map.project(coord);
-    const q = map.unproject([c.x + (p.x - c.x) * k, c.y + (p.y - c.y) * k]);
-    return [q.lng, q.lat];
-  });
+/** Did this event ask for the constrained version? Shift OR Alt/Option, as asked. */
+const geomSnapping = e => !!(e && (e.shiftKey || e.altKey));
+
+/** Turn into the range (−180, 180], so a readout says −170° rather than 190°. */
+function geomWrapDeg(d) {
+  let x = d % 360;
+  if (x > 180) x -= 360;
+  if (x <= -180) x += 360;
+  return x;
 }
 
 /**
@@ -2527,20 +2546,33 @@ function geomScale(k) {
  * three points.
  */
 function geomStraighten() {
-  if (!GEOM) return;
+  if (!GEOM || GEOM.kind !== "area") return;
   const TOL = 2.5;
   geomPush();
   GEOM.rings = GEOM.rings.map(r => {
-    if (r.length <= 4) return r;
-    const keep = r.filter((c, i) => {
-      if (i === 0 || i === r.length - 1) return true;
-      const a = map.project(r[i - 1]), b = map.project(c), d = map.project(r[i + 1]);
+    const open = r.slice(0, -1);            // the closing point is the first one again
+    if (open.length <= 3) return r;
+    /**
+     * ⚠️ **Every vertex is tested, including the first.** This used to skip `i === 0` and
+     * `i === r.length - 1` outright — which is right for the *closing* point but wrong for the
+     * first, whose neighbours are the last real vertex and the second. A redundant corner that
+     * happened to be vertex 0 could never be straightened away, and since a ring's start is
+     * arbitrary, which corner that was is pure luck.
+     */
+    const n = open.length;
+    const keep = open.filter((c, i) => {
+      const a = map.project(open[(i - 1 + n) % n]);
+      const b = map.project(c);
+      const d = map.project(open[(i + 1) % n]);
       const len = Math.hypot(d.x - a.x, d.y - a.y) || 1;
       const dist = Math.abs((d.x - a.x) * (a.y - b.y) - (a.x - b.x) * (d.y - a.y)) / len;
       return dist > TOL;
     });
-    return keep.length >= 4 ? keep : r;
+    if (keep.length < 3) return r;
+    return keep.concat([keep[0].slice()]);
   });
+  // Dropping corners renumbers the rest — see geomClearSel for why pruning would be worse.
+  geomClearSel();
   geomDraw(); post("geomstate", geomState());
 }
 
@@ -2945,6 +2977,63 @@ function geomDraw() {
     }
   }
 
+  /**
+   * The transform box — Move mode only, where the subject is the whole shape.
+   *
+   * Four corners scale about the box's centre and a knob on a stem rotates. Not shown in Reshape,
+   * where the corners of the *outline* are the subject and a second set of squares nearby would be
+   * a coin toss every time you reached for one.
+   */
+  if (GEOM.mode === "move") {
+    const box = geomBox();
+    if (box) {
+      const x0 = box.minX - BOX_PAD, y0 = box.minY - BOX_PAD;
+      const x1 = box.maxX + BOX_PAD, y1 = box.maxY + BOX_PAD;
+      l.appendChild(el("rect", { x: x0, y: y0, width: x1 - x0, height: y1 - y0,
+                                 fill: "none", stroke: "#0b369c", "stroke-width": 1,
+                                 "stroke-dasharray": "5 4", "stroke-opacity": .7 }));
+      // the rotate knob, on a stem above the top edge
+      const kx = (x0 + x1) / 2, ky = y0 - BOX_STEM;
+      l.appendChild(el("line", { x1: kx, y1: y0, x2: kx, y2: ky,
+                                 stroke: "#0b369c", "stroke-width": 1, "stroke-opacity": .7 }));
+      const knob = el("circle", { cx: kx, cy: ky, r: 7, fill: "#fff",
+                                  stroke: "#0b369c", "stroke-width": 2, class: "geom-rot" });
+      knob.setAttribute("style", "pointer-events:auto;cursor:grab");
+      knob.addEventListener("mousedown", e => { e.stopPropagation(); geomDown(e, { kind: "rotate" }); });
+      l.appendChild(knob);
+
+      // the four scale corners — square, so they are never mistaken for a vertex handle
+      const S = 9;
+      [[x0, y0, "nwse"], [x1, y0, "nesw"], [x1, y1, "nwse"], [x0, y1, "nesw"]]
+        .forEach(([hx, hy, dir]) => {
+          const h = el("rect", { x: hx - S / 2, y: hy - S / 2, width: S, height: S, rx: 2,
+                                 fill: "#fff", stroke: "#0b369c", "stroke-width": 2,
+                                 class: "geom-scale" });
+          h.setAttribute("style", "pointer-events:auto;cursor:" + dir + "-resize");
+          h.addEventListener("mousedown", e => { e.stopPropagation(); geomDown(e, { kind: "scale" }); });
+          l.appendChild(h);
+        });
+
+      /**
+       * The live readout, beside the pointer rather than pinned to the box — your eye is on the
+       * handle you are dragging, and a number in the corner of the shape is a number you have to go
+       * and find. It says when the modifier is holding it, because "37°" and "35° because I am
+       * holding Shift" are different facts.
+       */
+      if (GEOM.xform) {
+        const tx = GEOM.xform.x + 16, ty = GEOM.xform.y - 12;
+        const label = GEOM.xform.text + (GEOM.xform.snapped ? "  snap" : "");
+        const w = label.length * 7.1 + 14;
+        l.appendChild(el("rect", { x: tx, y: ty - 12, width: w, height: 21, rx: 5,
+                                   fill: "#0b369c" }));
+        const t = el("text", { x: tx + 7, y: ty + 3, fill: "#fff",
+                               "font-family": "system-ui, sans-serif", "font-size": 12 });
+        t.textContent = label;
+        l.appendChild(t);
+      }
+    }
+  }
+
   // The marquee, while it is being dragged.
   if (GEOM.band) {
     const a = map.project(GEOM.band.a), b = map.project(GEOM.band.b);
@@ -3005,17 +3094,49 @@ function geomDown(ev, what) {
   if (!GEOM) return;
   ev.preventDefault();
   const start = { x: ev.clientX, y: ev.clientY };
-  const before = geomSnap();
+  const snapshot = geomSnap();
+  /**
+   * ⚠️ **The geometry as it was when the gesture began — every frame is computed from THIS.**
+   *
+   * The whole-shape drag used to apply a per-frame delta on top of the previous frame's result,
+   * which meant a `project → add pixels → unproject` round trip *per frame*. Mercator is not
+   * linear, and that round trip is lossy, so a slow drag across the map accumulated error a fast
+   * one did not — the shape ended up somewhere slightly different depending on how you moved the
+   * mouse, which is indefensible for a floor plan. Rebuilding from the origin each frame makes
+   * every gesture absolute: the same pointer position always produces the same geometry.
+   *
+   * It is also what makes rotate and scale honest. Applying 1° thirty times is not a 30° turn.
+   */
+  const origRings = JSON.parse(JSON.stringify(GEOM.rings));
+  const origPoint = GEOM.point ? GEOM.point.slice() : null;
+  /** The transform pivot, fixed at gesture start — the box moves as you drag, the pivot must not. */
+  const box = geomBox();
+  const cx = box ? box.cx : 0, cy = box ? box.cy : 0;
+  const a0 = Math.atan2(start.y - cy, start.x - cx);
+  const d0 = Math.hypot(start.x - cx, start.y - cy) || 1;
   let moved = false;
+
+  /** Rebuild the whole feature from its gesture-start state through one screen-space function. */
+  const fromOrigin = fn => {
+    GEOM.rings = origRings.map(r => r.map(fn));
+    if (origPoint) GEOM.point = fn(origPoint);
+  };
+  const shift = (dx, dy) => fromOrigin(c => {
+    const p = map.project(c);
+    const q = map.unproject([p.x + dx, p.y + dy]);
+    return [q.lng, q.lat];
+  });
 
   const move = e => {
     if (!GEOM) return;
-    if (!moved) { moved = true; GEOM.history.push(before); GEOM.future = []; }
+    if (!moved) { moved = true; GEOM.history.push(snapshot); GEOM.future = []; }
     const pt = { x: e.clientX, y: e.clientY };
+
     if (what.kind === "point") {
       const snapped = geomSnapTarget(pt);
       const q = snapped ? { lng: snapped[0], lat: snapped[1] } : map.unproject([pt.x, pt.y]);
       GEOM.point = [q.lng, q.lat];
+
     } else if (what.kind === "vertex") {
       const snapped = geomSnapTarget(pt);
       const q = snapped ? { lng: snapped[0], lat: snapped[1] } : map.unproject([pt.x, pt.y]);
@@ -3027,39 +3148,61 @@ function geomDown(ev, what) {
        * Snapping still applies to the corner under the cursor only. Snapping each of them to its
        * own nearest neighbour would distort the group into whatever happened to be nearby.
        */
-      const before = GEOM.rings[what.ri][what.ci];
-      const p0 = map.project(before), p1 = map.project([q.lng, q.lat]);
+      const p0 = map.project(origRings[what.ri][what.ci]);
+      const p1 = map.project([q.lng, q.lat]);
       const dx = p1.x - p0.x, dy = p1.y - p0.y;
-      const others = [...GEOM.sel].filter(k => k !== selKey(what.ri, what.ci));
+      GEOM.rings = JSON.parse(JSON.stringify(origRings));
       GEOM.rings[what.ri][what.ci] = [q.lng, q.lat];
-      for (const k of others) {
+      for (const k of GEOM.sel) {
+        if (k === selKey(what.ri, what.ci)) continue;
         const [ri, ci] = k.split(":").map(Number);
         const ring = GEOM.rings[ri];
         if (!ring || ci >= ring.length - 1) continue;
-        const p = map.project(ring[ci]);
-        const moved = map.unproject([p.x + dx, p.y + dy]);
-        ring[ci] = [moved.lng, moved.lat];
+        const p = map.project(origRings[ri][ci]);
+        const to = map.unproject([p.x + dx, p.y + dy]);
+        ring[ci] = [to.lng, to.lat];
       }
       // Every ring closes on its own first point, so a moved first corner moves the closer too.
       for (const ri of new Set([...GEOM.sel].map(k => Number(k.split(":")[0])).concat(what.ri))) {
         const ring = GEOM.rings[ri];
         if (ring) ring[ring.length - 1] = ring[0].slice();
       }
-    } else {
-      const dx = pt.x - start.x, dy = pt.y - start.y;
-      start.x = pt.x; start.y = pt.y;
-      GEOM.rings = GEOM.rings.map(r => r.map(c => {
-        const p = map.project(c);
-        const q = map.unproject([p.x + dx, p.y + dy]);
+
+    } else if (what.kind === "rotate") {
+      let deg = geomWrapDeg((Math.atan2(pt.y - cy, pt.x - cx) - a0) * 180 / Math.PI);
+      if (geomSnapping(e)) deg = Math.round(deg / SNAP_DEG) * SNAP_DEG;
+      const a = deg * Math.PI / 180, cos = Math.cos(a), sin = Math.sin(a);
+      fromOrigin(c => {
+        const p = map.project(c), dx = p.x - cx, dy = p.y - cy;
+        const q = map.unproject([cx + dx * cos - dy * sin, cy + dx * sin + dy * cos]);
         return [q.lng, q.lat];
-      }));
+      });
+      GEOM.xform = { text: (deg > 0 ? "+" : "") + Math.round(deg) + "°",
+                     snapped: geomSnapping(e), x: pt.x, y: pt.y };
+
+    } else if (what.kind === "scale") {
+      let k = Math.hypot(pt.x - cx, pt.y - cy) / d0;
+      if (geomSnapping(e)) k = Math.round(k / SNAP_PCT) * SNAP_PCT;
+      // A shape dragged through its own centre must not invert or vanish.
+      k = Math.max(0.05, Math.min(20, k));
+      fromOrigin(c => {
+        const p = map.project(c);
+        const q = map.unproject([cx + (p.x - cx) * k, cy + (p.y - cy) * k]);
+        return [q.lng, q.lat];
+      });
+      GEOM.xform = { text: Math.round(k * 100) + "%",
+                     snapped: geomSnapping(e), x: pt.x, y: pt.y };
+
+    } else {
+      shift(pt.x - start.x, pt.y - start.y);
     }
     geomDraw();
   };
   const up = () => {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
-    if (moved) post("geomstate", geomState());
+    GEOM && (GEOM.xform = null);
+    if (moved) { geomDraw(); post("geomstate", geomState()); }
   };
   document.addEventListener("mousemove", move);
   document.addEventListener("mouseup", up);
@@ -3128,8 +3271,8 @@ window.addEventListener("message", (ev) => {
     else if (d.cmd === "redo") geomRedo();
     else if (d.cmd === "reset") geomReset();
     else if (d.cmd === "straighten") geomStraighten();
-    else if (d.cmd === "rotate") geomRotate(d.deg || 15);
-    else if (d.cmd === "scale") geomScale(d.k || 1.05);
+    // `rotate` / `scale` used to arrive here from four stepped toolbar buttons. They are handles on
+    // the transform box now (see geomBox), so there is nothing left for the app to command.
     // Split is a MODE, not an act: the toolbar arms it, the two clicks on the map do the cutting.
     else if (d.cmd === "split") geomSetMode(GEOM && GEOM.mode === "split" ? "vertices" : "split");
   } else if (d.type === "editing") {
