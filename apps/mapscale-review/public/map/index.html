@@ -1714,6 +1714,7 @@ function applyHiddenTypes() {
       HIDDEN_BY_TYPE.delete(id);
       try { if (l) map.setLayoutProperty(id, "visibility", was); } catch (e) {}
     }
+    applyWayfinding();
     if (!HIDDEN_FLAT || !HIDDEN_FLAT.size) return;
     for (const l of map.getStyle().layers) {
       if (!typeHidden(l)) continue;
@@ -1723,6 +1724,119 @@ function applyHiddenTypes() {
       map.setLayoutProperty(l.id, "visibility", "none");
     }
   } catch (e) {}
+}
+
+/* ── the wayfinding network, when its section is the one you are in ──────────
+ *
+ * Olcay, 2026-08-16: *"Wayfinding Network is a complicated structure with network nodes and
+ * transition nodes."* It is, and the taxonomy says so precisely: `path-node` is the network itself,
+ * while `elevator-node`, `escalator-node`, `stairs-node`, `custom-transition` and
+ * `building-entrance-exit` are all ways OFF this floor.
+ *
+ * ⚠️ **This is the one place in the render that is authorship rather than derivation**, and it is
+ * deliberate, because there is nothing here to derive. The product draws the whole network with a
+ * single layer, `symbol_wayfinding-network_ptr`, and *none* of the six subTypes has a sprite — every
+ * one of them falls through the icon cascade to `default-poi`. So the platform's own answer is
+ * several hundred identical pin markers, which cannot express the distinction Olcay is asking for
+ * and is exactly what buried the floor in the screenshot that started this. Two circle layers,
+ * sized to be read at a glance and distinguished by what the taxonomy already distinguishes.
+ *
+ * The SDK's own symbol layer stays hidden even here — `hiddentypes` never lists this type on this
+ * section, so `applyHiddenTypes` leaves it alone; it is hidden by `WF_HIDE` below for its own
+ * reason, which is that it is the pin storm.
+ */
+const WF_NODE = "__wf_node", WF_TRANSITION = "__wf_transition";
+const WF_SL = "wayfindingnetwork";
+/** Mirrors `NETWORK_SUBTYPE` in the app's taxonomy — the one subType that is network, not exit. */
+const WF_NETWORK_SUBTYPE = "path-node";
+/**
+ * ⚠️ Invented, and the only colours in this file that are. Every other colour here is either the
+ * diff palette or the product's own, and these have neither: the DS has no token for a wayfinding
+ * node and the SDK's layer carries no paint to copy. Slate for the network, so a few hundred of
+ * them read as texture rather than as content, and the theme blue for a transition, which is the
+ * thing you are actually looking for when you open this section.
+ */
+const WF_COLOUR = { node: "#7A8699", transition: "#2563EB" };
+/** The SDK's own pin layer for this type: hidden while we draw the network ourselves. */
+const WF_HIDE = "symbol_wayfinding-network_ptr";
+let wfLevel = null, wfSource = null;
+
+/** Which source holds the nodes — the GeoJSON one once the render has swapped, else the tiles. */
+function wfSourceOf() {
+  const gj = GJ_SRC + WF_SL;
+  if (gjLive() && map.getSource(gj)) return { source: gj, sourceLayer: null };
+  return { source: "source_ptr", sourceLayer: WF_SL };
+}
+
+/**
+ * `network` picks the path-nodes; otherwise everything else this type has, which is the transitions.
+ *
+ * Stated as "is / is not the network subType" rather than as a list of the five transitions, for
+ * the same reason the app's `isTransitionNode` is: a transition added to the taxonomy tomorrow
+ * should draw as a transition without anybody editing this file.
+ */
+function wfFilter(network) {
+  return ["all",
+    ["any", ["==", ["get", "lvl"], TARGET.level], ["==", ["get", "lvl"], null]],
+    network ? ["==", ["get", "subType"], WF_NETWORK_SUBTYPE]
+            : ["!=", ["get", "subType"], WF_NETWORK_SUBTYPE]];
+}
+
+function wfRemove() {
+  for (const id of [WF_NODE, WF_TRANSITION])
+    try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
+  wfSource = null;
+  wfLevel = null;
+}
+
+function applyWayfinding() {
+  if (!map) return;
+  try {
+    /**
+     * Only when we have been TOLD a list that leaves this type out — i.e. its own section is the
+     * one on screen. `null` means nobody has said anything, which is every other screen in the app,
+     * and those must go on looking exactly as they did.
+     */
+    const want = !!HIDDEN_FLAT && !HIDDEN_FLAT.has(flatType("wayfinding-network"));
+    if (!want) return wfRemove();
+
+    const src = wfSourceOf();
+    // The render swap changes which source holds the nodes underneath us, so the layers are rebuilt
+    // rather than repointed — a layer's source is fixed once it is added.
+    if (wfSource && wfSource !== src.source) wfRemove();
+    if (!map.getLayer(WF_NODE)) {
+      const base = { source: src.source, type: "circle" };
+      if (src.sourceLayer) base["source-layer"] = src.sourceLayer;
+      map.addLayer(Object.assign({ id: WF_NODE, filter: wfFilter(true),
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 15, 1.2, 18, 2.6, 21, 4.5],
+          "circle-color": WF_COLOUR.node,
+          "circle-opacity": 0.85,
+        } }, base));
+      map.addLayer(Object.assign({ id: WF_TRANSITION, filter: wfFilter(false),
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 15, 2.5, 18, 5, 21, 8],
+          "circle-color": WF_COLOUR.transition,
+          // A white collar, so a transition still reads as one where the nodes are densest.
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 1.5,
+        } }, base));
+      wfSource = src.source;
+      wfLevel = TARGET.level;
+    } else if (wfLevel !== TARGET.level) {
+      // Baked in when the layer was created, exactly like the floor plan's — so a level switch has
+      // to re-set them or the last floor's network keeps drawing under this one.
+      map.setFilter(WF_NODE, wfFilter(true));
+      map.setFilter(WF_TRANSITION, wfFilter(false));
+      wfLevel = TARGET.level;
+    }
+    // The pin storm the product would otherwise draw for the same features.
+    if (map.getLayer(WF_HIDE) && map.getLayoutProperty(WF_HIDE, "visibility") !== "none")
+      map.setLayoutProperty(WF_HIDE, "visibility", "none");
+    const clone = GJ_LYR + WF_HIDE;
+    if (map.getLayer(clone) && map.getLayoutProperty(clone, "visibility") !== "none")
+      map.setLayoutProperty(clone, "visibility", "none");
+  } catch (e) { post("error", { message: "wayfinding: " + e.message }); }
 }
 
 /** The style's own source-layer names, whatever their layers' visibility. */

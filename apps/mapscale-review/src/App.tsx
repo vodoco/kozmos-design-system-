@@ -2,12 +2,16 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { TooltipProvider } from "@kozmos/react";
 import { TopBar, LeftRail } from "./ui/Chrome";
 import { MapContent, type LevelRef } from "./screens/MapContent";
+import type { MapSection } from "./mock/taxonomy";
 import { LevelEditor } from "./screens/LevelEditor";
 import { ManualReview } from "./screens/ManualReview";
 import { VersionHistory } from "./screens/VersionHistory";
 import { BuildingWizard } from "./screens/BuildingWizard";
 import { Settings } from "./screens/Settings";
-import { NotificationBell, type NotificationTarget } from "./ui/NotificationBell";
+import {
+  NotificationBell,
+  type NotificationTarget,
+} from "./ui/NotificationBell";
 import {
   FLAGGED_LEVEL,
   seedFlaggedChanges,
@@ -27,7 +31,12 @@ import { PublishScope } from "./ui/PublishScope";
 import type { TourScreen } from "./ui/Tour";
 import { Login } from "./screens/Login";
 import { getSession, sessionKey, subscribeSession } from "./cloud/session";
-import { followVersion, startPresence, stopPresence, subscribeFollow } from "./cloud/presence";
+import {
+  followVersion,
+  startPresence,
+  stopPresence,
+  subscribeFollow,
+} from "./cloud/presence";
 import { OnlinePeople } from "./ui/OnlinePeople";
 
 /**
@@ -36,7 +45,13 @@ import { OnlinePeople } from "./ui/OnlinePeople";
  *   → Editing Level (metadata + floor-plan) → upload a new CAD → MapScale → Expert Review
  *   → Manual Review of the detected changes → Apply.
  */
-type Screen = "mapContent" | "levelEditor" | "review" | "history" | "wizard" | "settings";
+type Screen =
+  | "mapContent"
+  | "levelEditor"
+  | "review"
+  | "history"
+  | "wizard"
+  | "settings";
 
 /** Terminal 3 and B Gates — the demo building the tour walks through (see §5). */
 const T3_BUILDING_ID = "51dd37d1-c2bc-4d9e-8e22-2ea1a15a626c";
@@ -58,7 +73,9 @@ const T3_BUILDING_ID = "51dd37d1-c2bc-4d9e-8e22-2ea1a15a626c";
  */
 function seedFlaggedLevel() {
   const key = levelKey(T3_BUILDING_ID, FLAGGED_LEVEL);
-  const versions = getLevelVersions(key, () => seedVersions("B4", FLAGGED_LEVEL, T3_BUILDING_ID));
+  const versions = getLevelVersions(key, () =>
+    seedVersions("B4", FLAGGED_LEVEL, T3_BUILDING_ID),
+  );
   const newest = versions[0];
   if (!newest || getReviewOutcome(key, newest.n)) return;
   const changes = seedFlaggedChanges();
@@ -66,7 +83,9 @@ function seedFlaggedLevel() {
     versionN: newest.n,
     changes,
     decisions: Object.fromEntries(changes.map((c) => [c.id, "flag" as const])),
-    notes: Object.fromEntries(changes.filter((c) => c.note).map((c) => [c.id, c.note as string])),
+    notes: Object.fromEntries(
+      changes.filter((c) => c.note).map((c) => [c.id, c.note as string]),
+    ),
     published: true,
     complete: true,
   });
@@ -87,6 +106,15 @@ const TOUR_LEVEL: LevelRef = {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("mapContent");
+  /**
+   * Which of the Maps rail's four sections is selected — the layer group on the map and the rows in
+   * the tree (Olcay, 2026-08-16).
+   *
+   * Held here rather than inside Map Content because the rail is drawn beside **every** screen, and
+   * a section picked from the Level Editor has to be able to take you back to the map to show you
+   * the thing you just asked for.
+   */
+  const [section, setSection] = useState<MapSection>("content");
   const [level, setLevel] = useState<LevelRef | null>(null);
   /**
    * What the review screen is reviewing: the job's post-expert % and, when red isn't the band's
@@ -95,7 +123,10 @@ export default function App() {
    * so no path can disagree with the tags. Threading this is what stopped the status card saying
    * 62% while the review header said 30.
    */
-  const [reviewCtx, setReviewCtx] = useState<{ pct: number | null; cause: RedCause | null }>({
+  const [reviewCtx, setReviewCtx] = useState<{
+    pct: number | null;
+    cause: RedCause | null;
+  }>({
     pct: null,
     cause: null,
   });
@@ -105,7 +136,9 @@ export default function App() {
   /** Which version's checkpoint starts selected — set when a floor-plan row was clicked. */
   const [historyN, setHistoryN] = useState<number | undefined>(undefined);
   /** Cause B's review opens history straight in Compare mode (decision 11). */
-  const [historyMode, setHistoryMode] = useState<"timeline" | "compare" | undefined>(undefined);
+  const [historyMode, setHistoryMode] = useState<
+    "timeline" | "compare" | undefined
+  >(undefined);
 
   const openLevel = (l: LevelRef) => {
     setLevel(l);
@@ -121,7 +154,12 @@ export default function App() {
     setReviewCtx({ pct: v?.changePct ?? null, cause: v?.redCause ?? null });
     setScreen("review");
   };
-  const openHistory = (l: LevelRef, from: Screen, selectN?: number, mode?: "timeline" | "compare") => {
+  const openHistory = (
+    l: LevelRef,
+    from: Screen,
+    selectN?: number,
+    mode?: "timeline" | "compare",
+  ) => {
     setLevel(l);
     setHistoryFrom(from);
     setHistoryN(selectN);
@@ -191,7 +229,14 @@ export default function App() {
   if (!getSession())
     return (
       <TooltipProvider delayDuration={0}>
-        <div style={{ display: "flex", flexDirection: "column", height: "100vh", minHeight: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100vh",
+            minHeight: 0,
+          }}
+        >
           {/* `onDone` exists for the transition; the store is what actually re-renders this. */}
           <Login onDone={() => undefined} />
         </div>
@@ -201,7 +246,14 @@ export default function App() {
   return (
     // no hover delay: these tooltips carry the only label the icon-only controls have
     <TooltipProvider delayDuration={0}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100vh", minHeight: 0 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          minHeight: 0,
+        }}
+      >
         <TopBar
           people={<OnlinePeople />}
           tab={screen === "settings" ? "Settings" : "Maps"}
@@ -249,9 +301,19 @@ export default function App() {
           }
         />
         <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-          <LeftRail variant={screen === "settings" ? "settings" : "maps"} />
+          <LeftRail
+            variant={screen === "settings" ? "settings" : "maps"}
+            section={section}
+            onSection={(s) => {
+              setSection(s);
+              // The rail's sections are layer groups over the map, so picking one from anywhere
+              // else in the app means "show me that on the map" — not "remember it for later".
+              setScreen("mapContent");
+            }}
+          />
           {screen === "mapContent" && (
             <MapContent
+              section={section}
               onEditLevel={openLevel}
               onReviewLevel={openReview}
               onUpdateLevel={openLevelBrowse}
@@ -300,7 +362,9 @@ export default function App() {
                 setReviewCtx({ pct, cause: cause ?? null });
                 setScreen("review");
               }}
-              onHistory={(selectN, mode) => openHistory(level, "levelEditor", selectN, mode)}
+              onHistory={(selectN, mode) =>
+                openHistory(level, "levelEditor", selectN, mode)
+              }
               uploadFile={pendingUpload}
               onUploadStarted={() => setPendingUpload(null)}
               browseOnMount={browseOnOpen}
@@ -325,27 +389,35 @@ export default function App() {
               // not back at the whole tree (Olcay, 2026-08-10 evening). Both exits: Cancel and a
               // concluded Save (the editor is where the version's new state shows).
               onClose={() => setScreen(level ? "levelEditor" : "mapContent")}
-              onCompare={level ? () => openHistory(level, "review", undefined, "compare") : undefined}
-              floorWarnings={level ? seedFloorWarnings(level.buildingId, level.index) : undefined}
+              onCompare={
+                level
+                  ? () => openHistory(level, "review", undefined, "compare")
+                  : undefined
+              }
+              floorWarnings={
+                level
+                  ? seedFloorWarnings(level.buildingId, level.index)
+                  : undefined
+              }
             />
           )}
         </div>
       </div>
-        <PublishScope
-          open={publishOpen}
-          onCancel={() => setPublishOpen(false)}
-          onPublish={() => setPublishOpen(false)}
-          onOpenLevel={(l) => {
-            setPublishOpen(false);
-            openReview({
-              building: l.building,
-              buildingId: l.buildingId,
-              index: l.index,
-              name: l.name,
-              short: l.short,
-            });
-          }}
-        />
+      <PublishScope
+        open={publishOpen}
+        onCancel={() => setPublishOpen(false)}
+        onPublish={() => setPublishOpen(false)}
+        onOpenLevel={(l) => {
+          setPublishOpen(false);
+          openReview({
+            building: l.building,
+            buildingId: l.buildingId,
+            index: l.index,
+            name: l.name,
+            short: l.short,
+          });
+        }}
+      />
     </TooltipProvider>
   );
 }

@@ -1,5 +1,6 @@
 import { Button, Icon, Text } from "@kozmos/react";
 import type { KozmosIconKey } from "@kozmos/icons";
+import type { MapSection } from "../mock/taxonomy";
 
 /**
  * Dashboard chrome, taken from the Figma header (`headerMenu`, node 2530:907).
@@ -94,8 +95,17 @@ export function TopBar({
       }}
     >
       {/* scope selector — globe cell, then the site block, each fenced by a rule */}
-      <div style={{ display: "flex", alignSelf: "stretch", alignItems: "center" }}>
-        <div style={{ width: RAIL_WIDTH, display: "grid", placeItems: "center", alignSelf: "stretch" }}>
+      <div
+        style={{ display: "flex", alignSelf: "stretch", alignItems: "center" }}
+      >
+        <div
+          style={{
+            width: RAIL_WIDTH,
+            display: "grid",
+            placeItems: "center",
+            alignSelf: "stretch",
+          }}
+        >
           {/* exported from the Figma header (globe-01) — not in @kozmos/icons */}
           <img src="/icons/globe-01.svg" alt="" width={32} height={32} />
         </div>
@@ -119,7 +129,9 @@ export function TopBar({
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 11, lineHeight: "14px", color: MUTED }}>Active Site</div>
+            <div style={{ fontSize: 11, lineHeight: "14px", color: MUTED }}>
+              Active Site
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span
                 style={{
@@ -137,7 +149,9 @@ export function TopBar({
               <Icon name="chevron-down" />
             </div>
           </div>
-          <Button size="sm" onClick={onPublish}>Publish</Button>
+          <Button size="sm" onClick={onPublish}>
+            Publish
+          </Button>
         </div>
       </div>
 
@@ -188,13 +202,39 @@ export function TopBar({
   );
 }
 
-type RailItem = { label: string; icon?: KozmosIconKey; img?: string; active?: boolean };
+type RailItem = {
+  label: string;
+  icon?: KozmosIconKey;
+  img?: string;
+  active?: boolean;
+  /**
+   * The layer group this item selects. Present on the Maps rail's four items and nowhere else —
+   * an item with no `section` is a name in the product this prototype does not implement, and it
+   * keeps the "Not part of this prototype" tooltip that says so.
+   */
+  section?: MapSection;
+};
 
+/**
+ * The Maps rail — and every one of these four now **does** something (Olcay, 2026-08-16:
+ * *"Wayfinding Network should show in when wayfinding network is selected. Geofences when geofence
+ * selected and beacons when beacon selected."*).
+ *
+ * They are not four screens: they are four **layer groups** over the same map and the same tree.
+ * That is the smallest honest reading of the instruction — each thing appears in its own section
+ * and nowhere else — and it costs one list, because the map already takes one.
+ */
 const RAIL: RailItem[] = [
-  { label: "Map Content", icon: "map-01", active: true },
-  { label: "Geofences", icon: "marker-pin-01" },
-  { label: "Wayfinding Network", icon: "navigation-pointer-01" },
-  { label: "IoT Devices", icon: "wifi" },
+  { label: "Map Content", icon: "map-01", section: "content" },
+  { label: "Geofences", icon: "marker-pin-01", section: "geofence" },
+  {
+    label: "Wayfinding Network",
+    icon: "navigation-pointer-01",
+    section: "wayfinding-network",
+  },
+  // The rail says IoT Devices; the taxonomy says `positioning-device`, whose one subType is
+  // `beacon` — Olcay's *"beacons when beacon selected"*. Same thing under two names.
+  { label: "IoT Devices", icon: "wifi", section: "positioning-device" },
 ];
 
 /**
@@ -212,7 +252,16 @@ const SETTINGS_RAIL: RailItem[] = [
 ];
 
 /** Left icon rail. NB: uses the limited @kozmos/icons set — swap for the dashboard icon set when available. */
-export function LeftRail({ variant = "maps" }: { variant?: "maps" | "settings" }) {
+export function LeftRail({
+  variant = "maps",
+  section = "content",
+  onSection,
+}: {
+  variant?: "maps" | "settings";
+  /** Which layer group is selected. Maps rail only — the Settings rail keeps its own `active`. */
+  section?: MapSection;
+  onSection?: (s: MapSection) => void;
+}) {
   const items = variant === "settings" ? SETTINGS_RAIL : RAIL;
   return (
     <div
@@ -227,33 +276,61 @@ export function LeftRail({ variant = "maps" }: { variant?: "maps" | "settings" }
         alignItems: "stretch",
       }}
     >
-      {items.map((it) => (
-        <div
-          key={it.label}
-          title={it.active ? undefined : "Not part of this prototype"}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 6,
-            padding: "16px 8px",
-            color: it.active ? LINK : MUTED,
-            background: it.active ? TINT : "transparent",
-            opacity: it.active ? 1 : 0.85,
-          }}
-        >
-          {it.img ? (
-            <img src={it.img} alt="" width={24} height={24} style={{ opacity: 0.5 }} />
-          ) : (
-            <Icon name={it.icon!} />
-          )}
-          <Text style={{ fontSize: 11, lineHeight: "14px", textAlign: "center", color: "inherit" }}>
-            {it.label}
-          </Text>
-        </div>
-      ))}
+      {items.map((it) => {
+        const live = !!it.section && !!onSection;
+        const on = live ? it.section === section : !!it.active;
+        return (
+          <div
+            key={it.label}
+            title={live || it.active ? undefined : "Not part of this prototype"}
+            onClick={live ? () => onSection(it.section!) : undefined}
+            role={live ? "button" : undefined}
+            aria-pressed={live ? on : undefined}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+              padding: "16px 8px",
+              color: on ? LINK : MUTED,
+              background: on ? TINT : "transparent",
+              opacity: on ? 1 : 0.85,
+              cursor: live ? "pointer" : undefined,
+            }}
+          >
+            {it.img ? (
+              <img
+                src={it.img}
+                alt=""
+                width={24}
+                height={24}
+                style={{ opacity: 0.5 }}
+              />
+            ) : (
+              <Icon name={it.icon!} />
+            )}
+            <Text
+              style={{
+                fontSize: 11,
+                lineHeight: "14px",
+                textAlign: "center",
+                color: "inherit",
+              }}
+            >
+              {it.label}
+            </Text>
+          </div>
+        );
+      })}
       <div style={{ flex: 1 }} />
-      <div style={{ display: "grid", placeItems: "center", padding: "16px 8px", color: MUTED }}>
+      <div
+        style={{
+          display: "grid",
+          placeItems: "center",
+          padding: "16px 8px",
+          color: MUTED,
+        }}
+      >
         <Icon name="info-circle" />
       </div>
     </div>

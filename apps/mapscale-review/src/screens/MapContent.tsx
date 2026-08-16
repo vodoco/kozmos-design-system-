@@ -73,9 +73,10 @@ import {
 } from "../mock/store";
 import { CONCOURSE_A_ID, SITE_SNAPSHOT, T3_ID } from "../mock/site";
 import {
-  CLASS_LABEL,
+  hiddenForSection,
+  type MapSection,
   SPRITE_BASE,
-  groupByClass,
+  groupForSection,
   spriteName,
   rowLabel,
   typeLabel,
@@ -814,6 +815,8 @@ const LevelTypesContext = createContext<{
   ) => void;
   /** Local edits by `fid`, so a rename in the panel shows in the tree too. In memory only (D3). */
   edits: Record<string, { name?: string; subType?: string }>;
+  /** The rail's selected layer group — the tree lists that section's rows and no others. */
+  section: MapSection;
 }>({
   byLevel: {},
   request: () => {},
@@ -823,6 +826,7 @@ const LevelTypesContext = createContext<{
   editors: {},
   hover: () => {},
   edits: {},
+  section: "content",
 });
 
 /**
@@ -1363,9 +1367,12 @@ function LevelTypes({
   index: number;
   flagged: Set<string>;
 }) {
-  const { byLevel } = useContext(LevelTypesContext);
+  const { byLevel, section } = useContext(LevelTypesContext);
   const counts = byLevel[`${buildingId}:${index}`];
-  const groups = useMemo(() => (counts ? groupByClass(counts) : []), [counts]);
+  const groups = useMemo(
+    () => (counts ? groupForSection(counts, section) : []),
+    [counts, section],
+  );
 
   if (!counts) {
     return (
@@ -1398,7 +1405,7 @@ function LevelTypes({
   return (
     <>
       {groups.map((g) => (
-        <div key={g.cls}>
+        <div key={g.label}>
           <div
             style={{
               display: "flex",
@@ -1417,7 +1424,7 @@ function LevelTypes({
                 color: "var(--primitives-colors-theme-700)",
               }}
             >
-              {CLASS_LABEL[g.cls].toUpperCase()}
+              {g.label.toUpperCase()}
             </span>
             <span style={{ fontSize: 10.5, color: MUTED }}>
               · {g.total} as loaded
@@ -1841,6 +1848,7 @@ function BuildingRow({
 }
 
 export function MapContent({
+  section = "content",
   onEditLevel,
   onReviewLevel,
   onUpdateLevel,
@@ -1848,6 +1856,12 @@ export function MapContent({
   onAddBuilding,
   onEditBuilding,
 }: {
+  /**
+   * Which of the rail's four layer groups is selected (Olcay, 2026-08-16). It decides two things
+   * and nothing else: what the map draws, and which rows the tree lists under a level. The screen
+   * is the same screen — these are not four screens, they are four layers over one.
+   */
+  section?: MapSection;
   onEditLevel: (l: LevelRef) => void;
   onReviewLevel: (l: LevelRef) => void;
   /** The ⋯ menu's Update floor-plan: open the editor with the file browser popped. */
@@ -2707,6 +2721,7 @@ export function MapContent({
     mainType?: string;
     subType?: string;
   } | null>(null);
+  const hiddenTypes = useMemo(() => hiddenForSection(section), [section]);
   const typesCtx = useMemo(
     () => ({
       byLevel: typesByLevel,
@@ -2718,6 +2733,7 @@ export function MapContent({
       editors: editorsByFid,
       hover: setHovered,
       edits,
+      section,
     }),
     [
       typesByLevel,
@@ -2728,6 +2744,7 @@ export function MapContent({
       focused,
       editorsByFid,
       edits,
+      section,
     ],
   );
   /**
@@ -3066,6 +3083,12 @@ export function MapContent({
              */
             onFeatureClick={onFeatureClick}
             onCursor={setPresenceCursor}
+            /**
+             * Every system type except this section's own — so the wayfinding network draws under
+             * *Wayfinding Network* and nowhere else, and Map Content is map content again.
+             * Memoised: an array literal here is a new value every render, and `send` depends on it.
+             */
+            hiddenTypes={hiddenTypes}
             peers={peers}
             editing={editors}
             levelGeometry={levelGeom}

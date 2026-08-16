@@ -416,9 +416,57 @@ export interface LevelTypeCount {
 
 export interface ClassGroup {
   cls: FeatureClass;
+  /**
+   * The heading, already decided.
+   *
+   * It used to be looked up from `CLASS_LABEL[g.cls]` where the tree draws it, which works exactly
+   * as long as every group IS a class. The Wayfinding Network section splits one class into two
+   * headings — *Network* and *Transitions* — so the group has to be able to name itself.
+   */
+  label: string;
   total: number;
   rows: LevelTypeCount[];
 }
+
+/**
+ * Which section of the left rail is on screen.
+ *
+ * Named for the `mainType` each section owns rather than for the rail's wording, because the type
+ * is what both halves need: the map hides every system type **except** this one, and the tree lists
+ * this one's rows. `content` owns no system type, so on Map Content all three stay hidden.
+ */
+export type MapSection =
+  | "content"
+  | "geofence"
+  | "wayfinding-network"
+  | "positioning-device";
+
+/**
+ * What the map may not draw for this section — Olcay, 2026-08-16: *"Wayfinding Network should show
+ * in when wayfinding network is selected. Geofences when geofence selected and beacons when beacon
+ * selected."*
+ *
+ * That sentence, whole, in one line: every system type except the one whose section you are in.
+ */
+export function hiddenForSection(section: MapSection): string[] {
+  return SYSTEM_MAIN_TYPES.filter((t) => t !== section);
+}
+
+/**
+ * The wayfinding network's one **network** subType. Everything else it has is a transition.
+ *
+ * Olcay, 2026-08-16: *"Wayfinding Network is a complicated structure with network nodes and
+ * transition nodes."* The taxonomy bears that out and names the pieces: `path-node` is the network
+ * itself, while `elevator-node`, `escalator-node`, `stairs-node`, `custom-transition` and
+ * `building-entrance-exit` are all ways OFF this floor.
+ *
+ * Stated as "the network one", not as a list of the transitions, and that direction matters: a
+ * transition subType added to the taxonomy tomorrow lands under *Transitions* by itself, which is
+ * where it belongs. The reverse phrasing would quietly file it as network.
+ */
+export const NETWORK_SUBTYPE = "path-node";
+export const isTransitionNode = (row: { mainType: string; subType?: string }) =>
+  row.mainType === "wayfinding-network" && row.subType !== NETWORK_SUBTYPE;
 
 /**
  * Group the map's raw per-type counts the way the dashboard does.
@@ -455,6 +503,53 @@ export function groupByClass(counts: LevelTypeCount[]): ClassGroup[] {
   }
   return CLASS_ORDER.filter((cls) => byClass.has(cls)).map((cls) => {
     const rows = (byClass.get(cls) ?? []).sort((a, b) => b.count - a.count);
-    return { cls, total: rows.reduce((n, r) => n + r.count, 0), rows };
+    return {
+      cls,
+      label: CLASS_LABEL[cls],
+      total: rows.reduce((n, r) => n + r.count, 0),
+      rows,
+    };
   });
+}
+
+/** One group, from rows already chosen. Empty groups are dropped by the caller, not built here. */
+function group(
+  cls: FeatureClass,
+  label: string,
+  rows: LevelTypeCount[],
+): ClassGroup {
+  return {
+    cls,
+    label,
+    rows: [...rows].sort((a, b) => b.count - a.count),
+    total: rows.reduce((n, r) => n + r.count, 0),
+  };
+}
+
+/**
+ * The tree's groups for the section on screen.
+ *
+ * On **Map Content** this is `groupByClass` exactly as it always was — by taxonomy class, with the
+ * system types dropped as plumbing.
+ *
+ * On a **system section** the tree lists that section's own rows, which are otherwise invisible
+ * everywhere in the app. The wayfinding network gets two headings rather than one, because Olcay's
+ * *"network nodes and transition nodes"* is a real distinction in the data and a flat list of six
+ * subTypes buries it: a `path-node` is a step along this floor, and everything else is a way off it.
+ */
+export function groupForSection(
+  counts: LevelTypeCount[],
+  section: MapSection,
+): ClassGroup[] {
+  if (section === "content") return groupByClass(counts);
+  const mine = counts.filter((c) => c.mainType === section);
+  if (!mine.length) return [];
+  if (section !== "wayfinding-network")
+    return [group("system", CLASS_LABEL.system, mine)];
+  const network = mine.filter((r) => !isTransitionNode(r));
+  const transitions = mine.filter(isTransitionNode);
+  return [
+    network.length ? group("system", "Network", network) : null,
+    transitions.length ? group("system", "Transitions", transitions) : null,
+  ].filter((g): g is ClassGroup => !!g);
 }

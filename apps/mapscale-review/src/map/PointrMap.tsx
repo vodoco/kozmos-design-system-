@@ -433,8 +433,23 @@ const PointrMap = forwardRef<
      * every one of them is never off and buries the POI cards the hover exists for. Making them
      * *unclickable* was the part that was wrong, and that part has gone.
      */
+    /**
+     * ⚠️ **The section you are in is the one thing that answers when you point at it.** These are
+     * quiet because a floor has hundreds of them and a card that follows the pointer across every
+     * wall is never off — but on the Wayfinding Network section the nodes are not background, they
+     * are the subject, and a section whose own content refuses to say what it is would be absurd.
+     *
+     * Derived from `hiddentypes` rather than taking a prop of its own: a system type that is NOT
+     * hidden is, by construction, the section on screen.
+     */
+    const hidden = latest.current.hiddenTypes ?? SYSTEM_MAIN_TYPES;
     win.postMessage(
-      { type: "quiettypes", types: NON_EDITABLE_MAIN_TYPES },
+      {
+        type: "quiettypes",
+        types: NON_EDITABLE_MAIN_TYPES.filter(
+          (t) => !SYSTEM_MAIN_TYPES.includes(t) || hidden.includes(t),
+        ),
+      },
       "*",
     );
     /**
@@ -451,13 +466,7 @@ const PointrMap = forwardRef<
      * `hiddenTypes` overrides it, which is how a rail section that becomes real will show its own
      * layer: it passes the list **without** its own type in it.
      */
-    win.postMessage(
-      {
-        type: "hiddentypes",
-        types: latest.current.hiddenTypes ?? SYSTEM_MAIN_TYPES,
-      },
-      "*",
-    );
+    win.postMessage({ type: "hiddentypes", types: hidden }, "*");
     if (latest.current.changes)
       win.postMessage(
         {

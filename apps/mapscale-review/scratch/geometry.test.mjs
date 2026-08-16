@@ -80,6 +80,7 @@ writeFileSync(
       `  flatType, sourceLayerIndex, groupBySourceLayer, cloneLayerDef,\n` +
       `  GJ, GJ_SRC, GJ_LYR, gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,\n` +
       `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
+      `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
       `export function __setHidden(t) {\n` +
@@ -106,6 +107,7 @@ const {
   flatType, sourceLayerIndex, groupBySourceLayer, cloneLayerDef,
   gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
+  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE,
   __setMap, __setLevelFeats, __setHidden, __env, TARGET, prefs, POSTED,
 } = mod;
 
@@ -1761,6 +1763,104 @@ const SYSTEM = ["wayfinding-network", "geofence", "positioning-device"];
   gjTeardown(null);
   __setHidden(null);
   HIDDEN_BY_TYPE.clear();
+}
+
+/* ══ WAYFINDING — network nodes and transition nodes ════════════════════════
+   Olcay, 2026-08-16: "Wayfinding Network is a complicated structure with network nodes and
+   transition nodes." The product draws all six subTypes with one symbol layer and no sprite for
+   any of them, so its own answer is several hundred identical pins — which is the picture that
+   started this. These two layers are the one piece of authorship in the render, and they exist
+   because there is nothing here to derive. */
+console.log("\nwayfinding");
+
+const SHOW_WF = ["geofence", "positioning-device"];   // the list a section passes: all but its own
+
+/* W1. It draws only where its section is the one on screen. */
+{
+  gjTeardown(null);
+  HIDDEN_BY_TYPE.clear();
+  const m = fakeMap();
+  __setMap(m);
+
+  // ⚠️ Not told anything — every other screen in the app. Those must look exactly as they did.
+  __setHidden(null);
+  applyWayfinding();
+  check("silence adds nothing", !m.getLayer(WF_NODE) && !m.getLayer(WF_TRANSITION));
+  check("…and leaves the SDK's own layer alone",
+        m.getLayoutProperty(WF_HIDE, "visibility") !== "none");
+
+  __setHidden(SYSTEM);                                  // Map Content: this type is hidden
+  applyWayfinding();
+  check("Map Content draws no network", !m.getLayer(WF_NODE));
+
+  __setHidden(SHOW_WF);                                 // Wayfinding Network selected
+  applyWayfinding();
+  check("its own section draws it", !!m.getLayer(WF_NODE) && !!m.getLayer(WF_TRANSITION));
+  check("…as circles, not as markers", m.getLayer(WF_NODE).type === "circle");
+  check("…off the tiles' own source layer",
+        m.getLayer(WF_NODE)["source-layer"] === "wayfindingnetwork");
+  check("⚠️ and the product's pin storm goes — 500 identical default-poi markers",
+        m.getLayoutProperty(WF_HIDE, "visibility") === "none");
+
+  __setHidden(SYSTEM);
+  applyWayfinding();
+  check("leaving the section takes them away again",
+        !m.getLayer(WF_NODE) && !m.getLayer(WF_TRANSITION));
+}
+
+/* W2. The split: one subType is the network, the other five are ways off the floor. */
+{
+  const net = JSON.stringify(wfFilter(true));
+  const trans = JSON.stringify(wfFilter(false));
+  check("the network layer takes path-nodes", /"==".*"subType".*"path-node"/.test(net), net);
+  check("…and the transition layer takes everything else", /"!=".*"subType".*"path-node"/.test(trans),
+        trans);
+  /**
+   * ⚠️ Phrased as "is / is not the network subType", never as a list of the five transitions. A
+   * transition subType added to the taxonomy tomorrow then draws as a transition by itself; the
+   * other phrasing would quietly file it as network, on a map where that is the difference between
+   * "a step along this floor" and "a way off it".
+   */
+  check("neither names the five transitions", !/elevator|escalator|stairs/.test(net + trans));
+  check("both are scoped to the level, like every other layer here",
+        net.indexOf('"lvl"') > 0 && trans.indexOf('"lvl"') > 0);
+}
+
+/* W3. A level switch re-sets the filters — they are baked in when the layer is made. */
+{
+  const m = fakeMap();
+  __setMap(m);
+  TARGET.level = -2;
+  __setHidden(SHOW_WF);
+  applyWayfinding();
+  check("built for the level on screen",
+        JSON.stringify(m.getFilter(WF_NODE)).indexOf("-2") > 0);
+  TARGET.level = 3;
+  applyWayfinding();
+  check("and re-filtered when the floor moves — or the last floor's network draws under this one",
+        JSON.stringify(m.getFilter(WF_NODE)).indexOf("3") > 0 &&
+        JSON.stringify(m.getFilter(WF_NODE)).indexOf("-2") < 0);
+  TARGET.level = -2;
+  wfRemove();
+  __setHidden(null);
+}
+
+/* W4. It follows the render swap: a layer's source is fixed once added, so it is rebuilt. */
+{
+  __setHidden(SHOW_WF);
+  const m = swap();
+  check("the floor is on the GeoJSON", gjLive());
+  applyWayfinding();
+  check("the nodes come off the GeoJSON source too",
+        m.getLayer(WF_NODE).source === "__gj_wayfindingnetwork");
+  check("…with no source-layer, which a GeoJSON source has none of",
+        !m.getLayer(WF_NODE)["source-layer"]);
+  check("and the CLONE of the pin layer is hidden as well as the original",
+        m.getLayoutProperty("__gjl_symbol_wayfinding-network_ptr", "visibility") === "none");
+  gjTeardown(null);
+  __setHidden(null);
+  HIDDEN_BY_TYPE.clear();
+  wfRemove();
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */
