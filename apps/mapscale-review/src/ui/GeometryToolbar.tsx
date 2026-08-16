@@ -75,7 +75,8 @@ export type GeomCommand =
   | { cmd: "undo" }
   | { cmd: "redo" }
   | { cmd: "reset" }
-  | { cmd: "straighten" }
+  | { cmd: "simplify" }
+  | { cmd: "square" }
   | { cmd: "split" };
 
 /* ── icons ────────────────────────────────────────────────────────────────────
@@ -133,8 +134,8 @@ function Split() {
   );
 }
 
-/** Straighten — three points that have been brought onto one line. */
-function Straighten() {
+/** Simplify — three points that have been brought onto one line, so the middle one can go. */
+function Simplify() {
   return (
     <svg {...ICON} aria-hidden>
       <path d="M3.5 15h17" />
@@ -142,6 +143,20 @@ function Straighten() {
       <circle cx="4.5" cy="15" r="2" fill="currentColor" stroke="none" />
       <circle cx="12" cy="15" r="2" fill="currentColor" stroke="none" />
       <circle cx="19.5" cy="15" r="2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/**
+ * Straighten — a wonky outline (ghosted) pulled onto a right-angled one, with a corner mark to say
+ * what the operation is actually about. Not a rectangle on its own: that reads as "draw a box".
+ */
+function Straighten() {
+  return (
+    <svg {...ICON} aria-hidden>
+      <path d="M4.5 8.2 12.5 4.6l7 4.2-1.2 9.4-13 .6z" strokeOpacity=".3" />
+      <path d="M5 7.5h14v11H5z" />
+      <path d="M8 15.5v-4h4" strokeOpacity=".55" />
     </svg>
   );
 }
@@ -490,8 +505,16 @@ export function GeometryToolbar({
             <Tile
               icon={<Straighten />}
               label="Straighten"
-              title="Drop points that already sit on the line between their neighbours"
-              onClick={() => onCommand({ cmd: "straighten" })}
+              title="Square the shape onto its own grid — near-right-angle corners become right angles, genuine diagonals are left alone"
+              onClick={() => onCommand({ cmd: "square" })}
+            />
+          )}
+          {!isPoint && (
+            <Tile
+              icon={<Simplify />}
+              label="Simplify"
+              title="Drop corners that already sit on the line between their neighbours"
+              onClick={() => onCommand({ cmd: "simplify" })}
             />
           )}
           <Tile
