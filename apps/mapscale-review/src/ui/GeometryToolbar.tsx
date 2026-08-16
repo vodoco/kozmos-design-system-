@@ -119,6 +119,8 @@ export interface GeomState {
   selectedEdges?: number;
   /** How many nodes the network being edited holds. */
   nodes?: number;
+  /** The pointer is on one of its edges — Delete would unlink it. */
+  onEdge?: boolean;
 }
 
 export type GeomCommand =
@@ -490,6 +492,8 @@ export function GeometryToolbar({
    */
   const isNetwork = state.kind === "network";
   const nodes = state.nodes ?? 0;
+  /** The pointer is on one of the network's edges, so Delete would unlink it. */
+  const onEdge = !!state.onEdge;
   const selected = state.selected ?? 0;
   /**
    * How many whole edges that corner selection amounts to — an edge counts when both of its ends
@@ -532,10 +536,17 @@ export function GeometryToolbar({
                * The selection is the thing most likely to be acted on next, so it outranks the
                * standing fact about the network — the same order the corner caption follows.
                */
+              /**
+               * ⚠️ The order is the order Delete itself resolves in: a selection outranks the edge
+               * under the pointer, so the caption must never promise the unlink while a selection
+               * would be deleted instead.
+               */
               text:
                 selected > 0
                   ? `${selected} node${selected === 1 ? "" : "s"} selected · drag to move · Delete to remove`
-                  : `Editing this network · ${nodes} node${nodes === 1 ? "" : "s"} · shift-drag to lasso`,
+                  : onEdge
+                    ? "Delete to unlink these two nodes"
+                    : `Editing this network · ${nodes} node${nodes === 1 ? "" : "s"} · shift-drag to lasso`,
               bad: false,
             }
           : isPoint

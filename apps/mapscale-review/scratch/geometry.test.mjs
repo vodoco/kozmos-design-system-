@@ -84,6 +84,7 @@ writeFileSync(
       `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,\n` +
       `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,\n` +
       `  networkComponents, networkRun, networkAdjacency, deleteNetworkNodes,\n` +
+      `  unlinkNetworkNodes,\n` +
       `  wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL, WF_NODES,\n` +
       `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_CURRENT, WF_R,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
@@ -121,7 +122,7 @@ const {
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
   applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,
   edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
-  networkComponents, networkRun, deleteNetworkNodes,
+  networkComponents, networkRun, deleteNetworkNodes, unlinkNetworkNodes,
   wfBuildEdges, wfEnsureEdges, WF_EDGE_HL, WF_NODE_HL,
   wfSetEditing, wfNetworkNodes, wfHighlight, WF_CURRENT, WF_R,
   editableAt, hoverableAt,
@@ -2235,15 +2236,22 @@ const node = (fid, at, nb, tr) => ({
   check("every node of the network grows into a handle", R(WF_NODE) !== rest);
   check("…and so do the transitions", JSON.stringify(m.getPaintProperty(WF_TRANSITION, "circle-radius"))
         === JSON.stringify(WF_R.transitionEdit));
-  check("the network stays lit for as long as you are in it",
-        JSON.stringify(m.getFilter(WF_NODE_HL)) === JSON.stringify(["==", ["get", "net"], 0]));
+  /**
+   * ⚠️ The **edges** stay lit and the nodes do not. Lighting every node of the network you are
+   * editing paints over the two states that actually matter while you are in it — which node is
+   * selected and which one you are on — and 926 identical lit dots say nothing anyway.
+   */
+  check("the network stays lit for as long as you are in it — by its corridors",
+        JSON.stringify(m.getFilter(WF_EDGE_HL)) === JSON.stringify(["==", ["get", "net"], 0]));
+  check("…and its nodes are left free to say something more useful",
+        JSON.stringify(m.getFilter(WF_NODE_HL)) === JSON.stringify(["==", ["get", "fid"], " none"]));
   check("…and the node you are on is marked apart from it",
         JSON.stringify(m.getFilter(WF_CURRENT)) === JSON.stringify(["==", ["get", "fid"], "a"]));
 
   // ⚠️ Hover cannot take the mark away while editing: the mark is no longer about the pointer.
   wfHighlight("z");
   check("hovering elsewhere does not steal the edit's highlight",
-        JSON.stringify(m.getFilter(WF_NODE_HL)) === JSON.stringify(["==", ["get", "net"], 0]));
+        JSON.stringify(m.getFilter(WF_EDGE_HL)) === JSON.stringify(["==", ["get", "net"], 0]));
 
   wfSetEditing(0, "b");
   check("moving to another node moves the current mark",
@@ -2251,8 +2259,9 @@ const node = (fid, at, nb, tr) => ({
 
   wfSetEditing(null);
   check("leaving edit mode puts the dots back", R(WF_NODE) === rest);
-  check("…and clears both marks",
-        JSON.stringify(m.getFilter(WF_CURRENT)) === JSON.stringify(m.getFilter(WF_NODE_HL)));
+  check("…and clears every mark",
+        [WF_CURRENT, WF_NODE_HL, WF_EDGE_HL].every(
+          (id) => JSON.stringify(m.getFilter(id)) === JSON.stringify(["==", ["get", "fid"], " none"])));
 
   // The editor is handed the whole network, not the node that was clicked.
   const netNodes = wfNetworkNodes(0);
@@ -2354,6 +2363,41 @@ const node = (fid, at, nb, tr) => ({
   check("the whole network can be deleted", deleteNetworkNodes(chain, ["a", "b", "c", "d"]).nodes.length === 0);
   check("…and a surviving node keeps its own way off the floor",
         gone.nodes.every((n) => (n.transitionNeighbors || []).length === 0));
+}
+
+/* P16. Unlinking. Olcay: "I should be able to hover over an edge and unlink so it removes the
+        neighbour relationship between nodes." The smallest edit this graph has — both nodes stay
+        exactly where they are, and the walk between them stops existing. */
+{
+  const pair = [
+    node("a", [0, 0], [{ fid: "b", speed: 1 }, "c"]),
+    node("b", [1, 0], ["a"]),
+    node("c", [2, 0], ["a"]),
+  ];
+  const out = unlinkNetworkNodes(pair, "a", "b");
+  check("both nodes are still there", out.nodes.length === 3);
+  check("…exactly where they were", JSON.stringify(out.nodes[0].at) === JSON.stringify([0, 0]));
+  /**
+   * ⚠️ Both directions go, because the LINE was the pair. Removing one reference would leave the
+   * line drawn — as a one-way, complete with arrowheads — which is not "unlink", it is a silent
+   * change of meaning.
+   */
+  check("a no longer names b", !out.nodes[0].neighbors.some((n) => n.fid === "b"));
+  check("…and b no longer names a", !out.nodes[1].neighbors.some((n) => n.fid === "a"));
+  check("two references went", out.removed === 2);
+  check("a's OTHER link is untouched", out.nodes[0].neighbors.some((n) => n.fid === "c"));
+
+  // A one-way pair only ever had the one reference, so it is the same act with a smaller count.
+  const oneway = [node("a", [0, 0], ["b"]), node("b", [1, 0], [])];
+  check("a one-way link unlinks too", unlinkNetworkNodes(oneway, "a", "b").removed === 1);
+  check("unlinking two nodes that were never linked changes nothing",
+        unlinkNetworkNodes(pair, "b", "c").removed === 0);
+
+  // It can split a network in two — a real outcome, and the editor says so rather than hiding it.
+  const chain = [node("a", [0, 0], ["b"]), node("b", [1, 0], ["a", "c"]), node("c", [2, 0], ["b"])];
+  const cut = unlinkNetworkNodes(chain, "b", "c");
+  const { list } = networkComponents(cut.nodes, networkEdges(cut.nodes).edges);
+  check("…and where it splits the network, it really is two now", list.length === 2);
 }
 
 /* ══ REACH — what a section lets you touch ══════════════════════════════════

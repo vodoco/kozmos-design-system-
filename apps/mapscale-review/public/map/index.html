@@ -1905,6 +1905,33 @@ function deleteNetworkNodes(nodes, fids) {
 }
 
 /**
+ * **Unlink two nodes** — Olcay, 2026-08-16: *"I should be able to hover over an edge and unlink so
+ * it removes the neighbour relationship between nodes."*
+ *
+ * The smallest edit this graph has, and the one with the least to argue about: the nodes both stay
+ * exactly where they are, and the walk between them stops existing.
+ *
+ * ⚠️ **Both directions go, because the line was the pair.** A two-way corridor is two references and
+ * one line on screen; removing one of them would leave the line drawn — as a one-way, complete with
+ * arrowheads — which is not "unlink", it is a silent change of meaning. A pair that was already
+ * one-way only ever had the one reference, so this is the same act either way.
+ *
+ * `transitionNeighbors` are deliberately untouched: a transition is not drawn as a line on this
+ * floor, so there is no edge under the pointer to have meant.
+ */
+function unlinkNetworkNodes(nodes, a, b) {
+  let removed = 0;
+  const out = (nodes || []).map(n => {
+    if (!n || (n.fid !== a && n.fid !== b)) return n;
+    const other = n.fid === a ? b : a;
+    const keep = (n.neighbors || []).filter(nb => nb.fid !== other);
+    removed += (n.neighbors || []).length - keep.length;
+    return Object.assign({}, n, { neighbors: keep });
+  });
+  return { nodes: out, removed };
+}
+
+/**
  * Move one node and rebuild only the lines that touch it.
  *
  * The whole point is that dragging a node in the editor takes its corridors with it — a network
@@ -2079,6 +2106,8 @@ const WF_SL = "wayfindingnetwork";
 const WF_NETWORK_SUBTYPE = "path-node";
 /** The node being edited, marked apart from the rest of its network. */
 const WF_CURRENT = "__wf_current", WF_SELECTED = "__wf_selected";
+/** The edge under the pointer while editing: what Delete would unlink. */
+const WF_CUT = "__wf_cut";
 /**
  * How big a node draws, at rest and in edit mode — Olcay, 2026-08-16: *"onHover the dots should not
  * get larger… nodes should get larger in edit mode."*
@@ -2109,8 +2138,22 @@ const WF_EDGE_HL = "__wf_edge_hl", WF_NODE_HL = "__wf_node_hl";
  * them read as texture rather than as content, and the theme blue for a transition, which is the
  * thing you are actually looking for when you open this section.
  */
+/**
+ * ⚠️ **The highlight has to be a colour you can SEE at three pixels** (Olcay, 2026-08-16: *"nodes
+ * doesn't highlight when selected. Also onHover highlight is gone too. there should be a color
+ * change."*).
+ *
+ * It was `#0b369c` — the editor's own handle navy — filled over `#7A8699` slate at a radius of two
+ * or three pixels. Technically a different colour; on a screen, the same grey dot. The lesson is
+ * not about these two values: **a mark that only differs in lightness disappears at the size the
+ * thing is actually drawn**, and this network draws small on purpose.
+ *
+ * So the lit state changes **hue**, not shade — sky against slate — and the selected state uses the
+ * editor's navy with a white collar, which separates it from both. Red is the palette's own removal
+ * colour and means here what it means everywhere: this is what goes if you press Delete.
+ */
 const WF_COLOUR = { node: "#7A8699", transition: "#2563EB", edge: "#9AA4B4", arrow: "#2563EB",
-                    hl: "#0b369c" };
+                    hl: "#0EA5E9", sel: "#0b369c", cut: "#EF4444" };
 /** The SDK's own pin layer for this type: hidden while we draw the network ourselves. */
 const WF_HIDE = "symbol_wayfinding-network_ptr";
 let wfLevel = null, wfSource = null;
@@ -2160,7 +2203,7 @@ function wfFilter(network) {
 
 function wfRemove() {
   for (const id of [WF_ARROW, WF_EDGE_HL, WF_EDGE_HIT, WF_EDGE, WF_NODE_HIT, WF_NODE,
-                    WF_TRANSITION, WF_NODE_HL, WF_SELECTED, WF_CURRENT])
+                    WF_TRANSITION, WF_NODE_HL, WF_SELECTED, WF_CURRENT, WF_CUT])
     try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
   for (const id of [WF_EDGE_SRC, WF_NODE_SRC])
     try { if (map.getSource(id)) map.removeSource(id); } catch (e) {}
@@ -2386,13 +2429,19 @@ function wfSetEditing(net, fid) {
     map.setPaintProperty(WF_TRANSITION, "circle-radius", on ? WF_R.transitionEdit : WF_R.transition);
     map.setPaintProperty(WF_NODE_HL, "circle-radius", on ? WF_R_MATCH_EDIT : WF_R_MATCH);
     map.setFilter(WF_CURRENT, on ? ["==", ["get", "fid"], wfEditing.fid] : WF_NONE);
-    if (!on) map.setFilter(WF_SELECTED, WF_NONE);
+    if (!on) { map.setFilter(WF_SELECTED, WF_NONE); map.setFilter(WF_CUT, WF_NONE); }
     // The network you are editing stays lit for as long as you are in it — hover cannot take the
     // mark away, because while editing the mark is no longer answering a question about the pointer.
     if (on) {
       wfHover = "editing";
+      /**
+       * ⚠️ **The EDGES stay lit, the nodes do not.** Lighting every node of the network you are
+       * editing paints over the two states that actually matter while you are in it — which node is
+       * selected, and which one you are on — and 926 identical lit dots say nothing anyway. The lit
+       * corridors are what say "this network"; the nodes are left to say something more useful.
+       */
       map.setFilter(WF_EDGE_HL, ["==", ["get", "net"], wfEditing.net]);
-      map.setFilter(WF_NODE_HL, ["==", ["get", "net"], wfEditing.net]);
+      map.setFilter(WF_NODE_HL, WF_NONE);
     } else {
       wfHover = null;
       map.setFilter(WF_EDGE_HL, WF_NONE);
@@ -2416,6 +2465,28 @@ function wfSetSelected() {
       ? ["any", ...sel.map(f => ["==", ["get", "fid"], f])] : WF_NONE);
   } catch (e) {}
 }
+
+/**
+ * The edge under the pointer while editing, held so Delete knows what it would unlink.
+ *
+ * ⚠️ **Hover is the whole selection mechanism for an edge**, and deliberately so: an edge has no
+ * `fid`, so it cannot be selected, kept, listed or reported like a node. Making one selectable
+ * would mean inventing an identity for a thing the platform does not have one for — which is the
+ * same refusal Split's second piece ran into. Pointing at it is enough to act on it.
+ */
+function wfHoverEdge(point) {
+  const e = wfEditing ? wfEdgeAt(point) : null;
+  const key = e ? e.join(" ") : null;
+  if (key === wfCutKey) return;
+  wfCutKey = key;
+  if (GEOM && GEOM.kind === "network") GEOM.cut = e;
+  try {
+    map.setFilter(WF_CUT, e
+      ? ["all", ["==", ["get", "from"], e[0]], ["==", ["get", "to"], e[1]]] : WF_NONE);
+  } catch (err) {}
+  post("geomstate", geomState());
+}
+let wfCutKey = null;
 
 /** Every node of one network, as the editor wants them: `{ fid, at }`, ready to drag. */
 function wfNetworkNodes(net) {
@@ -2541,6 +2612,18 @@ function applyWayfinding() {
        */
       map.addLayer({ id: WF_EDGE_HIT, type: "line", source: WF_EDGE_SRC,
         paint: { "line-color": "#000", "line-opacity": 0.001, "line-width": WF_HIT_W } });
+      /**
+       * The edge the pointer is on while a network is being edited — drawn in the palette's own
+       * removal red, which means here exactly what it means everywhere else in this file: **this is
+       * what goes if you press Delete.** Above the lit edges, below the nodes.
+       */
+      map.addLayer({ id: WF_CUT, type: "line", source: WF_EDGE_SRC,
+        filter: WF_NONE,
+        layout: { "line-cap": "round" },
+        paint: {
+          "line-color": WF_COLOUR.cut,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 15, 2.4, 18, 4, 21, 6],
+        } });
       map.addLayer(Object.assign({ id: WF_NODE_HIT, filter: ["any", wfFilter(true), wfFilter(false)],
         paint: { "circle-radius": WF_HIT_R, "circle-color": "#000", "circle-opacity": 0.001 } }, base));
       map.addLayer(Object.assign({ id: WF_NODE, filter: wfFilter(true),
@@ -2574,7 +2657,13 @@ function applyWayfinding() {
        * is about to move.
        */
       map.addLayer(Object.assign({ id: WF_SELECTED, filter: WF_NONE,
-        paint: { "circle-radius": WF_R_MATCH_EDIT, "circle-color": WF_COLOUR.hl } }, base));
+        paint: {
+          "circle-radius": WF_R_MATCH_EDIT,
+          "circle-color": WF_COLOUR.sel,
+          // A white collar, so a selected node separates from its neighbours AND from the floor.
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 1.5,
+        } }, base));
       map.addLayer(Object.assign({ id: WF_CURRENT, filter: WF_NONE,
         paint: {
           "circle-radius": WF_R_MATCH_EDIT,
@@ -2584,6 +2673,14 @@ function applyWayfinding() {
         } }, base));
       wfSource = src.source;
       wfLevel = TARGET.level;
+      /**
+       * ⚠️ **A rebuild wipes every filter, so the edit's marks are re-asserted here.** The layers
+       * are re-created whenever the node source flips — which happens a few frames after load, when
+       * the `/paths` fetch lands and the nodes move off the tiles. An edit begun before that would
+       * otherwise lose its highlight, its selection and its current-node mark, and the only symptom
+       * would be that nothing looks selected.
+       */
+      if (wfEditing) { wfSetEditing(wfEditing.net, wfEditing.fid); wfSetSelected(); }
     } else if (wfLevel !== TARGET.level) {
       // Baked in when the layer was created, exactly like the floor plan's — so a level switch has
       // to re-set them or the last floor's network keeps drawing under this one.
@@ -2600,7 +2697,7 @@ function applyWayfinding() {
      * whatever else the map has been told to hide.
      */
     for (const id of [WF_EDGE, WF_EDGE_HL, WF_EDGE_HIT, WF_ARROW, WF_NODE_HIT, WF_NODE,
-                      WF_TRANSITION, WF_NODE_HL, WF_SELECTED, WF_CURRENT])
+                      WF_TRANSITION, WF_NODE_HL, WF_SELECTED, WF_CURRENT, WF_CUT])
       if (map.getLayer(id) && map.getLayoutProperty(id, "visibility") === "none")
         map.setLayoutProperty(id, "visibility", "visible");
     // The pin storm the product would otherwise draw for the same features.
@@ -3489,6 +3586,23 @@ function start() {
        * you may click it, and now that clicking one actually switches to it, suppressing it there
        * would hide the feature behind an invisible affordance.
        */
+      /**
+       * ⚠️ **A network in edit mode raises no card at all** (Olcay, 2026-08-16: *"in edit mode I
+       * still see tooltip when on hover. We're already editing it."*).
+       *
+       * The rule above is per FEATURE — do not offer "click to edit" for the thing already open —
+       * and a network breaks it, because every node of it is a different feature with a different
+       * fid. Hovering the node beside the one you are on would offer to open what is already open,
+       * over the handles you are reaching for. The subject here is the network, so the whole
+       * network is "already open".
+       */
+      if (GEOM.kind === "network") {
+        dropCard();
+        // The edge under the pointer is what a hover means in here now — see the unlink mark.
+        wfHoverEdge(ev.point);
+        map.getCanvas().style.cursor = "";
+        return;
+      }
       // Hover only — a wall must not raise a card, but must still open on a click.
       const over = hoverableAt(ev.point);
       const overFid = over && over.properties && over.properties.fid;
@@ -3733,6 +3847,17 @@ function start() {
         (GEOM.kind === "area" || GEOM.kind === "network")) {
       ev.preventDefault();
       if (GEOM.kind === "network") geomDeleteNodes(); else geomDeleteSelected();
+      return;
+    }
+    /**
+     * **Delete on a hovered edge unlinks it** (Olcay, 2026-08-16). Below the selection on purpose:
+     * an explicit selection outranks whatever the pointer happens to be resting on, so Delete never
+     * does something other than what you just picked out.
+     */
+    if ((ev.key === "Delete" || ev.key === "Backspace") &&
+        GEOM && GEOM.kind === "network" && !GEOM.sel.size && GEOM.cut) {
+      ev.preventDefault();
+      geomUnlinkEdge();
       return;
     }
     /**
@@ -3992,6 +4117,8 @@ function geomBegin(fid) {
      */
     nodes: f.kind === "network" ? f.nodes : null,
     net: f.kind === "network" ? f.net : -1,
+    /** The edge under the pointer, as `[from, to]` — what Delete would unlink. Hover-lived. */
+    cut: null,
     history: [],
     future: [],
     snap: true,
@@ -4252,6 +4379,40 @@ function wfSelectIn(a, b, additive) {
 }
 
 /**
+ * **Unlink the edge under the pointer**: the two nodes stay, the walk between them stops existing.
+ *
+ * The smallest edit this graph has — and unlike deleting a node, nothing has to be contracted or
+ * refused, because nothing is left with a hole in it. It can still split a network in two, which is
+ * a real outcome and is reported rather than hidden.
+ */
+function geomUnlinkEdge() {
+  if (!GEOM || GEOM.kind !== "network" || !GEOM.cut) return;
+  const [a, b] = GEOM.cut;
+  geomPush();
+  const before = GEOM.nodes.map(n => n.fid);
+  const res = unlinkNetworkNodes(GEOM.nodes, a, b);
+  if (!res.removed) return;
+  wfReplaceNetwork(before, res.nodes);
+  GEOM.nodes = res.nodes.map(n => JSON.parse(JSON.stringify(n)));
+  GEOM.cut = null;
+  wfCutKey = null;
+  try { map.setFilter(WF_CUT, WF_NONE); } catch (e) {}
+  /**
+   * ⚠️ The network may have just become two, and the one being edited is whichever the panel's node
+   * is now in. Re-reading it is what keeps the highlight, the lasso and Delete all talking about
+   * the same set of nodes.
+   */
+  const net = wfNetOf(GEOM.fid);
+  if (net >= 0) { GEOM.net = net; GEOM.nodes = wfNetworkNodes(net); }
+  wfSetEditing(GEOM.net, GEOM.fid);
+  wfSetSelected();
+  post("geomerror", { fid: GEOM.fid, message:
+    res.removed > 1 ? "Unlinked — the two nodes no longer connect either way"
+                    : "Unlinked — the one-way link between the two nodes is gone" });
+  post("geomstate", geomState());
+}
+
+/**
  * **Delete the selected nodes from the network.**
  *
  * ⚠️ Not the same act as deleting a corner, and the difference is worth stating: a polygon with a
@@ -4496,6 +4657,8 @@ function geomState() {
         kind: GEOM.kind,
         /** How many nodes the network being edited has, for the toolbar to say so. */
         nodes: GEOM.nodes ? GEOM.nodes.length : 0,
+        /** Is the pointer on an edge? Then Delete unlinks it, and the caption should say so. */
+        onEdge: !!(GEOM.cut && GEOM.kind === "network"),
         selected: GEOM.sel.size,
         /**
          * How many whole EDGES the corner selection amounts to — an edge counts when **both** of
