@@ -89,7 +89,7 @@ writeFileSync(
       `  GJ, GJ_SRC, GJ_LYR, gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,\n` +
       `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
       `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,\n` +
-      `  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,\n` +
+      `  edgeKeys, selectedEdgeCount, grabOffset, aimPoint, networkEdges, moveNetworkNode,\n` +
       `  networkComponents, networkRun, networkAdjacency, deleteNetworkNodes,\n` +
       `  unlinkNetworkNodes,\n` +
       `  wfBuildEdges, wfEnsureEdges, WF_NODES, wfPaint,\n` +
@@ -132,7 +132,7 @@ const {
   gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
   applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,
-  edgeKeys, selectedEdgeCount, networkEdges, moveNetworkNode,
+  edgeKeys, selectedEdgeCount, grabOffset, aimPoint, networkEdges, moveNetworkNode,
   networkComponents, networkRun, deleteNetworkNodes, unlinkNetworkNodes,
   wfBuildEdges, wfEnsureEdges, wfPaint,
   wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd,
@@ -1986,6 +1986,33 @@ console.log("\nedge select");
   check("keys are per ring", selectedEdgeCount(two, new Set(["0:1", "1:0"])) === 0);
   check("…and the second ring's own edges count",
         selectedEdgeCount(two, new Set(["1:0", "1:1"])) === 1);
+}
+
+/* G6. ⚠️ A drag moves what you grabbed by how far the POINTER moved. Olcay, 2026-08-17: "dragging
+       edge has a bug. it jumps to an offset location right at the start."
+
+       Every drag here used to put the led point AT the pointer. That is invisible while the target
+       is small enough that you cannot grab it far from its centre — a corner handle is — and it is
+       a teleport on an EDGE, where you press wherever the corridor happens to run. */
+{
+  // The lead node is at (100,100) on screen; you press on the edge 40px to the right of it.
+  const grab = grabOffset({ x: 140, y: 100 }, { x: 100, y: 100 });
+  check("the offset is where you took hold, not where the thing is",
+        grab.dx === 40 && grab.dy === 0);
+
+  // Pointer has not moved yet: the node must not move either. This is the reported bug.
+  const still = aimPoint({ x: 140, y: 100 }, grab);
+  check("⚠️ pressing without moving moves nothing", still.x === 100 && still.y === 100);
+
+  // Pointer moves by (10, 5): the node moves by (10, 5), keeping the grab offset.
+  const moved = aimPoint({ x: 150, y: 105 }, grab);
+  check("…and the node follows the pointer's delta, not its position",
+        moved.x === 110 && moved.y === 105);
+
+  // Grabbing a handle dead centre is the degenerate case the old code got right by luck.
+  const centre = grabOffset({ x: 100, y: 100 }, { x: 100, y: 100 });
+  check("a dead-centre grab is no offset at all", centre.dx === 0 && centre.dy === 0);
+  check("…and then aiming IS the pointer", aimPoint({ x: 7, y: 9 }, centre).x === 7);
 }
 
 /* ══ PATHS — the network's lines, and where the direction comes from ════════

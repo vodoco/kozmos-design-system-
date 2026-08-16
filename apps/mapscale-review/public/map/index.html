@@ -4389,6 +4389,25 @@ function edgeKeys(ri, ci, ringLen) {
 }
 
 /**
+ * **Where you took hold of a thing, relative to the thing** — and what it is therefore aiming at.
+ *
+ * ⚠️ The rule these two encode is the one every drag here used to get wrong: **a drag moves what you
+ * grabbed by how far the pointer moved.** Putting it *at* the pointer instead is only invisible when
+ * the target is small enough that you cannot grab it far from its centre. A corner handle is; an
+ * **edge** is not — press halfway along a corridor and its end node teleports under the cursor
+ * before you have moved a pixel.
+ *
+ * Snap and the guides are then asked about `aimPoint`, i.e. about **where the node would be**, which
+ * is what they were always meant to answer: you are snapping the node to the wall, not the cursor.
+ */
+function grabOffset(start, lead) {
+  return { dx: start.x - lead.x, dy: start.y - lead.y };
+}
+function aimPoint(pt, grab) {
+  return { x: pt.x - grab.dx, y: pt.y - grab.dy };
+}
+
+/**
  * **An edge is selected when both of its ends are.** That is the entire model, and it is why edge
  * editing needed almost no new machinery: selecting an edge selects two corners, dragging it is the
  * multi-corner drag that already existed, and *multi*-edge selection is the same set with more in
@@ -6947,6 +6966,26 @@ function geomDown(ev, what) {
    */
   const origNodes = new Map((GEOM.nodes || []).map(n => [n.fid, n.at.slice()]));
   /**
+   * ⚠️ **Where you grabbed it, relative to the thing you grabbed** (Olcay, 2026-08-17: *"dragging
+   * edge has a bug. it jumps to an offset location right at the start."*).
+   *
+   * Every one of these drags put the led point **where the pointer was**, not where it started plus
+   * how far the pointer had moved. On a corner handle that is a jump of a few pixels and reads as
+   * precision. On an **edge** it is a jump of however far along the line you grabbed — you press
+   * halfway down a corridor and its end node teleports under your cursor before you have moved.
+   *
+   * The offset is taken once, at the press, and every frame aims at `pointer − offset`. Snap and
+   * the guides are then computed for **where the node would be**, which is what they were always
+   * meant to answer: you are snapping the node to the wall, not the cursor.
+   */
+  const leadOrig = what.kind === "vertex" ? (origRings[what.ri] || [])[what.ci]
+                 : what.kind === "netnode" ? origNodes.get(what.fid)
+                 : what.kind === "point" ? origPoint : null;
+  const grab = (() => {
+    if (!leadOrig) return { dx: 0, dy: 0 };
+    try { return grabOffset(start, map.project(leadOrig)); } catch (e) { return { dx: 0, dy: 0 }; }
+  })();
+  /**
    * Built once, here, for the life of the gesture — the map cannot move while a shape is being
    * dragged, so these screen coordinates stay true, and rebuilding per frame would cost more than
    * the frame has. Null when Snap is off, which turns every query below into a no-op.
@@ -7005,18 +7044,24 @@ function geomDown(ev, what) {
       GEOM.combine = null;
     }
     const pt = { x: e.clientX, y: e.clientY };
+    /**
+     * What the DRAGGED THING is aiming at — the pointer, less where in it you took hold. For every
+     * other gesture (move, rotate, scale) this is the pointer itself, because those measure a delta
+     * from the press rather than putting a point somewhere.
+     */
+    const aim = aimPoint(pt, grab);
 
     if (what.kind === "point") {
-      const hit = snapAt(pt.x, pt.y);
+      const hit = snapAt(aim.x, aim.y);
       GEOM.snapHit = hit;
       /**
        * A point has no neighbours, so there is no edge to take an angle from — but it can still be
        * lined up with the corners around it, which is most of what placing a POI *is*. Alignment
        * guides only; `resolveGuides` handles a null anchor by simply not offering an angle.
        */
-      let px = pt.x, py = pt.y;
+      let px = aim.x, py = aim.y;
       if (!hit && GEOM.snap) {
-        const g = resolveGuides(null, pt.x, pt.y, guideRefs, geomSnapping(e));
+        const g = resolveGuides(null, aim.x, aim.y, guideRefs, geomSnapping(e));
         px = g.x; py = g.y;
         GEOM.guides = g.guides;
         GEOM.guideAt = [g.x, g.y];
@@ -7039,11 +7084,11 @@ function geomDown(ev, what) {
        * One node of a network, dragged. The same Snap and the same guides a room's corner gets —
        * a node lines up with the wall beside it far more often than with nothing.
        */
-      const hit = snapAt(pt.x, pt.y);
+      const hit = snapAt(aim.x, aim.y);
       GEOM.snapHit = hit;
-      let px = pt.x, py = pt.y;
+      let px = aim.x, py = aim.y;
       if (!hit && GEOM.snap) {
-        const g = resolveGuides(null, pt.x, pt.y, guideRefs, geomSnapping(e));
+        const g = resolveGuides(null, aim.x, aim.y, guideRefs, geomSnapping(e));
         px = g.x; py = g.y;
         GEOM.guides = g.guides;
         GEOM.guideAt = [g.x, g.y];
@@ -7079,7 +7124,7 @@ function geomDown(ev, what) {
       }
 
     } else if (what.kind === "vertex") {
-      const hit = snapAt(pt.x, pt.y);
+      const hit = snapAt(aim.x, aim.y);
       GEOM.snapHit = hit;
       /**
        * Guides only when snapping caught nothing. A snap is a point that actually exists on another
@@ -7089,7 +7134,7 @@ function geomDown(ev, what) {
        * The anchor is the corner BEFORE this one in the ring, so the angle guide measures the edge
        * you are dragging — which is the edge you want straight.
        */
-      let gx = pt.x, gy = pt.y;
+      let gx = aim.x, gy = aim.y;
       /**
        * ⚠️ **Guides obey the Snap toggle**, so the toggle means one thing — *the tool holds you to
        * something* — and turning it off is the way to place a corner at a deliberate 85°, which a
@@ -7099,7 +7144,7 @@ function geomDown(ev, what) {
       if (!hit && GEOM.snap) {
         const ring = origScreen[what.ri] || [];
         const g = resolveGuides(geomVertexAnchors(ring, what.ci, gridDeg),
-                                pt.x, pt.y, guideRefs, geomSnapping(e));
+                                aim.x, aim.y, guideRefs, geomSnapping(e));
         gx = g.x; gy = g.y;
         GEOM.guides = g.guides;
         GEOM.guideAt = [g.x, g.y];
@@ -7108,8 +7153,8 @@ function geomDown(ev, what) {
       }
       const q = map.unproject(hit ? [hit.x, hit.y] : [gx, gy]);
       /**
-       * **The dragged corner goes where the pointer is; the rest of the selection follows by the
-       * same screen offset.** Not "every selected corner to the pointer", which would collapse
+       * **The dragged corner goes where the pointer took it from; the rest of the selection follows
+       * by the same screen offset.** Not "every selected corner to the pointer", which would collapse
        * them all onto one spot — the selection keeps its shape and simply moves.
        *
        * Snapping still applies to the corner under the cursor only. Snapping each of them to its
