@@ -3765,7 +3765,14 @@ function start() {
       if (!both) { GEOM.sel.clear(); GEOM.sel.add(line[0]); GEOM.sel.add(line[1]); wfSetSelected(); }
       // The end you grabbed nearer leads, so Snap and the guides answer for the end you aimed at.
       const lead = wfNearerEnd(line, [ev.clientX, ev.clientY]);
-      if (lead !== GEOM.fid) { GEOM.fid = lead; wfSetEditing(GEOM.net, lead); post("geomstate", geomState()); }
+      /**
+       * ⚠️ **The panel's subject is NOT moved here**, and that is deliberate — trap 9. The app holds
+       * "which feature is open" in two pieces of state and reads a disagreement between them as
+       * *nothing is open*, which sends the map `end` and destroys the edit. Repointing `GEOM.fid`
+       * mid-**gesture**, from a `mousedown`, is precisely how that disagreement is manufactured. A
+       * drag's lead is a fact about this gesture; which node the panel describes is a fact about the
+       * click, and the click already moves it on `mouseup`.
+       */
       geomDown(ev, { kind: "netnode", fid: lead });
       return;
     }
@@ -6978,13 +6985,30 @@ function geomDown(ev, what) {
    * the guides are then computed for **where the node would be**, which is what they were always
    * meant to answer: you are snapping the node to the wall, not the cursor.
    */
+  /**
+   * ⚠️ **`origNodes` only holds the network being edited**, and an edge can be grabbed whose lead is
+   * not in it — a corridor of a *different* network under the same pointer, or one added since the
+   * editor opened. Falling back to the level's own node table matters more than it looks: without
+   * it `leadOrig` is undefined, the offset silently becomes **zero**, and zero offset is exactly the
+   * old bug — the node jumps to the cursor. A fallback that returns nothing is how a fixed bug
+   * comes back wearing a different hat.
+   */
   const leadOrig = what.kind === "vertex" ? (origRings[what.ri] || [])[what.ci]
-                 : what.kind === "netnode" ? origNodes.get(what.fid)
+                 : what.kind === "netnode" ? (origNodes.get(what.fid) || wfNodeAt(what.fid))
                  : what.kind === "point" ? origPoint : null;
   const grab = (() => {
     if (!leadOrig) return { dx: 0, dy: 0 };
     try { return grabOffset(start, map.project(leadOrig)); } catch (e) { return { dx: 0, dy: 0 }; }
   })();
+  /**
+   * **One line per drag, saying what it took hold of.** This bug was reported twice and could not be
+   * reproduced from a terminal either time; the map is the only witness. A drag that jumps has
+   * `grab` at 0,0 with a lead it could not find, and this says so at the moment it happens.
+   */
+  if (what.kind === "netnode" || what.kind === "vertex")
+    console.info("[geometry] drag", what.kind, what.fid || (what.ri + ":" + what.ci),
+      "· grabbed", Math.round(grab.dx) + "," + Math.round(grab.dy), "px from it",
+      leadOrig ? "" : "· ⚠️ NO lead position — the drag will jump to the cursor");
   /**
    * Built once, here, for the life of the gesture — the map cannot move while a shape is being
    * dragged, so these screen coordinates stay true, and rebuilding per frame would cost more than
