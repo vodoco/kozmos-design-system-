@@ -2944,6 +2944,140 @@ function geomWrapDeg(d) {
  * it looks like rather than what it measures in degrees of longitude. Never takes a ring below
  * three points.
  */
+/* ── combine: bridge and stitch ────────────────────────────────────────────────
+   Olcay, 2026-08-16: *"user selects two or more features to combine, edge case is we should fill
+   the small gaps like walls"*.
+
+   ⚠️ **A general polygon union is not what this needs, and reaching for one would be the hack.**
+   Two rooms separated by a wall are **disjoint** — there is nothing to union. What is wanted is to
+   bridge the wall and make one room, and that is a different and much better-conditioned problem:
+   find the pair of facing edges within the gap, cut both rings at the bridge feet, and walk
+   A → bridge → B → bridge → home. Exact, and it avoids the degeneracies — shared edges, vertices
+   lying on edges — that make Greiner-Hormann treacherous in exactly the geometry adjacent rooms
+   occupy.
+
+   **The limit, stated rather than discovered:** one bridge per pair. Two rooms facing each other
+   across *two* separate openings join along the widest. Genuinely overlapping polygons would need a
+   real union; walled rooms are not that. */
+
+/* COMBINE-ENGINE-START — extracted and tested by scratch/geometry.test.mjs; DOM- and map-free.
+   Depends on `ringOpen`, `ringClose` and `ringSignedArea` from the split engine. */
+
+/**
+ * The closest approach between two segments: the two points, one on each, that are nearest.
+ *
+ * Sampled along one segment rather than solved in closed form. The closed-form answer needs four
+ * branches for the parallel and endpoint cases and is wrong in a different way in each; this is
+ * exact for the perpendicular case, within a fraction of the gap threshold everywhere else, and
+ * the threshold is a judgement call to within a few centimetres anyway.
+ */
+function segPairClosest(a1, a2, b1, b2, samples) {
+  const n = Math.max(8, samples || 24);
+  let best = null;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const p = [a1[0] + (a2[0] - a1[0]) * t, a1[1] + (a2[1] - a1[1]) * t];
+    const q = segClosest(p[0], p[1], b1[0], b1[1], b2[0], b2[1]);
+    const d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+    if (!best || d < best.d) best = { d, p, q, t };
+  }
+  return best;
+}
+
+/**
+ * Where two rings should be bridged, or `null` if nothing is near enough.
+ *
+ * Every edge of A against every edge of B. The **widest** facing pair wins rather than the nearest:
+ * a doorway and a wall may both be within the threshold, and joining through the doorway is what
+ * somebody meant. Width is measured as how much of the two edges actually face each other.
+ */
+function findBridge(ringA, ringB, maxGap) {
+  const A = ringOpen(ringA), B = ringOpen(ringB);
+  let best = null;
+  for (let i = 0; i < A.length; i++) {
+    const a1 = A[i], a2 = A[(i + 1) % A.length];
+    for (let j = 0; j < B.length; j++) {
+      const b1 = B[j], b2 = B[(j + 1) % B.length];
+      const c = segPairClosest(a1, a2, b1, b2);
+      if (!c || c.d > maxGap) continue;
+      // How much of the edge pair runs side by side at less than the gap — the opening's width.
+      let facing = 0;
+      const steps = 16;
+      for (let k = 0; k <= steps; k++) {
+        const t = k / steps;
+        const p = [a1[0] + (a2[0] - a1[0]) * t, a1[1] + (a2[1] - a1[1]) * t];
+        const q = segClosest(p[0], p[1], b1[0], b1[1], b2[0], b2[1]);
+        if (Math.hypot(q[0] - p[0], q[1] - p[1]) <= maxGap) facing++;
+      }
+      const width = (facing / (steps + 1)) * Math.hypot(a2[0] - a1[0], a2[1] - a1[1]);
+      if (!best || width > best.width) best = { i, j, width, gap: c.d, at: c };
+    }
+  }
+  return best;
+}
+
+/**
+ * Join two disjoint rings into one, bridging the gap between them.
+ *
+ * Returns a single closed ring, or `null` when there is nothing close enough to bridge — which the
+ * caller must report rather than silently returning one of the inputs.
+ *
+ * The stitch inserts the bridge feet as real corners, walks the rest of A forward from its foot,
+ * crosses to B, walks all of B, and crosses back. Winding is normalised first so the two rings are
+ * traversed the same way round; mixing them produces a figure-of-eight.
+ */
+function bridgeRings(ringA, ringB, maxGap) {
+  const br = findBridge(ringA, ringB, maxGap);
+  if (!br) return null;
+  const sameWinding = r =>
+    ringSignedArea(ringOpen(r)) < 0 ? ringOpen(r).slice().reverse() : ringOpen(r).slice();
+  const A = sameWinding(ringA), B = sameWinding(ringB);
+  // findBridge indexed the ORIGINAL rings; re-find on the normalised ones so the feet still match.
+  const br2 = findBridge(ringClose(A), ringClose(B), maxGap);
+  if (!br2) return null;
+  const { i, j, at } = br2;
+  const out = [];
+  // A, from just after the bridge foot, all the way round to the foot itself.
+  for (let k = 0; k < A.length; k++) out.push(A[(i + 1 + k) % A.length].slice());
+  out.push(at.p.slice());                       // the foot on A
+  out.push(at.q.slice());                       // …across the gap, onto B
+  for (let k = 0; k < B.length; k++) out.push(B[(j + 1 + k) % B.length].slice());
+  out.push(at.q.slice());                       // back to B's foot, and the ring closes to A
+  // Drop any point that repeats its predecessor — the feet can coincide with a corner.
+  const clean = out.filter((p, k) => k === 0 ||
+    Math.hypot(p[0] - out[k - 1][0], p[1] - out[k - 1][1]) > 1e-9);
+  if (clean.length < 3) return null;
+  return ringClose(clean);
+}
+
+/**
+ * Combine a whole set of rings, bridging as it goes.
+ *
+ * Greedy and order-independent: repeatedly join the pair with the widest opening between them,
+ * until nothing is close enough. Whatever could not be reached comes back separately — three rooms
+ * where one is across the building should give two results, not one impossible one.
+ */
+function combineRings(rings, maxGap) {
+  let pool = rings.map(r => ringClose(ringOpen(r)));
+  let joined = 0;
+  for (;;) {
+    let best = null;
+    for (let a = 0; a < pool.length; a++) {
+      for (let b = a + 1; b < pool.length; b++) {
+        const br = findBridge(pool[a], pool[b], maxGap);
+        if (br && (!best || br.width > best.width)) best = { a, b, width: br.width };
+      }
+    }
+    if (!best) break;
+    const merged = bridgeRings(pool[best.a], pool[best.b], maxGap);
+    if (!merged) break;
+    pool = pool.filter((_, k) => k !== best.a && k !== best.b).concat([merged]);
+    joined++;
+  }
+  return { rings: pool, joined };
+}
+/* COMBINE-ENGINE-END */
+
 /* ── straighten: square the shape up ───────────────────────────────────────────
    Olcay, 2026-08-16: *"Straighten should normalize should rectangularize or circularize or similar
    shapefy drawings."*

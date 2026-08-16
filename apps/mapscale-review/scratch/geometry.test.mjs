@@ -23,7 +23,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const src = readFileSync(join(here, "..", "public", "map", "index.html"), "utf8");
 
 /** Every marker-delimited engine in the map shell, in the order they must be defined. */
-const BLOCKS = ["SPLIT-ENGINE", "SNAP-ENGINE", "GUIDE-ENGINE", "SQUARE-ENGINE"];
+const BLOCKS = ["SPLIT-ENGINE", "SNAP-ENGINE", "GUIDE-ENGINE", "COMBINE-ENGINE", "SQUARE-ENGINE"];
 const engine = BLOCKS.map((name) => {
   const from = src.indexOf(`/* ${name}-START`);
   const to = src.indexOf(`/* ${name}-END */`);
@@ -41,7 +41,8 @@ writeFileSync(
     `${engine}\nexport { splitRingsByLine, ringSignedArea, ringOpen,\n` +
       `  segClosest, buildSnapIndex, snapQuery, dominantAngle, squareRings,\n` +
       `  angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,\n` +
-      `  guideTolFor, GUIDE_TOLS };\n`,
+      `  guideTolFor, GUIDE_TOLS,\n` +
+      `  segPairClosest, findBridge, bridgeRings, combineRings };\n`,
 );
 
 let mod;
@@ -55,6 +56,7 @@ const {
   segClosest, buildSnapIndex, snapQuery, dominantAngle, squareRings,
   angleGuide, alignGuides, resolveGuides, bestAngleGuide, rayIntersect,
   guideTolFor, GUIDE_TOLS,
+  segPairClosest, findBridge, bridgeRings, combineRings,
 } = mod;
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
@@ -628,6 +630,98 @@ const bearingOf = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI
   check("grading picks other for 75", guideTolFor(75, GUIDE_TOLS) === GUIDE_TOLS.other);
   check("grading wraps past a full turn", guideTolFor(450, GUIDE_TOLS) === GUIDE_TOLS.cardinal);
   check("grading handles negatives", guideTolFor(-90, GUIDE_TOLS) === GUIDE_TOLS.cardinal);
+}
+
+
+/* ══ combine engine ════════════════════════════════════════════════════════════ */
+
+console.log("\ncombine engine");
+
+/** Two 100×60 rooms with a wall-sized gap between them, left and right. */
+const roomL = close([[0, 0], [100, 0], [100, 60], [0, 60]]);
+const roomR = (gap) => close([[100 + gap, 0], [200 + gap, 0], [200 + gap, 60], [100 + gap, 60]]);
+
+/* C1. Closest approach between two segments, including the parallel case the closed form fumbles. */
+{
+  const c = segPairClosest([0, 0], [100, 0], [0, 10], [100, 10]);
+  check("parallel segments are 10 apart", c && Math.abs(c.d - 10) < 0.2, c ? c.d.toFixed(3) : "null");
+  const d = segPairClosest([0, 0], [10, 0], [50, 0], [60, 0]);
+  check("collinear but apart measures the end gap", d && Math.abs(d.d - 40) < 0.5,
+        d ? d.d.toFixed(3) : "null");
+}
+
+/* C2. A wall-sized gap is bridged; a corridor-sized one is not. That threshold is the whole
+       safeguard against combining two rooms that merely happen to be on the same floor. */
+{
+  check("a 6px wall is found", findBridge(roomL, roomR(6), 12) !== null);
+  check("a 40px corridor is not", findBridge(roomL, roomR(40), 12) === null);
+}
+
+/* C3. The join is ONE ring, and it holds both rooms plus the wall between them. */
+{
+  const out = bridgeRings(roomL, roomR(6), 12);
+  check("two rooms become one ring", out !== null);
+  const bad = out && wellFormed(out);
+  check("…and it is well formed", out && !bad, bad || "null");
+  const a = out ? Math.abs(ringSignedArea(ringOpen(out))) : 0;
+  // 6000 + 6000 for the rooms, 360 for the 6×60 wall now inside them.
+  check("…with the wall's area now inside it", Math.abs(a - 12360) < 400, a.toFixed(0));
+}
+
+/* C4. ⚠️ Winding must be normalised. Two rings traversed opposite ways stitch into a
+       figure-of-eight whose area partly cancels — the classic silent failure here. */
+{
+  const flipped = close([[100 + 6, 0], [100 + 6, 60], [200 + 6, 60], [200 + 6, 0]]);
+  const out = bridgeRings(roomL, flipped, 12);
+  check("opposite winding still joins cleanly", out !== null);
+  const a = out ? Math.abs(ringSignedArea(ringOpen(out))) : 0;
+  check("…and the area does not cancel itself away", Math.abs(a - 12360) < 400, a.toFixed(0));
+}
+
+/* C5. Nothing near enough is `null`, not "one of them" — a combine that silently drops a room is
+       worse than one that refuses. */
+{
+  check("far apart refuses", bridgeRings(roomL, roomR(200), 12) === null);
+}
+
+/* C6. Three in a row combine into one, whatever order they arrive in. */
+{
+  const a = close([[0, 0], [100, 0], [100, 60], [0, 60]]);
+  const b = close([[106, 0], [206, 0], [206, 60], [106, 60]]);
+  const c = close([[212, 0], [312, 0], [312, 60], [212, 60]]);
+  for (const order of [[a, b, c], [c, a, b], [b, c, a]]) {
+    const r = combineRings(order, 12);
+    check("three in a row make one", r.rings.length === 1 && r.joined === 2,
+          `${r.rings.length} ring(s), ${r.joined} join(s)`);
+  }
+}
+
+/* C7. A room across the building is left alone rather than dragged in — two results, not one
+       impossible one. */
+{
+  const near = close([[106, 0], [206, 0], [206, 60], [106, 60]]);
+  const far = close([[900, 0], [1000, 0], [1000, 60], [900, 60]]);
+  const r = combineRings([roomL, near, far], 12);
+  check("the unreachable room stays separate", r.rings.length === 2 && r.joined === 1,
+        `${r.rings.length} ring(s)`);
+  const areas = r.rings.map((x) => Math.abs(ringSignedArea(ringOpen(x)))).sort((p, q) => p - q);
+  check("…and keeps its own area untouched", Math.abs(areas[0] - 6000) < 1, areas[0].toFixed(0));
+}
+
+/* C8. A single ring in is the same ring out — combine of one is not an error. */
+{
+  const r = combineRings([roomL], 12);
+  check("one ring passes through", r.rings.length === 1 && r.joined === 0);
+}
+
+/* C9. Rooms stacked vertically bridge just as well as side by side — no axis is special. */
+{
+  const top = close([[0, 0], [100, 0], [100, 60], [0, 60]]);
+  const bot = close([[0, 66], [100, 66], [100, 126], [0, 126]]);
+  const out = bridgeRings(top, bot, 12);
+  check("a vertical wall bridges too", out !== null);
+  const a = out ? Math.abs(ringSignedArea(ringOpen(out))) : 0;
+  check("…with the same area logic", Math.abs(a - 12600) < 400, a.toFixed(0));
 }
 
 /* ══ square engine ═════════════════════════════════════════════════════════════ */
