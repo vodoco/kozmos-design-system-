@@ -2454,7 +2454,7 @@ function geomBegin(fid) {
      * is hidden, `layers` is which of the SDK's layers were drawing them. Both are needed: once a
      * wall is filtered out it stops being a rendered feature, so the layer can never be found again.
      */
-    hidden: { fids: [], layers: [] },
+    hidden: { fids: [], labels: [], layers: [] },
     /**
      * Properties by fid, for every feature this edit has touched — the subject and everything a
      * combine has picked. `geomTakeIdentity` needs them to move the panel, and the moment it needs
@@ -2501,7 +2501,8 @@ function geomSnap() {
      */
     fid: GEOM.fid,
     absorbed: GEOM.absorbed.slice(),
-    hidden: { fids: GEOM.hidden.fids.slice(), layers: GEOM.hidden.layers.slice() },
+    hidden: { fids: GEOM.hidden.fids.slice(), labels: GEOM.hidden.labels.slice(),
+              layers: GEOM.hidden.layers.slice() },
   };
 }
 
@@ -2511,10 +2512,11 @@ function geomRestore(s) {
   GEOM.pieceOf = s.pieceOf.slice();
   GEOM.nextPiece = s.nextPiece;
   GEOM.absorbed = s.absorbed.slice();
-  GEOM.hidden = { fids: s.hidden.fids.slice(), layers: s.hidden.layers.slice() };
+  GEOM.hidden = { fids: s.hidden.fids.slice(), labels: s.hidden.labels.slice(),
+                  layers: s.hidden.layers.slice() };
   // Every wall filter is rebuilt from `hidden` rather than patched, so undo and redo need no
-  // bookkeeping of their own — see geomApplyWallFilter.
-  geomApplyWallFilter();
+  // bookkeeping of their own — see geomApplyHiddenFilter.
+  geomApplyHiddenFilter();
   if (s.fid !== GEOM.fid) geomTakeIdentity(s.fid);
   // Indices move under a restore, so a kept selection would highlight the wrong corners.
   GEOM.sel.clear();
@@ -2637,8 +2639,8 @@ function geomEnd(commit) {
    * closed it would be a lie about the published map. Restoring runs whether or not the edit was
    * committed, because even a committed combine is local.
    */
-  GEOM.hidden = { fids: [], layers: [] };
-  geomApplyWallFilter();
+  GEOM.hidden = { fids: [], labels: [], layers: [] };
+  geomApplyHiddenFilter();
   GEOM = null;
   // Shift+drag goes back to being MapLibre's box zoom — see geomBegin.
   try { map.boxZoom.enable(); } catch (e) {}
@@ -2698,9 +2700,19 @@ function geomState() {
          */
         combinable: can.ok,
         combineWhy: can.why,
-        // What this session's combines have swallowed, so the panel can be honest about the rows
-        // in the tree that are now part of something else.
+        /**
+         * **What the combines in this session did**, so the panel's list can say it rather than
+         * only counting (Olcay, 2026-08-16: *"we should update the selected items section for
+         * combination results - what's joined for what's removed"*).
+         *
+         * Two different fates and they must not be conflated: a **joined** feature's floor is part
+         * of this shape now, while a **removed** one was standing between two of them and has been
+         * taken off the map. Both still exist in Pointr Cloud — the count is a report, not a claim
+         * that anything was deleted.
+         */
         absorbed: GEOM.absorbed.length,
+        joined: GEOM.absorbed.slice(),
+        removed: GEOM.hidden.labels.slice(),
         // A point has no outline: the toolbar drops every tool that would be a lie on one.
         kind: GEOM.kind,
         selected: GEOM.sel.size,
@@ -3330,33 +3342,55 @@ function segPairClosest(a1, a2, b1, b2, samples) {
   return best;
 }
 
+/** How finely an edge is sampled to find where it faces another. 1/48 of an edge is under 2%. */
+const BRIDGE_SAMPLES = 48;
+
 /**
  * Where two rings should be bridged, or `null` if nothing is near enough.
  *
  * Every edge of A against every edge of B. The **widest** facing pair wins rather than the nearest:
  * a doorway and a wall may both be within the threshold, and joining through the doorway is what
- * somebody meant. Width is measured as how much of the two edges actually face each other.
+ * somebody meant.
+ *
+ * ⚠️ It returns the **span** `t0…t1` along A's edge that faces B, not just the closest point.
+ * That span is the doorway, and the whole difference between a join that *fills* the gap and one
+ * that merely touches across it — see `bridgeRings`.
  */
 function findBridge(ringA, ringB, maxGap) {
   const A = ringOpen(ringA), B = ringOpen(ringB);
   let best = null;
   for (let i = 0; i < A.length; i++) {
     const a1 = A[i], a2 = A[(i + 1) % A.length];
+    const ax = a2[0] - a1[0], ay = a2[1] - a1[1];
+    const alen = Math.hypot(ax, ay);
+    if (alen < 1e-9) continue;
     for (let j = 0; j < B.length; j++) {
       const b1 = B[j], b2 = B[(j + 1) % B.length];
-      const c = segPairClosest(a1, a2, b1, b2);
-      if (!c || c.d > maxGap) continue;
       // How much of the edge pair runs side by side at less than the gap — the opening's width.
-      let facing = 0;
-      const steps = 16;
-      for (let k = 0; k <= steps; k++) {
-        const t = k / steps;
-        const p = [a1[0] + (a2[0] - a1[0]) * t, a1[1] + (a2[1] - a1[1]) * t];
-        const q = segClosest(p[0], p[1], b1[0], b1[1], b2[0], b2[1]);
-        if (Math.hypot(q[0] - p[0], q[1] - p[1]) <= maxGap) facing++;
+      let t0 = null, t1 = null;
+      for (let k = 0; k <= BRIDGE_SAMPLES; k++) {
+        const t = k / BRIDGE_SAMPLES;
+        const px = a1[0] + ax * t, py = a1[1] + ay * t;
+        const q = segClosest(px, py, b1[0], b1[1], b2[0], b2[1]);
+        if (Math.hypot(q[0] - px, q[1] - py) > maxGap) continue;
+        if (t0 === null) t0 = t;
+        t1 = t;
       }
-      const width = (facing / (steps + 1)) * Math.hypot(a2[0] - a1[0], a2[1] - a1[1]);
-      if (!best || width > best.width) best = { i, j, width, gap: c.d, at: c };
+      if (t0 === null) continue;
+      /**
+       * ⚠️ **A doorway is never allowed to be zero-width.** Two rooms meeting only at a corner
+       * produce a single sample, and a bridge with no width is exactly the seam this rewrite
+       * exists to remove — the join would be a slit rather than a room. Widened to the gap
+       * threshold about its own middle, and clipped to the edge.
+       */
+      const least = Math.min(1, maxGap / alen);
+      if (t1 - t0 < least) {
+        const mid = Math.min(1 - least / 2, Math.max(least / 2, (t0 + t1) / 2));
+        t0 = mid - least / 2;
+        t1 = mid + least / 2;
+      }
+      const width = (t1 - t0) * alen;
+      if (!best || width > best.width) best = { i, j, t0, t1, width };
     }
   }
   return best;
@@ -3384,17 +3418,40 @@ function bridgeRings(ringA, ringB, maxGap) {
   const A = sameWinding(ringA), B = sameWinding(ringB);
   const br = findBridge(ringClose(A), ringClose(B), maxGap);
   if (!br) return null;
-  const { i, j, at } = br;
+  const { i, j, t0, t1 } = br;
+
+  /**
+   * The doorway's two feet on each side. **Both ends, not the nearest point** — this is the change
+   * that made Combine produce one room instead of two rooms joined by a seam (Olcay, 2026-08-16:
+   * *"Combine should make 1 geometry by filling in between neatly"*).
+   *
+   * With both rings wound the same way, two facing edges necessarily run in *opposite* directions,
+   * so walking B forward from `Q0` arrives back at `Q1` — which is what makes the walk below one
+   * simple loop rather than a figure-of-eight.
+   */
+  const a1 = A[i], a2 = A[(i + 1) % A.length];
+  const at = t => [a1[0] + (a2[0] - a1[0]) * t, a1[1] + (a2[1] - a1[1]) * t];
+  const b1 = B[j], b2 = B[(j + 1) % B.length];
+  const onB = p => segClosest(p[0], p[1], b1[0], b1[1], b2[0], b2[1]);
+  const P0 = at(t0), P1 = at(t1);
+  const Q0 = onB(P0), Q1 = onB(P1);
+
   const out = [];
-  // A, from just after the bridge foot, all the way round to the foot itself.
-  for (let k = 0; k < A.length; k++) out.push(A[(i + 1 + k) % A.length].slice());
-  out.push(at.p.slice());                       // the foot on A
-  out.push(at.q.slice());                       // …across the gap, onto B
-  for (let k = 0; k < B.length; k++) out.push(B[(j + 1 + k) % B.length].slice());
-  out.push(at.q.slice());                       // back to B's foot, and the ring closes to A
-  // Drop any point that repeats its predecessor — the feet can coincide with a corner.
+  // All of A, starting just past the doorway's edge and coming back round to that edge's start…
+  for (let k = 1; k <= A.length; k++) out.push(A[(i + k) % A.length].slice());
+  out.push(P0.slice());                         // …up to the doorway's near jamb
+  out.push(Q0.slice());                         // across the gap onto B
+  for (let k = 1; k <= B.length; k++) out.push(B[(j + k) % B.length].slice());
+  out.push(Q1.slice());                         // back along B's edge to the far jamb
+  out.push(P1.slice());                         // and across again; the ring closes along A's edge
+
+  // Drop any point that repeats its predecessor — a jamb often lands exactly on a corner.
   const clean = out.filter((p, k) => k === 0 ||
     Math.hypot(p[0] - out[k - 1][0], p[1] - out[k - 1][1]) > 1e-9);
+  // …including the last against the first, which `ringClose` would otherwise duplicate.
+  while (clean.length > 1 &&
+         Math.hypot(clean[clean.length - 1][0] - clean[0][0],
+                    clean[clean.length - 1][1] - clean[0][1]) < 1e-9) clean.pop();
   if (clean.length < 3) return null;
   return ringClose(clean);
 }
@@ -3993,7 +4050,7 @@ function geomPxPerMetre(anchor) {
  * Module-level rather than on `GEOM`, because the restore has to be able to run *after* the editor
  * is gone — `geomEnd` clears the shape and the filters in the same breath.
  */
-const WALL_FILTERS = new Map();
+const HIDDEN_FILTERS = new Map();
 
 /**
  * Rebuild every wall filter from `GEOM.hidden`, from scratch.
@@ -4008,12 +4065,12 @@ const WALL_FILTERS = new Map();
  * the SDK's own filter rather than replacing it: losing the level filter would draw every floor's
  * walls at once for as long as the editor stayed open.
  */
-function geomApplyWallFilter() {
+function geomApplyHiddenFilter() {
   if (!map) return;
   try {
-    for (const [id, orig] of WALL_FILTERS)
+    for (const [id, orig] of HIDDEN_FILTERS)
       if (map.getLayer(id)) map.setFilter(id, orig === undefined ? null : orig);
-    WALL_FILTERS.clear();
+    HIDDEN_FILTERS.clear();
     const h = GEOM && GEOM.hidden;
     if (!h || !h.fids.length) return;
     /**
@@ -4029,41 +4086,63 @@ function geomApplyWallFilter() {
       const l = byId.get(id);
       if (!l) continue;
       // Read AFTER the restore above, so what is stored is the SDK's filter and never one of ours.
-      WALL_FILTERS.set(id, l.filter);
+      HIDDEN_FILTERS.set(id, l.filter);
       map.setFilter(id, l.filter ? ["all", l.filter, hide] : hide);
     }
   } catch (e) {}
 }
 
 /**
- * The walls standing between the features being combined, and the layers drawing them.
+ * **Whatever is standing between the features being combined**, and the layers drawing it.
  *
- * Both halves are needed and only one of them is obvious: once a wall is filtered out it stops
- * being a rendered feature, so the layer that drew it can never be found again. They are collected
- * together, in the one pass where both are still visible.
+ * ⚠️ **Not only walls** (Olcay, 2026-08-16: *"If there is something in between this should remove
+ * the item in between."*). It was `mainType === "wall"`, which was the common case and not the
+ * rule: a doorway, a threshold, a strip of circulation space between two rooms is just as much in
+ * the way, and leaving it behind inside the joined room is the same wrong answer.
  *
- * ⚠️ A wall that spans a tile boundary arrives once per tile with a different piece of its
- * geometry. The verdict is taken from the first piece seen and memoised — enough for a wall between
- * two rooms, which is short and lives inside one tile far more often than not.
+ * The test is unchanged and does the work — within the gap threshold of **two or more** of the
+ * combined features. At 0.6 m that is a genuinely narrow claim: a POI sitting in the middle of
+ * either room comes nowhere near qualifying.
+ *
+ * ⚠️ **The combined features must be excluded by name.** Each of them is within zero of itself and
+ * near at least one other, so it satisfies "between" perfectly — and would hide itself the instant
+ * this stopped being restricted to walls.
+ *
+ * Both halves of the return are needed and only one is obvious: once a feature is filtered out it
+ * stops being a rendered feature, so the layer that drew it can never be found again. They are
+ * collected together, in the one pass where both are still visible.
+ *
+ * ⚠️ A feature spanning a tile boundary arrives once per tile with a different piece of its
+ * geometry. The verdict is taken from the first piece seen and memoised — enough for something
+ * sitting in a wall's width, which is short and lives inside one tile far more often than not.
  */
-function geomInteriorWalls(sets, gapPx) {
+function geomInteriorFeatures(sets, gapPx, exclude) {
+  const skip = new Set(exclude || []);
   const verdict = new Map();
+  const named = new Map();
   const layers = new Set();
   try {
     for (const f of map.queryRenderedFeatures()) {
       const p = f.properties;
-      if (!p || p.mainType !== "wall" || !p.fid) continue;
+      if (!p || !p.fid || skip.has(p.fid)) continue;
       if (!verdict.has(p.fid)) {
         const rings = ringsOuter(f)
           .map(r => r.map(c => { const q = map.project(c); return [q.x, q.y]; }));
         verdict.set(p.fid, rings.length ? wallBetween(rings, sets, gapPx) : false);
+        /**
+         * ⚠️ **Named here or never.** The app has no properties for these — it never clicked them,
+         * they are walls and thresholds it was not even offering to select. And the moment they are
+         * hidden they stop being rendered features, so this is the last frame in which anything can
+         * ask them what they are called.
+         */
+        named.set(p.fid, { fid: p.fid, name: p.name || "", type: prettyType(p) });
       }
       if (verdict.get(p.fid) && f.layer && f.layer.id) layers.add(f.layer.id);
     }
   } catch (e) {}
-  const fids = [];
-  for (const [fid, yes] of verdict) if (yes) fids.push(fid);
-  return { fids, layers: [...layers] };
+  const fids = [], labels = [];
+  for (const [fid, yes] of verdict) if (yes) { fids.push(fid); labels.push(named.get(fid)); }
+  return { fids, labels, layers: [...layers] };
 }
 
 /**
@@ -4222,7 +4301,8 @@ function geomApplyCombine() {
    */
   const all = [GEOM.fid].concat(GEOM.pick.map(p => p.fid));
   const want = all[largestSet(sets)];
-  const walls = geomInteriorWalls(sets, gapPx);
+  // `all` is excluded by name: every combined feature is "between" the others by construction.
+  const between = geomInteriorFeatures(sets, gapPx, all);
 
   GEOM.rings = res.rings.map(r =>
     r.map(([x, y]) => { const q = map.unproject([x, y]); return [q.lng, q.lat]; }));
@@ -4230,11 +4310,13 @@ function geomApplyCombine() {
   // too far to reach comes back as its own, which is exactly what the piece count should say.
   GEOM.pieceOf = GEOM.rings.map((_, i) => i);
   GEOM.nextPiece = GEOM.rings.length;
+  const alreadyHidden = new Set(GEOM.hidden.fids);
   GEOM.hidden = {
-    fids: [...new Set(GEOM.hidden.fids.concat(walls.fids))],
-    layers: [...new Set(GEOM.hidden.layers.concat(walls.layers))],
+    fids: [...new Set(GEOM.hidden.fids.concat(between.fids))],
+    labels: GEOM.hidden.labels.concat(between.labels.filter(x => !alreadyHidden.has(x.fid))),
+    layers: [...new Set(GEOM.hidden.layers.concat(between.layers))],
   };
-  geomApplyWallFilter();
+  geomApplyHiddenFilter();
   // The switch can decline — see geomTakeIdentity. `GEOM.fid` afterwards is the truth either way,
   // so the absorbed list is built from THAT and never from what was merely wanted; a list that
   // included the feature the panel is actually on would be a lie in the one place it matters.

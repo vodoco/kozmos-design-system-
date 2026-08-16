@@ -93,6 +93,13 @@ export interface GeomState {
    * nothing here can remove them, so the count is reported rather than dressed up.
    */
   absorbed?: number;
+  /** The fids this session's combines have joined into this shape. */
+  joined?: string[];
+  /**
+   * What was standing between them and has been taken off the map — named by the map shell,
+   * because the app has never seen these features and cannot look them up once they are hidden.
+   */
+  removed?: { fid: string; name: string; type: string }[];
   /**
    * ⚠️ **`"point"` means there is no outline** (Olcay, 2026-08-15: *"if the geometry is point -
    * there is no way to reshape it"*). A great many POIs are a single coordinate: you can move it,

@@ -2415,18 +2415,50 @@ export function MapContent({
     () => (selectionProps.length ? mergeForEditing(selectionProps) : null),
     [selectionProps],
   );
-  /** The list the panel prints when you expand the count. */
-  const selectionList = useMemo(
-    () =>
-      selectionProps.map((b) => ({
-        fid: String(b.fid ?? ""),
-        name: String(b.name ?? ""),
+  /**
+   * The list the panel prints when you expand the count — **and what became of each row**.
+   *
+   * Three fates in one list rather than three lists (Olcay, 2026-08-16). After a Combine the
+   * question a person has is "what did that just do to my map", and the answer is one reading:
+   * this is what you still have, this is what went into it, this is what it took off the floor.
+   *
+   * The joined rows are named from `propsOfRef`, because the app selected them and holds their
+   * properties. The removed rows arrive already named from the map shell — the app has never seen
+   * them, and once they are hidden they cannot be looked up at all.
+   */
+  const selectionList = useMemo(() => {
+    const rows = selectionProps.map((b) => ({
+      fid: String(b.fid ?? ""),
+      name: String(b.name ?? ""),
+      typeLabel: typeLabel(String(b.subType ?? "") || String(b.mainType ?? "")),
+      fate: undefined as "joined" | "removed" | undefined,
+    }));
+    const shown = new Set(rows.map((r) => r.fid));
+    for (const fid of geom.joined ?? []) {
+      if (shown.has(fid)) continue;
+      shown.add(fid);
+      const bag = propsOfRef.current[fid] ?? {};
+      rows.push({
+        fid,
+        name: String(bag.name ?? ""),
         typeLabel: typeLabel(
-          String(b.subType ?? "") || String(b.mainType ?? ""),
+          String(bag.subType ?? "") || String(bag.mainType ?? ""),
         ),
-      })),
-    [selectionProps],
-  );
+        fate: "joined",
+      });
+    }
+    for (const r of geom.removed ?? []) {
+      if (shown.has(r.fid)) continue;
+      shown.add(r.fid);
+      rows.push({
+        fid: r.fid,
+        name: r.name,
+        typeLabel: r.type,
+        fate: "removed",
+      });
+    }
+    return rows;
+  }, [selectionProps, geom.joined, geom.removed]);
   /** Take one feature out of the selection, from the panel's list. */
   const onDeselect = useCallback((fid: string) => {
     setAlso((cur) => {

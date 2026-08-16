@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { Change } from "../mock/diff";
-import { NON_EDITABLE_MAIN_TYPES, type LevelTypeCount } from "../mock/taxonomy";
+import { type LevelTypeCount } from "../mock/taxonomy";
 import { pointrMapSrc } from "../mock/pointrConfig";
 
 /**
@@ -348,14 +348,22 @@ const PointrMap = forwardRef<
      */
     win.postMessage({ type: "decidable", on: latest.current.canDecide }, "*");
     /**
-     * What the map may offer to edit. The app owns the taxonomy; the map page has none, so it is
-     * told rather than left to guess — and until it is told it treats nothing as editable, which
-     * is the safe direction.
+     * What the map may **not** offer to edit. The app owns the taxonomy; the map page has none, so
+     * it is told rather than left to guess — and until it is told it treats nothing as editable,
+     * which is the safe direction.
+     *
+     * ⚠️ **Empty now: every geometry is editable** (Olcay, 2026-08-16: *"I should also be able to
+     * edit all geometries not just POIs"*). It used to be `NON_EDITABLE_MAIN_TYPES` — walls,
+     * transitions, circulation space, the floor plan itself — on the reasoning that those are not
+     * content somebody curates. That reasoning was about *review*, and this is an editor: if a wall
+     * is in the wrong place, the person fixing the floor is the person who needs to move it.
+     *
+     * The channel is deliberately kept rather than deleted, because it is exactly the hook the
+     * **layer locking** Olcay has parked will hang off — locking a layer means adding its types
+     * here, and the map already honours that with no further work. See the standing item in the
+     * hand-off.
      */
-    win.postMessage(
-      { type: "editabletypes", types: NON_EDITABLE_MAIN_TYPES },
-      "*",
-    );
+    win.postMessage({ type: "editabletypes", types: [] }, "*");
     if (latest.current.changes)
       win.postMessage(
         {

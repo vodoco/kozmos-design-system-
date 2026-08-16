@@ -694,15 +694,51 @@ const roomR = (gap) => close([[100 + gap, 0], [200 + gap, 0], [200 + gap, 60], [
   check("a 40px corridor is not", findBridge(roomL, roomR(40), 12) === null);
 }
 
-/* C3. The join is ONE ring, and it holds both rooms plus the wall between them. */
+/**
+ * Is `p` inside this ring? Ray casting — only ever used to assert what a join *contains*, which is
+ * the one thing an area figure cannot tell you on its own: the right total can still be the wrong
+ * shape.
+ */
+function inRing(ring, p) {
+  const r = ringOpen(ring);
+  let inside = false;
+  for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+    const [xi, yi] = r[i], [xj, yj] = r[j];
+    if ((yi > p[1]) !== (yj > p[1]) &&
+        p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/* C3. The join is ONE ring, and it holds both rooms plus the wall between them — **exactly**. */
 {
   const out = bridgeRings(roomL, roomR(6), 12);
   check("two rooms become one ring", out !== null);
   const bad = out && wellFormed(out);
   check("…and it is well formed", out && !bad, bad || "null");
   const a = out ? Math.abs(ringSignedArea(ringOpen(out))) : 0;
-  // 6000 + 6000 for the rooms, 360 for the 6×60 wall now inside them.
-  check("…with the wall's area now inside it", Math.abs(a - 12360) < 400, a.toFixed(0));
+  /**
+   * ⚠️ 6000 + 6000 for the rooms and 360 for the 6×60 wall, to the last decimal rather than within
+   * a few hundred. The tolerance used to be ±400 and it was hiding the bug: the old stitch bridged
+   * through the two NEAREST points, so it swallowed a wedge of the gap instead of the whole of it
+   * and came out at 12180 — inside the tolerance, and visibly a seam on the map.
+   */
+  check("…with the whole wall's area inside it", Math.abs(a - 12360) < 1e-6, a.toFixed(4));
+}
+
+/* C3b. ⚠️ **The gap is genuinely FILLED**, which is the thing area alone cannot prove — the same
+        total can be the wrong shape. Olcay, 2026-08-16: *"Combine should make 1 geometry by
+        filling in between neatly."* Every one of these points was OUTSIDE the old join. */
+{
+  const out = bridgeRings(roomL, roomR(6), 12);
+  for (const y of [1, 15, 30, 45, 59]) {
+    check(`the middle of the wall at y=${y} is inside the joined room`,
+          out && inRing(out, [103, y]));
+  }
+  check("…and so is each room's own middle",
+        out && inRing(out, [50, 30]) && inRing(out, [156, 30]));
+  check("…while the floor beyond the pair is still outside",
+        out && !inRing(out, [-10, 30]) && !inRing(out, [220, 30]));
 }
 
 /* C4. ⚠️ Winding must be normalised. Two rings traversed opposite ways stitch into a
@@ -712,7 +748,7 @@ const roomR = (gap) => close([[100 + gap, 0], [200 + gap, 0], [200 + gap, 60], [
   const out = bridgeRings(roomL, flipped, 12);
   check("opposite winding still joins cleanly", out !== null);
   const a = out ? Math.abs(ringSignedArea(ringOpen(out))) : 0;
-  check("…and the area does not cancel itself away", Math.abs(a - 12360) < 400, a.toFixed(0));
+  check("…and the area does not cancel itself away", Math.abs(a - 12360) < 1e-6, a.toFixed(4));
 }
 
 /* C5. Nothing near enough is `null`, not "one of them" — a combine that silently drops a room is
@@ -758,7 +794,7 @@ const roomR = (gap) => close([[100 + gap, 0], [200 + gap, 0], [200 + gap, 60], [
   const out = bridgeRings(top, bot, 12);
   check("a vertical wall bridges too", out !== null);
   const a = out ? Math.abs(ringSignedArea(ringOpen(out))) : 0;
-  check("…with the same area logic", Math.abs(a - 12600) < 400, a.toFixed(0));
+  check("…with the same area logic", Math.abs(a - 12600) < 1e-6, a.toFixed(4));
 }
 
 /* ── the interaction's own rules ──────────────────────────────────────────────

@@ -241,10 +241,12 @@ function DerivedSections({ values }: { values: Record<string, unknown> }) {
  * an untouched *Multiple values* field would be written back as empty to every feature in the
  * selection — silently erasing four descriptions because somebody renamed a room.
  *
- * A ` `-prefixed string, so it survives the `JSON.stringify` comparisons the dirty check and
- * the merge both use, and can never collide with anything a person could type.
+ * ⚠️ Written as the **escape** `\u0000`, never as a literal NUL in the source — an invisible
+ * control character in a file is a trap for every diff, editor and search that touches it. The
+ * value survives the `JSON.stringify` comparisons the dirty check and the merge both use, and
+ * can never collide with anything a person could type.
  */
-export const MULTIPLE = " multiple";
+export const MULTIPLE = "\u0000multiple";
 
 /**
  * Fields that belong to one feature and are never merged — the panel shows the primary's.
@@ -768,7 +770,21 @@ export function FeaturePanel({
    * The panel is given the whole list rather than just a number because it has to be able to *show*
    * which features they are — a count alone leaves you unable to check what you are about to edit.
    */
-  selection?: { fid: string; name: string; typeLabel: string }[];
+  selection?: {
+    fid: string;
+    name: string;
+    typeLabel: string;
+    /**
+     * What happened to this row (Olcay, 2026-08-16: *"we should update the selected items section
+     * for combination results - what's joined for what's removed"*).
+     *
+     * ⚠️ **Three fates, and they must not be conflated.** `selected` is the ordinary case, still
+     * its own feature. `joined` means a Combine took its floor into this shape. `removed` means it
+     * was standing *between* two of them — a wall, a threshold — and has been taken off the map.
+     * Absent means selected, so nothing outside Combine has to think about it.
+     */
+    fate?: "joined" | "removed";
+  }[];
   /** Take one feature back out of the selection, from the expanded list. */
   onDeselect?: (fid: string) => void;
   /**
@@ -824,8 +840,32 @@ export function FeaturePanel({
    * changes — so a look still costs nothing, exactly as it did before.
    */
   const [editing, setEditing] = useState(true);
-  /** More than one feature is selected, and everything below behaves differently because of it. */
-  const multi = (selection?.length ?? 1) > 1;
+  /**
+   * ⚠️ **Live rows only.** After a Combine the list still carries the joined and removed features —
+   * that is the point of it — but only one feature is actually being edited. Counting the whole
+   * list would title the panel "3 features" and promise that a change here reaches all of them,
+   * about two rows that no longer have an outline between them.
+   */
+  const liveRows = (selection ?? []).filter((s) => !s.fate);
+  const multi = liveRows.length > 1;
+  /** The strip appears whenever there is more than one row to report, whatever became of them. */
+  const showStrip = (selection?.length ?? 0) > 1;
+  /**
+   * What the strip's one line says. Three counts, each named for what actually happened to it, and
+   * only the ones that are non-zero — "3 selected · 0 removed" is noise pretending to be data.
+   */
+  const tally = useMemo(() => {
+    const rows = selection ?? [];
+    const kept = rows.filter((s) => !s.fate).length;
+    const joined = rows.filter((s) => s.fate === "joined").length;
+    const gone = rows.filter((s) => s.fate === "removed").length;
+    const parts: string[] = [];
+    // "selected" only while that is still true of them; once a combine has run they are one shape.
+    if (kept) parts.push(joined ? `${kept} kept` : `${kept} features selected`);
+    if (joined) parts.push(`${joined} joined`);
+    if (gone) parts.push(`${gone} removed`);
+    return parts.join(" · ");
+  }, [selection]);
   /** The list of what is selected, collapsed by default — a count you can check when you want to. */
   const [listOpen, setListOpen] = useState(false);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
@@ -996,7 +1036,7 @@ export function FeaturePanel({
      * What the confirmation calls this. With several selected the name is either shared or a
      * sentinel, and neither is worth announcing — the count is what happened.
      */
-    const n = selection?.length ?? 1;
+    const n = liveRows.length || 1;
     onSaved?.(n > 1 ? `${n} features` : String(draft.name ?? "").trim());
   };
 
@@ -1050,9 +1090,18 @@ export function FeaturePanel({
               }}
             >
               {multi
-                ? `${selection!.length} features`
-                : (editing ? String(draft.name ?? "") : name) ||
-                  `Unnamed ${typeLabel(subType || mainType)}`}
+                ? `${liveRows.length} features`
+                : /**
+                   * ⚠️ **Never the sentinel.** It leaked into the title on the bench the moment
+                   * one live feature was left holding a merged bag, and a raw `\u0000multiple`
+                   * on screen is the worst possible way to find out. Guarded here rather than
+                   * only upstream: this is the one string a person always reads.
+                   */
+                  (editing && draft.name !== MULTIPLE
+                    ? String(draft.name ?? "")
+                    : name === MULTIPLE
+                      ? ""
+                      : name) || `Unnamed ${typeLabel(subType || mainType)}`}
             </Text>
           }
           subtitle={
@@ -1096,7 +1145,7 @@ export function FeaturePanel({
          * you can still find it on screen; a selection you built by panning around cannot always be
          * unpicked the way it was picked.
          */}
-        {multi && (
+        {showStrip && (
           <div
             style={{
               marginBottom: 16,
@@ -1137,9 +1186,10 @@ export function FeaturePanel({
               >
                 ▶
               </span>
-              <span style={{ fontWeight: 500 }}>
-                {selection!.length} features selected
-              </span>
+              {/* After a combine the count is not a selection any more — it is a report of what
+                  the shape now consists of, and saying "selected" about a removed wall would be
+                  plainly untrue. */}
+              <span style={{ fontWeight: 500 }}>{tally}</span>
               <span style={{ marginLeft: "auto", fontSize: 11, color: MUTED }}>
                 {listOpen ? "Hide" : "Show"}
               </span>
@@ -1173,22 +1223,32 @@ export function FeaturePanel({
                           overflowWrap: "anywhere",
                         }}
                       >
-                        {s.name || `Unnamed ${s.typeLabel}`}
-                        {/* The first one is the anchor: the panel's identity, the shape the
-                            geometry tools act on, and the one Escape leaves behind. Saying so
-                            costs a word and explains why the list has an order at all. */}
-                        {i === 0 && (
-                          <Text
-                            as="span"
-                            style={{
-                              marginLeft: 6,
-                              fontSize: 10.5,
-                              color: MUTED,
-                            }}
-                          >
-                            primary
-                          </Text>
-                        )}
+                        <Text
+                          as="span"
+                          style={{
+                            // A removed feature is struck through: it is on this list to say what
+                            // happened to it, not because it is still there.
+                            textDecoration:
+                              s.fate === "removed" ? "line-through" : "none",
+                            color: s.fate === "removed" ? MUTED : INK,
+                          }}
+                        >
+                          {s.name || `Unnamed ${s.typeLabel}`}
+                        </Text>
+                        {/* What happened to it. The first row is the anchor — the panel's
+                            identity, the shape the geometry tools act on, and the one Escape
+                            leaves behind — which is why the list has an order at all. */}
+                        <Text
+                          as="span"
+                          style={{
+                            marginLeft: 6,
+                            fontSize: 10.5,
+                            color: MUTED,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {s.fate ?? (i === 0 ? "primary" : "")}
+                        </Text>
                       </Text>
                       <Text
                         style={{ display: "block", fontSize: 11, color: MUTED }}
@@ -1196,9 +1256,13 @@ export function FeaturePanel({
                         {s.typeLabel}
                       </Text>
                     </span>
+                    {/* Only a live selection can be dropped. A joined or removed row is a record
+                        of something that already happened — Undo is what reverses that, and an ✕
+                        here would promise it could be picked apart one row at a time. */}
                     <IconButton
                       variant="ghost"
                       size="sm"
+                      disabled={!!s.fate}
                       onClick={() => onDeselect?.(s.fid)}
                       aria-label={`Remove ${s.name || "this feature"} from the selection`}
                       title="Remove from selection"

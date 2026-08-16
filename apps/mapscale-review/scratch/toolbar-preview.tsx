@@ -39,6 +39,21 @@ const DEMO_SELECTION = [
   { fid: "b2", name: "Store Room 4", typeLabel: "Operational Space" },
   { fid: "c3", name: "", typeLabel: "Operational Space" },
 ];
+/** The same three, after a Combine: one kept, one joined into it, one wall taken off the map. */
+const COMBINED_SELECTION = [
+  {
+    fid: DEMO_PROPS.fid,
+    name: "Operational Space",
+    typeLabel: "Operational Space",
+  },
+  {
+    fid: "b2",
+    name: "Store Room 4",
+    typeLabel: "Operational Space",
+    fate: "joined" as const,
+  },
+  { fid: "w9", name: "", typeLabel: "Wall", fate: "removed" as const },
+];
 const MERGED = mergeForEditing([
   { ...DEMO_PROPS, description: "Back of house", hasAssistance: true },
   { ...DEMO_PROPS, fid: "b2", name: "Store Room 4", description: "Deliveries" },
@@ -72,7 +87,13 @@ function HeaderBench() {
          * one coherent form rather than a page of empty boxes.
          */
         { k: "3 selected", icon: undefined, multi: true },
-      ].map(({ k, icon, multi }) => (
+        /**
+         * ⚠️ **After a Combine** — one feature left, and the strip reporting what became of the
+         * others. The three fates have to be legible in one reading: what you still have, what
+         * went into it, and what it took off the floor.
+         */
+        { k: "after combine", icon: undefined, multi: true, combined: true },
+      ].map(({ k, icon, multi, combined }) => (
         <div
           key={k}
           style={{
@@ -96,8 +117,12 @@ function HeaderBench() {
             {k}
           </div>
           <FeaturePanel
-            props={multi ? MERGED : DEMO_PROPS}
-            selection={multi ? DEMO_SELECTION : undefined}
+            /* After a combine ONE feature survives, so its own bag is what the panel holds —
+               a merged bag there would be the bug that put the sentinel in the title. */
+            props={combined ? DEMO_PROPS : multi ? MERGED : DEMO_PROPS}
+            selection={
+              combined ? COMBINED_SELECTION : multi ? DEMO_SELECTION : undefined
+            }
             icon={icon}
             onClose={() => {}}
           />
