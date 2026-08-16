@@ -763,16 +763,34 @@ function drawEditing() {
  * draw half a room — the same reason `scanFeature` accumulates its bounds rather than returning on
  * the first hit.
  */
-/** Every loaded feature carrying this `fid`, whatever its geometry type. */
+/**
+ * Every loaded feature carrying this `fid`, whatever its geometry type.
+ *
+ * ⚠️ **Source-agnostic on purpose** (Olcay, 2026-08-16: *"in our dashboard we postprocess the style
+ * to use geojson datasource and not vector tiles, by removing source-layer and adding filter for
+ * each type"*). This used to hardcode `source_ptr` and require a `source-layer`, which is a **vector
+ * tile** shape — against a GeoJSON source, where layers carry no `source-layer`, the filter matched
+ * nothing, `geomFind` returned null and **the geometry editor would simply never open**. It now
+ * walks whatever sources the style actually uses and passes `sourceLayer` only where a layer has
+ * one, so the same code works either way.
+ *
+ * Still `querySourceFeatures` rather than `queryRenderedFeatures`: the latter sees only the current
+ * viewport, which is fatal when the level being reviewed is in a different wing from the camera.
+ */
 function featuresWithFid(fid) {
   const out = [];
   try {
-    const layers = [...new Set(map.getStyle().layers
-      .filter(l => l.source === "source_ptr" && l["source-layer"])
-      .map(l => l["source-layer"]))];
-    for (const L of layers)
-      for (const f of map.querySourceFeatures("source_ptr", { sourceLayer: L }))
+    const pairs = new Map();
+    for (const l of map.getStyle().layers) {
+      if (!l.source || l.type === "background") continue;
+      const key = l.source + "\u0000" + (l["source-layer"] || "");
+      if (!pairs.has(key)) pairs.set(key, { source: l.source, sourceLayer: l["source-layer"] });
+    }
+    for (const { source, sourceLayer } of pairs.values()) {
+      const feats = map.querySourceFeatures(source, sourceLayer ? { sourceLayer } : undefined);
+      for (const f of feats)
         if (f.properties && f.properties.fid === fid && f.geometry) out.push(f);
+    }
   } catch (e) {}
   return out;
 }
@@ -2528,11 +2546,24 @@ function buildSnapIndex(verts, segs, cell) {
 }
 
 /**
- * The best snap for a screen point, or `null`.
+ * How much nearer an edge must be than a corner before it wins, in pixels.
  *
- * **A corner beats an edge even when the edge is nearer.** A corner is a place somebody meant; a
- * point part-way along an edge is merely somewhere nearby, and preferring it would make the corners
- * — the things you actually want to meet — the hardest targets to hit.
+ * ⚠️ **This was `Infinity` in effect** — the first version returned a corner whenever one was in
+ * range at all, on the reasoning that a corner is a place somebody meant. That reasoning is right
+ * and the rule built from it was wrong: floor-plan outlines are dense enough that *some* corner is
+ * nearly always within the radius too, so the edge was found, then always lost. Edge snapping was
+ * unreachable in exactly the geometry it was built for (Olcay, 2026-08-16: *"snap to edge of other
+ * features doesn't work … surprising that we can snap to other features nodes but not edges"* —
+ * and the surprise is the tell: it was never the data, both came from the same loop).
+ *
+ * A bias keeps the intent without the flaw: a corner still wins ties and near-ties, so meeting one
+ * stays easy, but an edge that is *clearly* closer is what you were aiming at and takes it.
+ */
+const SNAP_CORNER_BIAS = 5;
+
+/**
+ * The best snap for a screen point, or `null`. Corners are preferred, but only by
+ * `SNAP_CORNER_BIAS` — see the note there for why an absolute preference was a bug.
  */
 function snapQuery(idx, px, py, radius) {
   if (!idx) return null;
@@ -2553,7 +2584,8 @@ function snapQuery(idx, px, py, radius) {
       }
     }
   }
-  if (bv) return { x: bv[0], y: bv[1], kind: "corner", d: bvd };
+  if (bv && (!be || bvd <= bed + SNAP_CORNER_BIAS))
+    return { x: bv[0], y: bv[1], kind: "corner", d: bvd };
   if (be) return { x: be[0], y: be[1], kind: "edge", d: bed };
   return null;
 }
@@ -2581,6 +2613,9 @@ function geomSnapIndex() {
       }
     }
   } catch (e) {}
+  // One line per gesture. If `edges` is ever 0 while `corners` is not, the fault is in the geometry
+  // this reads, not in the index — they are built in the same loop from the same rings.
+  console.info("[snap] index:", seen.size, "features,", verts.length, "corners,", segs.length, "edges");
   return buildSnapIndex(verts, segs, Math.max(SNAP_PX, 24));
 }
 

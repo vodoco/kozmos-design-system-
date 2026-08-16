@@ -315,12 +315,34 @@ console.log("\nsnap engine");
   near("works on a diagonal", segClosest(0, 10, 0, 0, 10, 10), [5, 5]);
 }
 
-/* S2. A corner wins over an edge even when the edge is nearer — the whole point of the ordering. */
+/* S2. A corner wins a near-tie — meeting a corner has to stay easy. */
 {
   const idx = buildSnapIndex([[100, 100]], [[80, 96, 200, 96]], 24);
-  const hit = snapQuery(idx, 100, 99, 10);
-  check("a corner outranks a closer edge", hit && hit.kind === "corner",
+  const hit = snapQuery(idx, 100, 99, 10);   // corner 1px away, edge 3px away
+  check("a corner wins a near-tie", hit && hit.kind === "corner",
         hit ? hit.kind + " @" + hit.d.toFixed(2) : "null");
+}
+
+/* S2b. ⚠️ THE REGRESSION. A corner in range used to win outright, so in floor-plan geometry — where
+        some corner is nearly always within the radius — the edge was found and then always lost.
+        Edge snapping was unreachable in exactly the geometry it was built for. Here the corner is
+        9px off and the edge 1px: the edge is plainly what you were aiming at. */
+{
+  const idx = buildSnapIndex([[100, 91]], [[0, 100, 400, 100]], 24);
+  const hit = snapQuery(idx, 100, 99, 10);
+  check("a clearly closer edge beats a distant corner", hit && hit.kind === "edge",
+        hit ? `${hit.kind} @${hit.d.toFixed(2)}` : "null");
+}
+
+/* S2c. The bias is the whole rule: just inside it the corner holds, just outside it the edge takes
+        over. Pinned so the constant cannot drift without a test noticing. */
+{
+  const edge = [[0, 100, 400, 100]];
+  const held = snapQuery(buildSnapIndex([[100, 96]], edge, 24), 100, 100, 10); // corner 4, edge 0
+  check("corner holds inside the bias", held && held.kind === "corner",
+        held ? held.kind : "null");
+  const lost = snapQuery(buildSnapIndex([[100, 94]], edge, 24), 100, 100, 10); // corner 6, edge 0
+  check("…and yields outside it", lost && lost.kind === "edge", lost ? lost.kind : "null");
 }
 
 /* S3. An edge is found when no corner is in range — the case that did not exist before. */
@@ -354,14 +376,16 @@ console.log("\nsnap engine");
   const idx = buildSnapIndex(verts, segs, 24);
   for (let i = 0; i < 500; i++) {
     const px = rnd() * 2000, py = rnd() * 2000, R = 10;
-    // the honest O(n) answer, with the same corner-beats-edge rule
+    // the honest O(n) answer, with the same biased corner-beats-edge rule
     let bv = null, bvd = R, be = null, bed = R;
     for (const v of verts) { const d = Math.hypot(v[0]-px, v[1]-py); if (d < bvd) { bvd = d; bv = v; } }
     for (const sg of segs) {
       const q = segClosest(px, py, sg[0], sg[1], sg[2], sg[3]);
       const d = Math.hypot(q[0]-px, q[1]-py); if (d < bed) { bed = d; be = q; }
     }
-    const want = bv ? { kind: "corner", d: bvd } : be ? { kind: "edge", d: bed } : null;
+    const BIAS = 5;   // must match SNAP_CORNER_BIAS in the shell
+    const want = bv && (!be || bvd <= bed + BIAS) ? { kind: "corner", d: bvd }
+               : be ? { kind: "edge", d: bed } : null;
     const got = snapQuery(idx, px, py, R);
     const same = (!want && !got) ||
       (want && got && want.kind === got.kind && Math.abs(want.d - got.d) < 1e-9);
