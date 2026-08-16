@@ -28,9 +28,16 @@ import { useState } from "react";
  *    small, and at 0.4 opacity for disabled they vanished outright. They are drawn now, at the
  *    house 1.6 stroke.
  * 3. **Eleven controls in one undifferentiated row is a list, not a toolbar.** They are groups
- *    doing distinct jobs: pick a MODE, TIDY the outline, or step through HISTORY. The mode group
- *    is a real segmented control on a track, because those three are mutually exclusive and
- *    nothing else in the bar is.
+ *    doing distinct jobs: pick a MODE, change how many SHAPES there are, TIDY the outline, or step
+ *    through HISTORY. Hairline separators carry that, and nothing else needs to.
+ *
+ * ⚠️ **The mode pair used to sit on a grey track** — a real segmented control, because those modes
+ * are mutually exclusive and nothing else in the bar is. It came out on 2026-08-16 (Olcay: *"I
+ * don't like the box in a box. Remove the grey box highlights."*) and he is right: the bar is
+ * already a white card floating on the map, so a filled rectangle inside it reads as a *container*
+ * rather than as a control, and the eye has to work out which of the two boxes is being described.
+ * Nothing was lost — the separators group, and the filled pressed tile is what says "this one is
+ * on". The track was saying it a second time, in a heavier voice.
  *
  * ⚠️ **Rotate and scale are NOT in here** (Olcay, 2026-08-16: *"Instead of adding multiple rotation
  * and scale buttons use control points and shortcuts"*). Four stepped buttons — ⟲ ⟳ ±5% — could
@@ -634,19 +641,22 @@ export function GeometryToolbar({
           overflowX: "auto",
         }}
       >
-        {/* Mode — the three that are alternatives, on their own track. A point has no alternatives:
-            there is one coordinate and you drag it, so the whole track goes. */}
+        {/**
+         * **Mode** — the alternatives. A point has none: there is one coordinate and you drag it,
+         * so the whole group goes.
+         *
+         * ⚠️ **The grey track under these two is gone** (Olcay, 2026-08-16: *"I don't like the box
+         * in a box. Remove the grey box highlights."*). It was there to say "these are mutually
+         * exclusive and nothing else in the bar is" — but that stopped being true of the *shape*
+         * once the bar sat on its own white card: a filled rectangle inside a filled rectangle
+         * reads as a container, not as a segmented control, and the eye has to work out which of
+         * the two boxes it is being told about.
+         *
+         * The grouping is not lost. The separators already do it, and the pressed tile is filled —
+         * which is what actually says "this one is on", and did all along.
+         */}
         {!isPoint && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "stretch",
-              gap: 2,
-              padding: 3,
-              borderRadius: 9,
-              background: "var(--primitives-colors-background-100, #f2f3f5)",
-            }}
-          >
+          <Group>
             {/**
              * ⚠️ **"Points" is gone** (Olcay, 2026-08-15: *"Points doesn't mean much"*). It named the
              * thing you manipulate rather than the thing you achieve — and it named it in the
@@ -674,7 +684,7 @@ export function GeometryToolbar({
               on={state.mode === "transform"}
               onClick={() => onCommand({ cmd: "mode", mode: "transform" })}
             />
-          </div>
+          </Group>
         )}
 
         {!isPoint && <Sep />}
@@ -684,9 +694,9 @@ export function GeometryToolbar({
          * shape; it changes **how many features there are**, which is a different kind of act from
          * reshaping one, and it belongs with Combine rather than with the modes.
          *
-         * The two are armed modes rather than buttons, and they are mutually exclusive with each
-         * other and with Reshape and Transform — but they are deliberately NOT on the mode track.
-         * That track is "how am I editing this shape"; these two change how many shapes there are.
+         * Split is an armed mode and Combine is an act; what they share is that both are about how
+         * many shapes exist, where the pair on the other side of the separator is about how you are
+         * editing one. That distinction is what the separator carries.
          */}
         {!isPoint && (
           <Group>
