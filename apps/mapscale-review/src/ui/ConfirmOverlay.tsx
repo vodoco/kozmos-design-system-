@@ -109,7 +109,20 @@ export function ConfirmOverlay({
         aria-label={title}
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: 400,
+          /**
+           * ⚠️ **A third button does not fit in 400** (Olcay, 2026-08-17: *"overlay need to be wider
+           * to fit 3 button I believe"* — it does).
+           *
+           * Measured rather than nudged, against the DS button's own metrics on a rendered page:
+           * *Keep editing* 113 + *Discard changes* 135 + *Save changes* 118, plus two 12px gaps, is
+           * **390px** of buttons against **352px** of inner width at 400 — a 38px overflow. And
+           * `justify-content: flex-end` does not clip an overflow, it pushes it out of the *other*
+           * end, so the ghost button ends up flush against the card's left edge with its padding
+           * gone. That is what the eye reads as "cramped".
+           *
+           * 480 is the card's own existing ceiling, not a new number, and leaves 42px spare.
+           */
+          width: altLabel && onAlt ? 480 : 400,
           minWidth: 320,
           maxWidth: 480,
           background: "#fff",
@@ -180,6 +193,14 @@ export function ConfirmOverlay({
             justifyContent: "flex-end",
             gap: 12,
             padding: 24,
+            /**
+             * ⚠️ The belt to the width's braces. A row of buttons that outgrows its card does not
+             * clip — it escapes the padding at the far end, silently, and looks like a spacing bug
+             * rather than an overflow. Wrapping is uglier than a wide dialog and much better than
+             * a label sitting on the card's edge, so it is what happens if a longer set of labels
+             * ever arrives.
+             */
+            flexWrap: "wrap",
           }}
         >
           <Button variant="ghost" onClick={onCancel}>
