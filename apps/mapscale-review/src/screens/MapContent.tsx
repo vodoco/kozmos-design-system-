@@ -2237,6 +2237,37 @@ export function MapContent({
     }
     closeProps();
   }, [closeProps]);
+  /**
+   * **Escape leaves the edit, wherever the focus happens to be** (Olcay, 2026-08-17: *"escape
+   * should exit editing (confirmation overlay if any change)"*).
+   *
+   * Two listeners for one key, because the screen is two documents: the map is an **iframe** and
+   * keeps its own keyboard, so a press over the map never reaches this window. The map peels its
+   * own layers first and then reports the key (`onEscape` below); this covers the other half —
+   * focus in the panel, the tree, or nowhere in particular.
+   *
+   * It goes through `onCancelEdit`, which is the ✕ button's own path: **Escape must not be a way
+   * around the unsaved-work question**, only a faster way of asking it.
+   */
+  useEffect(() => {
+    if (!focused) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      // The overlay owns Escape while it is open — there it means *Keep editing*, and closing the
+      // panel underneath the question being asked about it would be absurd.
+      if (pendingPick) return;
+      /**
+       * ⚠️ A native `<select>` eats Escape to close its own dropdown. Taking the panel down at the
+       * same time would make one press do two things, one of them invisible.
+       */
+      if (e.target instanceof HTMLSelectElement) return;
+      e.preventDefault();
+      onCancelEdit();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focused, pendingPick, onCancelEdit]);
+
   /** The tree's selection, guarded the same way the map's is — one rule, both surfaces. */
   const focus = useCallback(
     (buildingId: string, index: number, fid: string) => {
@@ -3128,6 +3159,11 @@ export function MapContent({
              */
             onFeatureClick={onFeatureClick}
             onCursor={setPresenceCursor}
+            /**
+             * Escape over the map, once the map has peeled everything of its own. The same path the
+             * ✕ takes, so the unsaved-work question is asked either way.
+             */
+            onEscape={onCancelEdit}
             /**
              * The rail's section, and the only thing the map is told about it. What may be drawn,
              * what may answer a click and what stays quiet under the pointer are all derived from

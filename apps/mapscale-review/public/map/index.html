@@ -4019,7 +4019,21 @@ function start() {
       geomDraw(); post("geomstate", geomState());
       return;
     }
-    if (SELECTED) select(SELECTED);
+    if (SELECTED) { select(SELECTED); return; }
+    /**
+     * **Nothing left to peel, so Escape leaves the edit** (Olcay, 2026-08-17: *"escape should exit
+     * editing (confirmation overlay if any change)"*).
+     *
+     * ⚠️ The comment above this used to claim a second Escape closed the panel *"which is what
+     * Escape has always done"*. It did not — there was no step that ever closed it, and the claim
+     * had been sitting here unchallenged because the peels above it are what anyone testing would
+     * hit first.
+     *
+     * Reported, not acted on: **only the app knows whether leaving needs asking first.** The
+     * unsaved-work overlay lives there, along with the draft it is protecting, and a map that
+     * closed the panel itself would walk straight around it.
+     */
+    post("escape", {});
   });
 
   /**

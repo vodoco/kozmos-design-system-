@@ -185,6 +185,19 @@ const PointrMap = forwardRef<
      * the app displays it.
      */
     onNetworks?: (forLevel: number, networks: MapNetwork[]) => void;
+    /**
+     * **Escape, pressed while the pointer was over the map** (Olcay, 2026-08-17: *"escape should
+     * exit editing (confirmation overlay if any change)"*).
+     *
+     * The map peels its own layers first — a cut being laid, a multi-selection, selected corners —
+     * and only reports the key once there is nothing of its own left to undo. What "exit editing"
+     * costs is the app's business: the unsaved-work overlay and the draft it protects both live
+     * here, and a map that closed the panel itself would walk around them.
+     *
+     * ⚠️ It arrives as an EVENT, so this side must not treat it as state: the same key pressed
+     * twice is two messages, and both mean the same thing.
+     */
+    onEscape?: () => void;
     /** This tab's cursor, in map coordinates — presence broadcasts it (see cloud/presence.ts). */
     onCursor?: (lng: number, lat: number) => void;
     /**
@@ -296,6 +309,7 @@ const PointrMap = forwardRef<
     onFeatureProps,
     onFeatureClick,
     onCursor,
+    onEscape,
     onNetworks,
     peers,
     editing,
@@ -596,6 +610,8 @@ const PointrMap = forwardRef<
           ev.data.props
         )
           onGeomIdentity?.(String(ev.data.fid), ev.data.props);
+      } else if (ev.data.type === "escape") {
+        if (ev.source === ref.current?.contentWindow) onEscape?.();
       } else if (ev.data.type === "networks") {
         if (ev.source === ref.current?.contentWindow)
           onNetworks?.(ev.data.level, ev.data.networks ?? []);
@@ -704,6 +720,7 @@ const PointrMap = forwardRef<
     onSelect,
     onFeatureProps,
     onNetworks,
+    onEscape,
   ]);
 
   /**
