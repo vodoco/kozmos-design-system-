@@ -33,7 +33,7 @@
  * Nothing here writes. Editing the network in this prototype is local, like every other edit.
  */
 import { authFetch } from "./session";
-import { POINTR } from "../mock/pointrConfig";
+import { MAP_PERSONA, POINTR, visibleToPersona } from "../mock/pointrConfig";
 
 /** One neighbour, as the API returns it. `speed` is per-edge and only on same-floor neighbours. */
 export interface PathNeighbor {
@@ -116,11 +116,23 @@ export async function levelPaths(
           : [];
 
       const out: PathNode[] = [];
+      let hidden = 0;
       for (const f of feats) {
         const p = f?.properties ?? {};
         const c = f?.geometry?.coordinates;
         if (!p.fid || f?.geometry?.type !== "Point" || !Array.isArray(c))
           continue;
+        /**
+         * ⚠️ **A node hidden from this persona takes its corridors with it.** The nodes carry
+         * `mapPersonas` like every other feature, and dropping one leaves its neighbours naming a
+         * fid that is not here — which `networkEdges` already counts as *dangling* and refuses to
+         * draw a line to. That is the right outcome and it is why the count below is worth reading:
+         * a network that loses half its nodes to a persona is a network worth looking at.
+         */
+        if (!visibleToPersona(p.mapPersonas)) {
+          hidden++;
+          continue;
+        }
         out.push({
           fid: String(p.fid),
           at: [Number(c[0]), Number(c[1])],
@@ -138,7 +150,8 @@ export async function levelPaths(
         out.length,
         "nodes ·",
         links,
-        "neighbour references · from the draft content",
+        "neighbour references · from the draft content" +
+          (hidden ? ` · ${hidden} hidden from the ${MAP_PERSONA} persona` : ""),
       );
       cache.set(k, out);
       return out;

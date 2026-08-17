@@ -54,6 +54,30 @@ const env = import.meta.env;
 
 export const MAP_PERSONA = env.VITE_POINTR_PERSONA ?? "facilityManager";
 
+/**
+ * **Is this feature meant for the persona the map is rendered for?** (Olcay, 2026-08-17: *"let's
+ * also use facilityManager map persona on the app."*)
+ *
+ * ⚠️ **The SDK applied the persona and the app never did**, and that gap widened the day the floor
+ * started rendering from GeoJSON. The SDK hides a POI whose `mapPersonas` excludes the key —
+ * `isPoiVisibleForPersonaKey()` — so the **tile**-rendered floor has always been a facility
+ * manager's view. Everything the app fetches for itself is unfiltered: the editor's geometry, the
+ * wayfinding graph, and, since the render swap, **the floor you are looking at**. So the same
+ * building showed one set of features drawn from tiles and a larger set drawn from GeoJSON, and
+ * nothing anywhere said why.
+ *
+ * ⚠️ **No `mapPersonas` at all means visible**, not hidden — the platform's own rule, and the safer
+ * direction: an unmarked feature is unclassified, not private, and dropping it would quietly empty
+ * a floor whose content predates personas.
+ */
+export function visibleToPersona(
+  mapPersonas: unknown,
+  persona: string = MAP_PERSONA,
+): boolean {
+  if (!Array.isArray(mapPersonas) || !mapPersonas.length) return true;
+  return mapPersonas.some((p) => String(p) === persona);
+}
+
 export const POINTR: PointrConfig = {
   baseUrl: env.VITE_POINTR_BASE_URL ?? "",
   client: env.VITE_POINTR_CLIENT ?? "",
@@ -66,7 +90,9 @@ export const POINTR: PointrConfig = {
 export function missingPointrConfig(): string[] {
   return Object.entries(POINTR)
     .filter(([, v]) => !v)
-    .map(([k]) => `VITE_POINTR_${k === "baseUrl" ? "BASE_URL" : k.toUpperCase()}`);
+    .map(
+      ([k]) => `VITE_POINTR_${k === "baseUrl" ? "BASE_URL" : k.toUpperCase()}`,
+    );
 }
 
 /**

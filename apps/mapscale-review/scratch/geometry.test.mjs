@@ -57,6 +57,8 @@ let map = null;
  * precisely the failure that was reported twice as "the highlight isn't working".
  */
 let GEOM = null;
+/* The connection the map booted with. Only its persona is read by these blocks. */
+const CONN = { persona: "facilityManager" };
 const TARGET = { level: 0, building: "B2", site: "S" };
 const prefs = { floorplan: true, hidePoiLabels: false, geojsonFloor: true };
 const FP_LAYERS = [];
@@ -93,7 +95,7 @@ writeFileSync(
       `  networkComponents, networkRun, networkAdjacency, deleteNetworkNodes,\n` +
       `  unlinkNetworkNodes,\n` +
       `  wfBuildEdges, wfEnsureEdges, WF_NODES, wfPaint,\n` +
-      `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, wfNodeAt,\n` +
+      `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, wfNodeAt, personaOk,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
@@ -135,7 +137,7 @@ const {
   edgeKeys, selectedEdgeCount, grabOffset, aimPoint, networkEdges, moveNetworkNode,
   networkComponents, networkRun, deleteNetworkNodes, unlinkNetworkNodes,
   wfBuildEdges, wfEnsureEdges, wfPaint,
-  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd,
+  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, personaOk,
   editableAt, hoverableAt,
   __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __sel, __edges,
   __env, TARGET, prefs, POSTED,
@@ -2492,6 +2494,42 @@ const node = (fid, at, nb, tr) => ({
   const cut = unlinkNetworkNodes(chain, "b", "c");
   const { list } = networkComponents(cut.nodes, networkEdges(cut.nodes).edges);
   check("…and where it splits the network, it really is two now", list.length === 2);
+}
+
+/* ══ PERSONA — the app sees what the map draws ══════════════════════════════
+   Olcay, 2026-08-17: "let's also use facilityManager map persona on the app."
+
+   ⚠️ The SDK applies the persona to what it DRAWS. querySourceFeatures reads the SOURCE, not the
+   layers, so everything the shell counts and reports has always included features the map itself
+   was hiding — the tree could list a back-of-house room the floor never drew, on a screen whose
+   whole point is that the list and the map agree. */
+console.log("\npersona");
+
+{
+  check("a feature meant for this persona is visible",
+        personaOk({ mapPersonas: ["staff", "facilityManager"] }));
+  check("…and one that is not, is not", !personaOk({ mapPersonas: ["customer", "visitor"] }));
+
+  /**
+   * ⚠️ **No `mapPersonas` at all means VISIBLE** — the platform's own rule, and the safer
+   * direction: unmarked is unclassified, not private. Reading it the other way would quietly empty
+   * a floor whose content predates personas.
+   */
+  check("unmarked is unclassified, not private", personaOk({ name: "Costa" }));
+  check("…and so is an empty list", personaOk({ mapPersonas: [] }));
+  check("no properties at all does not throw", personaOk(null) && personaOk(undefined));
+
+  /**
+   * ⚠️ **A vector tile flattens an array property to a string.** The same feature arrives as a real
+   * array from our own GeoJSON and as `"customer,facilityManager"` from the tiles — so the rule has
+   * to read both, or the persona would apply on one render path and not the other, which is the
+   * very inconsistency this exists to remove.
+   */
+  check("a tile's flattened list is read too", personaOk({ mapPersonas: "staff,facilityManager" }));
+  check("…including the bracketed form", personaOk({ mapPersonas: '["vip","facilityManager"]' }));
+  check("…and it still excludes", !personaOk({ mapPersonas: "customer,visitor" }));
+  // ⚠️ Not a substring match: "facilityManagerAssistant" is a different persona.
+  check("it matches whole keys, not substrings", !personaOk({ mapPersonas: "facilityManagerAssistant" }));
 }
 
 /* ══ REACH — what a section lets you touch ══════════════════════════════════

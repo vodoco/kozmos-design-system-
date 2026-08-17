@@ -602,6 +602,7 @@ function levelTypeCounts() {
         if (!p || p.lvl !== TARGET.level) continue;
         if (TARGET.building && p.bid && p.bid !== TARGET.building) continue;
         if (p.fid == null) continue;
+        if (!personaOk(p)) continue;          // counted only if the persona can see it
         // BEFORE the dedupe: a feature straddling a tile boundary arrives once per tile, and its
         // full extent is the union of those fragments.
         noteBounds(p.fid, f.geometry);
@@ -635,6 +636,7 @@ function levelFeatureNames(limit) {
       // would let every wall on the floor into the app's feature list the moment the render swaps.
       const sl = srcLayerOf(f);
       if (!p || !p.name || sl === "wall" || FP_SKIP[sl]) return;
+      if (!personaOk(p)) return;              // the map is not drawing it; the list must not list it
       // A type this screen does not draw is not one of its features either — a geofence carries a
       // perfectly good name ("Shops and Food") and would otherwise be listed as content.
       if (HIDDEN_FLAT && HIDDEN_FLAT.has(flatType(p.mainType))) return;
@@ -1979,6 +1981,36 @@ const gjLive = () => GJ.phase === "live";
 const gjIsClone = id => String(id).indexOf(GJ_LYR) === 0;
 /** Wanted where there is something to draw and nobody has switched it off. */
 const gjWanted = () => prefs.geojsonFloor !== false && LEVEL_FEATS.length > 0;
+
+/**
+ * **Is this feature meant for the persona this map is rendered for?** (Olcay, 2026-08-17.)
+ *
+ * ⚠️ The SDK applies the persona to what it *draws* — `isPoiVisibleForPersonaKey` — but
+ * `querySourceFeatures` reads the **source**, not the layers, so everything this file counts and
+ * reports has always included features the map itself was hiding. The tree could therefore list a
+ * back-of-house room the floor never drew, on a screen whose whole point is that the list and the
+ * map agree.
+ *
+ * ⚠️ **No `mapPersonas` at all means visible** — the platform's own rule, and the safer direction:
+ * unmarked is unclassified, not private.
+ */
+function personaOk(p) {
+  const m = p && p.mapPersonas;
+  if (!CONN.persona || m == null || m === "") return true;
+  const list = Array.isArray(m) ? m
+    // A vector tile flattens an array property to a string, so it arrives as `a,b,c` here and as a
+    // real array from our own GeoJSON. Both shapes, one rule.
+    : String(m).replace(/[[\]"\s]/g, "").split(",").filter(Boolean);
+  /**
+   * ⚠️ **An empty list is "carrying no personas", which is VISIBLE** — the same as the field being
+   * absent. This is the one place the rule is written twice (the app has `visibleToPersona`, and
+   * this file cannot import from it), and the two disagreed here until a test asked them the same
+   * question. When a rule has to live in two places, the tests are the only thing holding them
+   * together.
+   */
+  if (!list.length) return true;
+  return list.indexOf(CONN.persona) >= 0;
+}
 
 /** Which source-layer a feature came from — `__sl` for a clone's, which has no `sourceLayer`. */
 function srcLayerOf(f) {

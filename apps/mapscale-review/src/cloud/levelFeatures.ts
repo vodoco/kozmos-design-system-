@@ -36,7 +36,7 @@
  * the bag travels whole and the **size is measured and logged**, rather than guessed at either way.
  */
 import { authFetch } from "./session";
-import { POINTR } from "../mock/pointrConfig";
+import { MAP_PERSONA, POINTR, visibleToPersona } from "../mock/pointrConfig";
 
 /** One feature's true geometry and its own property bag. */
 export interface LevelGeometry {
@@ -115,14 +115,25 @@ export async function levelGeometry(
         geometry?: unknown;
       }[];
       const out: LevelGeometry[] = [];
+      let hidden = 0;
       for (const f of feats) {
         const fid = f?.properties?.fid;
-        if (fid && f.geometry)
-          out.push({
-            fid: String(fid),
-            geometry: f.geometry,
-            properties: f.properties ?? {},
-          });
+        if (!fid || !f.geometry) continue;
+        /**
+         * ⚠️ **The persona is applied HERE, where the data enters** — not at each of the four
+         * places that use it. The editor's geometry, the tree's counts and, since the render swap,
+         * **the floor itself** all derive from this list, and the SDK has been filtering its own
+         * tiles by persona all along. Filtering downstream would mean four chances to disagree.
+         */
+        if (!visibleToPersona(f.properties?.mapPersonas)) {
+          hidden++;
+          continue;
+        }
+        out.push({
+          fid: String(fid),
+          geometry: f.geometry,
+          properties: f.properties ?? {},
+        });
       }
       /**
        * ⚠️ **The one measurement that sizes the render swap.** A whole level now crosses the iframe
@@ -136,7 +147,8 @@ export async function levelGeometry(
         lvl,
         "→",
         out.length,
-        `features with geometry, unclipped, from the draft content · ${kb} KB to the map shell`,
+        `features with geometry, unclipped, from the draft content · ${kb} KB to the map shell` +
+          (hidden ? ` · ${hidden} hidden from the ${MAP_PERSONA} persona` : ""),
       );
       cache.set(k, out);
       return out;
