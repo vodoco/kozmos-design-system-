@@ -175,21 +175,19 @@ export function MapSettings({
          */}
         <div style={SECTION_HEAD}>FLOOR-PLAN OVERLAY</div>
         {/*
-         * One row, three parts (Olcay, 2026-08-18: "integrated in the same row. No need to say
-         * transparency. Value could be a tooltip.") — the same shape as the Building Wizard's
-         * reference-level row, which is where the slider idiom comes from. The overlay is the
-         * ORIGINAL floor-plan (a PNG in the product), and the slider is its transparency, so it
-         * lives inside the floor-plan's own row where it cannot read as a panel-wide preference.
-         * No label on purpose: between a row that already says "Show Floor-plan" and its switch,
-         * the slider has exactly one plausible meaning — the tooltip carries the number.
+         * Two lines now, one clickable apiece (Olcay, 2026-08-18: "I don't like too many
+         * clickables side by side" — the in-row version put slider, help and switch shoulder to
+         * shoulder). The row returns to the uniform label + switch shape every other preference
+         * has, with the help glyph NEXT TO THE LABEL (Olcay: "help symbol should be next to
+         * labels" — also v9's own pattern), and the slider gets a full-width line of its own
+         * underneath, indented behind the rail that says it belongs to the floor-plan. Everything
+         * the earlier rounds decided survives: no "Transparency" label, the value as a tooltip,
+         * double-click to return to the 50% default, shown only while the overlay is on.
          *
-         * DS-component note: this is the DS `Slider` + `Tooltip` composed, which covers hover and
-         * drag (`sliding` holds the tooltip open through a drag). What the DS does NOT offer is a
-         * thumb-anchored value tooltip that tracks the knob — this one anchors to the track. Good
-         * enough here; recorded in KOZMOS_DS_IMPROVEMENTS.md as "Slider needs a value-tooltip
-         * variant — we need to build it."
+         * DS-component note: DS `Slider` + `Tooltip` composed; the tooltip anchors to the track,
+         * not the knob — the value-tooltip Slider variant stays on the DS backlog.
          */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <label
             htmlFor="pref-show-floor-plan"
             style={{
@@ -202,43 +200,7 @@ export function MapSettings({
           >
             Show Floor-plan
           </label>
-          {prefs.floorplan && (
-            <TooltipProvider delayDuration={150}>
-              <Tooltip open={sliding || undefined}>
-                <TooltipTrigger asChild>
-                  {/* Double-click returns to the default — 50%, the overlay's historical look.
-                      The lightest form of v9's own "Revert changes" idiom. */}
-                  <span
-                    style={{ flex: 1, minWidth: 0, display: "block" }}
-                    onDoubleClick={() =>
-                      onChange({ ...prefs, floorplanTransparency: 0.5 })
-                    }
-                  >
-                    <Slider
-                      min={0}
-                      max={1}
-                      step={0.05}
-                      value={[prefs.floorplanTransparency ?? 0.5]}
-                      onValueChange={([v]) => {
-                        setSliding(true);
-                        onChange({ ...prefs, floorplanTransparency: v });
-                      }}
-                      onValueCommit={() => setSliding(false)}
-                      aria-label="Floor-plan transparency"
-                    />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  {/* "transparent", not a bare number — 50% alone invites the
-                      opacity-or-transparency question. */}
-                  {Math.round((prefs.floorplanTransparency ?? 0.5) * 100)}%
-                  transparent
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          {/* v9's row keeps a help glyph, and the PNG-overlay explanation needs a home.
-              Inline SVG because @kozmos/icons ships no help/question glyph — the D9 gap again. */}
+          {/* Inline SVG because @kozmos/icons ships no help/question glyph — the D9 gap again. */}
           <TooltipProvider delayDuration={150}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -300,6 +262,46 @@ export function MapSettings({
             />
           </span>
         </div>
+        {prefs.floorplan && (
+          <TooltipProvider delayDuration={150}>
+            <Tooltip open={sliding || undefined}>
+              <TooltipTrigger asChild>
+                {/* Double-click returns to the default — 50%, the overlay's historical look.
+                    The lightest form of v9's own "Revert changes" idiom. */}
+                <span
+                  style={{
+                    display: "block",
+                    margin: "8px 0 2px",
+                    padding: "2px 0 2px 14px",
+                    borderLeft: "2px solid #E7E9EE",
+                  }}
+                  onDoubleClick={() =>
+                    onChange({ ...prefs, floorplanTransparency: 0.5 })
+                  }
+                >
+                  <Slider
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={[prefs.floorplanTransparency ?? 0.5]}
+                    onValueChange={([v]) => {
+                      setSliding(true);
+                      onChange({ ...prefs, floorplanTransparency: v });
+                    }}
+                    onValueCommit={() => setSliding(false)}
+                    aria-label="Floor-plan transparency"
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {/* "transparent", not a bare number — 50% alone invites the
+                    opacity-or-transparency question. */}
+                {Math.round((prefs.floorplanTransparency ?? 0.5) * 100)}%
+                transparent
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
 
         <div style={SECTION_HEAD}>BASE MAP</div>
         <div style={{ display: "flex", gap: 10 }}>
