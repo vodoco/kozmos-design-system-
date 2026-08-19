@@ -24,6 +24,15 @@ export interface MapPrefs {
   /** Hide the SDK's POI pins and labels so nothing sits between you and the diff. Review only. */
   hidePoiLabels: boolean;
   floorplan: boolean;
+  /**
+   * How see-through the floor-plan overlay draws, 0–1 (Olcay, 2026-08-18 — a customer request on
+   * the v9 Map Settings component). 0 is solid ink, 1 is invisible. **0.5 reproduces the overlay's
+   * historical look** — its line-opacity was a baked 0.5 — which is why the default sits mid-scale
+   * rather than at an end: the slider's rest position explains the render everyone has always
+   * seen, and both directions from it do something. Optional like `geojsonFloor`: screens without
+   * the popover state no opinion, and the map shell supplies the same 0.5.
+   */
+  floorplanTransparency?: number;
   basemap: "vector" | "satellite";
   /**
    * Draw the floor from the **GeoJSON** the app fetched, with the SDK's vector tiles switched off

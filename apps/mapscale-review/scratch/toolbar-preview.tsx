@@ -2,13 +2,15 @@
  * Every state the geometry toolbar has, side by side, over a stand-in for the map — MAP-566.
  * See `toolbar-preview.html` for why this exists. Nothing in the app imports it.
  */
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "@kozmos/react";
 import "@kozmos/react/dist/style.css";
 import "../src/index.css";
 import { GeometryToolbar, type GeomState } from "../src/ui/GeometryToolbar";
 import { SavedNotice } from "../src/ui/SavedNotice";
+import { MapSettings } from "../src/ui/MapSettings";
+import type { MapPrefs } from "../src/map/PointrMap";
 import { FeaturePanel, mergeForEditing } from "../src/ui/FeaturePanel";
 
 /**
@@ -219,6 +221,48 @@ const CASES: { title: string; state: GeomState; notice?: string }[] = [
   },
 ];
 
+/**
+ * The Map View Preferences popover with the floor-plan transparency slider (Olcay, 2026-08-18 — a
+ * customer request on the v9 Map Settings component). The popover otherwise renders only behind
+ * sign-in, and this bench is the app's own answer to that (PROTOTYPE_PLATFORM §6.13). The stage is
+ * tall because the popover opens UPWARD from its bottom-left trigger.
+ */
+function MapSettingsBench() {
+  const [prefs, setPrefs] = useState<MapPrefs>({
+    greyscale: false,
+    hidePoiLabels: false,
+    floorplan: true,
+    basemap: "vector",
+    geojsonFloor: true,
+  });
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <div
+        style={{
+          font: "12px/1.4 system-ui",
+          color: "#5d626f",
+          marginBottom: 6,
+        }}
+      >
+        Map View Preferences — the transparency slider lives WITH the
+        floor-plan, indented under its toggle (click the settings button)
+      </div>
+      <div
+        style={{
+          position: "relative",
+          height: 560,
+          borderRadius: 12,
+          background:
+            "repeating-linear-gradient(45deg,#dfe4ec 0 10px,#e7ebf2 10px 20px)",
+          border: "1px solid #d3d9e3",
+        }}
+      >
+        <MapSettings prefs={prefs} onChange={setPrefs} geojson />
+      </div>
+    </div>
+  );
+}
+
 function Bench() {
   return (
     <div style={{ padding: 28, background: "#eef1f6", minHeight: "100vh" }}>
@@ -424,6 +468,8 @@ function Bench() {
           </div>
         </div>
       </div>
+
+      <MapSettingsBench />
     </div>
   );
 }

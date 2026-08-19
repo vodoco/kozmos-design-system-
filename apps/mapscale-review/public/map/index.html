@@ -230,7 +230,7 @@ let RESOLVED = [];                 // [{ change, rings:[[lnglat,…]], centroid:
 // `geojsonFloor` is the render swap (see the GJ block): draw the floor from the level's GeoJSON
 // with the SDK's tiles off. Defaults to ON, and costs nothing on a screen that never sends any
 // GeoJSON — `gjWanted()` also requires features to draw.
-const prefs = { greyscale: false, hidePoiLabels: false, floorplan: true, basemap: "vector", geojsonFloor: true };
+const prefs = { greyscale: false, hidePoiLabels: false, floorplan: true, floorplanTransparency: 0.5, basemap: "vector", geojsonFloor: true };
 
 function post(type, extra) { try { parent.postMessage(Object.assign({ source:"mapscale-map", type }, extra||{}), "*"); } catch(e){} }
 function el(tag, attrs){ const e=document.createElementNS(SVGNS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
@@ -1408,6 +1408,17 @@ function fpFilter() {
     ["any", ["==", ["get", "lvl"], TARGET.level], ["==", ["get", "lvl"], null]]];
 }
 
+/**
+ * The overlay's ink after the user's transparency: 0 = solid, 1 = invisible (Olcay, 2026-08-18).
+ * The historical paint was a baked `line-opacity: 0.5`, which the default t = 0.5 reproduces
+ * exactly — the slider's rest position IS the look this overlay has always had, and both
+ * directions from it do something. Clamped here too, because a prefs message is just a message.
+ */
+function fpOpacity() {
+  const t = +prefs.floorplanTransparency;
+  return isFinite(t) ? Math.max(0, Math.min(1, 1 - t)) : 0.5;
+}
+
 function addFloorplan() {
   try {
     // These layers outlive a level switch, and their filter is baked in when they're created — so
@@ -1441,7 +1452,7 @@ function addFloorplan() {
       const def = { id, type:"line", source: gj ? GJ_SRC + L : "source_ptr",
         filter: fpFilter(),
         layout:{ visibility: prefs.floorplan ? "visible" : "none" },
-        paint:{ "line-color":"#33425c", "line-width":1, "line-opacity":0.5 } };
+        paint:{ "line-color":"#33425c", "line-width":1, "line-opacity": fpOpacity() } };
       if (!gj) def["source-layer"] = L;
       map.addLayer(def);
       FP_LAYERS.push(id);
@@ -3034,6 +3045,10 @@ function applyPrefs() {
         // is drawn twice, in two slightly different places, which reads as a rendering bug.
         const mine = l.id.indexOf("__fp_gj_") === 0 ? gj : !gj;
         map.setLayoutProperty(l.id, "visibility", prefs.floorplan && mine ? "visible" : "none");
+        // Re-asserted every pass, not only at creation — the same law visibility follows: these
+        // layers are re-created when the floor's source flips, and a paint set once would be lost
+        // with no error the moment that rebuild happens.
+        map.setPaintProperty(l.id, "line-opacity", fpOpacity());
       }
       else if (l.id === "__sat")
         map.setLayoutProperty(l.id, "visibility", satellite ? "visible" : "none");
@@ -7384,6 +7399,11 @@ window.addEventListener("message", (ev) => {
     if ("greyscale" in d) prefs.greyscale = !!d.greyscale;
     if ("hidePoiLabels" in d) prefs.hidePoiLabels = !!d.hidePoiLabels;
     if ("floorplan" in d) prefs.floorplan = !!d.floorplan;
+    if ("floorplanTransparency" in d) {
+      // Clamp at the boundary: this arrives over postMessage, and NaN or 3 must not become paint.
+      const t = +d.floorplanTransparency;
+      if (isFinite(t)) prefs.floorplanTransparency = Math.max(0, Math.min(1, t));
+    }
     if ("basemap" in d) prefs.basemap = d.basemap;
     /**
      * ⚠️ **Absent means "yes, if you can"**, not "no". Four of the five screens build a `MapPrefs`

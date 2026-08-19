@@ -1,4 +1,10 @@
-import { Popover, PopoverTrigger, PopoverContent, Switch } from "@kozmos/react";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  Slider,
+  Switch,
+} from "@kozmos/react";
 import type { MapPrefs } from "../map/PointrMap";
 
 export type MapPrefsState = MapPrefs;
@@ -181,6 +187,60 @@ export function MapSettings({
           checked={prefs.floorplan}
           onCheckedChange={(v) => onChange({ ...prefs, floorplan: v })}
         />
+        {prefs.floorplan && (
+          /*
+           * The transparency belongs to the floor-plan, not to the panel (Olcay, 2026-08-18:
+           * "related to floorplan and not other elements within this map preferences panel") —
+           * hence the nested rail under the toggle rather than a sibling PrefRow, which would read
+           * as one more independent preference. Shown only while the overlay is on: a slider for
+           * an invisible overlay would be the one control in this popover that visibly does
+           * nothing. The slider is the same DS control the Building Wizard's reference-level row
+           * uses for exactly this job, at the same width.
+           */
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              margin: "6px 0 2px",
+              padding: "2px 0 2px 14px",
+              borderLeft: "2px solid #E7E9EE",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 12.5,
+                color: "var(--primitives-colors-background-600)",
+                flex: "0 0 auto",
+              }}
+            >
+              Transparency
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Slider
+                min={0}
+                max={1}
+                step={0.05}
+                value={[prefs.floorplanTransparency ?? 0.5]}
+                onValueChange={([v]) =>
+                  onChange({ ...prefs, floorplanTransparency: v })
+                }
+                aria-label="Floor-plan transparency"
+              />
+            </div>
+            <span
+              style={{
+                fontSize: 11,
+                color: "var(--primitives-colors-background-600)",
+                width: 32,
+                textAlign: "right",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {Math.round((prefs.floorplanTransparency ?? 0.5) * 100)}%
+            </span>
+          </div>
+        )}
 
         <div style={SECTION_HEAD}>BASE MAP</div>
         <div style={{ display: "flex", gap: 10 }}>
