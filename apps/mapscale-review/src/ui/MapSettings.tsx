@@ -142,7 +142,9 @@ export function MapSettings({
           />
         </button>
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" style={{ width: 268 }}>
+      {/* 280 matches the v9 component (widened 2026-08-18 to give the in-row slider real travel —
+          at 268 each 5% step was ~3px of thumb movement, coarse for a pointer). */}
+      <PopoverContent side="top" align="start" style={{ width: 280 }}>
         <div style={{ fontWeight: 600, color: "var(--review-ink)" }}>
           Map View Preferences
         </div>
@@ -204,7 +206,14 @@ export function MapSettings({
             <TooltipProvider delayDuration={150}>
               <Tooltip open={sliding || undefined}>
                 <TooltipTrigger asChild>
-                  <span style={{ flex: 1, minWidth: 0, display: "block" }}>
+                  {/* Double-click returns to the default — 50%, the overlay's historical look.
+                      The lightest form of v9's own "Revert changes" idiom. */}
+                  <span
+                    style={{ flex: 1, minWidth: 0, display: "block" }}
+                    onDoubleClick={() =>
+                      onChange({ ...prefs, floorplanTransparency: 0.5 })
+                    }
+                  >
                     <Slider
                       min={0}
                       max={1}
@@ -220,11 +229,63 @@ export function MapSettings({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top">
+                  {/* "transparent", not a bare number — 50% alone invites the
+                      opacity-or-transparency question. */}
                   {Math.round((prefs.floorplanTransparency ?? 0.5) * 100)}%
+                  transparent
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
+          {/* v9's row keeps a help glyph, and the PNG-overlay explanation needs a home.
+              Inline SVG because @kozmos/icons ships no help/question glyph — the D9 gap again. */}
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label="What is the floor-plan overlay?"
+                  style={{
+                    width: 16,
+                    height: 16,
+                    padding: 0,
+                    border: "none",
+                    background: "none",
+                    cursor: "help",
+                    flex: "0 0 auto",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <svg width={14} height={14} viewBox="0 0 14 14" aria-hidden>
+                    <circle
+                      cx={7}
+                      cy={7}
+                      r={6.3}
+                      fill="none"
+                      stroke="var(--primitives-colors-background-600)"
+                      strokeWidth={1.2}
+                    />
+                    <path
+                      d="M5.4 5.4a1.7 1.7 0 1 1 2.5 1.5c-.55.3-.9.6-.9 1.2"
+                      fill="none"
+                      stroke="var(--primitives-colors-background-600)"
+                      strokeWidth={1.2}
+                      strokeLinecap="round"
+                    />
+                    <circle
+                      cx={7}
+                      cy={10.4}
+                      r={0.8}
+                      fill="var(--primitives-colors-background-600)"
+                    />
+                  </svg>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                The original floor-plan drawing, shown over the map.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <span
             style={{
               display: "inline-flex",
@@ -279,7 +340,10 @@ export function MapSettings({
                     display: "block",
                     objectFit: "cover",
                     borderRadius: 8,
-                    border: `2px solid ${selected ? "var(--review-ink)" : "#E7E9EE"}`,
+                    /* theme-500, the DS's active blue — v9's own selected-thumbnail ring.
+                       This was --review-ink, the one selection in the popover speaking
+                       near-black while everything else selected speaks blue. */
+                    border: `2px solid ${selected ? "var(--primitives-colors-theme-500)" : "#E7E9EE"}`,
                   }}
                 />
                 <div
