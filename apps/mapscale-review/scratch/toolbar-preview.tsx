@@ -257,7 +257,8 @@ function MapSettingsBench() {
           border: "1px solid #d3d9e3",
         }}
       >
-        <MapSettings prefs={prefs} onChange={setPrefs} geojson />
+        {/* `focus` so the bench shows the whole product popover — the FOCUS pair included. */}
+        <MapSettings prefs={prefs} onChange={setPrefs} focus />
       </div>
     </div>
   );

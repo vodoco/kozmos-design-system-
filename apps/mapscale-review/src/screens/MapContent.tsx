@@ -3239,7 +3239,7 @@ export function MapContent({
               onClose={onCancelEdit}
             />
           )}
-          <MapSettings prefs={prefs} onChange={setPrefs} geojson />
+          <MapSettings prefs={prefs} onChange={setPrefs} />
           {dropped && live.length > 0 && target && (
             <UploadDropConfirm
               file={dropped}

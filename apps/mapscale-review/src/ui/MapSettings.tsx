@@ -1,9 +1,14 @@
+import { useState } from "react";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
   Slider,
   Switch,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from "@kozmos/react";
 import type { MapPrefs } from "../map/PointrMap";
 
@@ -87,7 +92,6 @@ export function MapSettings({
   prefs,
   onChange,
   focus = false,
-  geojson = false,
 }: {
   prefs: MapPrefs;
   onChange: (p: MapPrefs) => void;
@@ -97,13 +101,13 @@ export function MapSettings({
    * would only be offering to grey out nothing.
    */
   focus?: boolean;
-  /**
-   * Show the FLOOR SOURCE switch. Set by the screens that actually **fetch** the level's GeoJSON —
-   * only Map Content does today. The same rule as `focus`: a screen that has no GeoJSON would be
-   * offering a choice with one real option, and the switch would look broken rather than absent.
-   */
-  geojson?: boolean;
 }) {
+  /**
+   * True while the transparency slider is being dragged, so its value tooltip stays open through
+   * the drag — Radix dismisses hover-tooltips on pointer-down, which would hide the number at the
+   * exact moment it changes. `undefined` when idle hands control back to hover/focus.
+   */
+  const [sliding, setSliding] = useState(false);
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -159,88 +163,82 @@ export function MapSettings({
           </>
         )}
 
-        {geojson && (
-          <>
-            <div style={SECTION_HEAD}>FLOOR SOURCE</div>
-            {/*
-              The A/B for the render swap (Olcay, 2026-08-16). On, the floor is drawn from the
-              level's GeoJSON with the vector tiles switched off; off, it is the SDK's tiles, exactly
-              as it has always been. Both draw with the SAME paint — the layers are clones of the
-              SDK's own — so a difference you can see between the two positions is a difference in
-              the DATA, which is the honest thing this switch is for: the tiles are the last publish
-              and the GeoJSON is the draft.
-
-              Defaulting to on where it is offered, and `?? true` rather than a required field,
-              because the map already refuses by itself when there is nothing to draw.
-            */}
-            <PrefRow
-              label="Draw floor from GeoJSON"
-              checked={prefs.geojsonFloor ?? true}
-              onCheckedChange={(v) => onChange({ ...prefs, geojsonFloor: v })}
-            />
-          </>
-        )}
-
+        {/*
+         * ⚠️ No FLOOR SOURCE section any more (Olcay, 2026-08-18: "Draw floor from GeoJSON doesn't
+         * make sense… in our product we show the original floor plan as PNG"). The A/B switch was
+         * a prototype diagnostic, never a product control. `MapPrefs.geojsonFloor` SURVIVES as
+         * plumbing — the render swap still honours a posted value and still defaults to on — so
+         * the diagnostic can be driven from code; it just no longer wears a row in a
+         * product-shaped popover.
+         */}
         <div style={SECTION_HEAD}>FLOOR-PLAN OVERLAY</div>
-        <PrefRow
-          label="Show Floor-plan"
-          checked={prefs.floorplan}
-          onCheckedChange={(v) => onChange({ ...prefs, floorplan: v })}
-        />
-        {prefs.floorplan && (
-          /*
-           * The transparency belongs to the floor-plan, not to the panel (Olcay, 2026-08-18:
-           * "related to floorplan and not other elements within this map preferences panel") —
-           * hence the nested rail under the toggle rather than a sibling PrefRow, which would read
-           * as one more independent preference. Shown only while the overlay is on: a slider for
-           * an invisible overlay would be the one control in this popover that visibly does
-           * nothing. The slider is the same DS control the Building Wizard's reference-level row
-           * uses for exactly this job, at the same width.
-           */
-          <div
+        {/*
+         * One row, three parts (Olcay, 2026-08-18: "integrated in the same row. No need to say
+         * transparency. Value could be a tooltip.") — the same shape as the Building Wizard's
+         * reference-level row, which is where the slider idiom comes from. The overlay is the
+         * ORIGINAL floor-plan (a PNG in the product), and the slider is its transparency, so it
+         * lives inside the floor-plan's own row where it cannot read as a panel-wide preference.
+         * No label on purpose: between a row that already says "Show Floor-plan" and its switch,
+         * the slider has exactly one plausible meaning — the tooltip carries the number.
+         *
+         * DS-component note: this is the DS `Slider` + `Tooltip` composed, which covers hover and
+         * drag (`sliding` holds the tooltip open through a drag). What the DS does NOT offer is a
+         * thumb-anchored value tooltip that tracks the knob — this one anchors to the track. Good
+         * enough here; recorded in KOZMOS_DS_IMPROVEMENTS.md as "Slider needs a value-tooltip
+         * variant — we need to build it."
+         */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <label
+            htmlFor="pref-show-floor-plan"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              margin: "6px 0 2px",
-              padding: "2px 0 2px 14px",
-              borderLeft: "2px solid #E7E9EE",
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--review-ink)",
+              cursor: "pointer",
+              flex: "0 0 auto",
             }}
           >
-            <span
-              style={{
-                fontSize: 12.5,
-                color: "var(--primitives-colors-background-600)",
-                flex: "0 0 auto",
-              }}
-            >
-              Transparency
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Slider
-                min={0}
-                max={1}
-                step={0.05}
-                value={[prefs.floorplanTransparency ?? 0.5]}
-                onValueChange={([v]) =>
-                  onChange({ ...prefs, floorplanTransparency: v })
-                }
-                aria-label="Floor-plan transparency"
-              />
-            </div>
-            <span
-              style={{
-                fontSize: 11,
-                color: "var(--primitives-colors-background-600)",
-                width: 32,
-                textAlign: "right",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {Math.round((prefs.floorplanTransparency ?? 0.5) * 100)}%
-            </span>
-          </div>
-        )}
+            Show Floor-plan
+          </label>
+          {prefs.floorplan && (
+            <TooltipProvider delayDuration={150}>
+              <Tooltip open={sliding || undefined}>
+                <TooltipTrigger asChild>
+                  <span style={{ flex: 1, minWidth: 0, display: "block" }}>
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={[prefs.floorplanTransparency ?? 0.5]}
+                      onValueChange={([v]) => {
+                        setSliding(true);
+                        onChange({ ...prefs, floorplanTransparency: v });
+                      }}
+                      onValueCommit={() => setSliding(false)}
+                      aria-label="Floor-plan transparency"
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {Math.round((prefs.floorplanTransparency ?? 0.5) * 100)}%
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          <span
+            style={{
+              display: "inline-flex",
+              flex: "0 0 auto",
+              marginLeft: "auto",
+            }}
+          >
+            <Switch
+              id="pref-show-floor-plan"
+              checked={prefs.floorplan}
+              onCheckedChange={(v) => onChange({ ...prefs, floorplan: v })}
+            />
+          </span>
+        </div>
 
         <div style={SECTION_HEAD}>BASE MAP</div>
         <div style={{ display: "flex", gap: 10 }}>
