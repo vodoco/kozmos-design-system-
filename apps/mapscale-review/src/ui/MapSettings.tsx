@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Popover,
   PopoverTrigger,
@@ -102,12 +101,6 @@ export function MapSettings({
    */
   focus?: boolean;
 }) {
-  /**
-   * True while the transparency slider is being dragged, so its value tooltip stays open through
-   * the drag — Radix dismisses hover-tooltips on pointer-down, which would hide the number at the
-   * exact moment it changes. `undefined` when idle hands control back to hover/focus.
-   */
-  const [sliding, setSliding] = useState(false);
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -175,17 +168,17 @@ export function MapSettings({
          */}
         <div style={SECTION_HEAD}>FLOOR-PLAN OVERLAY</div>
         {/*
-         * Two lines now, one clickable apiece (Olcay, 2026-08-18: "I don't like too many
-         * clickables side by side" — the in-row version put slider, help and switch shoulder to
-         * shoulder). The row returns to the uniform label + switch shape every other preference
-         * has, with the help glyph NEXT TO THE LABEL (Olcay: "help symbol should be next to
-         * labels" — also v9's own pattern), and the slider gets a full-width line of its own
-         * underneath, indented behind the rail that says it belongs to the floor-plan. Everything
-         * the earlier rounds decided survives: no "Transparency" label, the value as a tooltip,
-         * double-click to return to the 50% default, shown only while the overlay is on.
+         * One row, and the slider lives BEHIND a transparency symbol (Olcay, 2026-08-18: "Can we
+         * not add a transparency symbol and transparency slider would be in a tooltip?"). The row
+         * keeps the uniform label (?) …… switch shape; the ◐ glyph sits with the switch at the
+         * control end and opens a small floating card holding the slider and its "N% transparent"
+         * readout. Mechanically that card is a nested DS Popover, not a hover Tooltip — a hover
+         * tooltip dismisses the moment a drag commits, which would close the control mid-gesture.
+         * Everything decided before survives: no "Transparency" label, double-click returns to the
+         * 50% default, shown only while the overlay is on.
          *
-         * DS-component note: DS `Slider` + `Tooltip` composed; the tooltip anchors to the track,
-         * not the knob — the value-tooltip Slider variant stays on the DS backlog.
+         * The ◐ glyph is an inline SVG — no transparency/opacity glyph in @kozmos/icons or the
+         * Pointr Icon Library (searched 2026-08-18): the D9 gap again.
          */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <label
@@ -248,33 +241,58 @@ export function MapSettings({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <span
-            style={{
-              display: "inline-flex",
-              flex: "0 0 auto",
-              marginLeft: "auto",
-            }}
-          >
-            <Switch
-              id="pref-show-floor-plan"
-              checked={prefs.floorplan}
-              onCheckedChange={(v) => onChange({ ...prefs, floorplan: v })}
-            />
-          </span>
-        </div>
-        {prefs.floorplan && (
-          <TooltipProvider delayDuration={150}>
-            <Tooltip open={sliding || undefined}>
-              <TooltipTrigger asChild>
+          {/* Spacer, not auto-margins — the switch keeps its right edge whether or not the
+              transparency glyph is rendered. */}
+          <span style={{ flex: 1 }} />
+          {prefs.floorplan && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  aria-label="Floor-plan transparency"
+                  style={{
+                    width: 16,
+                    height: 16,
+                    padding: 0,
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    flex: "0 0 auto",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  {/* ◐ — half-filled circle, the plainest opacity glyph at 14px. */}
+                  <svg width={14} height={14} viewBox="0 0 14 14" aria-hidden>
+                    <circle
+                      cx={7}
+                      cy={7}
+                      r={6.3}
+                      fill="none"
+                      stroke="var(--primitives-colors-background-600)"
+                      strokeWidth={1.2}
+                    />
+                    <path
+                      d="M7 .7 A6.3 6.3 0 0 1 7 13.3 Z"
+                      fill="var(--primitives-colors-background-600)"
+                    />
+                  </svg>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="top"
+                align="end"
+                style={{
+                  width: 216,
+                  padding: "10px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
                 {/* Double-click returns to the default — 50%, the overlay's historical look.
                     The lightest form of v9's own "Revert changes" idiom. */}
                 <span
-                  style={{
-                    display: "block",
-                    margin: "8px 0 2px",
-                    padding: "2px 0 2px 14px",
-                    borderLeft: "2px solid #E7E9EE",
-                  }}
+                  style={{ flex: 1, minWidth: 0, display: "block" }}
                   onDoubleClick={() =>
                     onChange({ ...prefs, floorplanTransparency: 0.5 })
                   }
@@ -284,24 +302,36 @@ export function MapSettings({
                     max={1}
                     step={0.05}
                     value={[prefs.floorplanTransparency ?? 0.5]}
-                    onValueChange={([v]) => {
-                      setSliding(true);
-                      onChange({ ...prefs, floorplanTransparency: v });
-                    }}
-                    onValueCommit={() => setSliding(false)}
+                    onValueChange={([v]) =>
+                      onChange({ ...prefs, floorplanTransparency: v })
+                    }
                     aria-label="Floor-plan transparency"
                   />
                 </span>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {/* "transparent", not a bare number — 50% alone invites the
-                    opacity-or-transparency question. */}
-                {Math.round((prefs.floorplanTransparency ?? 0.5) * 100)}%
-                transparent
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "var(--primitives-colors-background-600)",
+                    flex: "0 0 auto",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {/* "transparent", not a bare number — 50% alone invites the
+                      opacity-or-transparency question. */}
+                  {Math.round((prefs.floorplanTransparency ?? 0.5) * 100)}%
+                  transparent
+                </span>
+              </PopoverContent>
+            </Popover>
+          )}
+          <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+            <Switch
+              id="pref-show-floor-plan"
+              checked={prefs.floorplan}
+              onCheckedChange={(v) => onChange({ ...prefs, floorplan: v })}
+            />
+          </span>
+        </div>
 
         <div style={SECTION_HEAD}>BASE MAP</div>
         <div style={{ display: "flex", gap: 10 }}>
