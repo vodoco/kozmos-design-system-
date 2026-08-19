@@ -278,9 +278,15 @@ export function MapSettings({
                   </svg>
                 </button>
               </PopoverTrigger>
+              {/* Below the symbol and centred on it (Olcay, 2026-08-18) — the card hangs off its
+                  anchor like a tooltip would, instead of jumping to the panel's corner. Radix
+                  flips it above by itself when the map's bottom edge is too close. No pointer
+                  arrow: the DS Popover doesn't re-export Radix's PopoverArrow — noted in
+                  KOZMOS_DS_IMPROVEMENTS.md rather than reached around. */}
               <PopoverContent
-                side="top"
-                align="end"
+                side="bottom"
+                align="center"
+                sideOffset={6}
                 style={{
                   width: 216,
                   padding: "10px 14px",
