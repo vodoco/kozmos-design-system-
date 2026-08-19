@@ -289,43 +289,65 @@ export function MapSettings({
                 sideOffset={6}
                 style={{
                   width: 216,
-                  padding: "10px 14px",
+                  padding: "8px 14px 12px",
                   display: "flex",
-                  alignItems: "center",
-                  gap: 10,
+                  flexDirection: "column",
+                  alignItems: "stretch",
+                  gap: 6,
                 }}
               >
-                {/* Double-click returns to the default — 50%, the overlay's historical look.
-                    The lightest form of v9's own "Revert changes" idiom. */}
-                <span
-                  style={{ flex: 1, minWidth: 0, display: "block" }}
-                  onDoubleClick={() =>
-                    onChange({ ...prefs, floorplanTransparency: 0.5 })
-                  }
-                >
-                  <Slider
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={[prefs.floorplanTransparency ?? 0.5]}
-                    onValueChange={([v]) =>
-                      onChange({ ...prefs, floorplanTransparency: v })
-                    }
-                    aria-label="Floor-plan transparency"
-                  />
-                </span>
+                {/*
+                 * "Opacity", top-left (Olcay, 2026-08-18) — and the title changes what the number
+                 * must mean: under an Opacity heading the slider reads as OPACITY, right = more
+                 * visible, value = 1 − transparency. Only this UI boundary inverts; the pref stays
+                 * `floorplanTransparency` and the shell's fpOpacity() is untouched, so the 50%
+                 * midpoint (the overlay's historical look) is the same position in both readings.
+                 */}
                 <span
                   style={{
                     fontSize: 11,
-                    color: "var(--primitives-colors-background-600)",
-                    flex: "0 0 auto",
-                    fontVariantNumeric: "tabular-nums",
+                    fontWeight: 600,
+                    color: "var(--review-ink)",
+                    alignSelf: "flex-start",
                   }}
                 >
-                  {/* "transparent", not a bare number — 50% alone invites the
-                      opacity-or-transparency question. */}
-                  {Math.round((prefs.floorplanTransparency ?? 0.5) * 100)}%
-                  transparent
+                  Opacity
+                </span>
+                <span
+                  style={{ display: "flex", alignItems: "center", gap: 10 }}
+                >
+                  {/* Double-click returns to the default — 50%, the overlay's historical look.
+                      The lightest form of v9's own "Revert changes" idiom. */}
+                  <span
+                    style={{ flex: 1, minWidth: 0, display: "block" }}
+                    onDoubleClick={() =>
+                      onChange({ ...prefs, floorplanTransparency: 0.5 })
+                    }
+                  >
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={[1 - (prefs.floorplanTransparency ?? 0.5)]}
+                      onValueChange={([v]) =>
+                        onChange({ ...prefs, floorplanTransparency: 1 - v })
+                      }
+                      aria-label="Floor-plan opacity"
+                    />
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "var(--primitives-colors-background-600)",
+                      flex: "0 0 auto",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {Math.round(
+                      (1 - (prefs.floorplanTransparency ?? 0.5)) * 100,
+                    )}
+                    %
+                  </span>
                 </span>
               </PopoverContent>
             </Popover>
