@@ -1077,7 +1077,7 @@ function zoomToGroup(group) {
   const h = Math.max(...lats) - Math.min(...lats);
   // Stacked centroids have no extent to fit — fitBounds would slam to max zoom, so step in instead.
   if (w < 1e-7 && h < 1e-7) {
-    map.easeTo({ center: group[0].centroid, zoom: Math.min(map.getZoom() + 2, 21), duration: 450 });
+    map.easeTo({ center: group[0].centroid, zoom: Math.min(map.getZoom() + 2, map.getMaxZoom()), duration: 450 });
     return;
   }
   map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
@@ -3043,8 +3043,26 @@ function hideBuildingChrome() {
 // SDK's own staging so labels don't collide at city scale. Re-asserted with hideBuildingChrome —
 // cheap after the first pass, since already-lowered layers are skipped.
 const PTR_GEOMETRY_MINZOOM = 14;
+/**
+ * **How far in the user may go.** The SDK hands us a map capped at **21**, measured on a live
+ * board; MapLibre's own ceiling is 22 (Olcay, 2026-08-18: *"let's increase the zoom limit, up to
+ * 22 or so"*).
+ *
+ * ⚠️ **Raising the camera's cap is only safe because the CONTENT goes further.** Counted on the
+ * same live style: 115 of 123 `_ptr` layers already carry `maxzoom: 24`, so there is real geometry
+ * to see up here rather than an empty screen — which is precisely the failure `PTR_GEOMETRY_MINZOOM`
+ * above exists to prevent at the other end. The handful that stop earlier (one at 13, two at 17,
+ * four at 17.5) are building chrome and staged labels, and are meant to drop out.
+ *
+ * Re-asserted every `applyPrefs` pass rather than set once, for the same reason the minzoom relax
+ * is: the SDK rebuilds its style on level changes, and a ceiling set once would quietly return to
+ * 21 the first time it did.
+ */
+const ZOOM_CEILING = 22;
 function relaxPtrMinzoom() {
   try {
+    // The camera's own ceiling, lifted here so it travels with the other zoom-range work.
+    if (map.getMaxZoom() < ZOOM_CEILING) map.setMaxZoom(ZOOM_CEILING);
     map.getStyle().layers.forEach(l => {
       if (!/_ptr/.test(l.id)) return;
       if (l.id === "fill_building-outline_ptr" || l.id === "symbol_building-outline_ptr") return;
