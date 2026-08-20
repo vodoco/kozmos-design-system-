@@ -6794,10 +6794,20 @@ function geomDraw() {
       ring.slice(0, -1).forEach((c, ci) => {
         const p = map.project(c);
         const on = GEOM.sel.has(selKey(ri, ci));
+        /**
+         * ⚠️ **A snapped corner goes hollow, and that is not decoration** (Olcay, 2026-08-18: *"the
+         * circle and the sandtime symbol overlaps"*). The snap marker is drawn at this exact point,
+         * and a filled disc is 12px inside a 15px Endpoint square — it fills the glyph, so the
+         * square reads as a solid box and the hourglass loses the waist that identifies it. While
+         * the marker is up it IS the indicator for this point; the handle stands down to a hollow
+         * ring and gives the glyph a clean ground to sit on.
+         */
+        const snapped = GEOM.snapHit &&
+          Math.abs(p.x - GEOM.snapHit.x) < 2 && Math.abs(p.y - GEOM.snapHit.y) < 2;
         // A selected corner is FILLED. Hollow-vs-hollow-with-a-thicker-ring is not a difference you
         // can see across twenty handles at a glance, and the whole point of a marquee is the glance.
         const h = el("circle", { cx: p.x, cy: p.y, r: on ? HANDLE_R + 1 : HANDLE_R,
-                                 fill: on ? EDIT_INK : "#fff",
+                                 fill: (on && !snapped) ? EDIT_INK : "#fff",
                                  stroke: EDIT_INK, "stroke-width": 2, class: "geom-vx" });
         h.setAttribute("style", "pointer-events:auto;cursor:grab");
         h.addEventListener("mousedown", ev => {
@@ -6987,19 +6997,54 @@ function geomDraw() {
    */
   if (GEOM.snapHit) {
     const h = GEOM.snapHit;
+    /**
+     * ⚠️ **A white halo under the ink, because a marker lands on top of whatever it caught**
+     * (Olcay, 2026-08-18: *"the circle and the sandtime symbol overlaps"*). The snapped node draws
+     * its own filled handle at exactly this point, and an hourglass is at its thinnest precisely
+     * where that disc is — so the waist, the part that identifies the glyph, was the part being
+     * covered. The halo separates the marker from the handle, and from busy floor-plan linework
+     * too, without moving it off the point it is making a claim about.
+     *
+     * ⚠️ **And the Endpoint square no longer carries a centre dot.** It was there because "CAD
+     * relies on a crosshair we do not have" — we have one now, so the dot became a third mark
+     * competing for the same pixel.
+     */
+    const halo = (attrs) => {
+      l.appendChild(el(attrs.d ? "path" : "rect",
+        { ...attrs, fill: "none", stroke: "#fff", "stroke-width": 4, "stroke-opacity": .9 }));
+      l.appendChild(el(attrs.d ? "path" : "rect",
+        { ...attrs, fill: "none", stroke: TOOL_INK, "stroke-width": 2, "stroke-linejoin": "round" }));
+    };
     if (h.kind === "corner") {
       // Endpoint — the square.
-      l.appendChild(el("rect", { x: h.x - 7.5, y: h.y - 7.5, width: 15, height: 15,
-                                 fill: "none", stroke: TOOL_INK, "stroke-width": 2 }));
-      l.appendChild(el("circle", { cx: h.x, cy: h.y, r: 2.5, fill: TOOL_INK }));
+      halo({ x: h.x - 7.5, y: h.y - 7.5, width: 15, height: 15 });
     } else {
       // Nearest — the hourglass. Two triangles apex to apex: the path walks the top edge, crosses
       // to the far bottom corner, back along the bottom, and closes on the diagonal.
-      l.appendChild(el("path", {
-        d: "M" + (h.x - 7) + " " + (h.y - 8) + " L" + (h.x + 7) + " " + (h.y - 8) +
-           " L" + (h.x - 7) + " " + (h.y + 8) + " L" + (h.x + 7) + " " + (h.y + 8) + " Z",
-        fill: "none", stroke: TOOL_INK, "stroke-width": 2, "stroke-linejoin": "round" }));
+      halo({ d: "M" + (h.x - 7) + " " + (h.y - 8) + " L" + (h.x + 7) + " " + (h.y - 8) +
+                " L" + (h.x - 7) + " " + (h.y + 8) + " L" + (h.x + 7) + " " + (h.y + 8) + " Z" });
     }
+  }
+
+  /**
+   * The crosshair that replaces the hidden pointer — thin arms with an OPEN centre, so the pixel it
+   * is pointing at stays visible and any snap marker around it stays whole. Drawn last, over
+   * everything, because it is the one thing that must never be occluded.
+   */
+  if (GEOM.pointer) {
+    const q = GEOM.pointer, A = 11, G = 4;
+    l.appendChild(el("path", {
+      d: "M" + (q.x - A) + " " + q.y + " H" + (q.x - G) +
+         " M" + (q.x + G) + " " + q.y + " H" + (q.x + A) +
+         " M" + q.x + " " + (q.y - A) + " V" + (q.y - G) +
+         " M" + q.x + " " + (q.y + G) + " V" + (q.y + A),
+      fill: "none", stroke: "#fff", "stroke-width": 3, "stroke-opacity": .8 }));
+    l.appendChild(el("path", {
+      d: "M" + (q.x - A) + " " + q.y + " H" + (q.x - G) +
+         " M" + (q.x + G) + " " + q.y + " H" + (q.x + A) +
+         " M" + q.x + " " + (q.y - A) + " V" + (q.y - G) +
+         " M" + q.x + " " + (q.y + G) + " V" + (q.y + A),
+      fill: "none", stroke: TOOL_INK, "stroke-width": 1 }));
   }
 
   // The marquee, while it is being dragged.
@@ -7062,6 +7107,26 @@ function geomDown(ev, what) {
   if (!GEOM) return;
   ev.preventDefault();
   const start = { x: ev.clientX, y: ev.clientY };
+  /**
+   * ⚠️ **The pointer graphic is hidden for the whole gesture, and we draw a crosshair instead**
+   * (Olcay, 2026-08-18: *"the cursor covers the symbols while dragging and snapping"*).
+   *
+   * It covered them by construction rather than by bad luck: a corner handle is 10px across, so
+   * the node can never be grabbed more than ~5px off-centre, and the snap marker is drawn at the
+   * NODE (`aimPoint` = pointer − grabOffset). The marker therefore lands under the cursor's hotspot
+   * every time. CAD solves this the same way — it hides the arrow and gives you a crosshair, whose
+   * thin arms and open centre leave the AutoSnap marker readable. Taking their markers without
+   * their crosshair was taking half the idiom.
+   *
+   * It also makes a law visible that until now could not be seen: the node moves BY how far the
+   * pointer moved, never TO the pointer, so the gap between this crosshair and the marker IS the
+   * grab offset.
+   */
+  const canvas = map.getCanvas();
+  const cursorWas = canvas.style.cursor;
+  const rect = canvas.getBoundingClientRect();
+  canvas.style.cursor = "none";
+  GEOM.pointer = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
   const snapshot = geomSnap();
   /**
    * ⚠️ **The geometry as it was when the gesture began — every frame is computed from THIS.**
@@ -7369,12 +7434,16 @@ function geomDown(ev, what) {
       GEOM.snapHit = best ? best.at : null;
       shift(dx, dy);
     }
+    if (GEOM) GEOM.pointer = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     geomDraw();
   };
   const up = () => {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
-    if (GEOM) { GEOM.xform = null; GEOM.snapHit = null; GEOM.guides = GEOM.guideAt = null; }
+    // Every setter has a matching clear — a hidden cursor outliving its gesture is the worst of
+    // both worlds, and a crosshair left on the map is a pointer that is no longer there.
+    canvas.style.cursor = cursorWas || "";
+    if (GEOM) { GEOM.xform = null; GEOM.snapHit = null; GEOM.guides = GEOM.guideAt = null; GEOM.pointer = null; }
     if (moved) { geomDraw(); post("geomstate", geomState()); }
   };
   document.addEventListener("mousemove", move);
