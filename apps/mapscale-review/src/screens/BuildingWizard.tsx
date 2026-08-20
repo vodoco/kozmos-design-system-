@@ -1,3 +1,4 @@
+import { Star as StarOutline, StarFilled } from "../ui/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
@@ -59,7 +60,8 @@ const WIZARD_SECTOR_KEY = sectorKey("Workplace", "Corporate Office");
 function sectorLabel(key: string): string {
   for (const sec of PICKER_SECTORS) {
     if (sectorKey(sec.name) === key) return sec.name;
-    for (const sub of sec.subsectors) if (sectorKey(sec.name, sub.name) === key) return sub.name;
+    for (const sub of sec.subsectors)
+      if (sectorKey(sec.name, sub.name) === key) return sub.name;
   }
   return key;
 }
@@ -87,7 +89,13 @@ const INK = "var(--primitives-colors-theme-900)";
 const MUTED = "var(--primitives-colors-background-600)";
 const NO_CHANGES: never[] = [];
 
-type Phase = "queued" | "validating" | "mapping" | "expert" | "ready" | "failed";
+type Phase =
+  | "queued"
+  | "validating"
+  | "mapping"
+  | "expert"
+  | "ready"
+  | "failed";
 
 interface WizLevel {
   id: number;
@@ -162,7 +170,8 @@ function startDrag(
   e.stopPropagation();
   const sx = e.clientX;
   const sy = e.clientY;
-  const move = (ev: PointerEvent) => onMove(ev.clientX - sx, ev.clientY - sy, ev);
+  const move = (ev: PointerEvent) =>
+    onMove(ev.clientX - sx, ev.clientY - sy, ev);
   const up = () => {
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", up);
@@ -172,18 +181,16 @@ function startDrag(
   window.addEventListener("pointerup", up);
 }
 
-/** The default-level star. @kozmos/icons has no star (D9), so it is drawn — same path the tree uses. */
+/** The default-level star — `star-01` from the Pointr Icon Library, filled when it is the
+    default. One silhouette in two states (see `../ui/icons`). */
 function Star({ filled }: { filled?: boolean }) {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-      <path
-        d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"
-        fill={filled ? "var(--primitives-colors-theme-700)" : "none"}
-        stroke={filled ? "var(--primitives-colors-theme-700)" : "currentColor"}
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-    </svg>
+  return filled ? (
+    <StarFilled
+      size={14}
+      style={{ color: "var(--primitives-colors-theme-700)" }}
+    />
+  ) : (
+    <StarOutline size={14} />
   );
 }
 
@@ -206,7 +213,13 @@ function StepRow({
 }) {
   const current = state === "current";
   return (
-    <div style={{ border: `1px solid ${current ? INK : LINE}`, borderRadius: 10, overflow: "hidden" }}>
+    <div
+      style={{
+        border: `1px solid ${current ? INK : LINE}`,
+        borderRadius: 10,
+        overflow: "hidden",
+      }}
+    >
       <button
         onClick={onClick}
         disabled={state === "locked"}
@@ -220,22 +233,36 @@ function StepRow({
           cursor: state === "locked" ? "default" : "pointer",
           padding: "10px 12px",
           background: current ? INK : "#fff",
-          color: current ? "#fff" : state === "locked" ? "var(--primitives-colors-background-400)" : "var(--review-ink)",
+          color: current
+            ? "#fff"
+            : state === "locked"
+              ? "var(--primitives-colors-background-400)"
+              : "var(--review-ink)",
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 10, letterSpacing: 0.4, opacity: 0.75 }}>Step {n}/5</div>
+          <div style={{ fontSize: 10, letterSpacing: 0.4, opacity: 0.75 }}>
+            Step {n}/5
+          </div>
           <div style={{ fontSize: 13, fontWeight: 600 }}>{title}</div>
         </div>
         {state === "done" && (
-          <span style={{ color: "var(--primitives-colors-emotional-success-600)", display: "grid", placeItems: "center" }}>
+          <span
+            style={{
+              color: "var(--primitives-colors-emotional-success-600)",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
             <Icon name="check" />
           </span>
         )}
       </button>
       {current && (
         <div style={{ padding: "10px 12px", borderTop: `1px solid ${LINE}` }}>
-          <div style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.4 }}>{blurb}</div>
+          <div style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.4 }}>
+            {blurb}
+          </div>
           {children}
         </div>
       )}
@@ -244,7 +271,8 @@ function StepRow({
 }
 
 /** The design's own words when a level row is left open (2007:17095). */
-const UNSAVED_TIP = "You have unsaved floor-plans. Confirm or cancel them before proceeding.";
+const UNSAVED_TIP =
+  "You have unsaved floor-plans. Confirm or cancel them before proceeding.";
 
 /**
  * When a wizard-created level's first version arrived, formatted the way the seeds are.
@@ -285,7 +313,11 @@ export function BuildingWizard({
    * `storeId` present ⇒ Save updates the store row; absent (an SDK building) ⇒ edits don't
    * persist in the mock, the same limit as the editor's metadata (D3).
    */
-  initial?: { storeId?: string; name: string; levels: { index: number; short: string; long: string; file: string }[] };
+  initial?: {
+    storeId?: string;
+    name: string;
+    levels: { index: number; short: string; long: string; file: string }[];
+  };
 }) {
   const [step, setStep] = useState<WizardStepKey>("metadata");
   const [name, setName] = useState(initial?.name ?? "");
@@ -312,7 +344,8 @@ export function BuildingWizard({
   const advance = (id: number, phase: Phase, ms: number) =>
     timers.current.push(
       window.setTimeout(
-        () => setLevels((ls) => ls.map((l) => (l.id === id ? { ...l, phase } : l))),
+        () =>
+          setLevels((ls) => ls.map((l) => (l.id === id ? { ...l, phase } : l))),
         ms,
       ),
     );
@@ -325,7 +358,9 @@ export function BuildingWizard({
     const accepted = files.filter((f) => dropKind(f));
     if (!accepted.length) return;
     const top = levels.length ? Math.max(...levels.map((l) => l.index)) : -1;
-    const topOrdinal = levels.length ? Math.max(...levels.map((l) => l.ordinal)) : -1;
+    const topOrdinal = levels.length
+      ? Math.max(...levels.map((l) => l.ordinal))
+      : -1;
     const added: WizLevel[] = accepted.map((f, i) => {
       const index = top + 1 + i;
       return {
@@ -381,8 +416,8 @@ export function BuildingWizard({
       ls.map((l) =>
         l.id === draft.id
           ? draft
-          // one default level per building: confirming a new default clears the old one
-          : draft.isDefault
+          : // one default level per building: confirming a new default clears the old one
+            draft.isDefault
             ? { ...l, isDefault: false }
             : l,
       ),
@@ -421,7 +456,10 @@ export function BuildingWizard({
     setHistAt(0);
     setAnchors(ANCHORS_HOME);
   };
-  const current = others.find((l) => l.id === alignCurrent) ?? others.find((l) => !aligned.has(l.id)) ?? others[0];
+  const current =
+    others.find((l) => l.id === alignCurrent) ??
+    others.find((l) => !aligned.has(l.id)) ??
+    others[0];
   const [refOpacity, setRefOpacity] = useState(0.9);
 
   /* — step 4: fine-tune (2Dot Align) — */
@@ -449,7 +487,10 @@ export function BuildingWizard({
   anchorsRef.current = anchors;
   /** Called when an interaction settles: truncate any redo tail, push where we actually landed. */
   const commit = () => {
-    setHistory((h) => [...h.slice(0, histAt + 1), { t: fineRef.current, a: anchorsRef.current }]);
+    setHistory((h) => [
+      ...h.slice(0, histAt + 1),
+      { t: fineRef.current, a: anchorsRef.current },
+    ]);
     setHistAt((i) => i + 1);
   };
   const restore = (i: number) => {
@@ -474,24 +515,24 @@ export function BuildingWizard({
    * every seeded issue claimed the same one.
    */
   const [reviewingId, setReviewingId] = useState<number | null>(null);
-  const [reviews, setReviews] = useState<Record<number, { rows: Change[]; complete: boolean }>>(
-    () => {
-      /**
-       * Edit mode picks up where creation left off. A building's levels carry their concluded
-       * reviews in the store (that is how creation's flags reach the level editor at all — answer
-       * 4), so re-entering the wizard through the tree's *Edit building* reads them back rather
-       * than presenting every level as untouched. Version-matched like every other reader: a level
-       * whose floor-plan has been replaced since starts clean.
-       */
-      if (!initial?.storeId) return {};
-      const out: Record<number, { rows: Change[]; complete: boolean }> = {};
-      (initial.levels ?? []).forEach((l, i) => {
-        const saved = getReviewOutcome(levelKey(initial.storeId, l.index), 1);
-        if (saved) out[i + 1] = { rows: saved.changes, complete: saved.complete };
-      });
-      return out;
-    },
-  );
+  const [reviews, setReviews] = useState<
+    Record<number, { rows: Change[]; complete: boolean }>
+  >(() => {
+    /**
+     * Edit mode picks up where creation left off. A building's levels carry their concluded
+     * reviews in the store (that is how creation's flags reach the level editor at all — answer
+     * 4), so re-entering the wizard through the tree's *Edit building* reads them back rather
+     * than presenting every level as untouched. Version-matched like every other reader: a level
+     * whose floor-plan has been replaced since starts clean.
+     */
+    if (!initial?.storeId) return {};
+    const out: Record<number, { rows: Change[]; complete: boolean }> = {};
+    (initial.levels ?? []).forEach((l, i) => {
+      const saved = getReviewOutcome(levelKey(initial.storeId, l.index), 1);
+      if (saved) out[i + 1] = { rows: saved.changes, complete: saved.complete };
+    });
+    return out;
+  });
   /** Which level the Preview's list has selected — it drives the map beside it. */
   const [previewLevelId, setPreviewLevelId] = useState<number | null>(null);
   /** Save warns about unreviewed levels; it never blocks (Olcay's answer 1). */
@@ -504,8 +545,13 @@ export function BuildingWizard({
   // A failed run is settled, not pending: the level reports the failure and the wizard moves on.
   // Gating on `ready` alone would have left Continue disabled forever behind a file MapScale
   // couldn't read, with nothing the user could do about it.
-  const levelsDone = levels.length > 0 && levels.every((l) => l.phase === "ready" || l.phase === "failed");
-  const alignDone = alignSkipped || others.length === 0 || others.every((l) => aligned.has(l.id));
+  const levelsDone =
+    levels.length > 0 &&
+    levels.every((l) => l.phase === "ready" || l.phase === "failed");
+  const alignDone =
+    alignSkipped ||
+    others.length === 0 ||
+    others.every((l) => aligned.has(l.id));
   const fineDone = fineSkipped || fineConfirmed;
   const complete: Record<WizardStepKey, boolean> = {
     metadata: metadataDone,
@@ -514,8 +560,15 @@ export function BuildingWizard({
     finetune: fineDone,
     preview: false,
   };
-  const order: WizardStepKey[] = ["metadata", "levels", "align", "finetune", "preview"];
-  const canEnter = (k: WizardStepKey) => order.slice(0, order.indexOf(k)).every((p) => complete[p]);
+  const order: WizardStepKey[] = [
+    "metadata",
+    "levels",
+    "align",
+    "finetune",
+    "preview",
+  ];
+  const canEnter = (k: WizardStepKey) =>
+    order.slice(0, order.indexOf(k)).every((p) => complete[p]);
 
   /* ── per-level review state ─────────────────────────────────────────────── */
 
@@ -526,7 +579,8 @@ export function BuildingWizard({
    */
   const rowsByLevel = useMemo(() => {
     const m: Record<number, Change[]> = {};
-    for (const l of levels) m[l.id] = reviews[l.id]?.rows ?? creationChangesFor(l, l.ordinal);
+    for (const l of levels)
+      m[l.id] = reviews[l.id]?.rows ?? creationChangesFor(l, l.ordinal);
     return m;
   }, [levels, reviews]);
 
@@ -543,15 +597,23 @@ export function BuildingWizard({
     if (!r) return "awaiting";
     return r.complete ? "reviewed" : "in-review";
   };
-  const flaggedOf = (l: WizLevel) => (reviews[l.id]?.rows ?? []).filter((c) => c.decision === "flag").length;
+  const flaggedOf = (l: WizLevel) =>
+    (reviews[l.id]?.rows ?? []).filter((c) => c.decision === "flag").length;
   const levelCardFor = (l: WizLevel) => {
     const s = stateOf(l);
     if (s === "mapping") return PHASE_CARD[l.phase];
-    const card = { state: STATE_CARD[s], note: levelStateLabel(s, levelIssueCount(l.ordinal), flaggedOf(l)) };
+    const card = {
+      state: STATE_CARD[s],
+      note: levelStateLabel(s, levelIssueCount(l.ordinal), flaggedOf(l)),
+    };
     // Zero-issue and failed levels get no way in: there is nothing to confirm on one, and nothing
     // to confirm *from* on the other (§18 — both are excluded from the review count too).
     if (s === "ready" || s === "failed") return card;
-    return { ...card, primary: s === "reviewed" ? "Reopen" : "Review", onPrimary: () => setReviewingId(l.id) };
+    return {
+      ...card,
+      primary: s === "reviewed" ? "Reopen" : "Review",
+      onPrimary: () => setReviewingId(l.id),
+    };
   };
 
   /**
@@ -559,13 +621,20 @@ export function BuildingWizard({
    * (Olcay's answer 2) — creation's equivalent of Green auto-publishing; so is a failed one, which
    * would otherwise sit in the list as a task nobody can complete (§18's stated assumption).
    */
-  const reviewable = levels.filter((l) => l.phase === "ready" && levelIssueCount(l.ordinal) > 0);
-  const reviewedCount = reviewable.filter((l) => reviews[l.id]?.complete).length;
+  const reviewable = levels.filter(
+    (l) => l.phase === "ready" && levelIssueCount(l.ordinal) > 0,
+  );
+  const reviewedCount = reviewable.filter(
+    (l) => reviews[l.id]?.complete,
+  ).length;
   const unreviewed = reviewable.filter((l) => !reviews[l.id]?.complete);
   /** The building's three tiles — summed from the levels, not declared (§18). */
   const stats = buildingStats(levels.map((l) => l.ordinal));
 
-  const sortedLevels = useMemo(() => [...levels].sort((a, b) => b.index - a.index), [levels]);
+  const sortedLevels = useMemo(
+    () => [...levels].sort((a, b) => b.index - a.index),
+    [levels],
+  );
   const previewLevel = levels.find((l) => l.id === previewLevelId) ?? null;
   const reviewingLevel = levels.find((l) => l.id === reviewingId) ?? null;
 
@@ -592,10 +661,17 @@ export function BuildingWizard({
    * settled. The alternative — `created` — reads "no floor plan yet", which is worse.
    */
   const createBuilding = () => {
-    const id = initial?.storeId ?? `created-${nextId.current}-${name.trim().toLowerCase().replace(/\W+/g, "-")}`;
+    const id =
+      initial?.storeId ??
+      `created-${nextId.current}-${name.trim().toLowerCase().replace(/\W+/g, "-")}`;
     const data = {
       name: name.trim(),
-      levels: levels.map((l) => ({ index: l.index, short: l.short, long: l.long, file: l.file })),
+      levels: levels.map((l) => ({
+        index: l.index,
+        short: l.short,
+        long: l.long,
+        file: l.file,
+      })),
     };
     if (initial?.storeId) updateBuilding({ id: initial.storeId, ...data });
     else if (!initial) addBuilding({ id, ...data });
@@ -611,7 +687,12 @@ export function BuildingWizard({
           at: stamp(),
           state: "published",
           by: "You",
-          input: { kind: l.file.toLowerCase().endsWith(".geojson") ? "geojson" : "floor-plan", file: l.file },
+          input: {
+            kind: l.file.toLowerCase().endsWith(".geojson")
+              ? "geojson"
+              : "floor-plan",
+            file: l.file,
+          },
         };
         setLevelVersions(key, [version]);
         const r = reviews[l.id];
@@ -677,14 +758,27 @@ export function BuildingWizard({
   }, [levels, reviews, reviewingId, rowsByLevel]);
 
   const alignBody = (
-    <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+    <div
+      style={{
+        marginTop: 10,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
       <div>
-        <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }} title={ALIGN_COPY.referenceHint}>
+        <div
+          style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }}
+          title={ALIGN_COPY.referenceHint}
+        >
           ● {ALIGN_COPY.reference}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <Select value={String(reference?.id ?? "")} onValueChange={(v) => changeReference(Number(v))}>
+            <Select
+              value={String(reference?.id ?? "")}
+              onValueChange={(v) => changeReference(Number(v))}
+            >
               <SelectTrigger aria-label={ALIGN_COPY.reference}>
                 <SelectValue />
               </SelectTrigger>
@@ -715,21 +809,30 @@ export function BuildingWizard({
       </div>
       {others.length > 0 && current && (
         <div>
-          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }} title={ALIGN_COPY.toAlignHint}>
+          <div
+            style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }}
+            title={ALIGN_COPY.toAlignHint}
+          >
             ● {ALIGN_COPY.toAlign}{" "}
             <span
               style={{
-                background: aligned.has(current.id) ? "var(--primitives-colors-emotional-success-0)" : "#fff7e0",
+                background: aligned.has(current.id)
+                  ? "var(--primitives-colors-emotional-success-0)"
+                  : "#fff7e0",
                 border: `1px solid ${aligned.has(current.id) ? "var(--primitives-colors-emotional-success-200)" : "#edc759"}`,
                 borderRadius: 999,
                 padding: "0 8px",
                 fontSize: 10,
               }}
             >
-              {others.findIndex((l) => l.id === current.id) + 1} of {others.length}
+              {others.findIndex((l) => l.id === current.id) + 1} of{" "}
+              {others.length}
             </span>
           </div>
-          <Select value={String(current.id)} onValueChange={(v) => setAlignCurrent(Number(v))}>
+          <Select
+            value={String(current.id)}
+            onValueChange={(v) => setAlignCurrent(Number(v))}
+          >
             <SelectTrigger aria-label={ALIGN_COPY.toAlign}>
               <SelectValue />
             </SelectTrigger>
@@ -745,7 +848,9 @@ export function BuildingWizard({
         </div>
       )}
       {others.length === 0 && (
-        <div style={{ fontSize: 12, color: MUTED }}>One level only — nothing to align.</div>
+        <div style={{ fontSize: 12, color: MUTED }}>
+          One level only — nothing to align.
+        </div>
       )}
       {!alignDone && (
         <button style={SKIP_STYLE} onClick={() => setAlignSkipped(true)}>
@@ -756,13 +861,29 @@ export function BuildingWizard({
   );
 
   const fineBody = (
-    <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+    <div
+      style={{
+        marginTop: 10,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
       <div>
-        <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }} title={FINETUNE_COPY.referenceHint}>
+        <div
+          style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }}
+          title={FINETUNE_COPY.referenceHint}
+        >
           ● Reference Level
         </div>
         <div
-          style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${LINE}`, fontSize: 12, color: MUTED }}
+          style={{
+            padding: "8px 10px",
+            borderRadius: 8,
+            border: `1px solid ${LINE}`,
+            fontSize: 12,
+            color: MUTED,
+          }}
           title={FINETUNE_COPY.referenceHint}
         >
           {reference ? `${reference.short} — ${reference.long}` : "—"}
@@ -785,22 +906,61 @@ export function BuildingWizard({
    * them makes the tiles mean less.
    */
   const previewBody = (
-    <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+    <div
+      style={{
+        marginTop: 10,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
       <div style={{ display: "flex", gap: 8 }}>
         {[
-          [`${stats.surface} ${PREVIEW_LABELS.surfaceUnit}`, PREVIEW_LABELS.surfaceLabel],
+          [
+            `${stats.surface} ${PREVIEW_LABELS.surfaceUnit}`,
+            PREVIEW_LABELS.surfaceLabel,
+          ],
           [stats.duration, PREVIEW_LABELS.durationLabel],
           [stats.confidence, PREVIEW_LABELS.confidenceLabel],
         ].map(([v, l]) => (
-          <div key={l} style={{ flex: 1, border: `1px solid ${LINE}`, borderRadius: 8, padding: "8px 10px" }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--review-ink)" }}>{v}</div>
-            <div style={{ fontSize: 10, color: MUTED, lineHeight: 1.3 }}>{l}</div>
+          <div
+            key={l}
+            style={{
+              flex: 1,
+              border: `1px solid ${LINE}`,
+              borderRadius: 8,
+              padding: "8px 10px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: "var(--review-ink)",
+              }}
+            >
+              {v}
+            </div>
+            <div style={{ fontSize: 10, color: MUTED, lineHeight: 1.3 }}>
+              {l}
+            </div>
           </div>
         ))}
       </div>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 2 }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--review-ink)" }}>Levels</span>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: 8,
+          marginTop: 2,
+        }}
+      >
+        <span
+          style={{ fontSize: 12, fontWeight: 700, color: "var(--review-ink)" }}
+        >
+          Levels
+        </span>
         <span style={{ flex: 1 }} />
         {reviewable.length > 0 && (
           <span style={{ fontSize: 11, color: MUTED }}>
@@ -825,23 +985,45 @@ export function BuildingWizard({
                 alignItems: "center",
                 gap: 8,
                 border: `1px solid ${selected ? "var(--primitives-colors-theme-500)" : LINE}`,
-                boxShadow: selected ? "0 0 0 3px var(--primitives-colors-theme-0)" : "none",
+                boxShadow: selected
+                  ? "0 0 0 3px var(--primitives-colors-theme-0)"
+                  : "none",
                 borderRadius: 8,
                 padding: "6px 8px",
                 cursor: "pointer",
                 background: "#fff",
               }}
             >
-              <span style={{ width: 18, textAlign: "right", fontSize: 12, fontWeight: 600, color: "var(--review-ink)", flex: "0 0 auto" }}>
+              <span
+                style={{
+                  width: 18,
+                  textAlign: "right",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--review-ink)",
+                  flex: "0 0 auto",
+                }}
+              >
                 {l.index}
               </span>
               {/* The thumb keeps its own tap-to-enlarge, and must not ALSO select the row — one
                   press was opening the lightbox and switching the map underneath it. */}
-              <span onClick={(e) => e.stopPropagation()} style={{ display: "flex", flex: "0 0 auto" }}>
+              <span
+                onClick={(e) => e.stopPropagation()}
+                style={{ display: "flex", flex: "0 0 auto" }}
+              >
                 <FloorPlanThumb file={l.file} />
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, color: "var(--review-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "var(--review-ink)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {l.short} · {l.long}
                 </div>
                 <div
@@ -911,11 +1093,27 @@ export function BuildingWizard({
           e.target.value = "";
         }}
       />
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <Text style={{ fontSize: 18, fontWeight: 600, color: INK }}>Levels</Text>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 12,
+        }}
+      >
+        <Text style={{ fontSize: 18, fontWeight: 600, color: INK }}>
+          Levels
+        </Text>
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 12, color: MUTED }}>Auto Mapping {autoMapping ? "On" : "Off"}</span>
-        <Switch checked={autoMapping} onCheckedChange={setAutoMapping} aria-label="Auto Mapping" wrapperClassName="w-auto shrink-0" />
+        <span style={{ fontSize: 12, color: MUTED }}>
+          Auto Mapping {autoMapping ? "On" : "Off"}
+        </span>
+        <Switch
+          checked={autoMapping}
+          onCheckedChange={setAutoMapping}
+          aria-label="Auto Mapping"
+          wrapperClassName="w-auto shrink-0"
+        />
       </div>
       <div
         onClick={() => fileInput.current?.click()}
@@ -931,204 +1129,357 @@ export function BuildingWizard({
           marginBottom: 16,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--primitives-colors-theme-700)", fontWeight: 600, flex: "0 0 auto" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: 13,
+            color: "var(--primitives-colors-theme-700)",
+            fontWeight: 600,
+            flex: "0 0 auto",
+          }}
+        >
           <Icon name="plus" /> Add new level(s)
         </div>
         <div style={{ fontSize: 12, color: MUTED, flex: 1 }}>
           <b>{LEVEL_DROP_COPY.title}</b> {LEVEL_DROP_COPY.detail}
         </div>
-        <div style={{ fontSize: 11, color: MUTED, flex: "0 0 auto", maxWidth: 200 }}>{LEVEL_DROP_COPY.types}</div>
+        <div
+          style={{
+            fontSize: 11,
+            color: MUTED,
+            flex: "0 0 auto",
+            maxWidth: 200,
+          }}
+        >
+          {LEVEL_DROP_COPY.types}
+        </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {[...levels].sort((a, b) => b.index - a.index).map((l) =>
-          editing === l.id ? (
-            /* ── edit state (design 2007:17095): the row becomes the level's form ──────
+        {[...levels]
+          .sort((a, b) => b.index - a.index)
+          .map((l) =>
+            editing === l.id ? (
+              /* ── edit state (design 2007:17095): the row becomes the level's form ──────
                Two deliberate rows rather than a wrap: the file and its type belong together,
                then the level's own identity (index · short · long · external id). Widths are
                sized to their CONTENT — an index is 1–3 characters, a short name two, so neither
                deserves the space a file path does (Olcay, 2026-08-11: "inputs widths should be
                optimised"). The right column runs full height: confirm/cancel at the top, the two
                level actions in the bottom corner, as the frame draws them. */
-            <div
-              key={l.id}
-              style={{
-                border: `1px solid ${LINE}`,
-                borderRadius: 10,
-                background: "#fff",
-                padding: "14px 16px",
-                display: "flex",
-                gap: 16,
-                alignItems: "stretch",
-              }}
-            >
-              <div style={{ paddingTop: 22, flex: "0 0 auto" }}>
-                <FloorPlanThumb file={draft?.file ?? l.file} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
-                <div style={{ display: "flex", gap: 10, alignItems: "flex-start", width: "100%" }}>
-                  {/* capped: a file name is ~24 characters, so letting it flex to the pane's full
-                      width just stretched one input across 560px of empty space */}
-                  <div style={{ flex: "1 1 auto", minWidth: 0, maxWidth: 340 }}>
-                    <Input
-                      label="Floor-plan File"
-                      value={draft?.file ?? ""}
-                      onChange={(e) => setDraft((d) => (d ? { ...d, file: e.target.value } : d))}
-                    />
-                  </div>
-                  <div style={{ flex: "0 0 190px" }}>
-                    <FieldWrapper label="Level Type" inputId={`lt-${l.id}`}>
-                      <Select
-                        value={draft?.sector ?? WIZARD_SECTOR_KEY}
-                        onValueChange={(v) => setDraft((d) => (d ? { ...d, sector: v } : d))}
-                      >
-                        <SelectTrigger id={`lt-${l.id}`} aria-label="Level Type">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PICKER_SECTORS.map((sec) =>
-                            sec.subsectors.length ? (
-                              <SelectGroup key={sec.name}>
-                                <SelectLabel title={sec.description}>{sec.name}</SelectLabel>
-                                {sec.subsectors.map((sub) => (
-                                  <SelectItem key={sub.name} value={sectorKey(sec.name, sub.name)} title={sub.description}>
-                                    {sub.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            ) : (
-                              <SelectItem key={sec.name} value={sectorKey(sec.name)} title={sec.description}>
-                                {sec.name}
-                              </SelectItem>
-                            ),
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </FieldWrapper>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 10, alignItems: "flex-start", width: "100%" }}>
-                  <div style={{ flex: "0 0 88px" }}>
-                    <Input
-                      label="Level Index"
-                      type="number"
-                      value={String(draft?.index ?? 0)}
-                      onChange={(e) => setDraft((d) => (d ? { ...d, index: Number(e.target.value) } : d))}
-                    />
-                  </div>
-                  <div style={{ flex: "0 0 104px" }}>
-                    <Input
-                      label="Short Name"
-                      value={draft?.short ?? ""}
-                      onChange={(e) => setDraft((d) => (d ? { ...d, short: e.target.value } : d))}
-                    />
-                  </div>
-                  <div style={{ flex: "1 1 auto", minWidth: 0, maxWidth: 300 }}>
-                    <Input
-                      label="Long Name"
-                      value={draft?.long ?? ""}
-                      onChange={(e) => setDraft((d) => (d ? { ...d, long: e.target.value } : d))}
-                    />
-                  </div>
-                  <div style={{ flex: "0 0 178px" }}>
-                    <Input
-                      label="External Identifier"
-                      value={draft?.extId ?? ""}
-                      placeholder="1234567890abc"
-                      onChange={(e) => setDraft((d) => (d ? { ...d, extId: e.target.value } : d))}
-                    />
-                  </div>
-                </div>
-              </div>
               <div
+                key={l.id}
+                style={{
+                  border: `1px solid ${LINE}`,
+                  borderRadius: 10,
+                  background: "#fff",
+                  padding: "14px 16px",
+                  display: "flex",
+                  gap: 16,
+                  alignItems: "stretch",
+                }}
+              >
+                <div style={{ paddingTop: 22, flex: "0 0 auto" }}>
+                  <FloorPlanThumb file={draft?.file ?? l.file} />
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      alignItems: "flex-start",
+                      width: "100%",
+                    }}
+                  >
+                    {/* capped: a file name is ~24 characters, so letting it flex to the pane's full
+                      width just stretched one input across 560px of empty space */}
+                    <div
+                      style={{ flex: "1 1 auto", minWidth: 0, maxWidth: 340 }}
+                    >
+                      <Input
+                        label="Floor-plan File"
+                        value={draft?.file ?? ""}
+                        onChange={(e) =>
+                          setDraft((d) =>
+                            d ? { ...d, file: e.target.value } : d,
+                          )
+                        }
+                      />
+                    </div>
+                    <div style={{ flex: "0 0 190px" }}>
+                      <FieldWrapper label="Level Type" inputId={`lt-${l.id}`}>
+                        <Select
+                          value={draft?.sector ?? WIZARD_SECTOR_KEY}
+                          onValueChange={(v) =>
+                            setDraft((d) => (d ? { ...d, sector: v } : d))
+                          }
+                        >
+                          <SelectTrigger
+                            id={`lt-${l.id}`}
+                            aria-label="Level Type"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PICKER_SECTORS.map((sec) =>
+                              sec.subsectors.length ? (
+                                <SelectGroup key={sec.name}>
+                                  <SelectLabel title={sec.description}>
+                                    {sec.name}
+                                  </SelectLabel>
+                                  {sec.subsectors.map((sub) => (
+                                    <SelectItem
+                                      key={sub.name}
+                                      value={sectorKey(sec.name, sub.name)}
+                                      title={sub.description}
+                                    >
+                                      {sub.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              ) : (
+                                <SelectItem
+                                  key={sec.name}
+                                  value={sectorKey(sec.name)}
+                                  title={sec.description}
+                                >
+                                  {sec.name}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </FieldWrapper>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      alignItems: "flex-start",
+                      width: "100%",
+                    }}
+                  >
+                    <div style={{ flex: "0 0 88px" }}>
+                      <Input
+                        label="Level Index"
+                        type="number"
+                        value={String(draft?.index ?? 0)}
+                        onChange={(e) =>
+                          setDraft((d) =>
+                            d ? { ...d, index: Number(e.target.value) } : d,
+                          )
+                        }
+                      />
+                    </div>
+                    <div style={{ flex: "0 0 104px" }}>
+                      <Input
+                        label="Short Name"
+                        value={draft?.short ?? ""}
+                        onChange={(e) =>
+                          setDraft((d) =>
+                            d ? { ...d, short: e.target.value } : d,
+                          )
+                        }
+                      />
+                    </div>
+                    <div
+                      style={{ flex: "1 1 auto", minWidth: 0, maxWidth: 300 }}
+                    >
+                      <Input
+                        label="Long Name"
+                        value={draft?.long ?? ""}
+                        onChange={(e) =>
+                          setDraft((d) =>
+                            d ? { ...d, long: e.target.value } : d,
+                          )
+                        }
+                      />
+                    </div>
+                    <div style={{ flex: "0 0 178px" }}>
+                      <Input
+                        label="External Identifier"
+                        value={draft?.extId ?? ""}
+                        placeholder="1234567890abc"
+                        onChange={(e) =>
+                          setDraft((d) =>
+                            d ? { ...d, extId: e.target.value } : d,
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    alignItems: "flex-end",
+                    gap: 12,
+                    flex: "0 0 auto",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Button size="sm" variant="outline" onClick={cancelEdit}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={confirmEdit}>
+                      Confirm
+                    </Button>
+                  </div>
+                  {/* bottom corner, side by side — where the frame puts them */}
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 16 }}
+                  >
+                    <button
+                      onClick={() =>
+                        setDraft((d) => (d ? { ...d, isDefault: true } : d))
+                      }
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        fontSize: 12,
+                        whiteSpace: "nowrap",
+                        padding: 0,
+                        color: draft?.isDefault
+                          ? "var(--primitives-colors-theme-700)"
+                          : MUTED,
+                      }}
+                    >
+                      <Star filled={!!draft?.isDefault} /> Make Default
+                    </button>
+                    <button
+                      onClick={() => removeLevel(l.id)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        fontSize: 12,
+                        whiteSpace: "nowrap",
+                        padding: 0,
+                        color: "var(--primitives-colors-emotional-danger-600)",
+                      }}
+                    >
+                      <Icon name="trash-01" /> Remove Level
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* ── read state (design 2164:19545) ──────────────────────────────────────── */
+              <div
+                key={l.id}
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  alignItems: "flex-end",
-                  gap: 12,
-                  flex: "0 0 auto",
+                  alignItems: "center",
+                  gap: 14,
+                  border: `1px solid ${LINE}`,
+                  borderRadius: 10,
+                  background: "#fff",
+                  padding: "10px 14px",
                 }}
               >
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Button size="sm" variant="outline" onClick={cancelEdit}>
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={confirmEdit}>
-                    Confirm
-                  </Button>
-                </div>
-                {/* bottom corner, side by side — where the frame puts them */}
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <button
-                    onClick={() => setDraft((d) => (d ? { ...d, isDefault: true } : d))}
+                <span
+                  style={{
+                    width: 24,
+                    textAlign: "right",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "var(--review-ink)",
+                  }}
+                >
+                  {l.index}
+                </span>
+                <FloorPlanThumb file={l.file} />
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "var(--review-ink)",
+                    width: 34,
+                  }}
+                >
+                  {l.short}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
                     style={{
-                      display: "flex", alignItems: "center", gap: 6, border: "none", background: "none",
-                      cursor: "pointer", fontSize: 12, whiteSpace: "nowrap", padding: 0,
-                      color: draft?.isDefault ? "var(--primitives-colors-theme-700)" : MUTED,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      minWidth: 0,
                     }}
                   >
-                    <Star filled={!!draft?.isDefault} /> Make Default
-                  </button>
-                  <button
-                    onClick={() => removeLevel(l.id)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 6, border: "none", background: "none",
-                      cursor: "pointer", fontSize: 12, whiteSpace: "nowrap", padding: 0,
-                      color: "var(--primitives-colors-emotional-danger-600)",
-                    }}
-                  >
-                    <Icon name="trash-01" /> Remove Level
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* ── read state (design 2164:19545) ──────────────────────────────────────── */
-            <div
-              key={l.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                border: `1px solid ${LINE}`,
-                borderRadius: 10,
-                background: "#fff",
-                padding: "10px 14px",
-              }}
-            >
-              <span style={{ width: 24, textAlign: "right", fontSize: 14, fontWeight: 600, color: "var(--review-ink)" }}>
-                {l.index}
-              </span>
-              <FloorPlanThumb file={l.file} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--review-ink)", width: 34 }}>{l.short}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                  <span style={{ fontSize: 13, color: "var(--review-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {l.long}
-                  </span>
-                  {l.isDefault && (
-                    <span title="Default level — the map opens here" style={{ flex: "0 0 auto", display: "grid", placeItems: "center" }}>
-                      <Star filled />
+                    <span
+                      style={{
+                        fontSize: 13,
+                        color: "var(--review-ink)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {l.long}
                     </span>
-                  )}
+                    {l.isDefault && (
+                      <span
+                        title="Default level — the map opens here"
+                        style={{
+                          flex: "0 0 auto",
+                          display: "grid",
+                          placeItems: "center",
+                        }}
+                      >
+                        <Star filled />
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: MUTED,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {l.extId ? `External Identifier: ${l.extId}` : l.file}
+                  </div>
                 </div>
-                <div style={{ fontSize: 11, color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {l.extId ? `External Identifier: ${l.extId}` : l.file}
-                </div>
-              </div>
-              {/* the Level Type, as the design's tag rather than a repeat of the file name */}
-              <span
-                style={{
-                  flex: "0 0 auto", fontSize: 11, borderRadius: 999, padding: "1px 10px",
-                  color: "var(--primitives-colors-theme-700)",
-                  border: "1px solid var(--primitives-colors-theme-200)",
-                  background: "var(--primitives-colors-theme-0)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {sectorLabel(l.sector)}
-              </span>
-              {/*
+                {/* the Level Type, as the design's tag rather than a repeat of the file name */}
+                <span
+                  style={{
+                    flex: "0 0 auto",
+                    fontSize: 11,
+                    borderRadius: 999,
+                    padding: "1px 10px",
+                    color: "var(--primitives-colors-theme-700)",
+                    border: "1px solid var(--primitives-colors-theme-200)",
+                    background: "var(--primitives-colors-theme-0)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {sectorLabel(l.sector)}
+                </span>
+                {/*
                 The Level Manager is a way IN to the review, not just a report of it (§18: both
                 surfaces, one screen) — and the way in is the status card's own `primary` slot,
                 which exists for exactly this ("the one state that needs a real button: review the
@@ -1136,25 +1487,32 @@ export function BuildingWizard({
                 got: the level's long name is the only flexible column, so it was the one that paid,
                 and at 1280px it was crushed to nothing.
               */}
-              <div style={{ width: 288, flex: "0 0 auto" }}>
-                <AiMappingStatus {...levelCardFor(l)} />
+                <div style={{ width: 288, flex: "0 0 auto" }}>
+                  <AiMappingStatus {...levelCardFor(l)} />
+                </div>
+                {/* the edit affordance the design puts at the end of every row */}
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  aria-label={`Edit ${l.long}`}
+                  title="Edit level"
+                  onClick={() => startEdit(l)}
+                  style={{ flex: "0 0 auto" }}
+                >
+                  <Icon name="edit-01" />
+                </IconButton>
               </div>
-              {/* the edit affordance the design puts at the end of every row */}
-              <IconButton
-                variant="ghost"
-                size="sm"
-                aria-label={`Edit ${l.long}`}
-                title="Edit level"
-                onClick={() => startEdit(l)}
-                style={{ flex: "0 0 auto" }}
-              >
-                <Icon name="edit-01" />
-              </IconButton>
-            </div>
-          ),
-        )}
+            ),
+          )}
         {levels.length === 0 && (
-          <div style={{ fontSize: 12.5, color: MUTED, textAlign: "center", padding: 30 }}>
+          <div
+            style={{
+              fontSize: 12.5,
+              color: MUTED,
+              textAlign: "center",
+              padding: 30,
+            }}
+          >
             No levels yet — drop floor-plan files above to create them.
           </div>
         )}
@@ -1196,7 +1554,12 @@ export function BuildingWizard({
           onPointerDown={(e) => {
             if (aligned.has(current.id)) return;
             const t = alignT[current.id] ?? IDENTITY;
-            startDrag(e, (dx, dy) => setAlignT((m) => ({ ...m, [current.id]: { ...t, x: t.x + dx, y: t.y + dy } })));
+            startDrag(e, (dx, dy) =>
+              setAlignT((m) => ({
+                ...m,
+                [current.id]: { ...t, x: t.x + dx, y: t.y + dy },
+              })),
+            );
           }}
           style={{
             position: "absolute",
@@ -1225,14 +1588,22 @@ export function BuildingWizard({
             <div
               title="Drag to rotate"
               onPointerDown={(e) => {
-                const box = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
+                const box = (
+                  e.currentTarget.parentElement as HTMLElement
+                ).getBoundingClientRect();
                 const cx = box.left + box.width / 2;
                 const cy = box.top + box.height / 2;
                 const t = alignT[current.id] ?? IDENTITY;
                 const a0 = Math.atan2(e.clientY - cy, e.clientX - cx);
                 startDrag(e, (_dx, _dy, ev) => {
                   const a = Math.atan2(ev.clientY - cy, ev.clientX - cx);
-                  setAlignT((m) => ({ ...m, [current.id]: { ...t, rot: t.rot + ((a - a0) * 180) / Math.PI } }));
+                  setAlignT((m) => ({
+                    ...m,
+                    [current.id]: {
+                      ...t,
+                      rot: t.rot + ((a - a0) * 180) / Math.PI,
+                    },
+                  }));
                 });
               }}
               style={{
@@ -1269,16 +1640,26 @@ export function BuildingWizard({
           }}
           title={ALIGN_COPY.confirmTip}
         >
-          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--review-ink)" }}>{ALIGN_COPY.chip}</span>
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "var(--review-ink)",
+            }}
+          >
+            {ALIGN_COPY.chip}
+          </span>
           {aligned.has(current.id) ? (
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setAligned((s) => {
-                const n = new Set(s);
-                n.delete(current.id);
-                return n;
-              })}
+              onClick={() =>
+                setAligned((s) => {
+                  const n = new Set(s);
+                  n.delete(current.id);
+                  return n;
+                })
+              }
             >
               <Icon name="edit-01" /> Modify
             </Button>
@@ -1287,7 +1668,9 @@ export function BuildingWizard({
               size="sm"
               onClick={() => {
                 setAligned((s) => new Set(s).add(current.id));
-                const next = others.find((l) => l.id !== current.id && !aligned.has(l.id));
+                const next = others.find(
+                  (l) => l.id !== current.id && !aligned.has(l.id),
+                );
                 if (next) setAlignCurrent(next.id);
               }}
             >
@@ -1329,7 +1712,11 @@ export function BuildingWizard({
         onPointerDown={(e) => {
           if (fineConfirmed || tool !== "transform") return;
           const t = fineT;
-          startDrag(e, (dx, dy) => setFineT({ ...t, x: t.x + dx, y: t.y + dy }), commit);
+          startDrag(
+            e,
+            (dx, dy) => setFineT({ ...t, x: t.x + dx, y: t.y + dy }),
+            commit,
+          );
         }}
         style={{
           position: "absolute",
@@ -1337,7 +1724,11 @@ export function BuildingWizard({
           top: "50%",
           width: 520,
           transform: `translate(calc(-50% + ${fineT.x}px), calc(-50% + ${fineT.y}px)) rotate(${fineT.rot}deg)`,
-          cursor: fineConfirmed ? "default" : tool === "transform" ? "move" : "default",
+          cursor: fineConfirmed
+            ? "default"
+            : tool === "transform"
+              ? "move"
+              : "default",
           touchAction: "none",
           zIndex: 3,
         }}
@@ -1346,7 +1737,12 @@ export function BuildingWizard({
           src="/floorplan-preview.png"
           alt=""
           draggable={false}
-          style={{ width: "100%", display: "block", opacity: 0.55, filter: "sepia(1) saturate(8) hue-rotate(180deg)" }}
+          style={{
+            width: "100%",
+            display: "block",
+            opacity: 0.55,
+            filter: "sepia(1) saturate(8) hue-rotate(180deg)",
+          }}
         />
         {!fineConfirmed &&
           tool === "2dot" &&
@@ -1375,8 +1771,14 @@ export function BuildingWizard({
                       } else {
                         // …anchor B swings it around A (rotate) — the "simple math" 2-dot align
                         const a1 = Math.atan2(a0.by - a0.ay, a0.bx - a0.ax);
-                        const a2 = Math.atan2(a0.by - a0.ay + dy, a0.bx - a0.ax + dx);
-                        setFineT({ ...t0, rot: t0.rot + ((a2 - a1) * 180) / Math.PI });
+                        const a2 = Math.atan2(
+                          a0.by - a0.ay + dy,
+                          a0.bx - a0.ax + dx,
+                        );
+                        setFineT({
+                          ...t0,
+                          rot: t0.rot + ((a2 - a1) * 180) / Math.PI,
+                        });
                       }
                     },
                     commit,
@@ -1397,7 +1799,16 @@ export function BuildingWizard({
                   boxShadow: "0 1px 4px rgba(0,0,0,.3)",
                 }}
               >
-                <span style={{ position: "absolute", left: 20, top: -4, fontSize: 11, fontWeight: 700, color: "var(--primitives-colors-theme-700)" }}>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 20,
+                    top: -4,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--primitives-colors-theme-700)",
+                  }}
+                >
                   {k.toUpperCase()}
                 </span>
               </div>
@@ -1419,8 +1830,25 @@ export function BuildingWizard({
             width: 250,
           }}
         >
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--review-ink)" }}>{FINETUNE_COPY.anchorsTitle}</div>
-          <div style={{ fontSize: 11, color: MUTED, lineHeight: 1.35, margin: "2px 0 8px" }}>{FINETUNE_COPY.anchorsDetail}</div>
+          <div
+            style={{
+              fontSize: 12.5,
+              fontWeight: 700,
+              color: "var(--review-ink)",
+            }}
+          >
+            {FINETUNE_COPY.anchorsTitle}
+          </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: MUTED,
+              lineHeight: 1.35,
+              margin: "2px 0 8px",
+            }}
+          >
+            {FINETUNE_COPY.anchorsDetail}
+          </div>
           <Checkbox
             checked={pinned}
             onCheckedChange={(c) => setPinned(c === true)}
@@ -1430,13 +1858,42 @@ export function BuildingWizard({
             const x = k === "a" ? anchors.ax : anchors.bx;
             const y = k === "a" ? anchors.ay : anchors.by;
             return (
-              <div key={k} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 4 }}>
-                <span style={{ width: 16, height: 16, borderRadius: 8, background: "var(--primitives-colors-theme-700)", color: "#fff", fontSize: 10, display: "grid", placeItems: "center" }}>
+              <div
+                key={k}
+                style={{
+                  display: "flex",
+                  gap: 6,
+                  alignItems: "center",
+                  marginBottom: 4,
+                }}
+              >
+                <span
+                  style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 8,
+                    background: "var(--primitives-colors-theme-700)",
+                    color: "#fff",
+                    fontSize: 10,
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
                   {k.toUpperCase()}
                 </span>
                 <div style={{ flex: 1, fontSize: 10.5, color: MUTED }}>
-                  <div>{pinned ? "X" : "latitude"}: <b style={{ color: "var(--review-ink)" }}>{pinned ? Math.round(x) : lat(y + fineT.y)}</b></div>
-                  <div>{pinned ? "Y" : "longitude"}: <b style={{ color: "var(--review-ink)" }}>{pinned ? Math.round(y) : lng(x + fineT.x)}</b></div>
+                  <div>
+                    {pinned ? "X" : "latitude"}:{" "}
+                    <b style={{ color: "var(--review-ink)" }}>
+                      {pinned ? Math.round(x) : lat(y + fineT.y)}
+                    </b>
+                  </div>
+                  <div>
+                    {pinned ? "Y" : "longitude"}:{" "}
+                    <b style={{ color: "var(--review-ink)" }}>
+                      {pinned ? Math.round(y) : lng(x + fineT.x)}
+                    </b>
+                  </div>
                 </div>
               </div>
             );
@@ -1478,25 +1935,54 @@ export function BuildingWizard({
           zIndex: 4,
         }}
       >
-        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--review-ink)", marginRight: 6 }}>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: "var(--review-ink)",
+            marginRight: 6,
+          }}
+        >
           {FINETUNE_COPY.chip}
         </span>
         {fineConfirmed ? (
-          <Button size="sm" variant="outline" onClick={() => setFineConfirmed(false)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setFineConfirmed(false)}
+          >
             <Icon name="edit-01" /> Modify
           </Button>
         ) : (
           <>
-            <Button size="sm" variant={tool === "2dot" ? "default" : "ghost"} onClick={() => setTool("2dot")}>
+            <Button
+              size="sm"
+              variant={tool === "2dot" ? "default" : "ghost"}
+              onClick={() => setTool("2dot")}
+            >
               2Dot Align
             </Button>
-            <Button size="sm" variant={tool === "transform" ? "default" : "ghost"} onClick={() => setTool("transform")}>
+            <Button
+              size="sm"
+              variant={tool === "transform" ? "default" : "ghost"}
+              onClick={() => setTool("transform")}
+            >
               Transform
             </Button>
-            <Button size="sm" variant="ghost" disabled={histAt <= 0} onClick={() => restore(histAt - 1)}>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={histAt <= 0}
+              onClick={() => restore(histAt - 1)}
+            >
               Undo
             </Button>
-            <Button size="sm" variant="ghost" disabled={histAt >= history.length - 1} onClick={() => restore(histAt + 1)}>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={histAt >= history.length - 1}
+              onClick={() => restore(histAt + 1)}
+            >
               Redo
             </Button>
             <Button
@@ -1541,7 +2027,8 @@ export function BuildingWizard({
    * building hasn't got is refused instantly by the map's `targetExists()`, not spun on.
    */
   const previewTarget = useMemo(
-    () => (previewLevel ? { building: T3_ID, level: previewLevel.index } : undefined),
+    () =>
+      previewLevel ? { building: T3_ID, level: previewLevel.index } : undefined,
     [previewLevel?.index],
   );
   const previewArea = (
@@ -1578,7 +2065,17 @@ export function BuildingWizard({
 
   return (
     <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-      <div style={{ width: PANEL_WIDTH, flex: `0 0 ${PANEL_WIDTH}px`, borderRight: `1px solid ${LINE}`, background: "#fff", display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div
+        style={{
+          width: PANEL_WIDTH,
+          flex: `0 0 ${PANEL_WIDTH}px`,
+          borderRight: `1px solid ${LINE}`,
+          background: "#fff",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+        }}
+      >
         {/* Header outside the scroll area — the ✕ must not move with a scrollbar or scroll off
             the top of the panel (see PANEL_PAD). */}
         <div style={{ padding: PANEL_PAD }}>
@@ -1590,7 +2087,14 @@ export function BuildingWizard({
           />
         </div>
         <div style={{ padding: "0 20px 8px", overflow: "auto", flex: 1 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              marginTop: 6,
+            }}
+          >
             {WIZARD_STEPS.map((s) => (
               <StepRow
                 key={s.key}
@@ -1609,14 +2113,33 @@ export function BuildingWizard({
                 onClick={() => canEnter(s.key) && setStep(s.key)}
               >
                 {s.key === "metadata" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
-                    <Input label="Building Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Terminal D" />
-                    <Input label="External Identifier" value={extId} onChange={(e) => setExtId(e.target.value)} placeholder="DXB-TD" />
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                      marginTop: 10,
+                    }}
+                  >
+                    <Input
+                      label="Building Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Terminal D"
+                    />
+                    <Input
+                      label="External Identifier"
+                      value={extId}
+                      onChange={(e) => setExtId(e.target.value)}
+                      placeholder="DXB-TD"
+                    />
                   </div>
                 )}
                 {s.key === "levels" && (
                   <div style={{ marginTop: 10 }}>
-                    <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>
+                    <div
+                      style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}
+                    >
                       {levels.length === 0
                         ? "Drop floor-plan files on the right to create levels."
                         : `${levels.length} level${levels.length > 1 ? "s" : ""} · ${levels.filter((l) => l.phase === "ready").length} ready`}
@@ -1632,13 +2155,23 @@ export function BuildingWizard({
         </div>
         {/* the drawer's bottom carries the one advancing action (design 2007:24419: Continue,
             right-aligned; the header ✕ is the only cancel — Olcay's standing rule) */}
-        <div style={{ display: "flex", gap: 12, padding: "12px 20px", borderTop: `1px solid ${LINE}`, justifyContent: "flex-end" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            padding: "12px 20px",
+            borderTop: `1px solid ${LINE}`,
+            justifyContent: "flex-end",
+          }}
+        >
           {step === "preview" ? (
             <Button onClick={save} disabled={!metadataDone || !levelsDone}>
               Save
             </Button>
           ) : (
-            <span title={unsavedRow && step === "levels" ? UNSAVED_TIP : undefined}>
+            <span
+              title={unsavedRow && step === "levels" ? UNSAVED_TIP : undefined}
+            >
               <Button
                 disabled={!complete[step]}
                 onClick={() => setStep(order[order.indexOf(step) + 1])}
@@ -1649,7 +2182,14 @@ export function BuildingWizard({
           )}
         </div>
       </div>
-      <div style={{ position: "relative", flex: 1, background: "#EDEEF0", minWidth: 0 }}>
+      <div
+        style={{
+          position: "relative",
+          flex: 1,
+          background: "#EDEEF0",
+          minWidth: 0,
+        }}
+      >
         {(step === "metadata" || step === "levels") && levelsArea}
         {step === "align" && alignArea}
         {step === "finetune" && fineArea}

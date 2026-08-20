@@ -1,3 +1,4 @@
+import { Check } from "./icons";
 /**
  * "Applied" — the confirmation that an edit landed (Olcay, 2026-08-15: *"update a feature should
  * close the edit and save the changes … act like saved"*).
@@ -56,15 +57,8 @@ export function SavedNotice({ name }: { name: string }) {
           background: "#0b369c",
         }}
       >
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path
-            d="M2.5 6.2 4.7 8.4 9.5 3.6"
-            stroke="#fff"
-            strokeWidth="1.9"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {/* `check` from the Pointr Icon Library (see `./icons`); white on the disc. */}
+        <Check size={12} style={{ color: "#fff" }} />
       </span>
       <span style={{ minWidth: 0 }}>
         <span

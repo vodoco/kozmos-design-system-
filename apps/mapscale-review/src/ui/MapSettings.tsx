@@ -1,3 +1,4 @@
+import { Help, Opacity } from "./icons";
 import {
   Popover,
   PopoverTrigger,
@@ -211,29 +212,10 @@ export function MapSettings({
                     placeItems: "center",
                   }}
                 >
-                  <svg width={14} height={14} viewBox="0 0 14 14" aria-hidden>
-                    <circle
-                      cx={7}
-                      cy={7}
-                      r={6.3}
-                      fill="none"
-                      stroke="var(--primitives-colors-background-600)"
-                      strokeWidth={1.2}
-                    />
-                    <path
-                      d="M5.4 5.4a1.7 1.7 0 1 1 2.5 1.5c-.55.3-.9.6-.9 1.2"
-                      fill="none"
-                      stroke="var(--primitives-colors-background-600)"
-                      strokeWidth={1.2}
-                      strokeLinecap="round"
-                    />
-                    <circle
-                      cx={7}
-                      cy={10.4}
-                      r={0.8}
-                      fill="var(--primitives-colors-background-600)"
-                    />
-                  </svg>
+                  <Help
+                    size={14}
+                    style={{ color: "var(--primitives-colors-background-600)" }}
+                  />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top">
@@ -261,21 +243,12 @@ export function MapSettings({
                     placeItems: "center",
                   }}
                 >
-                  {/* ◐ — half-filled circle, the plainest opacity glyph at 14px. */}
-                  <svg width={14} height={14} viewBox="0 0 14 14" aria-hidden>
-                    <circle
-                      cx={7}
-                      cy={7}
-                      r={6.3}
-                      fill="none"
-                      stroke="var(--primitives-colors-background-600)"
-                      strokeWidth={1.2}
-                    />
-                    <path
-                      d="M7 .7 A6.3 6.3 0 0 1 7 13.3 Z"
-                      fill="var(--primitives-colors-background-600)"
-                    />
-                  </svg>
+                  {/* `contrast-02` from the Pointr Icon Library — the ◐. Recorded for two days
+                      as existing in no icon set; it was in Editor all along (see `./icons`). */}
+                  <Opacity
+                    size={14}
+                    style={{ color: "var(--primitives-colors-background-600)" }}
+                  />
                 </button>
               </PopoverTrigger>
               {/* Below the symbol and centred on it (Olcay, 2026-08-18) — the card hangs off its

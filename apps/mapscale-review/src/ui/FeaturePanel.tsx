@@ -1,3 +1,4 @@
+import { Copy } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -103,39 +104,9 @@ const RESERVED = new Set([
   "mapPersonas",
 ]);
 
-/**
- * ⚠️ **`@kozmos/icons` has no copy glyph** — the set is 35 icons and `copy-01` isn't among them,
- * which is the same D9 gap that already cost this app globe, sparkle, ellipsis and settings-04.
- * Drawn locally rather than substituted with something that means a different thing.
- */
+/** `copy-01` from the Pointr Icon Library (see `./icons`). */
 function CopyGlyph() {
-  return (
-    <svg
-      width={16}
-      height={16}
-      viewBox="0 0 16 16"
-      aria-hidden
-      focusable="false"
-    >
-      <rect
-        x="5.5"
-        y="5.5"
-        width="8"
-        height="8"
-        rx="1.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      />
-      <path
-        d="M10.5 3.5 H3.5 a1 1 0 0 0-1 1 V11"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Copy size={16} />;
 }
 
 function SectionTitle({ children }: { children: string }) {

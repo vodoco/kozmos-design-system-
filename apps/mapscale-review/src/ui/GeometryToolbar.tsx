@@ -1,4 +1,16 @@
 import { useState } from "react";
+import {
+  Combine,
+  Redo,
+  Reset,
+  Reshape,
+  Simplify,
+  Snap,
+  Split,
+  Straighten,
+  Transform,
+  Undo,
+} from "./icons";
 
 /**
  * The geometry toolbar — bottom centre of the map, the v9 *Map Content Geometry* position
@@ -134,150 +146,22 @@ export type GeomCommand =
   | { cmd: "split" }
   | { cmd: "combine" };
 
-/* ── icons ────────────────────────────────────────────────────────────────────
-   One 24×24 grid, one 1.6 stroke, `currentColor` throughout — so a button's own
-   colour and disabled state carry to its icon without a second set of rules.
-
-   Drawn at 22px (Olcay, 2026-08-15: *"I rather like to see larger symbols"*),
-   which is large enough that each one has to actually depict its operation —
-   at 17px a wrong icon merely looks like a smudge, at 22px it looks wrong. */
-
-const ICON = {
-  width: 22,
-  height: 22,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.6,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-} as const;
-
-/** Reshape — an irregular outline with its corners grabbable. */
-function Reshape() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M5.5 6.5 12 4l6.5 4.5-2 9.5-9-1z" />
-      <circle cx="5.5" cy="6.5" r="1.9" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="4" r="1.9" fill="currentColor" stroke="none" />
-      <circle cx="18.5" cy="8.5" r="1.9" fill="currentColor" stroke="none" />
-      <circle cx="16.5" cy="18" r="1.9" fill="currentColor" stroke="none" />
-      <circle cx="7.5" cy="17" r="1.9" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-/** Move — the whole thing, in any direction. */
-function Move() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M12 3.5v17M3.5 12h17" />
-      <path d="M9.6 5.9 12 3.5l2.4 2.4M9.6 18.1 12 20.5l2.4-2.4" />
-      <path d="M5.9 9.6 3.5 12l2.4 2.4M18.1 9.6 20.5 12l-2.4 2.4" />
-    </svg>
-  );
-}
-
-/** Split — one shape, two halves, the cut between them. */
-function Split() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M9.5 5H5.5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4" />
-      <path d="M14.5 5h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4" />
-      <path d="M12 3v3M12 9v3M12 15v3M12 21v0" strokeDasharray="0.1 0" />
-    </svg>
-  );
-}
-
 /**
- * Combine — two rooms that are now one, and the wall that used to divide them.
+ * **The bar's symbols come from the Pointr Icon Library** — see `./icons`, which records the node
+ * each one was exported from. Nothing here is hand-drawn any more; four of the ten (`combine`,
+ * `straighten`, `snap`, and the unused `square-up`) were drawn INTO the library on 2026-08-20
+ * because they genuinely did not exist, and the rest were already there and had simply never been
+ * looked for by category.
  *
- * **Deliberately the exact inverse of `Split`, drawn on the same two boxes.** Split's outline is
- * *broken* at the middle and its cut is the strong mark that runs past the shape; this one's
- * outline is *whole* around both rooms and the seam is the faint remnant left inside it. They are
- * the only pair in the bar that undo one another and they sit side by side, so the contrast between
- * them is doing as much work as either icon alone.
+ * Drawn at 22px (Olcay, 2026-08-15: *"I rather like to see larger symbols"*), which is large
+ * enough that each one has to actually depict its operation — at 17px a wrong icon merely looks
+ * like a smudge, at 22px it looks wrong.
  *
- * ⚠️ The first attempt was these boxes with arrows closing on the seam. At 5× on the bench the
- * arrowheads, the seam and the box edges all landed inside two pixels of each other and the middle
- * read as a smudge — the exact failure the 22px size was chosen to expose.
+ * ⚠️ **The stroke is the library's 2, not the 1.6 these used to be drawn at** (Olcay, 2026-08-20:
+ * *"library convention"*). The bar reads heavier than it did, and that is the trade taken for
+ * every Pointr surface drawing the same weight.
  */
-function Combine() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M5.5 5h13a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
-      <path d="M12 5.8v12.4" strokeOpacity=".3" strokeDasharray="2 2.5" />
-    </svg>
-  );
-}
-
-/** Simplify — three points that have been brought onto one line, so the middle one can go. */
-function Simplify() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M3.5 15h17" />
-      <path d="M8 8.5 12 5l4 3.5" strokeOpacity=".35" />
-      <circle cx="4.5" cy="15" r="2" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="15" r="2" fill="currentColor" stroke="none" />
-      <circle cx="19.5" cy="15" r="2" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-/**
- * Straighten — a wonky outline (ghosted) pulled onto a right-angled one, with a corner mark to say
- * what the operation is actually about. Not a rectangle on its own: that reads as "draw a box".
- */
-function Straighten() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M4.5 8.2 12.5 4.6l7 4.2-1.2 9.4-13 .6z" strokeOpacity=".3" />
-      <path d="M5 7.5h14v11H5z" />
-      <path d="M8 15.5v-4h4" strokeOpacity=".55" />
-    </svg>
-  );
-}
-
-/** Snap — two corners closing on the same point, which is literally what it does. */
-function Snap() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M4 10V4h6" />
-      <path d="M20 14v6h-6" />
-      <circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function Undo() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M4.5 10.5h9.8a4.8 4.8 0 0 1 0 9.6H8.5" />
-      <path d="M8.2 6.6 4.2 10.5l4 3.9" />
-    </svg>
-  );
-}
-
-function Redo() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M19.5 10.5H9.7a4.8 4.8 0 0 0 0 9.6h5.8" />
-      <path d="M15.8 6.6l4 3.9-4 3.9" />
-    </svg>
-  );
-}
-
-/** Reset — rewind to the start. Deliberately NOT a circular arrow: that is the rotate icon, and
-    the one control that throws your work away must not look like the one that nudges it 15°. */
-function Rewind() {
-  return (
-    <svg {...ICON} aria-hidden>
-      <path d="M4.5 5.5v13" />
-      <path d="M20 6.2v11.6L12.8 12z" />
-      <path d="M12.4 6.2v11.6L5.2 12z" />
-    </svg>
-  );
-}
+const ICON_PX = 22;
 
 const BAR_INK = "var(--review-ink)";
 const BAR_MUTED = "var(--primitives-colors-background-600)";
@@ -738,7 +622,7 @@ export function GeometryToolbar({
              * Its two neighbours were already verbs, so it was also the odd one out in its own group.
              */}
             <Tile
-              icon={<Reshape />}
+              icon={<Reshape size={ICON_PX} />}
               label="Reshape"
               title="Drag a corner to move it · click a midpoint to add one · Alt-click to remove"
               on={state.mode === "vertices"}
@@ -751,7 +635,7 @@ export function GeometryToolbar({
              */}
             {ringTools && (
               <Tile
-                icon={<Move />}
+                icon={<Transform size={ICON_PX} />}
                 label="Transform"
                 title="Drag to move · corners scale · the knob rotates · Shift or ⌥ snaps to 5° and 5%"
                 on={state.mode === "transform"}
@@ -775,7 +659,7 @@ export function GeometryToolbar({
         {ringTools && (
           <Group>
             <Tile
-              icon={<Split />}
+              icon={<Split size={ICON_PX} />}
               label="Split"
               title="Click twice on the map to cut the shape in two · Escape to cancel"
               on={state.mode === "split"}
@@ -793,7 +677,7 @@ export function GeometryToolbar({
              */}
             <WhyTip text={state.combinable ? null : state.combineWhy}>
               <Tile
-                icon={<Combine />}
+                icon={<Combine size={ICON_PX} />}
                 label="Combine"
                 title="Join the selected features into one · walls between them are hidden, and the largest keeps its name"
                 disabled={!state.combinable}
@@ -814,7 +698,7 @@ export function GeometryToolbar({
               exactly when you want it. */}
           {ringTools && (
             <Tile
-              icon={<Straighten />}
+              icon={<Straighten size={ICON_PX} />}
               label="Straighten"
               title="Square the shape onto its own grid — near-right-angle corners become right angles, genuine diagonals are left alone"
               onClick={() => onCommand({ cmd: "square" })}
@@ -822,14 +706,14 @@ export function GeometryToolbar({
           )}
           {ringTools && (
             <Tile
-              icon={<Simplify />}
+              icon={<Simplify size={ICON_PX} />}
               label="Simplify"
               title="Drop corners that already sit on the line between their neighbours"
               onClick={() => onCommand({ cmd: "simplify" })}
             />
           )}
           <Tile
-            icon={<Snap />}
+            icon={<Snap size={ICON_PX} />}
             label="Snap"
             title={
               isPoint
@@ -845,21 +729,21 @@ export function GeometryToolbar({
 
         <Group>
           <Tile
-            icon={<Undo />}
+            icon={<Undo size={ICON_PX} />}
             label="Undo"
             title="Undo"
             disabled={!state.canUndo}
             onClick={() => onCommand({ cmd: "undo" })}
           />
           <Tile
-            icon={<Redo />}
+            icon={<Redo size={ICON_PX} />}
             label="Redo"
             title="Redo"
             disabled={!state.canRedo}
             onClick={() => onCommand({ cmd: "redo" })}
           />
           <Tile
-            icon={<Rewind />}
+            icon={<Reset size={ICON_PX} />}
             label="Reset"
             title="Back to the published outline — discards every change to this shape"
             onClick={() => onCommand({ cmd: "reset" })}

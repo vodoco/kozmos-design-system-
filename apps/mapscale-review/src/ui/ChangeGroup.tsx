@@ -1,5 +1,11 @@
+import { ChevronRight } from "./icons";
 import { useState } from "react";
-import { SegmentedControl, Tooltip, TooltipTrigger, TooltipContent } from "@kozmos/react";
+import {
+  SegmentedControl,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@kozmos/react";
 import { ChangeReviewRow, DecisionGlyph } from "./ChangeReviewRow";
 import {
   CHANGE_COLORS,
@@ -13,17 +19,16 @@ const LINE = "#e3e4e8";
 const MUTED = "var(--review-muted)";
 
 function Chevron({ open }: { open: boolean }) {
+  /* `chevron-right` from the Pointr Icon Library, rotated on open — one glyph in two states, not
+     two glyphs (see `./icons`). */
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 16 16"
-      aria-hidden
-      focusable="false"
-      style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform .12s" }}
-    >
-      <path d="M6 3.5 L10.5 8 L6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
+    <ChevronRight
+      size={14}
+      style={{
+        transform: open ? "rotate(90deg)" : "none",
+        transition: "transform .12s",
+      }}
+    />
   );
 }
 
@@ -58,9 +63,17 @@ const ACTIONS: { value: Decision; label: string }[] = [
  * updates" is the point of grouping, not a bonus. Shows a value only when the group already agrees,
  * so it never claims a uniformity that isn't there.
  */
-function GroupDecision({ changes, onDecide }: { changes: Change[]; onDecide: (d: Decision) => void }) {
+function GroupDecision({
+  changes,
+  onDecide,
+}: {
+  changes: Change[];
+  onDecide: (d: Decision) => void;
+}) {
   const first = changes[0]?.decision;
-  const uniform = changes.every((c) => c.decision === first) ? first : undefined;
+  const uniform = changes.every((c) => c.decision === first)
+    ? first
+    : undefined;
   const items = ACTIONS.map((a) => ({
     value: a.value,
     label: (
@@ -69,7 +82,11 @@ function GroupDecision({ changes, onDecide }: { changes: Change[]; onDecide: (d:
           <span
             role="img"
             aria-label={`${a.label} all ${changes.length}`}
-            style={{ display: "grid", placeItems: "center", color: DECISION_INK }}
+            style={{
+              display: "grid",
+              placeItems: "center",
+              color: DECISION_INK,
+            }}
           >
             <DecisionGlyph kind={a.value} size={15} />
           </span>
@@ -78,7 +95,13 @@ function GroupDecision({ changes, onDecide }: { changes: Change[]; onDecide: (d:
       </Tooltip>
     ),
   }));
-  return <SegmentedControl items={items} value={uniform} onValueChange={(v) => onDecide(v as Decision)} />;
+  return (
+    <SegmentedControl
+      items={items}
+      value={uniform}
+      onValueChange={(v) => onDecide(v as Decision)}
+    />
+  );
 }
 
 /**
@@ -102,8 +125,22 @@ export function ChangeGroupBlock({
   const decidable = group.changes.filter((c) => c.type !== "preserved");
 
   return (
-    <div style={{ border: `1px solid ${LINE}`, borderRadius: 10, overflow: "hidden", background: "#fff" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px" }}>
+    <div
+      style={{
+        border: `1px solid ${LINE}`,
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "#fff",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "8px 10px",
+        }}
+      >
         <button
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
@@ -130,8 +167,7 @@ export function ChangeGroupBlock({
             text so it stays attached to the last word instead of floating.
           */}
           <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.35 }}>
-            {group.title}{" "}
-            <Count n={group.changes.length} color={accent} />
+            {group.title} <Count n={group.changes.length} color={accent} />
           </span>
         </button>
         {/* flex:0 0 auto — without it the control grows and shrinks the title to nothing */}
@@ -139,7 +175,12 @@ export function ChangeGroupBlock({
           <div style={{ flex: "0 0 auto" }}>
             <GroupDecision
               changes={decidable}
-              onDecide={(d) => onDecideGroup(decidable.map((c) => c.id), d)}
+              onDecide={(d) =>
+                onDecideGroup(
+                  decidable.map((c) => c.id),
+                  d,
+                )
+              }
             />
           </div>
         )}

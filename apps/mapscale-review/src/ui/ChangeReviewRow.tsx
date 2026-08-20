@@ -1,5 +1,11 @@
+import { Warning } from "./icons";
 import { useState } from "react";
-import { SegmentedControl, Tooltip, TooltipTrigger, TooltipContent } from "@kozmos/react";
+import {
+  SegmentedControl,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@kozmos/react";
 import {
   changeAccent,
   decisionInk,
@@ -19,20 +25,23 @@ import {
 /** Exported since 2026-08-13: the floor-warning strip (D16) draws the same mark, and two copies
  *  of one glyph is exactly how the two halves of a statement drift apart. */
 export function WarningGlyph({ size = 14 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden focusable="false">
-      <path d="M8 2.2 L14.6 13.4 H1.4 Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M8 6.2 V9.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <circle cx="8" cy="11.4" r="0.9" fill="currentColor" />
-    </svg>
-  );
+  /* `alert-triangle` from the Pointr Icon Library (see `./icons`). Still exported from here: the
+     floor-warning strip draws the same mark, and two copies of one glyph is exactly how the two
+     halves of a statement drift apart. */
+  return <Warning size={size} />;
 }
 
 /**
  * The same three marks the map draws on each feature — ✓ / 🚩 / ✗ in neutral black, so a decision
  * never reads as a change type. `currentColor` lets the control tint them when a segment is off.
  */
-export function DecisionGlyph({ kind, size = 18 }: { kind: Decision; size?: number }) {
+export function DecisionGlyph({
+  kind,
+  size = 18,
+}: {
+  kind: Decision;
+  size?: number;
+}) {
   const d =
     kind === "confirm"
       ? "M4 9.5 L7.5 13 L14 5.5"
@@ -40,9 +49,23 @@ export function DecisionGlyph({ kind, size = 18 }: { kind: Decision; size?: numb
         ? "M5 5 L13 13 M13 5 L5 13"
         : "M5.5 4 L5.5 15";
   return (
-    <svg width={size} height={size} viewBox="0 0 18 18" aria-hidden focusable="false">
-      <path d={d} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      {kind === "flag" && <path d="M5.5 4 L14 6.5 L5.5 9 Z" fill="currentColor" />}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 18 18"
+      aria-hidden
+      focusable="false"
+    >
+      <path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      {kind === "flag" && (
+        <path d="M5.5 4 L14 6.5 L5.5 9 Z" fill="currentColor" />
+      )}
     </svg>
   );
 }
@@ -100,7 +123,10 @@ export function ChangeReviewRow({
       label: (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span aria-label="Keep as it is" style={{ fontSize: 12, color: DECISION_INK, padding: "0 2px" }}>
+            <span
+              aria-label="Keep as it is"
+              style={{ fontSize: 12, color: DECISION_INK, padding: "0 2px" }}
+            >
               Kept
             </span>
           </TooltipTrigger>
@@ -116,7 +142,11 @@ export function ChangeReviewRow({
             <span
               role="img"
               aria-label="Flag for later"
-              style={{ display: "grid", placeItems: "center", color: decisionInk("flag") }}
+              style={{
+                display: "grid",
+                placeItems: "center",
+                color: decisionInk("flag"),
+              }}
             >
               <DecisionGlyph kind="flag" />
             </span>
@@ -138,7 +168,10 @@ export function ChangeReviewRow({
    */
   const keepIt = change.warning === "re-removed";
   const items = ACTIONS.map((a) => {
-    const label = keepIt && a.value === "reject" ? "Keep it — this object stays on the map" : a.label;
+    const label =
+      keepIt && a.value === "reject"
+        ? "Keep it — this object stays on the map"
+        : a.label;
     return {
       value: a.value,
       label: (
@@ -148,7 +181,11 @@ export function ChangeReviewRow({
             <span
               role="img"
               aria-label={label}
-              style={{ display: "grid", placeItems: "center", color: decisionInk(a.value) }}
+              style={{
+                display: "grid",
+                placeItems: "center",
+                color: decisionInk(a.value),
+              }}
             >
               <DecisionGlyph kind={a.value} />
             </span>
@@ -195,101 +232,119 @@ export function ChangeReviewRow({
       }}
     >
       {/* top strip — the identity, and the decision that belongs to it, on one baseline */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%" }}>
-      <div style={{ flex: "1 1 0", minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-          <span
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          width: "100%",
+        }}
+      >
+        <div style={{ flex: "1 1 0", minWidth: 0 }}>
+          <div
             style={{
-              fontWeight: 600,
-              color: "var(--review-ink)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              minWidth: 0,
             }}
           >
-            {change.name}
-          </span>
-          {/*
+            <span
+              style={{
+                fontWeight: 600,
+                color: "var(--review-ink)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {change.name}
+            </span>
+            {/*
             The glyph moved INTO the chip below (Olcay, 2026-08-11). It used to sit here beside the
             name, which meant the same warning was announced twice on two lines — a mark up here and
             its label down there — and the mark was the half with no words on it.
           */}
-        </div>
-        {warning && (
-          /**
-           * **A yellow chip** (Olcay, 2026-08-11). This supersedes §3's *"Risk is a third axis, and
-           * it is never coloured… never amber"* — the reasoning there was that amber already means
-           * *magnitude*, so spending it on risk says two things with one colour. Worth re-reading
-           * before it becomes law; the chip is at least confined to the row, where no traffic light
-           * appears.
-           */
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div
-                role="img"
-                aria-label={`Warning: ${WARNING_LABEL[warning]}`}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "var(--primitives-colors-emotional-alert-900)",
-                  background: "var(--primitives-colors-emotional-alert-0)",
-                  border: "1px solid #fde0a8",
-                  borderRadius: 999,
-                  padding: "1px 8px 1px 6px",
-                  margin: "3px 0 1px",
-                  cursor: "help",
-                }}
-              >
-                <WarningGlyph size={12} />
-                {WARNING_LABEL[warning]}
-              </div>
-            </TooltipTrigger>
-            {/* Bounded, or a single sentence lays itself out as one line wider than the panel
+          </div>
+          {warning && (
+            /**
+             * **A yellow chip** (Olcay, 2026-08-11). This supersedes §3's *"Risk is a third axis, and
+             * it is never coloured… never amber"* — the reasoning there was that amber already means
+             * *magnitude*, so spending it on risk says two things with one colour. Worth re-reading
+             * before it becomes law; the chip is at least confined to the row, where no traffic light
+             * appears.
+             */
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  role="img"
+                  aria-label={`Warning: ${WARNING_LABEL[warning]}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "var(--primitives-colors-emotional-alert-900)",
+                    background: "var(--primitives-colors-emotional-alert-0)",
+                    border: "1px solid #fde0a8",
+                    borderRadius: 999,
+                    padding: "1px 8px 1px 6px",
+                    margin: "3px 0 1px",
+                    cursor: "help",
+                  }}
+                >
+                  <WarningGlyph size={12} />
+                  {WARNING_LABEL[warning]}
+                </div>
+              </TooltipTrigger>
+              {/* Bounded, or a single sentence lays itself out as one line wider than the panel
                 (Olcay, 2026-08-11) — it overhung the drawer and covered the row above. */}
-            <TooltipContent style={{ maxWidth: 260, whiteSpace: "normal", lineHeight: 1.4 }}>
-              {WARNING_WHY[warning]}
-            </TooltipContent>
-          </Tooltip>
-        )}
-        {/*
+              <TooltipContent
+                style={{ maxWidth: 260, whiteSpace: "normal", lineHeight: 1.4 }}
+              >
+                {WARNING_WHY[warning]}
+              </TooltipContent>
+            </Tooltip>
+          )}
+          {/*
           **Details are behind a toggle** (Olcay, 2026-08-11: *"maybe there could be a 'details'
           button — when clicked the card expands and shows the details much more neatly"*).
           Every bullet used to render inline, so a row with two of them grew tall enough to wrap
           around the decision control and collide with it. Collapsed, a row is one line of summary
           and its decision; the bullets are there when you want them.
         */}
-        <div style={{ fontSize: 12.5, color: "var(--review-muted)" }}>{change.detail}</div>
-      </div>
-      {/* Deciding is not selecting: without this, every ✓ would also fly the map to that feature,
+          <div style={{ fontSize: 12.5, color: "var(--review-muted)" }}>
+            {change.detail}
+          </div>
+        </div>
+        {/* Deciding is not selecting: without this, every ✓ would also fly the map to that feature,
           and working down the list would become a slideshow. */}
-      <div style={{ flex: "0 0 auto" }} onClick={(e) => e.stopPropagation()}>
-        {override ? (
-          /*
+        <div style={{ flex: "0 0 auto" }} onClick={(e) => e.stopPropagation()}>
+          {override ? (
+            /*
             "Kept" stays a word rather than becoming a ✓, because it is the row's *status* and
             people read it as one — and because ✓ means "apply this change", which is not what is
             happening here. It is a segment now instead of a label, so it doubles as the way back
             out of a flag: within a review you un-flag by picking Kept again.
           */
-          <SegmentedControl
-            items={overrideItems}
-            /* "Kept" is the resting state, so it is SHOWN selected while the row carries no
+            <SegmentedControl
+              items={overrideItems}
+              /* "Kept" is the resting state, so it is SHOWN selected while the row carries no
                decision at all — and picking it clears back to none rather than writing `confirm`.
                Recording a decision here would put a ✓ badge on the map for a feature that was
                never in question; five overrides would all sprout marks meaning "still kept". */
-            value={change.decision === "flag" ? "flag" : "confirm"}
-            onValueChange={(v) => onDecide(v === "flag" ? "flag" : undefined)}
-          />
-        ) : (
-          <SegmentedControl
-            items={items}
-            value={change.decision}
-            onValueChange={(v) => onDecide(v as Decision)}
-          />
-        )}
-      </div>
+              value={change.decision === "flag" ? "flag" : "confirm"}
+              onValueChange={(v) => onDecide(v === "flag" ? "flag" : undefined)}
+            />
+          ) : (
+            <SegmentedControl
+              items={items}
+              value={change.decision}
+              onValueChange={(v) => onDecide(v as Decision)}
+            />
+          )}
+        </div>
       </div>
 
       {/*
@@ -339,9 +394,23 @@ export function ChangeReviewRow({
       {change.details?.length ? (
         <div style={{ width: "100%" }}>
           {expanded && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 3, paddingBottom: 8 }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 3,
+                paddingBottom: 8,
+              }}
+            >
               {change.details.map((d) => (
-                <div key={d} style={{ fontSize: 12, color: "var(--review-muted)", lineHeight: 1.45 }}>
+                <div
+                  key={d}
+                  style={{
+                    fontSize: 12,
+                    color: "var(--review-muted)",
+                    lineHeight: 1.45,
+                  }}
+                >
                   • {d}
                 </div>
               ))}
@@ -350,7 +419,10 @@ export function ChangeReviewRow({
           <button
             // stopPropagation: expanding is reading, not selecting — otherwise opening the
             // details would also fly the map to this feature.
-            onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((v) => !v);
+            }}
             aria-expanded={expanded}
             style={{
               display: "flex",
@@ -371,7 +443,9 @@ export function ChangeReviewRow({
             }}
           >
             {expanded ? "Hide details" : "Details"}
-            <span style={{ fontSize: 8, lineHeight: 1 }}>{expanded ? "▲" : "▼"}</span>
+            <span style={{ fontSize: 8, lineHeight: 1 }}>
+              {expanded ? "▲" : "▼"}
+            </span>
           </button>
         </div>
       ) : null}

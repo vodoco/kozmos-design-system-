@@ -1,3 +1,4 @@
+import { Pencil } from "./icons";
 import { useSyncExternalStore } from "react";
 import { Popover, PopoverContent, PopoverTrigger, Text } from "@kozmos/react";
 import {
@@ -25,26 +26,9 @@ import {
  * if you can go there, so the whole row is the control — it moves the map to their building and
  * level, which is the same destination their cursor is drawn in.
  */
-/** A pencil, 12px. `@kozmos/icons` has no edit glyph at this size — the same D9 gap as elsewhere. */
+/** A pencil, 12px — `edit-02` from the Pointr Icon Library (see `./icons`). */
 function EditGlyph({ colour }: { colour: string }) {
-  return (
-    <svg
-      width={12}
-      height={12}
-      viewBox="0 0 12 12"
-      aria-hidden
-      focusable="false"
-      style={{ flex: "0 0 auto" }}
-    >
-      <path
-        d="M8.2 1.6 L10.4 3.8 L4.3 9.9 L1.6 10.4 L2.1 7.7 Z"
-        fill="none"
-        stroke={colour}
-        strokeWidth="1.3"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Pencil size={12} style={{ color: colour, flex: "0 0 auto" }} />;
 }
 
 export function OnlinePeople() {

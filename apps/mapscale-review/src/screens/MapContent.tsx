@@ -1,4 +1,10 @@
 import {
+  ChevronLeft,
+  ChevronRight,
+  Ellipsis as EllipsisIcon,
+  StarFilled,
+} from "../ui/icons";
+import {
   createContext,
   useCallback,
   useContext,
@@ -698,37 +704,15 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-/** Three-dot affordance — @kozmos/icons has no ellipsis (see the DS gaps in the handoff). */
+/** `dots-horizontal` from the Pointr Icon Library (see `../ui/icons`). */
 function Ellipsis() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      aria-hidden
-      focusable="false"
-    >
-      {[4.5, 9, 13.5].map((cx) => (
-        <circle key={cx} cx={cx} cy="9" r="1.5" fill="currentColor" />
-      ))}
-    </svg>
-  );
+  return <EllipsisIcon size={18} />;
 }
 
 function Star() {
+  /* `star-01`, filled — the default level is a state, not a separate mark (see `../ui/icons`). */
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      aria-label="Default level"
-      role="img"
-    >
-      <path
-        d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.4 6.2 20.4l1.1-6.5-4.7-4.6 6.5-.95L12 2.5z"
-        fill="#3B82F6"
-      />
-    </svg>
+    <StarFilled size={14} label="Default level" style={{ color: "#3B82F6" }} />
   );
 }
 
@@ -3088,22 +3072,9 @@ export function MapContent({
               boxShadow: "0 1px 4px rgba(0,0,0,.10)",
             }}
           >
-            <svg
-              width="10"
-              height="14"
-              viewBox="0 0 10 14"
-              aria-hidden
-              focusable="false"
-            >
-              <path
-                d={listOpen ? "M7 2 L3 7 L7 12" : "M3 2 L7 7 L3 12"}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            {/* `chevron-left` / `chevron-right` from the Pointr Icon Library — the direction is
+                the state, so it is two glyphs rather than one rotated (see `../ui/icons`). */}
+            {listOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
           </button>
           {/*
           Switching away from a half-edited feature. Three ways out and none of them auto-saves:
