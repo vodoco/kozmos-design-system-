@@ -1,9 +1,17 @@
 /**
  * The map shell's geometry engines, under test — MAP-566.
  *
- * Nine of them now — SPLIT, SNAP, GUIDE, COMBINE, SQUARE, FOCUS, BOX, and the two behind the
- * GeoJSON floor render. All of them live inside `public/map/index.html` between marker comments and
- * are extracted from it rather than copied here, so what is tested is what ships.
+ * Twelve of them now — SPLIT, SNAP, GUIDE, COMBINE, SQUARE, FOCUS, BOX, EDGE, PATHS, REACH and the
+ * two behind the GeoJSON floor render. All of them live inside `public/map/index.html` between
+ * marker comments and are extracted from it rather than copied here, so what is tested is what
+ * ships.
+ *
+ * ⚠️ **Two of the checks here are not about arithmetic at all** — they are about whether the shell
+ * EVALUATES, because nothing else in this repo asks that question (trap 3: `public/map/index.html`
+ * is checked by nothing, and `node --check` cannot see a temporal dead zone). They run before the
+ * engines: a static read-before-declaration pass over the whole script body, and a probe that
+ * evaluates the extracted blocks in the browser's own file order. Both exist because the shell once
+ * shipped dead while 582 checks passed.
  *
  * `public/map/index.html` is a script tag, not a module, so there is nothing to import. Rather than
  * copy the algorithm here — where it would rot the moment somebody fixed a bug in the real one —
@@ -18,6 +26,9 @@
 import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
+// The parser only — `tsc` already ships with this app, and its parser reads plain JS. Nothing here
+// type-checks anything; it is used to find out WHERE things are declared and WHERE they are read.
+import ts from "typescript";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const src = readFileSync(join(here, "..", "public", "map", "index.html"), "utf8");
@@ -92,6 +103,101 @@ function __env() { return { TARGET, prefs, POSTED, FP_LAYERS, HIDDEN_FILTERS,
   applyPrefsCalls, addFloorplanCalls }; }
 `;
 
+/**
+ * ⚠️ **Trap 2, statically — across the WHOLE file rather than the third of it that sits between
+ * markers.**
+ *
+ * The file-order probe below evaluates the extracted blocks in the order the browser meets them,
+ * which is what caught the 2026-08-18 shell death. But it can only evaluate what it can extract:
+ * the marker blocks are **30.9% of the script body**, so a `const` read above its own declaration
+ * anywhere in the other 69% still ships. That was measured, not assumed — inserting one such read
+ * into unmarked code leaves all 582 checks passing on a shell that dies on load.
+ *
+ * So: parse the script body, note every top-level `const` / `let` / `class`, and walk the code that
+ * runs while the script is EVALUATING — top-level statements, and the bodies of functions that are
+ * immediately invoked. Function bodies that run later are skipped, because a closure reading a
+ * constant declared below it is ordinary and correct.
+ *
+ * The two guards are complementary and both are kept: this one sees the whole file but does not
+ * follow calls, and the probe follows everything but only sees the blocks.
+ */
+const scriptOpen = /<script(?![^>]*\bsrc=)[^>]*>/.exec(src);
+const scriptFrom = scriptOpen.index + scriptOpen[0].length;
+const scriptBody = src.slice(scriptFrom, src.indexOf("</script>", scriptFrom));
+const shellLineAt = (off) => src.slice(0, scriptFrom + off).split("\n").length;
+
+{
+  const sf = ts.createSourceFile("shell.js", scriptBody, ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS);
+
+  const bindingNames = (n, out) => {
+    if (ts.isIdentifier(n)) out.push(n);
+    else if (ts.isObjectBindingPattern(n) || ts.isArrayBindingPattern(n))
+      for (const el of n.elements) if (ts.isBindingElement(el)) bindingNames(el.name, out);
+    return out;
+  };
+
+  /** name → the offset at which it becomes readable, and the identifiers that ARE the binding. */
+  const declaredAt = new Map();
+  const bindings = new Set();
+  for (const st of sf.statements) {
+    if (ts.isVariableStatement(st)) {
+      const f = st.declarationList.flags;
+      // `var` hoists and initialises to undefined — no dead zone, so nothing to check.
+      if (!(f & ts.NodeFlags.Const) && !(f & ts.NodeFlags.Let)) continue;
+      for (const d of st.declarationList.declarations)
+        for (const id of bindingNames(d.name, [])) {
+          bindings.add(id);
+          if (!declaredAt.has(id.text)) declaredAt.set(id.text, st.end);
+        }
+    } else if (ts.isClassDeclaration(st) && st.name) {
+      bindings.add(st.name);
+      if (!declaredAt.has(st.name.text)) declaredAt.set(st.name.text, st.end);
+    }
+  }
+
+  const runsLater = (n) =>
+    ts.isFunctionDeclaration(n) || ts.isFunctionExpression(n) || ts.isArrowFunction(n) ||
+    ts.isMethodDeclaration(n) || ts.isGetAccessor(n) || ts.isSetAccessor(n) ||
+    ts.isConstructorDeclaration(n) || ts.isClassDeclaration(n) || ts.isClassExpression(n);
+  const unparen = (n) => { while (ts.isParenthesizedExpression(n)) n = n.expression; return n; };
+
+  const dead = [];
+  const walkNow = (node) => {
+    if (runsLater(node)) return;
+    if (ts.isIdentifier(node)) {
+      if (bindings.has(node)) return;                       // the declaration itself, not a read
+      const at = declaredAt.get(node.text);
+      if (at !== undefined && node.getStart(sf) < at)
+        dead.push({ name: node.text, off: node.getStart(sf), at });
+      return;
+    }
+    // `a.b` reads `a`; `b` is a property name, not a binding. Same for `{ b: … }` and labels.
+    if (ts.isPropertyAccessExpression(node)) return walkNow(node.expression);
+    if (ts.isPropertyAssignment(node)) return walkNow(node.initializer);
+    if (ts.isBindingElement(node)) return void (node.initializer && walkNow(node.initializer));
+    if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+      const callee = unparen(node.expression);
+      // an IIFE's body DOES run now, so it is the one function body worth descending into
+      if (ts.isFunctionExpression(callee) || ts.isArrowFunction(callee)) walkNow(callee.body);
+      else walkNow(node.expression);
+      for (const a of node.arguments || []) walkNow(a);
+      return;
+    }
+    ts.forEachChild(node, walkNow);
+  };
+  for (const st of sf.statements) walkNow(st);
+
+  if (dead.length) {
+    console.error(
+      "the map shell reads a const/let above where it is declared — the browser would die on load:");
+    for (const d of dead)
+      console.error(`  '${d.name}' is read at line ${shellLineAt(d.off)} but only becomes readable ` +
+                    `at line ${shellLineAt(d.at)} of public/map/index.html`);
+    console.error("  Move the declaration above its first top-level use IN THE FILE.");
+    process.exit(1);
+  }
+}
+
 const fileOrderProbe = join(here, "geometry.fileorder.mjs");
 writeFileSync(
   fileOrderProbe,
@@ -101,12 +207,18 @@ writeFileSync(
 try {
   await import(pathToFileURL(fileOrderProbe).href);
 } catch (e) {
+  // ⚠️ The probe is deliberately LEFT ON DISK when it fails — it is the only readable form of the
+  // browser's own evaluation order, and reading it is how you find which declaration to move.
   console.error(
     "the map shell does not evaluate in its own FILE order — the browser would die on load:\n  " +
     (e && e.message) +
-    "\n  Something declared with const/let is used above where it is declared. Move the declaration up.");
+    "\n  Something declared with const/let is used above where it is declared. Move the declaration up." +
+    "\n  The offending order is left in scratch/geometry.fileorder.mjs — read it there.");
   process.exit(1);
 }
+// It passed, so there is nothing left to read: clear it the way its sibling clears itself, or it
+// sits untracked in a working tree that `vercel deploy` ships whole (trap 6).
+unlinkSync(fileOrderProbe);
 
 const generated = join(here, "geometry.generated.mjs");
 writeFileSync(
