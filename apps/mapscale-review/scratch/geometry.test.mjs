@@ -23,7 +23,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const src = readFileSync(join(here, "..", "public", "map", "index.html"), "utf8");
 
 /** Every marker-delimited engine in the map shell, in the order they must be defined. */
-const BLOCKS = ["SPLIT-ENGINE", "SNAP-ENGINE", "GUIDE-ENGINE", "COMBINE-ENGINE", "SQUARE-ENGINE",
+const BLOCKS = ["INK",
+                "SPLIT-ENGINE", "SNAP-ENGINE", "GUIDE-ENGINE", "COMBINE-ENGINE", "SQUARE-ENGINE",
                 "FOCUS-ENGINE",
                 "BOX-ENGINE",
                 "GJRENDER-ENGINE", "GJSWAP-ENGINE",

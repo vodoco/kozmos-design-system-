@@ -766,7 +766,7 @@ function drawEditing() {
     if (!e || !e.fid) continue;
     const rings = featureRings(e.fid);
     if (!rings.length) continue;                 // not on this floor, or no tile for it yet
-    const colour = e.colour || "#0b369c";
+    const colour = e.colour || EDIT_INK;
     for (const ring of rings) {
       const d = ring.map((c, i) => { const p = map.project(c); return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ") + " Z";
       layer.appendChild(el("path", {
@@ -2188,7 +2188,7 @@ const WF_NODE_SRC = "__wf_nodes";
  * colour and means here what it means everywhere: this is what goes if you press Delete.
  */
 const WF_COLOUR = { node: "#7A8699", transition: "#2563EB", edge: "#9AA4B4", arrow: "#2563EB",
-                    hl: "#0EA5E9", sel: "#0b369c", cut: "#EF4444" };
+                    hl: "#0EA5E9", sel: EDIT_INK, cut: "#EF4444" };
 /** The SDK's own pin layer for this type: hidden while we draw the network ourselves. */
 const WF_HIDE = "symbol_wayfinding-network_ptr";
 let wfLevel = null, wfSource = null;
@@ -4206,6 +4206,10 @@ document.addEventListener("DOMContentLoaded", () => {
  */
 let GEOM = null;
 
+/* INK-START — extracted and tested by scratch/geometry.test.mjs. NOT an engine: two colour
+   constants. They live in a marked block because `WF_COLOUR` sits inside GJSWAP-ENGINE and
+   reads EDIT_INK, so the harness must see the real value rather than a restated copy in its
+   PRELUDE — a stub here would drift silently the day one of these changes. */
 /**
  * ⚠️ **The tool ink — one colour for guides, snap marks and the degree readouts**, because they
  * are one promise: *the tool is holding you to something*. Never the edit navy, which is spoken
@@ -4225,6 +4229,18 @@ let GEOM = null;
  * learned twice not to rely on. Dash pattern and stroke weight carry the distinction instead.
  */
 const TOOL_INK = "#051c4f";   // Colors/theme/1000
+
+/**
+ * **The edit ink** — the shape you are editing, its handles, the transform box, the marquee and
+ * the cut. `Colors/theme/800`. Paired with `TOOL_INK` above and deliberately a different value:
+ * the tool and the thing being worked on must never be the same colour.
+ *
+ * ⚠️ Hoisted 2026-08-18 from **21 scattered literals**. Two occurrences are deliberately left as
+ * text: the one in `<style>` (CSS cannot read a JS constant) and the one inside the WF_COLOUR
+ * note, which is prose about history rather than a value in use.
+ */
+const EDIT_INK = "#0b369c";   // Colors/theme/800
+/* INK-END */
 
 const SNAP_PX = 10;
 const HANDLE_R = 5;
@@ -6642,14 +6658,14 @@ function geomDraw() {
     for (const ring of p.rings) {
       const d = ring.map((c, i) => { const q = map.project(c); return (i ? "L" : "M") + q.x + " " + q.y; })
         .join(" ") + " Z";
-      l.appendChild(el("path", { d, fill: "#0b369c", "fill-opacity": .16, stroke: "#0b369c",
+      l.appendChild(el("path", { d, fill: EDIT_INK, "fill-opacity": .16, stroke: EDIT_INK,
                                  "stroke-width": 2, "stroke-dasharray": "6 4" }));
     }
     // A selected POINT feature has no outline to dash, and would otherwise be selected invisibly.
     if (p.point) {
       const q = map.project(p.point);
       l.appendChild(el("circle", { cx: q.x, cy: q.y, r: HANDLE_R + 5, fill: "none",
-                                   stroke: "#0b369c", "stroke-width": 2, "stroke-dasharray": "3 3" }));
+                                   stroke: EDIT_INK, "stroke-width": 2, "stroke-dasharray": "3 3" }));
     }
   }
 
@@ -6678,9 +6694,9 @@ function geomDraw() {
    */
   if (GEOM.kind === "point" && GEOM.point) {
     const p = map.project(GEOM.point);
-    l.appendChild(el("circle", { cx: p.x, cy: p.y, r: 13, fill: "#0b369c", "fill-opacity": .12 }));
+    l.appendChild(el("circle", { cx: p.x, cy: p.y, r: 13, fill: EDIT_INK, "fill-opacity": .12 }));
     const h = el("circle", { cx: p.x, cy: p.y, r: HANDLE_R + 2, fill: "#fff",
-                             stroke: "#0b369c", "stroke-width": 2.5, class: "geom-pt" });
+                             stroke: EDIT_INK, "stroke-width": 2.5, class: "geom-pt" });
     h.setAttribute("style", "pointer-events:auto;cursor:grab");
     h.addEventListener("mousedown", ev => { ev.stopPropagation(); geomDown(ev, { kind: "point" }); });
     l.appendChild(h);
@@ -6699,7 +6715,7 @@ function geomDraw() {
      * name. The cut shows as the seam between two outlines, which is the whole of what happened;
      * the toolbar says how many pieces there now are.
      */
-    const face = el("path", { d, fill: "#0b369c", "fill-opacity": .10, stroke: "#0b369c",
+    const face = el("path", { d, fill: EDIT_INK, "fill-opacity": .10, stroke: EDIT_INK,
                               "stroke-width": 2, class: "geom-face" });
     if (GEOM.mode === "transform") face.setAttribute("style", "pointer-events:auto;cursor:move");
     face.addEventListener("mousedown", ev => geomDown(ev, { kind: "move" }));
@@ -6725,7 +6741,7 @@ function geomDraw() {
         // and 12px of catchment, and shrinking the target to the ink would make a selected edge
         // harder to grab than an unselected one — backwards.
         if (on)
-          l.appendChild(el("line", { x1:a.x, y1:a.y, x2:b.x, y2:b.y, stroke:"#0b369c",
+          l.appendChild(el("line", { x1:a.x, y1:a.y, x2:b.x, y2:b.y, stroke:EDIT_INK,
                                      "stroke-width":4.5, "stroke-linecap":"round", class:"geom-edge-on" }));
         const hit = el("line", { x1:a.x, y1:a.y, x2:b.x, y2:b.y, stroke:"transparent",
                                  "stroke-width":12, "stroke-linecap":"butt", class:"geom-edge" });
@@ -6768,7 +6784,7 @@ function geomDraw() {
         const n = ring[ci + 1];
         const a = map.project(c), b = map.project(n);
         const m = el("circle", { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, r: 3.5,
-                                 fill: "#fff", stroke: "#0b369c", "stroke-width": 1.5, class: "geom-mid" });
+                                 fill: "#fff", stroke: EDIT_INK, "stroke-width": 1.5, class: "geom-mid" });
         m.setAttribute("style", "pointer-events:auto;cursor:copy");
         m.addEventListener("mousedown", ev => { ev.stopPropagation(); geomAddVertex(ri, ci); });
         l.appendChild(m);
@@ -6781,8 +6797,8 @@ function geomDraw() {
         // A selected corner is FILLED. Hollow-vs-hollow-with-a-thicker-ring is not a difference you
         // can see across twenty handles at a glance, and the whole point of a marquee is the glance.
         const h = el("circle", { cx: p.x, cy: p.y, r: on ? HANDLE_R + 1 : HANDLE_R,
-                                 fill: on ? "#0b369c" : "#fff",
-                                 stroke: "#0b369c", "stroke-width": 2, class: "geom-vx" });
+                                 fill: on ? EDIT_INK : "#fff",
+                                 stroke: EDIT_INK, "stroke-width": 2, class: "geom-vx" });
         h.setAttribute("style", "pointer-events:auto;cursor:grab");
         h.addEventListener("mousedown", ev => {
           ev.stopPropagation();
@@ -6820,15 +6836,15 @@ function geomDraw() {
        */
       l.appendChild(el("polygon", {
         points: box.corners.map(p => p[0] + "," + p[1]).join(" "),
-        fill: "none", stroke: "#0b369c", "stroke-width": 1,
+        fill: "none", stroke: EDIT_INK, "stroke-width": 1,
         "stroke-dasharray": "5 4", "stroke-opacity": .7,
       }));
       // The rotate knob, on a stem out along the top edge's own normal rather than straight up.
       l.appendChild(el("line", { x1: box.topMid[0], y1: box.topMid[1],
                                  x2: box.knob[0], y2: box.knob[1],
-                                 stroke: "#0b369c", "stroke-width": 1, "stroke-opacity": .7 }));
+                                 stroke: EDIT_INK, "stroke-width": 1, "stroke-opacity": .7 }));
       const knob = el("circle", { cx: box.knob[0], cy: box.knob[1], r: 7, fill: "#fff",
-                                  stroke: "#0b369c", "stroke-width": 2, class: "geom-rot" });
+                                  stroke: EDIT_INK, "stroke-width": 2, class: "geom-rot" });
       knob.setAttribute("style", "pointer-events:auto;cursor:grab");
       knob.addEventListener("mousedown", e => { e.stopPropagation(); geomDown(e, { kind: "rotate" }); });
       l.appendChild(knob);
@@ -6841,7 +6857,7 @@ function geomDraw() {
       const S = 9;
       box.corners.forEach(([hx, hy]) => {
         const h = el("rect", { x: hx - S / 2, y: hy - S / 2, width: S, height: S, rx: 2,
-                               fill: "#fff", stroke: "#0b369c", "stroke-width": 2,
+                               fill: "#fff", stroke: EDIT_INK, "stroke-width": 2,
                                class: "geom-scale" });
         // Measured from the centre, so the arrow agrees with the eye at any angle — see the note.
         h.setAttribute("style", "pointer-events:auto;cursor:" +
@@ -6867,7 +6883,7 @@ function geomDraw() {
         const label = GEOM.xform.text;
         const w = label.length * 7.1 + 14;
         l.appendChild(el("rect", { x: tx, y: ty - 12, width: w, height: 21, rx: 5,
-                                   fill: "#0b369c" }));
+                                   fill: EDIT_INK }));
         const t = el("text", { x: tx + 7, y: ty + 3, fill: "#fff",
                                "font-family": "'Readex Pro', system-ui, sans-serif", "font-size": 12 });
         t.textContent = label;
@@ -6992,8 +7008,8 @@ function geomDraw() {
     l.appendChild(el("rect", {
       x: Math.min(a.x, b.x), y: Math.min(a.y, b.y),
       width: Math.abs(b.x - a.x), height: Math.abs(b.y - a.y),
-      fill: "#0b369c", "fill-opacity": .08,
-      stroke: "#0b369c", "stroke-width": 1, "stroke-dasharray": "4 3",
+      fill: EDIT_INK, "fill-opacity": .08,
+      stroke: EDIT_INK, "stroke-width": 1, "stroke-dasharray": "4 3",
     }));
   }
 
@@ -7010,12 +7026,12 @@ function geomDraw() {
       const far = (window.innerWidth + window.innerHeight) * 2;
       const ux = (dx / len) * far, uy = (dy / len) * far;
       l.appendChild(el("line", { x1: a.x - ux, y1: a.y - uy, x2: a.x + ux, y2: a.y + uy,
-                                 stroke: "#0b369c", "stroke-width": 1, "stroke-dasharray": "4 4",
+                                 stroke: EDIT_INK, "stroke-width": 1, "stroke-dasharray": "4 4",
                                  "stroke-opacity": .45 }));
     }
     l.appendChild(el("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y,
-                               stroke: "#0b369c", "stroke-width": 2 }));
-    l.appendChild(el("circle", { cx: a.x, cy: a.y, r: 4, fill: "#0b369c" }));
+                               stroke: EDIT_INK, "stroke-width": 2 }));
+    l.appendChild(el("circle", { cx: a.x, cy: a.y, r: 4, fill: EDIT_INK }));
   }
 }
 
