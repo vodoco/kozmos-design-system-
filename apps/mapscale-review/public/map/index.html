@@ -175,6 +175,42 @@ function missingConfig() {
 // The values must stay in step with `Semantics/Diff` in @kozmos/tokens and CHANGE_COLORS in diff.ts.
 // (Making the map theme-aware means posting the resolved values in `prefs` — a real follow-up.)
 const COLORS = { new:"#2FBF71", updated:"#3B82F6", geometry:"#3B82F6", metadata:"#3B82F6", deleted:"#EF4444", preserved:"#9C6EFF" };
+
+/* INK-START — extracted and tested by scratch/geometry.test.mjs. NOT an engine: two colour
+   constants. They live in a marked block because `WF_COLOUR` sits inside GJSWAP-ENGINE and
+   reads EDIT_INK, so the harness must see the real value rather than a restated copy in its
+   PRELUDE — a stub here would drift silently the day one of these changes. */
+/**
+ * ⚠️ **The tool ink — one colour for guides, snap marks and the degree readouts**, because they
+ * are one promise: *the tool is holding you to something*. Never the edit navy, which is spoken
+ * for by the shape itself.
+ *
+ * **Off green as of 2026-08-18** (Olcay): in this design system green is the SUCCESS semantic and
+ * amber is ALERT, and both meanings are on screen at the same time as the editor — Map Content
+ * shows level status tags (`Auto-published` green, `Publishes in 6d` amber) in the tree while you
+ * drag a corner on the map beside it. A guide that borrows success green is saying something it
+ * does not mean.
+ *
+ * **Value: `Colors/theme/1000` (#051c4f)** — Olcay, 2026-08-18: use the tokens we already have,
+ * the theme ramp's darker end. There is no `accent` family published (checked: neither
+ * `packages/tokens` nor any Figma variable collection has one) and theme variants are not in use,
+ * so the only families left were the meaning-bearing ones. ⚠️ The cost is that the tool ink and
+ * the shape being edited (`theme/800`) now differ in SHADE, not hue — the one thing this file has
+ * learned twice not to rely on. Dash pattern and stroke weight carry the distinction instead.
+ */
+const TOOL_INK = "#051c4f";   // Colors/theme/1000
+
+/**
+ * **The edit ink** — the shape you are editing, its handles, the transform box, the marquee and
+ * the cut. `Colors/theme/800`. Paired with `TOOL_INK` above and deliberately a different value:
+ * the tool and the thing being worked on must never be the same colour.
+ *
+ * ⚠️ Hoisted 2026-08-18 from **21 scattered literals**. Two occurrences are deliberately left as
+ * text: the one in `<style>` (CSS cannot read a JS constant) and the one inside the WF_COLOUR
+ * note, which is prose about history rather than a value in use.
+ */
+const EDIT_INK = "#0b369c";   // Colors/theme/800
+/* INK-END */
 const LINE   = { new:"#1E9E4A", updated:"#1D4ED8", geometry:"#1D4ED8", metadata:"#1D4ED8", deleted:"#B91C1C", preserved:"#6D28D9" };
 // A decision (✓ / 🚩 / ✗) is state, not identity: it never recolours the feature — a flagged
 // "new" feature is still new. Badges are therefore neutral black, distinct from every type colour.
@@ -4206,42 +4242,6 @@ document.addEventListener("DOMContentLoaded", () => {
  */
 let GEOM = null;
 
-/* INK-START — extracted and tested by scratch/geometry.test.mjs. NOT an engine: two colour
-   constants. They live in a marked block because `WF_COLOUR` sits inside GJSWAP-ENGINE and
-   reads EDIT_INK, so the harness must see the real value rather than a restated copy in its
-   PRELUDE — a stub here would drift silently the day one of these changes. */
-/**
- * ⚠️ **The tool ink — one colour for guides, snap marks and the degree readouts**, because they
- * are one promise: *the tool is holding you to something*. Never the edit navy, which is spoken
- * for by the shape itself.
- *
- * **Off green as of 2026-08-18** (Olcay): in this design system green is the SUCCESS semantic and
- * amber is ALERT, and both meanings are on screen at the same time as the editor — Map Content
- * shows level status tags (`Auto-published` green, `Publishes in 6d` amber) in the tree while you
- * drag a corner on the map beside it. A guide that borrows success green is saying something it
- * does not mean.
- *
- * **Value: `Colors/theme/1000` (#051c4f)** — Olcay, 2026-08-18: use the tokens we already have,
- * the theme ramp's darker end. There is no `accent` family published (checked: neither
- * `packages/tokens` nor any Figma variable collection has one) and theme variants are not in use,
- * so the only families left were the meaning-bearing ones. ⚠️ The cost is that the tool ink and
- * the shape being edited (`theme/800`) now differ in SHADE, not hue — the one thing this file has
- * learned twice not to rely on. Dash pattern and stroke weight carry the distinction instead.
- */
-const TOOL_INK = "#051c4f";   // Colors/theme/1000
-
-/**
- * **The edit ink** — the shape you are editing, its handles, the transform box, the marquee and
- * the cut. `Colors/theme/800`. Paired with `TOOL_INK` above and deliberately a different value:
- * the tool and the thing being worked on must never be the same colour.
- *
- * ⚠️ Hoisted 2026-08-18 from **21 scattered literals**. Two occurrences are deliberately left as
- * text: the one in `<style>` (CSS cannot read a JS constant) and the one inside the WF_COLOUR
- * note, which is prose about history rather than a value in use.
- */
-const EDIT_INK = "#0b369c";   // Colors/theme/800
-/* INK-END */
-
 const SNAP_PX = 10;
 const HANDLE_R = 5;
 
@@ -7621,8 +7621,6 @@ let CAN_DECIDE = true;
 let PEERS = [];
 /** Features other people have open in the editor: [{ fid, who, colour }]. */
 let EDITING = [];
-
-
 
 
 /**
