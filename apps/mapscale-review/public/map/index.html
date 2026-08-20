@@ -6956,19 +6956,33 @@ function geomDraw() {
    * Without this a snap is indistinguishable from a slightly inaccurate drag — the shape lands
    * somewhere you did not put it and you have no way to know whether that was the tool helping or
    * the tool misbehaving. The mark differs by kind because the two are different promises: a
-   * **corner** is exact and gets a ring, an **edge** only fixes you across the wall and gets a
-   * short bar lying along it.
+   * **corner** is exact, an **edge** only fixes you across the wall.
+   *
+   * ⚠️ **These are CAD's AutoSnap glyphs, not shapes of our choosing** (Olcay, 2026-08-18). The
+   * people using this arrive from DWG/DXF floor plans, where the vocabulary is fixed and precise:
+   * a **square** is an Endpoint, a **triangle** a Midpoint, a **circle** a Center, a **diamond** a
+   * Quadrant, an **✕** an Intersection, and an **hourglass** is *Nearest* — the nearest point on a
+   * segment, which is exactly what `segClosest` computes for an edge.
+   *
+   * We previously drew a circle for the corner and a diamond for the edge, which to a CAD-literate
+   * eye said *Center* and *Quadrant* — not neutral, actively the wrong words. The centre dot on the
+   * endpoint square is ours: CAD relies on the crosshair being there to mark the exact spot and we
+   * have no crosshair, so the dot says which pixel.
    */
   if (GEOM.snapHit) {
     const h = GEOM.snapHit;
     if (h.kind === "corner") {
-      l.appendChild(el("circle", { cx: h.x, cy: h.y, r: 8, fill: "none",
-                                   stroke: TOOL_INK, "stroke-width": 2 }));
+      // Endpoint — the square.
+      l.appendChild(el("rect", { x: h.x - 7.5, y: h.y - 7.5, width: 15, height: 15,
+                                 fill: "none", stroke: TOOL_INK, "stroke-width": 2 }));
       l.appendChild(el("circle", { cx: h.x, cy: h.y, r: 2.5, fill: TOOL_INK }));
     } else {
-      l.appendChild(el("rect", { x: h.x - 9, y: h.y - 9, width: 18, height: 18,
-                                 fill: "none", stroke: TOOL_INK, "stroke-width": 2,
-                                 transform: "rotate(45 " + h.x + " " + h.y + ")" }));
+      // Nearest — the hourglass. Two triangles apex to apex: the path walks the top edge, crosses
+      // to the far bottom corner, back along the bottom, and closes on the diagonal.
+      l.appendChild(el("path", {
+        d: "M" + (h.x - 7) + " " + (h.y - 8) + " L" + (h.x + 7) + " " + (h.y - 8) +
+           " L" + (h.x - 7) + " " + (h.y + 8) + " L" + (h.x + 7) + " " + (h.y + 8) + " Z",
+        fill: "none", stroke: TOOL_INK, "stroke-width": 2, "stroke-linejoin": "round" }));
     }
   }
 
