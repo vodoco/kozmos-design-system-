@@ -1750,13 +1750,13 @@ function networkEdges(nodes) {
       if (!nb || !nb.fid) continue;
       if (!at.has(nb.fid)) { dangling++; continue; }
       if (nb.fid === n.fid) continue;                    // a node linking to itself draws nothing
-      const back = seen.get(nb.fid + " " + n.fid);
+      const back = seen.get(nb.fid + "\u0000" + n.fid);
       if (back !== undefined) {
         // The other direction is already drawn: this reference makes the same line two-way.
         edges[back].properties.oneway = false;
         continue;
       }
-      const key = n.fid + " " + nb.fid;
+      const key = n.fid + "\u0000" + nb.fid;
       if (seen.has(key)) continue;                       // the same neighbour listed twice
       seen.set(key, edges.length);
       edges.push({
