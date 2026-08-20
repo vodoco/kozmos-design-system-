@@ -68,10 +68,21 @@ function icon(libraryName: string, node: string, paths: string[]) {
 
 /* ── the geometry editor's toolbar ─────────────────────────────────────────────────────────── */
 
-export const Reshape = icon("bezier-curve-02", "1007:11210", [
-  "M10 20.26C6.91 19.52 4.48 17.09 3.74 14M20.26 14C19.52 17.09 17.09 19.52 14 20.26M14 3.74C17.09 4.48 19.52 6.91 20.26 10M3.74 10C4.48 6.91 6.91 4.48 10 3.74M3.6 14H4.4C4.96 14 5.24 14 5.45 13.89C5.64 13.8 5.8 13.64 5.89 13.45C6 13.24 6 12.96 6 12.4V11.6C6 11.04 6 10.76 5.89 10.55C5.8 10.36 5.64 10.2 5.45 10.11C5.24 10 4.96 10 4.4 10H3.6C3.04 10 2.76 10 2.55 10.11C2.36 10.2 2.2 10.36 2.11 10.55C2 10.76 2 11.04 2 11.6V12.4C2 12.96 2 13.24 2.11 13.45C2.2 13.64 2.36 13.8 2.55 13.89C2.76 14 3.04 14 3.6 14ZM19.6 14H20.4C20.96 14 21.24 14 21.45 13.89C21.64 13.8 21.8 13.64 21.89 13.45C22 13.24 22 12.96 22 12.4V11.6C22 11.04 22 10.76 21.89 10.55C21.8 10.36 21.64 10.2 21.45 10.11C21.24 10 20.96 10 20.4 10H19.6C19.04 10 18.76 10 18.55 10.11C18.36 10.2 18.2 10.36 18.11 10.55C18 10.76 18 11.04 18 11.6V12.4C18 12.96 18 13.24 18.11 13.45C18.2 13.64 18.36 13.8 18.55 13.89C18.76 14 19.04 14 19.6 14ZM11.6 6H12.4C12.96 6 13.24 6 13.45 5.89C13.64 5.8 13.8 5.64 13.89 5.45C14 5.24 14 4.96 14 4.4V3.6C14 3.04 14 2.76 13.89 2.55C13.8 2.36 13.64 2.2 13.45 2.11C13.24 2 12.96 2 12.4 2H11.6C11.04 2 10.76 2 10.55 2.11C10.36 2.2 10.2 2.36 10.11 2.55C10 2.76 10 3.04 10 3.6V4.4C10 4.96 10 5.24 10.11 5.45C10.2 5.64 10.36 5.8 10.55 5.89C10.76 6 11.04 6 11.6 6ZM11.6 22H12.4C12.96 22 13.24 22 13.45 21.89C13.64 21.8 13.8 21.64 13.89 21.45C14 21.24 14 20.96 14 20.4V19.6C14 19.04 14 18.76 13.89 18.55C13.8 18.36 13.64 18.2 13.45 18.11C13.24 18 12.96 18 12.4 18H11.6C11.04 18 10.76 18 10.55 18.11C10.36 18.2 10.2 18.36 10.11 18.55C10 18.76 10 19.04 10 19.6V20.4C10 20.96 10 21.24 10.11 21.45C10.2 21.64 10.36 21.8 10.55 21.89C10.76 22 11.04 22 11.6 22Z",
+/**
+ * Reshape — drawn into the library 2026-08-20 as `polygon-points`.
+ *
+ * ⚠️ **It replaced `bezier-curve-02` because Reshape and Transform were the SAME DEVICE**: a ring
+ * with four corner marks beside a box with four corner marks. At 22px that is one idea drawn twice
+ * — and these are the two *mutually exclusive modes*, the pair that most needs telling apart
+ * (Olcay, 2026-08-20). Two lesser faults went with it: the ring is a circle and rooms are not, and
+ * "bezier" says curves when this editor is strictly polygonal.
+ *
+ * The contrast now carries the distinction: an **irregular room with its corners marked** against
+ * Transform's **regular box with handles**.
+ */
+export const Reshape = icon("polygon-points", "2074:53", [
+  "M5 7L19 5L20 18L6 19ZM3.7 5.7H6.3V8.3H3.7ZM17.7 3.7H20.3V6.3H17.7ZM18.7 16.7H21.3V19.3H18.7ZM4.7 17.7H7.3V20.3H4.7Z",
 ]);
-
 export const Transform = icon("transform", "1007:11468", [
   "M19 7V17M5 7V17M17 5L7 5M17 19H7M4.6 7H5.4C5.96 7 6.24 7 6.45 6.89C6.64 6.8 6.8 6.64 6.89 6.45C7 6.24 7 5.96 7 5.4V4.6C7 4.04 7 3.76 6.89 3.55C6.8 3.36 6.64 3.2 6.45 3.11C6.24 3 5.96 3 5.4 3H4.6C4.04 3 3.76 3 3.55 3.11C3.36 3.2 3.2 3.36 3.11 3.55C3 3.76 3 4.04 3 4.6V5.4C3 5.96 3 6.24 3.11 6.45C3.2 6.64 3.36 6.8 3.55 6.89C3.76 7 4.04 7 4.6 7ZM4.6 21H5.4C5.96 21 6.24 21 6.45 20.89C6.64 20.8 6.8 20.64 6.89 20.45C7 20.24 7 19.96 7 19.4V18.6C7 18.04 7 17.76 6.89 17.55C6.8 17.36 6.64 17.2 6.45 17.11C6.24 17 5.96 17 5.4 17H4.6C4.04 17 3.76 17 3.55 17.11C3.36 17.2 3.2 17.36 3.11 17.55C3 17.76 3 18.04 3 18.6V19.4C3 19.96 3 20.24 3.11 20.45C3.2 20.64 3.36 20.8 3.55 20.89C3.76 21 4.04 21 4.6 21ZM18.6 7H19.4C19.96 7 20.24 7 20.45 6.89C20.64 6.8 20.8 6.64 20.89 6.45C21 6.24 21 5.96 21 5.4V4.6C21 4.04 21 3.76 20.89 3.55C20.8 3.36 20.64 3.2 20.45 3.11C20.24 3 19.96 3 19.4 3H18.6C18.04 3 17.76 3 17.55 3.11C17.36 3.2 17.2 3.36 17.11 3.55C17 3.76 17 4.04 17 4.6V5.4C17 5.96 17 6.24 17.11 6.45C17.2 6.64 17.36 6.8 17.55 6.89C17.76 7 18.04 7 18.6 7ZM18.6 21H19.4C19.96 21 20.24 21 20.45 20.89C20.64 20.8 20.8 20.64 20.89 20.45C21 20.24 21 19.96 21 19.4V18.6C21 18.04 21 17.76 20.89 17.55C20.8 17.36 20.64 17.2 20.45 17.11C20.24 17 19.96 17 19.4 17H18.6C18.04 17 17.76 17 17.55 17.11C17.36 17.2 17.2 17.36 17.11 17.55C17 17.76 17 18.04 17 18.6V19.4C17 19.96 17 20.24 17.11 20.45C17.2 20.64 17.36 20.8 17.55 20.89C17.76 21 18.04 21 18.6 21Z",
 ]);
@@ -90,8 +101,19 @@ export const Straighten = icon("straighten", "2064:45", [
   "M5 15H9V19M5 5V19H19L5 5Z",
 ]);
 
-export const Simplify = icon("pen-tool-minus", "1007:11384", [
-  "M2 5H8M19 11L17.24 17.17C17.15 17.47 17.11 17.62 17.03 17.75C16.95 17.86 16.86 17.96 16.75 18.03C16.63 18.12 16.47 18.16 16.17 18.26L4 22L7.74 9.83C7.84 9.53 7.88 9.37 7.97 9.25C8.04 9.14 8.14 9.05 8.25 8.97C8.38 8.89 8.53 8.85 8.83 8.76L15 7M4 22L10.59 15.41M21.87 7.87L18.13 4.13C17.74 3.74 17.54 3.54 17.31 3.46C17.11 3.4 16.89 3.4 16.69 3.46C16.46 3.54 16.26 3.74 15.87 4.13L15.13 4.87C14.74 5.26 14.54 5.46 14.46 5.69C14.4 5.89 14.4 6.11 14.46 6.31C14.54 6.54 14.74 6.74 15.13 7.13L18.87 10.87C19.26 11.26 19.46 11.46 19.69 11.54C19.89 11.6 20.11 11.6 20.31 11.54C20.54 11.46 20.74 11.26 21.13 10.87L21.87 10.13C22.26 9.74 22.46 9.54 22.54 9.31C22.6 9.11 22.6 8.89 22.54 8.69C22.46 8.46 22.26 8.26 21.87 7.87ZM12 12C13.1 12 14 12.9 14 14C14 15.1 13.1 16 12 16C10.9 16 10 15.1 10 14C10 12.9 10.9 12 12 12Z",
+/**
+ * Simplify — drawn into the library 2026-08-20. A corner-heavy edge above, a plain one below.
+ *
+ * ⚠️ **This took three rounds, and the failures are worth keeping.** Simplify drops corners that
+ * *already sit on the line between their neighbours*, so by definition the shape does not change:
+ * there is no before/after to draw, and the only honest subject is the POINT — which at 24px on a
+ * 2px stroke merges into the line it sits on. Rejected: `pen-tool-minus` (reads "pen"), collinear
+ * dots (a barbell), a struck corner (one big ×), a line over a line (an equals sign), a peak over
+ * its chord (**a house**), ends-only (a dumbbell), and an asymmetric bend (a paper plane).
+ * What works is showing complexity against plainness, with no apex and no symmetry.
+ */
+export const Simplify = icon("simplify", "2074:49", [
+  "M3 9H8V5H13V10H18V6H21M3 18H21",
 ]);
 
 /** Drawn into the library 2026-08-20 — there is no `magnet`, and `target-04` says "aim". */
