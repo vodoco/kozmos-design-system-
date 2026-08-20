@@ -1488,12 +1488,21 @@ function LevelRow({
    * target is a smaller thing to hit than the row it controls, and every other row in this tree
    * already answers a click somewhere along its length.
    */
+  /**
+   * ⚠️ **The request is made in the handler, not inside the `setOpen` updater** (fixed
+   * 2026-08-18). React runs updater functions *during render* — and twice under StrictMode — so
+   * calling `requestTypes` in there updated `MapContent` while `LevelRow` was still rendering.
+   * React said exactly that, every time a floor was expanded:
+   * *"Cannot update a component (MapContent) while rendering a different component (LevelRow)"*.
+   *
+   * `open` read from the closure is correct here: this is a click, so it holds the value from the
+   * render that produced the handler, which is the state the click is acting on. The updater form
+   * exists to survive rapid successive updates, which a toggle does not have.
+   */
   const toggle = useCallback(() => {
-    setOpen((o) => {
-      if (!o) requestTypes(buildingId, level.index);
-      return !o;
-    });
-  }, [buildingId, level.index, requestTypes]);
+    if (!open) requestTypes(buildingId, level.index);
+    setOpen(!open);
+  }, [open, buildingId, level.index, requestTypes]);
   // The map moving to this level opens it too — same rule, arrived at from the other direction.
   useEffect(() => {
     if (current) setOpen(true);
