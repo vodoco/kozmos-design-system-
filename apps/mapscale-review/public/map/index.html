@@ -4206,6 +4206,25 @@ document.addEventListener("DOMContentLoaded", () => {
  */
 let GEOM = null;
 
+/**
+ * ⚠️ **The tool ink — one colour for guides, snap marks and the degree readouts**, because they
+ * are one promise: *the tool is holding you to something*. Never the edit navy, which is spoken
+ * for by the shape itself.
+ *
+ * **Off green as of 2026-08-18** (Olcay): in this design system green is the SUCCESS semantic and
+ * amber is ALERT, and both meanings are on screen at the same time as the editor — Map Content
+ * shows level status tags (`Auto-published` green, `Publishes in 6d` amber) in the tree while you
+ * drag a corner on the map beside it. A guide that borrows success green is saying something it
+ * does not mean.
+ *
+ * ⚠️ **Interim value.** The right home is an `accent` ramp, which the design system does not
+ * publish yet (checked: neither `packages/tokens` nor any Figma variable collection has one). This
+ * is `emotional/info/700` — the only published non-neutral family that is not already spoken for,
+ * and it reads as "the tool is informing you". One constant here, one variable (`tool/guide`) in
+ * the Figma file: when accent lands, both are a single edit.
+ */
+const TOOL_INK = "#2379a4";
+
 const SNAP_PX = 10;
 const HANDLE_R = 5;
 
@@ -6869,7 +6888,7 @@ function geomDraw() {
         const ux = Math.cos(a) * far, uy = Math.sin(a) * far;
         l.appendChild(el("line", { x1: g.from[0] - ux, y1: g.from[1] - uy,
                                    x2: g.from[0] + ux, y2: g.from[1] + uy,
-                                   stroke: "#00875a", "stroke-width": 1,
+                                   stroke: TOOL_INK, "stroke-width": 1,
                                    "stroke-dasharray": "6 5", "stroke-opacity": .8 }));
         /**
          * The angle **to the wall it is measured from**, not to the screen — so `0°` reads "carries
@@ -6892,11 +6911,11 @@ function geomDraw() {
           const p2 = [g.from[0] + Math.cos(a2) * R, g.from[1] + Math.sin(a2) * R];
           l.appendChild(el("path", {
             d: `M${p1[0]} ${p1[1]} L${p1[0] + p2[0] - g.from[0]} ${p1[1] + p2[1] - g.from[1]} L${p2[0]} ${p2[1]}`,
-            fill: "none", stroke: "#00875a", "stroke-width": 2,
+            fill: "none", stroke: TOOL_INK, "stroke-width": 2,
           }));
         }
         l.appendChild(el("rect", { x: g.from[0] + 10, y: g.from[1] - 22, width: label.length * 7.5 + 12,
-                                   height: 19, rx: 5, fill: "#00875a" }));
+                                   height: 19, rx: 5, fill: TOOL_INK }));
         const t = el("text", { x: g.from[0] + 16, y: g.from[1] - 8, fill: "#fff",
                                "font-family": "'Readex Pro', system-ui, sans-serif", "font-size": 11.5 });
         t.textContent = label;
@@ -6915,7 +6934,7 @@ function geomDraw() {
         const to = GEOM.guideAt;
         if (to) {
           l.appendChild(el("line", { x1: g.ref[0], y1: g.ref[1], x2: to[0], y2: to[1],
-                                     stroke: "#00875a", "stroke-width": 1.5,
+                                     stroke: TOOL_INK, "stroke-width": 1.5,
                                      "stroke-dasharray": "3 4", "stroke-opacity": .95 }));
         }
         l.appendChild(el("line", {
@@ -6923,9 +6942,9 @@ function geomDraw() {
           y1: g.axis === "x" ? g.ref[1] - far : g.ref[1],
           x2: g.axis === "x" ? g.ref[0] : g.ref[0] + far,
           y2: g.axis === "x" ? g.ref[1] + far : g.ref[1],
-          stroke: "#00875a", "stroke-width": 1, "stroke-dasharray": "3 4", "stroke-opacity": .55 }));
+          stroke: TOOL_INK, "stroke-width": 1, "stroke-dasharray": "3 4", "stroke-opacity": .55 }));
         l.appendChild(el("rect", { x: g.ref[0] - 3.5, y: g.ref[1] - 3.5, width: 7, height: 7,
-                                   fill: "#00875a" }));
+                                   fill: TOOL_INK }));
       }
     }
   }
@@ -6943,11 +6962,11 @@ function geomDraw() {
     const h = GEOM.snapHit;
     if (h.kind === "corner") {
       l.appendChild(el("circle", { cx: h.x, cy: h.y, r: 8, fill: "none",
-                                   stroke: "#00875a", "stroke-width": 2 }));
-      l.appendChild(el("circle", { cx: h.x, cy: h.y, r: 2.5, fill: "#00875a" }));
+                                   stroke: TOOL_INK, "stroke-width": 2 }));
+      l.appendChild(el("circle", { cx: h.x, cy: h.y, r: 2.5, fill: TOOL_INK }));
     } else {
       l.appendChild(el("rect", { x: h.x - 9, y: h.y - 9, width: 18, height: 18,
-                                 fill: "none", stroke: "#00875a", "stroke-width": 2,
+                                 fill: "none", stroke: TOOL_INK, "stroke-width": 2,
                                  transform: "rotate(45 " + h.x + " " + h.y + ")" }));
     }
   }
