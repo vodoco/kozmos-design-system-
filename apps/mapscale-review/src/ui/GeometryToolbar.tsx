@@ -487,10 +487,22 @@ export function GeometryToolbar({
   const isPoint = state.kind === "point";
   /**
    * A **network** is being edited — every node of it is a handle (Olcay, 2026-08-16: *"I should be
-   * able to edit the whole network"*). It has no ring, so it drops the same tools a point does:
-   * there is nothing to straighten, simplify, split or combine about a graph.
+   * able to edit the whole network"*). It has **no ring**, so every tool that needs one goes —
+   * there is nothing to straighten, simplify, split or combine about a graph. What it keeps that a
+   * point does not is **Reshape**, because dragging the nodes is the whole of network editing.
    */
   const isNetwork = state.kind === "network";
+  /**
+   * The tools that need a **ring** — Split, Straighten, Simplify, and Transform's scale and rotate
+   * handles. Neither a point nor a network has one, so neither gets them (Olcay, 2026-08-20).
+   *
+   * ⚠️ Until today this was spelled `!isPoint`, so a network showed all six while the comment above
+   * claimed it showed none of them. The map shell was never in danger — `geomSquare` and
+   * `geomSimplify` both refuse anything that is not an `area`, and a network's `rings` is `[]` — so
+   * what shipped was six controls that quietly did nothing, which is the more expensive kind of
+   * wrong: a tile that refuses in silence teaches you that you did it incorrectly.
+   */
+  const ringTools = !isPoint && !isNetwork;
   const nodes = state.nodes ?? 0;
   /** The pointer is on one of the network's edges, so Delete would unlink it. */
   const onEdge = !!state.onEdge;
@@ -701,7 +713,9 @@ export function GeometryToolbar({
       >
         {/**
          * **Mode** — the alternatives. A point has none: there is one coordinate and you drag it,
-         * so the whole group goes.
+         * so the whole group goes. A **network** has exactly one — Reshape, which is what editing a
+         * graph IS — so the group stays and Transform leaves it, and the pressed tile goes on
+         * saying which mode you are in rather than offering a choice that is not there.
          *
          * ⚠️ **The grey track under these two is gone** (Olcay, 2026-08-16: *"I don't like the box
          * in a box. Remove the grey box highlights."*). It was there to say "these are mutually
@@ -735,13 +749,15 @@ export function GeometryToolbar({
              * whole shape — it has done since the handles replaced the stepped buttons — so "Move"
              * had become the name of just one of the three things it does.
              */}
-            <Tile
-              icon={<Move />}
-              label="Transform"
-              title="Drag to move · corners scale · the knob rotates · Shift or ⌥ snaps to 5° and 5%"
-              on={state.mode === "transform"}
-              onClick={() => onCommand({ cmd: "mode", mode: "transform" })}
-            />
+            {ringTools && (
+              <Tile
+                icon={<Move />}
+                label="Transform"
+                title="Drag to move · corners scale · the knob rotates · Shift or ⌥ snaps to 5° and 5%"
+                on={state.mode === "transform"}
+                onClick={() => onCommand({ cmd: "mode", mode: "transform" })}
+              />
+            )}
           </Group>
         )}
 
@@ -756,7 +772,7 @@ export function GeometryToolbar({
          * many shapes exist, where the pair on the other side of the separator is about how you are
          * editing one. That distinction is what the separator carries.
          */}
-        {!isPoint && (
+        {ringTools && (
           <Group>
             <Tile
               icon={<Split />}
@@ -787,12 +803,16 @@ export function GeometryToolbar({
           </Group>
         )}
 
-        {!isPoint && <Sep />}
+        {/* ⚠️ Gated on `ringTools`, not `!isPoint`, because the group ABOVE it is too: leave it on
+            `!isPoint` and a network draws this separator immediately after the one before it, with
+            nothing in between for either of them to divide. */}
+        {ringTools && <Sep />}
 
         <Group>
-          {/* Straighten needs corners to drop; a point has none. Snap survives, because a point
-              being dragged onto the corner of a room is exactly when you want it. */}
-          {!isPoint && (
+          {/* Straighten and Simplify need corners to drop; neither a point nor a network has any.
+              Snap survives both, because a node or a point dragged onto the corner of a room is
+              exactly when you want it. */}
+          {ringTools && (
             <Tile
               icon={<Straighten />}
               label="Straighten"
@@ -800,7 +820,7 @@ export function GeometryToolbar({
               onClick={() => onCommand({ cmd: "square" })}
             />
           )}
-          {!isPoint && (
+          {ringTools && (
             <Tile
               icon={<Simplify />}
               label="Simplify"

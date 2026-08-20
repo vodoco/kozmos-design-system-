@@ -219,6 +219,35 @@ const CASES: { title: string; state: GeomState; notice?: string }[] = [
       "A POINT feature — no outline, so Reshape / Transform / Split / Combine / Straighten all go",
     state: { ...BASE, kind: "point" },
   },
+  /**
+   * The network cases. They are here because the ruling of 2026-08-20 is otherwise invisible from
+   * a terminal: the toolbar had been showing all six ring tools on a graph, and the only way to see
+   * that it no longer does — and that the separators do not double up where the Divide group used
+   * to be — is to look at it.
+   */
+  {
+    title:
+      "A NETWORK — no ring, so Transform / Split / Combine / Straighten / Simplify go. Reshape stays: dragging the nodes IS network editing",
+    state: { ...BASE, kind: "network", nodes: 926 },
+  },
+  {
+    title:
+      "A network, pointer resting on one of its edges — Delete would unlink those two nodes",
+    state: { ...BASE, kind: "network", nodes: 926, onEdge: true },
+  },
+  {
+    title:
+      "Two of a network's edges selected — dragging moves both ends of each",
+    state: {
+      ...BASE,
+      kind: "network",
+      nodes: 926,
+      selected: 4,
+      selectedEdges: 2,
+      canUndo: true,
+      dirty: true,
+    },
+  },
 ];
 
 /**
