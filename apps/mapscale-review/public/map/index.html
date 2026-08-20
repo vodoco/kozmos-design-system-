@@ -4217,13 +4217,14 @@ let GEOM = null;
  * drag a corner on the map beside it. A guide that borrows success green is saying something it
  * does not mean.
  *
- * ⚠️ **Interim value.** The right home is an `accent` ramp, which the design system does not
- * publish yet (checked: neither `packages/tokens` nor any Figma variable collection has one). This
- * is `emotional/info/700` — the only published non-neutral family that is not already spoken for,
- * and it reads as "the tool is informing you". One constant here, one variable (`tool/guide`) in
- * the Figma file: when accent lands, both are a single edit.
+ * **Value: `Colors/theme/1000` (#051c4f)** — Olcay, 2026-08-18: use the tokens we already have,
+ * the theme ramp's darker end. There is no `accent` family published (checked: neither
+ * `packages/tokens` nor any Figma variable collection has one) and theme variants are not in use,
+ * so the only families left were the meaning-bearing ones. ⚠️ The cost is that the tool ink and
+ * the shape being edited (`theme/800`) now differ in SHADE, not hue — the one thing this file has
+ * learned twice not to rely on. Dash pattern and stroke weight carry the distinction instead.
  */
-const TOOL_INK = "#2379a4";
+const TOOL_INK = "#051c4f";   // Colors/theme/1000
 
 const SNAP_PX = 10;
 const HANDLE_R = 5;
