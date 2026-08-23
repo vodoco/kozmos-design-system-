@@ -658,13 +658,23 @@ export function GeometryToolbar({
          */}
         {ringTools && (
           <Group>
-            <Tile
-              icon={<Split size={ICON_PX} />}
-              label="Split"
-              title="Click twice on the map to cut the shape in two · Escape to cancel"
-              on={state.mode === "split"}
-              onClick={() => onCommand({ cmd: "split" })}
-            />
+            {/**
+             * ⚠️ **Split goes while several features are selected** (US5-4-3). A cut is defined by
+             * two clicks on ONE outline; against a selection it has no defined subject, and
+             * splitting several shapes at once is a much larger claim than this makes.
+             *
+             * Combine is the opposite and stays: it is the one tool that REQUIRES more than one.
+             * So the pair swaps roles as the selection grows, which is why they share a group.
+             */}
+            {picked === 0 && (
+              <Tile
+                icon={<Split size={ICON_PX} />}
+                label="Split"
+                title="Click twice on the map to cut the shape in two · Escape to cancel"
+                on={state.mode === "split"}
+                onClick={() => onCommand({ cmd: "split" })}
+              />
+            )}
             {/**
              * **Combine** (Olcay, 2026-08-16: *"user selects two or more features to combine, edge
              * case is we should fill the small gaps like walls and remove the combined walls from

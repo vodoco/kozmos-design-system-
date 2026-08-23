@@ -220,6 +220,15 @@ const CASES: { title: string; state: GeomState; notice?: string }[] = [
     state: { ...BASE, kind: "point" },
   },
   /**
+   * US5-4-3: Split leaves while several features are selected. Combine does the opposite — it is
+   * the one tool that requires more than one — so the pair swaps roles as the selection grows.
+   */
+  {
+    title:
+      "Several selected — Split is GONE (a cut has no defined subject across a selection) and Combine is live",
+    state: { ...BASE, picked: 2, combinable: true },
+  },
+  /**
    * The network cases. They are here because the ruling of 2026-08-20 is otherwise invisible from
    * a terminal: the toolbar had been showing all six ring tools on a graph, and the only way to see
    * that it no longer does — and that the separators do not double up where the Divide group used
