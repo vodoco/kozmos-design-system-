@@ -2438,6 +2438,50 @@ export function MapContent({
   );
 
   /**
+   * **Undo / Redo on the keyboard — the parent's half** (Olcay, 2026-08-23).
+   *
+   * ⚠️ **The map shell carries the same binding, and that is deliberate.** The map is an iframe, so
+   * it only receives a keystroke while focus is inside it. The moment anyone touches the properties
+   * panel, focus is in THIS document instead and the shell never hears the key. Both halves are
+   * needed for the shortcut to work from everywhere a user actually is; neither is redundant.
+   *
+   * ⚠️ **It must not fire while somebody is typing.** `Cmd+Z` in the Name field has to undo the
+   * TEXT, not the geometry — quietly reshaping a room because a user corrected a typo would be the
+   * worst kind of surprise. So a text target hands the event straight back to the browser.
+   *
+   * It also stands down while the unsaved-changes overlay is up: changing the shape behind a modal
+   * that is asking about that very shape is not something to offer.
+   *
+   * `preventDefault` only where the shortcut is genuinely handled, so the browser's own undo is
+   * left alone everywhere else.
+   */
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (!(ev.metaKey || ev.ctrlKey)) return;
+      const k = ev.key.toLowerCase();
+      if (k !== "z" && k !== "y") return;
+      if (!geom.editing || pendingPick) return;
+
+      const t = ev.target as HTMLElement | null;
+      const tag = t?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        t?.isContentEditable
+      )
+        return;
+
+      const redo = k === "y" || ev.shiftKey;
+      if (redo ? !geom.canRedo : !geom.canUndo) return;
+      ev.preventDefault();
+      sendGeom({ cmd: redo ? "redo" : "undo" });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [geom.editing, geom.canUndo, geom.canRedo, pendingPick, sendGeom]);
+
+  /**
    * The editor refusing a cut, in its own words. Shown on the toolbar rather than logged, because
    * the message is an instruction — "move it a little and try again" is useless in a console.
    */

@@ -163,6 +163,29 @@ export type GeomCommand =
  */
 const ICON_PX = 22;
 
+/**
+ * How to spell the accelerator for the machine this is running on. ⌘ on a Mac, Ctrl elsewhere —
+ * showing a user the wrong key is worse than showing none, because they try it once and stop
+ * believing the tooltips.
+ *
+ * Read once at module scope: it cannot change while the page is open, and the toolbar re-renders
+ * on every drag.
+ */
+const ACCEL = (() => {
+  if (typeof navigator === "undefined") return "Ctrl+";
+  /**
+   * ⚠️ `navigator.platform` is deprecated and can come back empty, which would tell a Mac user to
+   * press Ctrl — the one outcome worse than saying nothing, because they try it once and stop
+   * trusting the tooltips. So the user-agent string is checked as well, and Mac only wins if one of
+   * the two actually says so.
+   */
+  const nav = navigator as Navigator & {
+    userAgentData?: { platform?: string };
+  };
+  const hint = `${nav.userAgentData?.platform ?? ""} ${nav.platform ?? ""} ${nav.userAgent ?? ""}`;
+  return /Mac|iPhone|iPad|iPod/.test(hint) ? "\u2318" : "Ctrl+";
+})();
+
 const BAR_INK = "var(--review-ink)";
 const BAR_MUTED = "var(--primitives-colors-background-600)";
 const BAR_LINE = "var(--primitives-colors-background-900)";
@@ -741,14 +764,14 @@ export function GeometryToolbar({
           <Tile
             icon={<Undo size={ICON_PX} />}
             label="Undo"
-            title="Undo"
+            title={`Undo · ${ACCEL}Z`}
             disabled={!state.canUndo}
             onClick={() => onCommand({ cmd: "undo" })}
           />
           <Tile
             icon={<Redo size={ICON_PX} />}
             label="Redo"
-            title="Redo"
+            title={`Redo · ${ACCEL}\u21e7Z or ${ACCEL}Y`}
             disabled={!state.canRedo}
             onClick={() => onCommand({ cmd: "redo" })}
           />

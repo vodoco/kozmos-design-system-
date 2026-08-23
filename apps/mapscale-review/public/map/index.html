@@ -4035,6 +4035,28 @@ function start() {
   // dismissing, it dies when you look away.
   document.addEventListener("keydown", ev => {
     /**
+     * **Undo and Redo on the keyboard** (Olcay, 2026-08-23). The item is called *faster editing*,
+     * there is a whole specification for undo/redo, and both buttons sit in the bar — and until
+     * today the only way to reach either was the mouse.
+     *
+     * ⚠️ **This binding has to exist TWICE, and that is not duplication.** The map is an IFRAME, so
+     * a keystroke only arrives here while focus is inside it. With focus in the properties panel —
+     * which is where it is the moment anyone edits a name — the parent gets the event instead, and
+     * `MapContent` carries the other half. Bind one and the shortcut works from about half the
+     * places a user actually is.
+     *
+     * `Cmd` on a Mac, `Ctrl` everywhere else. `Cmd+Shift+Z` and `Ctrl+Y` are both Redo because both
+     * are people's muscle memory, and neither costs anything to accept.
+     */
+    const accel = ev.metaKey || ev.ctrlKey;
+    const k = ev.key.toLowerCase();
+    if (accel && GEOM && (k === "z" || k === "y")) {
+      const redo = k === "y" || ev.shiftKey;
+      ev.preventDefault();
+      if (redo) geomRedo(); else geomUndo();
+      return;
+    }
+    /**
      * **Delete removes the selected corners** (Olcay, 2026-08-15). Safe to bind bare, because this
      * document is the map and has no text input in it — the properties panel lives in the parent,
      * so typing a name there never reaches this listener.
