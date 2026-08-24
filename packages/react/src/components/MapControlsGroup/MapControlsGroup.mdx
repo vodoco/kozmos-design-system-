@@ -1,0 +1,130 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as MapControlsGroupStories from './MapControlsGroup.stories';
+
+<Meta of={MapControlsGroupStories} />
+
+# MapControlsGroup
+
+The stacked zoom, compass, and locate affordances that sit over a map.
+
+## Usage
+
+Use it as the standard control cluster on any map surface:
+
+- Inside the `AdaptiveMapShell` controls slot
+- Over a `MapView` in a custom layout
+
+Each handler is optional, and omitting one removes its button. A map with fixed
+zoom simply does not pass `onZoomIn` / `onZoomOut`, rather than rendering
+disabled controls.
+
+`compassBearing` rotates the compass glyph. Pass the renderer's current bearing;
+the component does not track it.
+
+`locationState` is a `UserLocationState` — `off`, `locating`, `following`,
+`heading`, `permission-denied`, `stale`, or `unavailable`. Several of these are
+not errors and should not read as failures: `locating` is in progress, and
+`stale` still has a usable last-known fix.
+
+Pair `locationState` with a localized `locationStateLabel`. The visual treatment
+alone does not tell a screen reader user whether location is following, denied,
+or merely stale.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { MapControlsGroup } from '@kozmos/react';
+
+<MapControlsGroup
+  label="Map controls"
+  onZoomIn={zoomIn}
+  onZoomOut={zoomOut}
+  onCompassReset={resetBearing}
+  onMyLocation={recenter}
+  compassBearing={bearing}
+  locationState={locationState}
+  locationLabel="My location"
+  locationStateLabel="Following your location"
+/>
+
+// Zoom only — omitted handlers drop their buttons
+<MapControlsGroup onZoomIn={zoomIn} onZoomOut={zoomOut} />
+  `}
+  vue={`
+<script setup>
+import { KozmosMapControlsGroup } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosMapControlsGroup
+    label="Map controls"
+    :compassBearing="bearing"
+    locationLabel="My location"
+    @zoomIn="zoomIn"
+    @zoomOut="zoomOut"
+    @myLocation="recenter"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct MapControls: View {
+    let bearing: Double
+
+    var body: some View {
+        KozmosMapControlsGroup(
+            compassBearing: bearing,
+            onZoomIn: { zoomIn() },
+            onZoomOut: { zoomOut() },
+            onCompassReset: { resetBearing() },
+            onMyLocation: { recenter() },
+            locationPresentation: .iconOnly,
+            locationLabel: "My location"
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.Composable
+import com.kozmos.components.mapcontrolsgroup.KozmosMapControlsGroup
+
+@Composable
+fun MapControls(bearing: Float) {
+    KozmosMapControlsGroup(
+        compassBearing = bearing,
+        onZoomIn = { zoomIn() },
+        onZoomOut = { zoomOut() },
+        onCompassReset = { resetBearing() },
+        onMyLocation = { recenter() },
+        locationLabel = "My location"
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- Every control keeps a 44px target, including in the icon-only presentation,
+  so the group satisfies the shared touch-target contract.
+- `label` names the cluster so it is announced as one group of controls rather
+  than a run of unlabelled buttons.
+- `locationState` must be conveyed through `locationStateLabel`, not by the icon
+  treatment alone.
+- The compass glyph does not auto-mirror in RTL; a bearing is physical.
+
+## Stories
+
+### Default
+<Canvas of={MapControlsGroupStories.Default} />
+
+### Zoom Only
+<Canvas of={MapControlsGroupStories.ZoomOnly} />

@@ -89,10 +89,12 @@ struct FloorList: View {
 package com.kozmos.example
 
 import androidx.compose.runtime.*
+import androidx.compose.ui.unit.dp
 import com.kozmos.components.listbox.KozmosListbox
+import com.kozmos.components.listbox.KozmosListboxOption
 
 @Composable
-fun FloorList(options: List<KozmosComboboxOption>) {
+fun FloorList(options: List<KozmosListboxOption>) {
     var selected by remember { mutableStateOf(listOf("l1")) }
 
     KozmosListbox(

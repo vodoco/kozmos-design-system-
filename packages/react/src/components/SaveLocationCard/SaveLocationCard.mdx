@@ -1,0 +1,115 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as SaveLocationCardStories from './SaveLocationCard.stories';
+
+<Meta of={SaveLocationCardStories} />
+
+# SaveLocationCard
+
+A prompt offering to keep a place in the user's saved locations, with routing
+and note shortcuts.
+
+## Usage
+
+Use it where a place is worth returning to:
+
+- After a search lands on a venue
+- In a POI detail sheet, below the primary content
+- Following arrival, when the user may want to save where they parked
+
+Do not use it for generic confirmations. `Card` and `Alert` cover those; this
+component is specifically about the saved-places relationship.
+
+`isSaved` is controlled. The component does not track its own saved state, so
+the toggle reflects whatever your store says — which is what keeps it correct
+after a sync from another device.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { SaveLocationCard } from '@kozmos/react';
+
+<SaveLocationCard
+  title="Save this location"
+  description="Keep it in your saved places for quick routing later."
+  isSaved={isSaved}
+  onSaveToggle={toggleSaved}
+  onRouteToLocation={route}
+  onEditNote={editNote}
+/>
+  `}
+  vue={`
+<script setup>
+import { KozmosSaveLocationCard } from "@kozmos/vue"
+import { ref } from "vue"
+
+const isSaved = ref(false)
+</script>
+
+<template>
+  <KozmosSaveLocationCard
+    title="Save this location"
+    :isSaved="isSaved"
+    @saveToggle="isSaved = !isSaved"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct PlaceActions: View {
+    @State private var isSaved = false
+
+    var body: some View {
+        KozmosSaveLocationCard(
+            title: "Save this location",
+            description: "Keep it in your saved places for quick routing later.",
+            isSaved: isSaved,
+            onSaveToggle: { isSaved.toggle() },
+            onRouteToLocation: { route() },
+            onEditNote: { editNote() }
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.*
+import com.kozmos.components.savelocationcard.KozmosSaveLocationCard
+
+@Composable
+fun PlaceActions() {
+    var isSaved by remember { mutableStateOf(false) }
+
+    KozmosSaveLocationCard(
+        title = "Save this location",
+        isSaved = isSaved,
+        onSaveToggle = { isSaved = !isSaved },
+        onRouteToLocation = { route() },
+        onEditNote = { editNote() }
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- Saved changes the glyph and the label, not just the tint, so the state is
+  never carried by colour alone.
+- The toggle exposes its pressed state to assistive technology rather than
+  relying on the label change alone.
+- All three actions keep a 44px target.
+
+## Stories
+
+### Unsaved
+<Canvas of={SaveLocationCardStories.Unsaved} />
+
+### Saved
+<Canvas of={SaveLocationCardStories.Saved} />

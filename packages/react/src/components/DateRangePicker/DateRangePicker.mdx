@@ -18,9 +18,10 @@ Use it wherever a span matters rather than a single day:
 For one date use `DatePicker`. `DateRangePicker` is exported from the same
 module and shares its validation and formatting behaviour.
 
-Values are ISO `YYYY-MM-DD` strings, not `Date` objects, so they survive
-serialization and carry no timezone of their own. Convert at the edges of your
-app, not in the field.
+On the web, values are ISO `YYYY-MM-DD` strings rather than `Date` objects, so
+they survive serialization and carry no timezone of their own. Native uses each
+platform's own date type — `Date` on SwiftUI, `LocalDate` on Compose — so
+convert at the edges of your app rather than in the field.
 
 `onRangeChange` fires when either end changes, including while the range is
 incomplete — expect a value with one end still empty and do not treat that as
@@ -76,8 +77,8 @@ import SwiftUI
 import Kozmos
 
 struct ReportFilters: View {
-    @State private var start = ""
-    @State private var end = ""
+    @State private var start = Date()
+    @State private var end = Date()
 
     var body: some View {
         KozmosDateRangePicker(
@@ -96,10 +97,11 @@ package com.kozmos.example
 
 import androidx.compose.runtime.*
 import com.kozmos.components.daterangepicker.KozmosDateRangePicker
+import com.kozmos.components.daterangepicker.KozmosDateRangeValue
 
 @Composable
 fun ReportFilters() {
-    var range by remember { mutableStateOf(KozmosDateRange("", "")) }
+    var range by remember { mutableStateOf(KozmosDateRangeValue()) }
 
     KozmosDateRangePicker(
         value = range,

@@ -1,0 +1,112 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as ScrollAreaStories from './ScrollArea.stories';
+
+<Meta of={ScrollAreaStories} />
+
+# ScrollArea
+
+A scrollable region with consistent scrollbar treatment across platforms.
+
+## Usage
+
+Use it where content must scroll inside a bounded box rather than moving the
+page:
+
+- A quick-access row of categories beside a map
+- A long option list inside a panel
+- Any pane with its own independent scroll
+
+Give it a bounded size. A `ScrollArea` with no height constraint grows to fit
+its content and never scrolls, which looks like the component is broken.
+
+`hideScrollbar` hides the bar but keeps the region scrollable. Reach for it only
+where another affordance makes scrolling obvious — a peeking next item, for
+instance — since a hidden scrollbar removes the main cue that there is more.
+
+`snap` is web-only. Native needs a different container entirely, not a flag:
+Compose requires a Lazy list with `rememberSnapFlingBehavior`, and SwiftUI
+paging is iOS 17+ while the package targets iOS 16. This is recorded as
+intentional in the variant analyzer rather than treated as a parity gap.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { ScrollArea } from '@kozmos/react';
+
+<ScrollArea orientation="horizontal" style={{ maxWidth: 480 }}>
+  <div style={{ display: 'flex', gap: 8 }}>{categories}</div>
+</ScrollArea>
+
+// Vertical pane with snapping (web only)
+<ScrollArea orientation="vertical" snap="y" style={{ height: 320 }}>
+  {items}
+</ScrollArea>
+  `}
+  vue={`
+<script setup>
+import { KozmosScrollArea } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosScrollArea orientation="horizontal" :style="{ maxWidth: '480px' }">
+    <div style="display: flex; gap: 8px">
+      <slot />
+    </div>
+  </KozmosScrollArea>
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct QuickAccess: View {
+    var body: some View {
+        KozmosScrollArea(
+            orientation: .horizontal,
+            showsIndicators: false,
+            maxWidth: 480
+        ) {
+            HStack(spacing: 8) { categories }
+        }
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.Composable
+import com.kozmos.components.scrollarea.KozmosScrollArea
+import com.kozmos.components.scrollarea.KozmosScrollAreaOrientation
+
+@Composable
+fun QuickAccess() {
+    KozmosScrollArea(
+        orientation = KozmosScrollAreaOrientation.Horizontal
+    ) {
+        Categories()
+    }
+}
+  `}
+/>
+
+## Accessibility
+
+- The region is keyboard scrollable, so it does not depend on a pointer or a
+  visible scrollbar.
+- `hideScrollbar` removes the visual cue but not the behaviour; pair it with
+  another affordance so the content does not appear to end at the fold.
+- Do not nest scroll areas on the same axis — the inner one traps the wheel and
+  keyboard, which is disorienting.
+
+## Stories
+
+### Horizontal Quick Access
+<Canvas of={ScrollAreaStories.HorizontalQuickAccess} />
+
+### Vertical Content
+<Canvas of={ScrollAreaStories.VerticalContent} />

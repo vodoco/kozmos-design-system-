@@ -103,9 +103,10 @@ package com.kozmos.example
 
 import androidx.compose.runtime.*
 import com.kozmos.components.combobox.KozmosCombobox
+import com.kozmos.components.listbox.KozmosListboxOption
 
 @Composable
-fun VenuePicker(options: List<KozmosComboboxOption>) {
+fun VenuePicker(options: List<KozmosListboxOption>) {
     var venue by remember { mutableStateOf("") }
     var query by remember { mutableStateOf("") }
 

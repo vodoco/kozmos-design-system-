@@ -94,9 +94,10 @@ package com.kozmos.example
 
 import androidx.compose.runtime.*
 import com.kozmos.components.multiselect.KozmosMultiSelect
+import com.kozmos.components.listbox.KozmosListboxOption
 
 @Composable
-fun FilterScreen(options: List<KozmosComboboxOption>) {
+fun FilterScreen(options: List<KozmosListboxOption>) {
     var selected by remember { mutableStateOf(listOf<String>()) }
     var query by remember { mutableStateOf("") }
 
