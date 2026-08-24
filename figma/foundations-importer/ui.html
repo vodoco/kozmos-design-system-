@@ -1148,12 +1148,34 @@
                 <option value="avatar">Avatar</option>
               </optgroup>
               <optgroup label="Product / SDK">
+                <option value="adaptiveMapShell">AdaptiveMapShell</option>
+                <option value="browseCategoriesPanel">
+                  BrowseCategoriesPanel
+                </option>
+                <option value="categoryTile">CategoryTile</option>
                 <option value="directionStep">DirectionStep</option>
                 <option value="floorSelector">FloorSelector</option>
                 <option value="locationPin">LocationPin</option>
+                <option value="mapControlButton">MapControlButton</option>
+                <option value="mapControlsGroup">MapControlsGroup</option>
+                <option value="mapOverlay">MapOverlay</option>
                 <option value="mapView">MapView</option>
                 <option value="poiCard">POICard</option>
+                <option value="poiDetailPanel">POIDetailPanel</option>
+                <option value="poiMediaGallery">POIMediaGallery</option>
+                <option value="poiResultCard">POIResultCard</option>
+                <option value="poiResultList">POIResultList</option>
+                <option value="routeOptionCard">RouteOptionCard</option>
+                <option value="routePreviewPanel">RoutePreviewPanel</option>
+                <option value="routeSummary">RouteSummary</option>
+                <option value="routingInputGroup">RoutingInputGroup</option>
+                <option value="saveLocationCard">SaveLocationCard</option>
+                <option value="userLocationMarker">UserLocationMarker</option>
                 <option value="wayfindingCard">WayfindingCard</option>
+              </optgroup>
+              <optgroup label="Platform / Form-Factor">
+                <option value="dynamicIsland">DynamicIsland</option>
+                <option value="feedbackCard">FeedbackCard</option>
               </optgroup>
               <optgroup label="Utilities">
                 <option value="icons">Curated Icons</option>
@@ -1253,8 +1275,7 @@
       const payloadStatus = document.getElementById("payloadStatus");
       const payloadBadge = document.getElementById("payloadBadge");
       const fontFamilyInput = document.getElementById("fontFamily");
-      const fontRegularStyleInput =
-        document.getElementById("fontRegularStyle");
+      const fontRegularStyleInput = document.getElementById("fontRegularStyle");
       const fontMediumStyleInput = document.getElementById("fontMediumStyle");
       const fontBoldStyleInput = document.getElementById("fontBoldStyle");
       const fontStatus = document.getElementById("fontStatus");
@@ -1503,6 +1524,132 @@
           update: "update-direction-step",
           rebuild: "rebuild-direction-step",
           hint: "Build creates DirectionStep with Straight, Left, Right, and Destination turn types plus editable instruction, distance, and duration text. Turn glyphs never auto-mirror in RTL. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        browseCategoriesPanel: {
+          label: "BrowseCategoriesPanel",
+          build: "build-browse-categories-panel",
+          update: "update-browse-categories-panel",
+          rebuild: "rebuild-browse-categories-panel",
+          hint: "Build creates BrowseCategoriesPanel with Basic, Search, and Empty content variants; Empty replaces the tile grid rather than sitting beside it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        categoryTile: {
+          label: "CategoryTile",
+          build: "build-category-tile",
+          update: "update-category-tile",
+          rebuild: "rebuild-category-tile",
+          hint: "Build creates CategoryTile with Default, Selected, and Disabled states. Selection thickens the border as well as recolouring it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        poiMediaGallery: {
+          label: "POIMediaGallery",
+          build: "build-poi-media-gallery",
+          update: "update-poi-media-gallery",
+          rebuild: "rebuild-poi-media-gallery",
+          hint: "Build creates POIMediaGallery with Single, Multiple, and Empty content variants; Single drops the paging controls entirely. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        poiResultCard: {
+          label: "POIResultCard",
+          build: "build-poi-result-card",
+          update: "update-poi-result-card",
+          rebuild: "rebuild-poi-result-card",
+          hint: "Build creates POIResultCard with Default, Selected, Featured, and Unavailable states. Featured uses a labelled badge rather than a colour swap. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        poiResultList: {
+          label: "POIResultList",
+          build: "build-poi-result-list",
+          update: "update-poi-result-list",
+          rebuild: "rebuild-poi-result-list",
+          hint: "Build creates POIResultList with Basic, Selected, and Empty content variants plus an editable result count. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        routeOptionCard: {
+          label: "RouteOptionCard",
+          build: "build-route-option-card",
+          update: "update-route-option-card",
+          rebuild: "rebuild-route-option-card",
+          hint: "Build creates RouteOptionCard with Default, Selected, Warning, and Unavailable states; the warning is its own text node. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        routePreviewPanel: {
+          label: "RoutePreviewPanel",
+          build: "build-route-preview-panel",
+          update: "update-route-preview-panel",
+          rebuild: "rebuild-route-preview-panel",
+          hint: "Build creates RoutePreviewPanel across the five RouteReadiness statuses; only Ready lists route options. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        routeSummary: {
+          label: "RouteSummary",
+          build: "build-route-summary",
+          update: "update-route-summary",
+          rebuild: "rebuild-route-summary",
+          hint: "Build creates RouteSummary with Preview and Active states; Preview offers Start Navigation and Active offers End Route. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        routingInputGroup: {
+          label: "RoutingInputGroup",
+          build: "build-routing-input-group",
+          update: "update-routing-input-group",
+          rebuild: "rebuild-routing-input-group",
+          hint: "Build creates RoutingInputGroup with two-point and three-point content variants plus the swap control. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        saveLocationCard: {
+          label: "SaveLocationCard",
+          build: "build-save-location-card",
+          update: "update-save-location-card",
+          rebuild: "rebuild-save-location-card",
+          hint: "Build creates SaveLocationCard with Default and Saved states; Saved changes the glyph and the label, not just the tint. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        userLocationMarker: {
+          label: "UserLocationMarker",
+          build: "build-user-location-marker",
+          update: "update-user-location-marker",
+          rebuild: "rebuild-user-location-marker",
+          hint: "Build creates UserLocationMarker with Hidden and Visible heading variants as pure geometry. Bearing rotates the cone rather than adding variants. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        dynamicIsland: {
+          label: "DynamicIsland",
+          build: "build-dynamic-island",
+          update: "update-dynamic-island",
+          rebuild: "rebuild-dynamic-island",
+          hint: "Build creates DynamicIsland with Compact, Expanded, and Minimal states as bezel-mounted pills with host content slots. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        feedbackCard: {
+          label: "FeedbackCard",
+          build: "build-feedback-card",
+          update: "update-feedback-card",
+          rebuild: "rebuild-feedback-card",
+          hint: "Build creates FeedbackCard with Default, Submitting, and Success states; Success replaces the form rather than disabling it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        adaptiveMapShell: {
+          label: "AdaptiveMapShell",
+          build: "build-adaptive-map-shell",
+          update: "update-adaptive-map-shell",
+          rebuild: "rebuild-adaptive-map-shell",
+          hint: "Build creates the map screen frame with Start and End panel placements plus top bar, controls, and panel slots. Placement is flow order, so it mirrors in RTL. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        mapControlButton: {
+          label: "MapControlButton",
+          build: "build-map-control-button",
+          update: "update-map-control-button",
+          rebuild: "rebuild-map-control-button",
+          hint: "Build creates MapControlButton with IconOnly and Labelled presentations, both at a 44px touch target. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        mapControlsGroup: {
+          label: "MapControlsGroup",
+          build: "build-map-controls-group",
+          update: "update-map-controls-group",
+          rebuild: "rebuild-map-controls-group",
+          hint: "Build creates the stacked zoom, compass, and locate controls with IconOnly and Labelled location presentations. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        mapOverlay: {
+          label: "MapOverlay",
+          build: "build-map-overlay",
+          update: "update-map-overlay",
+          rebuild: "rebuild-map-overlay",
+          hint: "Build creates MapOverlay at Auto, Small, Medium, Large, and Full widths with an editable title and a content slot. Position stays renderer placement. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        poiDetailPanel: {
+          label: "POIDetailPanel",
+          build: "build-poi-detail-panel",
+          update: "update-poi-detail-panel",
+          rebuild: "rebuild-poi-detail-panel",
+          hint: "Build creates POIDetailPanel with Inline, Sheet, and Panel presentations; Sheet rounds only its top corners and shows a grabber. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         floorSelector: {
           label: "FloorSelector",
@@ -2103,8 +2250,7 @@
           payload: parsedPayload,
           options: {
             createPages: document.getElementById("createPages").checked,
-            createVariables:
-              document.getElementById("createVariables").checked,
+            createVariables: document.getElementById("createVariables").checked,
             createDocs: document.getElementById("createDocs").checked,
           },
         });

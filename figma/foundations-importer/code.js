@@ -223,6 +223,61 @@ const LOCATION_PIN_SIZES = ["Sm", "Md", "Lg"];
 const LOCATION_PIN_SIZE_DIAMETERS = { Sm: 24, Md: 32, Lg: 40 };
 const POI_CARD_CONTENT = ["Basic", "Media", "Full"];
 const WAYFINDING_CARD_CONTENT = ["Basic", "Titled"];
+const ADAPTIVE_MAP_SHELL_PANEL_PLACEMENTS = ["Start", "End"];
+const MAP_CONTROL_BUTTON_PRESENTATIONS = ["IconOnly", "Labelled"];
+const MAP_CONTROLS_GROUP_PRESENTATIONS = ["IconOnly", "Labelled"];
+const MAP_OVERLAY_WIDTHS = ["Auto", "Small", "Medium", "Large", "Full"];
+const MAP_OVERLAY_WIDTH_SIZES = {
+  Auto: 240,
+  Small: 280,
+  Medium: 360,
+  Large: 480,
+  Full: 640,
+};
+const POI_DETAIL_PANEL_PRESENTATIONS = ["Inline", "Sheet", "Panel"];
+const BROWSE_CATEGORIES_PANEL_CONTENT = ["Basic", "Search", "Empty"];
+const CATEGORY_TILE_STATES = ["Default", "Selected", "Disabled"];
+const POI_MEDIA_GALLERY_CONTENT = ["Single", "Multiple", "Empty"];
+const POI_RESULT_CARD_STATES = [
+  "Default",
+  "Selected",
+  "Featured",
+  "Unavailable",
+];
+const POI_RESULT_LIST_CONTENT = ["Basic", "Selected", "Empty"];
+const ROUTE_OPTION_CARD_STATES = [
+  "Default",
+  "Selected",
+  "Warning",
+  "Unavailable",
+];
+const ROUTE_PREVIEW_PANEL_STATUSES = [
+  "Idle",
+  "Calculating",
+  "Ready",
+  "NoRoute",
+  "Error",
+];
+const ROUTE_PREVIEW_PANEL_STATUS_COPY = {
+  Idle: "Choose a destination to preview routes.",
+  Calculating: "Calculating routes...",
+  Ready: "3 routes available",
+  NoRoute: "No route to this destination.",
+  Error: "Routes could not be loaded.",
+};
+const ROUTE_SUMMARY_STATES = ["Preview", "Active"];
+const ROUTING_INPUT_GROUP_CONTENT = ["TwoPoints", "ThreePoints"];
+const SAVE_LOCATION_CARD_STATES = ["Default", "Saved"];
+const USER_LOCATION_MARKER_HEADINGS = ["Hidden", "Visible"];
+// Platform / form-factor lane. These validate on a specific device surface
+// before any Core promotion is considered.
+const DYNAMIC_ISLAND_STATES = ["Compact", "Expanded", "Minimal"];
+const DYNAMIC_ISLAND_GEOMETRY = {
+  Compact: { width: 240, height: 48, radius: 24 },
+  Expanded: { width: 360, height: 180, radius: 32 },
+  Minimal: { width: 64, height: 48, radius: 24 },
+};
+const FEEDBACK_CARD_STATES = ["Default", "Submitting", "Success"];
 const MAP_VIEW_CONTENT = ["Empty", "Overlay"];
 const PAGINATION_CONTENT = ["Basic", "Ellipsis", "Compact"];
 const PAGINATION_SIZES = ["Small", "Default"];
@@ -330,7 +385,15 @@ const COMPONENTS_PAGE_NAME = "Components";
 const COMPONENT_PAGE_LAYOUT_X = 80;
 const COMPONENT_PAGE_LAYOUT_Y = 80;
 const COMPONENT_PAGE_LAYOUT_ROW_GAP = 420;
+const COMPONENT_PAGE_LAYOUT_COLUMN_GAP = 320;
 const COMPONENT_PAGE_LAYOUT_SECTION_GAP = 220;
+// Column packing. A single column of sections, each itself a single column of
+// component sets, made the page 94,012px tall — a 1:16 ribbon that no one can
+// review, and one that got worse with every set added. Both levels now flow
+// into columns instead.
+const COMPONENT_PAGE_LAYOUT_MAX_COLUMNS = 6;
+const COMPONENT_PAGE_LAYOUT_SECTION_COLUMN_GAP = 480;
+const COMPONENT_PAGE_LAYOUT_MAX_SECTION_COLUMNS = 5;
 const COMPONENT_PAGE_LAYOUT_SECTION_PADDING_X = 40;
 const COMPONENT_PAGE_LAYOUT_SECTION_PADDING_TOP = 56;
 const COMPONENT_PAGE_LAYOUT_SECTION_PADDING_BOTTOM = 40;
@@ -357,8 +420,26 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   Stack: 520,
   List: 360,
   Table: 520,
+  AdaptiveMapShell: 520,
+  BrowseCategoriesPanel: 460,
+  CategoryTile: 260,
   DirectionStep: 260,
+  DynamicIsland: 320,
+  FeedbackCard: 360,
   FloorSelector: 420,
+  MapControlButton: 260,
+  MapControlsGroup: 320,
+  MapOverlay: 320,
+  POIDetailPanel: 620,
+  POIMediaGallery: 320,
+  POIResultCard: 260,
+  POIResultList: 460,
+  RouteOptionCard: 260,
+  RoutePreviewPanel: 480,
+  RouteSummary: 260,
+  RoutingInputGroup: 320,
+  SaveLocationCard: 300,
+  UserLocationMarker: 260,
   LocationPin: 320,
   MapView: 520,
   POICard: 620,
@@ -463,13 +544,35 @@ const COMPONENT_PAGE_LAYOUT_SECTIONS = [
     // domain-neutral and designers can see the boundary on the page.
     title: "Product / SDK",
     components: [
+      "AdaptiveMapShell",
+      "BrowseCategoriesPanel",
+      "CategoryTile",
       "DirectionStep",
       "FloorSelector",
       "LocationPin",
+      "MapControlButton",
+      "MapControlsGroup",
+      "MapOverlay",
       "MapView",
       "POICard",
+      "POIDetailPanel",
+      "POIMediaGallery",
+      "POIResultCard",
+      "POIResultList",
+      "RouteOptionCard",
+      "RoutePreviewPanel",
+      "RouteSummary",
+      "RoutingInputGroup",
+      "SaveLocationCard",
+      "UserLocationMarker",
       "WayfindingCard",
     ],
+  },
+  {
+    // Device-specific surfaces. Kept out of Product / SDK because they need
+    // form-factor validation of their own before any promotion.
+    title: "Platform / Form-Factor",
+    components: ["DynamicIsland", "FeedbackCard"],
   },
   {
     title: "Overlay",
@@ -699,6 +802,459 @@ const SURFACE_QA_COMPONENT_GROUPS = [
 ];
 const COMPONENT_DOCS = [
   {
+    componentName: "AdaptiveMapShell",
+    componentSetName: "AdaptiveMapShell",
+    category: "Product / SDK",
+    summary:
+      "AdaptiveMapShell is the map screen frame: a canvas, its floating controls, and a docked panel.",
+    usage: [
+      "Use Start when the panel belongs at the inline start of the reading direction.",
+      "Use End for the common desktop layout with the panel trailing the map.",
+      "Compose the panel slot with POIDetailPanel, RoutePreviewPanel, or BrowseCategoriesPanel.",
+    ],
+    api: [
+      "PanelPlacement maps to AdaptiveMapShell.panelPlacement.",
+      "Panel Slot maps to AdaptiveMapShell.panel, Top Bar Slot to .topBar.",
+      "Controls Slot maps to AdaptiveMapShell.controls.",
+      "mapStatus, mapLabel, and collisionInsets are behaviour with no visual counterpart.",
+    ],
+    properties: ["PanelPlacement: Start, End", "Panel Label Text"],
+    accessibility: [
+      "Placement is expressed in flow order, so the shell mirrors correctly in RTL.",
+      "The host app must name the map surface via mapLabel and the panel via panelLabel.",
+      "Collision insets must be passed to the renderer so controls never cover attribution.",
+    ],
+  },
+  {
+    componentName: "MapControlButton",
+    componentSetName: "MapControlButton",
+    category: "Product / SDK",
+    summary:
+      "MapControlButton is a single map affordance such as zoom, compass reset, or recentre.",
+    usage: [
+      "Use IconOnly inside a stacked control group over the canvas.",
+      "Use Labelled where the action needs to be readable without a tooltip.",
+      "Do not use for general actions; Core Button and IconButton cover those.",
+    ],
+    api: [
+      "Presentation maps to MapControlButton.presentation.",
+      "Label Text maps to MapControlButton.label.",
+      "pressed maps to the toggled surface treatment.",
+      "stateLabel extends the accessible name only.",
+    ],
+    properties: ["Presentation: IconOnly, Labelled", "Label Text"],
+    accessibility: [
+      "Both presentations keep a 44px target, including the icon-only variant.",
+      "label is the accessible name in both presentations, not just the visible one.",
+      "Glyphs never auto-mirror, so a compass keeps its physical orientation in RTL.",
+    ],
+  },
+  {
+    componentName: "MapControlsGroup",
+    componentSetName: "MapControlsGroup",
+    category: "Product / SDK",
+    summary:
+      "MapControlsGroup stacks the standard zoom, compass, and locate affordances.",
+    usage: [
+      "Use IconOnly over a dense canvas where space is tight.",
+      "Use Labelled when the locate control needs an explicit name.",
+      "Place the group inside the AdaptiveMapShell controls slot.",
+    ],
+    api: [
+      "LocationPresentation maps to MapControlsGroup.locationPresentation.",
+      "Location Label Text maps to MapControlsGroup.locationLabel.",
+      "onZoomIn, onZoomOut, onCompassReset, and onMyLocation are behaviour.",
+      "compassBearing rotates the renderer glyph and has no variant.",
+    ],
+    properties: [
+      "LocationPresentation: IconOnly, Labelled",
+      "Location Label Text",
+    ],
+    accessibility: [
+      "Every control keeps a 44px target so the group satisfies the touch-target contract.",
+      "locationState must be announced by product code; it is not colour-only here.",
+      "The group needs an accessible name via label so it reads as one control cluster.",
+    ],
+  },
+  {
+    componentName: "MapOverlay",
+    componentSetName: "MapOverlay",
+    category: "Product / SDK",
+    summary:
+      "MapOverlay is the floating surface that holds product chrome above the map canvas.",
+    usage: [
+      "Use Auto when the content should size itself, Full when it should span the canvas.",
+      "Use Small through Large for search, filters, and summary chrome.",
+      "Do not draw map content inside it; the canvas is renderer output.",
+    ],
+    api: [
+      "Width maps to MapOverlay.width (auto, sm, md, lg, full).",
+      "Overlay Content Slot maps to MapOverlay children.",
+      "position is renderer placement and stays outside the variant matrix.",
+      "collisionInsets come from the map adapter.",
+    ],
+    properties: [
+      "Width: Auto, Small, Medium, Large, Full",
+      "Overlay Title Text",
+    ],
+    accessibility: [
+      "Overlays must not cover the renderer attribution; pass collision insets instead.",
+      "Content keeps its own reading order; the overlay adds no landmark of its own.",
+      "Contrast is carried by the surface token, not by the basemap underneath.",
+    ],
+  },
+  {
+    componentName: "POIDetailPanel",
+    componentSetName: "POIDetailPanel",
+    category: "Product / SDK",
+    summary:
+      "POIDetailPanel presents one venue in full: media, description, services, and actions.",
+    usage: [
+      "Use Panel when docked beside the map, Sheet when anchored to the bottom edge.",
+      "Use Inline when the panel sits in document flow with no surface chrome.",
+      "Compose the media slot with POIMediaGallery rather than extending this set.",
+    ],
+    api: [
+      "Presentation maps to POIDetailPanel.presentation.",
+      "Title Text maps to poi.name, Subtitle Text to category, floor, and availability labels.",
+      "Description Text maps to poi.description.",
+      "Actions Slot maps to poi.actions resolved through actionLabels.",
+    ],
+    properties: [
+      "Presentation: Inline, Sheet, Panel",
+      "Title Text, Subtitle Text, Description Text",
+    ],
+    accessibility: [
+      "Sheet shows a grabber so the drag affordance is not gesture-only.",
+      "Inline drops the close affordance because there is nothing to dismiss.",
+      "actionStates carry loading and error messages that product code must announce.",
+    ],
+  },
+  {
+    componentName: "BrowseCategoriesPanel",
+    componentSetName: "BrowseCategoriesPanel",
+    category: "Product / SDK",
+    summary:
+      "BrowseCategoriesPanel is the category browser that opens before a search has been made.",
+    usage: [
+      "Use Basic when categories are the whole panel.",
+      "Use Search when a search field sits above the grid.",
+      "Use Empty when no category matches the current filter.",
+    ],
+    api: [
+      "Content covers the panel with and without search, plus its empty state.",
+      "Panel Label Text maps to BrowseCategoriesPanel.label.",
+      "Category Tile Slots map to categories rendered through CategoryTile.",
+      "onSelect and renderIcon are behaviour with no visual slot.",
+    ],
+    properties: ["Content: Basic, Search, Empty", "Panel Label Text"],
+    accessibility: [
+      "Empty replaces the grid, so assistive technology never reads an empty list.",
+      "The panel needs an accessible name via label so it reads as one region.",
+      "Category selection state belongs to CategoryTile, not to the panel.",
+    ],
+  },
+  {
+    componentName: "CategoryTile",
+    componentSetName: "CategoryTile",
+    category: "Product / SDK",
+    summary:
+      "CategoryTile is one selectable venue category inside the browse grid.",
+    usage: [
+      "Use Selected for the category currently filtering results.",
+      "Use Disabled when the category has no results on the active floor.",
+      "Do not use as a general-purpose button; Core Button covers that.",
+    ],
+    api: [
+      "State maps to category.selected and category.disabled.",
+      "Label Text maps to category.label.",
+      "Icon Slot maps to renderIcon(category).",
+      "resultCountLabel is announced by product code.",
+    ],
+    properties: ["State: Default, Selected, Disabled", "Label Text"],
+    accessibility: [
+      "Selection thickens the border as well as recolouring it, so it is not colour-only.",
+      "The tile is a button; product code owns its pressed state.",
+      "Disabled dims the tile but must also be exposed as disabled to assistive technology.",
+    ],
+  },
+  {
+    componentName: "POIMediaGallery",
+    componentSetName: "POIMediaGallery",
+    category: "Product / SDK",
+    summary:
+      "POIMediaGallery pages through the licensed images attached to a venue.",
+    usage: [
+      "Use Single when only one image exists.",
+      "Use Multiple when the venue has a pageable set.",
+      "Use Empty when no licensed media is available.",
+    ],
+    api: [
+      "Content covers one image, a pageable set, and the no-media case.",
+      "Position Text maps to positionLabel(current, total).",
+      "Media Slot maps to media[activeIndex].",
+      "activeIndex and onActiveIndexChange are behaviour.",
+    ],
+    properties: ["Content: Single, Multiple, Empty", "Position Text"],
+    accessibility: [
+      "Single drops the control row rather than showing disabled arrows.",
+      "positionLabel is the announced position; it is not inferred from the visual.",
+      "Each image carries its own alt text from product data.",
+    ],
+  },
+  {
+    componentName: "POIResultCard",
+    componentSetName: "POIResultCard",
+    category: "Product / SDK",
+    summary:
+      "POIResultCard is one venue row in a result list, mirroring its pin on the map.",
+    usage: [
+      "Use Selected for the result whose pin is currently selected.",
+      "Use Featured for sponsored or promoted results.",
+      "Use Unavailable when the venue is closed or unreachable.",
+    ],
+    api: [
+      "State maps to result.selected, result.featured, and result.available.",
+      "Title Text maps to poi.name.",
+      "Meta Text maps to floorLabel and travelEstimate.",
+      "onSelect receives the canonical POI ID.",
+    ],
+    properties: [
+      "State: Default, Selected, Featured, Unavailable",
+      "Title Text, Meta Text",
+    ],
+    accessibility: [
+      "Featured uses a labelled badge, so a sponsored result is never identified by colour alone.",
+      "Selection thickens the border as well as recolouring it.",
+      "Product code must keep the row and its LocationPin announced together.",
+    ],
+  },
+  {
+    componentName: "POIResultList",
+    componentSetName: "POIResultList",
+    category: "Product / SDK",
+    summary:
+      "POIResultList stacks venue results under a count and an optional empty state.",
+    usage: [
+      "Use Basic for a plain result list.",
+      "Use Selected to show the list with an active row.",
+      "Use Empty when the query returned nothing.",
+    ],
+    api: [
+      "Content covers the plain list, a selected row, and the empty state.",
+      "Result Count Text maps to POIResultList.resultCountLabel.",
+      "Result Slots map to items rendered through POIResultCard.",
+      "selectedPoiId is a single canonical POI ID.",
+    ],
+    properties: ["Content: Basic, Selected, Empty", "Result Count Text"],
+    accessibility: [
+      "Exactly one row is selected, matching selectedPoiId being a single ID.",
+      "resultCountLabel is the announced count and must stay in sync with the rows.",
+      "The list needs an accessible name via label.",
+    ],
+  },
+  {
+    componentName: "RouteOptionCard",
+    componentSetName: "RouteOptionCard",
+    category: "Product / SDK",
+    summary:
+      "RouteOptionCard presents one route choice with its duration, distance, and caveats.",
+    usage: [
+      "Use Selected for the route the user has picked.",
+      "Use Warning when the route has a caveat such as a lift outage.",
+      "Use Unavailable when the route cannot currently be taken.",
+    ],
+    api: [
+      "State maps to option.selected, option.warning, and option.available.",
+      "Option Label Text maps to option.label.",
+      "Option Meta Text maps to durationLabel and distanceLabel.",
+      "Warning Text maps to option.warning.",
+    ],
+    properties: [
+      "State: Default, Selected, Warning, Unavailable",
+      "Option Label Text, Option Meta Text, Warning Text",
+    ],
+    accessibility: [
+      "The warning is its own text node, so assistive technology reads it as separate content.",
+      "Selection thickens the border as well as recolouring it.",
+      "preference selects the mode icon; it is product data, not a variant.",
+    ],
+  },
+  {
+    componentName: "RoutePreviewPanel",
+    componentSetName: "RoutePreviewPanel",
+    category: "Product / SDK",
+    summary:
+      "RoutePreviewPanel lists the routes to a destination and tracks route readiness.",
+    usage: [
+      "Use Ready when routes exist and can be chosen.",
+      "Use Calculating while routing is in flight, Idle before a destination is set.",
+      "Use NoRoute and Error for the two failure cases, which read differently to users.",
+    ],
+    api: [
+      "Status maps to RoutePreviewPanel.status (idle, calculating, ready, no-route, error).",
+      "Destination Text maps to destinationName.",
+      "Status Text maps to the readiness copy; Status Slot maps to statusContent.",
+      "Option Slots map to options rendered through RouteOptionCard.",
+    ],
+    properties: [
+      "Status: Idle, Calculating, Ready, NoRoute, Error",
+      "Destination Text, Status Text",
+    ],
+    accessibility: [
+      "Only Ready lists options, so the panel never renders an empty option list.",
+      "selectedRouteAnnouncement must be announced when the choice changes.",
+      "Error uses the danger token plus its own copy, so it is not colour-only.",
+    ],
+  },
+  {
+    componentName: "RouteSummary",
+    componentSetName: "RouteSummary",
+    category: "Product / SDK",
+    summary:
+      "RouteSummary is the persistent ETA bar shown while previewing or following a route.",
+    usage: [
+      "Use Preview before navigation starts, while the user can still change their mind.",
+      "Use Active once turn-by-turn guidance is running.",
+      "Compose it above the map rather than inside the route panel.",
+    ],
+    api: [
+      "State maps to RouteSummary.state (preview, active).",
+      "ETA Text maps to etaText; Distance Text maps to distanceText.",
+      "Start Navigation Button maps to onStartNavigation, End Route Button to onEndRoute.",
+      "transportModeIcon fills the mode slot.",
+    ],
+    properties: ["State: Preview, Active", "ETA Text, Distance Text"],
+    accessibility: [
+      "Preview and Active never show both actions, so there is no ambiguous control.",
+      "Both strings arrive already localized from product code.",
+      "The bar must not cover the renderer attribution.",
+    ],
+  },
+  {
+    componentName: "RoutingInputGroup",
+    componentSetName: "RoutingInputGroup",
+    category: "Product / SDK",
+    summary:
+      "RoutingInputGroup collects the origin, destination, and any intermediate stops.",
+    usage: [
+      "Use TwoPoints for the common origin-to-destination case.",
+      "Use ThreePoints when the user has added a stop.",
+      "Compose the fields with Core Input rather than extending this set.",
+    ],
+    api: [
+      "Content covers two points and an added intermediate stop.",
+      "Point Field Slots map to points; Point Label Text maps to point.placeholder.",
+      "Swap Button maps to onSwap.",
+      "onAddPoint and onRemovePoint are behaviour with no visual slot.",
+    ],
+    properties: ["Content: TwoPoints, ThreePoints", "Point Label Text"],
+    accessibility: [
+      "Labels follow route order, so a third point reads as a stop between start and destination.",
+      "Swapping must move focus predictably and announce the new order.",
+      "Every field keeps a 44px target.",
+    ],
+  },
+  {
+    componentName: "SaveLocationCard",
+    componentSetName: "SaveLocationCard",
+    category: "Product / SDK",
+    summary:
+      "SaveLocationCard offers to keep a place in the user's saved locations.",
+    usage: [
+      "Use Default when the place has not been saved.",
+      "Use Saved once it is in the saved list.",
+      "Do not use for generic confirmations; Core Card and Alert cover those.",
+    ],
+    api: [
+      "State maps to SaveLocationCard.isSaved.",
+      "Title Text maps to title; Description Text maps to description.",
+      "Save Toggle Button maps to onSaveToggle.",
+      "Route and Edit Note map to onRouteToLocation and onEditNote.",
+    ],
+    properties: ["State: Default, Saved", "Title Text, Description Text"],
+    accessibility: [
+      "Saved changes the glyph and the label, so the state is not carried by colour alone.",
+      "The toggle must expose its pressed state to assistive technology.",
+      "All three actions keep a 44px target.",
+    ],
+  },
+  {
+    componentName: "UserLocationMarker",
+    componentSetName: "UserLocationMarker",
+    category: "Product / SDK",
+    summary:
+      "UserLocationMarker shows the device position on the map, with or without a bearing.",
+    usage: [
+      "Use Hidden when no reliable heading is available.",
+      "Use Visible when the device reports a bearing worth showing.",
+      "Do not use for POIs; LocationPin covers those.",
+    ],
+    api: [
+      "Heading maps to UserLocationMarker.showHeading.",
+      "heading is a bearing in degrees that rotates the cone.",
+      "The marker has no text slots.",
+      "Position on the canvas belongs to the map renderer.",
+    ],
+    properties: ["Heading: Hidden, Visible"],
+    accessibility: [
+      "The heading cone is a distinct shape, so a known bearing is not signalled by colour alone.",
+      "The renderer owns the marker's accessible name and position.",
+      "The accuracy halo is decorative and must not be announced separately.",
+    ],
+  },
+  {
+    componentName: "DynamicIsland",
+    componentSetName: "DynamicIsland",
+    category: "Platform / Form-Factor",
+    summary:
+      "DynamicIsland models the iOS bezel pill in its compact, expanded, and minimal states.",
+    usage: [
+      "Use Compact for the two-slot leading and trailing presentation.",
+      "Use Expanded for the full activity view, Minimal for the collapsed dot.",
+      "Treat it as a device surface, not a Core component.",
+    ],
+    api: [
+      "State maps to DynamicIsland.islandState (compact, expanded, minimal).",
+      "Compact Leading and Trailing Slots map to compactLeading and compactTrailing.",
+      "Expanded Content Slot maps to expandedContent.",
+      "Minimal Content Slot maps to minimalContent.",
+    ],
+    properties: ["State: Compact, Expanded, Minimal"],
+    accessibility: [
+      "The pill sits on the bezel, so it uses the inverse foreground rather than a Surface token.",
+      "Host content owns every accessible name; the island itself has none.",
+      "State transitions must be announced by the live activity, not inferred from motion.",
+    ],
+  },
+  {
+    componentName: "FeedbackCard",
+    componentSetName: "FeedbackCard",
+    category: "Platform / Form-Factor",
+    summary:
+      "FeedbackCard collects a rating and a comment about the wayfinding experience.",
+    usage: [
+      "Use Default for the editable form.",
+      "Use Submitting while the submission is in flight.",
+      "Use Success for the confirmation that replaces the form.",
+    ],
+    api: [
+      "State covers the editable form, the in-flight submit, and the confirmation.",
+      "Title Text maps to title; Description Text maps to description.",
+      "Success Text maps to successMessage.",
+      "Rating Slot and Comment Slot compose Core Rating and Textarea.",
+    ],
+    properties: [
+      "State: Default, Submitting, Success",
+      "Title Text, Description Text, Success Text",
+    ],
+    accessibility: [
+      "Success replaces the form, so nothing reads as still editable after submitting.",
+      "Submitting must be announced; the dimmed button alone is not sufficient.",
+      "The rating control owns its own accessible value.",
+    ],
+  },
+  {
     componentName: "DirectionStep",
     componentSetName: "DirectionStep",
     category: "Product / SDK",
@@ -774,7 +1330,7 @@ const COMPONENT_DOCS = [
       "Label Text, Number Text",
     ],
     accessibility: [
-      "Off-floor pins use a dashed outline so the state is not color-only.",
+      "Off-floor pins render as a hollow ring so the state is not color-only.",
       "Selected pins grow as well as recolor.",
       "Product code must keep pin and result-row selection announced together.",
     ],
@@ -7169,12 +7725,80 @@ const COMPONENT_FLOAT_TOKENS = [
   },
 ];
 
+// Layout-sizing diagnostics.
+//
+// `setLayoutSizing*` has to swallow errors: it is called on nodes whose runtime
+// may not expose the property at all. But swallowing hid a real bug — setting
+// FILL on a node not yet inside an auto-layout parent throws, the helper
+// returned false, and all 180 call sites ignore the return value, so text
+// silently collapsed to one character per line in the built sets. Failures are
+// recorded here and drained into whichever run reports next, so they show up in
+// the log the operator already reads instead of nowhere.
+const layoutSizingFailures = [];
+const LAYOUT_SIZING_FAILURE_SAMPLE_LIMIT = 12;
+
+function recordLayoutSizingFailure(axis, node, value, error) {
+  layoutSizingFailures.push({
+    axis,
+    value,
+    node: (node && node.name) || "(unnamed)",
+    type: (node && node.type) || "(unknown)",
+    parentType: (node && node.parent && node.parent.type) || "(detached)",
+    reason: error
+      ? String((error && error.message) || error)
+      : "assignment did not take effect",
+  });
+}
+
+function resetLayoutSizingFailures() {
+  layoutSizingFailures.length = 0;
+}
+
+function drainLayoutSizingFailures(stats) {
+  if (!stats || typeof stats !== "object") return;
+  if (layoutSizingFailures.length === 0) return;
+
+  const failures = layoutSizingFailures.slice();
+  resetLayoutSizingFailures();
+
+  if (!Array.isArray(stats.warnings)) stats.warnings = [];
+  stats.layoutSizingFailures = failures;
+
+  const sample = failures
+    .slice(0, LAYOUT_SIZING_FAILURE_SAMPLE_LIMIT)
+    .map(
+      (failure) =>
+        `${failure.node} (${failure.type}) ${failure.axis}=${failure.value} under ${failure.parentType}: ${failure.reason}`,
+    )
+    .join("; ");
+  const elided =
+    failures.length > LAYOUT_SIZING_FAILURE_SAMPLE_LIMIT
+      ? ` (+${failures.length - LAYOUT_SIZING_FAILURE_SAMPLE_LIMIT} more)`
+      : "";
+
+  stats.warnings.push(
+    `${failures.length} layout sizing call(s) did not apply; affected nodes may be mis-sized. ${sample}${elided}`,
+  );
+}
+
+/**
+ * Every handler branch answers the UI with a result object, so this is the one
+ * seam where layout-sizing diagnostics can be attached without a new branch
+ * being able to forget them.
+ */
+function postResultToUi(message) {
+  if (message && message.result) drainLayoutSizingFailures(message.result);
+  figma.ui.postMessage(message);
+}
+
 figma.ui.onmessage = async (message) => {
+  resetLayoutSizingFailures();
+
   try {
     configureFontConfig(message && message.fontConfig);
 
     if (message.type === "inspect") {
-      figma.ui.postMessage({
+      postResultToUi({
         type: "inspect-result",
         result: await inspectFile(),
       });
@@ -7186,7 +7810,7 @@ figma.ui.onmessage = async (message) => {
         message.payload,
         message.options || {},
       );
-      figma.ui.postMessage({ type: "import-result", result });
+      postResultToUi({ type: "import-result", result });
       return;
     }
 
@@ -7194,1069 +7818,1069 @@ figma.ui.onmessage = async (message) => {
       additionalComponentActionHandlers()[message.type];
     if (additionalComponentAction) {
       const result = await additionalComponentAction();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-text") {
       const result = await buildTextComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-text") {
       const result = await updateTextComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-text") {
       const result = await rebuildTextComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-heading") {
       const result = await buildHeadingComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-heading") {
       const result = await updateHeadingComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-heading") {
       const result = await rebuildHeadingComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-link") {
       const result = await buildLinkComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-link") {
       const result = await updateLinkComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-link") {
       const result = await rebuildLinkComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-label") {
       const result = await buildLabelComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-label") {
       const result = await updateLabelComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-label") {
       const result = await rebuildLabelComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-separator") {
       const result = await buildSeparatorComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-separator") {
       const result = await updateSeparatorComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-separator") {
       const result = await rebuildSeparatorComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-skeleton") {
       const result = await buildSkeletonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-skeleton") {
       const result = await updateSkeletonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-skeleton") {
       const result = await rebuildSkeletonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-box") {
       const result = await buildBoxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-box") {
       const result = await updateBoxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-box") {
       const result = await rebuildBoxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-stack") {
       const result = await buildStackComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-stack") {
       const result = await updateStackComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-stack") {
       const result = await rebuildStackComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-grid") {
       const result = await buildGridComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-grid") {
       const result = await updateGridComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-grid") {
       const result = await rebuildGridComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-container") {
       const result = await buildContainerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-container") {
       const result = await updateContainerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-container") {
       const result = await rebuildContainerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-breadcrumb") {
       const result = await buildBreadcrumbComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-breadcrumb") {
       const result = await updateBreadcrumbComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-breadcrumb") {
       const result = await rebuildBreadcrumbComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-pagination") {
       const result = await buildPaginationComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-pagination") {
       const result = await updatePaginationComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-pagination") {
       const result = await rebuildPaginationComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-accordion") {
       const result = await buildAccordionComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-accordion") {
       const result = await updateAccordionComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-accordion") {
       const result = await rebuildAccordionComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-button") {
       const result = await buildButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-button") {
       const result = await updateButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-button") {
       const result = await rebuildButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-icon-button") {
       const result = await buildIconButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-icon-button") {
       const result = await updateIconButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-icon-button") {
       const result = await rebuildIconButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-toggle-button") {
       const result = await buildToggleButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-toggle-button") {
       const result = await updateToggleButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-toggle-button") {
       const result = await rebuildToggleButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-split-button") {
       const result = await buildSplitButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-split-button") {
       const result = await updateSplitButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-split-button") {
       const result = await rebuildSplitButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-floating-action-button") {
       const result = await buildFloatingActionButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-floating-action-button") {
       const result = await updateFloatingActionButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-floating-action-button") {
       const result = await rebuildFloatingActionButtonComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-counter") {
       const result = await buildCounterComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-counter") {
       const result = await updateCounterComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-counter") {
       const result = await rebuildCounterComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-badge") {
       const result = await buildBadgeComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-badge") {
       const result = await updateBadgeComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-badge") {
       const result = await rebuildBadgeComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-chip") {
       const result = await buildChipComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-chip") {
       const result = await updateChipComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-chip") {
       const result = await rebuildChipComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-segmented-control") {
       const result = await buildSegmentedControlComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-segmented-control") {
       const result = await updateSegmentedControlComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-segmented-control") {
       const result = await rebuildSegmentedControlComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-card") {
       const result = await buildCardComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-card") {
       const result = await updateCardComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-card") {
       const result = await rebuildCardComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-list") {
       const result = await buildListComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-list") {
       const result = await updateListComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-list") {
       const result = await rebuildListComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-table") {
       const result = await buildTableComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-table") {
       const result = await updateTableComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-table") {
       const result = await rebuildTableComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-tabs") {
       const result = await buildTabsComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-tabs") {
       const result = await updateTabsComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-tabs") {
       const result = await rebuildTabsComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-tooltip") {
       const result = await buildTooltipComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-tooltip") {
       const result = await updateTooltipComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-tooltip") {
       const result = await rebuildTooltipComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-dialog") {
       const result = await buildDialogComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-dialog") {
       const result = await updateDialogComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-dialog") {
       const result = await rebuildDialogComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-drawer") {
       const result = await buildDrawerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-drawer") {
       const result = await updateDrawerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-drawer") {
       const result = await rebuildDrawerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-popover") {
       const result = await buildPopoverComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-popover") {
       const result = await updatePopoverComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-popover") {
       const result = await rebuildPopoverComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-menu") {
       const result = await buildMenuComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-menu") {
       const result = await updateMenuComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-menu") {
       const result = await rebuildMenuComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-checkbox") {
       const result = await buildCheckboxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-checkbox") {
       const result = await updateCheckboxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-checkbox") {
       const result = await rebuildCheckboxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-radio") {
       const result = await buildRadioComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-radio") {
       const result = await updateRadioComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-radio") {
       const result = await rebuildRadioComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-switch") {
       const result = await buildSwitchComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-switch") {
       const result = await updateSwitchComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-switch") {
       const result = await rebuildSwitchComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-input") {
       const result = await buildInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-input") {
       const result = await updateInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-input") {
       const result = await rebuildInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-password-input") {
       const result = await buildPasswordInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-password-input") {
       const result = await updatePasswordInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-password-input") {
       const result = await rebuildPasswordInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-form-field") {
       const result = await buildFormFieldComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-form-field") {
       const result = await updateFormFieldComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-form-field") {
       const result = await rebuildFormFieldComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-number-input") {
       const result = await buildNumberInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-number-input") {
       const result = await updateNumberInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-number-input") {
       const result = await rebuildNumberInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-otp-input") {
       const result = await buildOTPInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-otp-input") {
       const result = await updateOTPInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-otp-input") {
       const result = await rebuildOTPInputComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-combobox") {
       const result = await buildComboboxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-combobox") {
       const result = await updateComboboxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-combobox") {
       const result = await rebuildComboboxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-multi-select") {
       const result = await buildMultiSelectComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-multi-select") {
       const result = await updateMultiSelectComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-multi-select") {
       const result = await rebuildMultiSelectComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-listbox") {
       const result = await buildListboxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-listbox") {
       const result = await updateListboxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-listbox") {
       const result = await rebuildListboxComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-date-picker") {
       const result = await buildDatePickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-date-picker") {
       const result = await updateDatePickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-date-picker") {
       const result = await rebuildDatePickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-date-range-picker") {
       const result = await buildDateRangePickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-date-range-picker") {
       const result = await updateDateRangePickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-date-range-picker") {
       const result = await rebuildDateRangePickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-time-picker") {
       const result = await buildTimePickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-time-picker") {
       const result = await updateTimePickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-time-picker") {
       const result = await rebuildTimePickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-file-upload") {
       const result = await buildFileUploadComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-file-upload") {
       const result = await updateFileUploadComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-file-upload") {
       const result = await rebuildFileUploadComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-color-picker") {
       const result = await buildColorPickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-color-picker") {
       const result = await updateColorPickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-color-picker") {
       const result = await rebuildColorPickerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-textarea") {
       const result = await buildTextareaComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-textarea") {
       const result = await updateTextareaComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-textarea") {
       const result = await rebuildTextareaComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-search") {
       const result = await buildSearchComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-search") {
       const result = await updateSearchComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-search") {
       const result = await rebuildSearchComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-select") {
       const result = await buildSelectComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-select") {
       const result = await updateSelectComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-select") {
       const result = await rebuildSelectComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-slider") {
       const result = await buildSliderComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-slider") {
       const result = await updateSliderComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-slider") {
       const result = await rebuildSliderComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-rating") {
       const result = await buildRatingComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-rating") {
       const result = await updateRatingComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-rating") {
       const result = await rebuildRatingComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-stepper") {
       const result = await buildStepperComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-stepper") {
       const result = await updateStepperComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-stepper") {
       const result = await rebuildStepperComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-progress") {
       const result = await buildProgressComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-progress") {
       const result = await updateProgressComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-progress") {
       const result = await rebuildProgressComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-spinner") {
       const result = await buildSpinnerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-spinner") {
       const result = await updateSpinnerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-spinner") {
       const result = await rebuildSpinnerComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-avatar") {
       const result = await buildAvatarComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-avatar") {
       const result = await updateAvatarComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-avatar") {
       const result = await rebuildAvatarComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-alert") {
       const result = await buildAlertComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-alert") {
       const result = await updateAlertComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-alert") {
       const result = await rebuildAlertComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-empty-state") {
       const result = await buildEmptyStateComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-empty-state") {
       const result = await updateEmptyStateComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-empty-state") {
       const result = await rebuildEmptyStateComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-toast") {
       const result = await buildToastComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-toast") {
       const result = await updateToastComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "rebuild-toast") {
       const result = await rebuildToastComponent();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
@@ -8272,85 +8896,85 @@ figma.ui.onmessage = async (message) => {
         "Preparing audit results...",
         "Summarizing warnings and component recommendations.",
       );
-      figma.ui.postMessage({ type: "audit-result", result });
+      postResultToUi({ type: "audit-result", result });
       return;
     }
 
     if (message.type === "document-components") {
       const result = await documentComponentLibrary();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "reorganize-components") {
       const result = await reorganizeComponentsPage();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-surface-qa") {
       const result = await buildSurfaceQaPage();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "apply-text-styles") {
       const result = await applyTextStylesToComponentLibrary();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "build-example-dashboard") {
       const result = await buildDashboardExamplePage();
-      figma.ui.postMessage({ type: "example-result", result });
+      postResultToUi({ type: "example-result", result });
       return;
     }
 
     if (message.type === "build-example-settings") {
       const result = await buildSettingsExamplePage();
-      figma.ui.postMessage({ type: "example-result", result });
+      postResultToUi({ type: "example-result", result });
       return;
     }
 
     if (message.type === "build-example-mobile-drawer") {
       const result = await buildMobileDrawerExamplePage();
-      figma.ui.postMessage({ type: "example-result", result });
+      postResultToUi({ type: "example-result", result });
       return;
     }
 
     if (message.type === "build-example-operations-console") {
       const result = await buildOperationsConsoleExamplePage();
-      figma.ui.postMessage({ type: "example-result", result });
+      postResultToUi({ type: "example-result", result });
       return;
     }
 
     if (message.type === "build-example-sdk-route-flow") {
       const result = await buildSdkRouteFlowExamplePage();
-      figma.ui.postMessage({ type: "example-result", result });
+      postResultToUi({ type: "example-result", result });
       return;
     }
 
     if (message.type === "build-example-kiosk-handoff") {
       const result = await buildKioskHandoffExamplePage();
-      figma.ui.postMessage({ type: "example-result", result });
+      postResultToUi({ type: "example-result", result });
       return;
     }
 
     if (message.type === "build-all-examples") {
       const result = await buildAllExamplePages();
-      figma.ui.postMessage({ type: "example-result", result });
+      postResultToUi({ type: "example-result", result });
       return;
     }
 
     if (message.type === "build-icons") {
       const result = await syncIconSourceLibrary();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
     if (message.type === "update-icons") {
       const result = await syncIconSourceLibrary();
-      figma.ui.postMessage({ type: "component-result", result });
+      postResultToUi({ type: "component-result", result });
       return;
     }
 
@@ -8359,12 +8983,12 @@ figma.ui.onmessage = async (message) => {
       return;
     }
 
-    figma.ui.postMessage({
+    postResultToUi({
       type: "error",
       message: `Unknown plugin action "${message.type}". Reload the Kozmos DS Foundations Importer so the UI and code use the same local files.`,
     });
   } catch (error) {
-    figma.ui.postMessage({
+    postResultToUi({
       type: "error",
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -8373,7 +8997,7 @@ figma.ui.onmessage = async (message) => {
 };
 
 function postAuditProgress(step, title, detail) {
-  figma.ui.postMessage({
+  postResultToUi({
     type: "audit-progress",
     step,
     title,
@@ -8426,6 +9050,60 @@ function additionalComponentActionHandlers() {
     "build-timeline": buildTimelineComponent,
     "update-timeline": updateTimelineComponent,
     "rebuild-timeline": rebuildTimelineComponent,
+    "build-browse-categories-panel": buildBrowseCategoriesPanelComponent,
+    "update-browse-categories-panel": updateBrowseCategoriesPanelComponent,
+    "rebuild-browse-categories-panel": rebuildBrowseCategoriesPanelComponent,
+    "build-category-tile": buildCategoryTileComponent,
+    "update-category-tile": updateCategoryTileComponent,
+    "rebuild-category-tile": rebuildCategoryTileComponent,
+    "build-poi-media-gallery": buildPOIMediaGalleryComponent,
+    "update-poi-media-gallery": updatePOIMediaGalleryComponent,
+    "rebuild-poi-media-gallery": rebuildPOIMediaGalleryComponent,
+    "build-poi-result-card": buildPOIResultCardComponent,
+    "update-poi-result-card": updatePOIResultCardComponent,
+    "rebuild-poi-result-card": rebuildPOIResultCardComponent,
+    "build-poi-result-list": buildPOIResultListComponent,
+    "update-poi-result-list": updatePOIResultListComponent,
+    "rebuild-poi-result-list": rebuildPOIResultListComponent,
+    "build-route-option-card": buildRouteOptionCardComponent,
+    "update-route-option-card": updateRouteOptionCardComponent,
+    "rebuild-route-option-card": rebuildRouteOptionCardComponent,
+    "build-route-preview-panel": buildRoutePreviewPanelComponent,
+    "update-route-preview-panel": updateRoutePreviewPanelComponent,
+    "rebuild-route-preview-panel": rebuildRoutePreviewPanelComponent,
+    "build-route-summary": buildRouteSummaryComponent,
+    "update-route-summary": updateRouteSummaryComponent,
+    "rebuild-route-summary": rebuildRouteSummaryComponent,
+    "build-routing-input-group": buildRoutingInputGroupComponent,
+    "update-routing-input-group": updateRoutingInputGroupComponent,
+    "rebuild-routing-input-group": rebuildRoutingInputGroupComponent,
+    "build-save-location-card": buildSaveLocationCardComponent,
+    "update-save-location-card": updateSaveLocationCardComponent,
+    "rebuild-save-location-card": rebuildSaveLocationCardComponent,
+    "build-user-location-marker": buildUserLocationMarkerComponent,
+    "update-user-location-marker": updateUserLocationMarkerComponent,
+    "rebuild-user-location-marker": rebuildUserLocationMarkerComponent,
+    "build-dynamic-island": buildDynamicIslandComponent,
+    "update-dynamic-island": updateDynamicIslandComponent,
+    "rebuild-dynamic-island": rebuildDynamicIslandComponent,
+    "build-feedback-card": buildFeedbackCardComponent,
+    "update-feedback-card": updateFeedbackCardComponent,
+    "rebuild-feedback-card": rebuildFeedbackCardComponent,
+    "build-adaptive-map-shell": buildAdaptiveMapShellComponent,
+    "update-adaptive-map-shell": updateAdaptiveMapShellComponent,
+    "rebuild-adaptive-map-shell": rebuildAdaptiveMapShellComponent,
+    "build-map-control-button": buildMapControlButtonComponent,
+    "update-map-control-button": updateMapControlButtonComponent,
+    "rebuild-map-control-button": rebuildMapControlButtonComponent,
+    "build-map-controls-group": buildMapControlsGroupComponent,
+    "update-map-controls-group": updateMapControlsGroupComponent,
+    "rebuild-map-controls-group": rebuildMapControlsGroupComponent,
+    "build-map-overlay": buildMapOverlayComponent,
+    "update-map-overlay": updateMapOverlayComponent,
+    "rebuild-map-overlay": rebuildMapOverlayComponent,
+    "build-poi-detail-panel": buildPOIDetailPanelComponent,
+    "update-poi-detail-panel": updatePOIDetailPanelComponent,
+    "rebuild-poi-detail-panel": rebuildPOIDetailPanelComponent,
     "build-direction-step": buildDirectionStepComponent,
     "update-direction-step": updateDirectionStepComponent,
     "rebuild-direction-step": rebuildDirectionStepComponent,
@@ -10887,6 +11565,186 @@ function surfaceQaComponentDocs() {
   }));
 }
 
+/**
+ * Split an ordered list of heights into at most `columnCount` contiguous
+ * groups, minimising the tallest group.
+ *
+ * Contiguous matters: each column then holds a consecutive slice of the
+ * section's alphabetized list, so reading order stays column-major (down, then
+ * across) the way a newspaper reads. Binary-searching the height limit and
+ * greedily filling is exact for this problem and cheap at these sizes.
+ */
+function partitionIntoContiguousColumns(heights, columnCount) {
+  if (heights.length === 0) return [];
+
+  const limitCount = Math.max(1, Math.min(columnCount, heights.length));
+  if (limitCount === 1) return [heights.map((_value, index) => index)];
+
+  let low = 0;
+  let high = 0;
+
+  for (const height of heights) {
+    low = Math.max(low, height);
+    high += height;
+  }
+
+  const fits = (limit) => {
+    let used = 1;
+    let current = 0;
+
+    for (const height of heights) {
+      if (current > 0 && current + height > limit) {
+        used += 1;
+        current = height;
+      } else {
+        current += height;
+      }
+    }
+
+    return used <= limitCount;
+  };
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (fits(mid)) high = mid;
+    else low = mid + 1;
+  }
+
+  const groups = [[]];
+  let current = 0;
+
+  for (let index = 0; index < heights.length; index += 1) {
+    const group = groups[groups.length - 1];
+
+    if (group.length > 0 && current + heights[index] > low) {
+      groups.push([index]);
+      current = heights[index];
+      continue;
+    }
+
+    group.push(index);
+    current += heights[index];
+  }
+
+  return groups;
+}
+
+/**
+ * Flow blocks into the column count whose resulting bounding box is closest to
+ * square, and return the placement.
+ *
+ * Reviewability is what this optimises. A tall ribbon and a wide ribbon are
+ * equally awkward to scan, and a roughly square block is what Figma's
+ * zoom-to-fit is good at. Deriving the count from the measured sizes rather
+ * than a target-height constant means it keeps choosing well as sets are added,
+ * with nothing to re-tune.
+ *
+ * Each block is `{ width, height }`; `gap` separates blocks within a column and
+ * `columnGap` separates the columns.
+ */
+function packBlocksIntoColumns(blocks, gap, columnGap, maxColumns) {
+  if (blocks.length === 0) {
+    return { groups: [], columns: [], width: 0, height: 0 };
+  }
+
+  const packHeights = blocks.map((block) => block.height + gap);
+  const limit = Math.max(1, Math.min(maxColumns, blocks.length));
+  let best = null;
+
+  for (let count = 1; count <= limit; count += 1) {
+    const groups = partitionIntoContiguousColumns(packHeights, count);
+    const columns = [];
+    let width = 0;
+    let height = 0;
+
+    for (const group of groups) {
+      let columnWidth = 0;
+      let columnHeight = 0;
+
+      for (const index of group) {
+        columnWidth = Math.max(columnWidth, blocks[index].width);
+        columnHeight += packHeights[index];
+      }
+
+      columnHeight = Math.max(0, columnHeight - gap);
+      columns.push({ x: width, width: columnWidth, height: columnHeight });
+      width += columnWidth + columnGap;
+      height = Math.max(height, columnHeight);
+    }
+
+    width = Math.max(0, width - columnGap);
+    const aspect =
+      Math.max(width, height) / Math.max(1, Math.min(width, height));
+
+    if (!best || aspect < best.aspect) {
+      best = { groups, columns, width, height, aspect };
+    }
+  }
+
+  return best;
+}
+
+function componentSetFootprintHeight(node, bounds) {
+  return Math.max(
+    bounds.height,
+    COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS[canonicalComponentSetName(node.name)] ||
+      0,
+    COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT,
+  );
+}
+
+/**
+ * Lay one section's component sets out in columns, relative to the section's
+ * content origin. Column widths are independent because set widths in this
+ * library span roughly 200px to several thousand, so a uniform column width
+ * would either clip the wide ones or strand whitespace beside the narrow ones.
+ */
+function layoutComponentSetColumns(nodes) {
+  const entries = [];
+
+  for (const node of nodes) {
+    const bounds = measureComponentSetLayoutBounds(node);
+    entries.push({
+      node,
+      bounds,
+      footprintHeight: componentSetFootprintHeight(node, bounds),
+      x: 0,
+      y: 0,
+    });
+  }
+
+  const packed = packBlocksIntoColumns(
+    entries.map((entry) => ({
+      width: entry.bounds.width,
+      height: entry.footprintHeight,
+    })),
+    COMPONENT_PAGE_LAYOUT_ROW_GAP,
+    COMPONENT_PAGE_LAYOUT_COLUMN_GAP,
+    COMPONENT_PAGE_LAYOUT_MAX_COLUMNS,
+  );
+
+  packed.groups.forEach((group, columnIndex) => {
+    const column = packed.columns[columnIndex];
+    let columnY = 0;
+
+    for (const index of group) {
+      const entry = entries[index];
+      entry.x = column.x;
+      entry.y = columnY;
+      columnY += entry.footprintHeight + COMPONENT_PAGE_LAYOUT_ROW_GAP;
+    }
+
+    column.componentCount = group.length;
+  });
+
+  return {
+    entries,
+    columns: packed.columns,
+    contentWidth: packed.width,
+    contentHeight: packed.height,
+  };
+}
+
 async function reorganizeComponentsPage() {
   const stats = {
     page: COMPONENTS_PAGE_NAME,
@@ -10951,124 +11809,64 @@ async function reorganizeComponentsPage() {
   });
   removeStaleComponentLayoutSections(page, activeSectionTitles);
 
-  let y = COMPONENT_PAGE_LAYOUT_Y;
+  // Measure every section before placing any of it: packing the sections
+  // themselves into columns needs all the block sizes up front.
+  const measuredSections = [];
 
   for (const section of sectionNodes) {
-    const sectionRecord = {
-      title: section.title,
-      kind: useNativeSections ? "SECTION" : "TEXT",
-      x: COMPONENT_PAGE_LAYOUT_X,
-      y,
-      componentCount: 0,
-      components: [],
-    };
+    const layout = layoutComponentSetColumns(section.nodes);
+    const heading = useNativeSections
+      ? null
+      : upsertComponentSectionHeading(page, section.title, fonts);
+    const contentOffsetY = heading
+      ? Math.ceil(heading.height || 0) +
+        COMPONENT_PAGE_LAYOUT_SECTION_HEADING_GAP
+      : COMPONENT_PAGE_LAYOUT_SECTION_PADDING_TOP;
+    const trailing = useNativeSections
+      ? COMPONENT_PAGE_LAYOUT_SECTION_PADDING_BOTTOM
+      : 0;
+    const inset = useNativeSections
+      ? COMPONENT_PAGE_LAYOUT_SECTION_PADDING_X
+      : 0;
 
-    if (useNativeSections) {
-      const layoutSection = upsertComponentLayoutSection(page, section.title);
-      page.appendChild(layoutSection);
-      layoutSection.x =
-        COMPONENT_PAGE_LAYOUT_X - COMPONENT_PAGE_LAYOUT_SECTION_PADDING_X;
-      layoutSection.y = y;
-
-      let sectionContentY = COMPONENT_PAGE_LAYOUT_SECTION_PADDING_TOP;
-      let sectionContentWidth = 0;
-
-      for (const node of section.nodes) {
-        const bounds = measureComponentSetLayoutBounds(node);
-        const footprintHeight = Math.max(
-          bounds.height,
-          COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS[
-            canonicalComponentSetName(node.name)
-          ] || 0,
-          COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT,
-        );
-
-        if (node.parent !== layoutSection) layoutSection.appendChild(node);
-        node.x = COMPONENT_PAGE_LAYOUT_SECTION_PADDING_X - bounds.minX;
-        node.y = sectionContentY - bounds.minY;
-        stats.movedComponentSets += 1;
-        stats.positions.push({
-          name: node.name,
-          section: section.title,
-          id: node.id,
-          urlNodeId: nodeIdForUrl(node.id),
-          x: node.x,
-          y: node.y,
-          visualX: layoutSection.x + COMPONENT_PAGE_LAYOUT_SECTION_PADDING_X,
-          visualY: layoutSection.y + sectionContentY,
-          width: bounds.width,
-          height: bounds.height,
-          footprintHeight,
-        });
-        sectionRecord.componentCount += 1;
-        sectionRecord.components.push(node.name);
-        sectionContentWidth = Math.max(sectionContentWidth, bounds.width);
-
-        sectionContentY += footprintHeight + COMPONENT_PAGE_LAYOUT_ROW_GAP;
-      }
-
-      const sectionHeight =
-        sectionContentY -
-        COMPONENT_PAGE_LAYOUT_ROW_GAP +
-        COMPONENT_PAGE_LAYOUT_SECTION_PADDING_BOTTOM;
-      const sectionWidth =
-        sectionContentWidth + COMPONENT_PAGE_LAYOUT_SECTION_PADDING_X * 2;
-      resizeNodeWithoutConstraints(layoutSection, sectionWidth, sectionHeight);
-
-      sectionRecord.id = layoutSection.id;
-      sectionRecord.urlNodeId = nodeIdForUrl(layoutSection.id);
-      sectionRecord.width = sectionWidth;
-      sectionRecord.height = sectionHeight;
-      stats.sections.push(sectionRecord);
-      y += sectionHeight + COMPONENT_PAGE_LAYOUT_SECTION_GAP;
-      continue;
-    }
-
-    const heading = upsertComponentSectionHeading(page, section.title, fonts);
-    sectionRecord.headingId = heading.id;
-    sectionRecord.headingUrlNodeId = nodeIdForUrl(heading.id);
-    heading.x = COMPONENT_PAGE_LAYOUT_X;
-    heading.y = y;
-
-    y +=
-      Math.ceil(heading.height || 0) +
-      COMPONENT_PAGE_LAYOUT_SECTION_HEADING_GAP;
-
-    for (const node of section.nodes) {
-      const bounds = measureComponentSetLayoutBounds(node);
-      const footprintHeight = Math.max(
-        bounds.height,
-        COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS[
-          canonicalComponentSetName(node.name)
-        ] || 0,
-        COMPONENT_PAGE_LAYOUT_MIN_FOOTPRINT_HEIGHT,
-      );
-
-      if (node.parent !== page) page.appendChild(node);
-      node.x = COMPONENT_PAGE_LAYOUT_X - bounds.minX;
-      node.y = y - bounds.minY;
-      stats.movedComponentSets += 1;
-      stats.positions.push({
-        name: node.name,
-        section: section.title,
-        id: node.id,
-        urlNodeId: nodeIdForUrl(node.id),
-        x: node.x,
-        y: node.y,
-        visualX: COMPONENT_PAGE_LAYOUT_X,
-        visualY: y,
-        width: bounds.width,
-        height: bounds.height,
-        footprintHeight,
-      });
-      sectionRecord.componentCount += 1;
-      sectionRecord.components.push(node.name);
-
-      y += footprintHeight + COMPONENT_PAGE_LAYOUT_ROW_GAP;
-    }
-    stats.sections.push(sectionRecord);
-    y += COMPONENT_PAGE_LAYOUT_SECTION_GAP;
+    measuredSections.push({
+      section,
+      layout,
+      heading,
+      contentOffsetX: inset,
+      contentOffsetY,
+      width: layout.contentWidth + inset * 2,
+      height: contentOffsetY + layout.contentHeight + trailing,
+    });
   }
+
+  const sectionGrid = packBlocksIntoColumns(
+    measuredSections,
+    COMPONENT_PAGE_LAYOUT_SECTION_GAP,
+    COMPONENT_PAGE_LAYOUT_SECTION_COLUMN_GAP,
+    COMPONENT_PAGE_LAYOUT_MAX_SECTION_COLUMNS,
+  );
+  stats.sectionColumns = sectionGrid.columns.length;
+  stats.pageWidth = sectionGrid.width;
+  stats.pageHeight = sectionGrid.height;
+
+  sectionGrid.groups.forEach((group, columnIndex) => {
+    const column = sectionGrid.columns[columnIndex];
+    let columnY = COMPONENT_PAGE_LAYOUT_Y;
+
+    for (const index of group) {
+      const block = measuredSections[index];
+      placeComponentSection(
+        page,
+        block,
+        COMPONENT_PAGE_LAYOUT_X + column.x,
+        columnY,
+        useNativeSections,
+        stats,
+      );
+      columnY += block.height + COMPONENT_PAGE_LAYOUT_SECTION_GAP;
+    }
+  });
 
   if (stats.skippedComponentSets.length > 0) {
     stats.warnings.push(
@@ -11085,10 +11883,94 @@ async function reorganizeComponentsPage() {
       ? ` Removed ${stats.unexpectedTopLevelInstancesRemoved} stray top-level generated instance(s).`
       : "";
   stats.message =
-    `Reorganized ${stats.movedComponentSets} component set(s) on the Components page into ${stats.sections.length} alphabetized ${useNativeSections ? "native Figma section" : "section heading"} group(s); node IDs were preserved.` +
+    `Reorganized ${stats.movedComponentSets} component set(s) on the Components page into ${stats.sections.length} alphabetized ${useNativeSections ? "native Figma section" : "section heading"} group(s) across ${stats.sectionColumns} column(s), ${stats.pageWidth} x ${stats.pageHeight}px; node IDs were preserved.` +
     renameSummary +
     cleanupSummary;
   return stats;
+}
+
+/**
+ * Place one measured section and its component sets.
+ *
+ * Native sections own their children, so those children carry section-relative
+ * coordinates; the text-heading fallback leaves everything on the page in
+ * absolute coordinates. `stats.positions` always records absolute page
+ * coordinates so the build report stays comparable across both paths.
+ */
+function placeComponentSection(
+  page,
+  block,
+  originX,
+  originY,
+  useNativeSections,
+  stats,
+) {
+  const sectionRecord = {
+    title: block.section.title,
+    kind: useNativeSections ? "SECTION" : "TEXT",
+    x: originX,
+    y: originY,
+    width: block.width,
+    height: block.height,
+    columnCount: block.layout.columns.length,
+    componentCount: 0,
+    components: [],
+  };
+
+  let container = page;
+  let contentOriginX = originX + block.contentOffsetX;
+  let contentOriginY = originY + block.contentOffsetY;
+  let layoutSection = null;
+
+  if (useNativeSections) {
+    layoutSection = upsertComponentLayoutSection(page, block.section.title);
+    page.appendChild(layoutSection);
+    layoutSection.x = originX;
+    layoutSection.y = originY;
+    container = layoutSection;
+    contentOriginX = block.contentOffsetX;
+    contentOriginY = block.contentOffsetY;
+    sectionRecord.id = layoutSection.id;
+    sectionRecord.urlNodeId = nodeIdForUrl(layoutSection.id);
+  } else {
+    block.heading.x = originX;
+    block.heading.y = originY;
+    sectionRecord.headingId = block.heading.id;
+    sectionRecord.headingUrlNodeId = nodeIdForUrl(block.heading.id);
+  }
+
+  for (const entry of block.layout.entries) {
+    const node = entry.node;
+    const contentX = contentOriginX + entry.x;
+    const contentY = contentOriginY + entry.y;
+
+    if (node.parent !== container) container.appendChild(node);
+    node.x = contentX - entry.bounds.minX;
+    node.y = contentY - entry.bounds.minY;
+    stats.movedComponentSets += 1;
+    stats.positions.push({
+      name: node.name,
+      section: block.section.title,
+      id: node.id,
+      urlNodeId: nodeIdForUrl(node.id),
+      x: node.x,
+      y: node.y,
+      visualX: layoutSection ? originX + contentX : contentX,
+      visualY: layoutSection ? originY + contentY : contentY,
+      width: entry.bounds.width,
+      height: entry.bounds.height,
+      footprintHeight: entry.footprintHeight,
+    });
+    sectionRecord.componentCount += 1;
+    sectionRecord.components.push(node.name);
+  }
+
+  if (layoutSection) {
+    resizeNodeWithoutConstraints(layoutSection, block.width, block.height);
+  }
+
+  stats.sections.push(sectionRecord);
+  return sectionRecord;
 }
 
 function componentPageLayoutOrder(sections) {
@@ -14704,6 +15586,114 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "Label") {
     return {
       State: LABEL_STATES,
+    };
+  }
+
+  if (canonicalName === "AdaptiveMapShell") {
+    return {
+      PanelPlacement: ADAPTIVE_MAP_SHELL_PANEL_PLACEMENTS,
+    };
+  }
+
+  if (canonicalName === "MapControlButton") {
+    return {
+      Presentation: MAP_CONTROL_BUTTON_PRESENTATIONS,
+    };
+  }
+
+  if (canonicalName === "MapControlsGroup") {
+    return {
+      LocationPresentation: MAP_CONTROLS_GROUP_PRESENTATIONS,
+    };
+  }
+
+  if (canonicalName === "MapOverlay") {
+    return {
+      Width: MAP_OVERLAY_WIDTHS,
+    };
+  }
+
+  if (canonicalName === "POIDetailPanel") {
+    return {
+      Presentation: POI_DETAIL_PANEL_PRESENTATIONS,
+    };
+  }
+
+  if (canonicalName === "BrowseCategoriesPanel") {
+    return {
+      Content: BROWSE_CATEGORIES_PANEL_CONTENT,
+    };
+  }
+
+  if (canonicalName === "CategoryTile") {
+    return {
+      State: CATEGORY_TILE_STATES,
+    };
+  }
+
+  if (canonicalName === "POIMediaGallery") {
+    return {
+      Content: POI_MEDIA_GALLERY_CONTENT,
+    };
+  }
+
+  if (canonicalName === "POIResultCard") {
+    return {
+      State: POI_RESULT_CARD_STATES,
+    };
+  }
+
+  if (canonicalName === "POIResultList") {
+    return {
+      Content: POI_RESULT_LIST_CONTENT,
+    };
+  }
+
+  if (canonicalName === "RouteOptionCard") {
+    return {
+      State: ROUTE_OPTION_CARD_STATES,
+    };
+  }
+
+  if (canonicalName === "RoutePreviewPanel") {
+    return {
+      Status: ROUTE_PREVIEW_PANEL_STATUSES,
+    };
+  }
+
+  if (canonicalName === "RouteSummary") {
+    return {
+      State: ROUTE_SUMMARY_STATES,
+    };
+  }
+
+  if (canonicalName === "RoutingInputGroup") {
+    return {
+      Content: ROUTING_INPUT_GROUP_CONTENT,
+    };
+  }
+
+  if (canonicalName === "SaveLocationCard") {
+    return {
+      State: SAVE_LOCATION_CARD_STATES,
+    };
+  }
+
+  if (canonicalName === "UserLocationMarker") {
+    return {
+      Heading: USER_LOCATION_MARKER_HEADINGS,
+    };
+  }
+
+  if (canonicalName === "DynamicIsland") {
+    return {
+      State: DYNAMIC_ISLAND_STATES,
+    };
+  }
+
+  if (canonicalName === "FeedbackCard") {
+    return {
+      State: FEEDBACK_CARD_STATES,
     };
   }
 
@@ -42220,6 +43210,3293 @@ async function rebuildWayfindingCardComponent() {
   });
 }
 
+// --- Product / SDK shared anatomy ------------------------------------------
+//
+// The sets below are mostly nested auto-layout frames over a handful of
+// repeating shapes: a padded surface, a neutral slot standing in for content a
+// renderer or the product owns, and a square control button. Spelling those out
+// inline buried the parts that actually differ between components.
+
+/** Configured auto-layout frame with fills and strokes cleared. */
+function productSdkFrame(name, options) {
+  const settings = options || {};
+  const frame = figma.createFrame();
+  frame.name = name;
+  frame.layoutMode =
+    settings.direction === "horizontal" ? "HORIZONTAL" : "VERTICAL";
+  frame.primaryAxisSizingMode = settings.primarySizing || "AUTO";
+  frame.counterAxisSizingMode = settings.counterSizing || "AUTO";
+  frame.primaryAxisAlignItems = settings.primaryAlign || "MIN";
+  frame.counterAxisAlignItems = settings.counterAlign || "MIN";
+  frame.itemSpacing = settings.spacing || 0;
+
+  const padding = settings.padding || 0;
+  frame.paddingLeft =
+    typeof settings.paddingLeft === "number" ? settings.paddingLeft : padding;
+  frame.paddingRight =
+    typeof settings.paddingRight === "number" ? settings.paddingRight : padding;
+  frame.paddingTop =
+    typeof settings.paddingTop === "number" ? settings.paddingTop : padding;
+  frame.paddingBottom =
+    typeof settings.paddingBottom === "number"
+      ? settings.paddingBottom
+      : padding;
+  frame.fills = [];
+  frame.strokes = [];
+  frame.clipsContent = false;
+
+  if (
+    typeof settings.width === "number" &&
+    typeof settings.height === "number"
+  ) {
+    frame.resizeWithoutConstraints(settings.width, settings.height);
+  }
+
+  return frame;
+}
+
+/**
+ * Configure a component frame as a Product / SDK variant root.
+ *
+ * Every variant repeats the same seven-line preamble; the parts worth reading
+ * are the anatomy that follows it.
+ */
+function productSdkVariantRoot(component, componentName, variantName, options) {
+  const settings = options || {};
+  component.name = variantName;
+  component.layoutMode =
+    settings.direction === "horizontal" ? "HORIZONTAL" : "VERTICAL";
+  component.primaryAxisSizingMode = settings.primarySizing || "FIXED";
+  component.counterAxisSizingMode = settings.counterSizing || "FIXED";
+  component.primaryAxisAlignItems = settings.primaryAlign || "MIN";
+  component.counterAxisAlignItems = settings.counterAlign || "MIN";
+  component.itemSpacing = settings.spacing || 0;
+
+  const padding = settings.padding || 0;
+  component.paddingLeft =
+    typeof settings.paddingLeft === "number" ? settings.paddingLeft : padding;
+  component.paddingRight =
+    typeof settings.paddingRight === "number" ? settings.paddingRight : padding;
+  component.paddingTop =
+    typeof settings.paddingTop === "number" ? settings.paddingTop : padding;
+  component.paddingBottom =
+    typeof settings.paddingBottom === "number"
+      ? settings.paddingBottom
+      : padding;
+  component.resizeWithoutConstraints(settings.width, settings.height);
+  component.clipsContent = settings.clip === true;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", componentName);
+  removeDirectChildren(component);
+  return component;
+}
+
+/** Neutral placeholder for content a renderer or the product owns. */
+async function productSdkSlot({
+  name,
+  label,
+  width,
+  height,
+  fonts,
+  variableByName,
+  stats,
+  muted,
+}) {
+  const slot = productSdkFrame(name, {
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    padding: 12,
+    width,
+    height,
+  });
+  slot.cornerRadius = 8;
+  slot.fills = [
+    paintFromVariable(
+      muted ? "Surface/100" : "Colors/background/100",
+      muted ? "#F4F5F7" : "#E3E4E8",
+      variableByName,
+      stats,
+    ),
+  ];
+  slot.strokes = [
+    paintFromVariable(
+      "Colors/background/200",
+      "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  slot.strokeWeight = 1;
+
+  const text = await productSdkText({
+    name: name + " Text",
+    characters: label,
+    styleKey: "cardDescription",
+    fonts,
+    bold: false,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    variableByName,
+    stats,
+    width: Math.max(24, width - 24),
+  });
+  text.textAlignHorizontal = "CENTER";
+  appendWithSizing(slot, text, "FILL", null);
+  return slot;
+}
+
+/**
+ * Square or labelled map-chrome button.
+ *
+ * The glyph is text rather than an icon instance on purpose, matching
+ * DirectionStep: these are compass and zoom affordances that must not
+ * auto-mirror in RTL.
+ */
+async function productSdkControlButton({
+  name,
+  glyph,
+  label,
+  pressed,
+  fonts,
+  variableByName,
+  stats,
+}) {
+  const labelled = typeof label === "string" && label.length > 0;
+  const button = productSdkFrame(name, {
+    direction: "horizontal",
+    primarySizing: labelled ? "AUTO" : "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    spacing: labelled ? 8 : 0,
+    paddingLeft: labelled ? 12 : 0,
+    paddingRight: labelled ? 12 : 0,
+    width: 44,
+    height: 44,
+  });
+  button.cornerRadius = 8;
+  button.fills = [
+    paintFromVariable(
+      pressed ? "Colors/theme/100" : "Surface/0",
+      pressed ? "#CAD9FC" : "#FFFFFF",
+      variableByName,
+      stats,
+    ),
+  ];
+  button.strokes = [
+    paintFromVariable(
+      pressed ? "Colors/theme/500" : "Colors/background/200",
+      pressed ? "#135BEC" : "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  button.strokeWeight = 1;
+
+  const glyphText = await productSdkText({
+    name: name + " Glyph",
+    characters: glyph,
+    styleKey: "badgeLabel",
+    fonts,
+    bold: true,
+    fontSize: 16,
+    lineHeight: 20,
+    colorToken: pressed ? "Colors/theme/500" : "Colors/foreground/0",
+    colorFallback: pressed ? "#135BEC" : "#000000",
+    variableByName,
+    stats,
+    width: 20,
+  });
+  glyphText.textAlignHorizontal = "CENTER";
+  glyphText.textAutoResize = "WIDTH_AND_HEIGHT";
+  button.appendChild(glyphText);
+
+  if (labelled) {
+    const labelText = await productSdkText({
+      name: name + " Label",
+      characters: label,
+      styleKey: "controlLabel",
+      fonts,
+      bold: false,
+      fontSize: 14,
+      lineHeight: 20,
+      colorToken: "Colors/foreground/0",
+      colorFallback: "#000000",
+      variableByName,
+      stats,
+      width: 96,
+    });
+    labelText.textAutoResize = "WIDTH_AND_HEIGHT";
+    button.appendChild(labelText);
+  }
+
+  return button;
+}
+
+/** Title row with an optional trailing close affordance. */
+async function productSdkPanelHeader({
+  title,
+  titleNodeName,
+  closeGlyph,
+  width,
+  fonts,
+  variableByName,
+  stats,
+}) {
+  const header = productSdkFrame("Panel Header", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "AUTO",
+    primaryAlign: "SPACE_BETWEEN",
+    counterAlign: "CENTER",
+    spacing: 12,
+    width,
+    height: 32,
+  });
+
+  const titleText = await productSdkText({
+    name: titleNodeName,
+    characters: title,
+    styleKey: "cardTitle",
+    fonts,
+    bold: true,
+    fontSize: 16,
+    lineHeight: 24,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: Math.max(24, width - (closeGlyph ? 56 : 0)),
+  });
+  appendWithSizing(header, titleText, "FILL", null);
+
+  if (closeGlyph) {
+    const close = await productSdkControlButton({
+      name: "Close Slot",
+      glyph: closeGlyph,
+      fonts,
+      variableByName,
+      stats,
+    });
+    close.resizeWithoutConstraints(32, 32);
+    appendWithSizing(header, close, "FIXED", "FIXED");
+  }
+
+  return header;
+}
+
+// --- AdaptiveMapShell ------------------------------------------------------
+
+async function createAdaptiveMapShellVariant(args) {
+  const component = figma.createComponent();
+  await updateAdaptiveMapShellVariant(component, args);
+  return component;
+}
+
+function parseAdaptiveMapShellVariantName(name) {
+  return productSdkVariantValues(
+    name,
+    "PanelPlacement",
+    ADAPTIVE_MAP_SHELL_PANEL_PLACEMENTS,
+  );
+}
+
+async function updateAdaptiveMapShellVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  productSdkVariantRoot(
+    component,
+    "AdaptiveMapShell",
+    "PanelPlacement=" + value,
+    {
+      spacing: 12,
+      padding: 12,
+      width: 760,
+      height: 440,
+    },
+  );
+  productSdkSurface(component, 12, variableByName, stats);
+
+  const topBar = await productSdkSlot({
+    name: "Top Bar Slot",
+    label: "Top bar slot",
+    width: 736,
+    height: 48,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+  appendWithSizing(component, topBar, "FILL", "FIXED");
+
+  const body = productSdkFrame("Shell Body", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    spacing: 12,
+    width: 736,
+    height: 344,
+  });
+
+  // The map surface hosts the controls slot: `controls` renders above the
+  // canvas, so it is modelled as a trailing-aligned child rather than a
+  // sibling column, which would read as a third pane.
+  const mapSurface = productSdkFrame("Map Surface", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "MAX",
+    counterAlign: "MIN",
+    padding: 12,
+    width: 432,
+    height: 344,
+  });
+  mapSurface.cornerRadius = 8;
+  mapSurface.clipsContent = true;
+  mapSurface.fills = [
+    paintFromVariable(
+      "Colors/background/100",
+      "#E3E4E8",
+      variableByName,
+      stats,
+    ),
+  ];
+  mapSurface.strokes = [
+    paintFromVariable(
+      "Colors/background/200",
+      "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  mapSurface.strokeWeight = 1;
+
+  const controls = await productSdkSlot({
+    name: "Controls Slot",
+    label: "Controls",
+    width: 60,
+    height: 152,
+    fonts,
+    variableByName,
+    stats,
+  });
+  mapSurface.appendChild(controls);
+
+  const panel = await productSdkSlot({
+    name: "Panel Slot",
+    label: "Panel slot",
+    width: 280,
+    height: 344,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+
+  // Start places the panel at the inline start, End at the inline end. Both
+  // are laid out in flow, so the shell mirrors correctly in RTL.
+  if (value === "Start") {
+    appendWithSizing(body, panel, "FIXED", "FILL");
+    appendWithSizing(body, mapSurface, "FILL", "FILL");
+  } else {
+    appendWithSizing(body, mapSurface, "FILL", "FILL");
+    appendWithSizing(body, panel, "FIXED", "FILL");
+  }
+
+  appendWithSizing(component, body, "FILL", "FILL");
+}
+
+function configureAdaptiveMapShellProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Panel Slot Text",
+    "Panel Label Text",
+    "Panel slot",
+    stats,
+  );
+}
+
+const ADAPTIVE_MAP_SHELL_DESCRIPTION = [
+  "Kozmos AdaptiveMapShell generated from the React AdaptiveMapShell API.",
+  "PanelPlacement maps to AdaptiveMapShell.panelPlacement (start, end).",
+  "Top Bar Slot maps to AdaptiveMapShell.topBar.",
+  "Panel Slot maps to AdaptiveMapShell.panel, Controls Slot to .controls.",
+  "Map Surface is renderer output; mapLabel and collisionInsets have no visual counterpart.",
+];
+
+async function buildAdaptiveMapShellComponent() {
+  return buildSingleAxisComponent({
+    componentName: "AdaptiveMapShell",
+    componentSetName: "AdaptiveMapShell",
+    axisName: "PanelPlacement",
+    values: ADAPTIVE_MAP_SHELL_PANEL_PLACEMENTS,
+    x: 80,
+    y: 11200,
+    xStep: 820,
+    createVariant: createAdaptiveMapShellVariant,
+    configureProperties: configureAdaptiveMapShellProperties,
+    autoReorganize: true,
+    description: ADAPTIVE_MAP_SHELL_DESCRIPTION,
+  });
+}
+
+async function updateAdaptiveMapShellComponent() {
+  return updateSingleAxisComponent({
+    componentName: "AdaptiveMapShell",
+    componentSetName: "AdaptiveMapShell",
+    axisName: "PanelPlacement",
+    values: ADAPTIVE_MAP_SHELL_PANEL_PLACEMENTS,
+    xStep: 820,
+    createVariant: createAdaptiveMapShellVariant,
+    updateVariant: updateAdaptiveMapShellVariant,
+    parseVariantName: parseAdaptiveMapShellVariantName,
+    configureProperties: configureAdaptiveMapShellProperties,
+    autoReorganize: true,
+    description: ADAPTIVE_MAP_SHELL_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildAdaptiveMapShellComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "AdaptiveMapShell",
+    componentSetName: "AdaptiveMapShell",
+    build: buildAdaptiveMapShellComponent,
+  });
+}
+
+// --- MapControlButton ------------------------------------------------------
+
+async function createMapControlButtonVariant(args) {
+  const component = figma.createComponent();
+  await updateMapControlButtonVariant(component, args);
+  return component;
+}
+
+function parseMapControlButtonVariantName(name) {
+  return productSdkVariantValues(
+    name,
+    "Presentation",
+    MAP_CONTROL_BUTTON_PRESENTATIONS,
+  );
+}
+
+async function updateMapControlButtonVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const labelled = value === "Labelled";
+  productSdkVariantRoot(
+    component,
+    "MapControlButton",
+    "Presentation=" + value,
+    {
+      direction: "horizontal",
+      primarySizing: labelled ? "AUTO" : "FIXED",
+      counterSizing: "FIXED",
+      primaryAlign: "CENTER",
+      counterAlign: "CENTER",
+      spacing: labelled ? 8 : 0,
+      paddingLeft: labelled ? 12 : 0,
+      paddingRight: labelled ? 12 : 0,
+      // 44px on both axes even when icon-only: this is the shared touch-target
+      // contract, not a visual choice.
+      width: 44,
+      height: 44,
+    },
+  );
+  component.cornerRadius = 8;
+  component.fills = [
+    paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
+  ];
+  component.strokes = [
+    paintFromVariable(
+      "Colors/background/200",
+      "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokeWeight = 1;
+
+  const glyph = await productSdkText({
+    name: "Control Glyph",
+    characters: "+",
+    styleKey: "badgeLabel",
+    fonts,
+    bold: true,
+    fontSize: 18,
+    lineHeight: 24,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: 20,
+  });
+  glyph.textAlignHorizontal = "CENTER";
+  glyph.textAutoResize = "WIDTH_AND_HEIGHT";
+  component.appendChild(glyph);
+
+  if (labelled) {
+    const label = await productSdkText({
+      name: "Label Text",
+      characters: "Zoom in",
+      styleKey: "controlLabel",
+      fonts,
+      bold: false,
+      fontSize: 14,
+      lineHeight: 20,
+      colorToken: "Colors/foreground/0",
+      colorFallback: "#000000",
+      variableByName,
+      stats,
+      width: 96,
+    });
+    label.textAutoResize = "WIDTH_AND_HEIGHT";
+    component.appendChild(label);
+  }
+}
+
+function configureMapControlButtonProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Label Text",
+    "Label Text",
+    "Zoom in",
+    stats,
+  );
+}
+
+const MAP_CONTROL_BUTTON_DESCRIPTION = [
+  "Kozmos MapControlButton generated from the React MapControlButton API.",
+  "Presentation maps to MapControlButton.presentation (icon-only, labelled).",
+  "Label Text maps to MapControlButton.label, which is the accessible name in both presentations.",
+  "stateLabel is appended to the accessible name and has no visual counterpart.",
+  "Both presentations keep a 44px target so the touch-target contract holds.",
+];
+
+async function buildMapControlButtonComponent() {
+  return buildSingleAxisComponent({
+    componentName: "MapControlButton",
+    componentSetName: "MapControlButton",
+    axisName: "Presentation",
+    values: MAP_CONTROL_BUTTON_PRESENTATIONS,
+    x: 80,
+    y: 11800,
+    xStep: 240,
+    createVariant: createMapControlButtonVariant,
+    configureProperties: configureMapControlButtonProperties,
+    autoReorganize: true,
+    description: MAP_CONTROL_BUTTON_DESCRIPTION,
+  });
+}
+
+async function updateMapControlButtonComponent() {
+  return updateSingleAxisComponent({
+    componentName: "MapControlButton",
+    componentSetName: "MapControlButton",
+    axisName: "Presentation",
+    values: MAP_CONTROL_BUTTON_PRESENTATIONS,
+    xStep: 240,
+    createVariant: createMapControlButtonVariant,
+    updateVariant: updateMapControlButtonVariant,
+    parseVariantName: parseMapControlButtonVariantName,
+    configureProperties: configureMapControlButtonProperties,
+    autoReorganize: true,
+    description: MAP_CONTROL_BUTTON_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildMapControlButtonComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "MapControlButton",
+    componentSetName: "MapControlButton",
+    build: buildMapControlButtonComponent,
+  });
+}
+
+// --- MapControlsGroup ------------------------------------------------------
+
+const MAP_CONTROLS_GROUP_BUTTONS = [
+  { name: "Zoom In Button", glyph: "+" },
+  { name: "Zoom Out Button", glyph: "−" },
+  { name: "Compass Button", glyph: "◈" },
+];
+
+async function createMapControlsGroupVariant(args) {
+  const component = figma.createComponent();
+  await updateMapControlsGroupVariant(component, args);
+  return component;
+}
+
+function parseMapControlsGroupVariantName(name) {
+  return productSdkVariantValues(
+    name,
+    "LocationPresentation",
+    MAP_CONTROLS_GROUP_PRESENTATIONS,
+  );
+}
+
+async function updateMapControlsGroupVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const labelled = value === "Labelled";
+  const width = labelled ? 188 : 44;
+  productSdkVariantRoot(
+    component,
+    "MapControlsGroup",
+    "LocationPresentation=" + value,
+    {
+      primarySizing: "AUTO",
+      counterSizing: "FIXED",
+      counterAlign: "MAX",
+      spacing: 8,
+      width,
+      height: 188,
+    },
+  );
+  component.fills = [];
+  component.strokes = [];
+
+  for (const spec of MAP_CONTROLS_GROUP_BUTTONS) {
+    const button = await productSdkControlButton({
+      name: spec.name,
+      glyph: spec.glyph,
+      fonts,
+      variableByName,
+      stats,
+    });
+    appendWithSizing(component, button, "FIXED", "FIXED");
+  }
+
+  // Only the location control follows the axis. The zoom and compass controls
+  // are always icon-only in the React component.
+  const location = await productSdkControlButton({
+    name: "My Location Button",
+    glyph: "◎",
+    label: labelled ? "My location" : null,
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(component, location, labelled ? "HUG" : "FIXED", "FIXED");
+}
+
+function configureMapControlsGroupProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "My Location Button Label",
+    "Location Label Text",
+    "My location",
+    stats,
+  );
+}
+
+const MAP_CONTROLS_GROUP_DESCRIPTION = [
+  "Kozmos MapControlsGroup generated from the React MapControlsGroup API.",
+  "LocationPresentation maps to MapControlsGroup.locationPresentation (icon-only, labelled).",
+  "Location Label Text maps to MapControlsGroup.locationLabel.",
+  "Zoom and compass controls are always icon-only, matching the React component.",
+  "compassBearing rotates the renderer's compass and has no variant counterpart.",
+];
+
+async function buildMapControlsGroupComponent() {
+  return buildSingleAxisComponent({
+    componentName: "MapControlsGroup",
+    componentSetName: "MapControlsGroup",
+    axisName: "LocationPresentation",
+    values: MAP_CONTROLS_GROUP_PRESENTATIONS,
+    x: 80,
+    y: 12200,
+    xStep: 300,
+    createVariant: createMapControlsGroupVariant,
+    configureProperties: configureMapControlsGroupProperties,
+    autoReorganize: true,
+    description: MAP_CONTROLS_GROUP_DESCRIPTION,
+  });
+}
+
+async function updateMapControlsGroupComponent() {
+  return updateSingleAxisComponent({
+    componentName: "MapControlsGroup",
+    componentSetName: "MapControlsGroup",
+    axisName: "LocationPresentation",
+    values: MAP_CONTROLS_GROUP_PRESENTATIONS,
+    xStep: 300,
+    createVariant: createMapControlsGroupVariant,
+    updateVariant: updateMapControlsGroupVariant,
+    parseVariantName: parseMapControlsGroupVariantName,
+    configureProperties: configureMapControlsGroupProperties,
+    autoReorganize: true,
+    description: MAP_CONTROLS_GROUP_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildMapControlsGroupComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "MapControlsGroup",
+    componentSetName: "MapControlsGroup",
+    build: buildMapControlsGroupComponent,
+  });
+}
+
+// --- MapOverlay ------------------------------------------------------------
+
+async function createMapOverlayVariant(args) {
+  const component = figma.createComponent();
+  await updateMapOverlayVariant(component, args);
+  return component;
+}
+
+function parseMapOverlayVariantName(name) {
+  return productSdkVariantValues(name, "Width", MAP_OVERLAY_WIDTHS);
+}
+
+async function updateMapOverlayVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const width = MAP_OVERLAY_WIDTH_SIZES[value] || MAP_OVERLAY_WIDTH_SIZES.Auto;
+  productSdkVariantRoot(component, "MapOverlay", "Width=" + value, {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 8,
+    padding: 12,
+    width,
+    height: 96,
+  });
+  productSdkSurface(component, 12, variableByName, stats);
+
+  const title = await productSdkText({
+    name: "Overlay Title Text",
+    characters: "Overlay",
+    styleKey: "cardTitle",
+    fonts,
+    bold: true,
+    fontSize: 14,
+    lineHeight: 20,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: width - 24,
+  });
+  appendWithSizing(component, title, "FILL", null);
+
+  const slot = await productSdkSlot({
+    name: "Overlay Content Slot",
+    label: "Overlay content",
+    width: width - 24,
+    height: 44,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+  appendWithSizing(component, slot, "FILL", "FIXED");
+}
+
+function configureMapOverlayProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Overlay Title Text",
+    "Overlay Title Text",
+    "Overlay",
+    stats,
+  );
+}
+
+const MAP_OVERLAY_DESCRIPTION = [
+  "Kozmos MapOverlay generated from the React MapOverlay API.",
+  "Width maps to MapOverlay.width (auto, sm, md, lg, full).",
+  "Overlay Content Slot maps to MapOverlay children.",
+  "position is renderer placement against the map canvas, so it stays out of the variant matrix; crossing 6 positions with 5 widths would produce 30 variants.",
+  "collisionInsets are supplied by the map adapter and have no visual counterpart.",
+];
+
+async function buildMapOverlayComponent() {
+  return buildSingleAxisComponent({
+    componentName: "MapOverlay",
+    componentSetName: "MapOverlay",
+    axisName: "Width",
+    values: MAP_OVERLAY_WIDTHS,
+    x: 80,
+    y: 12600,
+    xStep: 720,
+    createVariant: createMapOverlayVariant,
+    configureProperties: configureMapOverlayProperties,
+    autoReorganize: true,
+    description: MAP_OVERLAY_DESCRIPTION,
+  });
+}
+
+async function updateMapOverlayComponent() {
+  return updateSingleAxisComponent({
+    componentName: "MapOverlay",
+    componentSetName: "MapOverlay",
+    axisName: "Width",
+    values: MAP_OVERLAY_WIDTHS,
+    xStep: 720,
+    createVariant: createMapOverlayVariant,
+    updateVariant: updateMapOverlayVariant,
+    parseVariantName: parseMapOverlayVariantName,
+    configureProperties: configureMapOverlayProperties,
+    autoReorganize: true,
+    description: MAP_OVERLAY_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildMapOverlayComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "MapOverlay",
+    componentSetName: "MapOverlay",
+    build: buildMapOverlayComponent,
+  });
+}
+
+// --- POIDetailPanel --------------------------------------------------------
+
+async function createPOIDetailPanelVariant(args) {
+  const component = figma.createComponent();
+  await updatePOIDetailPanelVariant(component, args);
+  return component;
+}
+
+function parsePOIDetailPanelVariantName(name) {
+  return productSdkVariantValues(
+    name,
+    "Presentation",
+    POI_DETAIL_PANEL_PRESENTATIONS,
+  );
+}
+
+async function updatePOIDetailPanelVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const width = 380;
+  const contentWidth = width - 32;
+  productSdkVariantRoot(component, "POIDetailPanel", "Presentation=" + value, {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 12,
+    padding: 16,
+    width,
+    height: 420,
+  });
+  productSdkSurface(component, 12, variableByName, stats);
+
+  // Sheet is anchored to the bottom edge, so only its top corners round and it
+  // carries a grabber. Inline sits in the document flow with no elevation
+  // affordance at all. Panel is the free-standing docked card.
+  if (value === "Sheet") {
+    component.cornerRadius = 0;
+    component.topLeftRadius = 16;
+    component.topRightRadius = 16;
+
+    const grabber = productSdkFrame("Grabber", {
+      primarySizing: "FIXED",
+      counterSizing: "FIXED",
+      width: 40,
+      height: 4,
+    });
+    grabber.cornerRadius = 2;
+    grabber.fills = [
+      paintFromVariable(
+        "Colors/background/200",
+        "#C7CAD1",
+        variableByName,
+        stats,
+      ),
+    ];
+    const grabberRow = productSdkFrame("Grabber Row", {
+      direction: "horizontal",
+      primarySizing: "FIXED",
+      counterSizing: "FIXED",
+      primaryAlign: "CENTER",
+      counterAlign: "CENTER",
+      width: contentWidth,
+      height: 12,
+    });
+    grabberRow.appendChild(grabber);
+    appendWithSizing(component, grabberRow, "FILL", "FIXED");
+  } else if (value === "Inline") {
+    component.strokes = [];
+    component.cornerRadius = 0;
+  }
+
+  const header = await productSdkPanelHeader({
+    title: "Kozmos Cafe",
+    titleNodeName: "Title Text",
+    closeGlyph: value === "Inline" ? null : "×",
+    width: contentWidth,
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(component, header, "FILL", "HUG");
+
+  const subtitle = await productSdkText({
+    name: "Subtitle Text",
+    characters: "Cafe · Level 2 · Open until 21:00",
+    styleKey: "cardDescription",
+    fonts,
+    bold: false,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    variableByName,
+    stats,
+    width: contentWidth,
+  });
+  appendWithSizing(component, subtitle, "FILL", null);
+
+  const media = await productSdkSlot({
+    name: "Media Slot",
+    label: "POIMediaGallery slot",
+    width: contentWidth,
+    height: 120,
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(component, media, "FILL", "FIXED");
+
+  const description = await productSdkText({
+    name: "Description Text",
+    characters:
+      "Speciality coffee and pastries beside the north atrium escalators.",
+    styleKey: "cardBody",
+    fonts,
+    bold: false,
+    fontSize: 14,
+    lineHeight: 20,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: contentWidth,
+    wrap: true,
+  });
+  appendWithSizing(component, description, "FILL", "HUG");
+
+  const services = await productSdkSlot({
+    name: "Services Slot",
+    label: "Services and access restrictions",
+    width: contentWidth,
+    height: 44,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+  appendWithSizing(component, services, "FILL", "FIXED");
+
+  const actions = productSdkFrame("Actions Slot", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    spacing: 8,
+    width: contentWidth,
+    height: 44,
+  });
+  for (const actionLabel of ["Navigate", "Save", "Share"]) {
+    const action = await productSdkControlButton({
+      name: actionLabel + " Action",
+      glyph: actionLabel.charAt(0),
+      label: actionLabel,
+      fonts,
+      variableByName,
+      stats,
+    });
+    appendWithSizing(actions, action, "HUG", "FIXED");
+  }
+  appendWithSizing(component, actions, "FILL", "FIXED");
+}
+
+function configurePOIDetailPanelProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Title Text",
+    "Title Text",
+    "Kozmos Cafe",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Subtitle Text",
+    "Subtitle Text",
+    "Cafe · Level 2 · Open until 21:00",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Description Text",
+    "Description Text",
+    "Speciality coffee and pastries beside the north atrium escalators.",
+    stats,
+  );
+}
+
+const POI_DETAIL_PANEL_DESCRIPTION = [
+  "Kozmos POIDetailPanel generated from the React POIDetailPanel API.",
+  "Presentation maps to POIDetailPanel.presentation (inline, sheet, panel).",
+  "Title Text maps to poi.name, Subtitle Text to the category, floor, and availability labels.",
+  "Description Text maps to poi.description.",
+  "Actions Slot maps to poi.actions with actionLabels; actionStates stay product state.",
+  "Sheet rounds only its top corners and shows a grabber; Inline has no surface chrome.",
+];
+
+async function buildPOIDetailPanelComponent() {
+  return buildSingleAxisComponent({
+    componentName: "POIDetailPanel",
+    componentSetName: "POIDetailPanel",
+    axisName: "Presentation",
+    values: POI_DETAIL_PANEL_PRESENTATIONS,
+    x: 80,
+    y: 13000,
+    xStep: 440,
+    createVariant: createPOIDetailPanelVariant,
+    configureProperties: configurePOIDetailPanelProperties,
+    autoReorganize: true,
+    description: POI_DETAIL_PANEL_DESCRIPTION,
+  });
+}
+
+async function updatePOIDetailPanelComponent() {
+  return updateSingleAxisComponent({
+    componentName: "POIDetailPanel",
+    componentSetName: "POIDetailPanel",
+    axisName: "Presentation",
+    values: POI_DETAIL_PANEL_PRESENTATIONS,
+    xStep: 440,
+    createVariant: createPOIDetailPanelVariant,
+    updateVariant: updatePOIDetailPanelVariant,
+    parseVariantName: parsePOIDetailPanelVariantName,
+    configureProperties: configurePOIDetailPanelProperties,
+    autoReorganize: true,
+    description: POI_DETAIL_PANEL_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildPOIDetailPanelComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "POIDetailPanel",
+    componentSetName: "POIDetailPanel",
+    build: buildPOIDetailPanelComponent,
+  });
+}
+
+// --- BrowseCategoriesPanel -------------------------------------------------
+
+async function createBrowseCategoriesPanelVariant(args) {
+  const component = figma.createComponent();
+  await updateBrowseCategoriesPanelVariant(component, args);
+  return component;
+}
+
+function parseBrowseCategoriesPanelVariantName(name) {
+  return productSdkVariantValues(
+    name,
+    "Content",
+    BROWSE_CATEGORIES_PANEL_CONTENT,
+  );
+}
+
+async function updateBrowseCategoriesPanelVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const width = 380;
+  const contentWidth = width - 32;
+  productSdkVariantRoot(
+    component,
+    "BrowseCategoriesPanel",
+    "Content=" + value,
+    {
+      primarySizing: "AUTO",
+      counterSizing: "FIXED",
+      spacing: 12,
+      padding: 16,
+      width,
+      height: 360,
+    },
+  );
+  productSdkSurface(component, 12, variableByName, stats);
+
+  const heading = await productSdkText({
+    name: "Panel Label Text",
+    characters: "Browse categories",
+    styleKey: "cardTitle",
+    fonts,
+    bold: true,
+    fontSize: 16,
+    lineHeight: 24,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: contentWidth,
+  });
+  appendWithSizing(component, heading, "FILL", null);
+
+  if (value === "Search") {
+    const search = await productSdkSlot({
+      name: "Search Slot",
+      label: "Search slot",
+      width: contentWidth,
+      height: 44,
+      fonts,
+      variableByName,
+      stats,
+      muted: true,
+    });
+    appendWithSizing(component, search, "FILL", "FIXED");
+  }
+
+  if (value === "Empty") {
+    // The empty state replaces the grid rather than sitting beside it, so a
+    // designer cannot accidentally show both.
+    const empty = await productSdkSlot({
+      name: "Empty State Slot",
+      label: "EmptyState slot",
+      width: contentWidth,
+      height: 180,
+      fonts,
+      variableByName,
+      stats,
+      muted: true,
+    });
+    appendWithSizing(component, empty, "FILL", "FIXED");
+    return;
+  }
+
+  const grid = productSdkFrame("Category Grid", {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 8,
+    width: contentWidth,
+    height: 180,
+  });
+
+  for (let rowIndex = 0; rowIndex < 2; rowIndex += 1) {
+    const row = productSdkFrame("Category Row " + (rowIndex + 1), {
+      direction: "horizontal",
+      primarySizing: "FIXED",
+      counterSizing: "FIXED",
+      spacing: 8,
+      width: contentWidth,
+      height: 84,
+    });
+
+    for (let columnIndex = 0; columnIndex < 3; columnIndex += 1) {
+      const tile = await productSdkSlot({
+        name: "Category Tile Slot",
+        label: "Tile",
+        width: 106,
+        height: 84,
+        fonts,
+        variableByName,
+        stats,
+      });
+      appendWithSizing(row, tile, "FILL", "FIXED");
+    }
+
+    appendWithSizing(grid, row, "FILL", "FIXED");
+  }
+
+  appendWithSizing(component, grid, "FILL", "HUG");
+}
+
+function configureBrowseCategoriesPanelProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Panel Label Text",
+    "Panel Label Text",
+    "Browse categories",
+    stats,
+  );
+}
+
+const BROWSE_CATEGORIES_PANEL_DESCRIPTION = [
+  "Kozmos BrowseCategoriesPanel generated from the React BrowseCategoriesPanel API.",
+  "Content covers the panel with and without the search slot, plus its empty state.",
+  "Panel Label Text maps to BrowseCategoriesPanel.label.",
+  "Category Tile Slots map to categories rendered through CategoryTile.",
+  "Empty replaces the grid rather than sitting beside it, matching the React component.",
+];
+
+async function buildBrowseCategoriesPanelComponent() {
+  return buildSingleAxisComponent({
+    componentName: "BrowseCategoriesPanel",
+    componentSetName: "BrowseCategoriesPanel",
+    axisName: "Content",
+    values: BROWSE_CATEGORIES_PANEL_CONTENT,
+    x: 80,
+    y: 13600,
+    xStep: 440,
+    createVariant: createBrowseCategoriesPanelVariant,
+    configureProperties: configureBrowseCategoriesPanelProperties,
+    autoReorganize: true,
+    description: BROWSE_CATEGORIES_PANEL_DESCRIPTION,
+  });
+}
+
+async function updateBrowseCategoriesPanelComponent() {
+  return updateSingleAxisComponent({
+    componentName: "BrowseCategoriesPanel",
+    componentSetName: "BrowseCategoriesPanel",
+    axisName: "Content",
+    values: BROWSE_CATEGORIES_PANEL_CONTENT,
+    xStep: 440,
+    createVariant: createBrowseCategoriesPanelVariant,
+    updateVariant: updateBrowseCategoriesPanelVariant,
+    parseVariantName: parseBrowseCategoriesPanelVariantName,
+    configureProperties: configureBrowseCategoriesPanelProperties,
+    autoReorganize: true,
+    description: BROWSE_CATEGORIES_PANEL_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildBrowseCategoriesPanelComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "BrowseCategoriesPanel",
+    componentSetName: "BrowseCategoriesPanel",
+    build: buildBrowseCategoriesPanelComponent,
+  });
+}
+
+// --- CategoryTile ----------------------------------------------------------
+
+async function createCategoryTileVariant(args) {
+  const component = figma.createComponent();
+  await updateCategoryTileVariant(component, args);
+  return component;
+}
+
+function parseCategoryTileVariantName(name) {
+  return productSdkVariantValues(name, "State", CATEGORY_TILE_STATES);
+}
+
+async function updateCategoryTileVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const selected = value === "Selected";
+  const disabled = value === "Disabled";
+  productSdkVariantRoot(component, "CategoryTile", "State=" + value, {
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    spacing: 8,
+    padding: 12,
+    width: 120,
+    height: 104,
+  });
+  component.cornerRadius = 12;
+  component.fills = [
+    paintFromVariable(
+      selected ? "Colors/theme/100" : "Surface/0",
+      selected ? "#CAD9FC" : "#FFFFFF",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokes = [
+    paintFromVariable(
+      selected ? "Colors/theme/500" : "Colors/background/200",
+      selected ? "#135BEC" : "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  // Selection thickens the border as well as recolouring it, so it survives a
+  // theme where the two colours are close.
+  component.strokeWeight = selected ? 2 : 1;
+  component.opacity = disabled ? 0.4 : 1;
+
+  const icon = await productSdkSlot({
+    name: "Icon Slot",
+    label: "Icon",
+    width: 40,
+    height: 40,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+  icon.cornerRadius = 20;
+  appendWithSizing(component, icon, "FIXED", "FIXED");
+
+  const label = await productSdkText({
+    name: "Label Text",
+    characters: "Food",
+    styleKey: "controlLabel",
+    fonts,
+    bold: selected,
+    fontSize: 14,
+    lineHeight: 20,
+    colorToken: selected ? "Colors/theme/700" : "Colors/foreground/0",
+    colorFallback: selected ? "#0B357F" : "#000000",
+    variableByName,
+    stats,
+    width: 96,
+  });
+  label.textAlignHorizontal = "CENTER";
+  appendWithSizing(component, label, "FILL", null);
+}
+
+function configureCategoryTileProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Label Text",
+    "Label Text",
+    "Food",
+    stats,
+  );
+}
+
+const CATEGORY_TILE_DESCRIPTION = [
+  "Kozmos CategoryTile generated from the React CategoryTile API.",
+  "State maps to category.selected and category.disabled.",
+  "Label Text maps to category.label; Icon Slot maps to renderIcon(category).",
+  "Selection thickens the border as well as recolouring it, so it is not colour-only.",
+  "resultCountLabel is announced by product code and has no visual slot here.",
+];
+
+async function buildCategoryTileComponent() {
+  return buildSingleAxisComponent({
+    componentName: "CategoryTile",
+    componentSetName: "CategoryTile",
+    axisName: "State",
+    values: CATEGORY_TILE_STATES,
+    x: 80,
+    y: 14200,
+    xStep: 180,
+    createVariant: createCategoryTileVariant,
+    configureProperties: configureCategoryTileProperties,
+    autoReorganize: true,
+    description: CATEGORY_TILE_DESCRIPTION,
+  });
+}
+
+async function updateCategoryTileComponent() {
+  return updateSingleAxisComponent({
+    componentName: "CategoryTile",
+    componentSetName: "CategoryTile",
+    axisName: "State",
+    values: CATEGORY_TILE_STATES,
+    xStep: 180,
+    createVariant: createCategoryTileVariant,
+    updateVariant: updateCategoryTileVariant,
+    parseVariantName: parseCategoryTileVariantName,
+    configureProperties: configureCategoryTileProperties,
+    autoReorganize: true,
+    description: CATEGORY_TILE_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildCategoryTileComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "CategoryTile",
+    componentSetName: "CategoryTile",
+    build: buildCategoryTileComponent,
+  });
+}
+
+// --- POIMediaGallery -------------------------------------------------------
+
+async function createPOIMediaGalleryVariant(args) {
+  const component = figma.createComponent();
+  await updatePOIMediaGalleryVariant(component, args);
+  return component;
+}
+
+function parsePOIMediaGalleryVariantName(name) {
+  return productSdkVariantValues(name, "Content", POI_MEDIA_GALLERY_CONTENT);
+}
+
+async function updatePOIMediaGalleryVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const width = 340;
+  const contentWidth = width - 24;
+  productSdkVariantRoot(component, "POIMediaGallery", "Content=" + value, {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 8,
+    padding: 12,
+    width,
+    height: 220,
+  });
+  productSdkSurface(component, 12, variableByName, stats);
+
+  if (value === "Empty") {
+    const empty = await productSdkSlot({
+      name: "Empty Media Slot",
+      label: "No licensed media",
+      width: contentWidth,
+      height: 140,
+      fonts,
+      variableByName,
+      stats,
+      muted: true,
+    });
+    appendWithSizing(component, empty, "FILL", "FIXED");
+    return;
+  }
+
+  const media = await productSdkSlot({
+    name: "Media Slot",
+    label: "Venue image",
+    width: contentWidth,
+    height: 140,
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(component, media, "FILL", "FIXED");
+
+  // Single media has nothing to page between, so it drops the whole control
+  // row rather than showing disabled arrows.
+  if (value === "Single") return;
+
+  const controls = productSdkFrame("Gallery Controls", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "SPACE_BETWEEN",
+    counterAlign: "CENTER",
+    spacing: 8,
+    width: contentWidth,
+    height: 44,
+  });
+
+  const previous = await productSdkControlButton({
+    name: "Previous Button",
+    glyph: "‹",
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(controls, previous, "FIXED", "FIXED");
+
+  const position = await productSdkText({
+    name: "Position Text",
+    characters: "1 of 4",
+    styleKey: "fieldMeta",
+    fonts,
+    bold: false,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    variableByName,
+    stats,
+    width: 120,
+  });
+  position.textAlignHorizontal = "CENTER";
+  appendWithSizing(controls, position, "FILL", null);
+
+  const next = await productSdkControlButton({
+    name: "Next Button",
+    glyph: "›",
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(controls, next, "FIXED", "FIXED");
+
+  appendWithSizing(component, controls, "FILL", "FIXED");
+}
+
+function configurePOIMediaGalleryProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Position Text",
+    "Position Text",
+    "1 of 4",
+    stats,
+  );
+}
+
+const POI_MEDIA_GALLERY_DESCRIPTION = [
+  "Kozmos POIMediaGallery generated from the React POIMediaGallery API.",
+  "Content covers one image, a pageable set, and the no-media case.",
+  "Position Text maps to positionLabel(current, total).",
+  "Media Slot maps to media[activeIndex]; alt text stays product data.",
+  "Single drops the control row entirely rather than showing disabled arrows.",
+];
+
+async function buildPOIMediaGalleryComponent() {
+  return buildSingleAxisComponent({
+    componentName: "POIMediaGallery",
+    componentSetName: "POIMediaGallery",
+    axisName: "Content",
+    values: POI_MEDIA_GALLERY_CONTENT,
+    x: 80,
+    y: 14600,
+    xStep: 400,
+    createVariant: createPOIMediaGalleryVariant,
+    configureProperties: configurePOIMediaGalleryProperties,
+    autoReorganize: true,
+    description: POI_MEDIA_GALLERY_DESCRIPTION,
+  });
+}
+
+async function updatePOIMediaGalleryComponent() {
+  return updateSingleAxisComponent({
+    componentName: "POIMediaGallery",
+    componentSetName: "POIMediaGallery",
+    axisName: "Content",
+    values: POI_MEDIA_GALLERY_CONTENT,
+    xStep: 400,
+    createVariant: createPOIMediaGalleryVariant,
+    updateVariant: updatePOIMediaGalleryVariant,
+    parseVariantName: parsePOIMediaGalleryVariantName,
+    configureProperties: configurePOIMediaGalleryProperties,
+    autoReorganize: true,
+    description: POI_MEDIA_GALLERY_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildPOIMediaGalleryComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "POIMediaGallery",
+    componentSetName: "POIMediaGallery",
+    build: buildPOIMediaGalleryComponent,
+  });
+}
+
+// --- POIResultCard ---------------------------------------------------------
+
+async function createPOIResultCardVariant(args) {
+  const component = figma.createComponent();
+  await updatePOIResultCardVariant(component, args);
+  return component;
+}
+
+function parsePOIResultCardVariantName(name) {
+  return productSdkVariantValues(name, "State", POI_RESULT_CARD_STATES);
+}
+
+async function updatePOIResultCardVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const selected = value === "Selected";
+  const featured = value === "Featured";
+  const unavailable = value === "Unavailable";
+  const width = 360;
+  productSdkVariantRoot(component, "POIResultCard", "State=" + value, {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "AUTO",
+    counterAlign: "CENTER",
+    spacing: 12,
+    padding: 12,
+    width,
+    height: 92,
+  });
+  component.cornerRadius = 12;
+  component.fills = [
+    paintFromVariable(
+      selected ? "Colors/theme/100" : "Surface/0",
+      selected ? "#CAD9FC" : "#FFFFFF",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokes = [
+    paintFromVariable(
+      selected ? "Colors/theme/500" : "Colors/background/200",
+      selected ? "#135BEC" : "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokeWeight = selected ? 2 : 1;
+  component.opacity = unavailable ? 0.55 : 1;
+
+  const logo = await productSdkSlot({
+    name: "Logo Slot",
+    label: "Logo",
+    width: 48,
+    height: 48,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+  appendWithSizing(component, logo, "FIXED", "FIXED");
+
+  const copy = productSdkFrame("Result Copy", {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 2,
+    width: 240,
+    height: 60,
+  });
+
+  const titleRow = productSdkFrame("Title Row", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "AUTO",
+    counterAlign: "CENTER",
+    spacing: 6,
+    width: 240,
+    height: 20,
+  });
+
+  const title = await productSdkText({
+    name: "Title Text",
+    characters: "Kozmos Cafe",
+    styleKey: "listItem",
+    fonts,
+    bold: true,
+    fontSize: 14,
+    lineHeight: 20,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: featured ? 156 : 240,
+  });
+  appendWithSizing(titleRow, title, "FILL", null);
+
+  // Featured is carried by an explicit badge rather than a colour swap: a
+  // sponsored result must stay identifiable without relying on hue.
+  if (featured) {
+    const badge = productSdkFrame("Featured Badge", {
+      direction: "horizontal",
+      primarySizing: "AUTO",
+      counterSizing: "FIXED",
+      primaryAlign: "CENTER",
+      counterAlign: "CENTER",
+      paddingLeft: 8,
+      paddingRight: 8,
+      width: 72,
+      height: 20,
+    });
+    badge.cornerRadius = 10;
+    badge.fills = [
+      paintFromVariable(
+        "Colors/emotional/alert/900",
+        "#FDF2D9",
+        variableByName,
+        stats,
+      ),
+    ];
+    const badgeText = await productSdkText({
+      name: "Featured Text",
+      characters: "Featured",
+      styleKey: "badgeLabel",
+      fonts,
+      bold: true,
+      fontSize: 11,
+      lineHeight: 16,
+      colorToken: "Colors/emotional/alert/500",
+      colorFallback: "#9A6700",
+      variableByName,
+      stats,
+      width: 56,
+    });
+    badgeText.textAutoResize = "WIDTH_AND_HEIGHT";
+    badge.appendChild(badgeText);
+    appendWithSizing(titleRow, badge, "HUG", "FIXED");
+  }
+
+  appendWithSizing(copy, titleRow, "FILL", "HUG");
+
+  const meta = await productSdkText({
+    name: "Meta Text",
+    characters: unavailable ? "Closed · Level 2" : "Level 2 · 3 min · 180 m",
+    styleKey: "fieldMeta",
+    fonts,
+    bold: false,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    variableByName,
+    stats,
+    width: 240,
+  });
+  appendWithSizing(copy, meta, "FILL", null);
+
+  appendWithSizing(component, copy, "FILL", "HUG");
+}
+
+function configurePOIResultCardProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Title Text",
+    "Title Text",
+    "Kozmos Cafe",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Meta Text",
+    "Meta Text",
+    "Level 2 · 3 min · 180 m",
+    stats,
+  );
+}
+
+const POI_RESULT_CARD_DESCRIPTION = [
+  "Kozmos POIResultCard generated from the React POIResultCard API.",
+  "State maps to result.selected, result.featured, and result.available.",
+  "Title Text maps to poi.name; Meta Text to floorLabel and travelEstimate.",
+  "Featured uses a labelled badge, so a sponsored result is not identified by colour alone.",
+  "Selection must stay in step with the matching LocationPin on the map.",
+];
+
+async function buildPOIResultCardComponent() {
+  return buildSingleAxisComponent({
+    componentName: "POIResultCard",
+    componentSetName: "POIResultCard",
+    axisName: "State",
+    values: POI_RESULT_CARD_STATES,
+    x: 80,
+    y: 15000,
+    xStep: 420,
+    createVariant: createPOIResultCardVariant,
+    configureProperties: configurePOIResultCardProperties,
+    autoReorganize: true,
+    description: POI_RESULT_CARD_DESCRIPTION,
+  });
+}
+
+async function updatePOIResultCardComponent() {
+  return updateSingleAxisComponent({
+    componentName: "POIResultCard",
+    componentSetName: "POIResultCard",
+    axisName: "State",
+    values: POI_RESULT_CARD_STATES,
+    xStep: 420,
+    createVariant: createPOIResultCardVariant,
+    updateVariant: updatePOIResultCardVariant,
+    parseVariantName: parsePOIResultCardVariantName,
+    configureProperties: configurePOIResultCardProperties,
+    autoReorganize: true,
+    description: POI_RESULT_CARD_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildPOIResultCardComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "POIResultCard",
+    componentSetName: "POIResultCard",
+    build: buildPOIResultCardComponent,
+  });
+}
+
+// --- POIResultList ---------------------------------------------------------
+
+async function createPOIResultListVariant(args) {
+  const component = figma.createComponent();
+  await updatePOIResultListVariant(component, args);
+  return component;
+}
+
+function parsePOIResultListVariantName(name) {
+  return productSdkVariantValues(name, "Content", POI_RESULT_LIST_CONTENT);
+}
+
+async function updatePOIResultListVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const width = 380;
+  const contentWidth = width - 24;
+  productSdkVariantRoot(component, "POIResultList", "Content=" + value, {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 8,
+    padding: 12,
+    width,
+    height: 360,
+  });
+  productSdkSurface(component, 12, variableByName, stats);
+
+  const count = await productSdkText({
+    name: "Result Count Text",
+    characters: value === "Empty" ? "No results" : "12 results",
+    styleKey: "fieldMeta",
+    fonts,
+    bold: false,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    variableByName,
+    stats,
+    width: contentWidth,
+  });
+  appendWithSizing(component, count, "FILL", null);
+
+  if (value === "Empty") {
+    const empty = await productSdkSlot({
+      name: "Empty State Slot",
+      label: "EmptyState slot",
+      width: contentWidth,
+      height: 200,
+      fonts,
+      variableByName,
+      stats,
+      muted: true,
+    });
+    appendWithSizing(component, empty, "FILL", "FIXED");
+    return;
+  }
+
+  for (let index = 0; index < 3; index += 1) {
+    // Selected marks exactly one row, mirroring selectedPoiId being a single
+    // canonical POI ID rather than a set.
+    const isSelected = value === "Selected" && index === 1;
+    const row = await productSdkSlot({
+      name: isSelected ? "Selected Result Slot" : "Result Slot",
+      label: isSelected ? "POIResultCard (selected)" : "POIResultCard",
+      width: contentWidth,
+      height: 92,
+      fonts,
+      variableByName,
+      stats,
+      muted: !isSelected,
+    });
+    if (isSelected) {
+      row.strokes = [
+        paintFromVariable("Colors/theme/500", "#135BEC", variableByName, stats),
+      ];
+      row.strokeWeight = 2;
+    }
+    appendWithSizing(component, row, "FILL", "FIXED");
+  }
+}
+
+function configurePOIResultListProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Result Count Text",
+    "Result Count Text",
+    "12 results",
+    stats,
+  );
+}
+
+const POI_RESULT_LIST_DESCRIPTION = [
+  "Kozmos POIResultList generated from the React POIResultList API.",
+  "Content covers the plain list, a list with a selected row, and the empty state.",
+  "Result Count Text maps to POIResultList.resultCountLabel.",
+  "Result Slots map to items rendered through POIResultCard.",
+  "Exactly one row is selected, mirroring selectedPoiId being a single canonical ID.",
+];
+
+async function buildPOIResultListComponent() {
+  return buildSingleAxisComponent({
+    componentName: "POIResultList",
+    componentSetName: "POIResultList",
+    axisName: "Content",
+    values: POI_RESULT_LIST_CONTENT,
+    x: 80,
+    y: 15400,
+    xStep: 440,
+    createVariant: createPOIResultListVariant,
+    configureProperties: configurePOIResultListProperties,
+    autoReorganize: true,
+    description: POI_RESULT_LIST_DESCRIPTION,
+  });
+}
+
+async function updatePOIResultListComponent() {
+  return updateSingleAxisComponent({
+    componentName: "POIResultList",
+    componentSetName: "POIResultList",
+    axisName: "Content",
+    values: POI_RESULT_LIST_CONTENT,
+    xStep: 440,
+    createVariant: createPOIResultListVariant,
+    updateVariant: updatePOIResultListVariant,
+    parseVariantName: parsePOIResultListVariantName,
+    configureProperties: configurePOIResultListProperties,
+    autoReorganize: true,
+    description: POI_RESULT_LIST_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildPOIResultListComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "POIResultList",
+    componentSetName: "POIResultList",
+    build: buildPOIResultListComponent,
+  });
+}
+
+// --- RouteOptionCard -------------------------------------------------------
+
+async function createRouteOptionCardVariant(args) {
+  const component = figma.createComponent();
+  await updateRouteOptionCardVariant(component, args);
+  return component;
+}
+
+function parseRouteOptionCardVariantName(name) {
+  return productSdkVariantValues(name, "State", ROUTE_OPTION_CARD_STATES);
+}
+
+async function updateRouteOptionCardVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const selected = value === "Selected";
+  const warning = value === "Warning";
+  const unavailable = value === "Unavailable";
+  const width = 340;
+  const copyWidth = width - 24 - 48 - 12;
+  productSdkVariantRoot(component, "RouteOptionCard", "State=" + value, {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "AUTO",
+    counterAlign: "CENTER",
+    spacing: 12,
+    padding: 12,
+    width,
+    height: warning ? 104 : 84,
+  });
+  component.cornerRadius = 12;
+  component.fills = [
+    paintFromVariable(
+      selected ? "Colors/theme/100" : "Surface/0",
+      selected ? "#CAD9FC" : "#FFFFFF",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokes = [
+    paintFromVariable(
+      selected ? "Colors/theme/500" : "Colors/background/200",
+      selected ? "#135BEC" : "#C7CAD1",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokeWeight = selected ? 2 : 1;
+  component.opacity = unavailable ? 0.55 : 1;
+
+  const mode = await productSdkSlot({
+    name: "Mode Icon Slot",
+    label: "Mode",
+    width: 48,
+    height: 48,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+  mode.cornerRadius = 24;
+  appendWithSizing(component, mode, "FIXED", "FIXED");
+
+  const copy = productSdkFrame("Option Copy", {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 2,
+    width: copyWidth,
+    height: 60,
+  });
+
+  const label = await productSdkText({
+    name: "Option Label Text",
+    characters: "Step-free route",
+    styleKey: "listItem",
+    fonts,
+    bold: true,
+    fontSize: 14,
+    lineHeight: 20,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: copyWidth,
+  });
+  appendWithSizing(copy, label, "FILL", null);
+
+  const meta = await productSdkText({
+    name: "Option Meta Text",
+    characters: "6 min · 320 m",
+    styleKey: "fieldMeta",
+    fonts,
+    bold: false,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    variableByName,
+    stats,
+    width: copyWidth,
+  });
+  appendWithSizing(copy, meta, "FILL", null);
+
+  // The warning is its own text node rather than a recoloured meta line, so it
+  // is readable by assistive technology as separate content.
+  if (warning) {
+    const warningText = await productSdkText({
+      name: "Warning Text",
+      characters: "Lift out of service",
+      styleKey: "fieldMeta",
+      fonts,
+      bold: true,
+      fontSize: 12,
+      lineHeight: 16,
+      colorToken: "Colors/emotional/alert/500",
+      colorFallback: "#9A6700",
+      variableByName,
+      stats,
+      width: copyWidth,
+    });
+    appendWithSizing(copy, warningText, "FILL", null);
+  }
+
+  appendWithSizing(component, copy, "FILL", "HUG");
+}
+
+function configureRouteOptionCardProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Option Label Text",
+    "Option Label Text",
+    "Step-free route",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Option Meta Text",
+    "Option Meta Text",
+    "6 min · 320 m",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Warning Text",
+    "Warning Text",
+    "Lift out of service",
+    stats,
+  );
+}
+
+const ROUTE_OPTION_CARD_DESCRIPTION = [
+  "Kozmos RouteOptionCard generated from the React RouteOptionCard API.",
+  "State maps to option.selected, option.warning, and option.available.",
+  "Option Label Text maps to option.label; Option Meta Text to durationLabel and distanceLabel.",
+  "Warning Text maps to option.warning and is a separate node, not a recoloured meta line.",
+  "preference is product data; it selects the icon rather than adding a variant axis.",
+];
+
+async function buildRouteOptionCardComponent() {
+  return buildSingleAxisComponent({
+    componentName: "RouteOptionCard",
+    componentSetName: "RouteOptionCard",
+    axisName: "State",
+    values: ROUTE_OPTION_CARD_STATES,
+    x: 80,
+    y: 15800,
+    xStep: 400,
+    createVariant: createRouteOptionCardVariant,
+    configureProperties: configureRouteOptionCardProperties,
+    autoReorganize: true,
+    description: ROUTE_OPTION_CARD_DESCRIPTION,
+  });
+}
+
+async function updateRouteOptionCardComponent() {
+  return updateSingleAxisComponent({
+    componentName: "RouteOptionCard",
+    componentSetName: "RouteOptionCard",
+    axisName: "State",
+    values: ROUTE_OPTION_CARD_STATES,
+    xStep: 400,
+    createVariant: createRouteOptionCardVariant,
+    updateVariant: updateRouteOptionCardVariant,
+    parseVariantName: parseRouteOptionCardVariantName,
+    configureProperties: configureRouteOptionCardProperties,
+    autoReorganize: true,
+    description: ROUTE_OPTION_CARD_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildRouteOptionCardComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "RouteOptionCard",
+    componentSetName: "RouteOptionCard",
+    build: buildRouteOptionCardComponent,
+  });
+}
+
+// --- RoutePreviewPanel -----------------------------------------------------
+
+async function createRoutePreviewPanelVariant(args) {
+  const component = figma.createComponent();
+  await updateRoutePreviewPanelVariant(component, args);
+  return component;
+}
+
+function parseRoutePreviewPanelVariantName(name) {
+  return productSdkVariantValues(name, "Status", ROUTE_PREVIEW_PANEL_STATUSES);
+}
+
+async function updateRoutePreviewPanelVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const width = 380;
+  const contentWidth = width - 32;
+  const ready = value === "Ready";
+  productSdkVariantRoot(component, "RoutePreviewPanel", "Status=" + value, {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 12,
+    padding: 16,
+    width,
+    height: 380,
+  });
+  productSdkSurface(component, 12, variableByName, stats);
+
+  const header = await productSdkPanelHeader({
+    title: "Kozmos Cafe",
+    titleNodeName: "Destination Text",
+    closeGlyph: "‹",
+    width: contentWidth,
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(component, header, "FILL", "HUG");
+
+  const statusText = await productSdkText({
+    name: "Status Text",
+    characters: ROUTE_PREVIEW_PANEL_STATUS_COPY[value],
+    styleKey: "fieldMeta",
+    fonts,
+    bold: false,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken:
+      value === "Error"
+        ? "Colors/emotional/danger/600"
+        : "Colors/foreground/500",
+    colorFallback: value === "Error" ? "#C0362C" : "#747B8B",
+    variableByName,
+    stats,
+    width: contentWidth,
+  });
+  appendWithSizing(component, statusText, "FILL", null);
+
+  // Only Ready has routes to choose between. Every other readiness shows its
+  // status surface instead, so the panel never renders an empty option list.
+  if (ready) {
+    for (let index = 0; index < 3; index += 1) {
+      const option = await productSdkSlot({
+        name: index === 0 ? "Selected Option Slot" : "Option Slot",
+        label: "RouteOptionCard",
+        width: contentWidth,
+        height: 84,
+        fonts,
+        variableByName,
+        stats,
+        muted: index !== 0,
+      });
+      if (index === 0) {
+        option.strokes = [
+          paintFromVariable(
+            "Colors/theme/500",
+            "#135BEC",
+            variableByName,
+            stats,
+          ),
+        ];
+        option.strokeWeight = 2;
+      }
+      appendWithSizing(component, option, "FILL", "FIXED");
+    }
+  } else {
+    const statusSlot = await productSdkSlot({
+      name: "Status Slot",
+      label: "Status content slot",
+      width: contentWidth,
+      height: 180,
+      fonts,
+      variableByName,
+      stats,
+      muted: true,
+    });
+    appendWithSizing(component, statusSlot, "FILL", "FIXED");
+  }
+
+  const actions = productSdkFrame("Panel Actions", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    spacing: 8,
+    width: contentWidth,
+    height: 44,
+  });
+  const back = await productSdkControlButton({
+    name: "Back Button",
+    glyph: "‹",
+    label: "Back",
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(actions, back, "HUG", "FIXED");
+  const proceed = await productSdkControlButton({
+    name: "Continue Button",
+    glyph: "→",
+    label: "Continue",
+    pressed: ready,
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(actions, proceed, "FILL", "FIXED");
+  appendWithSizing(component, actions, "FILL", "FIXED");
+}
+
+function configureRoutePreviewPanelProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Destination Text",
+    "Destination Text",
+    "Kozmos Cafe",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Status Text",
+    "Status Text",
+    ROUTE_PREVIEW_PANEL_STATUS_COPY.Ready,
+    stats,
+  );
+}
+
+const ROUTE_PREVIEW_PANEL_DESCRIPTION = [
+  "Kozmos RoutePreviewPanel generated from the React RoutePreviewPanel API.",
+  "Status maps to RoutePreviewPanel.status (idle, calculating, ready, no-route, error).",
+  "Destination Text maps to destinationName; Status Text to the readiness copy.",
+  "Option Slots map to options rendered through RouteOptionCard.",
+  "Only Ready lists options; every other readiness shows the status slot instead.",
+];
+
+async function buildRoutePreviewPanelComponent() {
+  return buildSingleAxisComponent({
+    componentName: "RoutePreviewPanel",
+    componentSetName: "RoutePreviewPanel",
+    axisName: "Status",
+    values: ROUTE_PREVIEW_PANEL_STATUSES,
+    x: 80,
+    y: 16200,
+    xStep: 440,
+    createVariant: createRoutePreviewPanelVariant,
+    configureProperties: configureRoutePreviewPanelProperties,
+    autoReorganize: true,
+    description: ROUTE_PREVIEW_PANEL_DESCRIPTION,
+  });
+}
+
+async function updateRoutePreviewPanelComponent() {
+  return updateSingleAxisComponent({
+    componentName: "RoutePreviewPanel",
+    componentSetName: "RoutePreviewPanel",
+    axisName: "Status",
+    values: ROUTE_PREVIEW_PANEL_STATUSES,
+    xStep: 440,
+    createVariant: createRoutePreviewPanelVariant,
+    updateVariant: updateRoutePreviewPanelVariant,
+    parseVariantName: parseRoutePreviewPanelVariantName,
+    configureProperties: configureRoutePreviewPanelProperties,
+    autoReorganize: true,
+    description: ROUTE_PREVIEW_PANEL_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildRoutePreviewPanelComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "RoutePreviewPanel",
+    componentSetName: "RoutePreviewPanel",
+    build: buildRoutePreviewPanelComponent,
+  });
+}
+
+// --- RouteSummary ----------------------------------------------------------
+
+async function createRouteSummaryVariant(args) {
+  const component = figma.createComponent();
+  await updateRouteSummaryVariant(component, args);
+  return component;
+}
+
+function parseRouteSummaryVariantName(name) {
+  return productSdkVariantValues(name, "State", ROUTE_SUMMARY_STATES);
+}
+
+async function updateRouteSummaryVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const active = value === "Active";
+  const width = 360;
+  productSdkVariantRoot(component, "RouteSummary", "State=" + value, {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "AUTO",
+    counterAlign: "CENTER",
+    spacing: 12,
+    padding: 12,
+    width,
+    height: 76,
+  });
+  productSdkSurface(component, 12, variableByName, stats);
+
+  const mode = await productSdkSlot({
+    name: "Transport Mode Slot",
+    label: "Mode",
+    width: 44,
+    height: 44,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+  mode.cornerRadius = 22;
+  appendWithSizing(component, mode, "FIXED", "FIXED");
+
+  const copy = productSdkFrame("Summary Copy", {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 2,
+    width: 152,
+    height: 44,
+  });
+
+  const eta = await productSdkText({
+    name: "ETA Text",
+    characters: "6 min",
+    styleKey: "cardTitle",
+    fonts,
+    bold: true,
+    fontSize: 16,
+    lineHeight: 24,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: 152,
+  });
+  appendWithSizing(copy, eta, "FILL", null);
+
+  const distance = await productSdkText({
+    name: "Distance Text",
+    characters: "320 m",
+    styleKey: "fieldMeta",
+    fonts,
+    bold: false,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    variableByName,
+    stats,
+    width: 152,
+  });
+  appendWithSizing(copy, distance, "FILL", null);
+  appendWithSizing(component, copy, "FILL", "HUG");
+
+  // Preview offers Start; Active has already started, so it offers only End.
+  // Showing both at once would let a designer build a state React never emits.
+  const action = await productSdkControlButton({
+    name: active ? "End Route Button" : "Start Navigation Button",
+    glyph: active ? "×" : "→",
+    label: active ? "End" : "Start",
+    pressed: !active,
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(component, action, "HUG", "FIXED");
+}
+
+function configureRouteSummaryProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "ETA Text",
+    "ETA Text",
+    "6 min",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Distance Text",
+    "Distance Text",
+    "320 m",
+    stats,
+  );
+}
+
+const ROUTE_SUMMARY_DESCRIPTION = [
+  "Kozmos RouteSummary generated from the React RouteSummary API.",
+  "State maps to RouteSummary.state (preview, active).",
+  "ETA Text maps to etaText; Distance Text maps to distanceText.",
+  "Preview offers Start Navigation, Active offers End Route; they are never both present.",
+  "Both strings arrive already localized from product code.",
+];
+
+async function buildRouteSummaryComponent() {
+  return buildSingleAxisComponent({
+    componentName: "RouteSummary",
+    componentSetName: "RouteSummary",
+    axisName: "State",
+    values: ROUTE_SUMMARY_STATES,
+    x: 80,
+    y: 16800,
+    xStep: 420,
+    createVariant: createRouteSummaryVariant,
+    configureProperties: configureRouteSummaryProperties,
+    autoReorganize: true,
+    description: ROUTE_SUMMARY_DESCRIPTION,
+  });
+}
+
+async function updateRouteSummaryComponent() {
+  return updateSingleAxisComponent({
+    componentName: "RouteSummary",
+    componentSetName: "RouteSummary",
+    axisName: "State",
+    values: ROUTE_SUMMARY_STATES,
+    xStep: 420,
+    createVariant: createRouteSummaryVariant,
+    updateVariant: updateRouteSummaryVariant,
+    parseVariantName: parseRouteSummaryVariantName,
+    configureProperties: configureRouteSummaryProperties,
+    autoReorganize: true,
+    description: ROUTE_SUMMARY_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildRouteSummaryComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "RouteSummary",
+    componentSetName: "RouteSummary",
+    build: buildRouteSummaryComponent,
+  });
+}
+
+// --- RoutingInputGroup -----------------------------------------------------
+
+async function createRoutingInputGroupVariant(args) {
+  const component = figma.createComponent();
+  await updateRoutingInputGroupVariant(component, args);
+  return component;
+}
+
+function parseRoutingInputGroupVariantName(name) {
+  return productSdkVariantValues(name, "Content", ROUTING_INPUT_GROUP_CONTENT);
+}
+
+async function updateRoutingInputGroupVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const pointCount = value === "ThreePoints" ? 3 : 2;
+  const width = 360;
+  const fieldWidth = width - 24 - 44 - 8;
+  productSdkVariantRoot(component, "RoutingInputGroup", "Content=" + value, {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "AUTO",
+    counterAlign: "MIN",
+    spacing: 8,
+    padding: 12,
+    width,
+    height: pointCount * 52 + 24,
+  });
+  productSdkSurface(component, 12, variableByName, stats);
+
+  const fields = productSdkFrame("Point Fields", {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 8,
+    width: fieldWidth,
+    height: pointCount * 52,
+  });
+
+  const labels = ["Start", "Add stop", "Destination"];
+  for (let index = 0; index < pointCount; index += 1) {
+    // Three points inserts the intermediate stop between start and
+    // destination, so the labels track the route order, not the array index.
+    const label =
+      pointCount === 3 ? labels[index] : labels[index === 0 ? 0 : 2];
+    const field = await productSdkSlot({
+      name: "Point Field Slot",
+      label,
+      width: fieldWidth,
+      height: 44,
+      fonts,
+      variableByName,
+      stats,
+      muted: true,
+    });
+    appendWithSizing(fields, field, "FILL", "FIXED");
+  }
+
+  appendWithSizing(component, fields, "FILL", "HUG");
+
+  const swap = await productSdkControlButton({
+    name: "Swap Button",
+    glyph: "⇅",
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(component, swap, "FIXED", "FIXED");
+}
+
+function configureRoutingInputGroupProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Point Field Slot Text",
+    "Point Label Text",
+    "Start",
+    stats,
+  );
+}
+
+const ROUTING_INPUT_GROUP_DESCRIPTION = [
+  "Kozmos RoutingInputGroup generated from the React RoutingInputGroup API.",
+  "Content covers the two-point origin/destination case and an added intermediate stop.",
+  "Point Field Slots map to points; Point Label Text maps to point.placeholder.",
+  "Swap Button maps to onSwap; onAddPoint and onRemovePoint are behaviour.",
+  "Labels follow route order, so a third point reads as a stop between start and destination.",
+];
+
+async function buildRoutingInputGroupComponent() {
+  return buildSingleAxisComponent({
+    componentName: "RoutingInputGroup",
+    componentSetName: "RoutingInputGroup",
+    axisName: "Content",
+    values: ROUTING_INPUT_GROUP_CONTENT,
+    x: 80,
+    y: 17200,
+    xStep: 420,
+    createVariant: createRoutingInputGroupVariant,
+    configureProperties: configureRoutingInputGroupProperties,
+    autoReorganize: true,
+    description: ROUTING_INPUT_GROUP_DESCRIPTION,
+  });
+}
+
+async function updateRoutingInputGroupComponent() {
+  return updateSingleAxisComponent({
+    componentName: "RoutingInputGroup",
+    componentSetName: "RoutingInputGroup",
+    axisName: "Content",
+    values: ROUTING_INPUT_GROUP_CONTENT,
+    xStep: 420,
+    createVariant: createRoutingInputGroupVariant,
+    updateVariant: updateRoutingInputGroupVariant,
+    parseVariantName: parseRoutingInputGroupVariantName,
+    configureProperties: configureRoutingInputGroupProperties,
+    autoReorganize: true,
+    description: ROUTING_INPUT_GROUP_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildRoutingInputGroupComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "RoutingInputGroup",
+    componentSetName: "RoutingInputGroup",
+    build: buildRoutingInputGroupComponent,
+  });
+}
+
+// --- SaveLocationCard ------------------------------------------------------
+
+async function createSaveLocationCardVariant(args) {
+  const component = figma.createComponent();
+  await updateSaveLocationCardVariant(component, args);
+  return component;
+}
+
+function parseSaveLocationCardVariantName(name) {
+  return productSdkVariantValues(name, "State", SAVE_LOCATION_CARD_STATES);
+}
+
+async function updateSaveLocationCardVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const saved = value === "Saved";
+  const width = 340;
+  const contentWidth = width - 24;
+  productSdkVariantRoot(component, "SaveLocationCard", "State=" + value, {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 8,
+    padding: 12,
+    width,
+    height: 160,
+  });
+  productSdkSurface(component, 12, variableByName, stats);
+
+  const title = await productSdkText({
+    name: "Title Text",
+    characters: "Save this location",
+    styleKey: "cardTitle",
+    fonts,
+    bold: true,
+    fontSize: 16,
+    lineHeight: 24,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: contentWidth,
+  });
+  appendWithSizing(component, title, "FILL", null);
+
+  const description = await productSdkText({
+    name: "Description Text",
+    characters: "Keep it in your saved places for quick routing later.",
+    styleKey: "cardDescription",
+    fonts,
+    bold: false,
+    fontSize: 14,
+    lineHeight: 20,
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    variableByName,
+    stats,
+    width: contentWidth,
+    wrap: true,
+  });
+  appendWithSizing(component, description, "FILL", "HUG");
+
+  const actions = productSdkFrame("Card Actions", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    spacing: 8,
+    width: contentWidth,
+    height: 44,
+  });
+
+  // Saved is a filled glyph plus a changed label, not just a tint: a saved
+  // state that reads only as a colour swap fails at a glance.
+  const save = await productSdkControlButton({
+    name: "Save Toggle Button",
+    glyph: saved ? "★" : "☆",
+    label: saved ? "Saved" : "Save",
+    pressed: saved,
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(actions, save, "FILL", "FIXED");
+
+  const route = await productSdkControlButton({
+    name: "Route Button",
+    glyph: "→",
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(actions, route, "FIXED", "FIXED");
+
+  const note = await productSdkControlButton({
+    name: "Edit Note Button",
+    glyph: "✎",
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(actions, note, "FIXED", "FIXED");
+
+  appendWithSizing(component, actions, "FILL", "FIXED");
+}
+
+function configureSaveLocationCardProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Title Text",
+    "Title Text",
+    "Save this location",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Description Text",
+    "Description Text",
+    "Keep it in your saved places for quick routing later.",
+    stats,
+  );
+}
+
+const SAVE_LOCATION_CARD_DESCRIPTION = [
+  "Kozmos SaveLocationCard generated from the React SaveLocationCard API.",
+  "State maps to SaveLocationCard.isSaved.",
+  "Title Text maps to title; Description Text maps to description.",
+  "Save Toggle Button maps to onSaveToggle, Route to onRouteToLocation, Edit Note to onEditNote.",
+  "Saved changes the glyph and the label, so the state is not carried by colour alone.",
+];
+
+async function buildSaveLocationCardComponent() {
+  return buildSingleAxisComponent({
+    componentName: "SaveLocationCard",
+    componentSetName: "SaveLocationCard",
+    axisName: "State",
+    values: SAVE_LOCATION_CARD_STATES,
+    x: 80,
+    y: 17600,
+    xStep: 400,
+    createVariant: createSaveLocationCardVariant,
+    configureProperties: configureSaveLocationCardProperties,
+    autoReorganize: true,
+    description: SAVE_LOCATION_CARD_DESCRIPTION,
+  });
+}
+
+async function updateSaveLocationCardComponent() {
+  return updateSingleAxisComponent({
+    componentName: "SaveLocationCard",
+    componentSetName: "SaveLocationCard",
+    axisName: "State",
+    values: SAVE_LOCATION_CARD_STATES,
+    xStep: 400,
+    createVariant: createSaveLocationCardVariant,
+    updateVariant: updateSaveLocationCardVariant,
+    parseVariantName: parseSaveLocationCardVariantName,
+    configureProperties: configureSaveLocationCardProperties,
+    autoReorganize: true,
+    description: SAVE_LOCATION_CARD_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildSaveLocationCardComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "SaveLocationCard",
+    componentSetName: "SaveLocationCard",
+    build: buildSaveLocationCardComponent,
+  });
+}
+
+// --- UserLocationMarker ----------------------------------------------------
+
+async function createUserLocationMarkerVariant(args) {
+  const component = figma.createComponent();
+  await updateUserLocationMarkerVariant(component, args);
+  return component;
+}
+
+function parseUserLocationMarkerVariantName(name) {
+  return productSdkVariantValues(
+    name,
+    "Heading",
+    USER_LOCATION_MARKER_HEADINGS,
+  );
+}
+
+async function updateUserLocationMarkerVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const showHeading = value === "Visible";
+  productSdkVariantRoot(component, "UserLocationMarker", "Heading=" + value, {
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    width: 64,
+    height: 64,
+  });
+  component.fills = [];
+  component.strokes = [];
+
+  // The accuracy halo is the outer disc; the dot is the fix itself. Both are
+  // ellipses rather than text so the marker scales cleanly on the canvas.
+  const halo = figma.createEllipse();
+  halo.name = "Accuracy Halo";
+  halo.resizeWithoutConstraints(64, 64);
+  halo.fills = [
+    paintFromVariable("Colors/theme/100", "#CAD9FC", variableByName, stats),
+  ];
+  halo.opacity = 0.5;
+  halo.strokes = [];
+  component.appendChild(halo);
+  halo.x = 0;
+  halo.y = 0;
+
+  if (showHeading) {
+    // Heading is a distinct wedge on top of the halo, so a marker with a known
+    // bearing is distinguishable from one without at any zoom level.
+    const cone = figma.createPolygon();
+    cone.name = "Heading Cone";
+    cone.pointCount = 3;
+    cone.resizeWithoutConstraints(28, 24);
+    cone.fills = [
+      paintFromVariable("Colors/theme/500", "#135BEC", variableByName, stats),
+    ];
+    cone.strokes = [];
+    component.appendChild(cone);
+    cone.x = 18;
+    cone.y = 2;
+  }
+
+  const dot = figma.createEllipse();
+  dot.name = "Location Dot";
+  dot.resizeWithoutConstraints(20, 20);
+  dot.fills = [
+    paintFromVariable("Colors/theme/500", "#135BEC", variableByName, stats),
+  ];
+  dot.strokes = [
+    paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
+  ];
+  dot.strokeWeight = 3;
+  component.appendChild(dot);
+  dot.x = 22;
+  dot.y = 22;
+}
+
+function configureUserLocationMarkerProperties(_componentSet, _stats) {
+  // No editable text: the marker is pure geometry, and its accessible name is
+  // owned by the map renderer that positions it.
+}
+
+const USER_LOCATION_MARKER_DESCRIPTION = [
+  "Kozmos UserLocationMarker generated from the React UserLocationMarker API.",
+  "Heading maps to UserLocationMarker.showHeading.",
+  "heading is a bearing in degrees; it rotates the cone rather than adding a variant.",
+  "The marker has no text; the map renderer owns its position and accessible name.",
+  "Heading adds a distinct wedge, so a known bearing is not signalled by colour alone.",
+];
+
+async function buildUserLocationMarkerComponent() {
+  return buildSingleAxisComponent({
+    componentName: "UserLocationMarker",
+    componentSetName: "UserLocationMarker",
+    axisName: "Heading",
+    values: USER_LOCATION_MARKER_HEADINGS,
+    x: 80,
+    y: 18000,
+    xStep: 140,
+    createVariant: createUserLocationMarkerVariant,
+    configureProperties: configureUserLocationMarkerProperties,
+    autoReorganize: true,
+    description: USER_LOCATION_MARKER_DESCRIPTION,
+  });
+}
+
+async function updateUserLocationMarkerComponent() {
+  return updateSingleAxisComponent({
+    componentName: "UserLocationMarker",
+    componentSetName: "UserLocationMarker",
+    axisName: "Heading",
+    values: USER_LOCATION_MARKER_HEADINGS,
+    xStep: 140,
+    createVariant: createUserLocationMarkerVariant,
+    updateVariant: updateUserLocationMarkerVariant,
+    parseVariantName: parseUserLocationMarkerVariantName,
+    configureProperties: configureUserLocationMarkerProperties,
+    autoReorganize: true,
+    description: USER_LOCATION_MARKER_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildUserLocationMarkerComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "UserLocationMarker",
+    componentSetName: "UserLocationMarker",
+    build: buildUserLocationMarkerComponent,
+  });
+}
+
+// --- DynamicIsland ---------------------------------------------------------
+
+async function createDynamicIslandVariant(args) {
+  const component = figma.createComponent();
+  await updateDynamicIslandVariant(component, args);
+  return component;
+}
+
+function parseDynamicIslandVariantName(name) {
+  return productSdkVariantValues(name, "State", DYNAMIC_ISLAND_STATES);
+}
+
+async function updateDynamicIslandVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const geometry = DYNAMIC_ISLAND_GEOMETRY[value];
+  productSdkVariantRoot(component, "DynamicIsland", "State=" + value, {
+    direction: value === "Expanded" ? "vertical" : "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: value === "Compact" ? "SPACE_BETWEEN" : "CENTER",
+    counterAlign: "CENTER",
+    spacing: 8,
+    padding: value === "Expanded" ? 16 : 12,
+    width: geometry.width,
+    height: geometry.height,
+    clip: true,
+  });
+  // The island is a black pill on the device bezel, not a themed surface, so
+  // it uses the inverse foreground rather than a Surface token.
+  component.cornerRadius = geometry.radius;
+  component.fills = [
+    paintFromVariable(
+      "Colors/foreground/1000",
+      "#0B0D12",
+      variableByName,
+      stats,
+    ),
+  ];
+  component.strokes = [];
+
+  if (value === "Minimal") {
+    const minimal = await productSdkSlot({
+      name: "Minimal Content Slot",
+      label: "•",
+      width: 32,
+      height: 24,
+      fonts,
+      variableByName,
+      stats,
+    });
+    appendWithSizing(component, minimal, "FIXED", "FIXED");
+    return;
+  }
+
+  if (value === "Compact") {
+    const leading = await productSdkSlot({
+      name: "Compact Leading Slot",
+      label: "Leading",
+      width: 56,
+      height: 24,
+      fonts,
+      variableByName,
+      stats,
+    });
+    appendWithSizing(component, leading, "FIXED", "FIXED");
+
+    const trailing = await productSdkSlot({
+      name: "Compact Trailing Slot",
+      label: "Trailing",
+      width: 56,
+      height: 24,
+      fonts,
+      variableByName,
+      stats,
+    });
+    appendWithSizing(component, trailing, "FIXED", "FIXED");
+    return;
+  }
+
+  const expanded = await productSdkSlot({
+    name: "Expanded Content Slot",
+    label: "Expanded content",
+    width: geometry.width - 32,
+    height: geometry.height - 32,
+    fonts,
+    variableByName,
+    stats,
+  });
+  appendWithSizing(component, expanded, "FILL", "FILL");
+}
+
+function configureDynamicIslandProperties(_componentSet, _stats) {
+  // Every region is a slot for host content; there is no island-owned text.
+}
+
+const DYNAMIC_ISLAND_DESCRIPTION = [
+  "Kozmos DynamicIsland generated from the React DynamicIsland API.",
+  "State maps to DynamicIsland.islandState (compact, expanded, minimal).",
+  "Compact Leading and Trailing Slots map to compactLeading and compactTrailing.",
+  "Expanded Content Slot maps to expandedContent; Minimal Content Slot to minimalContent.",
+  "The pill sits on the device bezel, so it uses the inverse foreground rather than a Surface token.",
+];
+
+async function buildDynamicIslandComponent() {
+  return buildSingleAxisComponent({
+    componentName: "DynamicIsland",
+    componentSetName: "DynamicIsland",
+    axisName: "State",
+    values: DYNAMIC_ISLAND_STATES,
+    x: 80,
+    y: 18400,
+    xStep: 460,
+    createVariant: createDynamicIslandVariant,
+    configureProperties: configureDynamicIslandProperties,
+    autoReorganize: true,
+    description: DYNAMIC_ISLAND_DESCRIPTION,
+  });
+}
+
+async function updateDynamicIslandComponent() {
+  return updateSingleAxisComponent({
+    componentName: "DynamicIsland",
+    componentSetName: "DynamicIsland",
+    axisName: "State",
+    values: DYNAMIC_ISLAND_STATES,
+    xStep: 460,
+    createVariant: createDynamicIslandVariant,
+    updateVariant: updateDynamicIslandVariant,
+    parseVariantName: parseDynamicIslandVariantName,
+    configureProperties: configureDynamicIslandProperties,
+    autoReorganize: true,
+    description: DYNAMIC_ISLAND_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildDynamicIslandComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "DynamicIsland",
+    componentSetName: "DynamicIsland",
+    build: buildDynamicIslandComponent,
+  });
+}
+
+// --- FeedbackCard ----------------------------------------------------------
+
+async function createFeedbackCardVariant(args) {
+  const component = figma.createComponent();
+  await updateFeedbackCardVariant(component, args);
+  return component;
+}
+
+function parseFeedbackCardVariantName(name) {
+  return productSdkVariantValues(name, "State", FEEDBACK_CARD_STATES);
+}
+
+async function updateFeedbackCardVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const submitting = value === "Submitting";
+  const success = value === "Success";
+  const width = 340;
+  const contentWidth = width - 32;
+  productSdkVariantRoot(component, "FeedbackCard", "State=" + value, {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 12,
+    padding: 16,
+    width,
+    height: 240,
+  });
+  productSdkSurface(component, 12, variableByName, stats);
+
+  // Success replaces the form outright. Leaving a disabled form behind the
+  // confirmation would suggest the rating is still editable.
+  if (success) {
+    const successText = await productSdkText({
+      name: "Success Text",
+      characters: "Thanks for your feedback.",
+      styleKey: "cardTitle",
+      fonts,
+      bold: true,
+      fontSize: 16,
+      lineHeight: 24,
+      colorToken: "Colors/emotional/success/500",
+      colorFallback: "#1E7F4F",
+      variableByName,
+      stats,
+      width: contentWidth,
+      wrap: true,
+    });
+    appendWithSizing(component, successText, "FILL", "HUG");
+    return;
+  }
+
+  const title = await productSdkText({
+    name: "Title Text",
+    characters: "How was your visit?",
+    styleKey: "cardTitle",
+    fonts,
+    bold: true,
+    fontSize: 16,
+    lineHeight: 24,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
+    variableByName,
+    stats,
+    width: contentWidth,
+  });
+  appendWithSizing(component, title, "FILL", null);
+
+  const description = await productSdkText({
+    name: "Description Text",
+    characters: "Rate your wayfinding experience and add a comment.",
+    styleKey: "cardDescription",
+    fonts,
+    bold: false,
+    fontSize: 14,
+    lineHeight: 20,
+    colorToken: "Colors/foreground/500",
+    colorFallback: "#747B8B",
+    variableByName,
+    stats,
+    width: contentWidth,
+    wrap: true,
+  });
+  appendWithSizing(component, description, "FILL", "HUG");
+
+  const rating = await productSdkSlot({
+    name: "Rating Slot",
+    label: "Rating slot",
+    width: contentWidth,
+    height: 44,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+  appendWithSizing(component, rating, "FILL", "FIXED");
+
+  const comment = await productSdkSlot({
+    name: "Comment Slot",
+    label: "Textarea slot",
+    width: contentWidth,
+    height: 56,
+    fonts,
+    variableByName,
+    stats,
+    muted: true,
+  });
+  appendWithSizing(component, comment, "FILL", "FIXED");
+
+  const submit = await productSdkControlButton({
+    name: "Submit Button",
+    glyph: submitting ? "◌" : "→",
+    label: submitting ? "Sending" : "Send feedback",
+    pressed: !submitting,
+    fonts,
+    variableByName,
+    stats,
+  });
+  submit.opacity = submitting ? 0.6 : 1;
+  appendWithSizing(component, submit, "FILL", "FIXED");
+}
+
+function configureFeedbackCardProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Title Text",
+    "Title Text",
+    "How was your visit?",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Description Text",
+    "Description Text",
+    "Rate your wayfinding experience and add a comment.",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Success Text",
+    "Success Text",
+    "Thanks for your feedback.",
+    stats,
+  );
+}
+
+const FEEDBACK_CARD_DESCRIPTION = [
+  "Kozmos FeedbackCard generated from the React FeedbackCard API.",
+  "State covers the editable form, the in-flight submit, and the confirmation.",
+  "Title Text maps to title; Description Text to description; Success Text to successMessage.",
+  "Rating Slot and Comment Slot compose Core Rating and Textarea.",
+  "Success replaces the form rather than disabling it, so nothing reads as still editable.",
+];
+
+async function buildFeedbackCardComponent() {
+  return buildSingleAxisComponent({
+    componentName: "FeedbackCard",
+    componentSetName: "FeedbackCard",
+    axisName: "State",
+    values: FEEDBACK_CARD_STATES,
+    x: 80,
+    y: 18800,
+    xStep: 400,
+    createVariant: createFeedbackCardVariant,
+    configureProperties: configureFeedbackCardProperties,
+    autoReorganize: true,
+    description: FEEDBACK_CARD_DESCRIPTION,
+  });
+}
+
+async function updateFeedbackCardComponent() {
+  return updateSingleAxisComponent({
+    componentName: "FeedbackCard",
+    componentSetName: "FeedbackCard",
+    axisName: "State",
+    values: FEEDBACK_CARD_STATES,
+    xStep: 400,
+    createVariant: createFeedbackCardVariant,
+    updateVariant: updateFeedbackCardVariant,
+    parseVariantName: parseFeedbackCardVariantName,
+    configureProperties: configureFeedbackCardProperties,
+    autoReorganize: true,
+    description: FEEDBACK_CARD_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildFeedbackCardComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "FeedbackCard",
+    componentSetName: "FeedbackCard",
+    build: buildFeedbackCardComponent,
+  });
+}
+
 async function buildSingleAxisComponent(config) {
   const stats = {
     created: false,
@@ -62104,11 +66381,16 @@ function setLayoutSizingHorizontal(node, value) {
 
   try {
     node.layoutSizingHorizontal = value;
-    return node.layoutSizingHorizontal === value;
-  } catch (_error) {
-    // Older Figma runtimes may not expose layout sizing on every node type.
+  } catch (error) {
+    // Older Figma runtimes may not expose layout sizing on every node type,
+    // and FILL throws outside an auto-layout parent. Both are recorded.
+    recordLayoutSizingFailure("layoutSizingHorizontal", node, value, error);
     return false;
   }
+
+  if (node.layoutSizingHorizontal === value) return true;
+  recordLayoutSizingFailure("layoutSizingHorizontal", node, value, null);
+  return false;
 }
 
 function setLayoutSizingVertical(node, value) {
@@ -62116,11 +66398,16 @@ function setLayoutSizingVertical(node, value) {
 
   try {
     node.layoutSizingVertical = value;
-    return node.layoutSizingVertical === value;
-  } catch (_error) {
-    // Older Figma runtimes may not expose layout sizing on every node type.
+  } catch (error) {
+    // Older Figma runtimes may not expose layout sizing on every node type,
+    // and FILL throws outside an auto-layout parent. Both are recorded.
+    recordLayoutSizingFailure("layoutSizingVertical", node, value, error);
     return false;
   }
+
+  if (node.layoutSizingVertical === value) return true;
+  recordLayoutSizingFailure("layoutSizingVertical", node, value, null);
+  return false;
 }
 
 function setNodePropertyIfSupported(node, propertyName, value) {
