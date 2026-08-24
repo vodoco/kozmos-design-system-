@@ -5,13 +5,25 @@ Branch: `codex/wave-2-figma-components`.
 
 ## 1. Verified State
 
-All gates pass as of this handoff:
+**Read this first: verify against a clean checkout, not the working tree.**
+
+For most of this branch's life a large part of its substance was uncommitted.
+The tree had 97 React components; the committed branch had 79. Every coverage
+number in earlier handoffs was measured against the working tree, so they
+described something CI never saw. That is fixed — the tree is clean and the
+commits contain everything — but the habit is what caused it. To check state:
+
+```bash
+git worktree add --detach /tmp/verify HEAD && cd /tmp/verify
+```
+
+All gates pass on a clean checkout as of this handoff:
 
 | Gate                                         | Result                                       |
 | -------------------------------------------- | -------------------------------------------- |
 | `pnpm typecheck` / `lint` / `test` / `build` | exit 0                                       |
 | `components:contract:check`                  | ok                                           |
-| `components:variant:check`                   | ok                                           |
+| `components:variant:check`                   | ok (97 scanned, 1 gap)                       |
 | `tokens:contrast:check`                      | ok (50 pairs, light + dark)                  |
 | `figma:plugin:check`                         | ok                                           |
 | `check-completion --check`                   | STATUS.md up to date                         |
@@ -23,14 +35,14 @@ All gates pass as of this handoff:
 |                     | Web (React) | iOS   | Android | Vue          | Figma     |
 | ------------------- | ----------- | ----- | ------- | ------------ | --------- |
 | Components          | 97/97       | 97/97 | 97/97   | 100 wrappers | **94/97** |
-| Variant-axis gaps   | reference   | 0/25  | 0/25    | 0/25         | **1/25**  |
+| Variant-axis gaps   | reference   | 0/26  | 0/26    | 0/26         | **1/26**  |
 | Code Connect linked | 68/92       | 68/92 | 68/92   | —            | —         |
 
-**Figma builders are now complete.** The three components with no Figma set are
-all intentional: `Icon` (source components on the `Icons` page), `FieldWrapper`
-(covered by the `FormField` set via a documented Code Connect override), and
-`GlassSettingsPanel` (internal-only, excluded from STATUS.md). The one remaining
-variant-axis gap is `Icon`, for the same reason.
+The three components with no Figma set are all intentional: `Icon` (source
+components on the `Icons` page), `FieldWrapper` (covered by the `FormField` set
+via a documented Code Connect override), and `GlassSettingsPanel`
+(internal-only, excluded from STATUS.md). The one variant-axis gap is `Icon`,
+for the same reason.
 
 The weakest link is now **Code Connect**, not component presence: Core is
 complete at 68/92, Product / SDK is at zero. Native test coverage is second — 8
@@ -85,6 +97,34 @@ layout section rather than Product / SDK, matching STATUS.md's lanes.
 Three shared helpers carry the repeated anatomy: `productSdkFrame`,
 `productSdkVariantRoot`, `productSdkSlot`, `productSdkControlButton`, and
 `productSdkPanelHeader`.
+
+### The branch's own foundation was uncommitted
+
+Rebasing onto `main` was the first thing all session to run against a clean
+checkout, and it surfaced that 18 React component directories, the whole
+`@kozmos/product-contracts` package, half the SwiftUI and Compose packages, and
+several script fixes existed only in the working tree. Committed in twelve
+focused commits (`a75e1ac`..`7ca53a3`), including:
+
+- Nine SwiftUI components that were 12-line `Text("Name")` placeholders, now
+  implemented, and their files renamed off the `Kozmos` prefix so
+  `check-completion`'s `{name}/{name}.swift` path matches.
+- `packages/react/playwright/.cache` untracked — 85 files of Vite build output
+  that made every `git status` unreadable.
+- Package exports fixed to real `.mjs` / `.umd.cjs` names, matching what Vite
+  emits, plus a `"use client";` banner React needs under RSC.
+
+Two checker bugs fell out of it, both of the same species — a check asserting on
+formatting rather than on code:
+
+- `check-figma-plugin-compat.mjs` scanned raw source for `...`, `?.`, `??`. Any
+  ellipsis in ordinary prose ("Calculating routes...") read as spread syntax. It
+  was failing on the committed tree both before and after this work. Strings and
+  comments are masked before the scan now.
+- `check-component-contracts.mjs` compared single-quoted source snippets, so the
+  pre-commit prettier run broke `React Text 4xl size` against a file that plainly
+  contains the entry. Same class as `a91cdce`. String assertions now normalise
+  quotes on both sides.
 
 ### §5 risk cleanups
 
@@ -151,6 +191,10 @@ These need a human call; none are blocked on code.
 
 ## 6. Known Risks And Gotchas
 
+- **Verify against a clean checkout, not the working tree.** This is how the
+  branch ended up with 79 committed components while every report said 97. A
+  `git worktree add --detach /tmp/verify HEAD` costs seconds and is the only
+  thing that measures what CI will see.
 - **The new sets have never been run in Figma.** Every builder is statically
   audited — axis names agree across config, variant root, and parser; every
   handler action resolves; every `productSdkText` call has an explicit width, the
