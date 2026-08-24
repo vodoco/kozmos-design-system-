@@ -40752,6 +40752,22 @@ async function updateToastComponent() {
 // new ones, so "Apply Text Styles" and the library audit keep working.
 // ---------------------------------------------------------------------------
 
+/**
+ * Append a child, then apply its auto-layout sizing.
+ *
+ * Order matters and is easy to get wrong: `layoutSizingHorizontal = "FILL"`
+ * throws when the node has no auto-layout parent, and `setLayoutSizing*`
+ * swallows that error. Setting sizing before appending therefore does nothing
+ * silently, and a text node with no explicit width collapses to one character
+ * per line. Always go through this helper.
+ */
+function appendWithSizing(parent, child, horizontal, vertical) {
+  parent.appendChild(child);
+  if (horizontal) setLayoutSizingHorizontal(child, horizontal);
+  if (vertical) setLayoutSizingVertical(child, vertical);
+  return child;
+}
+
 function productSdkVariantValues(name, axisName, allowedValues) {
   const values = {};
 
@@ -40793,19 +40809,29 @@ async function productSdkText({
   colorFallback,
   variableByName,
   stats,
+  width,
+  wrap,
 }) {
   const text = figma.createText();
   text.name = name;
   text.fontName = bold ? fonts.medium : fonts.regular;
   text.fontSize = fontSize;
   text.lineHeight = { unit: "PIXELS", value: lineHeight };
-  text.textAutoResize = "TRUNCATE";
+  text.textAutoResize = wrap ? "HEIGHT" : "TRUNCATE";
   await applyTextStyleToNodeAsync(text, styleKey, stats);
   text.characters = characters;
   text.fills = [
     paintFromVariable(colorToken, colorFallback, variableByName, stats),
   ];
-  text.textAlignVertical = "CENTER";
+  text.textAlignVertical = wrap ? "TOP" : "CENTER";
+
+  // Give every text a real width up front. TRUNCATE and HEIGHT both need one,
+  // and a later FILL that fails would otherwise leave the node one character
+  // wide.
+  if (typeof width === "number" && width > 0) {
+    text.resizeWithoutConstraints(width, Math.max(lineHeight, 1));
+  }
+
   return text;
 }
 
@@ -40864,8 +40890,6 @@ async function updateDirectionStepVariant(
     paintFromVariable("Colors/theme/100", "#CAD9FC", variableByName, stats),
   ];
   badge.strokes = [];
-  setLayoutSizingHorizontal(badge, "FIXED");
-  setLayoutSizingVertical(badge, "FIXED");
 
   // The turn glyph is intentionally text, not an auto-mirroring icon: a left
   // turn stays a physical left turn in RTL locales.
@@ -40885,7 +40909,7 @@ async function updateDirectionStepVariant(
   glyph.textAlignHorizontal = "CENTER";
   glyph.textAutoResize = "WIDTH_AND_HEIGHT";
   badge.appendChild(glyph);
-  component.appendChild(badge);
+  appendWithSizing(component, badge, "FIXED", "FIXED");
 
   const copy = figma.createFrame();
   copy.name = "Direction Copy";
@@ -40895,8 +40919,6 @@ async function updateDirectionStepVariant(
   copy.itemSpacing = 2;
   copy.fills = [];
   copy.resizeWithoutConstraints(268, 44);
-  setLayoutSizingHorizontal(copy, "FILL");
-  setLayoutSizingVertical(copy, "HUG");
 
   const instruction = await productSdkText({
     name: "Instruction Text",
@@ -40910,6 +40932,7 @@ async function updateDirectionStepVariant(
     colorFallback: "#000000",
     variableByName,
     stats,
+    width: 268,
   });
   bindFloatVariable(
     instruction,
@@ -40925,8 +40948,7 @@ async function updateDirectionStepVariant(
     variableByName,
     stats,
   );
-  setLayoutSizingHorizontal(instruction, "FILL");
-  copy.appendChild(instruction);
+  appendWithSizing(copy, instruction, "FILL", null);
 
   const meta = figma.createFrame();
   meta.name = "Direction Meta";
@@ -40949,7 +40971,7 @@ async function updateDirectionStepVariant(
       fontSize: 12,
       lineHeight: 16,
       colorToken: "Colors/foreground/500",
-      colorFallback: "#6B6F76",
+      colorFallback: "#747B8B",
       variableByName,
       stats,
     });
@@ -40972,7 +40994,7 @@ async function updateDirectionStepVariant(
   }
 
   copy.appendChild(meta);
-  component.appendChild(copy);
+  appendWithSizing(component, copy, "FILL", "HUG");
 }
 
 function configureDirectionStepProperties(componentSet, stats) {
@@ -41125,8 +41147,6 @@ async function updateFloorSelectorVariant(
           ),
         ]
       : [];
-    setLayoutSizingHorizontal(item, "FIXED");
-    setLayoutSizingVertical(item, "FIXED");
 
     const label = await productSdkText({
       name: selected ? "Selected Floor Text" : `Floor ${index + 1} Text`,
@@ -41158,7 +41178,7 @@ async function updateFloorSelectorVariant(
       stats,
     );
     item.appendChild(label);
-    component.appendChild(item);
+    appendWithSizing(component, item, "FIXED", "FIXED");
   }
 
   if (compact) {
@@ -41191,8 +41211,6 @@ async function floorSelectorStepperGlyph(
   frame.cornerRadius = 6;
   frame.fills = [];
   frame.strokes = [];
-  setLayoutSizingHorizontal(frame, "FIXED");
-  setLayoutSizingVertical(frame, "FIXED");
 
   const text = await productSdkText({
     name: `${name} Glyph`,
@@ -41203,13 +41221,15 @@ async function floorSelectorStepperGlyph(
     fontSize: 14,
     lineHeight: 20,
     colorToken: "Colors/foreground/500",
-    colorFallback: "#6B6F76",
+    colorFallback: "#747B8B",
     variableByName,
     stats,
   });
   text.textAlignHorizontal = "CENTER";
   text.textAutoResize = "WIDTH_AND_HEIGHT";
   frame.appendChild(text);
+  setLayoutSizingHorizontal(frame, "FIXED");
+  setLayoutSizingVertical(frame, "FIXED");
   return frame;
 }
 
@@ -41394,8 +41414,6 @@ async function updateLocationPinVariant(
   ];
   marker.strokeWeight = 2;
   marker.dashPattern = props.state === "OffFloor" ? [3, 3] : [];
-  setLayoutSizingHorizontal(marker, "FIXED");
-  setLayoutSizingVertical(marker, "FIXED");
 
   const number = await productSdkText({
     name: "Number Text",
@@ -41413,7 +41431,7 @@ async function updateLocationPinVariant(
   number.textAlignHorizontal = "CENTER";
   number.textAutoResize = "WIDTH_AND_HEIGHT";
   marker.appendChild(number);
-  component.appendChild(marker);
+  appendWithSizing(component, marker, "FIXED", "FIXED");
 
   const label = await productSdkText({
     name: "Label Text",
@@ -41589,9 +41607,6 @@ async function updateMapViewVariant(
       ),
     ];
     slot.strokeWeight = 1;
-    setLayoutSizingHorizontal(slot, "FILL");
-    setLayoutSizingVertical(slot, "HUG");
-
     const slotLabel = await productSdkText({
       name: "Overlay Slot Text",
       characters: "Map overlay slot",
@@ -41601,14 +41616,14 @@ async function updateMapViewVariant(
       fontSize: 14,
       lineHeight: 20,
       colorToken: "Colors/foreground/500",
-      colorFallback: "#6B6F76",
+      colorFallback: "#747B8B",
       variableByName,
       stats,
+      width: 432,
     });
     slotLabel.textAlignHorizontal = "CENTER";
-    setLayoutSizingHorizontal(slotLabel, "FILL");
-    slot.appendChild(slotLabel);
-    component.appendChild(slot);
+    appendWithSizing(slot, slotLabel, "FILL", null);
+    appendWithSizing(component, slot, "FILL", "HUG");
   }
 
   const attribution = await productSdkText({
@@ -41620,7 +41635,7 @@ async function updateMapViewVariant(
     fontSize: 10,
     lineHeight: 14,
     colorToken: "Colors/foreground/500",
-    colorFallback: "#6B6F76",
+    colorFallback: "#747B8B",
     variableByName,
     stats,
   });
@@ -41758,9 +41773,7 @@ async function updatePOICardVariant(
       ),
     ];
     media.strokes = [];
-    setLayoutSizingHorizontal(media, "FILL");
-    setLayoutSizingVertical(media, "FIXED");
-    component.appendChild(media);
+    appendWithSizing(component, media, "FILL", "FIXED");
   }
 
   const body = figma.createFrame();
@@ -41775,8 +41788,6 @@ async function updatePOICardVariant(
   body.paddingBottom = 16;
   body.fills = [];
   body.resizeWithoutConstraints(320, 120);
-  setLayoutSizingHorizontal(body, "FILL");
-  setLayoutSizingVertical(body, "HUG");
 
   const heading = figma.createFrame();
   heading.name = "POI Heading";
@@ -41786,8 +41797,6 @@ async function updatePOICardVariant(
   heading.itemSpacing = 2;
   heading.fills = [];
   heading.resizeWithoutConstraints(288, 48);
-  setLayoutSizingHorizontal(heading, "FILL");
-  setLayoutSizingVertical(heading, "HUG");
 
   const title = await productSdkText({
     name: "Title Text",
@@ -41801,6 +41810,7 @@ async function updatePOICardVariant(
     colorFallback: "#000000",
     variableByName,
     stats,
+    width: 288,
   });
   bindFloatVariable(
     title,
@@ -41816,8 +41826,7 @@ async function updatePOICardVariant(
     variableByName,
     stats,
   );
-  setLayoutSizingHorizontal(title, "FILL");
-  heading.appendChild(title);
+  appendWithSizing(heading, title, "FILL", null);
 
   const subtitle = await productSdkText({
     name: "Subtitle Text",
@@ -41828,9 +41837,10 @@ async function updatePOICardVariant(
     fontSize: 14,
     lineHeight: 20,
     colorToken: "Colors/foreground/500",
-    colorFallback: "#6B6F76",
+    colorFallback: "#747B8B",
     variableByName,
     stats,
+    width: 288,
   });
   bindFloatVariable(
     subtitle,
@@ -41846,9 +41856,8 @@ async function updatePOICardVariant(
     variableByName,
     stats,
   );
-  setLayoutSizingHorizontal(subtitle, "FILL");
-  heading.appendChild(subtitle);
-  body.appendChild(heading);
+  appendWithSizing(heading, subtitle, "FILL", null);
+  appendWithSizing(body, heading, "FILL", "HUG");
 
   const description = await productSdkText({
     name: "Description Text",
@@ -41859,13 +41868,13 @@ async function updatePOICardVariant(
     fontSize: 14,
     lineHeight: 20,
     colorToken: "Colors/foreground/500",
-    colorFallback: "#6B6F76",
+    colorFallback: "#747B8B",
     variableByName,
     stats,
+    width: 288,
+    wrap: true,
   });
-  description.textAutoResize = "HEIGHT";
-  setLayoutSizingHorizontal(description, "FILL");
-  body.appendChild(description);
+  appendWithSizing(body, description, "FILL", "HUG");
 
   if (showsActions) {
     // Footer actions compose a live Button instance rather than a cloned
@@ -41879,7 +41888,6 @@ async function updatePOICardVariant(
     actions.counterAxisAlignItems = "CENTER";
     actions.itemSpacing = 8;
     actions.fills = [];
-    setLayoutSizingHorizontal(actions, "FILL");
 
     const created = await createNestedComponentInstance({
       componentSetName: "Button",
@@ -41912,10 +41920,10 @@ async function updatePOICardVariant(
       );
     }
 
-    body.appendChild(actions);
+    appendWithSizing(body, actions, "FILL", "HUG");
   }
 
-  component.appendChild(body);
+  appendWithSizing(component, body, "FILL", "HUG");
 }
 
 function configurePOICardProperties(componentSet, stats) {
@@ -42042,8 +42050,6 @@ async function updateWayfindingCardVariant(
     header.itemSpacing = 12;
     header.fills = [];
     header.resizeWithoutConstraints(288, 24);
-    setLayoutSizingHorizontal(header, "FILL");
-    setLayoutSizingVertical(header, "HUG");
 
     const title = await productSdkText({
       name: "Title Text",
@@ -42057,6 +42063,7 @@ async function updateWayfindingCardVariant(
       colorFallback: "#000000",
       variableByName,
       stats,
+      width: 236,
     });
     bindFloatVariable(
       title,
@@ -42072,8 +42079,7 @@ async function updateWayfindingCardVariant(
       variableByName,
       stats,
     );
-    setLayoutSizingHorizontal(title, "FILL");
-    header.appendChild(title);
+    appendWithSizing(header, title, "FILL", null);
 
     const created = await createNestedComponentInstance({
       componentSetName: "IconButton",
@@ -42097,7 +42103,7 @@ async function updateWayfindingCardVariant(
           ),
     );
 
-    component.appendChild(header);
+    appendWithSizing(component, header, "FILL", "HUG");
   }
 
   const slot = figma.createFrame();
@@ -42108,8 +42114,6 @@ async function updateWayfindingCardVariant(
   slot.itemSpacing = 8;
   slot.fills = [];
   slot.resizeWithoutConstraints(288, 80);
-  setLayoutSizingHorizontal(slot, "FILL");
-  setLayoutSizingVertical(slot, "HUG");
 
   const body = await productSdkText({
     name: "Body Text",
@@ -42120,14 +42124,14 @@ async function updateWayfindingCardVariant(
     fontSize: 14,
     lineHeight: 20,
     colorToken: "Colors/foreground/500",
-    colorFallback: "#6B6F76",
+    colorFallback: "#747B8B",
     variableByName,
     stats,
+    width: 288,
+    wrap: true,
   });
-  body.textAutoResize = "HEIGHT";
-  setLayoutSizingHorizontal(body, "FILL");
-  slot.appendChild(body);
-  component.appendChild(slot);
+  appendWithSizing(slot, body, "FILL", "HUG");
+  appendWithSizing(component, slot, "FILL", "HUG");
 }
 
 function configureWayfindingCardProperties(componentSet, stats) {
@@ -46371,8 +46375,6 @@ async function appendPaginationControl({
   if (icon && iconPosition === "after") await appendIcon(icon);
 
   parent.appendChild(frame);
-  setLayoutSizingHorizontal(frame, "FIXED");
-  setLayoutSizingVertical(frame, "FIXED");
 
   return {
     node: frame,
@@ -46421,8 +46423,6 @@ function appendPaginationEllipsis(parent, metrics, variableByName, stats) {
   }
 
   parent.appendChild(frame);
-  setLayoutSizingHorizontal(frame, "FIXED");
-  setLayoutSizingVertical(frame, "FIXED");
 
   return {
     node: frame,
@@ -51212,7 +51212,7 @@ async function syncCardVariantChildren({
 
     header.appendChild(title);
     header.appendChild(description);
-    component.appendChild(header);
+    appendWithSizing(component, header, "FILL", "HUG");
   } else if (header) {
     header.remove();
     header = null;
