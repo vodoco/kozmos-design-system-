@@ -20,11 +20,29 @@ function fail(message) {
   throw new Error(message);
 }
 
+/**
+ * Quote style is formatting, not contract.
+ *
+ * These assertions are literal source snippets, and prettier rewrites `\'` to
+ * `"` in the files they check. Every string assertion written before that ran
+ * would otherwise fail the moment the pre-commit hook touched a component —
+ * which is exactly how "React Text 4xl size" broke. Compare with both sides
+ * normalised so the check tracks the code, not its formatting.
+ */
+function normalizeQuotes(value) {
+  return String(value).replace(/'/g, '"');
+}
+
+function containsLiteral(content, pattern) {
+  if (content.includes(pattern)) return true;
+  return normalizeQuotes(content).includes(normalizeQuotes(pattern));
+}
+
 function assertContains(filePath, content, pattern, label) {
   const ok =
     pattern instanceof RegExp
       ? pattern.test(content)
-      : content.includes(pattern);
+      : containsLiteral(content, pattern);
   if (!ok) {
     fail(`${filePath}: missing ${label}`);
   }
@@ -34,7 +52,7 @@ function assertNotContains(filePath, content, pattern, label) {
   const ok =
     pattern instanceof RegExp
       ? !pattern.test(content)
-      : !content.includes(pattern);
+      : !containsLiteral(content, pattern);
   if (!ok) {
     fail(`${filePath}: unexpected ${label}`);
   }
