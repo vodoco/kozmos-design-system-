@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -98,20 +97,23 @@ fun KozmosLocationPin(
         Box(contentAlignment = Alignment.Center) {
             Canvas(modifier = Modifier.size(diameter)) {
                 val radius = this.size.minDimension / 2f
-                drawCircle(color = markerColor.copy(alpha = alpha), radius = radius)
-                // Off-floor pins are outlined rather than filled, so the state
-                // is not carried by colour alone.
+                // Off-floor pins invert to a hollow ring: the fill drops out
+                // and the marker colour moves to the stroke. Shape carries the
+                // state, so it is never colour-only, and a dashed stroke at
+                // this diameter reads as a cogwheel rather than a dashed ring.
+                val fill = if (offFloor) {
+                    KozmosColors.primitivesColorsBackground0
+                } else {
+                    markerColor
+                }
+                val ring = if (offFloor) markerColor else KozmosColors.primitivesColorsForeground1000
+                val ringWidth = (if (offFloor) 3f else 2f) * density
+
+                drawCircle(color = fill.copy(alpha = alpha), radius = radius)
                 drawCircle(
-                    color = KozmosColors.primitivesColorsForeground1000.copy(alpha = alpha),
-                    radius = radius - 1f,
-                    style = Stroke(
-                        width = 2f * density,
-                        pathEffect = if (offFloor) {
-                            PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
-                        } else {
-                            null
-                        }
-                    )
+                    color = ring.copy(alpha = alpha),
+                    radius = radius - ringWidth / 2f,
+                    style = Stroke(width = ringWidth)
                 )
             }
 
@@ -120,7 +122,9 @@ fun KozmosLocationPin(
                     text = it.toString(),
                     fontSize = (diameter.value * 0.44f).sp,
                     fontWeight = FontWeight.Bold,
-                    color = KozmosColors.primitivesColorsForeground1000.copy(alpha = alpha)
+                    color = (
+                        if (offFloor) markerColor else KozmosColors.primitivesColorsForeground1000
+                        ).copy(alpha = alpha)
                 )
             }
         }

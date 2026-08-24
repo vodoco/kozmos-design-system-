@@ -41125,8 +41125,9 @@ async function updateFloorSelectorVariant(
 
   for (let index = 0; index < labels.length; index += 1) {
     // The first list entry represents the selected floor so designers can see
-    // the selected treatment without a second variant axis.
-    const selected = !compact && index === 0;
+    // the selected treatment without a second variant axis. The compact
+    // stepper shows only the current floor, so its single entry is selected.
+    const selected = compact || index === 0;
     const item = figma.createFrame();
     item.name = selected ? "Floor Item Selected" : `Floor Item ${index + 1}`;
     item.layoutMode = "HORIZONTAL";
@@ -41400,20 +41401,38 @@ async function updateLocationPinVariant(
   marker.counterAxisAlignItems = "CENTER";
   marker.resizeWithoutConstraints(diameter, diameter);
   marker.cornerRadius = diameter / 2;
+  // Off-floor pins invert to a hollow ring: the fill drops out and the brand
+  // colour moves to the stroke. A dashed stroke on a circle this small renders
+  // as a cogwheel rather than a dashed ring, so shape carries the state
+  // instead — still not colour-only.
+  const offFloor = props.state === "OffFloor";
   marker.fills = [
-    paintFromVariable(palette.fill, palette.fallback, variableByName, stats),
+    offFloor
+      ? paintFromVariable(
+          "Colors/background/0",
+          "#FFFFFF",
+          variableByName,
+          stats,
+        )
+      : paintFromVariable(
+          palette.fill,
+          palette.fallback,
+          variableByName,
+          stats,
+        ),
   ];
-  // Off-floor pins are outlined so the state is not colour-only.
   marker.strokes = [
-    paintFromVariable(
-      "Colors/foreground/1000",
-      "#FFFFFF",
-      variableByName,
-      stats,
-    ),
+    offFloor
+      ? paintFromVariable(palette.fill, palette.fallback, variableByName, stats)
+      : paintFromVariable(
+          "Colors/foreground/1000",
+          "#FFFFFF",
+          variableByName,
+          stats,
+        ),
   ];
-  marker.strokeWeight = 2;
-  marker.dashPattern = props.state === "OffFloor" ? [3, 3] : [];
+  marker.strokeWeight = offFloor ? 3 : 2;
+  marker.dashPattern = [];
 
   const number = await productSdkText({
     name: "Number Text",
@@ -41423,8 +41442,8 @@ async function updateLocationPinVariant(
     bold: true,
     fontSize: Math.round(diameter * 0.44),
     lineHeight: Math.round(diameter * 0.62),
-    colorToken: "Colors/foreground/1000",
-    colorFallback: "#FFFFFF",
+    colorToken: offFloor ? palette.fill : "Colors/foreground/1000",
+    colorFallback: offFloor ? palette.fallback : "#FFFFFF",
     variableByName,
     stats,
   });

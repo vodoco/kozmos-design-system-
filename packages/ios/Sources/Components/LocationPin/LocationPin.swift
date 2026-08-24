@@ -141,26 +141,27 @@ public struct KozmosLocationPin: View {
 
     private var marker: some View {
         ZStack {
+            // Off-floor pins invert to a hollow ring: the fill drops out and
+            // the marker colour moves to the stroke. Shape carries the state,
+            // so it is never colour-only, and a dashed stroke at this diameter
+            // would read as a cogwheel rather than a dashed ring.
             Circle()
-                .fill(markerColor)
+                .fill(offFloor ? KozmosColors.primitivesColorsBackground0 : markerColor)
                 .frame(width: diameter, height: diameter)
 
-            // Off-floor pins are outlined rather than filled, so the state is
-            // not carried by colour alone.
             Circle()
                 .strokeBorder(
-                    KozmosColors.primitivesColorsForeground1000,
-                    style: StrokeStyle(
-                        lineWidth: 2,
-                        dash: offFloor ? [3, 3] : []
-                    )
+                    offFloor ? markerColor : KozmosColors.primitivesColorsForeground1000,
+                    lineWidth: offFloor ? 3 : 2
                 )
                 .frame(width: diameter, height: diameter)
 
             if let number {
                 Text("\(number)")
                     .font(.system(size: diameter * 0.44, weight: .bold))
-                    .foregroundColor(KozmosColors.primitivesColorsForeground1000)
+                    .foregroundColor(
+                        offFloor ? markerColor : KozmosColors.primitivesColorsForeground1000
+                    )
             }
         }
         .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.24), radius: 4, y: 2)
