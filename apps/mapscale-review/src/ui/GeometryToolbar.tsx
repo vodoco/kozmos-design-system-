@@ -189,6 +189,12 @@ const ACCEL = (() => {
 const BAR_INK = "var(--review-ink)";
 const BAR_MUTED = "var(--primitives-colors-background-600)";
 const BAR_LINE = "var(--primitives-colors-background-900)";
+/**
+ * The caption's ground. Deliberately a raw near-black rather than `background-900`: that token IS
+ * near-black in the light theme, but it is named like a background and has already been mis-read
+ * once — see the DS backlog. A tooltip's ground is not a background token's job.
+ */
+const CAPTION_BG = "#1a1c24";
 const BAR_ON_BG = "#eaf0ff";
 const BAR_ON_INK = "#0b369c";
 /* The app's own danger ink (`AiMappingStatus`'s `danger600`), not a token — the DS publishes no red
@@ -275,7 +281,11 @@ function WhyTip({
             borderRadius: 8,
             background: "var(--review-ink, #1d2433)",
             color: "#fff",
-            font: "12px/1.4 inherit",
+            // ⚠️ NOT the `font` shorthand: `font: 12px/1.4 inherit` is INVALID — `inherit` is
+            // not a family — so the browser drops the whole declaration and the text silently
+            // renders at the inherited size. Three of these were live before 2026-08-23.
+            fontSize: 12,
+            lineHeight: 1.4,
             textAlign: "left",
             boxShadow: "0 6px 20px rgba(11,54,156,.22)",
             pointerEvents: "none",
@@ -514,7 +524,10 @@ export function GeometryToolbar({
     <div
       style={{
         position: "absolute",
-        bottom: 18,
+        // Lifted off the bottom edge (Olcay, 2026-08-23). At 18 the bar sat almost on the map's
+        // border, which reads as clipped rather than floating — and on a short map it collided
+        // with the attribution strip.
+        bottom: 32,
         // Centre of the map you can SEE, not of the map element — see `padRight`.
         left: `calc(50% - ${padRight / 2}px)`,
         transform: "translateX(-50%)",
@@ -553,7 +566,8 @@ export function GeometryToolbar({
             borderRadius: 999,
             background: BAR_ON_INK,
             color: "#fff",
-            font: "12px/1.35 inherit",
+            fontSize: 12,
+            lineHeight: 1.35,
             fontWeight: 500,
             boxShadow: "0 4px 14px rgba(11,54,156,.28)",
             whiteSpace: "nowrap",
@@ -587,15 +601,28 @@ export function GeometryToolbar({
         <div
           role="status"
           aria-live="polite"
+          /**
+           * **A dark pill, not a white one** (Olcay, 2026-08-23: *"make the toast message black and
+           * smaller"*). This is the product's own tooltip idiom — every hint in the drawing toolbar
+           * is a dark rounded rectangle with light text — so the editor was the odd one out.
+           *
+           * It also solves a problem sideways: a white pill needs an outline to separate it from a
+           * pale map, and that outline was the near-black hairline. Dark ink needs no outline.
+           *
+           * ⚠️ **A refusal is not a hint and must not look like one.** Guidance is dark; a refusal
+           * is the danger colour, because "that cut runs along an edge" and "shift-drag to select
+           * corners" are different kinds of sentence.
+           */
           style={{
             maxWidth: 460,
-            padding: "5px 11px",
-            borderRadius: 999,
-            background: "#fff",
-            border: `1px solid ${caption.bad ? BAR_BAD : BAR_LINE}`,
-            boxShadow: "0 4px 14px rgba(11,54,156,.12)",
-            font: "12px/1.35 inherit",
-            color: caption.bad ? BAR_BAD : BAR_MUTED,
+            padding: "6px 10px",
+            borderRadius: 8,
+            background: caption.bad ? BAR_BAD : CAPTION_BG,
+            border: "none",
+            boxShadow: "0 4px 14px rgba(11,54,156,.18)",
+            fontSize: 11,
+            lineHeight: 1.4,
+            color: "#fff",
             textAlign: "center",
           }}
         >
