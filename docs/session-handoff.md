@@ -7,36 +7,38 @@ Branch: `codex/wave-2-figma-components`.
 
 All gates pass as of this handoff:
 
-| Gate                                                     | Result                                                              |
-| -------------------------------------------------------- | ------------------------------------------------------------------- |
-| `pnpm typecheck` / `lint` / `test` / `build`             | exit 0                                                              |
-| `components:contract:check`                              | ok                                                                  |
-| `components:variant:check`                               | ok                                                                  |
-| `tokens:contrast:check`                                  | ok (50 pairs, light + dark)                                         |
-| `figma:plugin:check`                                     | ok                                                                  |
-| `check-completion --check`                               | STATUS.md up to date                                                |
-| `figma:parse:linked` / `:ios:linked` / `:android:linked` | exit 0                                                              |
-| iOS                                                      | `swift build` 0 warnings, 27 tests pass                             |
-| Android                                                  | `assembleDebug` + `testDebugUnitTest` + `verifyPaparazziDebug` pass |
-| Vue                                                      | `vite build` + `vue-tsc` clean                                      |
+| Gate                                         | Result                                       |
+| -------------------------------------------- | -------------------------------------------- |
+| `pnpm typecheck` / `lint` / `test` / `build` | exit 0                                       |
+| `components:contract:check`                  | ok                                           |
+| `components:variant:check`                   | ok                                           |
+| `tokens:contrast:check`                      | ok (50 pairs, light + dark)                  |
+| `figma:plugin:check`                         | ok                                           |
+| `check-completion --check`                   | STATUS.md up to date                         |
+| iOS                                          | `swift build` exit 0                         |
+| Android                                      | `assembleDebug` + `testDebugUnitTest` exit 0 |
 
 ### Platform coverage
 
-|                     | Web (React) | iOS      | Android  | Vue          | Figma |
-| ------------------- | ----------- | -------- | -------- | ------------ | ----- |
-| Components          | 97/97       | 97/97    | 97/97    | 100 wrappers | 75/97 |
-| Stories             | 97/97       | —        | —        | 3            | —     |
-| Tests               | 97/97       | 8 files  | 8 files  | 1 spec       | —     |
-| Variant-axis gaps   | reference   | **0/25** | **0/25** | **0/25**     | 6/25  |
-| Code Connect linked | 68/92       | 68/92    | 68/92    | —            | —     |
+|                     | Web (React) | iOS   | Android | Vue          | Figma     |
+| ------------------- | ----------- | ----- | ------- | ------------ | --------- |
+| Components          | 97/97       | 97/97 | 97/97   | 100 wrappers | **94/97** |
+| Variant-axis gaps   | reference   | 0/25  | 0/25    | 0/25         | **1/25**  |
+| Code Connect linked | 68/92       | 68/92 | 68/92   | —            | —         |
 
-**Is it up to date?** Component presence and variant parity: yes, on all four
-platforms. Code Connect: Core is complete, Product / SDK is at zero. Native
-_test_ coverage is the weakest link — 8 test files each against 97 components.
+**Figma builders are now complete.** The three components with no Figma set are
+all intentional: `Icon` (source components on the `Icons` page), `FieldWrapper`
+(covered by the `FormField` set via a documented Code Connect override), and
+`GlassSettingsPanel` (internal-only, excluded from STATUS.md). The one remaining
+variant-axis gap is `Icon`, for the same reason.
+
+The weakest link is now **Code Connect**, not component presence: Core is
+complete at 68/92, Product / SDK is at zero. Native test coverage is second — 8
+test files each against 97 components.
 
 ## 2. What This Branch Changed
 
-Nine commits, `0ac20a1`..`ab23fec`:
+Original nine commits `0ac20a1`..`ab23fec`, plus this session:
 
 - `0ac20a1` Native product contracts + the 10 missing Product / SDK components on
   iOS and Android, with contract tests.
@@ -50,27 +52,82 @@ Nine commits, `0ac20a1`..`ab23fec`:
 - `a91cdce` Contract assertion made whitespace-tolerant.
 - `6803f20` Fixed text collapsing to zero width in the built Figma sets.
 - `ab23fec` Off-floor pins render as a hollow ring, not a cogwheel.
+- **This session**: Components page grid layout, the remaining 18 Figma builders,
+  and the §5 risk cleanups. See §3.
 
-## 3. Immediate Next Actions, In Order
+## 3. Done This Session
 
-1. **Re-run `Update` (not Build) on all six Product / SDK sets in Figma.** Update
-   preserves node IDs, which the Code Connect step depends on. This applies the
-   fixes in `6803f20` and `ab23fec`. The first run produced broken output — see
-   §5.
-2. **Run `Audit Library`** and keep the JSON.
-3. **Send the build logs.** Each prints the URL-safe node ID. With those, write
-   the 18 Code Connect files (6 components x React/SwiftUI/Compose) and replace
-   the six native `// Placeholder` stubs, then run `figma:publish:linked:dry` and
+### Components page is a grid, not a ribbon
+
+`reorganizeComponentsPage` packed everything into one column: sections stacked
+vertically, and each section's sets stacked vertically inside it. The page was
+5,792 x 94,012px — a 1:16 ribbon.
+
+Both levels now flow into newspaper-style columns via `packBlocksIntoColumns`,
+which tries every column count and picks the one whose bounding box is closest
+to square. There is no target-height constant to re-tune as sets are added.
+Simulated against the plugin's own constants and footprint floors: **13,020 x
+15,580px, 1.20:1, 5.9x shorter.** Reading order stays column-major, so each
+column holds a contiguous slice of the alphabetized list.
+
+`stats` now records `sectionColumns`, `pageWidth`, `pageHeight`, and a
+`columnCount` per section.
+
+### The remaining 18 Figma builders
+
+Every Product / SDK component now has a builder, plus the two platform surfaces.
+Full axis table in `docs/figma-upcoming-components.md`. Five of them close real
+variant-parity gaps, taking Figma from 6/25 gaps to 1/25.
+
+`DynamicIsland` and `FeedbackCard` went into a new `Platform / Form-Factor`
+layout section rather than Product / SDK, matching STATUS.md's lanes.
+
+Three shared helpers carry the repeated anatomy: `productSdkFrame`,
+`productSdkVariantRoot`, `productSdkSlot`, `productSdkControlButton`, and
+`productSdkPanelHeader`.
+
+### §5 risk cleanups
+
+- **Silent `setLayoutSizing*` failures now surface.** The helpers record every
+  failure into a module-level collector, and `postResultToUi` drains it into the
+  result object each handler posts, so it lands in `stats.warnings` — which the
+  UI already renders as a "warn" run. All 197 `figma.ui.postMessage` call sites
+  were routed through that one seam, so a new handler branch cannot forget it.
+  No call-site changes were needed across the 180 sizing calls.
+- **Six dead Code Connect stubs deleted** (`Heading`, `Text`, `ThemeProvider`
+  x `.figma.swift` / `.figma.kt`). Verified unreferenced by every config, and
+  `check-completion` short-circuits file checks for not-applicable components,
+  so STATUS.md did not move. iOS and Android still build.
+- **Husky deprecation fixed.** `.husky/pre-commit` is now just `npx lint-staged`;
+  the v9-deprecated shebang and `husky.sh` sourcing are gone.
+- **Stale LocationPin doc fixed.** The generated accessibility copy still said
+  off-floor pins use "a dashed outline"; `ab23fec` changed that to a hollow ring.
+- **Analyzer window trap fixed.** `figmaAxes()` in `check-variant-parity.mjs`
+  read a fixed 40,000-character slice of `expectedVariantAxesForComponentSetName`.
+  The registry is now 12,333 characters and growing; past the cap it would have
+  silently dropped axes and reported them as "component absent from Figma". It
+  now ends at the function's own closing brace.
+
+## 4. Immediate Next Actions, In Order
+
+1. **Build the 18 new sets in Figma.** Use **Build** for these (they do not exist
+   yet), then **Update** from then on. Keep the logs — each prints the URL-safe
+   node ID, which the Code Connect step needs.
+2. **Re-run `Update` on the six existing Product / SDK sets** to apply `6803f20`
+   and `ab23fec`. Update preserves node IDs; Build would not.
+3. **Run `Reorganize`** and confirm the page really lands near the simulated
+   13,020 x 15,580. The simulation used `COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS` as a
+   stand-in for measured footprints; it reproduced the old page height to within
+   1.5%, but the real numbers come from Figma.
+4. **Run `Audit Library`** and keep the JSON. Watch for the new layout-sizing
+   warnings — they will now appear where they were previously silent.
+5. **Write the Code Connect files** for all 24 Product / SDK sets (React,
+   SwiftUI, Compose) from the node IDs, replace the six native `// Placeholder`
+   stubs, then run `figma:publish:linked:dry` and
    `figma:publish:native:linked:dry`.
-4. **Fix the Components page layout before adding more sets** — see §4.
-5. **Write the remaining 18 Product / SDK Figma builders** using the lane in
-   `figma/foundations-importer/code.js`. The scaffolding exists; each new one is
-   a config plus variant functions following the DirectionStep pattern, or the
-   two-axis matrix pattern LocationPin uses.
 6. **Dashboard items outside the design system** — raised but never scoped.
-   Likely adds genuinely new components rather than variants.
 
-## 4. Open Decisions
+## 5. Open Decisions
 
 These need a human call; none are blocked on code.
 
@@ -80,10 +137,6 @@ These need a human call; none are blocked on code.
 })`), DOM-transplants slots, cannot SSR (`createRoot` is client-only), and
   makes every consumer ship react + react-dom (~130KB). Fine internally; not
   fine for a public SDK.
-- **Components page layout.** The page is **5,792 x 94,012px** — 14 sections in
-  one column, `Inputs` alone 35,428px tall. Adding 18 more sets makes review
-  impractical. Recommend fixing `reorganizeComponentsPage` to a multi-column
-  grid first.
 - **Naming normalisation.** Native enums are inconsistently prefixed
   (`AlertStatus`, `BadgeVariant`, `ChipSize`, `CounterTone`,
   `SegmentedControlSize`, `StackDirection` lack `Kozmos`), and
@@ -92,57 +145,48 @@ These need a human call; none are blocked on code.
 - **LocationPin `variant` and `labelPlacement` in Figma.** Recorded as
   intentional (colour is a token override, label placement is renderer layout).
   `Size` was added. Revisit only if designers ask.
+- **MapOverlay `position` in Figma.** The set carries `Width` only. Crossing 6
+  positions with 5 widths would be 30 variants for what is renderer placement.
+  Recorded in the set description; revisit if designers ask.
 
-## 5. Known Risks And Gotchas
+## 6. Known Risks And Gotchas
 
-Things that will bite whoever picks this up.
-
-- **`setLayoutSizingHorizontal/Vertical` swallow errors silently.** Setting
-  `FILL` on a node that is not yet in an auto-layout parent throws; the helper
-  catches it and returns `false`, which callers ignore. This produced the
-  first-run bug where text collapsed to one character per line. There are **180
-  call sites plugin-wide**, so other builders may have latent failures that never
-  appear in the log. Worth making the helper record a warning into `stats`.
-- **Six dead Code Connect files.** `Heading`, `Text`, and `ThemeProvider` each
-  have `.figma.swift` and `.figma.kt` placeholder stubs, but STATUS.md lists all
-  three as "Code Connect not applicable" (typography lives in text styles;
-  ThemeProvider is runtime). They are not counted in the 92 denominator, so they
-  are simply dead files. Safe to delete; not done, to avoid a silent change.
-- **`code.js` versus prettier.** The file had never been prettier-formatted.
-  Running prettier over it wrapped a signature and broke a contract assertion
-  (fixed in `a91cdce`). The pre-commit hook will prettier it on any commit that
-  stages it, so re-run `components:contract:check` **after** formatting, not
-  before.
+- **The new sets have never been run in Figma.** Every builder is statically
+  audited — axis names agree across config, variant root, and parser; every
+  handler action resolves; every `productSdkText` call has an explicit width, the
+  §5 failure mode — but static checks cannot catch a layout that simply looks
+  wrong. Expect a visual pass.
+- **Plugin syntax is restricted.** No spread, optional chaining, or nullish
+  coalescing anywhere in `code.js`; `figma:plugin:check` enforces it.
+- **Axis names that close variant gaps must stay single alphabetic tokens.**
+  The analyzer extracts them with `/([A-Za-z]+):/`, so `PanelPlacement` matches
+  React's `panelPlacement` but `"Panel Placement"` would capture only
+  `Placement` and silently reopen the gap.
+- **`code.js` versus prettier.** The pre-commit hook prettiers any staged
+  commit, so re-run `components:contract:check` **after** formatting.
 - **Android needs an SDK path.** Without `ANDROID_HOME` or
   `packages/android/local.properties`, every Gradle task fails before
   compilation. Documented in `packages/android/README.md`.
 - **Piping Gradle through `tail`/`grep` swallows its exit code.** Use
-  `set -o pipefail` or check `${PIPESTATUS[0]}`. A "passing" baseline was
-  reported this way once and was actually failing.
-- **Some commits on this branch bundle pre-existing uncommitted work.** `code.js`,
-  `ui.html`, `STATUS.md`, `package.json`, `Breadcrumb.kt`, `DirectionStep.kt` and
-  others were already dirty when the session began. The messages describe only
-  the new work. Review before pushing.
+  `set -o pipefail` or check `${PIPESTATUS[0]}`.
+- **Some commits on this branch bundle pre-existing uncommitted work.** Review
+  before pushing.
 - **~588 files remain uncommitted** and are untouched pre-existing work.
-- **Husky prints a deprecation warning** on every commit (v10 will fail). Two
-  lines to remove from `.husky/pre-commit`.
 
-## 6. The Variant Analyzer
+## 7. The Variant Analyzer
 
 `pnpm components:variant:check` — reads React cva blocks and union props,
 SwiftUI/Compose enums (declared _and_ parameter-typed), and the Figma plugin's
 axis registry, then diffs them.
 
-**Treat its output as an upper bound.** It needed six parser fixes during this
-session and every one _shrank_ the backlog — including a recommended "Android
-variant catch-up" that turned out to be already complete. Eyeball a specific
-finding before acting on it.
+**Treat its output as an upper bound.** It needed six parser fixes in the prior
+session and one more here, and every one _shrank_ the backlog. Eyeball a
+specific finding before acting on it.
 
-Decisions on record live in its `INTENTIONAL` registry with the reasoning inline,
-so they stop reappearing as backlog. Full write-up:
-`docs/component-variant-gap-analysis.md`.
+Decisions on record live in its `INTENTIONAL` registry with the reasoning
+inline. Full write-up: `docs/component-variant-gap-analysis.md`.
 
-## 7. Key Facts
+## 8. Key Facts
 
 - Figma file: `Kozmos DS - Core Library`, key `Yj4O8p6Y9h2Sa9zJVoAiVY`.
 - Components page node: `4:4`. Product / SDK section: `1340:6764`.

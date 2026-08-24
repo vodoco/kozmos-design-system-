@@ -1,19 +1,51 @@
 # Figma Component Backlog
 
-This backlog tracks React code components that do not yet have canonical Core
-Figma component sets in `Kozmos DS - Core Library`.
+This backlog tracks components that should become part of the expanded Core
+library in `Kozmos DS - Core Library`. It includes existing React components
+that do not yet have canonical Core Figma component sets and net-new Core
+components identified during the 2026-05-23 cross-design-system research pass.
 
 Generated context:
 
+- Current 2026-06-21 status: the old "upcoming Core" component waves have been
+  closed for the current domain-neutral Core lane. `STATUS.md` reports Core at
+  68/68 across Web, tests, linked Web Code Connect, iOS, linked iOS Code
+  Connect, Android, and linked Android Code Connect. Treat the older wave notes
+  below as historical rationale, not as the active missing-component list.
+- No current `.figma.*` mapping files contain `node-id=TBD`. Future additions
+  should still use Update over Rebuild to preserve node IDs and should pass
+  `pnpm figma:parse:linked`, `pnpm figma:parse:native:linked`, component
+  contracts, token contrast contracts, and visual QA before being considered
+  complete.
+- Active next work is polish and governance: refresh stale documentation,
+  verify token contrast contracts, perform Figma visual QA on crowded/collapsed
+  layouts, and keep Product / SDK examples separate from Core component sets.
+
 - Code inventory source: `packages/react/src/components`
-- Current Core Figma v1 component sets: Button, IconButton, Badge, Card, Tabs,
-  Tooltip, Dialog, Popover, Menu, Toast, Checkbox, Radio, Switch, Input,
-  Textarea, Search, Select, Slider, Progress, Spinner, Avatar, Alert, Counter
+- Current linked Core Figma component sets: Link, Separator, Skeleton, Box,
+  Stack, Grid, Container, Breadcrumb, Accordion, Button, IconButton, Counter,
+  Badge, Card, List, Table, Tabs, Pagination, Tooltip, Dialog, Drawer, Popover,
+  Menu, Checkbox, Radio, Switch, Input, Textarea, Search, Select, Slider,
+  Progress, Spinner, Alert, EmptyState, Toast, Avatar, Chip, and
+  SegmentedControl.
+- Chip, Drawer, Grid, List, Table, Pagination, and SegmentedControl are now
+  linked in the React, SwiftUI, and Compose Core Code Connect publish lanes.
 - Icon source components already exist on the Figma `Icons` page, so `Icon` is
   treated separately from this component-set backlog.
-- React placeholder Code Connect files already exist for Drawer,
-  FloatingActionButton, Grid, SplitButton, Stack, and ToggleButton, but they
-  still use `node-id=TBD` until matching Figma component sets are built.
+- React placeholder Code Connect files already exist for FloatingActionButton,
+  SplitButton, and ToggleButton, but they still use `node-id=TBD` until matching
+  canonical Figma component sets are linked.
+
+Update 2026-05-24: FloatingActionButton, SplitButton, and ToggleButton have
+now been promoted into the Figma build flow. The next expansion pass is the
+form and picker wave: FormField / FieldWrapper, Combobox, MultiSelect /
+Listbox, DatePicker / DateRangePicker / TimePicker, and FileUpload / DropZone.
+
+Update 2026-05-25: the importer picker now surfaces the form and picker wave
+with wired component-set generators for FormField, Combobox, MultiSelect,
+Listbox, DatePicker, DateRangePicker, TimePicker, and FileUpload. DropZone is
+represented by FileUpload `Content=Dropzone` because React exports DropZone as
+a FileUpload alias.
 
 ## Core v1 Freeze
 
@@ -28,9 +60,10 @@ proportions, naming, docs clarity, and visual fidelity, but every added or tuned
 component must pass the relevant importer, contract, parsing, build, and visual
 QA checks before being considered done.
 
-## Wave 2 Scope
+## Recently Completed Core Expansion
 
-Wave 2 starts with low-risk primitives and composition helpers:
+These low-risk primitives and composition helpers have either landed as Figma
+component sets or, for typography-only entries, as text styles:
 
 - Text
 - Heading
@@ -43,6 +76,137 @@ Wave 2 starts with low-risk primitives and composition helpers:
 - Container
 - Breadcrumb
 - Accordion
+
+Text, Heading, and Label are intentionally not Core component sets in Figma;
+they live as text styles/tokens and code components. Link and Separator remain
+component sets because they carry interaction or visual anatomy beyond raw
+typography.
+
+## Accepted Core Expansion Scope
+
+The current direction is to include the full domain-neutral Core set, not just
+the smallest product-derived subset. Each item still needs the normal design,
+API, accessibility, Figma, Code Connect, and platform parity checks before it is
+treated as shipped.
+
+### Wave 0: Close Existing Scaffolds
+
+These already have Code Connect scaffolds or Figma importer work and should be
+closed before adding more placeholders.
+
+- SegmentedControl (closed: linked to `309:5165`)
+- Grid (closed: linked to `359:1574`)
+- ToggleButton
+- SplitButton
+- FloatingActionButton
+
+### Wave 1: Form Completeness
+
+These fill the biggest generic product-form gaps and unblock dashboard, CMS,
+configuration, and filtering flows.
+
+- FormField / FieldWrapper (React anatomy hardened; Figma importer builder
+  added with a shared child content slot)
+- NumberInput / NumberField / Spinbutton (React, SwiftUI, and Compose code
+  added; Figma importer and Code Connect scaffolds added; Figma component set
+  build/link pending)
+- Combobox / Autocomplete (React primitive and Figma importer builder added;
+  Figma component-set build/link and Code Connect node ID pending)
+- MultiSelect / Listbox (React primitives and Figma importer builders added;
+  Figma component-set build/link and Code Connect node IDs pending)
+- PasswordInput (React primitive and Figma importer builder added; Figma
+  component-set build/link and Code Connect node ID pending)
+- SearchBar
+- CheckboxGroup
+- RadioGroup
+- RangeSlider
+
+### Wave 2: Date, File, And Verification Inputs
+
+- DateField
+- DatePicker (React API hardened; Figma importer builder added with closed
+  field and open calendar examples)
+- DateRangePicker (React primitive added; Figma importer builder added with
+  closed two-field and open range-calendar examples)
+- TimeField
+- TimePicker (React API hardened; Figma importer builder added with closed
+  field and open time-list examples)
+- Calendar
+- FileUpload / DropZone (React primitive hardened with multiple-file,
+  validation, drag/drop, and accessibility support; Figma importer builder
+  added with DropZone represented as `Content=Dropzone`)
+- FileTrigger
+- OTPInput / PINInput (React API hardened; Figma importer builder added; Figma
+  component set built and React Code Connect linked to node `475:38745`)
+
+### Wave 3: Navigation, Structure, And Disclosure
+
+- BottomNavigation
+- NavigationRail
+- Navbar / TopNavigation
+- Sidebar / SideNavigation
+- NavigationMenu
+- CommandPalette / CommandMenu
+- Stepper / ProgressTracker
+- Tree / TreeView (React primitive hardened with tree semantics, keyboard
+  behavior, counts, metadata, and safe nested row actions; Figma importer
+  builder added with Basic/Count/Actions content examples)
+- Timeline (Figma importer builder added; component set built and Code Connect
+  linked across React, SwiftUI, and Compose)
+- ScrollArea
+- Collapsible / Disclosure
+- Resizable / SplitPane / WindowSplitter
+
+### Wave 4: Data Display And Utility Primitives
+
+- AvatarGroup
+- DescriptionList
+- KeyValue / LabeledValue
+- Metric / Stat
+- Code
+- CodeBlock / CodeSnippet
+- Keyboard / Kbd
+- Image / Thumbnail
+- AspectRatio
+- Spacer
+- Inline / Flex
+- VisuallyHidden
+- FocusRing
+- Portal
+- DataGrid
+- TreeGrid
+
+### Wave 5: Feedback, Status, And Overlay Depth
+
+- AlertDialog
+- ConfirmDialog
+- Banner
+- InlineMessage
+- SectionMessage / Callout
+- LoadingOverlay
+- Meter
+- StatusDot / StatusLight
+- HoverCard
+- ContextMenu
+- Sheet
+- BottomSheet
+- Backdrop / Blanket
+- Spotlight / Tour
+
+### Wave 6: Specialized But Still Core
+
+- ColorField
+- ColorSwatch
+- ColorSwatchPicker
+- ColorSlider
+- ColorArea
+- ColorWheel
+- Rating
+- FilterBar
+- AppliedFilters
+- SortControl
+- ButtonGroup
+- Toolbar
 
 ## Composition Dependencies
 
@@ -66,14 +230,29 @@ visuals.
 - FloatingActionButton
 - SplitButton
 - ToggleButton
-- SegmentedControl
+- ButtonGroup
+- Toolbar
+- NumberInput (React, SwiftUI, and Compose code added; Figma importer and Code
+  Connect scaffolds added; Figma component set build/link pending)
+- PasswordInput (React primitive and Figma importer builder added; Figma
+  component-set build/link pending)
+- Combobox
+- MultiSelect
 - DatePicker
+- DateRangePicker
 - TimePicker
-- FileUpload
-- OTPInput
+- DateField
+- TimeField
+- Calendar
+- FileUpload / DropZone alias
+- FileTrigger
+- OTPInput / PINInput (builder added; Figma component set built and React Code
+  Connect linked to node `475:38745`)
 - Rating
 - Stepper
 - SearchBar
+- ColorField
+- ColorSwatch
 
 ## Layout, Navigation, And Data Display
 
@@ -81,22 +260,49 @@ visuals.
 - Breadcrumb
 - BottomNavigation
 - Navbar
-- Pagination
+- NavigationMenu
+- NavigationRail
+- CommandPalette
+- Pagination (implemented and linked)
 - Sidebar
 - ScrollArea
-- Tree
-- List
-- Table
-- Timeline
-- Chip
-- Tag
+- Tree (React primitive hardened; Figma importer builder added with row count
+  and action anatomy examples)
+- TreeGrid
+- List (implemented and linked)
+- Table (implemented and linked)
+- DataGrid
+- DescriptionList
+- KeyValue
+- Metric
+- Timeline (Figma importer builder added; component set built and Code Connect
+  linked across React, SwiftUI, and Compose)
+- Chip (implemented and linked)
+- SegmentedControl (implemented and linked)
+
+`Tag` remains available in code as a legacy/static label component, but Core
+promotion should use `Chip` for compact selectable, removable, and filterable
+items. Avoid adding both to the Figma Core library unless a future platform
+requirement creates a clear semantic split.
 
 ## Feedback And Overlays
 
 - Backdrop
 - BottomSheet
-- Drawer
+- Drawer (implemented and linked)
 - EmptyState
+- AlertDialog
+- ConfirmDialog
+- Banner
+- InlineMessage
+- SectionMessage
+- LoadingOverlay
+- Meter
+- StatusDot
+- HoverCard
+- ContextMenu
+- Sheet
+- Spotlight
 - Skeleton
 
 ## Map And Product Components
@@ -115,20 +321,172 @@ visuals.
 - UserLocationMarker
 - WayfindingCard
 
-## App/Provider Components
+## Platform / Form-Factor Components
 
-These may need docs, examples, or Code Connect rather than visible Figma
-components.
+These should not be mixed into the domain-neutral Core lane. They need their
+own platform and product validation because the same primitive can behave very
+differently on Dynamic Island, watch, kiosk, landscape, and spatial surfaces.
 
 - DynamicIsland
 - FeedbackCard
 - ThemeProvider
 
+DynamicIsland is the canonical name for the iOS live activity surface. Avoid
+`IslandDisplay` or generic island naming unless a non-Apple platform abstraction
+is intentionally being designed.
+
+Recommended expansion lanes:
+
+- Dynamic Island / Live Activity: compact, minimal, expanded, Lock Screen,
+  StandBy, Smart Stack, and fallback web/fullscreen presentations.
+- Watch / wearable: tile, complication, glance card, notification, compact
+  list, confirmation, and map/route glance patterns.
+- Spatial / AR / VR / XR: spatial panel, anchored prompt, placement guide,
+  gaze/focus affordance, immersive overlay, passthrough scrim, and spatial
+  tooltip patterns.
+- Kiosk: idle screen, language selector, large action, route launcher, QR
+  handoff, session timeout, offline state, and accessibility controls.
+- Landscape / large screen: split pane, map with side panel, list-detail,
+  supporting pane, command panel, and bottom-sheet-to-side-panel adaptations.
+
+Use platform guidance as constraints, not as a reason to duplicate Core
+controls. The form-factor lane should compose Button, IconButton, Card, Dialog,
+Drawer, Sheet, List, Grid, Tabs, Progress, EmptyState, and map/product
+components rather than cloning their anatomy.
+
 `GlassSettingsPanel` is treated as an internal/dev-only control surface and is
 not part of the public NPM or Figma component roadmap.
 
-## Next Recommendation
+## Net-New Components Needed In Code
 
-Build Wave 2 in the order above, then evaluate `FieldWrapper` and `Grid` before
-starting heavier product/navigation components. This gives the library reusable
-text, spacing, boundary, and disclosure primitives before composite work resumes.
+These are not present as current React component directories and need a code API
+before Figma promotion.
+
+- DateField
+- TimeField
+- Calendar
+- FileTrigger
+- ColorField
+- ColorSwatch
+- ColorSwatchPicker
+- ColorSlider
+- ColorArea
+- ColorWheel
+- CheckboxGroup
+- RadioGroup
+- RangeSlider
+- NavigationMenu
+- NavigationRail
+- CommandPalette
+- ButtonGroup
+- Toolbar
+- AspectRatio
+- Spacer
+- Inline
+- VisuallyHidden
+- FocusRing
+- Portal
+- Collapsible
+- Resizable
+- SplitPane
+- DescriptionList
+- KeyValue
+- Metric
+- AvatarGroup
+- Code
+- CodeBlock
+- Kbd
+- DataGrid
+- TreeGrid
+- AlertDialog
+- ConfirmDialog
+- Banner
+- InlineMessage
+- SectionMessage
+- LoadingOverlay
+- Meter
+- StatusDot
+- HoverCard
+- ContextMenu
+- Sheet
+- Spotlight
+- FilterBar
+- AppliedFilters
+- SortControl
+- LiveActivity
+- WatchTile
+- WatchComplication
+- SpatialPanel
+- SpatialToolbar
+- AnchorPrompt
+- PlacementGuide
+- KioskShell
+- IdleScreen
+- LargeScreenShell
+- ListDetailLayout
+- SupportingPane
+
+## Product / SDK And Platform Wave (2026-08-24)
+
+The importer now has builders for every remaining Product / SDK component plus
+the two platform/form-factor surfaces. Eighteen sets were added:
+
+| Component             | Axis                   | Values                                   |
+| --------------------- | ---------------------- | ---------------------------------------- |
+| AdaptiveMapShell      | `PanelPlacement`       | Start, End                               |
+| BrowseCategoriesPanel | `Content`              | Basic, Search, Empty                     |
+| CategoryTile          | `State`                | Default, Selected, Disabled              |
+| DynamicIsland         | `State`                | Compact, Expanded, Minimal               |
+| FeedbackCard          | `State`                | Default, Submitting, Success             |
+| MapControlButton      | `Presentation`         | IconOnly, Labelled                       |
+| MapControlsGroup      | `LocationPresentation` | IconOnly, Labelled                       |
+| MapOverlay            | `Width`                | Auto, Small, Medium, Large, Full         |
+| POIDetailPanel        | `Presentation`         | Inline, Sheet, Panel                     |
+| POIMediaGallery       | `Content`              | Single, Multiple, Empty                  |
+| POIResultCard         | `State`                | Default, Selected, Featured, Unavailable |
+| POIResultList         | `Content`              | Basic, Selected, Empty                   |
+| RouteOptionCard       | `State`                | Default, Selected, Warning, Unavailable  |
+| RoutePreviewPanel     | `Status`               | Idle, Calculating, Ready, NoRoute, Error |
+| RouteSummary          | `State`                | Preview, Active                          |
+| RoutingInputGroup     | `Content`              | TwoPoints, ThreePoints                   |
+| SaveLocationCard      | `State`                | Default, Saved                           |
+| UserLocationMarker    | `Heading`              | Hidden, Visible                          |
+
+`DynamicIsland` and `FeedbackCard` sit in a new `Platform / Form-Factor` layout
+section rather than in Product / SDK, matching how `STATUS.md` lanes them.
+
+Five of these close variant-parity gaps against real React props, so the axis
+names are load-bearing and must stay single tokens for the analyzer to match
+them: `panelPlacement`, `presentation`, `locationPresentation`, `width`, and
+`presentation` again for POIDetailPanel. `pnpm components:variant:check` now
+reports 1/25 Figma gaps, down from 6/25, and the remaining one is `Icon`, which
+is intentional — icons are source components on the `Icons` page.
+
+Still to do for this wave: build the sets in Figma, review them, and write the
+Code Connect files for React, SwiftUI, and Compose.
+
+## Code-Ready, Figma Builder Pending
+
+These now have React implementations and importer visibility, but still need
+canonical Figma component-set generators plus Code Connect node IDs.
+
+- None. The Product / SDK and platform wave above closed the last of them.
+  DropZone remains intentionally covered by FileUpload `Content=Dropzone`,
+  FieldWrapper by the `FormField` set, and GlassSettingsPanel is internal-only.
+
+FormField, Combobox, MultiSelect, Listbox, DatePicker, DateRangePicker,
+TimePicker, and FileUpload have moved out of this list because their importer
+builders are now wired; they still need the Figma component sets to be built,
+reviewed, published, and linked to Code Connect.
+
+## Immediate Next Recommendation
+
+Start with Wave 0, then Wave 1. That gives Core the highest leverage without
+creating a large number of Figma-only or code-only placeholders.
+
+1. Build/link ToggleButton, SplitButton, and FloatingActionButton or explicitly
+   move them out of Core publish lanes.
+2. Build/link FormField, Combobox, MultiSelect, Listbox, DatePicker,
+   DateRangePicker, TimePicker, and FileUpload from the importer. SearchBar can
+   follow once we decide whether it remains a Search variant or becomes a
+   separate component.
