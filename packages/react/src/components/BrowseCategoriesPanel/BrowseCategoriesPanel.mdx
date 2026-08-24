@@ -1,0 +1,13 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./BrowseCategoriesPanel.stories";
+
+<Meta of={Stories} />
+
+# BrowseCategoriesPanel
+
+Scrollable Product/SDK category composition. Search and actions remain ahead of
+the category grid in DOM and keyboard order, while safe-area padding keeps the
+last row reachable on mobile.
+
+<Canvas of={Stories.Default} />
+<Controls />

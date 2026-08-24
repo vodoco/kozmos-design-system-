@@ -1,0 +1,13 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./CategoryTile.stories";
+
+<Meta of={Stories} />
+
+# CategoryTile
+
+Product category action with controlled selection, multiline localization-safe
+labels, optional localized result counts, and a minimum 44px target.
+
+<Canvas of={Stories.Default} />
+<Canvas of={Stories.Selected} />
+<Controls />

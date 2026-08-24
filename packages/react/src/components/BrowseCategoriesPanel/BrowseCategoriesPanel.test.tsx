@@ -1,0 +1,47 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { Heart, ShoppingBag } from "lucide-react";
+import { describe, expect, it, vi } from "vitest";
+import { BrowseCategoriesPanel } from "./BrowseCategoriesPanel";
+
+describe("BrowseCategoriesPanel", () => {
+  it("keeps search, actions, and category controls in a predictable order", () => {
+    const onSelect = vi.fn();
+    const { container } = render(
+      <BrowseCategoriesPanel
+        actions={<button type="button">Filters</button>}
+        categories={[
+          { id: "favourites", label: "Favourites", selected: false },
+          { id: "shopping", label: "Shopping", selected: true },
+        ]}
+        onSelect={onSelect}
+        renderIcon={(category) =>
+          category.id === "shopping" ? <ShoppingBag /> : <Heart />
+        }
+        search={<input aria-label="Search places" />}
+      />,
+    );
+
+    const controls = Array.from(container.querySelectorAll("input, button"));
+    expect(
+      controls.map(
+        (control) => control.getAttribute("aria-label") ?? control.textContent,
+      ),
+    ).toEqual(["Search places", "Filters", "Favourites", "Shopping"]);
+    fireEvent.click(screen.getByRole("button", { name: "Shopping" }));
+    expect(onSelect).toHaveBeenCalledWith("shopping");
+  });
+
+  it("renders a directed empty state", () => {
+    render(
+      <BrowseCategoriesPanel
+        categories={[]}
+        emptyState="No categories are available on this floor."
+        onSelect={() => undefined}
+        renderIcon={() => null}
+      />,
+    );
+    expect(
+      screen.getByText("No categories are available on this floor."),
+    ).toBeVisible();
+  });
+});

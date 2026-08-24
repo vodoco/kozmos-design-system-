@@ -1,0 +1,53 @@
+import { Meta, Story } from "@storybook/blocks";
+import * as NavigationItemStories from "./NavigationItem.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={NavigationItemStories} />
+
+# NavigationItem
+
+Reusable navigation row/item primitive for top navigation, side navigation, and compact rails.
+
+<Story of={NavigationItemStories.Side} />
+
+## Usage
+
+<PlatformSnippets
+    react={`
+import { NavigationItem } from "@kozmos/react"
+import { Search } from "lucide-react"
+
+<NavigationItem href="/explore" icon={<Search className="h-5 w-5" />} selected>
+  Explore
+</NavigationItem>
+    `}
+    swift={`
+import SwiftUI
+
+KozmosNavigationItem(
+  label: "Explore",
+  placement: .side,
+  selected: true
+) {
+  Image(systemName: "magnifyingglass")
+}
+`}
+    kotlin={`
+package com.kozmos.components.navigationitem
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+
+@Composable
+fun NavigationItemExample() {
+  KozmosNavigationItem(
+    label = "Explore",
+    placement = KozmosNavigationItemPlacement.Side,
+    selected = true,
+    icon = { Icon(Icons.Default.Search, contentDescription = null) }
+  )
+}
+    `}
+/>

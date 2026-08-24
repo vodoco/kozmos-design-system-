@@ -1,0 +1,14 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./POIResultCard.stories";
+
+<Meta of={Stories} />
+
+# POIResultCard
+
+Product result pattern that shares a stable POI ID and result index with its
+map marker. Selection is controlled through `result.selected`; unavailable
+results remain readable but cannot invoke `onSelect`.
+
+<Canvas of={Stories.Default} />
+<Canvas of={Stories.FeaturedSelected} />
+<Controls />

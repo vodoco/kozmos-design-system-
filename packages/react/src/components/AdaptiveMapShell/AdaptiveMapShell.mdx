@@ -1,0 +1,16 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./AdaptiveMapShell.stories";
+
+<Meta of={Stories} />
+
+# AdaptiveMapShell
+
+Map-engine-neutral responsive layout. It places mobile content as a safe-area
+aware bottom panel and desktop content as a side panel. The `map` slot must be a
+real supported renderer; this component never draws substitute map geometry.
+Collision insets are exposed as `--kozmos-map-inset-*` CSS properties for an SDK
+adapter to consume deliberately.
+
+<Canvas of={Stories.PanelAtEnd} />
+<Canvas of={Stories.Error} />
+<Controls />
