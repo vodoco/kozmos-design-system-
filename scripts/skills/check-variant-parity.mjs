@@ -78,121 +78,165 @@ const AXIS_ALIASES = {
  */
 const INTENTIONAL = {
   "Sidebar.variant": {
-    figma: "Modelled as part of the Content axis: SIDEBAR_CONTENT is Basic, Sections, Tools, Rail, so the rail variant is expressible. A separate Variant axis would multiply the set without adding a state designers cannot already pick.",
+    figma:
+      "Modelled as part of the Content axis: SIDEBAR_CONTENT is Basic, Sections, Tools, Rail, so the rail variant is expressible. A separate Variant axis would multiply the set without adding a state designers cannot already pick.",
   },
   "LocationPin.variant": {
-    figma: "Colour role is a token override in Figma, not a variant. Crossing 4 colours with the 5 State variants would produce 20+ variants for a marker whose colour is usually themed per venue.",
+    figma:
+      "Colour role is a token override in Figma, not a variant. Crossing 4 colours with the 5 State variants would produce 20+ variants for a marker whose colour is usually themed per venue.",
   },
   "LocationPin.labelPlacement": {
-    figma: "Label placement is a layout concern owned by the map renderer, which positions the marker and its label against collision boxes.",
+    figma:
+      "Label placement is a layout concern owned by the map renderer, which positions the marker and its label against collision boxes.",
   },
   "FloatingActionButton.placement": {
-    figma: "Positioning is the parent's job on native: a FAB is placed by a ZStack alignment or Scaffold's floatingActionButton slot, not by a variant on the button. The React values are CSS position classes with no visual difference.",
+    figma:
+      "Positioning is the parent's job on native: a FAB is placed by a ZStack alignment or Scaffold's floatingActionButton slot, not by a variant on the button. The React values are CSS position classes with no visual difference.",
     ios: "Positioning is the parent's job on native: a FAB is placed by a ZStack alignment or Scaffold's floatingActionButton slot, not by a variant on the button. The React values are CSS position classes with no visual difference.",
-    android: "Positioning is the parent's job on native: a FAB is placed by a ZStack alignment or Scaffold's floatingActionButton slot, not by a variant on the button. The React values are CSS position classes with no visual difference.",
+    android:
+      "Positioning is the parent's job on native: a FAB is placed by a ZStack alignment or Scaffold's floatingActionButton slot, not by a variant on the button. The React values are CSS position classes with no visual difference.",
   },
   "SearchBar.variant": {
     ios: "Pure CSS positioning. The React implementation itself notes that floating coordinates are delegated to the MapOverlay container, so on native the parent owns placement and the axis carries no visual difference.",
-    android: "Pure CSS positioning. The React implementation itself notes that floating coordinates are delegated to the MapOverlay container, so on native the parent owns placement and the axis carries no visual difference.",
+    android:
+      "Pure CSS positioning. The React implementation itself notes that floating coordinates are delegated to the MapOverlay container, so on native the parent owns placement and the axis carries no visual difference.",
   },
   "MapOverlay.width": {
     ios: "Overlay sizing is a container concern on native: the host lays the overlay out with frame/width modifiers and Kozmos spacing tokens rather than a fixed t-shirt scale.",
-    android: "Overlay sizing is a container concern on native: the host lays the overlay out with frame/width modifiers and Kozmos spacing tokens rather than a fixed t-shirt scale.",
+    android:
+      "Overlay sizing is a container concern on native: the host lays the overlay out with frame/width modifiers and Kozmos spacing tokens rather than a fixed t-shirt scale.",
   },
   "ScrollArea.snap": {
-    figma: "Scroll snapping needs a different container on native, not a flag: Compose requires a Lazy list with rememberSnapFlingBehavior, and SwiftUI paging is iOS 17+ while the package targets iOS 16. An enum here would be a no-op on both platforms.",
+    figma:
+      "Scroll snapping needs a different container on native, not a flag: Compose requires a Lazy list with rememberSnapFlingBehavior, and SwiftUI paging is iOS 17+ while the package targets iOS 16. An enum here would be a no-op on both platforms.",
     ios: "Scroll snapping needs a different container on native, not a flag: Compose requires a Lazy list with rememberSnapFlingBehavior, and SwiftUI paging is iOS 17+ while the package targets iOS 16. An enum here would be a no-op on both platforms.",
-    android: "Scroll snapping needs a different container on native, not a flag: Compose requires a Lazy list with rememberSnapFlingBehavior, and SwiftUI paging is iOS 17+ while the package targets iOS 16. An enum here would be a no-op on both platforms.",
+    android:
+      "Scroll snapping needs a different container on native, not a flag: Compose requires a Lazy list with rememberSnapFlingBehavior, and SwiftUI paging is iOS 17+ while the package targets iOS 16. An enum here would be a no-op on both platforms.",
   },
   "Stack.align": {
-    figma: "Alignment stays a product-code choice to avoid variant explosion (plugin README).",
+    figma:
+      "Alignment stays a product-code choice to avoid variant explosion (plugin README).",
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Stack.justify": {
-    figma: "Justification stays a product-code choice to avoid variant explosion (plugin README).",
+    figma:
+      "Justification stays a product-code choice to avoid variant explosion (plugin README).",
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Stack.wrap": {
-    figma: "Wrapping stays a product-code choice to avoid variant explosion (plugin README).",
+    figma:
+      "Wrapping stays a product-code choice to avoid variant explosion (plugin README).",
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Stack.gap": {
-    figma: "The Figma set is documented as canonical Gap 2/4/6 examples, not the full scale (plugin README). Spacing comes from Kozmos variables rather than one variant per step, consistent with the Stack/Grid layout decision.",
+    figma:
+      "The Figma set is documented as canonical Gap 2/4/6 examples, not the full scale (plugin README). Spacing comes from Kozmos variables rather than one variant per step, consistent with the Stack/Grid layout decision.",
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Stack.direction": {
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    figma: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    figma:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Grid.align": {
-    figma: "Alignment stays a product-code choice to avoid variant explosion (plugin README).",
+    figma:
+      "Alignment stays a product-code choice to avoid variant explosion (plugin README).",
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Grid.justify": {
-    figma: "Justification stays a product-code choice to avoid variant explosion (plugin README).",
+    figma:
+      "Justification stays a product-code choice to avoid variant explosion (plugin README).",
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Grid.flow": {
     figma: "Dense placement and flow stay in product code (plugin README).",
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Grid.cols": {
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    figma: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    figma:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Grid.rows": {
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    figma: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    figma:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Grid.gap": {
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    figma: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    figma:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Grid.xGap": {
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    figma: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    figma:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Grid.yGap": {
     ios: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    android: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
-    figma: "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    android:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
+    figma:
+      "Layout stays a platform primitive: native uses VStack/HStack/Row/Column and LazyVerticalGrid with KozmosDimensions spacing. Mirroring CSS axes would import Tailwind's numeric gap scale and web 12-column semantics into Swift/Kotlin, and wrap/baseline/reverse cannot be expressed faithfully as container parameters.",
   },
   "Text.size": {
     ios: "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
-    android: "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
-    figma: "Text is a typography token/style, not a Figma component set (STATUS.md).",
+    android:
+      "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
+    figma:
+      "Text is a typography token/style, not a Figma component set (STATUS.md).",
   },
   "Text.weight": {
     ios: "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
-    android: "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
-    figma: "Text is a typography token/style, not a Figma component set (STATUS.md).",
+    android:
+      "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
+    figma:
+      "Text is a typography token/style, not a Figma component set (STATUS.md).",
   },
   "Text.align": {
     ios: "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
-    android: "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
-    figma: "Text is a typography token/style, not a Figma component set (STATUS.md).",
+    android:
+      "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
+    figma:
+      "Text is a typography token/style, not a Figma component set (STATUS.md).",
   },
   "Text.color": {
     ios: "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
-    android: "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
-    figma: "Text is a typography token/style, not a Figma component set (STATUS.md).",
+    android:
+      "Typography stays a platform primitive: native uses .font()/MaterialTheme.typography with Kozmos type tokens and text styles, not component variants. Same reasoning as Stack and Grid.",
+    figma:
+      "Text is a typography token/style, not a Figma component set (STATUS.md).",
   },
 };
 
 const normalizeRaw = (value) =>
-  String(value).toLowerCase().replace(/[-_\s]/g, "");
+  String(value)
+    .toLowerCase()
+    .replace(/[-_\s]/g, "");
 
 const normalize = (value) => {
   const raw = normalizeRaw(value);
@@ -205,9 +249,7 @@ const isBooleanAxis = (values) =>
   values.every((value) => value === "true" || value === "false");
 
 function readDirSafe(dir) {
-  return fs.existsSync(dir)
-    ? fs.readdirSync(dir, { withFileTypes: true })
-    : [];
+  return fs.existsSync(dir) ? fs.readdirSync(dir, { withFileTypes: true }) : [];
 }
 
 function componentNames() {
@@ -281,7 +323,9 @@ function braceBlock(source, from) {
 }
 
 function reactAxes(component) {
-  const file = readIfExists(path.join(REACT_DIR, component, `${component}.tsx`));
+  const file = readIfExists(
+    path.join(REACT_DIR, component, `${component}.tsx`),
+  );
   if (!file) return null;
 
   const axes = {};
@@ -357,8 +401,7 @@ function nativeAxes(component, files, enumPattern, language) {
         axis = bare;
       } else {
         const aliased = Object.entries(ENUM_NAME_ALIASES).find(
-          ([key, value]) =>
-            key.startsWith(`${component}.`) && value === bare,
+          ([key, value]) => key.startsWith(`${component}.`) && value === bare,
         );
         if (aliased) axis = aliased[0].split(".")[1];
       }
@@ -376,7 +419,6 @@ function nativeAxes(component, files, enumPattern, language) {
 
   return found ? axes : null;
 }
-
 
 /**
  * Values declared in a Swift or Kotlin enum body.
@@ -400,7 +442,10 @@ function enumBodyValues(block, language) {
   if (language === "swift") {
     for (const match of body.matchAll(/\bcase\s+([^\n]+)/g)) {
       for (const part of splitTopLevel(match[1])) {
-        const name = part.trim().replace(/^`|`$/g, "").match(/^([a-zA-Z][a-zA-Z0-9]*)/);
+        const name = part
+          .trim()
+          .replace(/^`|`$/g, "")
+          .match(/^([a-zA-Z][a-zA-Z0-9]*)/);
         if (name) values.push(name[1]);
       }
     }
@@ -449,7 +494,6 @@ function splitTopLevel(text) {
   parts.push(current);
   return parts;
 }
-
 
 /**
  * Every enum declared anywhere in a native package, keyed by name.
@@ -559,7 +603,13 @@ function figmaAxes() {
     "function expectedVariantAxesForComponentSetName(",
   );
   if (start === -1) return {};
-  const region = source.slice(start, start + 40000);
+
+  // End at the function's own closing brace, not a fixed byte budget. A window
+  // silently drops every axis past it, which reads as "component absent from
+  // Figma" rather than as a parser limit; the registry has already grown past
+  // a third of the old 40,000-char cap.
+  const end = source.indexOf("\n}\n", start);
+  const region = source.slice(start, end === -1 ? source.length : end);
 
   const byComponent = {};
   for (const match of region.matchAll(
@@ -567,9 +617,7 @@ function figmaAxes() {
   )) {
     const component = match[1];
     const axes = {};
-    for (const axisMatch of match[2].matchAll(
-      /([A-Za-z]+):\s*([A-Z0-9_]+)/g,
-    )) {
+    for (const axisMatch of match[2].matchAll(/([A-Za-z]+):\s*([A-Z0-9_]+)/g)) {
       const values = arrays[axisMatch[2]];
       if (values && values.length) axes[axisMatch[1]] = values;
     }
@@ -705,7 +753,9 @@ function main() {
         continue;
       }
       if (result.missingAxes.length) {
-        problems.push(`${platform} missing axes -> ${result.missingAxes.join("; ")}`);
+        problems.push(
+          `${platform} missing axes -> ${result.missingAxes.join("; ")}`,
+        );
       }
       if (result.missingValues.length) {
         problems.push(
