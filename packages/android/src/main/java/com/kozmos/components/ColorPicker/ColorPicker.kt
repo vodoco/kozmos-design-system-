@@ -1,0 +1,451 @@
+package com.kozmos.components.colorpicker
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
+import com.kozmos.components.input.KozmosInputStatus
+import com.kozmos.components.slider.KozmosSlider
+import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
+
+enum class KozmosColorPickerFormat {
+    Hex,
+    Rgb,
+    Hsl
+}
+
+@Composable
+fun KozmosColorPicker(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    alpha: Float = 100f,
+    onAlphaChange: (Float) -> Unit = {},
+    label: String? = null,
+    helperText: String? = null,
+    paletteLabel: String = "Kozmos Design System 2.0",
+    presets: List<String> = kozmosColorPickerDefaultPresets,
+    format: KozmosColorPickerFormat = KozmosColorPickerFormat.Hsl,
+    expanded: Boolean? = null,
+    defaultExpanded: Boolean = false,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    status: KozmosInputStatus = KozmosInputStatus.Default
+) {
+    var internalExpanded by rememberSaveable { mutableStateOf(defaultExpanded) }
+    var currentFormat by rememberSaveable { mutableStateOf(format) }
+    val isExpanded = expanded ?: internalExpanded
+    val setExpanded: (Boolean) -> Unit = { next ->
+        if (expanded == null) internalExpanded = next
+    }
+    val normalizedValue = normalizeHexColor(value)
+    val color = colorFromHex(normalizedValue)
+    val hsl = rgbToHsl(hexToRgb(normalizedValue))
+    val fieldShape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val borderColor = statusColor(status) ?: KozmosThemeTokens.primitivesColorsForeground500
+    val fieldBackground = if (!enabled || readOnly) {
+        KozmosThemeTokens.primitivesColorsBackground100
+    } else {
+        KozmosThemeTokens.primitivesColorsBackground0
+    }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing75)
+    ) {
+        if (label != null) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (enabled) KozmosThemeTokens.primitivesColorsForeground100 else KozmosThemeTokens.primitivesColorsForeground500
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+                .background(fieldBackground, fieldShape)
+                .border(1.dp, borderColor, fieldShape)
+                .clickable(enabled = enabled && !readOnly) { setExpanded(!isExpanded) }
+                .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing150),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(color, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius50))
+                    .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius50))
+            )
+            Text(
+                text = normalizedValue,
+                style = MaterialTheme.typography.bodyMedium,
+                color = KozmosThemeTokens.primitivesColorsForeground0
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            androidx.compose.material3.Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Close color picker" else "Open color picker",
+                tint = KozmosThemeTokens.primitivesColorsForeground500,
+                modifier = Modifier
+                    .size(20.dp)
+                    .rotate(if (isExpanded) 180f else 0f)
+            )
+        }
+
+        if (isExpanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(KozmosThemeTokens.primitivesColorsBackground0, fieldShape)
+                    .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, fieldShape)
+                    .padding(KozmosDimensions.primitivesLayoutSpacing150),
+                verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing150)
+            ) {
+                ColorArea(color = colorFromHex(rgbToHex(hslToRgb(HslColor(hsl.h, 100f, 50f)))), hsl = hsl)
+
+                LabeledKozmosSlider(
+                    label = "Hue",
+                    value = hsl.h,
+                    range = 0f..360f,
+                    enabled = enabled && !readOnly,
+                    onValueChange = { nextHue ->
+                        onValueChange(rgbToHex(hslToRgb(hsl.copy(h = nextHue))))
+                    }
+                )
+
+                LabeledKozmosSlider(
+                    label = "Opacity",
+                    value = alpha.coerceIn(0f, 100f),
+                    range = 0f..100f,
+                    enabled = enabled && !readOnly,
+                    onValueChange = { onAlphaChange(it.coerceIn(0f, 100f)) }
+                )
+
+                FormatControls(
+                    format = currentFormat,
+                    onFormatChange = { currentFormat = it },
+                    value = normalizedValue,
+                    alpha = alpha,
+                    hsl = hsl
+                )
+
+                PaletteSelector(label = paletteLabel)
+                PresetGrid(
+                    presets = presets,
+                    selectedValue = normalizedValue,
+                    enabled = enabled && !readOnly,
+                    onValueChange = onValueChange
+                )
+            }
+        }
+
+        if (!helperText.isNullOrBlank()) {
+            Text(
+                text = helperText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = statusColor(status) ?: KozmosThemeTokens.primitivesColorsForeground500
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColorArea(color: Color, hsl: HslColor) {
+    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(144.dp)
+            .background(Brush.horizontalGradient(listOf(Color.White, color)), shape)
+            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)), shape)
+            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, shape)
+    ) {
+        val handleSize = 18.dp
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(
+                    x = (maxWidth - handleSize) * (hsl.s.coerceIn(0f, 100f) / 100f),
+                    y = (maxHeight - handleSize) * (1f - hsl.l.coerceIn(0f, 100f) / 100f)
+                )
+                .size(handleSize)
+                .background(KozmosThemeTokens.primitivesColorsBackground0, CircleShape)
+                .border(1.dp, KozmosThemeTokens.primitivesColorsForeground0, CircleShape)
+        )
+    }
+}
+
+@Composable
+private fun LabeledKozmosSlider(
+    label: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    enabled: Boolean,
+    onValueChange: (Float) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing50)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = KozmosThemeTokens.primitivesColorsForeground500
+        )
+        KozmosSlider(
+            value = value.coerceIn(range.start, range.endInclusive),
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            valueRange = range,
+            enabled = enabled
+        )
+    }
+}
+
+@Composable
+private fun FormatControls(
+    format: KozmosColorPickerFormat,
+    onFormatChange: (KozmosColorPickerFormat) -> Unit,
+    value: String,
+    alpha: Float,
+    hsl: HslColor
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing75),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CompactValueBox(
+            text = when (format) {
+                KozmosColorPickerFormat.Hex -> "HEX"
+                KozmosColorPickerFormat.Rgb -> "RGB"
+                KozmosColorPickerFormat.Hsl -> "HSL"
+            },
+            modifier = Modifier.clickable {
+                onFormatChange(
+                    when (format) {
+                        KozmosColorPickerFormat.Hex -> KozmosColorPickerFormat.Rgb
+                        KozmosColorPickerFormat.Rgb -> KozmosColorPickerFormat.Hsl
+                        KozmosColorPickerFormat.Hsl -> KozmosColorPickerFormat.Hex
+                    }
+                )
+            }
+        )
+
+        val channels = when (format) {
+            KozmosColorPickerFormat.Hex -> listOf(value)
+            KozmosColorPickerFormat.Rgb -> {
+                val rgb = hexToRgb(value)
+                listOf("${rgb.r}", "${rgb.g}", "${rgb.b}")
+            }
+            KozmosColorPickerFormat.Hsl -> listOf("${hsl.h.toInt()}", "${hsl.s.toInt()}", "${hsl.l.toInt()}")
+        }
+
+        channels.forEach { channel ->
+            CompactValueBox(
+                text = channel,
+                modifier = if (format == KozmosColorPickerFormat.Hex) Modifier.weight(1f) else Modifier.widthIn(min = 44.dp)
+            )
+        }
+
+        CompactValueBox(text = alpha.coerceIn(0f, 100f).toInt().toString())
+        Text(text = "%", color = KozmosThemeTokens.primitivesColorsForeground500)
+    }
+}
+
+@Composable
+private fun CompactValueBox(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+        color = KozmosThemeTokens.primitivesColorsForeground0,
+        modifier = modifier
+            .height(36.dp)
+            .background(KozmosThemeTokens.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing100, vertical = KozmosDimensions.primitivesLayoutSpacing75)
+    )
+}
+
+@Composable
+private fun PaletteSelector(label: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .background(KozmosThemeTokens.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing150),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = KozmosThemeTokens.primitivesColorsForeground0
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        androidx.compose.material3.Icon(
+            imageVector = Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+            tint = KozmosThemeTokens.primitivesColorsForeground500,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+private fun PresetGrid(
+    presets: List<String>,
+    selectedValue: String,
+    enabled: Boolean,
+    onValueChange: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100)
+    ) {
+        presets.map(::normalizeHexColor).chunked(8).forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100)
+            ) {
+                row.forEach { preset ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .background(colorFromHex(preset), RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius50))
+                            .border(
+                                if (preset == selectedValue) 2.dp else 1.dp,
+                                KozmosThemeTokens.primitivesColorsForeground500,
+                                RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius50)
+                            )
+                            .clickable(enabled = enabled) { onValueChange(preset) }
+                    )
+                }
+                repeat(8 - row.size) {
+                    Spacer(modifier = Modifier.weight(1f).aspectRatio(1f))
+                }
+            }
+        }
+    }
+}
+
+val kozmosColorPickerDefaultPresets = listOf(
+    "#135BEC", "#8FB4FF", "#7C3AED", "#0F766E",
+    "#1492A6", "#2E97CC", "#0EA5E9", "#38BDF8",
+    "#C2410C", "#B91C1C", "#A16207", "#CA8A04",
+    "#15803D", "#22C55E", "#BE185D", "#EC4899",
+    "#4F46E5", "#6366F1", "#7E22CE", "#A855F7",
+    "#111827", "#374151", "#747B8B", "#C7CAD1"
+)
+
+private data class RgbColor(val r: Int, val g: Int, val b: Int)
+private data class HslColor(val h: Float, val s: Float, val l: Float)
+
+private fun normalizeHexColor(value: String): String {
+    val raw = value.trim().removePrefix("#")
+    return when {
+        raw.matches(Regex("^[0-9a-fA-F]{3}$")) -> "#${raw.map { "$it$it" }.joinToString("").uppercase()}"
+        raw.matches(Regex("^[0-9a-fA-F]{6}$")) -> "#${raw.uppercase()}"
+        else -> "#135BEC"
+    }
+}
+
+private fun colorFromHex(value: String): Color =
+    Color(android.graphics.Color.parseColor(normalizeHexColor(value)))
+
+private fun hexToRgb(value: String): RgbColor {
+    val hex = normalizeHexColor(value).removePrefix("#")
+    return RgbColor(
+        r = hex.substring(0, 2).toInt(16),
+        g = hex.substring(2, 4).toInt(16),
+        b = hex.substring(4, 6).toInt(16)
+    )
+}
+
+private fun rgbToHex(rgb: RgbColor): String =
+    "#%02X%02X%02X".format(rgb.r.coerceIn(0, 255), rgb.g.coerceIn(0, 255), rgb.b.coerceIn(0, 255))
+
+private fun rgbToHsl(rgb: RgbColor): HslColor {
+    val red = rgb.r / 255f
+    val green = rgb.g / 255f
+    val blue = rgb.b / 255f
+    val max = maxOf(red, green, blue)
+    val min = minOf(red, green, blue)
+    val lightness = (max + min) / 2f
+    val delta = max - min
+    if (delta == 0f) {
+        return HslColor(0f, 0f, lightness * 100f)
+    }
+    val saturation = if (lightness > 0.5f) delta / (2f - max - min) else delta / (max + min)
+    val hue = when (max) {
+        red -> ((green - blue) / delta + if (green < blue) 6f else 0f) * 60f
+        green -> ((blue - red) / delta + 2f) * 60f
+        else -> ((red - green) / delta + 4f) * 60f
+    }
+    return HslColor(hue, saturation * 100f, lightness * 100f)
+}
+
+private fun hslToRgb(hsl: HslColor): RgbColor {
+    val hue = ((hsl.h % 360f) + 360f) % 360f / 360f
+    val saturation = hsl.s.coerceIn(0f, 100f) / 100f
+    val lightness = hsl.l.coerceIn(0f, 100f) / 100f
+    if (saturation == 0f) {
+        val value = (lightness * 255f).toInt()
+        return RgbColor(value, value, value)
+    }
+    val q = if (lightness < 0.5f) lightness * (1f + saturation) else lightness + saturation - lightness * saturation
+    val p = 2f * lightness - q
+    fun channel(offset: Float): Int {
+        var t = hue + offset
+        if (t < 0f) t += 1f
+        if (t > 1f) t -= 1f
+        val result = when {
+            t < 1f / 6f -> p + (q - p) * 6f * t
+            t < 1f / 2f -> q
+            t < 2f / 3f -> p + (q - p) * (2f / 3f - t) * 6f
+            else -> p
+        }
+        return (result * 255f).toInt().coerceIn(0, 255)
+    }
+    return RgbColor(channel(1f / 3f), channel(0f), channel(-1f / 3f))
+}
+
+@Composable
+private fun statusColor(status: KozmosInputStatus): Color? = when (status) {
+    KozmosInputStatus.Error -> KozmosThemeTokens.primitivesColorsEmotionalDanger600
+    KozmosInputStatus.Warning -> KozmosThemeTokens.primitivesColorsEmotionalAlert600
+    KozmosInputStatus.Success -> KozmosThemeTokens.primitivesColorsEmotionalSuccess600
+    KozmosInputStatus.Default -> null
+}

@@ -16,8 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,23 +36,38 @@ data class TreeNode(
     val children: List<TreeNode> = emptyList()
 )
 
+enum class KozmosTreeDensity {
+    Default,
+    Compact
+}
+
 @Composable
 fun KozmosTree(
     data: List<TreeNode>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    density: KozmosTreeDensity = KozmosTreeDensity.Default
 ) {
     LazyColumn(modifier = modifier) {
         items(data) { item ->
-            TreeItem(item, 0)
+            TreeItem(item, 0, density)
         }
     }
 }
 
 @Composable
-fun TreeItem(item: TreeNode, depth: Int) {
+fun TreeItem(
+    item: TreeNode,
+    depth: Int,
+    density: KozmosTreeDensity = KozmosTreeDensity.Default
+) {
     var isExpanded by remember { mutableStateOf(false) }
     val hasChildren = item.children.isNotEmpty()
     val rotation by animateFloatAsState(targetValue = if (isExpanded) 90f else 0f, label = "rotation")
+    val verticalPadding = if (density == KozmosTreeDensity.Compact) {
+        KozmosDimensions.primitivesLayoutSpacing25
+    } else {
+        KozmosDimensions.primitivesLayoutSpacing50
+    }
 
     Column {
         Row(
@@ -61,12 +75,12 @@ fun TreeItem(item: TreeNode, depth: Int) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { if (hasChildren) isExpanded = !isExpanded }
-                .padding(vertical = KozmosDimensions.primitivesLayoutSpacing50, horizontal = KozmosDimensions.primitivesLayoutSpacing100)
+                .padding(vertical = verticalPadding, horizontal = KozmosDimensions.primitivesLayoutSpacing100)
         ) {
             Spacer(modifier = Modifier.width((depth * 16).dp))
             if (hasChildren) {
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "Expand",
                     modifier = Modifier
                         .size(KozmosDimensions.primitivesLayoutSizing300)
@@ -84,7 +98,7 @@ fun TreeItem(item: TreeNode, depth: Int) {
         AnimatedVisibility(visible = isExpanded) {
             Column {
                 item.children.forEach { child ->
-                    TreeItem(child, depth + 1)
+                    TreeItem(child, depth + 1, density)
                 }
             }
         }

@@ -3,8 +3,10 @@ package com.kozmos.components.timeline
 import com.kozmos.tokens.KozmosDimensions
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -17,10 +19,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.kozmos.tokens.KozmosColors
 
 data class TimelineItem(
@@ -29,13 +32,42 @@ data class TimelineItem(
     val description: String
 )
 
+enum class KozmosTimelineDensity {
+    Default,
+    Compact
+}
+
+private val LocalKozmosTimelineDensity = staticCompositionLocalOf {
+    KozmosTimelineDensity.Default
+}
+
+private val KozmosTimelineDensity.contentSpacing
+    get() = if (this == KozmosTimelineDensity.Compact) {
+        KozmosDimensions.primitivesLayoutSpacing25
+    } else {
+        KozmosDimensions.primitivesLayoutSpacing50
+    }
+
+private val KozmosTimelineDensity.itemBottomPadding
+    get() = if (this == KozmosTimelineDensity.Compact) {
+        KozmosDimensions.primitivesLayoutSpacing200
+    } else {
+        KozmosDimensions.primitivesLayoutSpacing400
+    }
+
 @Composable
 fun KozmosTimeline(
     modifier: Modifier = Modifier,
-    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit
+    density: KozmosTimelineDensity = KozmosTimelineDensity.Default,
+    content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(modifier = modifier) {
-        content()
+    CompositionLocalProvider(LocalKozmosTimelineDensity provides density) {
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing0)
+        ) {
+            content()
+        }
     }
 }
 
@@ -43,8 +75,10 @@ fun KozmosTimeline(
 fun KozmosTimelineItem(
     modifier: Modifier = Modifier,
     isLast: Boolean = false,
-    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit
 ) {
+    val density = LocalKozmosTimelineDensity.current
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -75,9 +109,10 @@ fun KozmosTimelineItem(
             modifier = Modifier
                 .padding(
                     start = KozmosDimensions.primitivesLayoutSpacing100, 
-                    bottom = if (isLast) KozmosDimensions.primitivesLayoutSpacing0 else KozmosDimensions.primitivesLayoutSpacing400
+                    bottom = if (isLast) KozmosDimensions.primitivesLayoutSpacing0 else density.itemBottomPadding
                 )
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(density.contentSpacing)
         ) {
             content()
         }

@@ -1,11 +1,11 @@
 package com.kozmos.components.otpinput
 
-import com.kozmos.tokens.KozmosDimensions
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -17,58 +17,143 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kozmos.components.input.KozmosInputStatus
 import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosOTPInput(
     value: String,
     onValueChange: (String) -> Unit,
     length: Int = 6,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    label: String? = null,
+    status: KozmosInputStatus = KozmosInputStatus.Default,
+    error: Boolean = false,
+    helperText: String? = null,
+    errorMessage: String? = null
 ) {
-    BasicTextField(
-        value = value,
-        onValueChange = {
-            if (it.length <= length && it.all { char -> char.isDigit() }) {
-                onValueChange(it)
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        decorationBox = {
-            Row(
-                modifier = modifier,
-                horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(length) { index ->
-                    val char = if (index < value.length) value[index] else null
-                    val isFocused = index == value.length
-                    
+    val cellCount = length.coerceAtLeast(1)
+    val effectiveStatus = if (error) KozmosInputStatus.Error else status
+    val supportingText = errorMessage ?: helperText
+    val displayValue = value.filter { char -> char.isDigit() }.take(cellCount)
+    val statusColor = when (effectiveStatus) {
+        KozmosInputStatus.Error -> KozmosThemeTokens.primitivesColorsEmotionalDanger600
+        KozmosInputStatus.Warning -> KozmosThemeTokens.primitivesColorsEmotionalAlert600
+        KozmosInputStatus.Success -> KozmosThemeTokens.primitivesColorsEmotionalSuccess600
+        KozmosInputStatus.Default -> null
+    }
+    val inactiveBorderColor = statusColor ?: KozmosThemeTokens.primitivesColorsForeground500
+    val fieldBackground = if (!enabled || readOnly) {
+        KozmosThemeTokens.primitivesColorsBackground100
+    } else {
+        KozmosThemeTokens.primitivesColorsBackground0
+    }
+    val textColor = when {
+        !enabled -> KozmosThemeTokens.primitivesColorsForeground500
+        statusColor != null -> statusColor
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+    val helperColor = when {
+        !enabled -> KozmosThemeTokens.primitivesColorsForeground500
+        statusColor != null -> statusColor
+        else -> KozmosThemeTokens.primitivesColorsForeground500
+    }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing75)
+    ) {
+        if (label != null) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = statusColor ?: textColor
+            )
+        }
+
+        BasicTextField(
+            value = displayValue,
+            onValueChange = { rawValue ->
+                if (enabled && !readOnly) {
+                    onValueChange(rawValue.filter { char -> char.isDigit() }.take(cellCount))
+                }
+            },
+            enabled = enabled,
+            readOnly = readOnly,
+            singleLine = true,
+            cursorBrush = SolidColor(KozmosThemeTokens.primitivesColorsTheme500),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        repeat(cellCount) { index ->
+                            val char = if (index < displayValue.length) displayValue[index] else null
+                            val activeIndex = displayValue.length.coerceAtMost(cellCount - 1)
+                            val isActive = index == activeIndex && enabled && !readOnly
+                            val borderColor = if (isActive) {
+                                KozmosColors.primitivesColorsTheme500
+                            } else {
+                                inactiveBorderColor
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .width(44.dp)
+                                    .height(50.dp)
+                                    .background(fieldBackground, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+                                    .border(
+                                        width = if (isActive) 2.dp else 1.dp,
+                                        color = borderColor,
+                                        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (char != null) {
+                                    Text(
+                                        text = char.toString(),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        textAlign = TextAlign.Center,
+                                        color = textColor
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     Box(
                         modifier = Modifier
-                            .width(44.dp)
+                            .fillMaxWidth()
                             .height(50.dp)
-                            .background(KozmosColors.primitivesColorsBackground100, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
-                            .border(
-                                width = if (isFocused) 2.dp else 1.dp,
-                                color = if (isFocused) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsBackground300,
-                                shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
-                            ),
-                        contentAlignment = Alignment.Center
+                            .alpha(0f)
                     ) {
-                        if (char != null) {
-                            Text(
-                                text = char.toString(),
-                                style = MaterialTheme.typography.titleLarge,
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        innerTextField()
                     }
                 }
             }
+        )
+
+        if (!supportingText.isNullOrBlank()) {
+            Text(
+                text = supportingText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = helperColor
+            )
         }
-    )
+    }
 }

@@ -1,14 +1,23 @@
 package com.kozmos.components.navbar
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosDimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,15 +27,53 @@ fun KozmosNavbar(
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {}
 ) {
-    TopAppBar(
-        title = { Text(title) },
+    KozmosNavbar(
         modifier = modifier,
-        navigationIcon = navigationIcon,
-        actions = actions,
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = KozmosColors.primitivesColorsBackground0,
-            titleContentColor = KozmosColors.primitivesColorsForeground100,
-            actionIconContentColor = KozmosColors.primitivesColorsForeground100
-        )
+        logo = { Text(title, style = MaterialTheme.typography.titleMedium) },
+        context = { navigationIcon() },
+        actions = actions
     )
+}
+
+@Composable
+fun KozmosNavbar(
+    modifier: Modifier = Modifier,
+    logo: @Composable RowScope.() -> Unit = {},
+    context: @Composable RowScope.() -> Unit = {},
+    navigation: @Composable RowScope.() -> Unit = {},
+    primaryAction: @Composable RowScope.() -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+    utilities: @Composable RowScope.() -> Unit = {},
+    account: @Composable RowScope.() -> Unit = {}
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .background(KozmosColors.primitivesColorsBackground0)
+                .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing200),
+            horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing200),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            logo()
+            context()
+            primaryAction()
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                content = navigation
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                actions()
+                utilities()
+                account()
+            }
+        }
+        Divider(color = KozmosColors.primitivesColorsBackground300)
+    }
 }
