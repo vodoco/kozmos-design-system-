@@ -1,4 +1,4 @@
-package com.kozmos.components.MapOverlay
+package com.kozmos.components.mapoverlay
 
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
