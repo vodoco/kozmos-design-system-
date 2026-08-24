@@ -26,6 +26,7 @@ packages/ios/.build/
 # Testing & Logs
 playwright-report/
 test-results/
+packages/react/playwright/.cache/
 *.log
 *.hprof
 *.hprof.gz
