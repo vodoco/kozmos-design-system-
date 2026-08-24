@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Combine,
+  Move,
   Redo,
   Reset,
   Reshape,
@@ -639,8 +640,19 @@ export function GeometryToolbar({
           padding: 5,
           borderRadius: 12,
           background: "#fff",
-          border: `1px solid ${BAR_LINE}`,
-          boxShadow: "0 8px 28px rgba(11,54,156,.16)",
+          /**
+           * **No border** (Olcay, 2026-08-23: *"I don't like the black outline around the
+           * toolbar"*). It was `background-900`, which is near-black in the light theme — a token
+           * named like a background doing a hairline's job, and it drew a hard box around a thing
+           * that should read as floating over the map.
+           *
+           * Elevation replaces it, in two layers: a tight, almost-opaque shadow gives the card its
+           * edge where it meets a pale map, and a wide soft one lifts it. One layer cannot do both
+           * — a single soft shadow dissolves the boundary, a single tight one looks stuck down.
+           */
+          border: "none",
+          boxShadow:
+            "0 1px 2px rgba(16,24,40,.10), 0 12px 32px rgba(11,54,156,.18)",
           maxWidth: "100%",
           overflowX: "auto",
         }}
@@ -661,6 +673,28 @@ export function GeometryToolbar({
          * The grouping is not lost. The separators already do it, and the pressed tile is filled —
          * which is what actually says "this one is on", and did all along.
          */}
+        {/**
+         * **A point opens in Move, and the bar says so** (Olcay, 2026-08-23). Until now a point
+         * showed no mode at all: the caption said "drag it to move it" and the bar looked inert,
+         * as though the feature could not be edited.
+         *
+         * The rule this completes: **every kind opens in its one editing mode, shown pressed** —
+         * an area and a network in Reshape, a point in Move. What differs is only how many modes
+         * the kind HAS, which is exactly what the group should be showing.
+         */}
+        {isPoint && (
+          <Group>
+            <Tile
+              icon={<Move size={ICON_PX} />}
+              label="Move"
+              title="Drag the point to reposition it"
+              on
+              onClick={() => onCommand({ cmd: "mode", mode: "vertices" })}
+            />
+          </Group>
+        )}
+        {isPoint && <Sep />}
+
         {!isPoint && (
           <Group>
             {/**

@@ -77,19 +77,33 @@ function icon(libraryName: string, node: string, paths: string[]) {
  * (Olcay, 2026-08-20). Two lesser faults went with it: the ring is a circle and rooms are not, and
  * "bezier" says curves when this editor is strictly polygonal.
  *
- * The contrast now carries the distinction: an **irregular room with its corners marked** against
- * Transform's **regular box with handles** — and **one corner is drawn open** (Olcay, 2026-08-20),
- * which is the grabbed handle. That is not decoration: it is the map's own idiom, where a snapped
- * corner's handle goes hollow mid-drag.
+ * ⚠️ **The cursor DOES fit, and the earlier note here said it did not.** Two attempts on 2026-08-20
+ * failed because the pointer and the path collided; the version that works — Olcay's own reference,
+ * 2026-08-23 — **breaks the path where the cursor crosses it**, so the two never touch. That one
+ * trick is the whole difference, and it is why "there is no room" was the wrong conclusion rather
+ * than a true one.
  *
- * ⚠️ **A cursor was tried and does not fit.** Drawing the pointer that pulls the corner is the
- * clearest possible statement of Reshape, but the library's own cursor needs ~9 of the 24 units —
- * beside an edge and three nodes it merges into a blob at 22px. The library spends the *whole*
- * grid on `cursor-click-01`. Hollow-versus-solid says the same thing in the space available.
+ * What it now shows is the act rather than the affordance: two anchors, the path between them, and
+ * the pointer dragging it. Against Transform's regular box with four identical handles there is no
+ * longer anything to confuse.
  */
-export const Reshape = icon("polygon-points", "2074:53", [
-  "M5 7L19 5L20 18L6 19ZM3.7 5.7H6.3V8.3H3.7ZM18.7 16.7H21.3V19.3H18.7ZM4.7 17.7H7.3V20.3H4.7ZM16.3 2.3H21.7V7.7H16.3Z",
+export const Reshape = icon("edit-path", "2074:53", [
+  "M2.6 3.4H6.8V7.6H2.6ZM17.2 3.4H21.4V7.6H17.2Z" +
+    "M4.7 8.6C5.4 10.6 6.6 11.9 8.2 12.7M19.3 8.6C18.8 10.3 17.9 11.4 16.6 12.2" +
+    "M10 10.2L10 20.6L12.5 18.2L14.4 22L16.2 21.1L14.4 17.4L17.6 17Z",
 ]);
+/**
+ * Move — repositioning a POINT (Olcay, 2026-08-23). Four arrows from a centre: the one thing you
+ * can do to a single coordinate.
+ *
+ * ⚠️ **Not the same word as Transform, deliberately.** Transform moves, scales AND rotates, which
+ * is why it stopped being called Move. A point has no size and no orientation, so scale and rotate
+ * are meaningless on it — calling its mode Transform would promise two things that cannot happen.
+ */
+export const Move = icon("move", "1007:11360", [
+  "M5 15L2 12L5 9M2 12H22M15 5L12 2L9 5M12 2V22M9 19L12 22L15 19M19 15L22 12L19 9",
+]);
+
 export const Transform = icon("transform", "1007:11468", [
   "M19 7V17M5 7V17M17 5L7 5M17 19H7M4.6 7H5.4C5.96 7 6.24 7 6.45 6.89C6.64 6.8 6.8 6.64 6.89 6.45C7 6.24 7 5.96 7 5.4V4.6C7 4.04 7 3.76 6.89 3.55C6.8 3.36 6.64 3.2 6.45 3.11C6.24 3 5.96 3 5.4 3H4.6C4.04 3 3.76 3 3.55 3.11C3.36 3.2 3.2 3.36 3.11 3.55C3 3.76 3 4.04 3 4.6V5.4C3 5.96 3 6.24 3.11 6.45C3.2 6.64 3.36 6.8 3.55 6.89C3.76 7 4.04 7 4.6 7ZM4.6 21H5.4C5.96 21 6.24 21 6.45 20.89C6.64 20.8 6.8 20.64 6.89 20.45C7 20.24 7 19.96 7 19.4V18.6C7 18.04 7 17.76 6.89 17.55C6.8 17.36 6.64 17.2 6.45 17.11C6.24 17 5.96 17 5.4 17H4.6C4.04 17 3.76 17 3.55 17.11C3.36 17.2 3.2 17.36 3.11 17.55C3 17.76 3 18.04 3 18.6V19.4C3 19.96 3 20.24 3.11 20.45C3.2 20.64 3.36 20.8 3.55 20.89C3.76 21 4.04 21 4.6 21ZM18.6 7H19.4C19.96 7 20.24 7 20.45 6.89C20.64 6.8 20.8 6.64 20.89 6.45C21 6.24 21 5.96 21 5.4V4.6C21 4.04 21 3.76 20.89 3.55C20.8 3.36 20.64 3.2 20.45 3.11C20.24 3 19.96 3 19.4 3H18.6C18.04 3 17.76 3 17.55 3.11C17.36 3.2 17.2 3.36 17.11 3.55C17 3.76 17 4.04 17 4.6V5.4C17 5.96 17 6.24 17.11 6.45C17.2 6.64 17.36 6.8 17.55 6.89C17.76 7 18.04 7 18.6 7ZM18.6 21H19.4C19.96 21 20.24 21 20.45 20.89C20.64 20.8 20.8 20.64 20.89 20.45C21 20.24 21 19.96 21 19.4V18.6C21 18.04 21 17.76 20.89 17.55C20.8 17.36 20.64 17.2 20.45 17.11C20.24 17 19.96 17 19.4 17H18.6C18.04 17 17.76 17 17.55 17.11C17.36 17.2 17.2 17.36 17.11 17.55C17 17.76 17 18.04 17 18.6V19.4C17 19.96 17 20.24 17.11 20.45C17.2 20.64 17.36 20.8 17.55 20.89C17.76 21 18.04 21 18.6 21Z",
 ]);
