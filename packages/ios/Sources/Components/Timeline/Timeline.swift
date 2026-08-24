@@ -1,5 +1,39 @@
 import SwiftUI
 
+public enum KozmosTimelineDensity {
+    case `default`
+    case compact
+
+    var contentSpacing: CGFloat {
+        switch self {
+        case .default:
+            return KozmosDimensions.primitivesLayoutSpacing50
+        case .compact:
+            return KozmosDimensions.primitivesLayoutSpacing25
+        }
+    }
+
+    var itemBottomPadding: CGFloat {
+        switch self {
+        case .default:
+            return KozmosDimensions.primitivesLayoutSpacing400
+        case .compact:
+            return KozmosDimensions.primitivesLayoutSpacing200
+        }
+    }
+}
+
+private struct KozmosTimelineDensityKey: EnvironmentKey {
+    static let defaultValue: KozmosTimelineDensity = .default
+}
+
+private extension EnvironmentValues {
+    var kozmosTimelineDensity: KozmosTimelineDensity {
+        get { self[KozmosTimelineDensityKey.self] }
+        set { self[KozmosTimelineDensityKey.self] = newValue }
+    }
+}
+
 public struct TimelineItem: Identifiable {
     public let id = UUID()
     public let time: String
@@ -15,8 +49,13 @@ public struct TimelineItem: Identifiable {
 
 public struct KozmosTimeline<Content: View>: View {
     let content: Content
+    let density: KozmosTimelineDensity
     
-    public init(@ViewBuilder content: () -> Content) {
+    public init(
+        density: KozmosTimelineDensity = .default,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.density = density
         self.content = content()
     }
     
@@ -24,11 +63,14 @@ public struct KozmosTimeline<Content: View>: View {
         VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing0) {
             content
         }
+        .environment(\.kozmosTimelineDensity, density)
         .padding()
     }
 }
 
 public struct KozmosTimelineItem<Content: View>: View {
+    @Environment(\.kozmosTimelineDensity) private var density
+
     let content: Content
     let isLast: Bool
     
@@ -59,10 +101,10 @@ public struct KozmosTimelineItem<Content: View>: View {
             }
             .frame(width: KozmosDimensions.primitivesLayoutSizing300)
             
-            VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing50) {
+            VStack(alignment: .leading, spacing: density.contentSpacing) {
                 content
             }
-            .padding(.bottom, !isLast ? KozmosDimensions.primitivesLayoutSpacing400 : KozmosDimensions.primitivesLayoutSpacing0)
+            .padding(.bottom, !isLast ? density.itemBottomPadding : KozmosDimensions.primitivesLayoutSpacing0)
         }
         .fixedSize(horizontal: false, vertical: true)
     }

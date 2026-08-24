@@ -1,5 +1,19 @@
 import SwiftUI
 
+public enum KozmosTreeDensity {
+    case `default`
+    case compact
+
+    var verticalPadding: CGFloat {
+        switch self {
+        case .default:
+            return 8
+        case .compact:
+            return 4
+        }
+    }
+}
+
 public struct Node: Identifiable, Hashable {
     public let id = UUID()
     public let value: String
@@ -13,9 +27,11 @@ public struct Node: Identifiable, Hashable {
 
 public struct KozmosTree: View {
     let nodes: [Node]
+    let density: KozmosTreeDensity
     
-    public init(nodes: [Node]) {
+    public init(nodes: [Node], density: KozmosTreeDensity = .default) {
         self.nodes = nodes
+        self.density = density
     }
     
     public var body: some View {
@@ -30,6 +46,7 @@ public struct KozmosTree: View {
                 }
                 Text(node.value)
             }
+            .padding(.vertical, density.verticalPadding)
         }
     }
 }

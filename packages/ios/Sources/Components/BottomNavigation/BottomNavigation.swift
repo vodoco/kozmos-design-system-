@@ -3,23 +3,47 @@ import SwiftUI
 public struct KozmosBottomNavigation: View {
     @Binding var selection: Int
     let items: [(icon: String, title: String)]
+    let onSelect: (Int) -> Void
     
-    public init(selection: Binding<Int>, items: [(icon: String, title: String)]) {
+    public init(
+        selection: Binding<Int>,
+        items: [(icon: String, title: String)],
+        onSelect: @escaping (Int) -> Void = { _ in }
+    ) {
         self._selection = selection
         self.items = items
+        self.onSelect = onSelect
     }
     
     public var body: some View {
-        TabView(selection: $selection) {
-            ForEach(0..<items.count, id: \.self) { index in
-                Text(items[index].title) // Placeholder for content
-                    .tabItem {
+        HStack(spacing: KozmosDimensions.primitivesLayoutSpacing0) {
+            ForEach(items.indices, id: \.self) { index in
+                KozmosNavigationItem(
+                    label: items[index].title,
+                    placement: .rail,
+                    density: .compact,
+                    content: .iconLabel,
+                    selected: selection == index,
+                    action: {
+                        selection = index
+                        onSelect(index)
+                    },
+                    icon: {
                         Image(systemName: items[index].icon)
-                        Text(items[index].title)
                     }
-                    .tag(index)
+                )
+                .frame(maxWidth: .infinity)
+                .accessibilityAddTraits(selection == index ? .isSelected : [])
             }
         }
-        .accentColor(KozmosColors.primitivesColorsTheme500)
+        .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing100)
+        .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing50)
+        .background(KozmosColors.primitivesColorsBackground0)
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(KozmosColors.primitivesColorsBackground300),
+            alignment: .top
+        )
     }
 }

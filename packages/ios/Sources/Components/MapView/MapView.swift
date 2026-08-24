@@ -9,16 +9,8 @@ public struct KozmosMapView<Content: View>: View {
     
     public var body: some View {
         ZStack {
-            // Structural Placeholder Grid Mimicking React Web Component
             KozmosColors.primitivesColorsBackground200
-            
-            VStack {
-                Text("Map View Container")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            
-            // Injected Parent Mapping Engine Payload natively floating above the placeholder
+
             content()
         }
         .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
