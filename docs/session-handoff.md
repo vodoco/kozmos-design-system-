@@ -30,6 +30,53 @@ All gates pass on a clean checkout as of this handoff:
 | iOS                                          | `swift build` exit 0                         |
 | Android                                      | `assembleDebug` + `testDebugUnitTest` exit 0 |
 
+### CI status
+
+Local gates green does not mean CI green — the two disagreed for most of this
+branch's life. Open PR: `vodoco/kozmos-design-system-#1`, 58 commits, rebased on
+current `main`, mergeable.
+
+Last fully settled run (`6ce77f5`), plus the re-run after the bundle fix
+(`0a6e08a`):
+
+| Job              | Result      | Cause                     |
+| ---------------- | ----------- | ------------------------- |
+| `analyze-bundle` | **fixed**   | was ours — see below      |
+| `lighthouse`     | pass        | —                         |
+| `Run Chromatic`  | pass        | —                         |
+| Web Build & Test | **blocked** | Figma `403 Token expired` |
+| iOS Build        | **blocked** | Figma `403 Token expired` |
+| Android Build    | **blocked** | Figma `403 Token expired` |
+
+**The three blocked jobs need a credential, not a code change.** All die at the
+Code Connect dry-run with `Failed to fetch node info (403): 403 Token expired`.
+The repo's `FIGMA_ACCESS_TOKEN` Actions secret has expired. This is pre-existing,
+not something this branch introduced — `main`'s own CI run (`2d383f2`) fails
+identically on iOS and Android. Rotate the token in Figma, set it in the repo's
+Actions secrets, and re-run; nothing in the code is blocking these.
+
+Resist "fixing" this in the workflow. The Web step already skips when the token
+is _absent_, and it would be easy to extend that to swallow auth errors too —
+but then a genuinely broken Code Connect mapping passes silently, which is the
+only thing that step exists to catch.
+
+Two CI failures were real and are fixed:
+
+- **Lint**, which fails on `main` at `apps/mapscale-review`: four unescaped JSX
+  apostrophes, and two `eslint-disable` directives naming
+  `react-hooks/exhaustive-deps` — a rule this repo has never registered, so
+  eslint errored on the unknown-rule directive while it suppressed nothing. Not
+  fixable by registering the plugin: the hoisted
+  `eslint-plugin-react-hooks@7.0.1` fails to load, importing a
+  `zod-validation-error/v4` subpath that package does not export.
+- **`analyze-bundle`**, which was ours. The wave took `@kozmos/react` from 79 to
+  97 components and the ESM bundle from 128.80 KB to 254.07 KB raw, past a
+  250 KB ceiling set when the library was half the size. Gzip — what consumers
+  actually download — went 26.15 KB to 51.07 KB against an unchanged 70 KB
+  budget. The raw ceiling is now 300 KB. **Next time this is hit, do subpath
+  exports rather than another bump**: one entry point means every consumer pays
+  for ColorPicker whether they import it or not.
+
 ### Platform coverage
 
 |                     | Web (React) | iOS   | Android | Vue          | Figma     |
@@ -126,6 +173,21 @@ formatting rather than on code:
   contains the entry. Same class as `a91cdce`. String assertions now normalise
   quotes on both sides.
 
+### Getting CI to tell the truth
+
+The branch had never had a green CI run. Four of six jobs failed. Two were real
+and are fixed (the `apps/mapscale-review` lint errors, and the bundle budget —
+both detailed in §1); three are one expired Figma token, which is pre-existing
+on `main` and needs a human.
+
+Also fixed while installing: the root `prepare` script still ran `husky install`,
+which is removed in v10. The earlier commit fixed only `.husky/pre-commit` and
+claimed the deprecation was done, so `29712c1` finishes it.
+
+The branch is now rebased onto current `main`. The rebase itself was clean; the
+one conflict was `pnpm-lock.yaml`, regenerated with `pnpm install --lockfile-only`
+against the merged `package.json` files rather than resolved by hand.
+
 ### §5 risk cleanups
 
 - **Silent `setLayoutSizing*` failures now surface.** The helpers record every
@@ -150,6 +212,10 @@ formatting rather than on code:
 
 ## 4. Immediate Next Actions, In Order
 
+0. **Rotate `FIGMA_ACCESS_TOKEN`.** Three CI jobs are blocked on it and nothing
+   else, and the same expired token will block step 5's dry-runs locally. Do
+   this first or the rest of the list stalls at the end. Generate a fresh token
+   in Figma, set it in the repo's Actions secrets, re-run the three jobs.
 1. **Build the 18 new sets in Figma.** Use **Build** for these (they do not exist
    yet), then **Update** from then on. Keep the logs — each prints the URL-safe
    node ID, which the Code Connect step needs.
@@ -164,7 +230,8 @@ formatting rather than on code:
 5. **Write the Code Connect files** for all 24 Product / SDK sets (React,
    SwiftUI, Compose) from the node IDs, replace the six native `// Placeholder`
    stubs, then run `figma:publish:linked:dry` and
-   `figma:publish:native:linked:dry`.
+   `figma:publish:native:linked:dry`. Both need step 0 done — they are the same
+   commands CI is failing on.
 6. **Dashboard items outside the design system** — raised but never scoped.
 
 ## 5. Open Decisions
@@ -191,6 +258,11 @@ These need a human call; none are blocked on code.
 
 ## 6. Known Risks And Gotchas
 
+- **Local gates green is not CI green.** They disagreed here for two independent
+  reasons at once: an uncommitted working tree, and checks that only exist in CI
+  (bundle budget, Code Connect dry-runs against the live Figma file). Read the
+  actual job logs — the GitHub check annotations point at workflow line numbers,
+  not at the failing command, and are close to useless for diagnosis.
 - **Verify against a clean checkout, not the working tree.** This is how the
   branch ended up with 79 committed components while every report said 97. A
   `git worktree add --detach /tmp/verify HEAD` costs seconds and is the only
