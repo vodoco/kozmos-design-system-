@@ -4,14 +4,21 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "rm -rf dist && vite build && tsc -p tsconfig.json"
   },
   "peerDependencies": {
     "lucide-react": ">=0.300.0",
@@ -20,6 +27,7 @@
   "devDependencies": {
     "lucide-react": "0.563.0",
     "react": "19.2.4",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vite": "^5.2.0"
   }
 }

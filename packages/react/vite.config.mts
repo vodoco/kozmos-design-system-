@@ -61,11 +61,13 @@ export default defineConfig(async () => {
       lib: {
         entry: path.resolve(__dirname, "src/index.ts"),
         name: "KozmosReact",
-        fileName: (format: string) => `kozmos-react.${format}.js`,
+        fileName: (format: string) =>
+          format === "es" ? "kozmos-react.mjs" : "kozmos-react.umd.cjs",
       },
       rollupOptions: {
         external: dependencyExternals,
         output: {
+          banner: '"use client";',
           globals: Object.fromEntries(
             dependencyExternals.map((dep) => [dep, toGlobalName(dep)]),
           ),
