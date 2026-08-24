@@ -18,6 +18,29 @@ const PATHS = {
   reactIndex: "packages/react/src/index.ts",
 };
 
+const LINKED_CONFIGS = {
+  react: {
+    config: "figma.linked.config.json",
+    packageRoot: "packages/react",
+    extension: ".figma.tsx",
+  },
+  ios: {
+    config: "packages/ios/figma.linked.config.json",
+    packageRoot: "packages/ios",
+    extension: ".figma.swift",
+  },
+  android: {
+    config: "packages/android/figma.linked.config.json",
+    packageRoot: "packages/android",
+    extension: ".figma.kt",
+  },
+};
+
+const CODE_CONNECT_FILE_OVERRIDES = {
+  FieldWrapper:
+    "packages/react/src/components/FieldWrapper/FormField.figma.tsx",
+};
+
 function readJson(repoPath) {
   return JSON.parse(fs.readFileSync(path.join(ROOT_DIR, repoPath), "utf-8"));
 }
@@ -28,6 +51,53 @@ function exists(repoPath) {
 
 function read(repoPath) {
   return fs.readFileSync(path.join(ROOT_DIR, repoPath), "utf-8");
+}
+
+function repoRelative(absPath) {
+  return path.relative(ROOT_DIR, absPath).replaceAll(path.sep, "/");
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function resolveConfigInclude(configRepoPath, packageRoot, includePath) {
+  const configPath = path.join(ROOT_DIR, configRepoPath);
+  const candidates = [
+    path.resolve(path.dirname(configPath), includePath),
+    path.join(ROOT_DIR, includePath),
+    path.join(ROOT_DIR, packageRoot, includePath),
+  ];
+
+  return (
+    candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0]
+  );
+}
+
+function inspectLinkedConfig({ config, packageRoot, extension }) {
+  if (!exists(config)) {
+    return { config, files: [], placeholderFiles: [] };
+  }
+
+  const includes = readJson(config).codeConnect?.include || [];
+  const files = includes
+    .filter((includePath) => includePath.endsWith(extension))
+    .map((includePath) =>
+      repoRelative(resolveConfigInclude(config, packageRoot, includePath)),
+    );
+  const placeholderFiles = files.filter(
+    (filePath) => exists(filePath) && /node-id=TBD/i.test(read(filePath)),
+  );
+
+  return { config, files, placeholderFiles };
+}
+
+function linkedStatus(label, configInfo) {
+  if (configInfo.placeholderFiles.length === 0) {
+    return `ready for the current ${configInfo.files.length} ${label} component-set mappings`;
+  }
+
+  return `blocked: ${configInfo.placeholderFiles.length} ${label} linked mapping(s) still contain node-id=TBD`;
 }
 
 function flattenTokens(source, mode, group = [], output = []) {
@@ -76,7 +146,7 @@ function hasRealCodeConnectMapping(repoPath) {
   return inspectCodeConnectMapping(repoPath).linked;
 }
 
-function inspectCodeConnectMapping(repoPath) {
+function inspectCodeConnectMapping(repoPath, componentName = null) {
   if (!exists(repoPath)) {
     return {
       file: null,
@@ -85,6 +155,7 @@ function inspectCodeConnectMapping(repoPath) {
       needsNodeId: false,
       status: "missing",
       issues: [],
+      connectedComponents: [],
       mappedProps: [],
     };
   }
@@ -110,6 +181,10 @@ function inspectCodeConnectMapping(repoPath) {
   if (!hasConnectCall) issues.push("missing Code Connect call");
 
   const figmaUrl = extractFigmaUrl(repoPath);
+  const connectedComponents = extractConnectedComponentNames(
+    repoPath,
+    componentName,
+  );
 
   return {
     file: repoPath,
@@ -118,7 +193,8 @@ function inspectCodeConnectMapping(repoPath) {
     needsNodeId: Boolean(figmaUrl && /node-id=TBD/i.test(figmaUrl)),
     status: hasConnectCall && issues.length === 0 ? "linked" : "scaffold",
     issues,
-    mappedProps: extractCodeConnectProps(repoPath),
+    connectedComponents,
+    mappedProps: extractCodeConnectProps(repoPath, connectedComponents),
   };
 }
 
@@ -130,15 +206,74 @@ function extractFigmaUrl(repoPath) {
   return match ? match[0] : null;
 }
 
-function extractCodeConnectProps(repoPath) {
+function createTsxSourceFile(repoPath) {
+  return ts.createSourceFile(
+    repoPath,
+    read(repoPath),
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+}
+
+function extractConnectedComponentNames(repoPath, componentName = null) {
   if (!exists(repoPath)) return [];
 
-  const content = read(repoPath);
-  return uniqueValues(
-    [...content.matchAll(/\b([A-Za-z_$][\w$]*)\s*:\s*figma\./g)]
-      .map((match) => match[1])
-      .filter((name) => shouldKeepPropName(name)),
-  );
+  const sourceFile = createTsxSourceFile(repoPath);
+  const connectedNames = new Set(componentName ? [componentName] : []);
+
+  function visit(node) {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === "connect"
+    ) {
+      const componentArg = node.arguments[0];
+      if (ts.isIdentifier(componentArg)) {
+        connectedNames.add(componentArg.text);
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+
+  return [...connectedNames].sort((a, b) => a.localeCompare(b));
+}
+
+function jsxTagNameText(tagName) {
+  if (ts.isIdentifier(tagName)) return tagName.text;
+  if (ts.isPropertyAccessExpression(tagName)) return tagName.name.text;
+  return null;
+}
+
+function extractCodeConnectProps(repoPath, connectedComponentNames = []) {
+  if (!exists(repoPath)) return [];
+
+  const sourceFile = createTsxSourceFile(repoPath);
+  const connectedNames = new Set(connectedComponentNames);
+  const props = new Set();
+
+  function collectJsxAttributes(node) {
+    if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+      const tagName = jsxTagNameText(node.tagName);
+      if (tagName && connectedNames.has(tagName)) {
+        for (const attr of node.attributes.properties) {
+          if (ts.isJsxAttribute(attr) && ts.isIdentifier(attr.name)) {
+            const attrName = attr.name.text;
+            if (shouldKeepPropName(attrName)) props.add(attrName);
+          }
+        }
+      }
+    }
+
+    ts.forEachChild(node, collectJsxAttributes);
+  }
+
+  collectJsxAttributes(sourceFile);
+
+  return [...props].sort((a, b) => a.localeCompare(b));
 }
 
 function propNameFromNode(nameNode, sourceFile) {
@@ -282,6 +417,30 @@ function collectKnownExternalPropsFromText(typeText, props) {
     return true;
   }
 
+  if (/AccordionPrimitive\.Root/.test(typeText)) {
+    addProps(props, [
+      "children",
+      "collapsible",
+      "defaultValue",
+      "disabled",
+      "type",
+      "value",
+    ]);
+    return true;
+  }
+
+  if (/TabsPrimitive\.Root/.test(typeText)) {
+    addProps(props, [
+      "activationMode",
+      "children",
+      "defaultValue",
+      "dir",
+      "orientation",
+      "value",
+    ]);
+    return true;
+  }
+
   if (/SliderPrimitive\.Root/.test(typeText)) {
     addProps(props, [
       "children",
@@ -319,7 +478,7 @@ function collectKnownExternalPropsFromText(typeText, props) {
   }
 
   if (/SelectPrimitive\.Trigger/.test(typeText)) {
-    addProps(props, ["children", "disabled", "id"]);
+    addProps(props, ["autoFocus", "children", "disabled", "id"]);
     return true;
   }
 
@@ -329,7 +488,31 @@ function collectKnownExternalPropsFromText(typeText, props) {
   }
 
   if (/DialogPrimitive\.Content/.test(typeText)) {
-    addProps(props, ["children", "forceMount"]);
+    addProps(props, ["children", "forceMount", "side"]);
+    return true;
+  }
+
+  if (/PopoverPrimitive\.Content|TooltipPrimitive\.Content/.test(typeText)) {
+    addProps(props, [
+      "align",
+      "children",
+      "collisionPadding",
+      "side",
+      "sideOffset",
+    ]);
+    return true;
+  }
+
+  if (/RadioGroupPrimitive\.Root/.test(typeText)) {
+    addProps(props, [
+      "children",
+      "defaultValue",
+      "disabled",
+      "name",
+      "orientation",
+      "required",
+      "value",
+    ]);
     return true;
   }
 
@@ -345,6 +528,18 @@ function collectKnownExternalPropsFromText(typeText, props) {
     return true;
   }
 
+  if (/ToastPrimitive\.Root/.test(typeText)) {
+    addProps(props, [
+      "children",
+      "defaultOpen",
+      "duration",
+      "forceMount",
+      "open",
+      "type",
+    ]);
+    return true;
+  }
+
   if (/TogglePrimitive\.Root/.test(typeText)) {
     addProps(props, ["children", "defaultPressed", "disabled", "pressed"]);
     return true;
@@ -354,10 +549,17 @@ function collectKnownExternalPropsFromText(typeText, props) {
 }
 
 function collectKnownImportedProps(localName, context, props) {
+  if (localName === "BoxProps") {
+    addProps(props, ["asChild", "children", "id"]);
+    return true;
+  }
+
   if (localName !== "ButtonProps") return false;
 
   addProps(props, [
+    "aria-label",
     "asChild",
+    "autoFocus",
     "children",
     "disabled",
     "isLoading",
@@ -411,6 +613,11 @@ function collectPropsFromHeritage(heritageClauses, context, props, seen) {
       const localName = expressionText.split(".").at(-1);
       if (context.definitions.has(localName)) {
         collectPropsFromDefinition(localName, context, props, seen);
+        continue;
+      }
+
+      if (collectKnownImportedProps(localName, context, props)) {
+        continue;
       }
     }
   }
@@ -575,16 +782,28 @@ function addCommonInheritedProps(sourceFile, props) {
       sourceText,
     )
   ) {
-    addProp(props, "children");
+    addProps(props, [
+      "aria-describedby",
+      "aria-invalid",
+      "aria-label",
+      "children",
+      "id",
+      "role",
+      "tabIndex",
+      "title",
+    ]);
   }
 
   if (/ButtonHTMLAttributes/.test(sourceText)) {
-    addProp(props, "disabled");
+    addProps(props, ["autoFocus", "disabled", "type"]);
   }
 
   if (/(?:InputHTMLAttributes|TextareaHTMLAttributes)/.test(sourceText)) {
     for (const propName of [
+      "autoFocus",
+      "defaultValue",
       "disabled",
+      "name",
       "placeholder",
       "readOnly",
       "required",
@@ -635,6 +854,41 @@ function extractProps(repoPath, componentName) {
   };
 }
 
+function resolveComponentPropSource(componentFile, componentName) {
+  if (!exists(componentFile)) return componentFile;
+
+  const content = read(componentFile);
+  const exportMatch = content.match(
+    new RegExp(
+      `export\\s*\\{[\\s\\S]*?\\b${escapeRegExp(componentName)}\\b[\\s\\S]*?\\}\\s*from\\s*[\"']([^\"']+)[\"']`,
+    ),
+  );
+  if (!exportMatch) return componentFile;
+
+  const componentDir = path.dirname(path.join(ROOT_DIR, componentFile));
+  const base = path.resolve(componentDir, exportMatch[1]);
+  const candidates = [
+    base,
+    `${base}.tsx`,
+    `${base}.ts`,
+    path.join(base, "index.tsx"),
+  ];
+  const resolved = candidates.find((candidate) => fs.existsSync(candidate));
+
+  return resolved ? repoRelative(resolved) : componentFile;
+}
+
+function mergeComponentApis(apis) {
+  const props = uniqueValues(apis.flatMap((api) => api.props));
+  const variants = {};
+
+  for (const api of apis) {
+    Object.assign(variants, api.variants);
+  }
+
+  return { props, variants };
+}
+
 function discoverReactComponents() {
   const componentRoot = path.join(ROOT_DIR, PATHS.reactComponents);
   const exportedIndex = exists(PATHS.reactIndex) ? read(PATHS.reactIndex) : "";
@@ -649,9 +903,18 @@ function discoverReactComponents() {
       const componentFile = `${base}/${name}.tsx`;
       const storyFile = `${base}/${name}.stories.tsx`;
       const testFile = `${base}/${name}.test.tsx`;
-      const codeConnectFile = `${base}/${name}.figma.tsx`;
-      const componentApi = extractProps(componentFile, name);
-      const codeConnect = inspectCodeConnectMapping(codeConnectFile);
+      const codeConnectFile =
+        CODE_CONNECT_FILE_OVERRIDES[name] ?? `${base}/${name}.figma.tsx`;
+      const codeConnect = inspectCodeConnectMapping(codeConnectFile, name);
+      const componentPropSource = resolveComponentPropSource(
+        componentFile,
+        name,
+      );
+      const componentApi = mergeComponentApis(
+        uniqueValues([name, ...codeConnect.connectedComponents]).map(
+          (connectedName) => extractProps(componentPropSource, connectedName),
+        ),
+      );
       const unmappedProps = codeConnect.mappedProps.filter(
         (propName) => !componentApi.props.includes(propName),
       );
@@ -700,6 +963,10 @@ function buildManifest() {
   const lightTokens = flattenTokens(readJson(PATHS.tokensLight), "light");
   const darkTokens = flattenTokens(readJson(PATHS.tokensDark), "dark");
   const components = discoverReactComponents();
+  const componentSummary = summarizeComponents(components);
+  const linkedReact = inspectLinkedConfig(LINKED_CONFIGS.react);
+  const linkedIos = inspectLinkedConfig(LINKED_CONFIGS.ios);
+  const linkedAndroid = inspectLinkedConfig(LINKED_CONFIGS.android);
   const firstBatch = components
     .filter((component) => component.codeConnect.file)
     .map((component) => component.name);
@@ -719,7 +986,22 @@ function buildManifest() {
       ),
       publishCommand: "pnpm figma:publish:dry",
       publishStatus:
-        "blocked until real component node IDs replace node-id=TBD",
+        componentSummary.codeConnectScaffolds > 0
+          ? "blocked for all-component React publish until non-core node-id=TBD scaffolds are linked; use linked publish for Core"
+          : "ready",
+      linkedPublishCommand: "pnpm figma:publish:linked:dry",
+      linkedPublishConfig: linkedReact.config,
+      linkedPublishStatus: linkedStatus("Core React", linkedReact),
+      nativeLinkedPublishCommand: "pnpm figma:publish:native:linked:dry",
+      nativeLinkedPublishConfigs: [linkedIos.config, linkedAndroid.config],
+      nativeLinkedPublishStatus:
+        linkedIos.placeholderFiles.length === 0 &&
+        linkedAndroid.placeholderFiles.length === 0
+          ? `ready for the current ${linkedIos.files.length} Core SwiftUI and ${linkedAndroid.files.length} Core Compose component-set mappings`
+          : [
+              linkedStatus("Core SwiftUI", linkedIos),
+              linkedStatus("Core Compose", linkedAndroid),
+            ].join("; "),
     },
     tokens: {
       summary: {
@@ -742,7 +1024,7 @@ function buildManifest() {
       })),
     },
     components: {
-      summary: summarizeComponents(components),
+      summary: componentSummary,
       firstBatch,
       items: components,
     },

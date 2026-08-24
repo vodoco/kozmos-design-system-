@@ -6,7 +6,7 @@ import { gzipSync } from "zlib";
 const MAX_RAW_SIZE_KB = 250;
 const MAX_GZIP_SIZE_KB = 70;
 const REACT_PKG_DIR = path.resolve(__dirname, "../../packages/react");
-const DIST_FILE = path.resolve(REACT_PKG_DIR, "dist/kozmos-react.es.js");
+const DIST_FILE = path.resolve(REACT_PKG_DIR, "dist/kozmos-react.mjs");
 
 console.log(
   "🔄 Building @kozmos/react and its dependencies for performance analysis...",
