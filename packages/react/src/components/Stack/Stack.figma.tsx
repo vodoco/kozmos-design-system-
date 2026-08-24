@@ -6,7 +6,7 @@ figma.connect(
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-1027",
   {
     props: {
-      children: figma.children("*"),
+      children: figma.slot("Content Slot") ?? figma.children("*"),
       direction: figma.enum("Direction", {
         Row: "row",
         Column: "column",

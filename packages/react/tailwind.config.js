@@ -66,15 +66,15 @@ module.exports = {
           foreground: "var(--primitives-colors-foreground-1000)",
         },
         success: {
-          DEFAULT: "var(--primitives-colors-emotional-success-600)",
+          DEFAULT: "var(--primitives-colors-emotional-success-800)",
           foreground: "var(--primitives-colors-foreground-1000)",
         },
         warning: {
-          DEFAULT: "var(--primitives-colors-emotional-alert-600)",
+          DEFAULT: "var(--primitives-colors-emotional-alert-800)",
           foreground: "var(--primitives-colors-foreground-1000)",
         },
         info: {
-          DEFAULT: "var(--primitives-colors-emotional-info-600)",
+          DEFAULT: "var(--primitives-colors-emotional-info-700)",
           foreground: "var(--primitives-colors-foreground-1000)",
         },
         border: "var(--primitives-colors-background-200)",

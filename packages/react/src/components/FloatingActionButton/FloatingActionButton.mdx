@@ -36,12 +36,11 @@ import { KozmosFloatingActionButton } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosFloatingActionButton: View {
-    var body: some View {
-        Text("FloatingActionButton Content placeholder")
-    }
-}
-    `}
+KozmosFloatingActionButton(
+iconName: "plus",
+action: {}
+)
+`}
     kotlin={`
 package com.kozmos.components.floatingactionbutton
 
@@ -56,19 +55,20 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosFloatingActionButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    icon: ImageVector = Icons.Default.Add
+onClick: () -> Unit,
+modifier: Modifier = Modifier,
+icon: ImageVector = Icons.Default.Add
 ) {
-    FloatingActionButton(
-        onClick = onClick,
-        modifier = modifier,
-        containerColor = KozmosColors.primitivesColorsTheme500,
-        contentColor = KozmosColors.primitivesColorsBackground0
-    ) {
-        Icon(icon, contentDescription = "Action")
-    }
+FloatingActionButton(
+onClick = onClick,
+modifier = modifier,
+containerColor = KozmosColors.primitivesColorsTheme500,
+contentColor = KozmosColors.primitivesColorsBackground0
+) {
+Icon(icon, contentDescription = "Action")
+}
 }
 
     `}
+
 />

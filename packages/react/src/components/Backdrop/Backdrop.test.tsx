@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { Backdrop } from "./Backdrop";
 import { describe, it, expect } from "vitest";
+import "@testing-library/jest-dom/vitest";
 
 describe("Backdrop", () => {
   it("renders correctly", () => {

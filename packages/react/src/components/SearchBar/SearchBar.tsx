@@ -40,6 +40,8 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
       onChange,
       onClear,
       placeholder = "Search...",
+      type = "search",
+      "aria-label": ariaLabel,
       ...props
     },
     ref,
@@ -47,15 +49,23 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
     const { trackEvent } = useKozmosAnalytics();
 
     return (
-      <div className={cn(searchBarVariants({ variant }), containerClassName)}>
-        <Search className="w-5 h-5 text-muted-foreground mr-3 shrink-0" />
+      <div
+        className={cn(searchBarVariants({ variant }), containerClassName)}
+        role="search"
+      >
+        <Search
+          aria-hidden="true"
+          className="w-5 h-5 text-muted-foreground mr-3 shrink-0"
+        />
         <input
           ref={ref}
           className={cn(
             "flex-1 bg-transparent border-none outline-none text-base placeholder:text-muted-foreground",
             className,
           )}
+          aria-label={ariaLabel ?? placeholder}
           placeholder={placeholder}
+          type={type}
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
           onKeyDown={(e) => {
@@ -73,11 +83,11 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
               onChange?.("");
               onClear?.();
             }}
-            className="p-1 rounded-full hover:bg-muted transition-colors ml-3 shrink-0"
+            className="ml-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Clear search"
             type="button"
           >
-            <X className="w-5 h-5 text-muted-foreground" />
+            <X aria-hidden="true" className="w-5 h-5 text-muted-foreground" />
           </button>
         )}
       </div>

@@ -36,12 +36,11 @@ import { KozmosStepper } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosStepper: View {
-    var body: some View {
-        Text("Stepper Content placeholder")
-    }
-}
-    `}
+KozmosStepper(
+steps: ["Details", "Review", "Publish"],
+currentStep: 1
+)
+`}
     kotlin={`
 package com.kozmos.components.stepper
 
@@ -72,19 +71,19 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosStepper(
-    steps: List<String>,
-    currentStep: Int,
-    modifier: Modifier = Modifier
+steps: List<String>,
+currentStep: Int,
+modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        steps.forEachIndexed { index, step ->
-            val isCompleted = index < currentStep
-            val isCurrent = index == currentStep
-            
+Row(
+modifier = modifier.fillMaxWidth(),
+horizontalArrangement = Arrangement.SpaceBetween,
+verticalAlignment = Alignment.CenterVertically
+) {
+steps.forEachIndexed { index, step ->
+val isCompleted = index < currentStep
+val isCurrent = index == currentStep
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing50)
@@ -116,14 +115,14 @@ fun KozmosStepper(
                         )
                     }
                 }
-                
+
                 Text(
                     text = step,
                     style = MaterialTheme.typography.labelSmall,
                     color = if (isCurrent) KozmosColors.primitivesColorsForeground100 else KozmosColors.primitivesColorsForeground500
                 )
             }
-            
+
             if (index < steps.size - 1) {
                 Box(
                     modifier = Modifier
@@ -134,7 +133,9 @@ fun KozmosStepper(
             }
         }
     }
+
 }
 
     `}
+
 />

@@ -36,12 +36,11 @@ import { KozmosSearch } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosSearch: View {
-    var body: some View {
-        Text("Search Content placeholder")
-    }
-}
-    `}
+KozmosSearch(
+text: .constant(""),
+placeholder: "Search"
+)
+`}
     kotlin={`
 package com.kozmos.components.search
 
@@ -61,28 +60,29 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun KozmosSearch(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String = "Search",
-    modifier: Modifier = Modifier
+value: String,
+onValueChange: (String) -> Unit,
+placeholder: String = "Search",
+modifier: Modifier = Modifier
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder) },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
-        singleLine = true,
-        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = com.kozmos.tokens.KozmosColors.primitivesColorsTheme500,
-            unfocusedBorderColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground300,
-            cursorColor = com.kozmos.tokens.KozmosColors.primitivesColorsTheme500,
-            focusedLeadingIconColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground500,
-            unfocusedLeadingIconColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground500
-        )
-    )
+OutlinedTextField(
+value = value,
+onValueChange = onValueChange,
+placeholder = { Text(placeholder) },
+leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+modifier = modifier.fillMaxWidth(),
+shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+singleLine = true,
+colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+focusedBorderColor = com.kozmos.tokens.KozmosColors.primitivesColorsTheme500,
+unfocusedBorderColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground300,
+cursorColor = com.kozmos.tokens.KozmosColors.primitivesColorsTheme500,
+focusedLeadingIconColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground500,
+unfocusedLeadingIconColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground500
+)
+)
 }
 
     `}
+
 />

@@ -36,12 +36,12 @@ import { KozmosOTPInput } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosOTPInput: View {
-    var body: some View {
-        Text("OTPInput Content placeholder")
-    }
-}
-    `}
+KozmosOTPInput(
+length: 6,
+value: .constant("123456"),
+label: "Verification code"
+)
+`}
     kotlin={`
 package com.kozmos.components.otpinput
 
@@ -69,29 +69,29 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosOTPInput(
-    value: String,
-    onValueChange: (String) -> Unit,
-    length: Int = 6,
-    modifier: Modifier = Modifier
+value: String,
+onValueChange: (String) -> Unit,
+length: Int = 6,
+modifier: Modifier = Modifier
 ) {
-    BasicTextField(
-        value = value,
-        onValueChange = {
-            if (it.length <= length && it.all { char -> char.isDigit() }) {
-                onValueChange(it)
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        decorationBox = {
-            Row(
-                modifier = modifier,
-                horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(length) { index ->
-                    val char = if (index < value.length) value[index] else null
-                    val isFocused = index == value.length
-                    
+BasicTextField(
+value = value,
+onValueChange = {
+if (it.length <= length && it.all { char -> char.isDigit() }) {
+onValueChange(it)
+}
+},
+keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+decorationBox = {
+Row(
+modifier = modifier,
+horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
+verticalAlignment = Alignment.CenterVertically
+) {
+repeat(length) { index ->
+val char = if (index < value.length) value[index] else null
+val isFocused = index == value.length
+
                     Box(
                         modifier = Modifier
                             .width(44.dp)
@@ -116,7 +116,9 @@ fun KozmosOTPInput(
             }
         }
     )
+
 }
 
     `}
+
 />

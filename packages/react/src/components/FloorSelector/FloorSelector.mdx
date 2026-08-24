@@ -9,7 +9,7 @@ import { PlatformSnippets } from "../PlatformSnippets";
 Displays the FloorSelector interface topology natively.
 
 <Canvas>
-  <Story of={FloorSelectorStories.Default} />
+  <Story of={FloorSelectorStories.VerticalList} />
 </Canvas>
 
 <Controls />
@@ -36,12 +36,11 @@ import { KozmosFloorSelector } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosFloorSelector: View {
-    var body: some View {
-        Text("FloorSelector Content placeholder")
-    }
-}
-    `}
+KozmosFloorSelector(
+floors: ["B2", "B1", "G", "1", "2"],
+selectedFloor: .constant("G")
+)
+`}
     kotlin={`
 package com.kozmos.components.floorselector
 
@@ -68,40 +67,41 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun KozmosFloorSelector(
-    floors: List<String>,
-    selectedFloor: String,
-    onFloorSelect: (String) -> Unit,
-    modifier: Modifier = Modifier
+floors: List<String>,
+selectedFloor: String,
+onFloorSelect: (String) -> Unit,
+modifier: Modifier = Modifier
 ) {
-    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
-    Column(
-        modifier = modifier
-            .shadow(4.dp, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
-            .background(KozmosColors.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
-            .padding(KozmosDimensions.primitivesLayoutSpacing50)
-    ) {
-        floors.forEach { floor ->
-            val isSelected = floor == selectedFloor
-            Box(
-                modifier = Modifier
-                    .size(KozmosDimensions.primitivesLayoutSizing500)
-                    .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
-                    .background(if (isSelected) KozmosColors.primitivesColorsTheme500 else Color.Transparent)
-                    .clickable { 
-                        trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "FloorSelector", eventName = "floor_selected", properties = mapOf("floor" to floor)))
-                        onFloorSelect(floor) 
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = floor,
-                    color = if (isSelected) KozmosColors.primitivesColorsBackground0 else KozmosColors.primitivesColorsForeground100,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                )
-            }
-        }
-    }
+val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+Column(
+modifier = modifier
+.shadow(4.dp, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
+.background(KozmosColors.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
+.padding(KozmosDimensions.primitivesLayoutSpacing50)
+) {
+floors.forEach { floor ->
+val isSelected = floor == selectedFloor
+Box(
+modifier = Modifier
+.size(KozmosDimensions.primitivesLayoutSizing500)
+.clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
+.background(if (isSelected) KozmosColors.primitivesColorsTheme500 else Color.Transparent)
+.clickable {
+trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "FloorSelector", eventName = "floor_selected", properties = mapOf("floor" to floor)))
+onFloorSelect(floor)
+},
+contentAlignment = Alignment.Center
+) {
+Text(
+text = floor,
+color = if (isSelected) KozmosColors.primitivesColorsBackground0 else KozmosColors.primitivesColorsForeground100,
+style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+)
+}
+}
+}
 }
 
     `}
+
 />

@@ -47,7 +47,16 @@ export interface ButtonProps
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, isLoading, children, onClick, ...props },
+    {
+      className,
+      variant,
+      size,
+      isLoading,
+      children,
+      onClick,
+      disabled,
+      ...props
+    },
     ref,
   ) => {
     const { trackEvent } = useKozmosAnalytics();
@@ -55,7 +64,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       trackEvent("Button", "button_clicked", {
         variant: variant || "default",
-        disabled: props.disabled,
+        disabled,
       });
       onClick?.(e);
     };
@@ -64,11 +73,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         className={cn(buttonVariants({ variant, size }), className)}
         ref={ref}
-        disabled={isLoading || props.disabled}
+        disabled={isLoading || disabled}
         onClick={handleClick}
         {...props}
       >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isLoading && (
+          <Loader2 aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
+        )}
         {children}
       </button>
     );

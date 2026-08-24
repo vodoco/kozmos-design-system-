@@ -36,12 +36,15 @@ import { KozmosBottomNavigation } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosBottomNavigation: View {
-    var body: some View {
-        Text("BottomNavigation Content placeholder")
-    }
-}
-    `}
+KozmosBottomNavigation(
+selection: .constant(0),
+items: [
+(icon: "house", title: "Home"),
+(icon: "map", title: "Maps"),
+(icon: "bell", title: "Alerts")
+]
+)
+`}
     kotlin={`
 package com.kozmos.components.bottomnavigation
 
@@ -55,32 +58,33 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.kozmos.tokens.KozmosColors
 
 data class BottomNavigationItem(
-    val title: String,
-    val icon: ImageVector,
-    val route: String
+val title: String,
+val icon: ImageVector,
+val route: String
 )
 
 @Composable
 fun KozmosBottomNavigation(
-    items: List<BottomNavigationItem>,
-    currentRoute: String,
-    onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier
+items: List<BottomNavigationItem>,
+currentRoute: String,
+onNavigate: (String) -> Unit,
+modifier: Modifier = Modifier
 ) {
-    NavigationBar(
-        modifier = modifier,
-        containerColor = KozmosColors.primitivesColorsBackground0
-    ) {
-        items.forEach { item ->
-            NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = item.title) },
-                label = { Text(item.title) },
-                selected = currentRoute == item.route,
-                onClick = { onNavigate(item.route) }
-            )
-        }
-    }
+NavigationBar(
+modifier = modifier,
+containerColor = KozmosColors.primitivesColorsBackground0
+) {
+items.forEach { item ->
+NavigationBarItem(
+icon = { Icon(item.icon, contentDescription = item.title) },
+label = { Text(item.title) },
+selected = currentRoute == item.route,
+onClick = { onNavigate(item.route) }
+)
+}
+}
 }
 
     `}
+
 />

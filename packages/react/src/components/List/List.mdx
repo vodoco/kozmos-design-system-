@@ -36,12 +36,11 @@ import { KozmosList } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosList: View {
-    var body: some View {
-        Text("List Content placeholder")
-    }
+KozmosList {
+KozmosListItem("First item")
+KozmosListItem("Second item")
 }
-    `}
+`}
     kotlin={`
 package com.kozmos.components.list
 
@@ -60,32 +59,33 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosList(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+modifier: Modifier = Modifier,
+content: @Composable () -> Unit
 ) {
-    Column(modifier = modifier) {
-        content()
-    }
+Column(modifier = modifier) {
+content()
+}
 }
 
 @Composable
 fun KozmosListItem(
-    text: String,
-    modifier: Modifier = Modifier,
-    showDivider: Boolean = true
+text: String,
+modifier: Modifier = Modifier,
+showDivider: Boolean = true
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = KozmosColors.primitivesColorsForeground100,
-            modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)
-        )
-        if (showDivider) {
-            Divider(color = KozmosColors.primitivesColorsBackground300)
-        }
-    }
+Column(modifier = modifier.fillMaxWidth()) {
+Text(
+text = text,
+style = MaterialTheme.typography.bodyLarge,
+color = KozmosColors.primitivesColorsForeground100,
+modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)
+)
+if (showDivider) {
+Divider(color = KozmosColors.primitivesColorsBackground300)
+}
+}
 }
 
     `}
+
 />

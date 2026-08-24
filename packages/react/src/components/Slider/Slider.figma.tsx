@@ -20,9 +20,23 @@ figma.connect(
         Error: true,
       }),
       label: figma.string("Label Text"),
+      defaultValue: figma.enum("Type", {
+        Single: [50],
+        Range: [20, 80],
+      }),
+      thumbCount: figma.enum("Type", {
+        Single: 1,
+        Range: 2,
+      }),
     },
-    example: ({ disabled, error, label }) => (
-      <Slider disabled={disabled} error={error} label={label} />
+    example: ({ disabled, error, label, defaultValue, thumbCount }) => (
+      <Slider
+        defaultValue={defaultValue}
+        disabled={disabled}
+        error={error}
+        label={label}
+        thumbCount={thumbCount}
+      />
     ),
   },
 );

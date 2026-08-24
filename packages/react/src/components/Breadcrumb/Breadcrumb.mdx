@@ -36,12 +36,11 @@ import { KozmosBreadcrumb } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosBreadcrumb: View {
-    var body: some View {
-        Text("Breadcrumb Content placeholder")
-    }
-}
-    `}
+KozmosBreadcrumb(
+items: ["Home", "Maps", "Dubai Mall"],
+onSelect: { \_ in }
+)
+`}
     kotlin={`
 package com.kozmos.components.breadcrumb
 
@@ -64,17 +63,17 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosBreadcrumb(
-    items: List<String>,
-    onItemClick: (Int) -> Unit,
-    modifier: Modifier = Modifier
+items: List<String>,
+onItemClick: (Int) -> Unit,
+modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        items.forEachIndexed { index, item ->
-            val isLast = index == items.size - 1
-            
+Row(
+modifier = modifier,
+verticalAlignment = Alignment.CenterVertically
+) {
+items.forEachIndexed { index, item ->
+val isLast = index == items.size - 1
+
             Text(
                 text = item,
                 style = MaterialTheme.typography.bodyMedium,
@@ -85,7 +84,7 @@ fun KozmosBreadcrumb(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             if (!isLast) {
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowRight,
@@ -96,7 +95,9 @@ fun KozmosBreadcrumb(
             }
         }
     }
+
 }
 
     `}
+
 />

@@ -36,12 +36,12 @@ import { KozmosMenu } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosMenu: View {
-    var body: some View {
-        Text("Menu Content placeholder")
-    }
-}
-    `}
+KozmosMenu(
+title: "Actions",
+items: ["Edit", "Duplicate", "Delete"],
+onSelect: { \_ in }
+)
+`}
     kotlin={`
 package com.kozmos.components.menu
 
@@ -53,28 +53,29 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun KozmosMenu(
-    expanded: Boolean,
-    onDismissRequest: () -> Unit,
-    items: List<String>,
-    onItemClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+expanded: Boolean,
+onDismissRequest: () -> Unit,
+items: List<String>,
+onItemClick: (String) -> Unit,
+modifier: Modifier = Modifier
 ) {
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismissRequest,
-        modifier = modifier
-    ) {
-        items.forEach { item ->
-            DropdownMenuItem(
-                text = { Text(item) },
-                onClick = {
-                    onItemClick(item)
-                    onDismissRequest()
-                }
-            )
-        }
-    }
+DropdownMenu(
+expanded = expanded,
+onDismissRequest = onDismissRequest,
+modifier = modifier
+) {
+items.forEach { item ->
+DropdownMenuItem(
+text = { Text(item) },
+onClick = {
+onItemClick(item)
+onDismissRequest()
+}
+)
+}
+}
 }
 
     `}
+
 />

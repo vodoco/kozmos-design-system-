@@ -36,12 +36,19 @@ import { KozmosTable } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosTable: View {
-    var body: some View {
-        Text("Table Content placeholder")
-    }
+struct Row: Identifiable {
+let id = UUID()
+let name: String
+let status: String
 }
-    `}
+
+KozmosTable([Row(name: "Dubai Mall", status: "Open")]) { row in
+KozmosTableRow {
+KozmosTableCell(row.name)
+KozmosTableCell(row.status)
+}
+}
+`}
     kotlin={`
 package com.kozmos.components.table
 
@@ -67,66 +74,67 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosTable(
-    modifier: Modifier = Modifier,
-    header: @Composable (() -> Unit)? = null,
-    content: @Composable () -> Unit
+modifier: Modifier = Modifier,
+header: @Composable (() -> Unit)? = null,
+content: @Composable () -> Unit
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
-            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
-    ) {
-        if (header != null) {
-            header()
-            Divider()
-        }
-        content()
-    }
+Column(
+modifier = modifier
+.fillMaxWidth()
+.clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+.border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+) {
+if (header != null) {
+header()
+Divider()
+}
+content()
+}
 }
 
 @Composable
 fun KozmosTableRow(
-    modifier: Modifier = Modifier,
-    content: @Composable RowScope.() -> Unit
+modifier: Modifier = Modifier,
+content: @Composable RowScope.() -> Unit
 ) {
-    Column {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(KozmosDimensions.primitivesLayoutSpacing200),
-            content = content
-        )
-        Divider()
-    }
+Column {
+Row(
+modifier = modifier
+.fillMaxWidth()
+.padding(KozmosDimensions.primitivesLayoutSpacing200),
+content = content
+)
+Divider()
+}
 }
 
 @Composable
 fun RowScope.KozmosTableCell(
-    text: String,
-    modifier: Modifier = Modifier,
-    weight: Float = 1f
+text: String,
+modifier: Modifier = Modifier,
+weight: Float = 1f
 ) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = modifier.weight(weight)
-    )
+Text(
+text = text,
+style = MaterialTheme.typography.bodyMedium,
+modifier = modifier.weight(weight)
+)
 }
 
 @Composable
 fun RowScope.KozmosTableHeaderCell(
-    text: String,
-    modifier: Modifier = Modifier,
-    weight: Float = 1f
+text: String,
+modifier: Modifier = Modifier,
+weight: Float = 1f
 ) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        color = KozmosColors.primitivesColorsForeground500,
-        modifier = modifier.weight(weight)
-    )
+Text(
+text = text,
+style = MaterialTheme.typography.titleSmall,
+color = KozmosColors.primitivesColorsForeground500,
+modifier = modifier.weight(weight)
+)
 }
 
     `}
+
 />

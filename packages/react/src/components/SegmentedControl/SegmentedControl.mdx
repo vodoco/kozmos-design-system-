@@ -1,4 +1,4 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Controls, Meta, Story } from "@storybook/blocks";
 import * as SegmentedControlStories from "./SegmentedControl.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -6,7 +6,9 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 # SegmentedControl
 
-Displays the SegmentedControl interface topology natively.
+Use SegmentedControl when users choose one option from a short, visible set.
+Prefer Radio for longer lists and Tabs when the selected item changes visible
+content regions.
 
 <Canvas>
   <Story of={SegmentedControlStories.Default} />
@@ -19,12 +21,19 @@ Displays the SegmentedControl interface topology natively.
 <div className="subheading">Code</div>
 
 <PlatformSnippets
-    react={`
+  react={`
 import { SegmentedControl } from "@kozmos/react"
 
-<SegmentedControl />
-    `}
-    vue={`
+<SegmentedControl
+  defaultValue="overview"
+  items={[
+    { value: "overview", label: "Overview" },
+    { value: "details", label: "Details" },
+    { value: "activity", label: "Activity" },
+  ]}
+/>
+  `}
+  vue={`
 <script setup>
 import { KozmosSegmentedControl } from "@kozmos/vue"
 </script>
@@ -32,49 +41,22 @@ import { KozmosSegmentedControl } from "@kozmos/vue"
 <template>
   <KozmosSegmentedControl />
 </template>
-    `}
-    swift={`
-import SwiftUI
+  `}
+  swift={`
+@State private var selection = 0
 
-struct KozmosSegmentedControl: View {
-    var body: some View {
-        Text("SegmentedControl Content placeholder")
-    }
-}
-    `}
-    kotlin={`
-package com.kozmos.components.segmentedcontrol
+KozmosSegmentedControl(
+selection: $selection,
+items: ["Overview", "Details", "Activity"]
+)
+`}
+  kotlin={`
+var selectedIndex by remember { mutableIntStateOf(0) }
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
-fun KozmosSegmentedControl(
-    options: List<String>,
-    selectedIndex: Int,
-    onOptionSelected: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(modifier = modifier) {
-        options.forEachIndexed { index, label ->
-            androidx.compose.material3.TextButton(
-                onClick = { onOptionSelected(index) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = label,
-                    color = if (index == selectedIndex) 
-                        com.kozmos.tokens.KozmosColors.primitivesColorsTheme500 
-                    else 
-                        com.kozmos.tokens.KozmosColors.primitivesColorsForeground500
-                )
-            }
-        }
-    }
-}
-
-    `}
+KozmosSegmentedControl(
+options = listOf("Overview", "Details", "Activity"),
+selectedIndex = selectedIndex,
+onOptionSelected = { selectedIndex = it }
+)
+`}
 />

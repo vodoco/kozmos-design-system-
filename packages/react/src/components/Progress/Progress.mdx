@@ -36,12 +36,8 @@ import { KozmosProgress } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosProgress: View {
-    var body: some View {
-        Text("Progress Content placeholder")
-    }
-}
-    `}
+KozmosProgress(value: 0.6)
+`}
     kotlin={`
 package com.kozmos.components.progress
 
@@ -53,16 +49,17 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosProgress(
-    progress: Float,
-    modifier: Modifier = Modifier
+progress: Float,
+modifier: Modifier = Modifier
 ) {
-    LinearProgressIndicator(
-        progress = progress,
-        modifier = modifier,
-        color = KozmosColors.primitivesColorsTheme500,
-        trackColor = KozmosColors.primitivesColorsBackground300,
-    )
+LinearProgressIndicator(
+progress = progress,
+modifier = modifier,
+color = KozmosColors.primitivesColorsTheme500,
+trackColor = KozmosColors.primitivesColorsBackground300,
+)
 }
 
     `}
+
 />

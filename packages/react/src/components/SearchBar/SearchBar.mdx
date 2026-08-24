@@ -36,12 +36,11 @@ import { KozmosSearchBar } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosSearchBar: View {
-    var body: some View {
-        Text("SearchBar Content placeholder")
-    }
-}
-    `}
+KozmosSearchBar(
+text: .constant(""),
+placeholder: "Search places"
+)
+`}
     kotlin={`
 package com.kozmos.components.searchbar
 
@@ -69,13 +68,13 @@ import androidx.compose.ui.text.input.ImeAction
 
 @Composable
 fun KozmosSearchBar(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onClear: (() -> Unit)? = null,
-    placeholder: String = "Search...",
-    modifier: Modifier = Modifier
+value: String,
+onValueChange: (String) -> Unit,
+onClear: (() -> Unit)? = null,
+placeholder: String = "Search...",
+modifier: Modifier = Modifier
 ) {
-    val trackEvent = LocalKozmosAnalytics.current
+val trackEvent = LocalKozmosAnalytics.current
 
     Surface(
         modifier = modifier.fillMaxWidth().padding(horizontal = KozmosDimensions.primitivesLayoutSpacing200, vertical = KozmosDimensions.primitivesLayoutSpacing100),
@@ -120,7 +119,9 @@ fun KozmosSearchBar(
             )
         )
     }
+
 }
 
     `}
+
 />

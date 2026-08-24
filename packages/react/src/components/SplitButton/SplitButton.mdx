@@ -36,12 +36,12 @@ import { KozmosSplitButton } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosSplitButton: View {
-    var body: some View {
-        Text("SplitButton Content placeholder")
-    }
-}
-    `}
+KozmosSplitButton(
+label: "Export",
+mainAction: {},
+menuItems: [("CSV", {}), ("PDF", {})]
+)
+`}
     kotlin={`
 package com.kozmos.components.splitbutton
 
@@ -72,12 +72,12 @@ data class SplitContextMenuItem(val label: String, val onClick: () -> Unit)
 
 @Composable
 fun KozmosSplitButton(
-    label: String,
-    onMainClick: () -> Unit,
-    menuItems: List<SplitContextMenuItem>,
-    modifier: Modifier = Modifier
+label: String,
+onMainClick: () -> Unit,
+menuItems: List<SplitContextMenuItem>,
+modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
+var expanded by remember { mutableStateOf(false) }
 
     Row(modifier = modifier) {
         Button(
@@ -110,7 +110,9 @@ fun KozmosSplitButton(
             }
         }
     }
+
 }
 
     `}
+
 />

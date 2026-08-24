@@ -36,12 +36,8 @@ import { KozmosBackdrop } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosBackdrop: View {
-    var body: some View {
-        Text("Backdrop Content placeholder")
-    }
-}
-    `}
+KozmosBackdrop(visible: true, onTap: {})
+`}
     kotlin={`
 package com.kozmos.components.backdrop
 
@@ -58,23 +54,24 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosBackdrop(
-    visible: Boolean = true,
-    onTap: () -> Unit = {},
-    modifier: Modifier = Modifier
+visible: Boolean = true,
+onTap: () -> Unit = {},
+modifier: Modifier = Modifier
 ) {
-    if (visible) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(KozmosColors.primitivesColorsBackground800.copy(alpha = 0.4f))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onTap
-                )
-        )
-    }
+if (visible) {
+Box(
+modifier = modifier
+.fillMaxSize()
+.background(KozmosColors.primitivesColorsBackground800.copy(alpha = 0.4f))
+.clickable(
+interactionSource = remember { MutableInteractionSource() },
+indication = null,
+onClick = onTap
+)
+)
+}
 }
 
     `}
+
 />

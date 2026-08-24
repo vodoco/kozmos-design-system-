@@ -36,25 +36,29 @@ import { KozmosIcon } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosIcon: View {
-    var body: some View {
-        Text("Icon Content placeholder")
-    }
-}
-    `}
+KozmosIcon(
+"bell",
+size: .md,
+color: .default,
+accessibilityLabel: "Notifications"
+)
+`}
     kotlin={`
-package com.kozmos.components.icon
-
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import com.kozmos.components.icon.KozmosIcon
+import com.kozmos.components.icon.KozmosIconColor
+import com.kozmos.components.icon.KozmosIconSize
 
 @Composable
-fun KozmosIcon(
-    name: String,
-    modifier: Modifier = Modifier
-) {
-    // Placeholder
+fun IconExample() {
+    KozmosIcon(
+        name = "bell-01",
+        size = KozmosIconSize.Md,
+        color = KozmosIconColor.Default,
+        contentDescription = "Notifications"
+    )
 }
 
     `}
+
 />

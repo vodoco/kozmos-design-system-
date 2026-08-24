@@ -1,94 +1,136 @@
-import React from 'react';
-import { cn } from '../../utils';
-import { Button } from '../Button';
-import { Plus, Minus, Compass, Focus } from 'lucide-react';
-import { useKozmosAnalytics } from '../../utils/analytics';
+import React from "react";
+import type { UserLocationState } from "@kozmos/product-contracts";
+import { cn } from "../../utils";
+import { MapControlButton } from "../MapControlButton";
+import { Plus, Minus, Compass, Focus } from "lucide-react";
+import { useKozmosAnalytics } from "../../utils/analytics";
 
 export interface MapControlsGroupProps extends React.HTMLAttributes<HTMLDivElement> {
-    onZoomIn?: () => void;
-    onZoomOut?: () => void;
-    onCompassReset?: () => void;
-    onMyLocation?: () => void;
-    compassBearing?: number;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onCompassReset?: () => void;
+  onMyLocation?: () => void;
+  compassBearing?: number;
+  label?: string;
+  locationState?: UserLocationState;
+  locationLabel?: string;
+  locationStateLabel?: string;
+  locationPresentation?: "icon-only" | "labelled";
 }
 
-const MapControlsGroup = React.forwardRef<HTMLDivElement, MapControlsGroupProps>(
-    ({ className, onZoomIn, onZoomOut, onCompassReset, onMyLocation, compassBearing = 0, ...props }, ref) => {
-        const { trackEvent } = useKozmosAnalytics();
+const MapControlsGroup = React.forwardRef<
+  HTMLDivElement,
+  MapControlsGroupProps
+>(
+  (
+    {
+      className,
+      onZoomIn,
+      onZoomOut,
+      onCompassReset,
+      onMyLocation,
+      compassBearing = 0,
+      label = "Map controls",
+      locationState = "off",
+      locationLabel = "Focus location",
+      locationStateLabel,
+      locationPresentation = "icon-only",
+      ...props
+    },
+    ref,
+  ) => {
+    const { trackEvent } = useKozmosAnalytics();
 
-        const handleZoomIn = () => {
-             trackEvent('MapControls', 'zoom_in', {});
-             onZoomIn?.();
-        };
+    const handleZoomIn = () => {
+      trackEvent("MapControls", "zoom_in", {});
+      onZoomIn?.();
+    };
 
-        const handleZoomOut = () => {
-             trackEvent('MapControls', 'zoom_out', {});
-             onZoomOut?.();
-        };
+    const handleZoomOut = () => {
+      trackEvent("MapControls", "zoom_out", {});
+      onZoomOut?.();
+    };
 
-        return (
-            <div ref={ref} className={cn('flex flex-col gap-2 relative pointer-events-auto', className)} {...props}>
-                {/* Zoom Cluster */}
-                <div className="flex flex-col bg-white/70 dark:bg-black/70 backdrop-blur-2xl ring-1 ring-black/5 dark:ring-white/10 rounded-[length:var(--primitives-radius-lg)] shadow-2xl overflow-hidden w-11">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-full h-11 rounded-none border-b border-border/50 hover:bg-secondary text-foreground"
-                        onClick={handleZoomIn}
-                        aria-label="Zoom In"
-                    >
-                        <Plus className="w-5 h-5" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-full h-11 rounded-none hover:bg-secondary text-foreground"
-                        onClick={handleZoomOut}
-                        aria-label="Zoom Out"
-                    >
-                        <Minus className="w-5 h-5" />
-                    </Button>
-                </div>
-
-                {/* Compass */}
-                {onCompassReset && (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-11 h-11 rounded-[length:var(--primitives-radius-lg)] bg-white/70 dark:bg-black/70 backdrop-blur-2xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 hover:bg-white/90 dark:hover:bg-black/90 text-foreground transition-all duration-300"
-                        onClick={() => {
-                            trackEvent('MapControls', 'compass_reset', {});
-                            onCompassReset();
-                        }}
-                        aria-label="Reset Bearing"
-                    >
-                        <Compass
-                            className="w-5 h-5 transition-transform duration-300"
-                            style={{ transform: `rotate(${compassBearing}deg)` }}
-                        />
-                    </Button>
+    return (
+      <div
+        ref={ref}
+        aria-label={label}
+        className={cn(
+          "relative flex flex-col gap-2 pointer-events-auto",
+          className,
+        )}
+        role="group"
+        {...props}
+      >
+        {/* Zoom Cluster */}
+        {(onZoomIn || onZoomOut) && (
+          <div className="flex w-11 flex-col overflow-hidden rounded-[var(--primitives-radius-lg)] bg-background/90 shadow-lg ring-1 ring-border backdrop-blur-2xl">
+            {onZoomIn && (
+              <MapControlButton
+                icon={<Plus className="h-5 w-5" />}
+                label="Zoom in"
+                variant="ghost"
+                className={cn(
+                  "w-full rounded-none text-foreground hover:bg-secondary",
+                  onZoomOut && "border-b border-border/50",
                 )}
+                onClick={handleZoomIn}
+              />
+            )}
+            {onZoomOut && (
+              <MapControlButton
+                icon={<Minus className="h-5 w-5" />}
+                label="Zoom out"
+                variant="ghost"
+                className="w-full rounded-none text-foreground hover:bg-secondary"
+                onClick={handleZoomOut}
+              />
+            )}
+          </div>
+        )}
 
-                {/* My Location */}
-                {onMyLocation && (
-                    <Button
-                        variant="default"
-                        size="icon"
-                        className="w-11 h-11 rounded-[length:var(--primitives-radius-lg)] shadow-md"
-                        onClick={() => {
-                            trackEvent('MapControls', 'my_location_triggered', {});
-                            onMyLocation();
-                        }}
-                        aria-label="Locate me"
-                    >
-                        <Focus className="w-5 h-5" />
-                    </Button>
-                )}
-            </div>
-        );
-    }
+        {/* Compass */}
+        {onCompassReset && (
+          <MapControlButton
+            icon={
+              <Compass
+                className="h-5 w-5 transition-transform duration-300"
+                style={{ transform: `rotate(${compassBearing}deg)` }}
+              />
+            }
+            label="Reset bearing"
+            variant="ghost"
+            className="rounded-[var(--primitives-radius-lg)] bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-2xl transition-all duration-300 hover:bg-background"
+            onClick={() => {
+              trackEvent("MapControls", "compass_reset", {});
+              onCompassReset();
+            }}
+          />
+        )}
+
+        {/* My Location */}
+        {onMyLocation && (
+          <MapControlButton
+            icon={<Focus className="h-5 w-5" />}
+            isLoading={locationState === "locating"}
+            label={locationLabel}
+            presentation={locationPresentation}
+            pressed={
+              locationState === "following" || locationState === "heading"
+            }
+            stateLabel={locationStateLabel}
+            className="rounded-[var(--primitives-radius-lg)] shadow-md"
+            onClick={() => {
+              trackEvent("MapControls", "my_location_triggered", {});
+              onMyLocation();
+            }}
+          />
+        )}
+      </div>
+    );
+  },
 );
 
-MapControlsGroup.displayName = 'MapControlsGroup';
+MapControlsGroup.displayName = "MapControlsGroup";
 
 export { MapControlsGroup };

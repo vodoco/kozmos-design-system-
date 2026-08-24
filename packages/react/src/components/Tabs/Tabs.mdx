@@ -36,12 +36,24 @@ import { KozmosTabs } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosTabs: View {
-    var body: some View {
-        Text("Tabs Content placeholder")
-    }
+KozmosTabs(selection: .constant("overview")) {
+KozmosTabsList {
+KozmosTabsTrigger(
+value: "overview",
+title: "Overview",
+selection: .constant("overview")
+)
 }
-    `}
+
+    KozmosTabsContent(
+        value: "overview",
+        selection: .constant("overview")
+    ) {
+        Text("Overview content")
+    }
+
+}
+`}
     kotlin={`
 package com.kozmos.components.tabs
 
@@ -66,40 +78,40 @@ import com.kozmos.tokens.KozmosDimensions
 
 @Composable
 fun KozmosTabs(
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit
+modifier: Modifier = Modifier,
+content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        content()
-    }
+Column(modifier = modifier.fillMaxWidth()) {
+content()
+}
 }
 
 @Composable
 fun KozmosTabsList(
-    modifier: Modifier = Modifier,
-    content: @Composable RowScope.() -> Unit
+modifier: Modifier = Modifier,
+content: @Composable RowScope.() -> Unit
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(KozmosColors.primitivesColorsBackground0),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        content()
-    }
+Row(
+modifier = modifier
+.fillMaxWidth()
+.background(KozmosColors.primitivesColorsBackground0),
+verticalAlignment = Alignment.CenterVertically
+) {
+content()
+}
 }
 
 @Composable
 fun RowScope.KozmosTabsTrigger(
-    value: String,
-    title: String,
-    selectedValue: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+value: String,
+title: String,
+selectedValue: String,
+onValueChange: (String) -> Unit,
+modifier: Modifier = Modifier
 ) {
-    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
-    val isSelected = value == selectedValue
-    
+val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+val isSelected = value == selectedValue
+
     Box(
         modifier = modifier
             .weight(1f)
@@ -124,21 +136,23 @@ fun RowScope.KozmosTabsTrigger(
             )
         }
     }
+
 }
 
 @Composable
 fun KozmosTabsContent(
-    value: String,
-    selectedValue: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+value: String,
+selectedValue: String,
+modifier: Modifier = Modifier,
+content: @Composable () -> Unit
 ) {
-    if (value == selectedValue) {
-        Box(modifier = modifier.padding(top = KozmosDimensions.primitivesLayoutSpacing100)) {
-            content()
-        }
-    }
+if (value == selectedValue) {
+Box(modifier = modifier.padding(top = KozmosDimensions.primitivesLayoutSpacing100)) {
+content()
+}
+}
 }
 
     `}
+
 />

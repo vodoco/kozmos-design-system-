@@ -36,12 +36,11 @@ import { KozmosStack } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosStack: View {
-    var body: some View {
-        Text("Stack Content placeholder")
-    }
+Stack(direction: .vertical, spacing: 8) {
+Text("First")
+Text("Second")
 }
-    `}
+`}
     kotlin={`
 package com.kozmos.components.stack
 
@@ -56,19 +55,19 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 enum class StackDirection {
-    Horizontal,
-    Vertical
+Horizontal,
+Vertical
 }
 
 @Composable
 fun KozmosStack(
-    modifier: Modifier = Modifier,
-    direction: StackDirection = StackDirection.Vertical,
-    spacing: Dp = com.kozmos.tokens.KozmosDimensions.primitivesLayoutSpacing100,
-    content: @Composable () -> Unit
+modifier: Modifier = Modifier,
+direction: StackDirection = StackDirection.Vertical,
+spacing: Dp = com.kozmos.tokens.KozmosDimensions.primitivesLayoutSpacing100,
+content: @Composable () -> Unit
 ) {
-    val arrangement = Arrangement.spacedBy(spacing)
-    
+val arrangement = Arrangement.spacedBy(spacing)
+
     when (direction) {
         StackDirection.Horizontal -> {
             Row(modifier = modifier, horizontalArrangement = arrangement) {
@@ -81,7 +80,9 @@ fun KozmosStack(
             }
         }
     }
+
 }
 
     `}
+
 />

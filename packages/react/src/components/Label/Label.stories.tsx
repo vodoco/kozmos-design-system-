@@ -1,25 +1,25 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { Label } from './Label';
+import type { Meta, StoryObj } from "@storybook/react";
+import { Label } from "./Label";
 
 const meta = {
-  title: 'Components/Label',
+  title: "Components/Label",
   component: Label,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
   },
-  } satisfies Meta<typeof Label>;
+} satisfies Meta<typeof Label>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    children: 'Label',
+    children: "Label",
   },
 };
 
 export const Outline: Story = {
   args: {
-    children: 'Outline',
+    children: "Outline",
   },
 };

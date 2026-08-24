@@ -36,12 +36,8 @@ import { KozmosSpinner } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosSpinner: View {
-    var body: some View {
-        Text("Spinner Content placeholder")
-    }
-}
-    `}
+KozmosSpinner()
+`}
     kotlin={`
 package com.kozmos.components.spinner
 
@@ -53,13 +49,14 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosSpinner(
-    modifier: Modifier = Modifier
+modifier: Modifier = Modifier
 ) {
-    CircularProgressIndicator(
-        modifier = modifier,
-        color = KozmosColors.primitivesColorsTheme500
-    )
+CircularProgressIndicator(
+modifier = modifier,
+color = KozmosColors.primitivesColorsTheme500
+)
 }
 
     `}
+
 />

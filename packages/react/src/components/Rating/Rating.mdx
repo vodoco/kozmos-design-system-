@@ -36,12 +36,8 @@ import { KozmosRating } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosRating: View {
-    var body: some View {
-        Text("Rating Content placeholder")
-    }
-}
-    `}
+KozmosRating(value: .constant(4), max: 5)
+`}
     kotlin={`
 package com.kozmos.components.rating
 
@@ -64,17 +60,17 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosRating(
-    value: Int,
-    onValueChange: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-    max: Int = 5,
-    readOnly: Boolean = false
+value: Int,
+onValueChange: (Int) -> Unit,
+modifier: Modifier = Modifier,
+max: Int = 5,
+readOnly: Boolean = false
 ) {
-    Row(modifier = modifier) {
-        repeat(max) { index ->
-            val ratingValue = index + 1
-            val isFilled = ratingValue <= value
-            
+Row(modifier = modifier) {
+repeat(max) { index ->
+val ratingValue = index + 1
+val isFilled = ratingValue <= value
+
             Icon(
                 imageVector = if (isFilled) Icons.Filled.Star else Icons.Outlined.Star,
                 contentDescription = null,
@@ -88,7 +84,9 @@ fun KozmosRating(
             )
         }
     }
+
 }
 
     `}
+
 />

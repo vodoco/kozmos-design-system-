@@ -10,7 +10,7 @@ figma.connect(
         True: true,
         False: false,
       }),
-      children: figma.string("Container Text"),
+      children: figma.slot("Content Slot") ?? figma.children(["Content Slot"]),
     },
     example: ({ centered, children }) => (
       <Container centered={centered}>{children}</Container>

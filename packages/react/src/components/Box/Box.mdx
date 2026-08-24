@@ -36,12 +36,10 @@ import { KozmosBox } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosBox: View {
-    var body: some View {
-        Text("Box Content placeholder")
-    }
+Box {
+Text("Content")
 }
-    `}
+`}
     kotlin={`
 package com.kozmos.components.box
 
@@ -51,13 +49,14 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun KozmosBox(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+modifier: Modifier = Modifier,
+content: @Composable () -> Unit
 ) {
-    Box(modifier = modifier) {
-        content()
-    }
+Box(modifier = modifier) {
+content()
+}
 }
 
     `}
+
 />

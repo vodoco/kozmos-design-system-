@@ -36,12 +36,11 @@ import { KozmosToggleButton } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosToggleButton: View {
-    var body: some View {
-        Text("ToggleButton Content placeholder")
-    }
-}
-    `}
+KozmosToggleButton(
+isOn: .constant(false),
+label: "Notifications"
+)
+`}
     kotlin={`
 package com.kozmos.components.togglebutton
 
@@ -68,30 +67,30 @@ import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
 enum class KozmosToggleButtonVariant {
-    Default, Outline
+Default, Outline
 }
 
 enum class KozmosToggleButtonSize {
-    Small, Default, Large
+Small, Default, Large
 }
 
 @Composable
 fun KozmosToggleButton(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    label: String? = null,
-    icon: ImageVector? = null,
-    variant: KozmosToggleButtonVariant = KozmosToggleButtonVariant.Default,
-    size: KozmosToggleButtonSize = KozmosToggleButtonSize.Default
+checked: Boolean,
+onCheckedChange: (Boolean) -> Unit,
+modifier: Modifier = Modifier,
+label: String? = null,
+icon: ImageVector? = null,
+variant: KozmosToggleButtonVariant = KozmosToggleButtonVariant.Default,
+size: KozmosToggleButtonSize = KozmosToggleButtonSize.Default
 ) {
-    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
-    val hPadding = when (size) {
-        KozmosToggleButtonSize.Small -> KozmosDimensions.primitivesLayoutSpacing150
-        KozmosToggleButtonSize.Default -> KozmosDimensions.primitivesLayoutSpacing200
-        KozmosToggleButtonSize.Large -> KozmosDimensions.primitivesLayoutSpacing300
-    }
-    
+val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+val hPadding = when (size) {
+KozmosToggleButtonSize.Small -> KozmosDimensions.primitivesLayoutSpacing150
+KozmosToggleButtonSize.Default -> KozmosDimensions.primitivesLayoutSpacing200
+KozmosToggleButtonSize.Large -> KozmosDimensions.primitivesLayoutSpacing300
+}
+
     val vPadding = when (size) {
         KozmosToggleButtonSize.Small -> KozmosDimensions.primitivesLayoutSpacing50
         KozmosToggleButtonSize.Default -> KozmosDimensions.primitivesLayoutSpacing100
@@ -118,9 +117,9 @@ fun KozmosToggleButton(
 
     Surface(
         checked = checked,
-        onCheckedChange = { 
+        onCheckedChange = {
             trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "ToggleButton", eventName = "toggle_pressed", properties = mapOf("pressed" to it.toString())))
-            onCheckedChange(it) 
+            onCheckedChange(it)
         },
         shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
         color = backgroundColor,
@@ -164,7 +163,9 @@ fun KozmosToggleButton(
             }
         }
     }
+
 }
 
     `}
+
 />

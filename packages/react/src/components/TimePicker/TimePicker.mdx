@@ -36,12 +36,11 @@ import { KozmosTimePicker } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosTimePicker: View {
-    var body: some View {
-        Text("TimePicker Content placeholder")
-    }
-}
-    `}
+KozmosTimePicker(
+selection: .constant(Date()),
+label: "Time"
+)
+`}
     kotlin={`
 package com.kozmos.components.timepicker
 
@@ -64,14 +63,14 @@ import java.util.Calendar
 
 @Composable
 fun KozmosTimePicker(
-    time: LocalTime?,
-    onTimeSelected: (LocalTime) -> Unit,
-    modifier: Modifier = Modifier,
-    label: String = "Select Time"
+time: LocalTime?,
+onTimeSelected: (LocalTime) -> Unit,
+modifier: Modifier = Modifier,
+label: String = "Select Time"
 ) {
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-    
+val context = LocalContext.current
+val calendar = Calendar.getInstance()
+
     if (time != null) {
         calendar.set(Calendar.HOUR_OF_DAY, time.hour)
         calendar.set(Calendar.MINUTE, time.minute)
@@ -104,7 +103,9 @@ fun KozmosTimePicker(
                 .clickable { timePickerDialog.show() }
         )
     }
+
 }
 
     `}
+
 />

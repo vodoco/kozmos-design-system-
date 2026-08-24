@@ -5,26 +5,48 @@ import { Label } from "../Label";
 export type FieldStatus = "default" | "error" | "warning" | "success";
 
 export interface FieldWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
+  description?: React.ReactNode;
+  descriptionId?: string;
   error?: boolean | string;
   errorId?: string;
   helperText?: string;
   helperId?: string;
+  hideLabel?: boolean;
   label?: string;
+  labelAction?: React.ReactNode;
   inputId?: string;
+  optionalText?: string;
+  required?: boolean;
   status?: FieldStatus;
   children: React.ReactNode;
+}
+
+function fieldMessageClass(status: FieldStatus) {
+  return cn(
+    "text-sm leading-5",
+    status === "error" && "text-destructive",
+    status === "warning" && "text-warning",
+    status === "success" && "text-success",
+    status === "default" && "text-muted-foreground",
+  );
 }
 
 export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
   (
     {
       className,
+      description,
+      descriptionId,
       error,
       errorId,
       helperText,
       helperId,
+      hideLabel,
       label,
+      labelAction,
       inputId,
+      optionalText,
+      required,
       status = "default",
       children,
       ...props
@@ -35,32 +57,59 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
     const message = isStringError ? error : helperText;
     const messageId = isStringError ? errorId : helperId;
     const messageStatus = isStringError ? "error" : status;
+    const showRequiredMark = required && !hideLabel;
+    const showOptionalText = Boolean(
+      !required && optionalText && label && !hideLabel,
+    );
 
     return (
       <div
         ref={ref}
-        className={cn("relative w-full flex flex-col gap-1.5", className)}
+        className={cn("relative flex w-full flex-col gap-1.5", className)}
+        data-status={messageStatus}
         {...props}
       >
         {label && (
-          <Label
-            htmlFor={inputId}
-            className="text-sm font-semibold text-foreground"
+          <div className={cn("flex items-baseline justify-between gap-3")}>
+            <Label
+              htmlFor={inputId}
+              className={cn(
+                "text-sm font-semibold text-foreground",
+                hideLabel && "sr-only",
+              )}
+            >
+              {label}
+              {showRequiredMark && (
+                <span
+                  aria-hidden="true"
+                  className="ml-0.5 text-destructive"
+                  data-slot="required-mark"
+                >
+                  *
+                </span>
+              )}
+            </Label>
+            {(showOptionalText || labelAction) && (
+              <span className="shrink-0 text-xs leading-5 text-muted-foreground">
+                {labelAction || optionalText}
+              </span>
+            )}
+          </div>
+        )}
+        {description && (
+          <p
+            id={descriptionId}
+            className="text-sm leading-5 text-muted-foreground"
           >
-            {label}
-          </Label>
+            {description}
+          </p>
         )}
         {children}
         {message && (
           <p
             id={messageId}
-            className={cn(
-              "text-sm",
-              messageStatus === "error" && "text-destructive",
-              messageStatus === "warning" && "text-warning",
-              messageStatus === "success" && "text-success",
-              messageStatus === "default" && "text-muted-foreground",
-            )}
+            className={fieldMessageClass(messageStatus)}
+            role={messageStatus === "error" ? "alert" : undefined}
           >
             {message}
           </p>
@@ -71,3 +120,6 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
 );
 
 FieldWrapper.displayName = "FieldWrapper";
+
+export type FormFieldProps = FieldWrapperProps;
+export const FormField = FieldWrapper;

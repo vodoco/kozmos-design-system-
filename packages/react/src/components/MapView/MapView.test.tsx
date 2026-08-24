@@ -1,10 +1,18 @@
-import { render, screen } from '@testing-library/react';
-import { MapView } from './MapView';
-import { describe, it, expect } from 'vitest';
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { MapView } from "./MapView";
 
-describe('MapView', () => {
-    it('renders children', () => {
-        render(<MapView><div>Map Content</div></MapView>);
-        expect(screen.getByText('Map Content')).toBeInTheDocument();
-    });
+describe("MapView", () => {
+  it("renders an accessible map host and its renderer content", () => {
+    render(
+      <MapView mapLabel="Ground floor map">
+        <div>Map renderer</div>
+      </MapView>,
+    );
+
+    expect(
+      screen.getByRole("region", { name: "Ground floor map" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Map renderer")).toBeInTheDocument();
+  });
 });
