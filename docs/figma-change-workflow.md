@@ -1,6 +1,6 @@
 # Figma Change Workflow
 
-Last checked: 2026-05-17
+Last checked: 2026-05-21
 
 ## Current Direction
 
@@ -58,7 +58,9 @@ After code merges, regenerate the manifest, update the Figma component, then upd
 4. If token-level, update `packages/tokens/src/tokens-light.json` and `packages/tokens/src/tokens-dark.json`, run `pnpm tokens:build`, then re-import foundations.
 5. If API-level, update React first, then iOS/Android as needed, then rebuild/update the Figma component.
 6. Run `pnpm figma:manifest` and `pnpm exec tsx scripts/skills/check-completion.ts --check`.
-7. Run `pnpm figma:publish:linked:dry` for the currently linked library components, or `pnpm figma:publish:dry` once all Code Connect files have real node IDs.
+7. Run `pnpm figma:publish:linked:dry` for the currently linked React library components.
+8. Run `pnpm figma:publish:native:linked:dry` for the SwiftUI and Compose linked mappings.
+9. Use root `pnpm figma:publish:dry` only after non-core scaffold mappings have real node IDs.
 
 ## Current Plugin Scope
 
@@ -67,11 +69,15 @@ After code merges, regenerate the manifest, update the Figma component, then upd
 - Import foundations from `docs/figma-foundations-payload.json`
 - Create foundation pages
 - Create local variables and modes
-- Create the first `Button / v1` component set
-- Update `Button / v1` in place while preserving its Code Connect node ID
+- Build/update the current 37 canonical Core component sets with unsuffixed names
+- Update existing component sets in place while preserving Code Connect node IDs
+- Apply shared text styles/token bindings
+- Reorganize the Components page without changing component set IDs
+- Build the transparent surface QA page
 - Audit the open Figma library and produce JSON for review
 
 Next useful plugin features:
 
-- Build the next first-batch components one at a time
-- Add controlled repair actions for missing variants
+- Keep the 37 Core sets clean as React, SwiftUI, and Compose APIs evolve
+- Add new platform-specific component sets only after the Core library stays stable
+- Add controlled repair actions for recurring audit findings

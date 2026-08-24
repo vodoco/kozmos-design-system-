@@ -1,6 +1,22 @@
 # Kozmos Figma Rebuild Plan
 
-Last checked: 2026-05-17
+Last checked: 2026-06-21
+
+## Current Checkpoint
+
+The original rebuild plan below is now mostly historical. The active state is:
+
+- `Kozmos DS - Core Library` remains the canonical Figma target.
+- `STATUS.md` reports Core at 68/68 across Web, Web tests, linked Web Code
+  Connect, iOS, linked iOS Code Connect, Android, and linked Android Code
+  Connect.
+- Current `.figma.*` mappings contain no `node-id=TBD` placeholders.
+- `pnpm figma:parse:linked`, `pnpm figma:parse:native:linked`,
+  `pnpm components:contract:check`, and `pnpm tokens:contrast:check` are the
+  local release gates before publishing linked Code Connect lanes.
+- Use this file for rebuild history and process shape. Use `STATUS.md`,
+  `docs/figma-library-manifest.json`, and the Figma plugin `Audit Library`
+  output for current go/no-go status.
 
 ## Current Figma Access
 
@@ -93,7 +109,7 @@ The GitHub Figma variable sync workflow is therefore gated behind the repository
 
 Use the local development plugin at `figma/foundations-importer/manifest.json` to import the payload into the open Figma file. This bypasses the missing Variables REST scope by using Figma's in-file Plugin API.
 
-The same plugin now includes **Build Button**, which creates the first `Button / v1` component set on the `Components` page and returns the URL-safe node ID needed for Code Connect.
+The same plugin now includes controlled Core component builders/updaters. Current canonical component set names are unsuffixed, such as `Button`, and Update should be preferred because it preserves the stable node ID needed for Code Connect.
 
 ### Phase 2: File Structure
 
@@ -104,38 +120,49 @@ Create a clean library structure:
 - `Foundations`
 - `Components`
 - `Utilities`
-- `Archive / Legacy Reference`
 
-Keep old assets in an archive/reference area instead of wiring Code Connect to outdated component APIs.
+Do not create new Archive / Legacy Reference content during rebuilds. If old assets are useful for comparison, keep them outside the canonical library surface or as a temporary manual reference, not as generated rebuild output.
 
-### Phase 3: First Component Batch
+### Phase 3: Current Core Component Batch
 
-Build and validate these first because matching React Code Connect scaffold files already exist:
+The current Core Figma library uses 37 canonical component-set mappings after SegmentedControl was linked. Text, Heading, and Label are maintained as typography styles/tokens rather than component sets.
 
+- Accordion
 - Alert
 - Avatar
 - Badge
+- Box
+- Breadcrumb
 - Button
 - Card
 - Checkbox
+- Chip
+- Container
+- Counter
 - Dialog
 - Drawer
-- FloatingActionButton
-- Grid
 - IconButton
 - Input
+- Link
+- List
 - Menu
+- Pagination
 - Popover
 - Progress
 - Radio
+- Search
 - Select
+- SegmentedControl
+- Separator
+- Skeleton
 - Slider
 - Spinner
-- SplitButton
 - Stack
 - Switch
+- Table
 - Tabs
-- ToggleButton
+- Textarea
+- Toast
 - Tooltip
 
 For each component:
@@ -146,27 +173,28 @@ For each component:
 4. Review the matching `.figma.tsx` scaffold against the actual component props.
 5. Capture the real Figma node ID.
 6. Replace `node-id=TBD` in the matching `.figma.tsx`.
-7. Run `pnpm --filter @kozmos/react figma:publish:dry`.
+7. Add SwiftUI and Compose `.figma` mappings when the native component API exists.
+8. Run `pnpm figma:publish:linked:dry` and `pnpm figma:publish:native:linked:dry`.
 
-Some first-batch scaffolds target subcomponents rather than the directory's default component, such as `DrawerContent`, `SelectTrigger`, and `RadioGroupItem`. Review these manually instead of relying only on the manifest prop comparison.
+Some mappings target subcomponents or variant-specific examples rather than the directory's default component, such as `DialogContent`, `MenuContent`, `SelectTrigger`, and `RadioGroupItem`. Multiple Code Connect chips for one Figma component are expected when those chips represent distinct framework/variant snippets.
 
 Button first-pass notes:
 
 - React `Button` exposes `variant`, `size`, `disabled`, and `isLoading`.
 - Storybook now includes the `glass` variant.
 - Code Connect maps Figma `State` to `disabled` and `isLoading`, avoiding separate boolean properties that would not drive visual state.
-- All React Code Connect scaffolds now point at the new `Kozmos DS - Core Library` file key; publishing remains blocked until real node IDs replace `node-id=TBD`.
-- `Button / v1` was audited in Figma as component set node `15:411` (`node-id=15-411`) with 84 variants and is now linked in React Code Connect.
+- All Core React, SwiftUI, and Compose linked Code Connect mappings now point at the new `Kozmos DS - Core Library` file key.
+- `Button` is audited in Figma as component set node `77:1055` (`node-id=77-1055`) with 84 variants and is linked in React, SwiftUI, and Compose Code Connect.
 - Designer change governance lives in `docs/figma-change-workflow.md`.
 - Icon strategy lives in `docs/figma-icon-strategy.md`; use the existing Simple Icons library as the artwork source and expose icon slots from Kozmos components.
 
 ### Phase 4: Remaining Web Coverage
 
-After the first 25 are connected, create Code Connect files for the remaining React components and prioritize the documented components with stories/tests first.
+Root `pnpm figma:publish:dry` is still blocked by non-core scaffold mappings such as Grid, SplitButton, ToggleButton, and FloatingActionButton. Treat those as future library expansion work rather than Core release blockers.
 
 ### Phase 5: Native Code Connect
 
-The iOS and Android `.figma.*` files are currently placeholders. Generate real mappings after the React/Figma component API stabilizes so native mappings inherit the same component naming and variant model.
+The 37 Core iOS and Android `.figma.*` mappings are now linked. Future native work should focus on API parity where Figma/Web expose props that native components do not yet expose, such as Slider label/status behavior.
 
 ## CI Visual Regression Strategy
 
@@ -180,9 +208,12 @@ Required CI starts Storybook once and runs React interaction tests plus Axe gove
 pnpm figma:manifest
 pnpm --filter @kozmos/tokens build
 pnpm tsx scripts/skills/check-completion.ts --check
-pnpm --filter @kozmos/react figma:publish:dry
+pnpm figma:plugin:check
+pnpm components:contract:check
+pnpm figma:publish:linked:dry
+pnpm figma:publish:native:linked:dry
 pnpm build
 pnpm test
 ```
 
-`figma:publish:dry` is expected to fail fast until real Figma node IDs replace `node-id=TBD`.
+Root `figma:publish:dry` is expected to fail fast until non-Core placeholders receive real Figma node IDs or are excluded from the broad publish lane.

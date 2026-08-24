@@ -45,6 +45,9 @@ jobs:
       - name: Verify Component Contracts
         run: pnpm components:contract:check
 
+      - name: Verify Token Contrast Contracts
+        run: pnpm tokens:contrast:check
+
       - name: Parse React Code Connect
         run: pnpm figma:parse:linked
 
