@@ -1,0 +1,140 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as ComboboxStories from './Combobox.stories';
+
+<Meta of={ComboboxStories} />
+
+# Combobox
+
+A single-select field that filters its options as the user types.
+
+## Usage
+
+Use it when the list is too long to scan comfortably in a `Select` — roughly a
+dozen options or more:
+
+- Country, city, or venue pickers
+- Assigning a person from a directory
+- Any list where the user knows what they want and would rather type it
+
+For a short, fixed list use `Select`; the filter input is overhead there. For
+choosing several values use `MultiSelect`.
+
+`onValueChange` receives both the value and the matching option, so there is no
+need to look the option up again by id.
+
+Set `emptyText` to something that tells the user what to do next — "No venues
+match that name" beats "No results".
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { Combobox } from '@kozmos/react';
+
+<Combobox
+  label="Venue"
+  options={venues}
+  emptyText="No venues match that name"
+  onValueChange={(value, option) => selectVenue(option)}
+  clearable
+/>
+
+// Controlled, with custom filtering
+<Combobox
+  label="Venue"
+  options={venues}
+  value={value}
+  inputValue={query}
+  onInputValueChange={setQuery}
+  filterOption={(option, input) =>
+    option.label.toLowerCase().includes(input.toLowerCase())
+  }
+/>
+  `}
+  vue={`
+<script setup>
+import { KozmosCombobox } from "@kozmos/vue"
+import { ref } from "vue"
+
+const venue = ref("")
+const venues = [
+  { value: "cafe", label: "Kozmos Cafe" },
+  { value: "atrium", label: "North Atrium" },
+]
+</script>
+
+<template>
+  <KozmosCombobox
+    label="Venue"
+    :options="venues"
+    :value="venue"
+    emptyText="No venues match that name"
+    @valueChange="(value) => (venue = value)"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct VenuePicker: View {
+    @State private var venue = ""
+    @State private var query = ""
+
+    var body: some View {
+        KozmosCombobox(
+            value: $venue,
+            inputValue: $query,
+            options: venues,
+            label: "Venue",
+            placeholder: "Search venues",
+            emptyText: "No venues match that name",
+            clearable: true
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.*
+import com.kozmos.components.combobox.KozmosCombobox
+
+@Composable
+fun VenuePicker(options: List<KozmosComboboxOption>) {
+    var venue by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf("") }
+
+    KozmosCombobox(
+        value = venue,
+        onValueChange = { venue = it },
+        inputValue = query,
+        onInputValueChange = { query = it },
+        options = options,
+        label = "Venue",
+        placeholder = "Search venues"
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- The listbox is linked to the input, so the active option is announced as the
+  user arrows through it.
+- Typing filters but never silently changes the selection; committing is an
+  explicit choice.
+- `emptyText` is announced when filtering empties the list, so the absence of
+  results is not conveyed only by an empty box.
+
+## Stories
+
+### Default
+<Canvas of={ComboboxStories.Default} />
+
+### With Validation
+<Canvas of={ComboboxStories.WithValidation} />

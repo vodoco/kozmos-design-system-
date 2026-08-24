@@ -1,0 +1,124 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as ListboxStories from './Listbox.stories';
+
+<Meta of={ListboxStories} />
+
+# Listbox
+
+An always-visible list of selectable options, in single or multiple mode.
+
+## Usage
+
+Use it when the options should stay on screen rather than hide behind a trigger:
+
+- A filter panel beside results
+- A settings pane where the current choice should always be readable
+- The list body inside a larger composed control
+
+If the list should collapse to a trigger, use `Select`, `Combobox`, or
+`MultiSelect` — those own their own popover. `Listbox` is deliberately just the
+list, so it composes inside them and inside your own surfaces.
+
+`onValueChange` receives the new value and the option that caused the change. In
+`multiple` mode the value is an array; in single mode it is a string. Read the
+mode from your own state rather than inferring it from the value's type — an
+array of one is ambiguous otherwise.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { Listbox } from '@kozmos/react';
+
+<Listbox
+  options={floors}
+  value={floor}
+  onValueChange={(value) => setFloor(value as string)}
+/>
+
+// Multiple selection
+<Listbox
+  options={amenities}
+  multiple
+  value={selected}
+  onValueChange={(value) => setSelected(value as string[])}
+/>
+  `}
+  vue={`
+<script setup>
+import { KozmosListbox } from "@kozmos/vue"
+import { ref } from "vue"
+
+const floor = ref("l1")
+const floors = [
+  { value: "l1", label: "Level 1" },
+  { value: "l2", label: "Level 2" },
+]
+</script>
+
+<template>
+  <KozmosListbox
+    :options="floors"
+    :value="floor"
+    @valueChange="(value) => (floor = value)"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct FloorList: View {
+    @State private var selected: [String] = ["l1"]
+
+    var body: some View {
+        KozmosListbox(
+            options: floors,
+            selectedValues: $selected,
+            multiple: false,
+            maxHeight: 280
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.*
+import com.kozmos.components.listbox.KozmosListbox
+
+@Composable
+fun FloorList(options: List<KozmosComboboxOption>) {
+    var selected by remember { mutableStateOf(listOf("l1")) }
+
+    KozmosListbox(
+        options = options,
+        selectedValues = selected,
+        onSelectionChange = { selected = it },
+        multiple = false,
+        maxHeight = 280.dp
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- Renders as a listbox with `option` children, so selection state is announced
+  rather than inferred from styling.
+- Arrow keys move the active option and Home / End jump to the ends; selection
+  in single mode follows focus.
+- `maxHeight` scrolls the list rather than clipping it, keeping every option
+  reachable by keyboard.
+
+## Stories
+
+### Single
+<Canvas of={ListboxStories.Single} />
+
+### Multiple
+<Canvas of={ListboxStories.Multiple} />
