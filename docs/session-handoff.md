@@ -35,8 +35,10 @@ All gates pass on a clean checkout as of this handoff:
 ### CI status
 
 Local gates green does not mean CI green — the two disagreed for most of this
-branch's life. Open PR: `vodoco/kozmos-design-system-#1`, 62 commits, rebased on
-current `main`, mergeable.
+branch's life. Open PR: `vodoco/kozmos-design-system-#1`, rebased on current
+`main`, mergeable. (Commit and file counts are deliberately not quoted here —
+updating this doc changes them, so any number written down is stale on arrival.
+Read them off the PR.)
 
 Last fully settled run (`6ce77f5`), plus the re-run after the bundle fix
 (`0a6e08a`):
