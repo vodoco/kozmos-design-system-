@@ -1,6 +1,7 @@
 # Session Handoff
 
-Written 2026-08-24. Everything below was verified by running it, not recalled.
+Written 2026-08-24, updated 2026-08-25. Everything below was verified by
+running it, not recalled.
 Branch: `codex/wave-2-figma-components`.
 
 ## 1. Verified State
@@ -23,6 +24,7 @@ All gates pass on a clean checkout as of this handoff:
 | -------------------------------------------- | -------------------------------------------- |
 | `pnpm typecheck` / `lint` / `test` / `build` | exit 0                                       |
 | `components:contract:check`                  | ok                                           |
+| `docs:snippets:check`                        | ok (319 identifiers, 321 snippets)           |
 | `components:variant:check`                   | ok (97 scanned, 1 gap)                       |
 | `tokens:contrast:check`                      | ok (50 pairs, light + dark)                  |
 | `figma:plugin:check`                         | ok                                           |
@@ -33,7 +35,7 @@ All gates pass on a clean checkout as of this handoff:
 ### CI status
 
 Local gates green does not mean CI green — the two disagreed for most of this
-branch's life. Open PR: `vodoco/kozmos-design-system-#1`, 58 commits, rebased on
+branch's life. Open PR: `vodoco/kozmos-design-system-#1`, 62 commits, rebased on
 current `main`, mergeable.
 
 Last fully settled run (`6ce77f5`), plus the re-run after the bundle fix
@@ -59,6 +61,10 @@ Resist "fixing" this in the workflow. The Web step already skips when the token
 is _absent_, and it would be easy to extend that to swallow auth errors too —
 but then a genuinely broken Code Connect mapping passes silently, which is the
 only thing that step exists to catch.
+
+The Web job also gained a `Verify Documentation Snippets` step (see §3). It runs
+before the Figma steps, so it is exercised on every run despite the token
+blockage.
 
 Two CI failures were real and are fixed:
 
@@ -173,6 +179,43 @@ formatting rather than on code:
   contains the entry. Same class as `a91cdce`. String assertions now normalise
   quotes on both sides.
 
+### Storybook docs, and a check that they are not fiction
+
+MDX coverage is 97/97. Fourteen components had stories but no docs page — seven
+added by this branch (ColorPicker, Combobox, DateRangePicker, Listbox,
+MultiSelect, NumberInput, PasswordInput) and seven older ones (FeedbackCard,
+FieldWrapper, MapControlsGroup, MapOverlay, NavigationAnnouncer,
+SaveLocationCard, ScrollArea).
+
+Each follows the `Input.mdx` shape: Usage, Implementation with
+`<PlatformSnippets>` across React/Vue/SwiftUI/Compose, and a Canvas per story.
+Note that most of the existing corpus is far thinner — 66 of the 97 files have
+only an `## Implementation` section — so these sit above the current median
+rather than matching it. They also carry an `## Accessibility` section, which no
+previous MDX had; the justification is that the Figma plugin's `COMPONENT_DOCS`
+already models an accessibility array per component, so Storybook was the one
+place missing it.
+
+**Four of the first seven pages named types that do not exist**, and it took a
+manual cross-check against the native sources to notice: `KozmosComboboxOption`
+(really `KozmosListboxOption`), `KozmosDateRange` (really
+`KozmosDateRangeValue`), `KozmosOverlayPosition.TopLeft` in a Kotlin block
+(really `OverlayPosition.TOP_LEFT`), and a `String` bound where SwiftUI wants a
+`Date`. Parameter _names_ had been read from the real sources; the _types_ were
+filled in from what looked idiomatic, and looked fine.
+
+Hence `pnpm docs:snippets:check` (`scripts/check-doc-snippets.mjs`), now a CI
+step. It resolves every `Kozmos*` identifier in a snippet against **that
+platform's own sources** — the per-platform part is the point, since a global
+search passes `KozmosOverlayPosition` in a Kotlin block because the type exists
+in Swift. Identifiers a snippet declares itself are skipped, which matters:
+several examples define their own type (`struct KozmosSwitchStyle: ToggleStyle`
+in Switch.mdx), and the first version of the check failed CI on three innocent
+files because of it.
+
+It catches identifiers, not types, so the SwiftUI `Date`-versus-`String` mistake
+would still slip through. Closing that means compiling the snippets.
+
 ### Getting CI to tell the truth
 
 The branch had never had a green CI run. Four of six jobs failed. Two were real
@@ -258,6 +301,14 @@ These need a human call; none are blocked on code.
 
 ## 6. Known Risks And Gotchas
 
+- **Prose and code samples are unverified by default.** The MDX platform
+  snippets are template strings; nothing compiled them, and four wrong type
+  names shipped looking perfectly plausible. `docs:snippets:check` closes the
+  identifier half of that. The same caution applies to the Figma plugin's
+  `COMPONENT_DOCS` strings and to this handoff: anything not executed by a gate
+  is only as good as the last person who read it. The stale LocationPin
+  "dashed outline" line survived a commit that changed the behaviour for exactly
+  this reason.
 - **Local gates green is not CI green.** They disagreed here for two independent
   reasons at once: an uncommitted working tree, and checks that only exist in CI
   (bundle budget, Code Connect dry-runs against the live Figma file). Read the
