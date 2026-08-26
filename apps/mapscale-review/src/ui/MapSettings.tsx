@@ -1,4 +1,4 @@
-import { Help, Opacity } from "./icons";
+import { Help, Transparency } from "./icons";
 import {
   Popover,
   PopoverTrigger,
@@ -178,17 +178,14 @@ export function MapSettings({
          * Everything decided before survives: no "Transparency" label, double-click returns to the
          * 50% default, shown only while the overlay is on.
          *
-         * ⚠️ **That last line used to say the ◐ was an inline SVG because no transparency glyph
-         * existed in @kozmos/icons or the Pointr Icon Library.** It is not, and one does — the
-         * comment outlived the fix. Both symbols on this row are live library instances (see
-         * `./icons`): `contrast-02` for the ◐ and `help-circle` for the (?).
+         * Both symbols on this row are live Pointr Icon Library instances (see `./icons`):
+         * `transparency` — the checkerboard — and `help-circle` for the (?).
          *
-         * 🔴 **The library also ships a glyph literally named `transparency`** — the checkerboard —
-         * which is the semantically correct symbol for this control and was missed by the
-         * 2026-08-18 search. It is NOT used, and deliberately: judged at the size it ships at, the
-         * checkerboard collapses into a dark blob at 14px and only resolves around 24px, while
-         * `contrast-02` stays legible. Right meaning, wrong size. Recorded so the next person does
-         * not "fix" it without re-judging at 14px first.
+         * ⚠️ **The checkerboard is 24px and the help-circle beside it is 14. That is deliberate**,
+         * and it is the ruling from 2026-08-24: at 16px the checker's cells are 6px and it
+         * collapses into a filled square with a notch, so *"the fix is the button, not the mark"*.
+         * A lighter one-quadrant variant was tried and rejected — at 16px it reads as Cut-out.
+         * Shrinking this to match its neighbour re-opens a question that was already closed.
          */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <label
@@ -243,8 +240,8 @@ export function MapSettings({
                 <button
                   aria-label="Floor-plan transparency"
                   style={{
-                    width: 16,
-                    height: 16,
+                    width: 24,
+                    height: 24,
                     padding: 0,
                     border: "none",
                     background: "none",
@@ -254,10 +251,15 @@ export function MapSettings({
                     placeItems: "center",
                   }}
                 >
-                  {/* `contrast-02` from the Pointr Icon Library — the ◐. Recorded for two days
-                      as existing in no icon set; it was in Editor all along (see `./icons`). */}
-                  <Opacity
-                    size={14}
+                  {/* `transparency` from the Pointr Icon Library — drawn into it for this very
+                      control (2026-08-24), published 2026-08-25. 24px, not 14: see the note above.
+
+                      ⚠️ The Figma instance binds `Colors/foreground/800`; that token resolves to
+                      #c7cad1 in the CSS ramp, which is near-invisible on white, so this keeps the
+                      row's own muted ink and matches the (?) beside it. Worth reconciling — the
+                      two ramps disagree about which end of `foreground` is dark. */}
+                  <Transparency
+                    size={24}
                     style={{ color: "var(--primitives-colors-background-600)" }}
                   />
                 </button>

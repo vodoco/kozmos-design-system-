@@ -34,10 +34,25 @@ type IconProps = {
 };
 
 /**
+ * A path that is **filled** rather than stroked.
+ *
+ * Almost every library glyph is a stroked outline and the plain `string` form covers it. A few are
+ * not — `transparency` is two solid checker cells inside a stroked square — and rendering those
+ * with the shared `fill="none"` would turn a solid cell into an empty box.
+ */
+type IconPath = string | { d: string; filled: true };
+
+/**
  * One wrapper for every icon, so the convention cannot drift glyph by glyph. `currentColor` is the
  * whole colour story: nothing here names a colour, and every caller tints by setting `color`.
  */
-function icon(libraryName: string, node: string, paths: string[]) {
+function icon(
+  libraryName: string,
+  node: string,
+  paths: IconPath[],
+  /** Square-cornered glyphs need a mitre; the round default softens a checkerboard's corners. */
+  opts?: { linejoin?: "round" | "miter" },
+) {
   const Icon = ({ size = 24, className, style, label }: IconProps) => (
     <svg
       width={size}
@@ -47,7 +62,7 @@ function icon(libraryName: string, node: string, paths: string[]) {
       stroke="currentColor"
       strokeWidth={2}
       strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeLinejoin={opts?.linejoin ?? "round"}
       className={className}
       style={style}
       role={label ? "img" : undefined}
@@ -55,9 +70,13 @@ function icon(libraryName: string, node: string, paths: string[]) {
       aria-hidden={label ? undefined : true}
       focusable="false"
     >
-      {paths.map((d) => (
-        <path key={d} d={d} />
-      ))}
+      {paths.map((p) =>
+        typeof p === "string" ? (
+          <path key={p} d={p} />
+        ) : (
+          <path key={p.d} d={p.d} fill="currentColor" stroke="none" />
+        ),
+      )}
     </svg>
   );
   Icon.displayName = libraryName;
@@ -165,11 +184,34 @@ export const Help = icon("help-circle", "1007:10248", [
   "M9.09 9C9.33 8.33 9.79 7.77 10.4 7.41C11.01 7.05 11.73 6.92 12.43 7.04C13.13 7.16 13.76 7.52 14.22 8.06C14.67 8.61 14.92 9.29 14.92 10C14.92 12 11.92 13 11.92 13M12 17H12.01M22 12C22 17.52 17.52 22 12 22C6.48 22 2 17.52 2 12C2 6.48 6.48 2 12 2C17.52 2 22 6.48 22 12Z",
 ]);
 
-/** The ◐ that opens the floor-plan opacity card. Recorded for two days as existing nowhere. */
-export const Opacity = icon("contrast-02", "1007:11252", [
-  "M12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22Z",
-  "M12 18.5C15.59 18.5 18.5 15.59 18.5 12C18.5 8.41 15.59 5.5 12 5.5V18.5Z",
-]);
+/**
+ * The checkerboard that opens the floor-plan opacity card.
+ *
+ * ⚠️ **This is the glyph that was DRAWN INTO the library for this control** (2026-08-24) and
+ * published on 2026-08-25 — the library genuinely had no transparency mark before that. Its
+ * geometry is the library's own, read back off `transparency` (node `2171:24`): two solid 9×9
+ * checker cells at (3,3) and (12,12), inside a stroked 18×18 square. Square corners, hence the
+ * mitre.
+ *
+ * ⚠️ **It must be drawn at 24px.** At 16 the cells are 6px and it collapses into a filled square
+ * with a notch — that was found when it was drawn, and the ruling was *"the fix is the button, not
+ * the mark"*. A lighter one-quadrant variant was tried and rejected: at 16px it reads as Cut-out.
+ * So the button is 24px even though the help-circle beside it is a hairline 14. Do not shrink this
+ * to match its neighbour; that trade was already made in the other direction, deliberately.
+ *
+ * It replaced `contrast-02` (`1007:11252`), which was a stand-in adopted while the library had
+ * nothing — and which means *contrast*, not transparency.
+ */
+export const Transparency = icon(
+  "transparency",
+  "2171:24",
+  [
+    { d: "M3 3H12V12H3Z", filled: true },
+    { d: "M12 12H21V21H12Z", filled: true },
+    "M3 3H21V21H3Z",
+  ],
+  { linejoin: "miter" },
+);
 
 export const Ellipsis = icon("dots-horizontal", "1007:9867", [
   "M12 13C12.55 13 13 12.55 13 12C13 11.45 12.55 11 12 11C11.45 11 11 11.45 11 12C11 12.55 11.45 13 12 13Z",
