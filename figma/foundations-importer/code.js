@@ -42128,11 +42128,14 @@ async function updateFloorSelectorVariant(
     item.resizeWithoutConstraints(44, 44);
     item.cornerRadius = 6;
     item.strokes = [];
+    // theme/700 rather than theme/500: the label on this chip is
+    // foreground/1000, which flips per theme, while theme/500 is #135BEC in
+    // both. Pairing two flipping tokens keeps the label readable either way.
     item.fills = selected
       ? [
           paintFromVariable(
-            "Colors/theme/500",
-            "#135BEC",
+            "Colors/theme/700",
+            "#0D44C2",
             variableByName,
             stats,
           ),
@@ -42303,7 +42306,7 @@ function locationPinPalette(state) {
   if (state === "Disabled" || state === "OffFloor") {
     return { fill: "Colors/foreground/400", fallback: "#5D626F" };
   }
-  return { fill: "Colors/theme/500", fallback: "#135BEC" };
+  return { fill: "Colors/theme/700", fallback: "#0D44C2" };
 }
 
 function locationPinVariantCombinations() {
