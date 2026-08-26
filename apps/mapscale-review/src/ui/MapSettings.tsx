@@ -178,8 +178,17 @@ export function MapSettings({
          * Everything decided before survives: no "Transparency" label, double-click returns to the
          * 50% default, shown only while the overlay is on.
          *
-         * The ◐ glyph is an inline SVG — no transparency/opacity glyph in @kozmos/icons or the
-         * Pointr Icon Library (searched 2026-08-18): the D9 gap again.
+         * ⚠️ **That last line used to say the ◐ was an inline SVG because no transparency glyph
+         * existed in @kozmos/icons or the Pointr Icon Library.** It is not, and one does — the
+         * comment outlived the fix. Both symbols on this row are live library instances (see
+         * `./icons`): `contrast-02` for the ◐ and `help-circle` for the (?).
+         *
+         * 🔴 **The library also ships a glyph literally named `transparency`** — the checkerboard —
+         * which is the semantically correct symbol for this control and was missed by the
+         * 2026-08-18 search. It is NOT used, and deliberately: judged at the size it ships at, the
+         * checkerboard collapses into a dark blob at 14px and only resolves around 24px, while
+         * `contrast-02` stays legible. Right meaning, wrong size. Recorded so the next person does
+         * not "fix" it without re-judging at 14px first.
          */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <label
@@ -194,7 +203,9 @@ export function MapSettings({
           >
             Show Floor-plan
           </label>
-          {/* Inline SVG because @kozmos/icons ships no help/question glyph — the D9 gap again. */}
+          {/* `help-circle` from the Pointr Icon Library (see `./icons`) — this comment used to
+              claim it was an inline SVG for want of a glyph, which stopped being true when the
+              library was actually searched. */}
           <TooltipProvider delayDuration={150}>
             <Tooltip>
               <TooltipTrigger asChild>
