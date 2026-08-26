@@ -40,33 +40,28 @@ branch's life. Open PR: `vodoco/kozmos-design-system-#1`, rebased on current
 updating this doc changes them, so any number written down is stale on arrival.
 Read them off the PR.)
 
-Last fully settled run (`6ce77f5`), plus the re-run after the bundle fix
-(`0a6e08a`):
+Status on `61c09ca`, attempt 3, after the token was rotated on 2026-08-26:
 
-| Job              | Result      | Cause                     |
-| ---------------- | ----------- | ------------------------- |
-| `analyze-bundle` | **fixed**   | was ours — see below      |
-| `lighthouse`     | pass        | —                         |
-| `Run Chromatic`  | pass        | —                         |
-| Web Build & Test | **blocked** | Figma `403 Token expired` |
-| iOS Build        | **blocked** | Figma `403 Token expired` |
-| Android Build    | **blocked** | Figma `403 Token expired` |
+| Job              | Result   | Note                                          |
+| ---------------- | -------- | --------------------------------------------- |
+| `analyze-bundle` | pass     | was ours — budget raised, see below           |
+| `lighthouse`     | pass     | —                                             |
+| `Run Chromatic`  | pass     | —                                             |
+| iOS Build        | **pass** | Code Connect verified against Figma           |
+| Android Build    | **pass** | Code Connect verified against Figma           |
+| Web Build & Test | —        | last checked in progress; verify the same way |
 
-**The three blocked jobs need a credential, not a code change.** All die at the
-Code Connect dry-run with `Failed to fetch node info (403): 403 Token expired`.
-The repo's `FIGMA_ACCESS_TOKEN` Actions secret has expired. This is pre-existing,
-not something this branch introduced — `main`'s own CI run (`2d383f2`) fails
-identically on iOS and Android. Rotate the token in Figma, set it in the repo's
-Actions secrets, and re-run; nothing in the code is blocking these.
-
-Resist "fixing" this in the workflow. The Web step already skips when the token
-is _absent_, and it would be easy to extend that to swallow auth errors too —
-but then a genuinely broken Code Connect mapping passes silently, which is the
-only thing that step exists to catch.
+iOS and Android were confirmed to have genuinely run rather than skipped: the
+step logged `All Code Connect files are valid` and emitted no `Skipping`
+annotation. Do the same check rather than trusting the green — see §6 on why an
+empty secret produces a passing job that verified nothing.
 
 The Web job also gained a `Verify Documentation Snippets` step (see §3). It runs
-before the Figma steps, so it is exercised on every run despite the token
-blockage.
+before the Figma steps, so it is exercised regardless of token state.
+
+For most of this branch's life these three failed on an expired
+`FIGMA_ACCESS_TOKEN`, which was pre-existing on `main` rather than introduced
+here. §6 has the recurrence date and the procedure.
 
 Two CI failures were real and are fixed:
 
@@ -257,10 +252,6 @@ against the merged `package.json` files rather than resolved by hand.
 
 ## 4. Immediate Next Actions, In Order
 
-0. **Rotate `FIGMA_ACCESS_TOKEN`.** Three CI jobs are blocked on it and nothing
-   else, and the same expired token will block step 5's dry-runs locally. Do
-   this first or the rest of the list stalls at the end. Generate a fresh token
-   in Figma, set it in the repo's Actions secrets, re-run the three jobs.
 1. **Build the 18 new sets in Figma.** Use **Build** for these (they do not exist
    yet), then **Update** from then on. Keep the logs — each prints the URL-safe
    node ID, which the Code Connect step needs.
@@ -275,8 +266,8 @@ against the merged `package.json` files rather than resolved by hand.
 5. **Write the Code Connect files** for all 24 Product / SDK sets (React,
    SwiftUI, Compose) from the node IDs, replace the six native `// Placeholder`
    stubs, then run `figma:publish:linked:dry` and
-   `figma:publish:native:linked:dry`. Both need step 0 done — they are the same
-   commands CI is failing on.
+   `figma:publish:native:linked:dry`. These are the same commands CI runs, so
+   they need a working `FIGMA_ACCESS_TOKEN` in `.env` — see §6.
 6. **Dashboard items outside the design system** — raised but never scoped.
 
 ## 5. Open Decisions
@@ -302,6 +293,31 @@ These need a human call; none are blocked on code.
   Recorded in the set description; revisit if designers ask.
 
 ## 6. Known Risks And Gotchas
+
+- **`FIGMA_ACCESS_TOKEN` expires 24 November 2026.** When it lapses, three CI
+  jobs fail at their Code Connect step with `Failed to fetch node info (403):
+403 Token expired`, and `figma:publish:linked:dry` fails the same way locally.
+  Nothing names the cause, so it reads as a code failure; the previous lapse
+  cost most of a session. The fix is a new Figma personal access token scoped to
+  **`file_content:read`** and **`file_code_connect:write`** only, then:
+
+  ```bash
+  gh secret set FIGMA_ACCESS_TOKEN --repo vodoco/kozmos-design-system-
+  ```
+
+  Paste at the prompt. Do not route it through `.env` and a `$(grep ...)`
+  substitution — that is how the secret was once set to an empty string, and an
+  empty secret is worse than an expired one: the step's `if [ -z ... ]` guard
+  then skips Code Connect and the job goes **green without verifying anything**.
+  Put the same value in `.env` separately so local publishes work.
+
+  Two verification notes. `GET /v1/me` returns 403 with the scopes above and
+  that is correct — test `/v1/files/Yj4O8p6Y9h2Sa9zJVoAiVY/nodes?ids=4:4`
+  instead, which is what CI actually calls. And a green job is not proof the
+  step ran: check the log says `All Code Connect files are valid` and that no
+  `Skipping ...` annotation was emitted. The skip text also appears in the
+  `##[group]Run` block as echoed script source, which looks alarming and means
+  nothing.
 
 - **Prose and code samples are unverified by default.** The MDX platform
   snippets are template strings; nothing compiled them, and four wrong type
