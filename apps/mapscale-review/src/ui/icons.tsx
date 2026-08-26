@@ -40,7 +40,11 @@ type IconProps = {
  * not — `transparency` is two solid checker cells inside a stroked square — and rendering those
  * with the shared `fill="none"` would turn a solid cell into an empty box.
  */
-type IconPath = string | { d: string; filled: true };
+type IconPath =
+  | string
+  | { d: string; filled: true }
+  /** A dashed run — `split`'s cut line is dotted in the library and must stay dotted here. */
+  | { d: string; dash: string };
 
 /**
  * One wrapper for every icon, so the convention cannot drift glyph by glyph. `currentColor` is the
@@ -73,8 +77,10 @@ function icon(
       {paths.map((p) =>
         typeof p === "string" ? (
           <path key={p} d={p} />
-        ) : (
+        ) : "filled" in p ? (
           <path key={p.d} d={p.d} fill="currentColor" stroke="none" />
+        ) : (
+          <path key={p.d} d={p.d} strokeDasharray={p.dash} />
         ),
       )}
     </svg>
@@ -127,8 +133,24 @@ export const Transform = icon("transform", "1007:11468", [
   "M19 7V17M5 7V17M17 5L7 5M17 19H7M4.6 7H5.4C5.96 7 6.24 7 6.45 6.89C6.64 6.8 6.8 6.64 6.89 6.45C7 6.24 7 5.96 7 5.4V4.6C7 4.04 7 3.76 6.89 3.55C6.8 3.36 6.64 3.2 6.45 3.11C6.24 3 5.96 3 5.4 3H4.6C4.04 3 3.76 3 3.55 3.11C3.36 3.2 3.2 3.36 3.11 3.55C3 3.76 3 4.04 3 4.6V5.4C3 5.96 3 6.24 3.11 6.45C3.2 6.64 3.36 6.8 3.55 6.89C3.76 7 4.04 7 4.6 7ZM4.6 21H5.4C5.96 21 6.24 21 6.45 20.89C6.64 20.8 6.8 20.64 6.89 20.45C7 20.24 7 19.96 7 19.4V18.6C7 18.04 7 17.76 6.89 17.55C6.8 17.36 6.64 17.2 6.45 17.11C6.24 17 5.96 17 5.4 17H4.6C4.04 17 3.76 17 3.55 17.11C3.36 17.2 3.2 17.36 3.11 17.55C3 17.76 3 18.04 3 18.6V19.4C3 19.96 3 20.24 3.11 20.45C3.2 20.64 3.36 20.8 3.55 20.89C3.76 21 4.04 21 4.6 21ZM18.6 7H19.4C19.96 7 20.24 7 20.45 6.89C20.64 6.8 20.8 6.64 20.89 6.45C21 6.24 21 5.96 21 5.4V4.6C21 4.04 21 3.76 20.89 3.55C20.8 3.36 20.64 3.2 20.45 3.11C20.24 3 19.96 3 19.4 3H18.6C18.04 3 17.76 3 17.55 3.11C17.36 3.2 17.2 3.36 17.11 3.55C17 3.76 17 4.04 17 4.6V5.4C17 5.96 17 6.24 17.11 6.45C17.2 6.64 17.36 6.8 17.55 6.89C17.76 7 18.04 7 18.6 7ZM18.6 21H19.4C19.96 21 20.24 21 20.45 20.89C20.64 20.8 20.8 20.64 20.89 20.45C21 20.24 21 19.96 21 19.4V18.6C21 18.04 21 17.76 20.89 17.55C20.8 17.36 20.64 17.2 20.45 17.11C20.24 17 19.96 17 19.4 17H18.6C18.04 17 17.76 17 17.55 17.11C17.36 17.2 17.2 17.36 17.11 17.55C17 17.76 17 18.04 17 18.6V19.4C17 19.96 17 20.24 17.11 20.45C17.2 20.64 17.36 20.8 17.55 20.89C17.76 21 18.04 21 18.6 21Z",
 ]);
 
-export const Split = icon("scissors-cut-01", "1007:11444", [
-  "M20 4L8.5 15.5M8.5 8.5L20 20M17.5 12H17.51M22 12H22.01M6 3C7.66 3 9 4.34 9 6C9 7.66 7.66 9 6 9C4.34 9 3 7.66 3 6C3 4.34 4.34 3 6 3ZM6 15C7.66 15 9 16.34 9 18C9 19.66 7.66 21 6 21C4.34 21 3 19.66 3 18C3 16.34 4.34 15 6 15Z",
+/**
+ * Split — the shape, and the dotted line parting it.
+ *
+ * ⚠️ **`scissors-cut-01` was a stand-in and is gone** (found by the 2026-08-26 audit of the design
+ * record against this file). A purpose-drawn `split` was added to the Pointr Icon Library and both
+ * design files have specified it since; the app was the half that never caught up — the same shape
+ * of drift as `contrast-02` standing in for `transparency`.
+ *
+ * The scissors were wrong twice over: they name the *implement* rather than the act, and at 24px a
+ * pair of scissors beside `cut-out` says "cut" twice with nothing to tell them apart. This says
+ * what Split does — one shape, one line through it, two pieces.
+ *
+ * Geometry read back off the library (node `2142:28`): a 16×16 square at (4,4) and a dotted run
+ * from (1,12) to (23,12), dash 1/4.
+ */
+export const Split = icon("split", "2142:28", [
+  "M4 4H20V20H4Z",
+  { d: "M1 12H23", dash: "1 4" },
 ]);
 
 /** Drawn into the library 2026-08-20 — a union, which `intersect-square` is not. */
