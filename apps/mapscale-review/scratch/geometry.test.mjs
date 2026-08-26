@@ -40,7 +40,7 @@ const BLOCKS = ["INK",
                 "BOX-ENGINE",
                 "GJRENDER-ENGINE", "GJSWAP-ENGINE",
                 "EDGE-ENGINE", "PATHS-ENGINE", "REACH-ENGINE",
-                "PREVIEW-ENGINE"];
+                "PREVIEW-ENGINE", "FPSRC-ENGINE"];
 const found = BLOCKS.map((name) => {
   const from = src.indexOf(`/* ${name}-START`);
   const to = src.indexOf(`/* ${name}-END */`);
@@ -244,6 +244,7 @@ writeFileSync(
       `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, wfNodeAt, personaOk,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
       `  outcomeOf, outcomeInk, previewFate, DECISION_INK, OVERRIDE_INK,\n` +
+      `  fpMode, FP_PREFIX,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
       `export function __setNodes(n) { WF_NODES = n; WF_EDGES = null; }\n` +
@@ -287,6 +288,7 @@ const {
   wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, personaOk,
   editableAt, hoverableAt,
   outcomeOf, outcomeInk, previewFate, DECISION_INK, OVERRIDE_INK,
+  fpMode, FP_PREFIX,
   __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __sel, __edges,
   __env, TARGET, prefs, POSTED,
 } = mod;
@@ -2791,6 +2793,35 @@ console.log("\nreview preview");
   check("an edit draws in the override purple", outcomeInk("edited") === OVERRIDE_INK);
   check("⚠️ the override purple is `preserved`'s own colour — an edit and a carried-through "
         + "override are one fact at two ages", OVERRIDE_INK === "#6D28D9");
+}
+
+/* ── F. the floor-plan outline's source ────────────────────────────────────── */
+
+console.log("\nfloor-plan source");
+
+/* F1. Three sources, in priority order — and the middle one is the whole point. */
+{
+  check("nothing available → the outline traces the published tiles",
+        fpMode(false, false) === "tiles");
+  check("⚠️ draft geometry posted, render swap OFF → the outline traces the DRAFT",
+        fpMode(false, true) === "draft");
+  check("the render swap live → the outline follows the floor, which is already the draft",
+        fpMode(true, false) === "gj");
+  check("the swap outranks the draft-only mode — both are the draft, one is already on screen",
+        fpMode(true, true) === "gj");
+}
+
+/* F2. Each mode owns its own layer-id prefix. This is what lets a mode change find its own layers
+      and nobody else's — without it the floor gets traced twice from two datasets at once. */
+{
+  const ids = [FP_PREFIX.tiles, FP_PREFIX.draft, FP_PREFIX.gj];
+  check("every mode has a prefix", ids.every((p) => typeof p === "string" && p.length > 0));
+  check("⚠️ the three prefixes are distinct", new Set(ids).size === 3);
+  // `__fp_` is a prefix OF `__fp_gj_` and `__fp_dr_`, so a teardown that matched on "starts with
+  // the tiles prefix" would take all three down. Whatever matches must be exact per mode.
+  check("the tiles prefix is a prefix of the other two — teardown must key on the MODE, not a "
+        + "string match",
+        FP_PREFIX.gj.startsWith(FP_PREFIX.tiles) && FP_PREFIX.draft.startsWith(FP_PREFIX.tiles));
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */

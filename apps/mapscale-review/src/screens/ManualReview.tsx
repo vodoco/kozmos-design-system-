@@ -20,6 +20,7 @@ import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings } from "../ui/MapSettings";
 import { PANEL_PAD, PanelHeader } from "../ui/PanelHeader";
 import PointrMap, { type MapPrefs, type MapLevel } from "../map/PointrMap";
+import { levelGeometry, type LevelGeometry } from "../cloud/levelFeatures";
 import type { LevelRef } from "./MapContent";
 import {
   seedChanges,
@@ -312,6 +313,25 @@ export function ManualReview({
   const [mapLevel, setMapLevel] = useState<MapLevel | null>(null);
   const onLevel = useCallback((l: MapLevel) => setMapLevel(l), []);
   /**
+   * **The level's DRAFT geometry, so "Show Floor-plan" traces the plan being reviewed** (Olcay,
+   * 2026-08-25: *"Show floor-plan shows the uploaded one… If the user wants to see the current
+   * map's floor-plan they'd save and exit from review"*).
+   *
+   * Until now this screen fetched none, so the map shell fell back to `source_ptr` and the overlay
+   * traced the **last publish** — precisely the floor-plan the ruling says you should have to leave
+   * the review to see. `cloud/levelFeatures` fetches the **draft** scope, which is what the upload
+   * became.
+   *
+   * ⚠️ **This does NOT swap the floor render.** The shell builds outline sources only and leaves
+   * the tiles drawing the fills — see `fpMode` there. A review needs both sides of the diff on
+   * screen: a removal is a feature the tiles have and the draft does not, so a floor drawn from the
+   * draft alone would have nothing underneath the red shape.
+   *
+   * Empty until it arrives, and empty forever if it fails — in which case the overlay keeps doing
+   * exactly what it did before, rather than the screen losing its floor-plan.
+   */
+  const [levelGeom, setLevelGeom] = useState<LevelGeometry[]>([]);
+  /**
    * Whose name the header carries. **The passed level wins** (fixed 2026-08-11) — this screen has
    * no level switcher, so what it was opened for is what it reviews.
    *
@@ -338,6 +358,20 @@ export function ManualReview({
         : undefined,
     [target?.buildingId, target?.index],
   );
+  useEffect(() => {
+    if (!mapTarget) return;
+    let live = true;
+    // Cleared first: leaving one floor's outline up while another loads would trace a plan that
+    // belongs to the level you have just left.
+    setLevelGeom([]);
+    void levelGeometry(mapTarget.building, mapTarget.level).then((g) => {
+      if (live) setLevelGeom(g);
+    });
+    return () => {
+      live = false;
+    };
+  }, [mapTarget]);
+
   const setOne = (id: string, d: Decision | undefined) =>
     setDecisions((p) => ({ ...p, [id]: d }));
   /**
@@ -1467,6 +1501,7 @@ export function ManualReview({
           geomCommands={geomCommands}
           onGeomState={onGeomState}
           onGeometry={onGeometry}
+          levelGeometry={levelGeom}
         />
         {/*
           The same bar Map Content uses, on the same map, driven by the same queue. `padRight` is 0

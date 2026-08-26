@@ -1599,6 +1599,75 @@ function drawBadgeGlyph(kind) {
 const FP_LAYERS = [];   // ids of the outline layers we've added
 let fpLevel = null;     // the level their filters are currently built for
 
+/* FPSRC-ENGINE-START — extracted and tested by scratch/geometry.test.mjs. Pure: which data the
+   floor-plan outline should be traced from, and what to call the layers that trace it. */
+/**
+ * **Three possible sources for the outline, and they are not interchangeable.**
+ *
+ * - `gj`     — the full GeoJSON render swap is live, so the floor itself is already the draft and
+ *              the outline simply follows it.
+ * - `draft`  — the app has posted this level's geometry but the floor is still tile-drawn. The
+ *              outline traces the DRAFT anyway. This is the review screen: *"Show floor-plan shows
+ *              the uploaded one"* (Olcay, 2026-08-25).
+ * - `tiles`  — nothing else is available, so the outline traces the last publish.
+ *
+ * ⚠️ **`draft` deliberately does NOT swap the floor render.** The tiles keep drawing the floor
+ * because a review needs BOTH sides of the diff on screen: a removal is a feature the published
+ * tiles have and the draft does not, and a floor drawn only from the draft would have nothing under
+ * the red shape. Tracing the outline from one source while rendering from another is the whole
+ * point — the outline is what the new plan says, the fills are what is live today.
+ */
+function fpMode(swapLive, draftReady) {
+  if (swapLive) return "gj";
+  if (draftReady) return "draft";
+  return "tiles";
+}
+/** One layer-id prefix per mode, so a mode change can find its own layers and nobody else's. */
+const FP_PREFIX = { gj: "__fp_gj_", draft: "__fp_dr_", tiles: "__fp_" };
+/* FPSRC-ENGINE-END */
+
+/** The outline's own GeoJSON sources — the DRAFT, built without cloning a single render layer. */
+const FP_DRAFT_SRC = "__fpdr_";
+let FP_DRAFT = { names: [], lvl: null };
+const fpDraftReady = () => FP_DRAFT.lvl === TARGET.level && FP_DRAFT.names.length > 0;
+/** Which mode the layers currently in `FP_LAYERS` were built for. */
+let fpMode_ = null;
+
+/**
+ * Build one GeoJSON source per source-layer from the level geometry the app posted — **sources
+ * only**, no cloned render layers, no verdict, no hiding of tiles.
+ *
+ * That is the entire difference from `gjBuild()`, and it is why this exists separately rather than
+ * calling into the swap: the swap's job is to REPLACE the floor and it earns that with a
+ * paint-count verdict (§12). Tracing an outline needs none of that machinery, and taking it on
+ * would mean the review map's whole render turned on a fetch that has never been seen to return.
+ */
+function fpBuildDraftSources() {
+  try {
+    if (!map || !LEVEL_FEATS.length) return false;
+    if (fpDraftReady()) return true;
+    const names = ptrSourceLayers();
+    if (!names.length) return false;
+    // ⚠️ `LEVEL_FEATS`, not `LEVEL_GEOM`: the latter is keyed by fid and holds geometry alone, and
+    // grouping needs the property bags — `mainType` decides which source-layer a feature belongs to.
+    const { groups } = groupBySourceLayer(names, LEVEL_FEATS, LEVEL_FEATS_LVL);
+    const made = [];
+    for (const [name, fs] of groups) {
+      if (!fs.length || FP_SKIP[name]) continue;   // the big groupings never draw the outline
+      const id = FP_DRAFT_SRC + name;
+      const data = { type: "FeatureCollection", features: fs };
+      if (map.getSource(id)) map.getSource(id).setData(data);
+      else map.addSource(id, { type: "geojson", data });
+      made.push(name);
+    }
+    FP_DRAFT = { names: made, lvl: TARGET.level };
+    return made.length > 0;
+  } catch (e) {
+    post("error", { message: "floorplan draft sources: " + e.message });
+    return false;
+  }
+}
+
 // all-expression syntax: mixing the legacy `["==","$type",…]` form with expressions makes MapLibre
 // read "$type" as a plain string, and the layer silently matches nothing.
 function fpFilter() {
@@ -1629,30 +1698,43 @@ function addFloorplan() {
       fpLevel = TARGET.level;
     }
     /**
-     * ⚠️ **Discovered from whichever source is drawing the floor.** This read rendered features and
-     * kept the ones on `source_ptr`, which answers *nothing* once the tiles are hidden — so on a
-     * GeoJSON-rendered floor no outline layer would ever be created, and the overlay would simply
-     * stop appearing on levels reached after the swap. When the render is live the names come from
-     * the GeoJSON sources instead, and the outline is then drawn from the same collection as the
-     * fills — the draft, not the last publish, which is the point of the swap.
+     * ⚠️ **Discovered from whichever source the outline is being traced from** — see `fpMode`.
+     *
+     * The tiles branch reads RENDERED features and keeps the ones on `source_ptr`, which answers
+     * *nothing* once the tiles are hidden. Both other branches name their sources outright, which
+     * is also why they work for a level that is off-screen: nothing has to have painted first.
      */
-    const gj = gjLive();
+    const mode = fpMode(gjLive(), fpDraftReady());
+    /**
+     * ⚠️ **A mode change tears the old layers down first.** Without this, switching sources leaves
+     * the previous mode's outline layers on the map — they are layers of OUR making, so neither
+     * `gjHideTiles` nor anything else would ever hide them, and the floor would be traced twice
+     * from two different datasets at once. That was already latent for the tiles → gj swap; a third
+     * mode made it certain.
+     */
+    if (fpMode_ !== null && fpMode_ !== mode) {
+      for (const id of FP_LAYERS.splice(0)) { try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {} }
+    }
+    fpMode_ = mode;
+
     // `typeHidden` here too: the outline is drawn by layers of OUR making, so nothing else would
     // ever hide them — a geofence zone would keep its outline after its fill had gone.
     const keep = n => n && !FP_SKIP[n] && !typeHidden({ "source-layer": n });
-    const layers = gj
-      ? GJ.sources.filter(keep)
+    const layers =
+      mode === "gj"    ? GJ.sources.filter(keep)
+      : mode === "draft" ? FP_DRAFT.names.filter(keep)
       : [...new Set(map.queryRenderedFeatures()
           .filter(f => f.source === "source_ptr" && keep(srcLayerOf(f)))
           .map(f => srcLayerOf(f)))].filter(Boolean);
+    const srcOf = L => mode === "gj" ? GJ_SRC + L : mode === "draft" ? FP_DRAFT_SRC + L : "source_ptr";
     layers.forEach(L => {
-      const id = (gj ? "__fp_gj_" : "__fp_") + L;
+      const id = FP_PREFIX[mode] + L;
       if (map.getLayer(id)) return;
-      const def = { id, type:"line", source: gj ? GJ_SRC + L : "source_ptr",
+      const def = { id, type:"line", source: srcOf(L),
         filter: fpFilter(),
         layout:{ visibility: prefs.floorplan ? "visible" : "none" },
         paint:{ "line-color":"#33425c", "line-width":1, "line-opacity": fpOpacity() } };
-      if (!gj) def["source-layer"] = L;
+      if (mode === "tiles") def["source-layer"] = L;
       map.addLayer(def);
       FP_LAYERS.push(id);
     });
@@ -7877,8 +7959,18 @@ window.addEventListener("message", (ev) => {
     // one: the next floor is a fresh question and deserves to be asked again.
     if (GJ.phase !== "off") gjTeardown("new level geometry arrived");
     GJ.phase = "off";
+    /**
+     * The floor-plan outline follows the DRAFT from here, whether or not the render swap ever runs.
+     * On the review screen the swap never does — see `fpMode` — and this is the whole of what makes
+     * "Show floor-plan" show the plan being reviewed rather than the one already published.
+     */
+    FP_DRAFT = { names: [], lvl: null };
+    const drew = fpBuildDraftSources();
+    if (drew) addFloorplan();
     console.info("[geojson] map shell holds", LEVEL_GEOM.size, "unclipped feature geometries",
-      LEVEL_FEATS.length ? "· level " + LEVEL_FEATS_LVL : "");
+      LEVEL_FEATS.length ? "· level " + LEVEL_FEATS_LVL : "",
+      drew ? "· floor-plan outline now traces the DRAFT (" + FP_DRAFT.names.length + " sources)"
+           : "· floor-plan outline still traces the published tiles");
   } else if (d.type === "decidable") {
     CAN_DECIDE = !!d.on;
     renderTip();          // a card already open must lose its control immediately
