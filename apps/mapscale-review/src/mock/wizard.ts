@@ -9,11 +9,41 @@
 import { SIMILARITY_WARN, type Change } from "./diff";
 
 export const WIZARD_STEPS = [
-  { key: "metadata", n: 1, title: "Metadata", blurb: "Provide essential information about the building such as name and identifiers." },
-  { key: "levels", n: 2, title: "Level Manager", blurb: "Manage and organize the different levels of the building. Upload one or more floorplan files to create levels for your building." },
-  { key: "align", n: 3, title: "Floor-plan Alignment", blurb: "Align and adjust the uploaded floor plans to ensure they are correctly positioned relative to each other." },
-  { key: "finetune", n: 4, title: "Fine-tune Building Placement", blurb: "Select one of the floor plans and accurately place and orient the building on the globe for georeferencing." },
-  { key: "preview", n: 5, title: "Preview", blurb: "AI Mapping has created meaningful indoor maps. Review and finalize before publishing." },
+  {
+    key: "metadata",
+    n: 1,
+    title: "Metadata",
+    blurb:
+      "Provide essential information about the building such as name and identifiers.",
+  },
+  {
+    key: "levels",
+    n: 2,
+    title: "Level Manager",
+    blurb:
+      "Manage and organize the different levels of the building. Upload one or more floorplan files to create levels for your building.",
+  },
+  {
+    key: "align",
+    n: 3,
+    title: "Floor-plan Alignment",
+    blurb:
+      "Align and adjust the uploaded floor plans to ensure they are correctly positioned relative to each other.",
+  },
+  {
+    key: "finetune",
+    n: 4,
+    title: "Fine-tune Building Placement",
+    blurb:
+      "Select one of the floor plans and accurately place and orient the building on the globe for georeferencing.",
+  },
+  {
+    key: "preview",
+    n: 5,
+    title: "Preview",
+    blurb:
+      "AI Mapping has created meaningful indoor maps. Review and finalize before publishing.",
+  },
 ] as const;
 
 export type WizardStepKey = (typeof WIZARD_STEPS)[number]["key"];
@@ -21,7 +51,8 @@ export type WizardStepKey = (typeof WIZARD_STEPS)[number]["key"];
 /** The Level Manager dropzone's own words (frame 18833:214839). */
 export const LEVEL_DROP_COPY = {
   title: "Drag & Drop or browse",
-  detail: "to upload one or more floor-plan files to create levels for your building.",
+  detail:
+    "to upload one or more floor-plan files to create levels for your building.",
   types: "Supported File Types: GeoJSON & DWG/DXF, PDF (experimental)",
 };
 
@@ -33,7 +64,8 @@ export const ALIGN_COPY = {
   toAlignHint: "Choose a level to align with your reference level.",
   chip: "Floor-plan Alignment",
   confirmTip: "Confirm or edit the alignment of floorplans",
-  gateTip: "To be able to proceed to the next step please make sure all floorplans are aligned to eachother.",
+  gateTip:
+    "To be able to proceed to the next step please make sure all floorplans are aligned to eachother.",
   skip: "Skip this step for now",
 };
 
@@ -42,9 +74,11 @@ export const FINETUNE_COPY = {
   chip: "Fine-tune Building Placement",
   toast: "Grab anchors to align floorplan on Earth.",
   anchorsTitle: "Anchor Placement Options",
-  anchorsDetail: "Adjust your anchors' positions to align the floor-plan data on Earth.",
+  anchorsDetail:
+    "Adjust your anchors' positions to align the floor-plan data on Earth.",
   pinned: "Anchors Pinned on the Floorplan",
-  referenceHint: "To choose a reference level, go to \"Floor-plan Alignment\" and update it there.",
+  referenceHint:
+    'To choose a reference level, go to "Floor-plan Alignment" and update it there.',
   skip: "Skip this step for now",
 };
 
@@ -88,14 +122,54 @@ export interface CreationIssue {
  * (10059:102926's "Resolve Potential Issues" page). A catalogue, not a list: levels draw from it,
  * so no two levels in a building's first pass show the same name.
  */
-const ISSUE_CATALOGUE: { group: CreationIssue["group"]; name: string; category: string; confidence: number }[] = [
-  { group: "metadata", name: "Fast-Track Security Checkpoint Alpha", category: "Aviation Services", confidence: 0.52 },
-  { group: "metadata", name: "Baggage Claim Assistance Desk B", category: "Aviation Services", confidence: 0.61 },
-  { group: "metadata", name: "Passport Control Fast Lane - International Gates", category: "Customs And Immigration", confidence: 0.44 },
-  { group: "metadata", name: "Airline Lounge Reception - Elite Members", category: "Aviation Services", confidence: 0.58 },
-  { group: "metadata", name: "Starbucks", category: "Coffee Shops", confidence: 0.66 },
-  { group: "feature-type", name: "Unlabeled polygon near Gate B14", category: "Unknown", confidence: 0.31 },
-  { group: "feature-type", name: "Duplicate wall segment, north concourse", category: "Structure", confidence: 0.49 },
+const ISSUE_CATALOGUE: {
+  group: CreationIssue["group"];
+  name: string;
+  category: string;
+  confidence: number;
+}[] = [
+  {
+    group: "metadata",
+    name: "Fast-Track Security Checkpoint Alpha",
+    category: "Aviation Services",
+    confidence: 0.52,
+  },
+  {
+    group: "metadata",
+    name: "Baggage Claim Assistance Desk B",
+    category: "Aviation Services",
+    confidence: 0.61,
+  },
+  {
+    group: "metadata",
+    name: "Passport Control Fast Lane - International Gates",
+    category: "Customs And Immigration",
+    confidence: 0.44,
+  },
+  {
+    group: "metadata",
+    name: "Airline Lounge Reception - Elite Members",
+    category: "Aviation Services",
+    confidence: 0.58,
+  },
+  {
+    group: "metadata",
+    name: "Starbucks",
+    category: "Coffee Shops",
+    confidence: 0.66,
+  },
+  {
+    group: "feature-type",
+    name: "Unlabeled polygon near Gate B14",
+    category: "Unknown",
+    confidence: 0.31,
+  },
+  {
+    group: "feature-type",
+    name: "Duplicate wall segment, north concourse",
+    category: "Structure",
+    confidence: 0.49,
+  },
 ];
 
 /**
@@ -174,7 +248,10 @@ function catalogueOffset(ordinal: number): number {
  * therefore resets that level's decisions: rare, and arguably right, since you have changed which
  * floor they were about.
  */
-export function creationIssuesFor(ordinal: number, levelIndex: number): CreationIssue[] {
+export function creationIssuesFor(
+  ordinal: number,
+  levelIndex: number,
+): CreationIssue[] {
   const count = levelIssueCount(ordinal);
   const from = catalogueOffset(ordinal);
   return Array.from({ length: count }, (_, i) => {
@@ -192,17 +269,27 @@ export function creationIssuesFor(ordinal: number, levelIndex: number): Creation
  * The names are MapScale's own output for a NEW building, so they don't resolve on the demo map
  * (the same honest limit as reviewing a non-B2 level; `bindToFloor` re-points what it can).
  */
-export function creationChangesFor(level: { index: number; short: string; long: string }, ordinal: number): Change[] {
+export function creationChangesFor(
+  level: { index: number; short: string; long: string },
+  ordinal: number,
+): Change[] {
   return creationIssuesFor(ordinal, level.index).map((i) => ({
     id: i.id,
     name: i.name,
-    type: i.group === "metadata" ? ("metadata" as const) : ("geometry" as const),
+    type:
+      i.group === "metadata" ? ("metadata" as const) : ("geometry" as const),
     kind: i.category.toLowerCase().replace(/\s+/g, "-"),
     detail: `${i.category} · ${level.short} · ${level.long}`,
     details:
       i.group === "metadata"
-        ? [`MapScale guessed the name — confirm or correct it.`, `Confidence ${Math.round(i.confidence * 100)}% (below the ${Math.round(SIMILARITY_WARN * 100)}% floor).`]
-        : [`MapScale couldn't classify this feature — confirm what it is.`, `Confidence ${Math.round(i.confidence * 100)}% (below the ${Math.round(SIMILARITY_WARN * 100)}% floor).`],
+        ? [
+            `MapScale guessed the name — confirm or correct it.`,
+            `Confidence ${Math.round(i.confidence * 100)}% (below the ${Math.round(SIMILARITY_WARN * 100)}% floor).`,
+          ]
+        : [
+            `MapScale couldn't classify this feature — confirm what it is.`,
+            `Confidence ${Math.round(i.confidence * 100)}% (below the ${Math.round(SIMILARITY_WARN * 100)}% floor).`,
+          ],
     warning: "low-confidence" as const,
   }));
 }
@@ -230,13 +317,18 @@ export function buildingStats(ordinals: number[]): BuildingStats {
   const surfaceSqm = rs.reduce((n, r) => n + r.areaSqm, 0);
   const durationMin = rs.reduce((n, r) => n + r.durationMin, 0);
   const confidencePct = surfaceSqm
-    ? Math.round(rs.reduce((n, r) => n + r.areaSqm * r.confidencePct, 0) / surfaceSqm)
+    ? Math.round(
+        rs.reduce((n, r) => n + r.areaSqm * r.confidencePct, 0) / surfaceSqm,
+      )
     : 0;
   return {
     surfaceSqm,
     surface: surfaceSqm.toLocaleString("en-US"),
     durationMin,
-    duration: durationMin >= 60 ? `${Math.floor(durationMin / 60)} h ${durationMin % 60} min` : `${durationMin} min`,
+    duration:
+      durationMin >= 60
+        ? `${Math.floor(durationMin / 60)} h ${durationMin % 60} min`
+        : `${durationMin} min`,
     confidencePct,
     confidence: `${confidencePct}%`,
   };
@@ -253,9 +345,19 @@ export function buildingStats(ordinals: number[]): BuildingStats {
  * printed on every finished level beside the note "Ready — review in Preview" — a level whose
  * MapScale guesses nobody had confirmed, pointing at a Preview that didn't distinguish levels.
  */
-export type LevelReviewState = "mapping" | "failed" | "ready" | "awaiting" | "in-review" | "reviewed";
+export type LevelReviewState =
+  | "mapping"
+  | "failed"
+  | "ready"
+  | "awaiting"
+  | "in-review"
+  | "reviewed";
 
-export function levelStateLabel(state: LevelReviewState, issues: number, flagged: number): string {
+export function levelStateLabel(
+  state: LevelReviewState,
+  issues: number,
+  edited: number,
+): string {
   switch (state) {
     case "mapping":
       return "Mapping";
@@ -268,14 +370,18 @@ export function levelStateLabel(state: LevelReviewState, issues: number, flagged
     case "in-review":
       return "In review";
     case "reviewed":
-      return flagged
-        ? `Reviewed · ${flagged} flagged`
-        : "Reviewed";
+      // ⚠️ **`flagged` until 2026-08-25.** It counted rows deferred; this counts rows *fixed*, which
+      // is the opposite kind of fact — worth saying because the level went live carrying somebody's
+      // own values, not because anything is outstanding.
+      return edited ? `Reviewed · ${edited} edited` : "Reviewed";
   }
 }
 
 /** Turn "L3-EK-lounges.dwg" into a presentable level name. */
 export function nameFromFile(file: string): string {
-  const base = file.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+  const base = file
+    .replace(/\.[^.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .trim();
   return base.replace(/\b\w/g, (c) => c.toUpperCase());
 }

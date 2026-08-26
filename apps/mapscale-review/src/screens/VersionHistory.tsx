@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Button, Text } from "@kozmos/react";
-import PointrMap, { type MapCamera, type PointrMapHandle } from "../map/PointrMap";
+import PointrMap, {
+  type MapCamera,
+  type PointrMapHandle,
+} from "../map/PointrMap";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { PANEL_PAD, PanelHeader } from "../ui/PanelHeader";
@@ -41,11 +44,30 @@ const LINK = "#0b369c";
 const NO_CHANGES: Change[] = [];
 
 /** Row/checkpoint tones per state — band tones where the state IS a band, quiet elsewhere. */
-const PILL: Record<VersionState, { tint: string; border: string; ink: string }> = {
-  "needs-review": { tint: BAND.medium.tint, border: BAND.medium.border, ink: BAND.medium.ink },
-  "needs-decision": { tint: BAND.large.tint, border: BAND.large.border, ink: BAND.large.ink },
-  rejected: { tint: BAND.large.tint, border: BAND.large.border, ink: BAND.large.ink },
-  published: { tint: BAND.minor.tint, border: BAND.minor.border, ink: BAND.minor.ink },
+const PILL: Record<
+  VersionState,
+  { tint: string; border: string; ink: string }
+> = {
+  "needs-review": {
+    tint: BAND.medium.tint,
+    border: BAND.medium.border,
+    ink: BAND.medium.ink,
+  },
+  "needs-decision": {
+    tint: BAND.large.tint,
+    border: BAND.large.border,
+    ink: BAND.large.ink,
+  },
+  rejected: {
+    tint: BAND.large.tint,
+    border: BAND.large.border,
+    ink: BAND.large.ink,
+  },
+  published: {
+    tint: BAND.minor.tint,
+    border: BAND.minor.border,
+    ink: BAND.minor.ink,
+  },
   created: { tint: "#eef3ff", border: "#cfdcff", ink: LINK },
   "expert-review": { tint: "#fff7e0", border: "#edc759", ink: "#805905" },
   processing: { tint: "#f2f3f5", border: LINE, ink: MUTED },
@@ -69,56 +91,107 @@ interface TimelineEvent {
 }
 
 /** One version's lifecycle, newest event first — the selected checkpoint's own story. */
-function eventsForVersion(v: LevelVersion, isNewest: boolean, levelName: string): TimelineEvent[] {
+function eventsForVersion(
+  v: LevelVersion,
+  isNewest: boolean,
+  levelName: string,
+): TimelineEvent[] {
   const out: TimelineEvent[] = [];
   switch (v.state) {
     case "needs-review":
-      out.push({ dot: DOT.pipeline, title: "Ready for your review (Manual Review)", meta: `${v.at} · MapScale`, body: `+${v.changePct}% change detected. Confirm each change, flag it for later, or reject it.` });
+      out.push({
+        dot: DOT.pipeline,
+        title: "Ready for your review (Review & Finalise)",
+        meta: `${v.at} · MapScale`,
+        body: `+${v.changePct}% change detected. Confirm each change, reject it, or edit it to put your own value in its place.`,
+      });
       break;
     case "needs-decision":
       out.push({
-        dot: DOT.decision, title: "Needs your decision", meta: `${v.at} · MapScale`,
-        body: v.redCause === "cannot-match"
-          ? RED_CAUSE_COPY["cannot-match"].detail
-          : `${v.changePct}% of floor area changed — never published automatically. Review it, then publish when you're ready.`,
+        dot: DOT.decision,
+        title: "Needs your decision",
+        meta: `${v.at} · MapScale`,
+        body:
+          v.redCause === "cannot-match"
+            ? RED_CAUSE_COPY["cannot-match"].detail
+            : `${v.changePct}% of floor area changed — never published automatically. Review it, then publish when you're ready.`,
       });
       break;
     case "rejected":
       out.push({
-        dot: DOT.decision, title: "Rejected — unrealistic change",
+        dot: DOT.decision,
+        title: "Rejected — unrealistic change",
         meta: `${v.at} · MapScale · ${v.changePct}% of floor area`,
         body: RED_CAUSE_COPY["large-change"].error,
       });
       break;
     case "failed":
-      out.push({ dot: DOT.decision, title: "Processing failed", meta: `${v.at} · MapScale`, body: RED_CAUSE_COPY["cannot-process"].error });
+      out.push({
+        dot: DOT.decision,
+        title: "Processing failed",
+        meta: `${v.at} · MapScale`,
+        body: RED_CAUSE_COPY["cannot-process"].error,
+      });
       break;
     case "expert-review":
-      out.push({ dot: DOT.pipeline, title: "Expert Review — Pointr mapping team", meta: `${v.at} · Mapping Team`, body: "Experts correct the AI result before you see it. You can keep editing — their corrections may override changes you make now." });
+      out.push({
+        dot: DOT.pipeline,
+        title: "Expert Review — Pointr mapping team",
+        meta: `${v.at} · Mapping Team`,
+        body: "Experts correct the AI result before you see it. You can keep editing — their corrections may override changes you make now.",
+      });
       break;
     case "published":
       out.push({
         dot: DOT.published,
-        title: v.changePct !== undefined && v.changePct < 20 ? "Auto-published" : "Published",
+        title:
+          v.changePct !== undefined && v.changePct < 20
+            ? "Auto-published"
+            : "Published",
         meta: `${v.at} · Dashboard`,
-        body: v.changePct !== undefined && v.changePct < 20
-          ? `Minor change (+${v.changePct}%) published automatically.`
-          : `Published${v.changePct !== undefined ? ` (+${v.changePct}%)` : ""} after review.`,
+        body:
+          v.changePct !== undefined && v.changePct < 20
+            ? `Minor change (+${v.changePct}%) published automatically.`
+            : `Published${v.changePct !== undefined ? ` (+${v.changePct}%)` : ""} after review.`,
       });
       break;
   }
   // `rejected` belongs here too: the A-guard fires on the post-expert % (decision 9), so the
   // pipeline genuinely ran before the verdict.
-  if (isNewest && (v.state === "needs-review" || v.state === "needs-decision" || v.state === "rejected")) {
-    out.push({ dot: DOT.pipeline, title: "Expert Review — Pointr mapping team", meta: `${v.at} · Mapping Team`, body: "Experts corrected the AI result before you saw it — the % shown is theirs." });
-    out.push({ dot: DOT.pipeline, title: "MapScale processing", meta: `${v.at} · MapScale`, body: "MapScale mapped the floor. Frame-changing actions wait until it completes; editing stays open." });
+  if (
+    isNewest &&
+    (v.state === "needs-review" ||
+      v.state === "needs-decision" ||
+      v.state === "rejected")
+  ) {
+    out.push({
+      dot: DOT.pipeline,
+      title: "Expert Review — Pointr mapping team",
+      meta: `${v.at} · Mapping Team`,
+      body: "Experts corrected the AI result before you saw it — the % shown is theirs.",
+    });
+    out.push({
+      dot: DOT.pipeline,
+      title: "MapScale processing",
+      meta: `${v.at} · MapScale`,
+      body: "MapScale mapped the floor. Frame-changing actions wait until it completes; editing stays open.",
+    });
   }
   if (v.n === 1) {
-    out.push({ dot: DOT.created, title: "Level created", meta: `${v.at} · Dashboard`, body: `${levelName} created.` });
+    out.push({
+      dot: DOT.created,
+      title: "Level created",
+      meta: `${v.at} · Dashboard`,
+      body: `${levelName} created.`,
+    });
   } else {
     out.push({
       dot: DOT.arrival,
-      title: v.restoredFrom ? `Restored from Version ${v.restoredFrom}` : v.source === "api" ? "Update received via API" : "Uploaded via Dashboard",
+      title: v.restoredFrom
+        ? `Restored from Version ${v.restoredFrom}`
+        : v.source === "api"
+          ? "Update received via API"
+          : "Uploaded via Dashboard",
       meta: `${v.at} · ${v.source === "api" ? "API" : "Dashboard"}`,
       body: v.restoredFrom
         ? `Version ${v.restoredFrom}'s map content re-submitted as Version ${v.n}. Nothing was deleted.`
@@ -134,7 +207,11 @@ function eventsForVersion(v: LevelVersion, isNewest: boolean, levelName: string)
  * so S1 must never claim an overlay for it.
  */
 function isPending(v: LevelVersion): boolean {
-  return v.state === "needs-review" || v.state === "needs-decision" || v.state === "expert-review";
+  return (
+    v.state === "needs-review" ||
+    v.state === "needs-decision" ||
+    v.state === "expert-review"
+  );
 }
 
 export function VersionHistory({
@@ -154,19 +231,26 @@ export function VersionHistory({
   const [versions] = useLevelVersions(level);
   const newest = versions[0];
   const [selectedN, setSelectedN] = useState(initialN ?? newest.n);
-  const [mode, setMode] = useState<"timeline" | "compare">(initialMode ?? "timeline");
+  const [mode, setMode] = useState<"timeline" | "compare">(
+    initialMode ?? "timeline",
+  );
   const selected = versions.find((v) => v.n === selectedN) ?? newest;
   const liveVersion = versions.find((v) => versionBadge(versions, v).live);
 
   // the pending newest's diff — the only change set the one-tile-set prototype can honestly draw
   const pendingChanges = useMemo<Change[]>(() => {
     if (!isPending(newest)) return NO_CHANGES;
-    const band = newest.redCause ? "large" : magnitudeBand(newest.changePct ?? 30);
+    const band = newest.redCause
+      ? "large"
+      : magnitudeBand(newest.changePct ?? 30);
     return seedChanges(band);
   }, [newest]);
 
   const mapTarget = useMemo(
-    () => (level.buildingId ? { building: level.buildingId, level: level.index } : undefined),
+    () =>
+      level.buildingId
+        ? { building: level.buildingId, level: level.index }
+        : undefined,
     [level.buildingId, level.index],
   );
   /**
@@ -183,7 +267,10 @@ export function VersionHistory({
     floorplan: false,
     basemap: "vector",
   });
-  const plainPrefs = useMemo(() => ({ ...userPrefs, greyscale: false, hidePoiLabels: false }), [userPrefs]);
+  const plainPrefs = useMemo(
+    () => ({ ...userPrefs, greyscale: false, hidePoiLabels: false }),
+    [userPrefs],
+  );
   const diffPrefs = userPrefs;
 
   const showDiff = selected.n === newest.n && isPending(newest);
@@ -198,7 +285,9 @@ export function VersionHistory({
    * back to the live baseline — comparing pending to pending would say nothing. The one-tile-set
    * honesty applies: a non-live selection shows the published map with the snapshot note.
    */
-  const leftVersion = (selected.n === newest.n && isPending(newest) ? liveVersion : selected) ?? selected;
+  const leftVersion =
+    (selected.n === newest.n && isPending(newest) ? liveVersion : selected) ??
+    selected;
   const leftBadge = versionBadge(versions, leftVersion);
   const leftNote =
     !leftBadge.live && liveVersion && leftVersion.n !== liveVersion.n
@@ -209,15 +298,24 @@ export function VersionHistory({
     () => eventsForVersion(selected, selected.n === newest.n, level.name),
     [selected, newest.n, level.name],
   );
-  const chrono = useMemo(() => [...versions].sort((a, b) => a.n - b.n), [versions]);
+  const chrono = useMemo(
+    () => [...versions].sort((a, b) => a.n - b.n),
+    [versions],
+  );
 
   // Compare's panes mirror each other's camera (Olcay: "the maps should be in sync"). Each pane
   // reports its moves; the app pushes them into the sibling, whose guarded jumpTo can't echo.
   // Boot framing flows through the same channel, so the panes converge without a special case.
   const leftMap = useRef<PointrMapHandle>(null);
   const rightMap = useRef<PointrMapHandle>(null);
-  const onLeftCamera = useCallback((cam: MapCamera) => rightMap.current?.setCamera(cam), []);
-  const onRightCamera = useCallback((cam: MapCamera) => leftMap.current?.setCamera(cam), []);
+  const onLeftCamera = useCallback(
+    (cam: MapCamera) => rightMap.current?.setCamera(cam),
+    [],
+  );
+  const onRightCamera = useCallback(
+    (cam: MapCamera) => leftMap.current?.setCamera(cam),
+    [],
+  );
 
   return (
     <div style={{ flex: 1, display: "flex", minHeight: 0, background: "#fff" }}>
@@ -238,14 +336,26 @@ export function VersionHistory({
             onClose={onBack}
             closeLabel="Close version history"
           />
-          <Text style={{ fontSize: 13, color: MUTED, display: "block", marginTop: 2 }}>
+          <Text
+            style={{
+              fontSize: 13,
+              color: MUTED,
+              display: "block",
+              marginTop: 2,
+            }}
+          >
             {level.name} · {level.building} — all floor-plans, newest first
           </Text>
         </div>
         <div style={{ overflow: "auto", flex: 1 }}>
           {versions.map((v) => {
             const badge = versionBadge(versions, v);
-            const tone = badge.label === "Superseded" ? NEUTRAL_PILL : badge.live ? PILL.published : PILL[v.state];
+            const tone =
+              badge.label === "Superseded"
+                ? NEUTRAL_PILL
+                : badge.live
+                  ? PILL.published
+                  : PILL[v.state];
             const isSel = v.n === selectedN;
             return (
               <div
@@ -255,37 +365,71 @@ export function VersionHistory({
                   padding: "14px 20px",
                   borderBottom: `1px solid ${LINE}`,
                   background: isSel ? "#eef3ff" : "#fff",
-                  borderLeft: isSel ? `3px solid ${LINK}` : "3px solid transparent",
+                  borderLeft: isSel
+                    ? `3px solid ${LINK}`
+                    : "3px solid transparent",
                   cursor: "pointer",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--review-ink)" }}>Version {v.n}</span>
+                  <span
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "var(--review-ink)",
+                    }}
+                  >
+                    Version {v.n}
+                  </span>
                   <SourcePill source={v.source} />
                   {/* only the exception is named: a restore's lineage, or a GeoJSON push */}
                   {(v.restoredFrom || v.input.kind === "geojson") && (
                     <span style={{ fontSize: 11, color: MUTED }}>
-                      {v.restoredFrom ? `Restored from Version ${v.restoredFrom}` : KIND_LABEL.geojson}
+                      {v.restoredFrom
+                        ? `Restored from Version ${v.restoredFrom}`
+                        : KIND_LABEL.geojson}
                     </span>
                   )}
                   <span style={{ flex: 1 }} />
                   <span
                     style={{
-                      fontSize: 11, color: tone.ink, background: tone.tint,
-                      border: `1px solid ${tone.border}`, borderRadius: 999, padding: "1px 8px", whiteSpace: "nowrap",
+                      fontSize: 11,
+                      color: tone.ink,
+                      background: tone.tint,
+                      border: `1px solid ${tone.border}`,
+                      borderRadius: 999,
+                      padding: "1px 8px",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {badge.live ? "Live" : badge.label}
                   </span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                  <span style={{ fontSize: 12, color: MUTED }} title={`${v.input.file} — ${v.by ?? "unknown"}`}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginTop: 6,
+                  }}
+                >
+                  <span
+                    style={{ fontSize: 12, color: MUTED }}
+                    title={`${v.input.file} — ${v.by ?? "unknown"}`}
+                  >
                     {v.at}
                     {v.by ? ` · ${v.by}` : ""}
                   </span>
                   <span style={{ flex: 1 }} />
                   {typeof v.changePct === "number" && (
-                    <span style={{ fontSize: 12, fontWeight: 600, color: v.changePct >= 20 ? BAND.medium.ink : BAND.minor.ink }}>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color:
+                          v.changePct >= 20 ? BAND.medium.ink : BAND.minor.ink,
+                      }}
+                    >
                       +{v.changePct}%
                     </span>
                   )}
@@ -297,29 +441,97 @@ export function VersionHistory({
       </div>
 
       {/* ── checkpoints over the map ──────────────────────────────────────── */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "14px 24px", borderBottom: `1px solid ${LINE}` }}>
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 18,
+            padding: "14px 24px",
+            borderBottom: `1px solid ${LINE}`,
+          }}
+        >
           {/* the scrubber: one checkpoint per floor-plan, oldest to newest */}
-          <div style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
             {chrono.map((v, i) => {
               const isSel = v.n === selectedN;
               const badge = versionBadge(versions, v);
-              const dotColor = badge.live ? DOT.published : isPending(v) ? DOT.pipeline : v.state === "failed" || v.state === "needs-decision" || v.state === "rejected" ? DOT.decision : DOT.created;
+              const dotColor = badge.live
+                ? DOT.published
+                : isPending(v)
+                  ? DOT.pipeline
+                  : v.state === "failed" ||
+                      v.state === "needs-decision" ||
+                      v.state === "rejected"
+                    ? DOT.decision
+                    : DOT.created;
               return (
-                <div key={v.n} style={{ display: "flex", alignItems: "center", flex: i ? 1 : "0 0 auto", minWidth: 0 }}>
-                  {i > 0 && <div style={{ flex: 1, height: 2, background: LINE, minWidth: 24 }} />}
+                <div
+                  key={v.n}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    flex: i ? 1 : "0 0 auto",
+                    minWidth: 0,
+                  }}
+                >
+                  {i > 0 && (
+                    <div
+                      style={{
+                        flex: 1,
+                        height: 2,
+                        background: LINE,
+                        minWidth: 24,
+                      }}
+                    />
+                  )}
                   <button
                     onClick={() => setSelectedN(v.n)}
                     title={`${v.input.file} · ${badge.live ? "Live" : badge.label}`}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 3,
+                    }}
                   >
                     <span
                       style={{
-                        width: 14, height: 14, borderRadius: 7, background: dotColor,
-                        boxShadow: isSel ? `0 0 0 3px ${LINK}33, 0 0 0 1.5px ${LINK}` : "none",
+                        width: 14,
+                        height: 14,
+                        borderRadius: 7,
+                        background: dotColor,
+                        boxShadow: isSel
+                          ? `0 0 0 3px ${LINK}33, 0 0 0 1.5px ${LINK}`
+                          : "none",
                       }}
                     />
-                    <span style={{ fontSize: 11, fontWeight: isSel ? 600 : 400, color: isSel ? INK : MUTED, whiteSpace: "nowrap" }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: isSel ? 600 : 400,
+                        color: isSel ? INK : MUTED,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       V{v.n} · {v.at.split(" · ")[0]}
                     </span>
                   </button>
@@ -328,10 +540,18 @@ export function VersionHistory({
             })}
           </div>
           <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
-            <Button size="sm" variant={mode === "timeline" ? "default" : "outline"} onClick={() => setMode("timeline")}>
+            <Button
+              size="sm"
+              variant={mode === "timeline" ? "default" : "outline"}
+              onClick={() => setMode("timeline")}
+            >
               Timeline
             </Button>
-            <Button size="sm" variant={mode === "compare" ? "default" : "outline"} onClick={() => setMode("compare")}>
+            <Button
+              size="sm"
+              variant={mode === "compare" ? "default" : "outline"}
+              onClick={() => setMode("compare")}
+            >
               Compare
             </Button>
           </div>
@@ -340,30 +560,105 @@ export function VersionHistory({
         {mode === "timeline" ? (
           <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
             {/* the selected checkpoint's own story */}
-            <div style={{ flex: "0 0 340px", borderRight: `1px solid ${LINE}`, overflow: "auto", padding: "16px 20px" }}>
-              <Text style={{ fontSize: 14, fontWeight: 600, color: "var(--review-ink)", display: "block" }}>
+            <div
+              style={{
+                flex: "0 0 340px",
+                borderRight: `1px solid ${LINE}`,
+                overflow: "auto",
+                padding: "16px 20px",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "var(--review-ink)",
+                  display: "block",
+                }}
+              >
                 Version {selected.n} — what happened
               </Text>
-              <div style={{ marginTop: 14, borderLeft: `2px solid ${LINE}`, marginLeft: 5 }}>
+              <div
+                style={{
+                  marginTop: 14,
+                  borderLeft: `2px solid ${LINE}`,
+                  marginLeft: 5,
+                }}
+              >
                 {timeline.map((e, i) => (
-                  <div key={i} style={{ position: "relative", padding: "0 0 22px 20px" }}>
-                    <span style={{ position: "absolute", left: -7, top: 3, width: 12, height: 12, borderRadius: 6, background: e.dot, border: "2px solid #fff" }} />
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--review-ink)" }}>{e.title}</div>
-                    <div style={{ fontSize: 11, color: "#9AA0A6", marginTop: 1 }}>{e.meta}</div>
-                    <div style={{ fontSize: 12, color: "#464a53", marginTop: 3, lineHeight: 1.45 }}>{e.body}</div>
+                  <div
+                    key={i}
+                    style={{ position: "relative", padding: "0 0 22px 20px" }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: -7,
+                        top: 3,
+                        width: 12,
+                        height: 12,
+                        borderRadius: 6,
+                        background: e.dot,
+                        border: "2px solid #fff",
+                      }}
+                    />
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: "var(--review-ink)",
+                      }}
+                    >
+                      {e.title}
+                    </div>
+                    <div
+                      style={{ fontSize: 11, color: "#9AA0A6", marginTop: 1 }}
+                    >
+                      {e.meta}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "#464a53",
+                        marginTop: 3,
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      {e.body}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
             {/* the map follows the checkpoint */}
-            <div style={{ position: "relative", flex: 1, minWidth: 0, background: "#EDEEF0" }}>
-              <PointrMap changes={showDiff ? pendingChanges : NO_CHANGES} prefs={showDiff ? diffPrefs : plainPrefs} target={mapTarget} />
+            <div
+              style={{
+                position: "relative",
+                flex: 1,
+                minWidth: 0,
+                background: "#EDEEF0",
+              }}
+            >
+              <PointrMap
+                changes={showDiff ? pendingChanges : NO_CHANGES}
+                prefs={showDiff ? diffPrefs : plainPrefs}
+                target={mapTarget}
+              />
               {snapshotNote && (
                 <div
                   style={{
-                    position: "absolute", left: "50%", bottom: 18, transform: "translateX(-50%)",
-                    background: "#fff", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.14)",
-                    padding: "8px 14px", fontSize: 12, color: MUTED, maxWidth: 460, textAlign: "center",
+                    position: "absolute",
+                    left: "50%",
+                    bottom: 18,
+                    transform: "translateX(-50%)",
+                    background: "#fff",
+                    borderRadius: 8,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.14)",
+                    padding: "8px 14px",
+                    fontSize: 12,
+                    color: MUTED,
+                    maxWidth: 460,
+                    textAlign: "center",
                   }}
                 >
                   {snapshotNote}
@@ -375,17 +670,56 @@ export function VersionHistory({
         ) : (
           <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
             {/* left: the selected checkpoint (the scrubber drives it). right: what wants to replace it. */}
-            <div style={{ position: "relative", flex: 1, minWidth: 0, background: "#EDEEF0", borderRight: `2px solid ${INK}` }}>
-              <div style={{ position: "absolute", top: 12, left: 12, zIndex: 4, background: "#fff", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, color: "var(--review-ink)", boxShadow: "0 2px 6px rgba(0,0,0,0.12)" }}>
-                Version {leftVersion.n} · {leftBadge.live ? "Live" : leftBadge.label}
+            <div
+              style={{
+                position: "relative",
+                flex: 1,
+                minWidth: 0,
+                background: "#EDEEF0",
+                borderRight: `2px solid ${INK}`,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  left: 12,
+                  zIndex: 4,
+                  background: "#fff",
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--review-ink)",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+                }}
+              >
+                Version {leftVersion.n} ·{" "}
+                {leftBadge.live ? "Live" : leftBadge.label}
               </div>
-              <PointrMap ref={leftMap} onCamera={onLeftCamera} changes={NO_CHANGES} prefs={plainPrefs} target={mapTarget} />
+              <PointrMap
+                ref={leftMap}
+                onCamera={onLeftCamera}
+                changes={NO_CHANGES}
+                prefs={plainPrefs}
+                target={mapTarget}
+              />
               {leftNote && (
                 <div
                   style={{
-                    position: "absolute", left: "50%", bottom: 18, transform: "translateX(-50%)",
-                    background: "#fff", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.14)",
-                    padding: "8px 14px", fontSize: 12, color: MUTED, maxWidth: 420, textAlign: "center", zIndex: 4,
+                    position: "absolute",
+                    left: "50%",
+                    bottom: 18,
+                    transform: "translateX(-50%)",
+                    background: "#fff",
+                    borderRadius: 8,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.14)",
+                    padding: "8px 14px",
+                    fontSize: 12,
+                    color: MUTED,
+                    maxWidth: 420,
+                    textAlign: "center",
+                    zIndex: 4,
                   }}
                 >
                   {leftNote}
@@ -393,13 +727,40 @@ export function VersionHistory({
               )}
               <MapSettings prefs={userPrefs} onChange={setUserPrefs} focus />
             </div>
-            <div style={{ position: "relative", flex: 1, minWidth: 0, background: "#EDEEF0" }}>
-              <div style={{ position: "absolute", top: 12, left: 12, zIndex: 4, background: "#fff", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, color: "var(--review-ink)", boxShadow: "0 2px 6px rgba(0,0,0,0.12)" }}>
+            <div
+              style={{
+                position: "relative",
+                flex: 1,
+                minWidth: 0,
+                background: "#EDEEF0",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  left: 12,
+                  zIndex: 4,
+                  background: "#fff",
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--review-ink)",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+                }}
+              >
                 {isPending(newest)
                   ? `Version ${newest.n} · ${typeof newest.changePct === "number" ? `+${newest.changePct}% pending` : "pending"}`
                   : `Version ${newest.n} · nothing pending`}
               </div>
-              <PointrMap ref={rightMap} onCamera={onRightCamera} changes={pendingChanges} prefs={diffPrefs} target={mapTarget} />
+              <PointrMap
+                ref={rightMap}
+                onCamera={onRightCamera}
+                changes={pendingChanges}
+                prefs={diffPrefs}
+                target={mapTarget}
+              />
             </div>
           </div>
         )}

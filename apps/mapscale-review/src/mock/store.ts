@@ -8,7 +8,7 @@
  * uploads to levels whose editors aren't open finally have somewhere to live.
  */
 
-import type { Change, Decision, LevelVersion } from "./diff";
+import type { Change, Decision, LevelVersion, Override } from "./diff";
 
 export interface StoredLevel {
   index: number;
@@ -54,7 +54,10 @@ export function updateBuilding(b: StoredBuilding) {
 const versionsByLevel = new Map<string, LevelVersion[]>();
 const versionListeners = new Set<() => void>();
 
-export function levelKey(buildingId: string | undefined, index: number): string {
+export function levelKey(
+  buildingId: string | undefined,
+  index: number,
+): string {
   return `${buildingId ?? "?"}:${index}`;
 }
 
@@ -103,7 +106,7 @@ export function subscribeLevelVersions(fn: () => void): () => void {
 export function clearLevelVersions() {
   if (versionsByLevel.size === 0) return;
   versionsByLevel.clear();
-  versionsRevision++;   // same handle every other mutation bumps — see getLevelVersionsRevision
+  versionsRevision++; // same handle every other mutation bumps — see getLevelVersionsRevision
   versionListeners.forEach((l) => l());
 }
 
@@ -117,23 +120,28 @@ export function clearLevelVersions() {
  * Which made the flag meaningless: decision 2 chose Flag over Edit precisely because *"flag now,
  * keep flagged items visible to edit later"*, and there was no later.
  *
+ * ⚠️ **2026-08-25: decision 2 was reversed and Flag is gone.** The outcome now carries what the
+ * reviewer *did* rather than what they deferred — see `overrides`.
+ *
  * Keyed by level; `versionN` records which version was reviewed, so a newer upload doesn't inherit
  * an older review's conclusions.
  */
 export interface ReviewOutcome {
   versionN: number;
   decisions: Record<string, Decision | undefined>;
-  /** The changes exactly as reviewed — the editor draws the flagged ones on its own map. */
+  /** The changes exactly as reviewed — MapScale's report, never the reviewer's answer to it. */
   changes: Change[];
   /**
-   * Optional note per flagged change, keyed by change id — **a sibling of `decisions`, not a field
-   * on the change** (Olcay, 2026-08-14: *"flag with optional notes"*).
+   * **The user's own values, keyed by change id** — a sibling of `decisions`, not a field on the
+   * change (Olcay, 2026-08-25: *"edit becomes user override which supersedes the incoming
+   * change"*). It replaces `notes`, which belonged to the flag.
    *
-   * Same reason `decisions` is separate: `changes` is the report as it arrived and must stay a
-   * faithful snapshot of what MapScale said. What a person wrote about it afterwards is theirs,
-   * and keying it the same way means an un-flag can drop the note with the decision.
+   * The same reason `decisions` is separate applies twice as hard here: `changes` is the report as
+   * it arrived and must stay a faithful snapshot of what MapScale said. That snapshot is what
+   * **Revert** restores — *"revert means back to MapScale's detected value and geometry"* — so
+   * reverting is nothing more than deleting the key, and there is no way for it to go wrong.
    */
-  notes?: Record<string, string>;
+  overrides?: Record<string, Override>;
   /** Did concluding it publish the level? (Amber does; red cause B only via Publish now.) */
   published: boolean;
   /**
@@ -192,8 +200,13 @@ export function getReviewCount(): number {
 }
 
 /** The report for one version of one level. A version with no review returns undefined. */
-export function getReviewOutcome(key: string, versionN: number | undefined): ReviewOutcome | undefined {
-  return versionN === undefined ? undefined : reviews.get(reviewKey(key, versionN));
+export function getReviewOutcome(
+  key: string,
+  versionN: number | undefined,
+): ReviewOutcome | undefined {
+  return versionN === undefined
+    ? undefined
+    : reviews.get(reviewKey(key, versionN));
 }
 
 export function subscribeReviews(fn: () => void): () => void {

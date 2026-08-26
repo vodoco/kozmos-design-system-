@@ -13,8 +13,9 @@ import {
   type NotificationTarget,
 } from "./ui/NotificationBell";
 import {
-  FLAGGED_LEVEL,
-  seedFlaggedChanges,
+  EDITED_LEVEL,
+  seedEditedChanges,
+  seedEditedOverrides,
   seedFloorWarnings,
   seedVersions,
   type RedCause,
@@ -57,40 +58,43 @@ type Screen =
 const T3_BUILDING_ID = "51dd37d1-c2bc-4d9e-8e22-2ea1a15a626c";
 
 /**
- * **B4 starts with a finished review that left two flags on it** (2026-08-14).
+ * **B4 starts with a finished review that two changes were EDITED in** (2026-08-14, rewritten
+ * 2026-08-25).
  *
- * The tree advertised *"2 flagged"* on that level as a hardcoded label with **no report behind
- * it**, so every surface reading the real data — the map most visibly — correctly showed nothing,
- * and the feature read as broken. Seeding the report the label was describing makes the tag true
- * and gives the flags-on-the-map behaviour something to draw.
+ * It began as the flagged-level seed: the tree advertised *"2 flagged"* on that level as a
+ * hardcoded label with **no report behind it**, so every surface reading the real data — the map
+ * most visibly — correctly showed nothing, and the feature read as broken.
  *
- * `complete: true, published: true` on purpose: this is a review someone **finished**, which is
- * the case Olcay meant — *"flags after the user saved the review or completed with flags"*. The
- * level is live and two things are still waiting for a human in the editor.
+ * ⚠️ **The tag it existed to make true is gone**, along with flagging. Olcay, 2026-08-25: *"once
+ * review concluded the map becomes the current map."* An edit is not an outstanding item to
+ * advertise; it is simply the floor. What the seed is for now is the **record**: a concluded
+ * review that carries two overrides, so Version History has a real one to show and so the shape a
+ * live review writes is the shape a seeded one has.
+ *
+ * `complete: true, published: true` on purpose: this is a review someone **finished**.
  *
  * Runs at import, once, and only fills a gap: if a report already exists for that version it is
  * left alone, so this can never overwrite something the user did in-session.
  */
-function seedFlaggedLevel() {
-  const key = levelKey(T3_BUILDING_ID, FLAGGED_LEVEL);
+function seedEditedLevel() {
+  const key = levelKey(T3_BUILDING_ID, EDITED_LEVEL);
   const versions = getLevelVersions(key, () =>
-    seedVersions("B4", FLAGGED_LEVEL, T3_BUILDING_ID),
+    seedVersions("B4", EDITED_LEVEL, T3_BUILDING_ID),
   );
   const newest = versions[0];
   if (!newest || getReviewOutcome(key, newest.n)) return;
-  const changes = seedFlaggedChanges();
   setReviewOutcome(key, {
     versionN: newest.n,
-    changes,
-    decisions: Object.fromEntries(changes.map((c) => [c.id, "flag" as const])),
-    notes: Object.fromEntries(
-      changes.filter((c) => c.note).map((c) => [c.id, c.note as string]),
-    ),
+    changes: seedEditedChanges(),
+    // No decisions: an override supersedes the incoming change, so confirming or rejecting it
+    // as well would be recording two answers to one question.
+    decisions: {},
+    overrides: seedEditedOverrides(),
     published: true,
     complete: true,
   });
 }
-seedFlaggedLevel();
+seedEditedLevel();
 /**
  * The level the tour opens: B2, the amber demo whose diff has real geometry. A MODULE constant,
  * not an inline literal — a fresh object each call would set state to a "new" value every time

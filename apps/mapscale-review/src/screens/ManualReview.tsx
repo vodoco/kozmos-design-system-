@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Text,
   Button,
@@ -9,6 +9,11 @@ import {
   SelectValue,
 } from "@kozmos/react";
 import { ChangeGroupBlock } from "../ui/ChangeGroup";
+import {
+  GeometryToolbar,
+  type GeomCommand,
+  type GeomState,
+} from "../ui/GeometryToolbar";
 import { ChangeReviewRow, WarningGlyph } from "../ui/ChangeReviewRow";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import { PANEL_WIDTH } from "../ui/Chrome";
@@ -34,15 +39,31 @@ import {
   type MagnitudeBand,
   type RedCause,
   WARNING_LABEL,
+  SEEDED_OVERRIDES,
   type FloorWarning,
+  type Override,
 } from "../mock/diff";
-import { getLevelVersions, getReviewOutcome, levelKey, setLevelVersions, setReviewOutcome } from "../mock/store";
+import {
+  getLevelVersions,
+  getReviewOutcome,
+  levelKey,
+  setLevelVersions,
+  setReviewOutcome,
+} from "../mock/store";
 
 const LINE = "#e3e4e8";
 /** Stable identity — PointrMap re-posts whenever `changes` changes by reference. */
 const NO_CHANGES: Change[] = [];
 
-function MapChrome({ prefs, onPrefs, focus }: { prefs: MapPrefs; onPrefs: (p: MapPrefs) => void; focus: boolean }) {
+function MapChrome({
+  prefs,
+  onPrefs,
+  focus,
+}: {
+  prefs: MapPrefs;
+  onPrefs: (p: MapPrefs) => void;
+  focus: boolean;
+}) {
   // No legend: every colour on the map is named in the list beside it (NEW / UPDATED / REMOVED /
   // PRESERVED), and the ✓ 🚩 ✗ marks are keyed by the tally under the magnitude block.
   // Focus lives here and nowhere else: it exists to get noise out from between you and the diff —
@@ -92,14 +113,14 @@ export function ManualReview({
      * update flow (Olcay, 2026-08-11); creation's Save just has nothing to hold out of publishing,
      * because nothing publishes here.
      */
-    onSave: (rows: Change[]) => void;
+    onSave: (rows: Change[], overrides: Record<string, Override>) => void;
     /**
      * Complete review — concludes this LEVEL. Hands the decided rows back, not a count, so
      * reopening resumes where the user left off (the wizard owns them; this screen is remounted
      * each time). No confirmation overlay: the update flow's asks first because completing may
      * publish a site, and creation publishes nothing.
      */
-    onConfirm: (rows: Change[]) => void;
+    onConfirm: (rows: Change[], overrides: Record<string, Override>) => void;
     /**
      * The wizard reviews **one level at a time**, and moving between them is the wizard's own
      * "Level to Align, N of M" idiom rather than the map's `LevelSelector` — you are inside the
@@ -118,7 +139,11 @@ export function ManualReview({
   const pct = magnitudePct ?? 30;
   // Cause B has no ratio but the whole floor needs eyes, so it reads as the large band.
   // Creation reads minor: a 92%-confidence result is good news, and green is its colour.
-  const bandKind: MagnitudeBand = creation ? "minor" : redCause ? "large" : magnitudeBand(pct);
+  const bandKind: MagnitudeBand = creation
+    ? "minor"
+    : redCause
+      ? "large"
+      : magnitudeBand(pct);
   /**
    * Cause B reviews WITHOUT a changelog (Olcay, 2026-08-10 evening, ruling audit Q8): a changelog
    * IS a comparison against the published map, and matching is exactly what failed — so any
@@ -132,7 +157,10 @@ export function ManualReview({
    * seeds were harvested from. Empty until the map reports; the seeded names stand in meanwhile.
    */
   const [floorFeatures, setFloorFeatures] = useState<string[]>([]);
-  const onFeatures = useCallback((names: string[]) => setFloorFeatures(names), []);
+  const onFeatures = useCallback(
+    (names: string[]) => setFloorFeatures(names),
+    [],
+  );
   const matchFailed = redCause === "cannot-match";
   /**
    * Decision 9 in this screen's own voice: a >50% change is REJECTED, never reviewed. Every
@@ -141,7 +169,8 @@ export function ManualReview({
    * full changelog under "publish when you're ready", contradicting the decision. Cause B is the
    * one large-band review that exists.
    */
-  const rejectedByGuard = !creation && !redCause && magnitudeBand(pct) === "large";
+  const rejectedByGuard =
+    !creation && !redCause && magnitudeBand(pct) === "large";
   // The set scales with the declared magnitude — a 62% screen shows a remodel, not the 30% list.
   // Creation mode reviews MapScale's guesses instead of a diff.
   const initialChanges = useMemo(
@@ -164,7 +193,9 @@ export function ManualReview({
    * must not greet you with "publishes automatically in 6 days" — that countdown is suspended, and
    * saying otherwise would be the screen lying about the one thing it exists to tell you.
    */
-  const [fate, setFate] = useState<"pending" | "published" | "cancelled" | "held">(() => {
+  const [fate, setFate] = useState<
+    "pending" | "published" | "cancelled" | "held"
+  >(() => {
     if (creation || !target) return "pending";
     const key = levelKey(target.buildingId, target.index);
     const newestN = getLevelVersions(key, () =>
@@ -186,20 +217,74 @@ export function ManualReview({
    */
   const [floorNoticesOpen, setFloorNoticesOpen] = useState(false);
   /**
-   * Notes written against flags, keyed by change id. Seeded from the saved report so re-opening a
-   * part-way review brings back what you wrote, exactly as `decisions` does.
+   * **The reviewer's own values, keyed by change id** — what replaced the flag's note field.
+   *
+   * Seeded from the demo table first and the saved report second, so re-opening a part-way review
+   * brings back what you edited exactly as `decisions` does. The demo table is narrowed to the ids
+   * actually in this band: `SEEDED_OVERRIDES` is flat and global, and an override for a change
+   * that is not on this floor would be an outcome nobody could see or revert.
    */
-  const [notes, setNotes] = useState<Record<string, string>>(() => {
+  const [overrides, setOverrides] = useState<Record<string, Override>>(() => {
     if (!target) return {};
     const key = levelKey(target.buildingId, target.index);
-    const newest = getLevelVersions(key, () => seedVersions(target.short, target.index, target.buildingId))[0];
-    return { ...(getReviewOutcome(key, newest?.n)?.notes ?? {}) };
+    const newest = getLevelVersions(key, () =>
+      seedVersions(target.short, target.index, target.buildingId),
+    )[0];
+    const saved = getReviewOutcome(key, newest?.n)?.overrides;
+    if (saved) return { ...saved };
+    return {};
   });
+  /**
+   * Seed the demo overrides once the changes are known. A separate effect rather than an
+   * initialiser, because `initialChanges` depends on what the **map** reports about the floor
+   * (`bindToFloor`), which is not known at mount — the same reason `decisions` needs its own
+   * gap-filling effect in creation mode.
+   *
+   * ⚠️ Fills gaps only. Overwriting would undo an edit the user has just made, and would resurrect
+   * one they have just reverted — which is the worse of the two, because Revert would visibly not
+   * work.
+   */
+  const seededOverrides = useRef(
+    (() => {
+      // Creation seeds nothing, and a level with no target has nothing to seed onto. A level that
+      // already carries a **saved report** must not be seeded either: the demo overrides would
+      // come back on top of a review someone has been through, resurrecting any they reverted —
+      // and a Revert that visibly does not stick is worse than no demo at all.
+      if (creation || !target) return true;
+      const key = levelKey(target.buildingId, target.index);
+      const newest = getLevelVersions(key, () =>
+        seedVersions(target.short, target.index, target.buildingId),
+      )[0];
+      return !!getReviewOutcome(key, newest?.n);
+    })(),
+  );
+  useEffect(() => {
+    if (creation || seededOverrides.current || !initialChanges.length) return;
+    const seed: Record<string, Override> = {};
+    for (const c of initialChanges)
+      if (SEEDED_OVERRIDES[c.id]) seed[c.id] = SEEDED_OVERRIDES[c.id];
+    if (!Object.keys(seed).length) return;
+    seededOverrides.current = true;
+    setOverrides((p) => {
+      const next = { ...p };
+      let changed = false;
+      for (const [id, o] of Object.entries(seed))
+        if (!(id in next)) {
+          next[id] = o;
+          changed = true;
+        }
+      return changed ? next : p;
+    });
+  }, [creation, initialChanges]);
   // `preserved` is not a change to review — it carries no decision, and the group and section
   // controls filter it out themselves rather than the screen pre-computing a list.
   // keyed by id, so a rebind (which changes names, never ids) can't lose a decision
-  const [decisions, setDecisions] = useState<Record<string, Decision | undefined>>(() => {
-    const seeded = Object.fromEntries(initialChanges.map((c) => [c.id, c.decision]));
+  const [decisions, setDecisions] = useState<
+    Record<string, Decision | undefined>
+  >(() => {
+    const seeded = Object.fromEntries(
+      initialChanges.map((c) => [c.id, c.decision]),
+    );
     // Resume a review saved part-way. Version-matched, so a new upload starts clean rather than
     // inheriting decisions taken about a floor-plan that has since been replaced.
     if (creation || !target) return seeded;
@@ -247,10 +332,14 @@ export function ManualReview({
   // for the same reason `changes` is: PointrMap posts whenever this prop's identity changes, so an
   // inline object would re-target the map on every render.
   const mapTarget = useMemo(
-    () => (target?.buildingId ? { building: target.buildingId, level: target.index } : undefined),
+    () =>
+      target?.buildingId
+        ? { building: target.buildingId, level: target.index }
+        : undefined,
     [target?.buildingId, target?.index],
   );
-  const setOne = (id: string, d: Decision | undefined) => setDecisions((p) => ({ ...p, [id]: d }));
+  const setOne = (id: string, d: Decision | undefined) =>
+    setDecisions((p) => ({ ...p, [id]: d }));
   /**
    * The map's pinned card decides through the SAME function the list rows use (Olcay, 2026-08-11:
    * *"I want to click on the markers on the map, see all options and change to something else"*).
@@ -261,7 +350,137 @@ export function ManualReview({
    * re-register the listener on every render.
    */
   const onMapDecision = useCallback(
-    (id: string, d: "confirm" | "flag" | "reject" | null) => setOne(id, d ?? undefined),
+    (id: string, d: "confirm" | "reject" | null) => setOne(id, d ?? undefined),
+    [],
+  );
+
+  /* ── editing ────────────────────────────────────────────────────────────────
+   *
+   * **The review page can now edit** (Olcay, 2026-08-25) — metadata in the row, geometry on the
+   * map. The geometry half is the editor that already exists, armed from here: the same command
+   * queue, the same `GeometryToolbar`, the same state messages that Map Content uses. Growing a
+   * second editor inside the review would have been two editors to keep in step, and this screen
+   * is the one place where a divergence would be invisible until it shipped.
+   */
+  const setOverride = useCallback(
+    (id: string, o: Override) =>
+      setOverrides((p) => ({ ...p, [id]: { ...p[id], ...o } })),
+    [],
+  );
+  /** Revert — the override is simply deleted, and MapScale's detected value is what is underneath. */
+  const revertOverride = useCallback(
+    (id: string) =>
+      setOverrides((p) => {
+        if (!(id in p)) return p;
+        const next = { ...p };
+        delete next[id];
+        return next;
+      }),
+    [],
+  );
+  /**
+   * **Revert on an ordinary row, Reset on a `preserved` one** — one control, and they are genuinely
+   * two acts, so this is where they part.
+   *
+   * A `preserved` row's override was made in an **earlier** run and is not in `overrides`; there is
+   * nothing here to delete. Resetting it means *stop keeping my old edit and take what the source
+   * says*, and the model already has a word for that: `reject`. Which is exactly the decision the
+   * row's segments were forbidden from offering (discarding your own work must not be a ✗ among
+   * twenty triage rows) — the objection was always to the **control**, never to the act, and a
+   * button that says what it discards is the control that was missing.
+   *
+   * ⚠️ Order matters: if the row also carries an override from *this* review, that comes off first.
+   * Reset would otherwise reach past the edit in front of you to the one from last month.
+   */
+  const revertOrReset = useCallback(
+    (id: string) => {
+      if (overrides[id]) return revertOverride(id);
+      const c = changes.find((x) => x.id === id);
+      if (c?.type === "preserved") setOne(id, "reject");
+    },
+    [overrides, revertOverride, changes],
+  );
+  const [geom, setGeom] = useState<GeomState>({ editing: false });
+  /**
+   * ⚠️ Bounded and append-only, exactly as Map Content's is — the consumer tracks the last `seq`
+   * it posted, so trimming can never replay a command. See the long note there.
+   */
+  const [geomCommands, setGeomCommands] = useState<
+    { seq: number; body: Record<string, unknown> }[]
+  >([]);
+  const geomSeq = useRef(0);
+  const sendGeom = useCallback((body: Record<string, unknown>) => {
+    geomSeq.current += 1;
+    setGeomCommands((cur) => [
+      ...cur.slice(-31),
+      { seq: geomSeq.current, body },
+    ]);
+  }, []);
+  const onGeomCommand = useCallback(
+    (c: GeomCommand) => sendGeom(c as unknown as Record<string, unknown>),
+    [sendGeom],
+  );
+  const onGeomState = useCallback(
+    (st: Record<string, unknown>) => setGeom(st as unknown as GeomState),
+    [],
+  );
+  /**
+   * Which CHANGE the open geometry session belongs to.
+   *
+   * A ref, not state: `onGeometry` fires from a message handler that must not be re-registered
+   * every time the answer changes, and nothing renders differently for knowing it.
+   *
+   * ⚠️ **It is a change id, not an `fid`.** The map resolves changes to real features by name (see
+   * `resolveChanges` in the shell), so the app has never held the fid — which is exactly why the
+   * shell grew `beginchange` rather than the app guessing one.
+   */
+  const geomFor = useRef<string | null>(null);
+  const editShape = useCallback(
+    (id: string) => {
+      geomFor.current = id;
+      sendGeom({ cmd: "beginchange", id });
+    },
+    [sendGeom],
+  );
+  /**
+   * The edit form closed. One commit point — the row — for both halves of an edit, so a saved name
+   * can never sit beside a discarded outline.
+   *
+   * The commit is gated on `dirty` as well as on the user's answer: ending a session that changed
+   * nothing with `commit: true` would post a `geometry` message and write an override recording an
+   * outline identical to the detected one.
+   */
+  const endShapeEdit = useCallback(
+    (commit: boolean) => {
+      if (!geomFor.current) return;
+      sendGeom({ cmd: "end", commit: commit && !!geom.dirty });
+      geomFor.current = null;
+    },
+    [sendGeom, geom.dirty],
+  );
+  /**
+   * A committed outline, merged into that row's override rather than replacing it — the name and
+   * the shape are two halves of one answer, and the form has usually written the first already.
+   */
+  const onGeometry = useCallback(
+    (_fid: string, rings: number[][][], pieces: number) => {
+      const id = geomFor.current;
+      if (!id) return;
+      setOverrides((p) => {
+        const cur = p[id] ?? {};
+        const line =
+          pieces > 1
+            ? `Boundary redrawn by hand — now ${pieces} pieces`
+            : "Boundary redrawn by hand";
+        const details = (cur.details ?? []).filter(
+          (d) => !d.startsWith("Boundary"),
+        );
+        return {
+          ...p,
+          [id]: { ...cur, geometry: rings, details: [...details, line] },
+        };
+      });
+    },
     [],
   );
 
@@ -275,7 +494,10 @@ export function ManualReview({
    * already under your eye, and moving the list then is an unrequested jolt — while a selection
    * made on the map has to come and find you.
    */
-  const [active, setActive] = useState<{ id: string | null; from: "list" | "map" }>({
+  const [active, setActive] = useState<{
+    id: string | null;
+    from: "list" | "map";
+  }>({
     id: null,
     from: "list",
   });
@@ -283,7 +505,10 @@ export function ManualReview({
   const activate = (id: string) =>
     setActive((cur) => ({ id: cur.id === id ? null : id, from: "list" }));
   /** Stable, so PointrMap doesn't re-subscribe its message listener on every render. */
-  const onMapSelect = useCallback((id: string | null) => setActive({ id, from: "map" }), []);
+  const onMapSelect = useCallback(
+    (id: string | null) => setActive({ id, from: "map" }),
+    [],
+  );
 
   /**
    * Concluding the review — what Save leaves behind (Olcay, 2026-08-11: *"we need to show the
@@ -305,7 +530,9 @@ export function ManualReview({
   const writeOutcome = (complete: boolean) => {
     if (creation || !target) return;
     const key = levelKey(target.buildingId, target.index);
-    const versions = getLevelVersions(key, () => seedVersions(target.short, target.index, target.buildingId));
+    const versions = getLevelVersions(key, () =>
+      seedVersions(target.short, target.index, target.buildingId),
+    );
     const newest = versions[0];
     if (!newest) return;
     /**
@@ -319,15 +546,27 @@ export function ManualReview({
      * **Auto-publish on conclusion** (decision 5) is the other one, and that genuinely requires
      * completing: an amber level publishes because you finished reviewing it.
      */
-    const published = fate === "published" || (complete && !matchFailed && bandKind === "medium");
-    // Only notes on rows that are still flagged: un-flagging drops the note with the decision, so
-    // a stale sentence can never resurface if the row is flagged again for a different reason.
-    const keptNotes: Record<string, string> = {};
-    for (const c of changes)
-      if (decisions[c.id] === "flag" && notes[c.id]?.trim()) keptNotes[c.id] = notes[c.id].trim();
-    setReviewOutcome(key, { versionN: newest.n, decisions, changes, published, complete, notes: keptNotes });
+    const published =
+      fate === "published" ||
+      (complete && !matchFailed && bandKind === "medium");
+    // Only overrides for rows that are actually in this report. An override keyed to a change the
+    // floor no longer carries could never be seen or reverted, and would come back to life the day
+    // a re-upload happened to reuse the id.
+    const live: Record<string, Override> = {};
+    for (const c of changes) if (overrides[c.id]) live[c.id] = overrides[c.id];
+    setReviewOutcome(key, {
+      versionN: newest.n,
+      decisions,
+      changes,
+      published,
+      complete,
+      overrides: live,
+    });
     if (published && newest.state !== "published")
-      setLevelVersions(key, [{ ...newest, state: "published" }, ...versions.slice(1)]);
+      setLevelVersions(key, [
+        { ...newest, state: "published" },
+        ...versions.slice(1),
+      ]);
   };
 
   /** Come back to it later. No ceremony: nothing is decided, nothing publishes, nothing is lost. */
@@ -343,31 +582,37 @@ export function ManualReview({
    * a change you let through.
    */
   const undecidedCount = changes.filter(
-    (c) => c.type !== "preserved" && !decisions[c.id],
+    (c) => c.type !== "preserved" && !decisions[c.id] && !overrides[c.id],
   ).length;
 
   /**
-   * How many changes you have flagged to come back to (Olcay, 2026-08-11: *"if there are flags we
-   * should warn user about these flags — you have flagged items to edit, do you still want to
-   * publish?"*).
+   * How many rows carry **your** value rather than MapScale's.
    *
-   * The warning is the honest half of §18a's ruling that **flags are annotations, not gates**.
-   * Because they don't block, completing takes them live exactly as detected — so the one moment
-   * that must say so is the moment before it happens. It warns; it never refuses.
+   * It replaces `flaggedCount`, and the sentence it feeds says something different in kind. The
+   * flag warning existed because flags were *annotations, not gates* — they did not hold anything
+   * back, so completing took them live exactly as detected and the moment before that had to say
+   * so. An edit has no such trap: what goes live is precisely what you put there. The count is
+   * kept because it is still worth stating what you are about to publish under your own name.
    */
-  const flaggedCount = changes.filter((c) => decisions[c.id] === "flag").length;
+  const editedCount = changes.filter((c) => overrides[c.id]).length;
   /**
-   * The changes as the MAP should see them: the report, plus whatever was written against each
-   * flag. The note lives in review state, not on the change, so the two are married here — this is
-   * the only place that needs them joined, and doing it in the map's prop keeps `changes` itself a
-   * clean snapshot of what MapScale said.
+   * The changes as the MAP should see them: the report, plus your override where you made one.
+   *
+   * Married here rather than in `changes`, which stays a clean snapshot of what MapScale said —
+   * the same division the store keeps, and the reason Revert is a deletion rather than an undo
+   * log. The shell reads `override` to paint the row's shape in the override purple and to show
+   * your name on the card instead of the detected one.
    */
   const mapChanges = useMemo(
-    () => changes.map((c) => (notes[c.id]?.trim() ? { ...c, note: notes[c.id].trim() } : c)),
-    [changes, notes],
+    () =>
+      changes.map((c) =>
+        overrides[c.id] ? { ...c, override: overrides[c.id] } : c,
+      ),
+    [changes, overrides],
   );
   /** Does completing this review actually publish? Decision 5 — and only for an eligible band. */
-  const willPublish = fate !== "published" && !matchFailed && bandKind === "medium";
+  const willPublish =
+    fate !== "published" && !matchFailed && bandKind === "medium";
 
   /**
    * Creation reviews one level at a time and **stays mounted while you step between them**, so
@@ -403,20 +648,25 @@ export function ManualReview({
    */
   useEffect(() => {
     if (!active.id || active.from !== "map") return;
-    const row = document.querySelector(`[data-change-row="${CSS.escape(active.id)}"]`);
+    const row = document.querySelector(
+      `[data-change-row="${CSS.escape(active.id)}"]`,
+    );
     row?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [active]);
   /**
    * Bulk decision — used by both a group header and a whole risk section.
    *
-   * A flag is a deliberate "I've seen this, come back to it", so a bulk action never silently
-   * clears one; deciding a flagged row individually still works. Without this, one "Confirm all"
-   * quietly undoes the whole triage pass — and with grouping there are now many more of them.
+   * **An edited row is never touched by a bulk action.** This is the same rule that used to
+   * protect flags, and it matters more now than it did then: a flag was a note, and one careless
+   * "Confirm all" cost you a reminder. An override is *work* — a name you typed, an outline you
+   * redrew — and writing a decision over it would silently throw that away, since a decision and
+   * an override cannot both stand (see the row's Edited state). Deciding an edited row one at a
+   * time still works: Revert first, and the ✓/✗ pair comes back.
    */
   const setMany = (ids: string[], d: Decision) =>
     setDecisions((p) => {
       const next = { ...p };
-      for (const id of ids) if (p[id] !== "flag" || d === "flag") next[id] = d;
+      for (const id of ids) if (!overrides[id]) next[id] = d;
       return next;
     });
   // Colour-keyed sections by change type, warnings sorted to the top of each.
@@ -458,14 +708,30 @@ export function ManualReview({
                 marginTop: 14,
               }}
             >
-              <div style={{ fontSize: 20, fontWeight: 700 }}>{RED_CAUSE_COPY["large-change"].card(pct)}</div>
+              <div style={{ fontSize: 20, fontWeight: 700 }}>
+                {RED_CAUSE_COPY["large-change"].card(pct)}
+              </div>
             </div>
-            <div style={{ fontSize: 12.5, color: "var(--review-muted)", lineHeight: 1.5, marginTop: 12 }}>
+            <div
+              style={{
+                fontSize: 12.5,
+                color: "var(--review-muted)",
+                lineHeight: 1.5,
+                marginTop: 12,
+              }}
+            >
               {RED_CAUSE_COPY["large-change"].error}
             </div>
           </div>
         </div>
-        <div style={{ position: "relative", flex: 1, background: "#EDEEF0", minWidth: 0 }}>
+        <div
+          style={{
+            position: "relative",
+            flex: 1,
+            background: "#EDEEF0",
+            minWidth: 0,
+          }}
+        >
           <PointrMap changes={NO_CHANGES} prefs={prefs} target={mapTarget} />
         </div>
       </div>
@@ -519,9 +785,22 @@ export function ManualReview({
                 }}
               >
                 Reviewing{" "}
-                <b style={{ color: "var(--primitives-colors-theme-900)", fontWeight: 600 }}>
+                <b
+                  style={{
+                    color: "var(--primitives-colors-theme-900)",
+                    fontWeight: 600,
+                  }}
+                >
                   {shown.short}
-                  <span style={{ color: "var(--primitives-colors-background-200)", fontWeight: 400, margin: "0 6px" }}>|</span>
+                  <span
+                    style={{
+                      color: "var(--primitives-colors-background-200)",
+                      fontWeight: 400,
+                      margin: "0 6px",
+                    }}
+                  >
+                    |
+                  </span>
                   {shown.long}
                 </b>
               </Text>
@@ -533,12 +812,25 @@ export function ManualReview({
         <div style={{ padding: "0 20px 8px", overflow: "auto", flex: 1 }}>
           {/* 8px of the old 10px gap now comes from the header block's own bottom padding */}
           <div style={{ height: 2 }} />
-          <Text style={{ fontSize: 13, color: "var(--review-muted)", display: "block", lineHeight: 1.45 }}>
+          <Text
+            style={{
+              fontSize: 13,
+              color: "var(--review-muted)",
+              display: "block",
+              lineHeight: 1.45,
+            }}
+          >
+            {/*
+              **The map is a preview of what you are about to publish** (Olcay, 2026-08-25), so
+              the lede says what the three outcomes do to it rather than naming three buttons.
+              Reject no longer means "mark it with a ✗": it means the floor keeps the published
+              value, and you watch that happen.
+            */}
             {creation
-              ? "Confirm each of MapScale's guesses, flag it for a later dashboard edit, or reject it."
+              ? "Confirm each of MapScale's guesses, edit it to put your own value in its place, or reject it."
               : matchFailed
                 ? "Inspect the whole floor, then publish it or upload a corrected floor-plan."
-                : "Confirm each change to apply it now, flag it for a later dashboard edit, or reject it."}
+                : "Confirm a change to apply it, reject it to keep what is published, or edit it to put your own value in its place. The map shows the floor as it will be."}
           </Text>
           {/*
             The wizard's level cycle — step 3's "Level to Align, N of M" idiom, reused because you
@@ -548,19 +840,29 @@ export function ManualReview({
           */}
           {creation?.levels && creation.levels.items.length > 1 && (
             <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4, color: "var(--review-ink)" }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  marginBottom: 4,
+                  color: "var(--review-ink)",
+                }}
+              >
                 ● Level to Review{" "}
                 <span
                   style={{
                     background: "var(--primitives-colors-emotional-success-0)",
-                    border: "1px solid var(--primitives-colors-emotional-success-200)",
+                    border:
+                      "1px solid var(--primitives-colors-emotional-success-200)",
                     borderRadius: 999,
                     padding: "0 8px",
                     fontSize: 10,
                   }}
                 >
-                  {creation.levels.items.findIndex((l) => l.id === creation.levels!.currentId) + 1} of{" "}
-                  {creation.levels.items.length}
+                  {creation.levels.items.findIndex(
+                    (l) => l.id === creation.levels!.currentId,
+                  ) + 1}{" "}
+                  of {creation.levels.items.length}
                 </span>
               </div>
               <Select
@@ -597,20 +899,29 @@ export function ManualReview({
           >
             {creation ? (
               <>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{creation.confidencePct}%</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>
+                  {creation.confidencePct}%
+                </div>
                 <div style={{ fontSize: 12 }}>
-                  MapScale confidence — a new building has nothing to compare yet; confirm its guesses below
+                  MapScale confidence — a new building has nothing to compare
+                  yet; confirm its guesses below
                 </div>
               </>
             ) : redCause === "cannot-match" ? (
               <>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{RED_CAUSE_COPY["cannot-match"].title}</div>
-                <div style={{ fontSize: 12, lineHeight: 1.35 }}>{RED_CAUSE_COPY["cannot-match"].detail}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>
+                  {RED_CAUSE_COPY["cannot-match"].title}
+                </div>
+                <div style={{ fontSize: 12, lineHeight: 1.35 }}>
+                  {RED_CAUSE_COPY["cannot-match"].detail}
+                </div>
               </>
             ) : (
               <>
                 <div style={{ fontSize: 20, fontWeight: 700 }}>{pct}%</div>
-                <div style={{ fontSize: 12 }}>of floor area changed vs the published floor plan</div>
+                <div style={{ fontSize: 12 }}>
+                  of floor area changed vs the published floor plan
+                </div>
               </>
             )}
           </div>
@@ -637,10 +948,18 @@ export function ManualReview({
                     lineHeight: 1.15,
                   }}
                 >
-                  <div style={{ fontSize: 17, fontWeight: 600, color: METRIC_COLOR[t] }}>
+                  <div
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 600,
+                      color: METRIC_COLOR[t],
+                    }}
+                  >
                     {changes.filter((c) => inMetric(c, t)).length}
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--review-muted)" }}>{METRIC_LABEL[t]}</div>
+                  <div style={{ fontSize: 11, color: "var(--review-muted)" }}>
+                    {METRIC_LABEL[t]}
+                  </div>
                 </div>
               ))}
             </div>
@@ -656,73 +975,80 @@ export function ManualReview({
             mock records the intent locally and Phase 2 gives it a real backend.
           */}
           {/* creation has no fate: Save creates, publishing stays the site's Publish */}
-          {!creation && (fate !== "pending" ? (
-            <div
-              style={{
-                border: `1px solid ${fate === "published" ? BAND.minor.border : LINE}`,
-                background: fate === "published" ? BAND.minor.tint : "#f2f3f5",
-                color: fate === "published" ? BAND.minor.ink : "var(--review-muted)",
-                borderRadius: 10,
-                padding: "10px 12px",
-                marginBottom: 12,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontSize: 12,
-                lineHeight: 1.4,
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                {fate === "published"
-                  ? "Published just now — this version is live."
-                  : fate === "held"
-                    ? // A part-way save suspends the countdown, so the strip must stop promising it.
-                      "In review — this level is held out of publishing, including the automatic one, until you complete the review."
-                    : "Scheduled publish cancelled — nothing publishes until you conclude the review or publish it yourself."}
-              </div>
-              {/* killing the timer doesn't take away the deliberate path — and being held doesn't
+          {!creation &&
+            (fate !== "pending" ? (
+              <div
+                style={{
+                  border: `1px solid ${fate === "published" ? BAND.minor.border : LINE}`,
+                  background:
+                    fate === "published" ? BAND.minor.tint : "#f2f3f5",
+                  color:
+                    fate === "published"
+                      ? BAND.minor.ink
+                      : "var(--review-muted)",
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                  marginBottom: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  fontSize: 12,
+                  lineHeight: 1.4,
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  {fate === "published"
+                    ? "Published just now — this version is live."
+                    : fate === "held"
+                      ? // A part-way save suspends the countdown, so the strip must stop promising it.
+                        "In review — this level is held out of publishing, including the automatic one, until you complete the review."
+                      : "Scheduled publish cancelled — nothing publishes until you conclude the review or publish it yourself."}
+                </div>
+                {/* killing the timer doesn't take away the deliberate path — and being held doesn't
                   either: you can still decide to put it live as it stands */}
-              {(fate === "cancelled" || fate === "held") && (
-                <Button size="sm" onClick={() => setFate("published")}>
-                  Publish now
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div
-              style={{
-                border: `1px solid ${band.border}`,
-                background: band.tint,
-                color: band.ink,
-                borderRadius: 10,
-                padding: "10px 12px",
-                marginBottom: 12,
-                display: "flex",
-                alignItems: "center",
-                // when the action wraps under the sentence it is an aside, not a second block
-                columnGap: 10,
-                rowGap: 6,
-                flexWrap: "wrap",
-              }}
-            >
-              {/*
+                {(fate === "cancelled" || fate === "held") && (
+                  <Button size="sm" onClick={() => setFate("published")}>
+                    Publish now
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  border: `1px solid ${band.border}`,
+                  background: band.tint,
+                  color: band.ink,
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                  marginBottom: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  // when the action wraps under the sentence it is an aside, not a second block
+                  columnGap: 10,
+                  rowGap: 6,
+                  flexWrap: "wrap",
+                }}
+              >
+                {/*
                 Amber's one action is a text link, so it fits BESIDE the sentence — and squeezes it
                 into three cramped lines. Give the sentence the whole row and let the link sit under
                 it. Cause B keeps them side by side: its action is a real button and reads as one.
               */}
-              <div
-                style={{
-                  flex: bandKind === "medium" ? "1 1 100%" : 1,
-                  minWidth: 180, fontSize: 12, lineHeight: 1.4,
-                }}
-              >
-                {bandKind === "medium"
-                  ? `Publishes automatically in ${GRACE_DAYS.demoLeft} days unless you finish reviewing.`
-                  : // only cause B reaches a large-band review: cause A is rejected before it gets
-                    // here (decision 9) and cause C never produces anything to review
-                    "Never published automatically. Review it, then publish when you're ready."}
-              </div>
-              {/*
+                <div
+                  style={{
+                    flex: bandKind === "medium" ? "1 1 100%" : 1,
+                    minWidth: 180,
+                    fontSize: 12,
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {bandKind === "medium"
+                    ? `Publishes automatically in ${GRACE_DAYS.demoLeft} days unless you finish reviewing.`
+                    : // only cause B reaches a large-band review: cause A is rejected before it gets
+                      // here (decision 9) and cause C never produces anything to review
+                      "Never published automatically. Review it, then publish when you're ready."}
+                </div>
+                {/*
                 Amber carries ONE action, and it is the quiet one (Olcay, 2026-08-13).
                 *Publish now* used to sit here too, and it was the wrong offer mid-review: it
                 publishes the same thing **Complete review** publishes, from the opposite end of the
@@ -733,26 +1059,26 @@ export function ManualReview({
                 Cause B keeps *Publish now*, and must: decision 11 gives it no changelog, so there
                 is nothing to "complete" and this is its only way to publish.
               */}
-              <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
-                {bandKind === "medium" ? (
-                  // A link in a 41px button box left the strip 90px tall for one line of text
-                  // (Olcay, 2026-08-14). Sized to its own text, it reads as the aside it is.
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => setFate("cancelled")}
-                    style={{ padding: 0, height: "auto", minHeight: 0 }}
-                  >
-                    Cancel scheduled publish
-                  </Button>
-                ) : (
-                  <Button size="sm" onClick={() => setFate("published")}>
-                    Publish now
-                  </Button>
-                )}
+                <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
+                  {bandKind === "medium" ? (
+                    // A link in a 41px button box left the strip 90px tall for one line of text
+                    // (Olcay, 2026-08-14). Sized to its own text, it reads as the aside it is.
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => setFate("cancelled")}
+                      style={{ padding: 0, height: "auto", minHeight: 0 }}
+                    >
+                      Cancel scheduled publish
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => setFate("published")}>
+                      Publish now
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
           {/*
             Cause B's body (decision 11): whole-floor inspection instead of a changelog. The map
@@ -772,13 +1098,21 @@ export function ManualReview({
                 color: "#464a53",
               }}
             >
-              <div style={{ fontWeight: 600, fontSize: 13, color: "var(--review-ink)", marginBottom: 4 }}>
+              <div
+                style={{
+                  fontWeight: 600,
+                  fontSize: 13,
+                  color: "var(--review-ink)",
+                  marginBottom: 4,
+                }}
+              >
                 No per-change list for this update
               </div>
-              A per-change list is a comparison against the published map — and aligning the two is
-              exactly what failed, so listing changes here would be guesswork. Inspect the floor on
-              the map, compare it with the published version, then publish when you're satisfied —
-              or upload a corrected floor-plan from the level's editor.
+              A per-change list is a comparison against the published map — and
+              aligning the two is exactly what failed, so listing changes here
+              would be guesswork. Inspect the floor on the map, compare it with
+              the published version, then publish when you’re satisfied — or
+              upload a corrected floor-plan from the level’s editor.
               {onCompare && (
                 <div style={{ marginTop: 10 }}>
                   <Button variant="outline" size="sm" onClick={onCompare}>
@@ -804,21 +1138,47 @@ export function ManualReview({
             <div
               data-tour="floor-warnings"
               style={{
-                marginTop: 10, border: `1px solid ${LINE}`, borderRadius: 8,
-                overflow: "hidden", background: "#f6f7f9",
+                marginTop: 10,
+                border: `1px solid ${LINE}`,
+                borderRadius: 8,
+                overflow: "hidden",
+                background: "#f6f7f9",
               }}
             >
-              <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "9px 12px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "flex-start",
+                  padding: "9px 12px",
+                }}
+              >
                 <span style={{ flex: "0 0 auto", marginTop: 2 }}>
                   <WarningGlyph size={13} />
                 </span>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--review-ink)" }}>
-                    {floorWarnings.map((w) => WARNING_LABEL[w.kind]).join(" · ")}
+                  <div
+                    style={{
+                      fontSize: 12.5,
+                      fontWeight: 600,
+                      color: "var(--review-ink)",
+                    }}
+                  >
+                    {floorWarnings
+                      .map((w) => WARNING_LABEL[w.kind])
+                      .join(" · ")}
                   </div>
                   {/* US10's point, and the reason these never wear amber: the engine carried on */}
-                  <div style={{ fontSize: 12, color: "#5d626f", lineHeight: 1.45, marginTop: 2 }}>
-                    Affects the whole floor. The change list below is unaffected.
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#5d626f",
+                      lineHeight: 1.45,
+                      marginTop: 2,
+                    }}
+                  >
+                    Affects the whole floor. The change list below is
+                    unaffected.
                   </div>
                 </div>
                 <button
@@ -826,8 +1186,14 @@ export function ManualReview({
                   onClick={() => setFloorNoticesOpen((v) => !v)}
                   aria-expanded={floorNoticesOpen}
                   style={{
-                    flex: "0 0 auto", border: 0, background: "none", padding: 0, cursor: "pointer",
-                    fontSize: 12, color: "var(--review-link, #0b369c)", fontFamily: "inherit",
+                    flex: "0 0 auto",
+                    border: 0,
+                    background: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    color: "var(--review-link, #0b369c)",
+                    fontFamily: "inherit",
                   }}
                 >
                   {floorNoticesOpen ? "Hide" : "Details"}
@@ -837,12 +1203,28 @@ export function ManualReview({
                 floorWarnings.map((w) => (
                   <div
                     key={w.kind}
-                    style={{ padding: "9px 12px 9px 35px", borderTop: `1px solid ${LINE}` }}
+                    style={{
+                      padding: "9px 12px 9px 35px",
+                      borderTop: `1px solid ${LINE}`,
+                    }}
                   >
-                    <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--review-ink)" }}>
+                    <div
+                      style={{
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        color: "var(--review-ink)",
+                      }}
+                    >
                       {WARNING_LABEL[w.kind]}
                     </div>
-                    <div style={{ fontSize: 12, color: "#5d626f", lineHeight: 1.45, marginTop: 2 }}>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "#5d626f",
+                        lineHeight: 1.45,
+                        marginTop: 2,
+                      }}
+                    >
                       {w.detail}
                     </div>
                   </div>
@@ -851,49 +1233,108 @@ export function ManualReview({
           )}
 
           <div data-tour="changelog">
-          {sections.map((s, i) => (
-            <div key={s.key} style={{ marginTop: i ? 18 : 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span
-                  style={{ width: 8, height: 8, borderRadius: 2, background: s.color, flex: "0 0 auto" }}
-                />
-                <span style={{ fontSize: 11, letterSpacing: 1, fontWeight: 700, color: s.color }}>
-                  {s.label}
-                </span>
-                <span style={{ fontSize: 11, letterSpacing: 1, fontWeight: 600, color: "#9AA0A6" }}>
-                  · {s.count}
-                </span>
-                <span style={{ flex: 1 }} />
-                {i === 0 && (
-                  <>
-                    <Button variant="link" size="sm" onClick={() => setMany(decidableIds, "confirm")}>
-                      Confirm all
-                    </Button>
-                    <Button variant="link" size="sm" onClick={() => setMany(decidableIds, "reject")}>
-                      Reject all
-                    </Button>
-                  </>
-                )}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
-                {s.groups.map((g) => (
-                  <ChangeGroupBlock key={g.key} group={g} onDecideOne={setOne} onDecideGroup={setMany} />
-                ))}
-                {s.rows.map((c) => (
-                  <ChangeReviewRow
-                    key={c.id}
-                    change={c}
-                    override={c.type === "preserved"}
-                    onDecide={(d) => setOne(c.id, d)}
-                    active={activeId === c.id}
-                    onActivate={() => activate(c.id)}
-                    note={notes[c.id]}
-                    onNote={(v) => setNotes((n) => ({ ...n, [c.id]: v }))}
+            {sections.map((s, i) => (
+              <div key={s.key} style={{ marginTop: i ? 18 : 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 2,
+                      background: s.color,
+                      flex: "0 0 auto",
+                    }}
                   />
-                ))}
+                  <span
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: 1,
+                      fontWeight: 700,
+                      color: s.color,
+                    }}
+                  >
+                    {s.label}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: 1,
+                      fontWeight: 600,
+                      color: "#9AA0A6",
+                    }}
+                  >
+                    · {s.count}
+                  </span>
+                  <span style={{ flex: 1 }} />
+                  {i === 0 && (
+                    <>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => setMany(decidableIds, "confirm")}
+                      >
+                        Confirm all
+                      </Button>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => setMany(decidableIds, "reject")}
+                      >
+                        Reject all
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                    marginTop: 8,
+                  }}
+                >
+                  {s.groups.map((g) => (
+                    <ChangeGroupBlock
+                      key={g.key}
+                      group={g}
+                      onDecideOne={setOne}
+                      onDecideGroup={setMany}
+                      overrides={overrides}
+                      onEdit={setOverride}
+                      onRevert={revertOrReset}
+                      onEditShape={editShape}
+                    />
+                  ))}
+                  {s.rows.map((c) => (
+                    <ChangeReviewRow
+                      key={c.id}
+                      change={c}
+                      preserved={c.type === "preserved"}
+                      onDecide={(d) => setOne(c.id, d)}
+                      active={activeId === c.id}
+                      onActivate={() => activate(c.id)}
+                      edit={overrides[c.id]}
+                      onEdit={(o) => setOverride(c.id, o)}
+                      onRevert={() => revertOrReset(c.id)}
+                      /*
+                      **Nothing to reshape on a metadata change or a removal.** A `metadata` row is
+                      a one-field fix by definition, and a `deleted` one has no new outline — the
+                      shape it would open is the published one, which rejecting the row already
+                      keeps. Offering the editor there would be a button that opens an editor with
+                      nothing to do in it.
+                    */
+                      onEditShape={
+                        c.type !== "deleted" && c.type !== "metadata"
+                          ? () => editShape(c.id)
+                          : undefined
+                      }
+                      onEditEnd={endShapeEdit}
+                      shapeDirty={geomFor.current === c.id && !!geom.dirty}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
           </div>
         </div>
         <div
@@ -934,11 +1375,13 @@ export function ManualReview({
               <Button
                 variant="secondary"
                 title="Save your decisions and come back to this level later. Nothing is concluded."
-                onClick={() => creation.onSave(changes)}
+                onClick={() => creation.onSave(changes, overrides)}
               >
                 Save
               </Button>
-              <Button onClick={() => creation.onConfirm(changes)}>Complete review</Button>
+              <Button onClick={() => creation.onConfirm(changes, overrides)}>
+                Complete review
+              </Button>
             </>
           ) : (
             <>
@@ -952,7 +1395,9 @@ export function ManualReview({
               >
                 Save
               </Button>
-              <Button onClick={() => setConfirmOpen(true)}>Complete review</Button>
+              <Button onClick={() => setConfirmOpen(true)}>
+                Complete review
+              </Button>
             </>
           )}
         </div>
@@ -960,7 +1405,11 @@ export function ManualReview({
         <ConfirmOverlay
           open={confirmOpen}
           tone="info"
-          title={flaggedCount ? `Complete review with ${flaggedCount} flagged change${flaggedCount === 1 ? "" : "s"}?` : "Complete this review?"}
+          title={
+            editedCount
+              ? `Finalise with ${editedCount} edited change${editedCount === 1 ? "" : "s"}?`
+              : "Finalise this review?"
+          }
           confirmLabel="Complete review"
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
@@ -975,9 +1424,10 @@ export function ManualReview({
             1. **What completing does** — and it says *publishes* outright when it will, rather
                than the old hedge "if this level is eligible", which left the reader to work out
                whether it applied to them at the moment they most needed to know.
-            2. **The flags**, when there are any: they go live as they are. Flagging means "come
-               back to this later"; §18a settled that it does not hold anything back, so this is
-               the sentence that keeps that from being a nasty surprise.
+            2. **The edits**, when there are any. Unlike the flag sentence this replaced, it is
+               not a warning — there is no trap in an override, because what goes live is exactly
+               what you put there. It says so because publishing something under your own name is
+               worth stating once, out loud, at the moment it happens.
             3. **The undecided**, which apply as detected — exactly what the grace period would
                have done unattended.
           */}
@@ -986,8 +1436,8 @@ export function ManualReview({
             : willPublish
               ? "Completing concludes the review and publishes this level with your decisions applied."
               : "Completing concludes the review. This level is not published automatically — use Publish now when you're ready.") +
-            (flaggedCount
-              ? ` ${flaggedCount} change${flaggedCount === 1 ? " is" : "s are"} flagged to edit later — flagging marks ${flaggedCount === 1 ? "it" : "them"} for a later dashboard edit, so ${flaggedCount === 1 ? "it goes" : "they go"} live as detected.`
+            (editedCount
+              ? ` ${editedCount} change${editedCount === 1 ? "" : "s"} carr${editedCount === 1 ? "ies" : "y"} your own value instead of MapScale's — ${editedCount === 1 ? "it goes" : "they go"} live as you edited ${editedCount === 1 ? "it" : "them"}.`
               : "") +
             (undecidedCount
               ? ` ${undecidedCount} change${undecidedCount === 1 ? "" : "s"} still ${undecidedCount === 1 ? "has" : "have"} no decision — ${undecidedCount === 1 ? "it will be applied" : "they will be applied"} as detected.`
@@ -996,7 +1446,15 @@ export function ManualReview({
       </div>
 
       {/* Map pane — live Pointr WebSDK map, highlights driven by the decisions above */}
-      <div data-tour="review-map" style={{ position: "relative", flex: 1, background: "#EDEEF0", minWidth: 0 }}>
+      <div
+        data-tour="review-map"
+        style={{
+          position: "relative",
+          flex: 1,
+          background: "#EDEEF0",
+          minWidth: 0,
+        }}
+      >
         <PointrMap
           changes={mapChanges}
           prefs={prefs}
@@ -1006,7 +1464,17 @@ export function ManualReview({
           active={activeId}
           onSelect={onMapSelect}
           target={mapTarget}
+          geomCommands={geomCommands}
+          onGeomState={onGeomState}
+          onGeometry={onGeometry}
         />
+        {/*
+          The same bar Map Content uses, on the same map, driven by the same queue. `padRight` is 0
+          here: the changelog is a *sibling pane* to the left, not an overlay on the right, so the
+          bar's centre and the map's centre are already the same point — the correction that pane
+          needs is the one this screen does not.
+        */}
+        <GeometryToolbar state={geom} onCommand={onGeomCommand} />
         <MapChrome prefs={prefs} onPrefs={setPrefs} focus={!matchFailed} />
       </div>
     </div>

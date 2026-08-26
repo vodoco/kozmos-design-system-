@@ -19,8 +19,66 @@ import { CONCOURSE_A_ID, T3_ID } from "./site";
  * A feature that changed in both ways stays ONE change — one feature, one map highlight, one
  * decision — classified by the heavier action (geometry), with `details` listing everything.
  */
-export type ChangeType = "new" | "geometry" | "metadata" | "deleted" | "preserved";
-export type Decision = "confirm" | "flag" | "reject";
+export type ChangeType =
+  | "new"
+  | "geometry"
+  | "metadata"
+  | "deleted"
+  | "preserved";
+
+/**
+ * **Two decisions, not three** (Olcay, 2026-08-25). `flag` is gone, and with it the whole
+ * come-back-to-it-later apparatus: the note, the pennant on the map, the tree's "N flagged" tag.
+ *
+ * This reverses **decision 2**, which chose Flag *over* Edit in the first place, on the promise
+ * that you would *"flag now, keep flagged items visible to edit later"*. The later never earned
+ * its keep: a flag is a decision to decide, and the review is where you are already standing.
+ * The replacement is the thing it was deferring to — you edit it here, and the edit becomes a
+ * **user override** that supersedes MapScale's suggestion (see `Override`).
+ *
+ * So a row has three possible outcomes and only two of them are chosen from a control:
+ * confirm, reject, and — reachable only by doing the work — edited.
+ */
+export type Decision = "confirm" | "reject";
+
+/**
+ * **The user's own value, standing in place of MapScale's** (Olcay, 2026-08-25: *"edit becomes
+ * user override which supersedes the incoming change"*).
+ *
+ * It is deliberately NOT a field on `Change`, and lives beside the decisions in `ReviewOutcome`
+ * instead. Same reason `decisions` is separate: `changes` is the report **as it arrived** and has
+ * to stay a faithful snapshot of what MapScale said. That snapshot is what makes Revert possible
+ * at all — reverting is deleting the override, and what is underneath is still the detected value
+ * (Olcay: *"revert means back to MapScale's detected value and geometry"*).
+ *
+ * Present ⇒ the row reads **Edited** and its `decision`, if any, no longer applies: there is
+ * nothing left to confirm or reject, because the incoming change has already been superseded.
+ */
+export interface Override {
+  /** The name the user typed, if they changed it. */
+  name?: string;
+  /** The object type the user picked, if they changed it. */
+  kind?: string;
+  /** GeoJSON.Geometry — the shape the user drew, if they reshaped it. */
+  geometry?: unknown;
+  /** What the user changed, in the changelog's own voice — one line each, same as `details`. */
+  details?: string[];
+}
+
+/**
+ * What a row actually resolves to. `edited` is not a `Decision` because you cannot pick it: it
+ * becomes true by editing, and it outranks whatever was chosen before.
+ */
+export type Outcome = Decision | "edited";
+
+/** The outcome of one row, given the override that may be standing over it. */
+export function outcomeOf(
+  decision: Decision | undefined,
+  override?: Override,
+): Outcome | undefined {
+  if (override) return "edited";
+  return decision;
+}
 
 /**
  * US8: *"Changelog consists of Notices and Warnings. Notices include any changes deemed safe by the
@@ -60,15 +118,20 @@ export const WARNING_LABEL: Record<WarningKind, string> = {
 
 /** One line saying why it needs a human — shown under the warning group's title. */
 export const WARNING_WHY: Record<WarningKind, string> = {
-  "source-conflict": "The source value changed underneath an edit you made. Yours is still applied.",
+  "source-conflict":
+    "The source value changed underneath an edit you made. Yours is still applied.",
   clash: "Now collides with another object on the new floor plan.",
   "out-of-bounds": "Now falls outside the new floor plan's boundary.",
-  "re-removed": "You removed this before. It is back in the source and has been removed again.",
+  "re-removed":
+    "You removed this before. It is back in the source and has been removed again.",
   "override-removed":
     "The new floor plan does not contain an object you had edited. Confirming this removal discards that edit.",
-  "georeference-shifted": "The new floor plan is positioned differently to the published one.",
-  "floorplan-resized": "The new floor plan covers a different area to the published one.",
-  "low-confidence": "MapScale matched this to the published feature with low confidence.",
+  "georeference-shifted":
+    "The new floor plan is positioned differently to the published one.",
+  "floorplan-resized":
+    "The new floor plan covers a different area to the published one.",
+  "low-confidence":
+    "MapScale matched this to the published feature with low confidence.",
 };
 
 /**
@@ -93,26 +156,16 @@ export interface Change {
   warning?: WarningKind;
   /** 0–1, geometry changes only. The report carries it; below SIMILARITY_WARN it raises a warning. */
   similarity?: number;
-  decision?: Decision; // Manual Review — client state
+  decision?: Decision; // Review & Finalise — client state
   /**
-   * Draw the decision mark, but **not** the diff shape (Olcay, 2026-08-14: *"I'd like to see
-   * visible flags on the map for those that are flagged"*).
+   * ⚠️ **`markOnly` and `note` were removed 2026-08-25, with flagging.**
    *
-   * Browsing Map Content is not reviewing. The review is over and the floor is live, so repainting
-   * features in diff colours would claim there is something to decide — but a flag is a note to
-   * self that outlived the review, and it has to be findable on the map, not only in the tree.
-   * So the map takes the real change and renders the pennant alone.
+   * `markOnly` drew a decision mark on Map Content *without* the diff shape, so a flag could
+   * outlive its review and stay findable on the live floor. Nothing outlives a review any more:
+   * Olcay, 2026-08-25 — *"once review concluded the map becomes the current map"*. An edit made
+   * during the review is simply in the data, and shows up on the **next** run as a `preserved`
+   * override, which is the honest place for it. `note` went with the flag it annotated.
    */
-  markOnly?: boolean;
-  /**
-   * The note written when this was flagged (Olcay, 2026-08-14: *"flag with optional notes"*).
-   *
-   * A flag on its own says *come back to this* and not **what for** — which is a mystery a week
-   * later, to the person who wrote it as much as to anyone else. Optional on purpose: making it
-   * required would turn a one-click triage mark into a form, and the whole point of Flag is that
-   * it is the cheap decision.
-   */
-  note?: string;
   geometry?: unknown; // GeoJSON.Geometry — for the map highlight
 }
 
@@ -120,7 +173,10 @@ export interface Change {
  * The two `WarningKind`s that are **facts about the floor**, not about any one object — US10's
  * georeference shift and US7's "the new plan is a different size" edge cases.
  */
-export type FloorWarningKind = Extract<WarningKind, "georeference-shifted" | "floorplan-resized">;
+export type FloorWarningKind = Extract<
+  WarningKind,
+  "georeference-shifted" | "floorplan-resized"
+>;
 
 /**
  * **D16, fixed 2026-08-13.** These used to have nowhere to live: the only slot for a warning was
@@ -266,8 +322,15 @@ export const NEW_VERSION_LEVEL = -2;
  * Building-aware since 2026-08-11, for the same reason `seedVersions()` is: index alone put a
  * hold on every building's L2, including ones whose seeded timeline says nothing of the sort.
  */
-export function isUnderExpertReview(levelIndex: number, buildingId: string = T3_ID): boolean {
-  return expertReviewEnabled() && buildingId === T3_ID && levelIndex === EXPERT_REVIEW_LEVEL;
+export function isUnderExpertReview(
+  levelIndex: number,
+  buildingId: string = T3_ID,
+): boolean {
+  return (
+    expertReviewEnabled() &&
+    buildingId === T3_ID &&
+    levelIndex === EXPERT_REVIEW_LEVEL
+  );
 }
 
 /**
@@ -306,18 +369,25 @@ export const EXPERT_HOLD = {
   mapTitle: "Mapping Team is reviewing this floor",
   mapDetail: "Changes you make may be overridden by their corrections.",
   /** The status card's info tooltip: what is happening, and what decides what happens next. */
-  what:
-    "Pointr's mapping team is correcting MapScale's result before you see it. The floor they're working on is a snapshot — you can keep editing meanwhile, but their corrections take precedence when the result lands (the team may fold your updates in). Once they finish, how much of the floor area changed decides what happens next: minor updates publish automatically, larger ones come to you for review.",
+  what: "Pointr's mapping team is correcting MapScale's result before you see it. The floor they're working on is a snapshot — you can keep editing meanwhile, but their corrections take precedence when the result lands (the team may fold your updates in). Once they finish, how much of the floor area changed decides what happens next: minor updates publish automatically, larger ones come to you for review.",
   /** Per-action reasons, hung off each locked control where the question is asked. */
-  upload: "Locked during Expert Review — a new floor plan would replace the one the mapping team is correcting.",
-  restore: "Locked during Expert Review — restoring would replace the content the mapping team is correcting.",
-  remove: "Locked during Expert Review — the mapping team is working on this level.",
+  upload:
+    "Locked during Expert Review — a new floor plan would replace the one the mapping team is correcting.",
+  restore:
+    "Locked during Expert Review — restoring would replace the content the mapping team is correcting.",
+  remove:
+    "Locked during Expert Review — the mapping team is working on this level.",
   georeference:
     "Locked during Expert Review — re-aligning the floor plan would move it under the mapping team's corrections.",
 };
 
 /** The hold's tone (Figma 2450:65 / 2450:69): amber, because it is a caution, not a failure. */
-export const HOLD_TONE = { tint: "#fff7e0", border: "#edc759", ink: "#805905", dot: "#D98C0D" };
+export const HOLD_TONE = {
+  tint: "#fff7e0",
+  border: "#edc759",
+  ink: "#805905",
+  dot: "#D98C0D",
+};
 
 /* ── versions ─────────────────────────────────────────────────────────────── */
 
@@ -350,13 +420,13 @@ export interface VersionInput {
 }
 
 export type VersionState =
-  | "created"        // level created, no floor plan yet
-  | "processing"     // MapScale is mapping it; frame-changing actions are held (JOB_RUNNING)
-  | "expert-review"  // Pointr's mapping team is correcting the result
-  | "needs-review"   // amber — publishes after the grace period unless reviewed
+  | "created" // level created, no floor plan yet
+  | "processing" // MapScale is mapping it; frame-changing actions are held (JOB_RUNNING)
+  | "expert-review" // Pointr's mapping team is correcting the result
+  | "needs-review" // amber — publishes after the grace period unless reviewed
   | "needs-decision" // red cause B — never auto-published, always manually publishable
-  | "rejected"       // red cause A — >50%, unrealistic, rejected outright (decision 9); no review, no publish
-  | "failed"         // red cause C — the job couldn't read the file; nothing exists to publish
+  | "rejected" // red cause A — >50%, unrealistic, rejected outright (decision 9); no review, no publish
+  | "failed" // red cause C — the job couldn't read the file; nothing exists to publish
   | "published";
 
 export const VERSION_STATE_LABEL: Record<VersionState, string> = {
@@ -417,24 +487,41 @@ export function seedVersions(
 ): LevelVersion[] {
   const history: LevelVersion[] = [
     {
-      n: 2, source: "dashboard", at: "10 Jul 2025 · 09:14", state: "published", changePct: 10,
-      by: "Ege Akpinar", input: { kind: "floor-plan", file: `${short}-departures-rev2.dwg` },
+      n: 2,
+      source: "dashboard",
+      at: "10 Jul 2025 · 09:14",
+      state: "published",
+      changePct: 10,
+      by: "Ege Akpinar",
+      input: { kind: "floor-plan", file: `${short}-departures-rev2.dwg` },
     },
     {
-      n: 1, source: "dashboard", at: "02 Jun 2025 · 15:20", state: "published",
-      by: "Olcay Kurtulus", input: { kind: "geojson", file: `${short}-initial-content.geojson` },
+      n: 1,
+      source: "dashboard",
+      at: "02 Jun 2025 · 15:20",
+      state: "published",
+      by: "Olcay Kurtulus",
+      input: { kind: "geojson", file: `${short}-initial-content.geojson` },
     },
   ];
 
   const arrival = (state: VersionState, changePct?: number): LevelVersion => ({
-    n: 3, source: "api", at: "09 Aug 2026 · 18:21", state, changePct,
-    by: "Airport Ops (API)", input: { kind: "floor-plan", file: `${short}-departures-rev3.dwg` },
+    n: 3,
+    source: "api",
+    at: "09 Aug 2026 · 18:21",
+    state,
+    changePct,
+    by: "Airport Ops (API)",
+    input: { kind: "floor-plan", file: `${short}-departures-rev3.dwg` },
   });
 
   // Red cause B (cannot-match) is the one demo that deliberately lives OUTSIDE the demo building:
   // it needs level 4, and Terminal 3 hasn't got one — only Concourse A has (handoff §17).
   if (buildingId === CONCOURSE_A_ID && levelIndex === 4)
-    return [{ ...arrival("needs-decision"), redCause: "cannot-match" }, ...history];
+    return [
+      { ...arrival("needs-decision"), redCause: "cannot-match" },
+      ...history,
+    ];
 
   // Everything else belongs to Terminal 3 and B Gates. Other buildings get the quiet two-version
   // history — which is what the tree always meant to say about them.
@@ -445,7 +532,11 @@ export function seedVersions(
   //   Amber 20–50% → level -2 (B2, 30% — the full review demo, its diff has real geometry)
   //   Red   >50%   → level 3  (EK Lounges, 62% — rejected outright, cause A)
   // Cause C (cannot-process) isn't seeded anywhere — it is the upload cycle's fourth step.
-  if (levelIndex === 3) return [{ ...arrival("rejected", 62), redCause: "large-change" }, ...history]; // Red — cause A, rejected
+  if (levelIndex === 3)
+    return [
+      { ...arrival("rejected", 62), redCause: "large-change" },
+      ...history,
+    ]; // Red — cause A, rejected
   if (levelIndex === 0) return [arrival("published", 12), ...history]; // Green — auto-published
   if (levelIndex === 1) return [arrival("needs-review", 30), ...history]; // Amber — grace running
   if (levelIndex === EXPERT_REVIEW_LEVEL && expertReviewEnabled())
@@ -474,9 +565,12 @@ export function versionBadge(
   v: LevelVersion,
 ): { label: string; live: boolean } {
   if (v.state === "published")
-    return v.n === liveN(versions) ? { label: "Live", live: true } : { label: "Superseded", live: false };
+    return v.n === liveN(versions)
+      ? { label: "Live", live: true }
+      : { label: "Superseded", live: false };
   const overtaken = versions.some((o) => o.n > v.n);
-  if (overtaken && v.state !== "created") return { label: "Superseded", live: false };
+  if (overtaken && v.state !== "created")
+    return { label: "Superseded", live: false };
   return { label: VERSION_STATE_LABEL[v.state], live: false };
 }
 
@@ -484,7 +578,10 @@ export function versionBadge(
  * Restore re-publishes old *mapped* content, so only versions that actually went live qualify —
  * and not the live one, because restoring it would be a no-op.
  */
-export function isRestorable(versions: LevelVersion[], v: LevelVersion): boolean {
+export function isRestorable(
+  versions: LevelVersion[],
+  v: LevelVersion,
+): boolean {
   return v.state === "published" && v.n !== liveN(versions);
 }
 
@@ -493,9 +590,13 @@ export function isRestorable(versions: LevelVersion[], v: LevelVersion): boolean
  * (same law as the expert hold's locks: a control that vanishes teaches nothing). Olcay's
  * question "why don't we have restore for all items?" is exactly what a hidden control invites.
  */
-export function restoreBlockReason(versions: LevelVersion[], v: LevelVersion): string | undefined {
+export function restoreBlockReason(
+  versions: LevelVersion[],
+  v: LevelVersion,
+): string | undefined {
   if (isRestorable(versions, v)) return undefined;
-  if (v.state === "published") return "This is the live version — restoring it would change nothing.";
+  if (v.state === "published")
+    return "This is the live version — restoring it would change nothing.";
   if (v.state === "created" || v.state === "processing")
     return "Nothing to restore — this version never finished processing, so it has no mapped content.";
   if (v.state === "failed")
@@ -546,7 +647,9 @@ export function bindToFloor(changes: Change[], available: string[]): Change[] {
   const onFloor = new Set(available);
   // names this floor offers that the seed didn't already claim, in the map's own order (biggest
   // first) so the highlights land on units a reviewer can actually see
-  const claimed = new Set(changes.filter((c) => onFloor.has(c.name)).map((c) => c.name));
+  const claimed = new Set(
+    changes.filter((c) => onFloor.has(c.name)).map((c) => c.name),
+  );
   const spare = available.filter((n) => !claimed.has(n));
   let next = 0;
   return changes.map((c) => {
@@ -576,15 +679,31 @@ export function magnitudeBand(pct: number): MagnitudeBand {
  */
 export const BAND: Record<
   MagnitudeBand,
-  { tint: string; border: string; ink: string; solid: string; onSolid: string; title: string; detail: string }
+  {
+    tint: string;
+    border: string;
+    ink: string;
+    solid: string;
+    onSolid: string;
+    title: string;
+    detail: string;
+  }
 > = {
   minor: {
-    tint: "#F1FBF5", border: "#B7E4C7", ink: "#1E7A46", solid: "#2FBF71", onSolid: "#3A2A00",
+    tint: "#F1FBF5",
+    border: "#B7E4C7",
+    ink: "#1E7A46",
+    solid: "#2FBF71",
+    onSolid: "#3A2A00",
     title: "Auto-published",
     detail: "Minor change — published automatically, nothing to review.",
   },
   medium: {
-    tint: "#FFF8EC", border: "#F5D08A", ink: "#8A5A00", solid: "#F5A623", onSolid: "#3A2A00",
+    tint: "#FFF8EC",
+    border: "#F5D08A",
+    ink: "#8A5A00",
+    solid: "#F5A623",
+    onSolid: "#3A2A00",
     title: "Ready for your review",
     // a getter for the same reason GRACE_DAYS is one — a template literal here would bake in
     // whatever the grace period was when the module first loaded
@@ -595,9 +714,14 @@ export const BAND: Record<
     },
   },
   large: {
-    tint: "#FEF2F2", border: "#F3B4B4", ink: "#B42318", solid: "#B42318", onSolid: "#FFFFFF",
+    tint: "#FEF2F2",
+    border: "#F3B4B4",
+    ink: "#B42318",
+    solid: "#B42318",
+    onSolid: "#FFFFFF",
     title: "Needs your decision",
-    detail: "Never published automatically. Review it, then publish when you're ready.",
+    detail:
+      "Never published automatically. Review it, then publish when you're ready.",
   },
 };
 
@@ -629,50 +753,72 @@ export const CHANGE_COLORS: Record<ChangeType, string> = {
 };
 
 /**
- * Confirm / Flag / Reject are *state*, not identity — a flagged "new" feature is still new — so a
- * decision never recolours the row or the map shape. The ✓/🚩/✗ marks carry it instead, in neutral
- * black so they read as a separate axis from the four type colours. Risk is a third axis and is
- * likewise never coloured: warnings are marked with a glyph, not with amber.
+ * **The decision mark is muted ink, and the map carries the decision itself** (Olcay, 2026-08-25).
+ *
+ * This ends the `COLOURED_DECISIONS` experiment and, in doing so, restores the rule it suspended
+ * on 2026-08-13 — *"a decision never recolours anything"* — by a route neither side foresaw. The
+ * argument for colouring the marks was that a decision was invisible until you found its badge.
+ * That is no longer true: the map is now a **preview of the finalised floor**, so a confirmed
+ * change simply *is* the map, a rejected one falls back to the published shape, and an edit paints
+ * override purple. The outcome is legible in the geometry before any mark is read.
+ *
+ * Which leaves the mark as a footnote on a shape that already says the answer — so it is drawn in
+ * muted ink, and never in green or red. Spending the traffic light twice on one map was the
+ * original objection and it was always the right one.
  */
-export const DECISION_INK = "#000000";
+export const DECISION_INK = "#737373";
 
 /**
- * **EXPERIMENT — one switch, flip to `false` to revert** (Olcay, 2026-08-11: *"I'd like to try
- * coloring the flags… so make it easy to revert"*).
+ * The ink an **edited** row draws in — the override purple, and the same fact `preserved` wears.
  *
- * `true` colours the three decisions — ✓ green, 🚩 amber, ✗ red — in the changelog, on the map's
- * centroid badges and in the map card's control. `false` restores the neutral black below.
+ * A `preserved` row is *"your override, carried through from a previous run"*; an edit made during
+ * this review is your override about to be carried through from this one. They are the same fact
+ * at two ages, and giving them one colour is what closes the loop: finish a review with an edit on
+ * it, and that feature comes back purple next time MapScale runs.
  *
- * ⚠️ **This is a deliberate suspension of two rules, which is why it is a switch and not a
- * rewrite.** §3: *"Confirm / Flag / Reject are neutral black — a decision never recolours
- * anything"*, and Olcay's own 2026-08-09 ruling: *"Flags should not change the color of the
- * state… Black for distinction."* The reasoning behind them still stands and is worth re-reading
- * before making this permanent: the map already spends colour on **what a feature is** (the four
- * diff colours) and on **magnitude** (the traffic light), so decisions were given the one axis
- * nobody else was using. Colouring them puts green/amber/red on the map twice, meaning two
- * different things.
+ * ⚠️ **NOT `--semantics-diff-override`, and this is the one place the two part company.** The DS
+ * publishes that token at **#9c6eff**, which is the SHAPE FILL — on white it measures about
+ * **3.3:1**, below the 4.5:1 a 11–13px label needs, so a pill and a detail line drawn in it are
+ * legible only to someone who already knows what they say. This is the darker half of the same
+ * pair — the value the map shell has always used for the `preserved` **stroke** (`LINE.preserved`)
+ * — at roughly 7.4:1.
  *
- * ⚠️ The map page keeps its own copy of both the flag and the colours — it never loads this module
- * (`public/map/index.html`, search `COLOURED_DECISIONS`). Flip both, or the list and the map will
- * disagree.
+ * **`changeAccent` still returns the token**, because a 4px accent bar is a shape and the token is
+ * correct there. Ink and fill are two jobs; the DS ships one of them.
+ *
+ * 🔴 **Token debt**: `Semantics/Diff` has no `override-ink`. Every other diff colour has the same
+ * gap and gets away with it because nothing else draws diff-coloured TEXT. Worth filing against
+ * the DS rather than spreading this literal — see `KOZMOS_DS_IMPROVEMENTS.md`.
  */
-export const COLOURED_DECISIONS = true;
+export const OVERRIDE_INK = "#6D28D9";
 
-/** Green / amber / red for ✓ 🚩 ✗. Only consulted while `COLOURED_DECISIONS` is on. */
-export const DECISION_COLORS: Record<Decision, string> = {
-  confirm: "#23b26b",
-  flag: "#D98C0D",
-  reject: "#d41c42",
-};
+/**
+ * ⚠️ **`COLOURED_DECISIONS` was retired 2026-08-25.** It was a one-switch experiment (Olcay,
+ * 2026-08-11: *"I'd like to try coloring the flags… so make it easy to revert"*) that painted
+ * ✓ green, 🚩 amber, ✗ red. The switch is gone rather than flipped: the reason to colour a mark
+ * was that the map said nothing about the outcome, and the preview now says all of it. See
+ * `DECISION_INK`.
+ *
+ * ⚠️ The map page keeps its own copy of this ink — it never loads this module
+ * (`public/map/index.html`, search `DECISION_INK`). Change one, change both.
+ */
 
-/** The ink a decision glyph draws in — the single place both states are resolved. */
-export function decisionInk(d?: Decision): string {
-  return COLOURED_DECISIONS && d ? DECISION_COLORS[d] : DECISION_INK;
+/** The ink a mark draws in. Muted for a decision; the override purple for an edit. */
+export function outcomeInk(o?: Outcome): string {
+  return o === "edited" ? OVERRIDE_INK : DECISION_INK;
 }
 
-/** Colour for a row/feature — always the diff type. */
-export function changeAccent(c: Change): string {
-  return CHANGE_COLORS[c.type];
+/**
+ * Colour for a row/feature.
+ *
+ * Normally the diff type — colour says **what a feature is**, and that rule has survived every
+ * other change to this file. An **edited** row is the one case where the type is no longer the
+ * truth: MapScale said "new", you replaced its answer with your own, and what is now heading for
+ * the floor is *your override*. So it takes the override purple, which is the colour that fact
+ * already has (`preserved`), and the two are the same fact at two ages — see `OVERRIDE_INK`.
+ */
+export function changeAccent(c: Change, override?: Override): string {
+  return override ? CHANGE_COLORS.preserved : CHANGE_COLORS[c.type];
 }
 
 /* ── the four metric boxes (v9 node 12826:126197) ─────────────────────────── */
@@ -680,7 +826,12 @@ export function changeAccent(c: Change): string {
 /** The tally keeps v9's four categories, so geometry + metadata both count as "Updated". */
 export type MetricCategory = "preserved" | "new" | "updated" | "deleted";
 
-export const METRIC_ORDER: MetricCategory[] = ["preserved", "new", "updated", "deleted"];
+export const METRIC_ORDER: MetricCategory[] = [
+  "preserved",
+  "new",
+  "updated",
+  "deleted",
+];
 
 export const METRIC_LABEL: Record<MetricCategory, string> = {
   preserved: "User Override",
@@ -697,7 +848,9 @@ export const METRIC_COLOR: Record<MetricCategory, string> = {
 };
 
 export function inMetric(c: Change, m: MetricCategory): boolean {
-  return m === "updated" ? c.type === "geometry" || c.type === "metadata" : c.type === m;
+  return m === "updated"
+    ? c.type === "geometry" || c.type === "metadata"
+    : c.type === m;
 }
 
 /* ── risk + grouping ──────────────────────────────────────────────────────── */
@@ -705,7 +858,11 @@ export function inMetric(c: Change, m: MetricCategory): boolean {
 /** An explicit warning wins; otherwise a geometry change the engine isn't sure about is risky. */
 export function riskOf(c: Change): Risk {
   if (c.warning) return "warning";
-  if (c.type === "geometry" && c.similarity !== undefined && c.similarity < SIMILARITY_WARN)
+  if (
+    c.type === "geometry" &&
+    c.similarity !== undefined &&
+    c.similarity < SIMILARITY_WARN
+  )
     return "warning";
   return "notice";
 }
@@ -713,7 +870,11 @@ export function riskOf(c: Change): Risk {
 /** The warning to show — explicit, or the one implied by a low similarity score. */
 export function warningOf(c: Change): WarningKind | undefined {
   if (c.warning) return c.warning;
-  if (c.type === "geometry" && c.similarity !== undefined && c.similarity < SIMILARITY_WARN)
+  if (
+    c.type === "geometry" &&
+    c.similarity !== undefined &&
+    c.similarity < SIMILARITY_WARN
+  )
     return "low-confidence";
   return undefined;
 }
@@ -773,7 +934,12 @@ export const SECTION_LABEL: Record<MetricCategory, string> = {
 };
 
 /** New first, then the things that changed, then removals, then your own edits as context. */
-export const SECTION_ORDER: MetricCategory[] = ["new", "updated", "deleted", "preserved"];
+export const SECTION_ORDER: MetricCategory[] = [
+  "new",
+  "updated",
+  "deleted",
+  "preserved",
+];
 
 /**
  * The changelog: sections by change type, each one colour-keyed, rows visible.
@@ -840,45 +1006,108 @@ export function buildSections(changes: Change[]): ReviewSection[] {
 function amberChanges(): Change[] {
   return [
     // ── New ────────────────────────────────────────────────────────────────
-    { id: "costa", name: "Costa Coffee", type: "new", kind: "food-beverage-space", detail: "New café", decision: "confirm" },
-    { id: "ddfzone10", name: "DDF Zone 10", type: "new", kind: "retail-space", detail: "New retail zone", decision: "confirm" },
-    { id: "giraffe", name: "Giraffe Pop-up Outlet", type: "new", kind: "retail-space", detail: "New pop-up unit", decision: "confirm" },
-    { id: "desi", name: "Desi LunchBox", type: "new", kind: "food-beverage-space", detail: "New quick-service unit", decision: "confirm" },
-    { id: "childcare", name: "Child Care", type: "new", kind: "amenity-space", detail: "New amenity", decision: "confirm" },
-    { id: "prayerf", name: "Female Prayer Room", type: "new", kind: "faith-worship-space", detail: "New amenity", decision: "confirm" },
+    {
+      id: "costa",
+      name: "Costa Coffee",
+      type: "new",
+      kind: "food-beverage-space",
+      detail: "New café",
+      decision: "confirm",
+    },
+    {
+      id: "ddfzone10",
+      name: "DDF Zone 10",
+      type: "new",
+      kind: "retail-space",
+      detail: "New retail zone",
+      decision: "confirm",
+    },
+    {
+      id: "giraffe",
+      name: "Giraffe Pop-up Outlet",
+      type: "new",
+      kind: "retail-space",
+      detail: "New pop-up unit",
+      decision: "confirm",
+    },
+    {
+      id: "desi",
+      name: "Desi LunchBox",
+      type: "new",
+      kind: "food-beverage-space",
+      detail: "New quick-service unit",
+      decision: "confirm",
+    },
+    {
+      id: "childcare",
+      name: "Child Care",
+      type: "new",
+      kind: "amenity-space",
+      detail: "New amenity",
+      decision: "confirm",
+    },
+    {
+      id: "prayerf",
+      name: "Female Prayer Room",
+      type: "new",
+      kind: "faith-worship-space",
+      detail: "New amenity",
+      decision: "confirm",
+    },
 
     // ── Geometry ───────────────────────────────────────────────────────────
     {
-      id: "burgerking", name: "Burger King", type: "geometry", kind: "food-beverage-space",
+      id: "burgerking",
+      name: "Burger King",
+      type: "geometry",
+      kind: "food-beverage-space",
       similarity: 0.73,
       detail: "Area & layout updated",
       details: ["Geometry modified — similarity 0.73", "Area: 84 m² → 96 m²"],
       decision: "confirm",
     },
     {
-      id: "ddfzone11", name: "DDF Zone 11", type: "geometry", kind: "retail-space",
+      id: "ddfzone11",
+      name: "DDF Zone 11",
+      type: "geometry",
+      kind: "retail-space",
       similarity: 0.81,
       detail: "Renamed & reshaped",
-      details: ['Name changed: from "DDF Zone 11" to "DDF Duty Free 11"', "Geometry modified — similarity 0.81"],
+      details: [
+        'Name changed: from "DDF Zone 11" to "DDF Duty Free 11"',
+        "Geometry modified — similarity 0.81",
+      ],
       decision: "confirm",
     },
     {
       // similarity 0.66 → below SIMILARITY_WARN, so riskOf() raises a low-confidence warning
-      id: "rostamani", name: "Al Rostamani Exchange", type: "geometry", kind: "service-space",
+      id: "rostamani",
+      name: "Al Rostamani Exchange",
+      type: "geometry",
+      kind: "service-space",
       similarity: 0.66,
       detail: "Geometry changed",
       details: ["Geometry modified — similarity 0.66"],
       decision: "confirm",
     },
     {
-      id: "nursery", name: "Nursery", type: "geometry", kind: "amenity-space",
+      id: "nursery",
+      name: "Nursery",
+      type: "geometry",
+      kind: "amenity-space",
       similarity: 0.58,
       detail: "Moved & renamed",
-      details: ['Name changed: from "Nursery" to "Baby Care Room"', "Geometry modified — similarity 0.58"],
+      details: [
+        'Name changed: from "Nursery" to "Baby Care Room"',
+        "Geometry modified — similarity 0.58",
+      ],
       decision: "confirm",
     },
     {
-      id: "visacancel", name: "Visa Cancellation Services", type: "geometry", kind: "service-space",
+      id: "visacancel",
+      name: "Visa Cancellation Services",
+      type: "geometry",
+      kind: "service-space",
       similarity: 0.79,
       detail: "Area reduced",
       details: ["Geometry modified — similarity 0.79", "Area: 31 m² → 22 m²"],
@@ -887,28 +1116,63 @@ function amberChanges(): Change[] {
 
     // ── Metadata ───────────────────────────────────────────────────────────
     {
-      id: "subway", name: "Subway", type: "metadata", kind: "food-beverage-space",
+      // Seeded EDITED, not decided — see SEEDED_OVERRIDES. These two carried `decision: "flag"`
+      // until 2026-08-25 and were the demo of a deferred row; they are now the demo of a fixed one.
+      id: "subway",
+      name: "Subway",
+      type: "metadata",
+      kind: "food-beverage-space",
       detail: 'Type: "Restaurant" → "Cafe"',
       details: ['Type changed: from "Restaurant" to "Cafe"'],
-      decision: "flag",
     },
     {
-      id: "ahlan", name: "Dubai Ahlan Counter", type: "metadata", kind: "service-space",
+      id: "ahlan",
+      name: "Dubai Ahlan Counter",
+      type: "metadata",
+      kind: "service-space",
       detail: "Renamed",
-      details: ['Name changed: from "Dubai Ahlan Counter" to "Ahlan Services Desk"'],
-      decision: "flag",
+      details: [
+        'Name changed: from "Dubai Ahlan Counter" to "Ahlan Services Desk"',
+      ],
     },
 
     // ── Removed ────────────────────────────────────────────────────────────
-    { id: "pharmacy", name: "DDF Pharmacy", type: "deleted", kind: "retail-space", detail: "Removed from floor plan", decision: "reject" },
-    { id: "wrapping", name: "Emirates Baggage Wrapping", type: "deleted", kind: "retail-space", detail: "Removed from floor plan", decision: "reject" },
-    { id: "dilizie", name: "Dilizie", type: "deleted", kind: "food-beverage-space", detail: "Removed from floor plan", decision: "reject" },
+    {
+      id: "pharmacy",
+      name: "DDF Pharmacy",
+      type: "deleted",
+      kind: "retail-space",
+      detail: "Removed from floor plan",
+      decision: "reject",
+    },
+    {
+      id: "wrapping",
+      name: "Emirates Baggage Wrapping",
+      type: "deleted",
+      kind: "retail-space",
+      detail: "Removed from floor plan",
+      decision: "reject",
+    },
+    {
+      id: "dilizie",
+      name: "Dilizie",
+      type: "deleted",
+      kind: "food-beverage-space",
+      detail: "Removed from floor plan",
+      decision: "reject",
+    },
     {
       // US7: you deleted this once already; it is back in the source and has been removed again
-      id: "wrapmachine", name: "Wrapping Machine Area", type: "deleted", kind: "retail-space",
+      id: "wrapmachine",
+      name: "Wrapping Machine Area",
+      type: "deleted",
+      kind: "retail-space",
       warning: "re-removed",
       detail: "Removed from floor plan",
-      details: ["You removed this in Version 2", "Present in the new source, removed again"],
+      details: [
+        "You removed this in Version 2",
+        "Present in the new source, removed again",
+      ],
       /**
        * Rests APPLIED, and that is the point (Olcay, 2026-08-13: *"is it respecting the user's
        * removal — similar to user overrides?"*). It is: US7 says a manually removed object **must
@@ -922,7 +1186,14 @@ function amberChanges(): Change[] {
        */
       decision: "confirm",
     },
-    { id: "ambulance", name: "Ambulance Services Room", type: "deleted", kind: "medical-space", detail: "Removed from floor plan", decision: "reject" },
+    {
+      id: "ambulance",
+      name: "Ambulance Services Room",
+      type: "deleted",
+      kind: "medical-space",
+      detail: "Removed from floor plan",
+      decision: "reject",
+    },
     {
       /**
        * **The case US7 does not cover** (Olcay, 2026-08-13). US7 says overrides must be kept, and
@@ -934,10 +1205,16 @@ function amberChanges(): Change[] {
        * reason: there, the answer is known (you already removed it). Here nothing can know whether
        * you want the object you invested in deleted, so the system must not choose for you.
        */
-      id: "berlinroom", name: "Berlin Room", type: "deleted", kind: "service-space",
+      id: "berlinroom",
+      name: "Berlin Room",
+      type: "deleted",
+      kind: "service-space",
       warning: "override-removed",
       detail: "Removed from floor plan",
-      details: ['You renamed this from "Room 10" in Version 2', "The new floor-plan does not contain it"],
+      details: [
+        'You renamed this from "Room 10" in Version 2',
+        "The new floor-plan does not contain it",
+      ],
       decision: undefined,
     },
 
@@ -945,33 +1222,57 @@ function amberChanges(): Change[] {
     // No review action applies to these; they're shown so you can see they survived.
     {
       // US7: the source value moved underneath your rename — yours still stands, but you should know
-      id: "marhaba", name: "Marhaba Reception", type: "preserved", kind: "service-space",
+      id: "marhaba",
+      name: "Marhaba Reception",
+      type: "preserved",
+      kind: "service-space",
       warning: "source-conflict",
       detail: "Your edit kept — source changed",
-      details: ['You renamed "Marhaba" to "Marhaba Reception"', 'Source now calls it "Marhaba Services"'],
+      details: [
+        'You renamed "Marhaba" to "Marhaba Reception"',
+        'Source now calls it "Marhaba Services"',
+      ],
     },
     {
-      id: "prm", name: "PRM Lounge  Reception", type: "preserved", kind: "service-space",
+      id: "prm",
+      name: "PRM Lounge  Reception",
+      type: "preserved",
+      kind: "service-space",
       detail: "Your earlier edit — kept",
       details: ['Type changed: from "Lounge" to "Assistance"'],
     },
     {
       // US7: a manually added object that now collides with the new floor plan
-      id: "costaseating", name: "Costa Coffee Seating", type: "preserved", kind: "social-space",
+      id: "costaseating",
+      name: "Costa Coffee Seating",
+      type: "preserved",
+      kind: "social-space",
       warning: "clash",
       detail: "Your edit kept — now overlaps",
-      details: ["You added this in Version 2", "Overlaps the new Costa Coffee unit"],
+      details: [
+        "You added this in Version 2",
+        "Overlaps the new Costa Coffee unit",
+      ],
     },
     {
-      id: "ekcustoms", name: "EK & Customs Counter", type: "preserved", kind: "service-space",
+      id: "ekcustoms",
+      name: "EK & Customs Counter",
+      type: "preserved",
+      kind: "service-space",
       detail: "Your earlier edit — kept",
-      details: ['Name changed: from "EK Customs" to "EK & Customs Counter"', "Geometry changed"],
+      details: [
+        'Name changed: from "EK Customs" to "EK & Customs Counter"',
+        "Geometry changed",
+      ],
     },
     {
       // US7's third preservation warning. It was declared in WarningKind but never seeded, so
       // "Outside the floor plan" could not appear on any screen (found 2026-08-11) — the new plan
       // is a different shape, and something you added now sits off it.
-      id: "wrapdesk", name: "Wrapping Desk 2", type: "preserved", kind: "service-space",
+      id: "wrapdesk",
+      name: "Wrapping Desk 2",
+      type: "preserved",
+      kind: "service-space",
       warning: "out-of-bounds",
       detail: "Your edit kept — now off the plan",
       details: [
@@ -994,38 +1295,199 @@ function amberChanges(): Change[] {
 function redExtras(): Change[] {
   return [
     // ── New — the remodel's anchors ─────────────────────────────────────────
-    { id: "apm", name: "APM Station", type: "new", kind: "transit-space", detail: "New APM station", details: ["New automated people mover station", "Area: 1,240 m²"], decision: "confirm" },
-    { id: "prayerm", name: "Male Prayer Room", type: "new", kind: "faith-worship-space", detail: "New amenity", decision: "confirm" },
-    { id: "nbd", name: "Emirates NBD", type: "new", kind: "service-space", detail: "New bank branch", decision: "confirm" },
+    {
+      id: "apm",
+      name: "APM Station",
+      type: "new",
+      kind: "transit-space",
+      detail: "New APM station",
+      details: ["New automated people mover station", "Area: 1,240 m²"],
+      decision: "confirm",
+    },
+    {
+      id: "prayerm",
+      name: "Male Prayer Room",
+      type: "new",
+      kind: "faith-worship-space",
+      detail: "New amenity",
+      decision: "confirm",
+    },
+    {
+      id: "nbd",
+      name: "Emirates NBD",
+      type: "new",
+      kind: "service-space",
+      detail: "New bank branch",
+      decision: "confirm",
+    },
 
     // ── Geometry — the check-in row rebuilt (collapses: 8 of one kind) ─────
-    { id: "bagdrop1", name: "Bag Drop Check-in 1", type: "geometry", kind: "check-in-counter", similarity: 0.55, detail: "Rebuilt", details: ["Geometry modified — similarity 0.55"], decision: "confirm" },
-    { id: "baggagedrop", name: "Baggage Drop", type: "geometry", kind: "check-in-counter", similarity: 0.58, detail: "Rebuilt", details: ["Geometry modified — similarity 0.58"], decision: "confirm" },
-    { id: "ekexpress", name: "Emirates F&J Express Check-in Counter", type: "geometry", kind: "check-in-counter", similarity: 0.63, detail: "Rebuilt", details: ["Geometry modified — similarity 0.63"], decision: "confirm" },
-    { id: "ektickets", name: "Emirates Ticket Sales Counters", type: "geometry", kind: "check-in-counter", similarity: 0.72, detail: "Rebuilt", details: ["Geometry modified — similarity 0.72"], decision: "confirm" },
-    { id: "ekticketing", name: "Emirates Ticketing Counter", type: "geometry", kind: "check-in-counter", similarity: 0.76, detail: "Rebuilt", details: ["Geometry modified — similarity 0.76"], decision: "confirm" },
-    { id: "excessbag", name: "Excess Baggage Cashier", type: "geometry", kind: "check-in-counter", similarity: 0.81, detail: "Rebuilt", details: ["Geometry modified — similarity 0.81"], decision: "confirm" },
-    { id: "fbcheckin", name: "First and Business Class Check-in", type: "geometry", kind: "check-in-counter", similarity: 0.84, detail: "Rebuilt", details: ["Geometry modified — similarity 0.84"], decision: "confirm" },
-    { id: "checkin", name: "Check-in", type: "geometry", kind: "check-in-counter", similarity: 0.88, detail: "Rebuilt", details: ["Geometry modified — similarity 0.88", "Area: 96 m² → 128 m²"], decision: "confirm" },
+    {
+      id: "bagdrop1",
+      name: "Bag Drop Check-in 1",
+      type: "geometry",
+      kind: "check-in-counter",
+      similarity: 0.55,
+      detail: "Rebuilt",
+      details: ["Geometry modified — similarity 0.55"],
+      decision: "confirm",
+    },
+    {
+      id: "baggagedrop",
+      name: "Baggage Drop",
+      type: "geometry",
+      kind: "check-in-counter",
+      similarity: 0.58,
+      detail: "Rebuilt",
+      details: ["Geometry modified — similarity 0.58"],
+      decision: "confirm",
+    },
+    {
+      id: "ekexpress",
+      name: "Emirates F&J Express Check-in Counter",
+      type: "geometry",
+      kind: "check-in-counter",
+      similarity: 0.63,
+      detail: "Rebuilt",
+      details: ["Geometry modified — similarity 0.63"],
+      decision: "confirm",
+    },
+    {
+      id: "ektickets",
+      name: "Emirates Ticket Sales Counters",
+      type: "geometry",
+      kind: "check-in-counter",
+      similarity: 0.72,
+      detail: "Rebuilt",
+      details: ["Geometry modified — similarity 0.72"],
+      decision: "confirm",
+    },
+    {
+      id: "ekticketing",
+      name: "Emirates Ticketing Counter",
+      type: "geometry",
+      kind: "check-in-counter",
+      similarity: 0.76,
+      detail: "Rebuilt",
+      details: ["Geometry modified — similarity 0.76"],
+      decision: "confirm",
+    },
+    {
+      id: "excessbag",
+      name: "Excess Baggage Cashier",
+      type: "geometry",
+      kind: "check-in-counter",
+      similarity: 0.81,
+      detail: "Rebuilt",
+      details: ["Geometry modified — similarity 0.81"],
+      decision: "confirm",
+    },
+    {
+      id: "fbcheckin",
+      name: "First and Business Class Check-in",
+      type: "geometry",
+      kind: "check-in-counter",
+      similarity: 0.84,
+      detail: "Rebuilt",
+      details: ["Geometry modified — similarity 0.84"],
+      decision: "confirm",
+    },
+    {
+      id: "checkin",
+      name: "Check-in",
+      type: "geometry",
+      kind: "check-in-counter",
+      similarity: 0.88,
+      detail: "Rebuilt",
+      details: ["Geometry modified — similarity 0.88", "Area: 96 m² → 128 m²"],
+      decision: "confirm",
+    },
 
     // ── Geometry — the two big floor movers ────────────────────────────────
-    { id: "foodcourt", name: "Food Court", type: "geometry", kind: "food-beverage-space", similarity: 0.52, detail: "Nearly doubled", details: ["Geometry modified — similarity 0.52", "Area: 310 m² → 540 m²"], decision: "confirm" },
-    { id: "entrancehall", name: "Entrance Hall", type: "geometry", kind: "circulation-space", similarity: 0.61, detail: "Reshaped", details: ["Geometry modified — similarity 0.61", "Reshaped around the new APM station"], decision: "confirm" },
+    {
+      id: "foodcourt",
+      name: "Food Court",
+      type: "geometry",
+      kind: "food-beverage-space",
+      similarity: 0.52,
+      detail: "Nearly doubled",
+      details: ["Geometry modified — similarity 0.52", "Area: 310 m² → 540 m²"],
+      decision: "confirm",
+    },
+    {
+      id: "entrancehall",
+      name: "Entrance Hall",
+      type: "geometry",
+      kind: "circulation-space",
+      similarity: 0.61,
+      detail: "Reshaped",
+      details: [
+        "Geometry modified — similarity 0.61",
+        "Reshaped around the new APM station",
+      ],
+      decision: "confirm",
+    },
 
     // ── Metadata ───────────────────────────────────────────────────────────
-    { id: "umlounge", name: "Emirates Um Service Lounge", type: "metadata", kind: "service-space", detail: "Renamed", details: ['Name changed: from "Emirates Um Service Lounge" to "Emirates Unaccompanied Minors Lounge"'], decision: "confirm" },
-    { id: "workspace", name: "Work Space", type: "metadata", kind: "social-space", detail: 'Type: "Office" → "Co-working Space"', details: ['Type changed: from "Office" to "Co-working Space"'], decision: "confirm" },
+    {
+      id: "umlounge",
+      name: "Emirates Um Service Lounge",
+      type: "metadata",
+      kind: "service-space",
+      detail: "Renamed",
+      details: [
+        'Name changed: from "Emirates Um Service Lounge" to "Emirates Unaccompanied Minors Lounge"',
+      ],
+      decision: "confirm",
+    },
+    {
+      id: "workspace",
+      name: "Work Space",
+      type: "metadata",
+      kind: "social-space",
+      detail: 'Type: "Office" → "Co-working Space"',
+      details: ['Type changed: from "Office" to "Co-working Space"'],
+      decision: "confirm",
+    },
 
     // ── Removed — the east services cluster cleared ────────────────────────
-    { id: "police", name: "Police Reception & Corridor", type: "deleted", kind: "service-space", detail: "Removed from floor plan", details: ["Relocated off this floor in the new plan"], decision: "reject" },
-    { id: "paycabin", name: "Automatic Pay Machine Cabin", type: "deleted", kind: "service-space", detail: "Removed from floor plan", decision: "reject" },
-    { id: "valet", name: "Valet Parking Space", type: "deleted", kind: "transit-space", detail: "Removed from floor plan", decision: "reject" },
+    {
+      id: "police",
+      name: "Police Reception & Corridor",
+      type: "deleted",
+      kind: "service-space",
+      detail: "Removed from floor plan",
+      details: ["Relocated off this floor in the new plan"],
+      decision: "reject",
+    },
+    {
+      id: "paycabin",
+      name: "Automatic Pay Machine Cabin",
+      type: "deleted",
+      kind: "service-space",
+      detail: "Removed from floor plan",
+      decision: "reject",
+    },
+    {
+      id: "valet",
+      name: "Valet Parking Space",
+      type: "deleted",
+      kind: "transit-space",
+      detail: "Removed from floor plan",
+      decision: "reject",
+    },
 
     // ── User overrides ─────────────────────────────────────────────────────
     {
-      id: "dilizieseating", name: "Dilizie Seating", type: "preserved", kind: "social-space",
+      id: "dilizieseating",
+      name: "Dilizie Seating",
+      type: "preserved",
+      kind: "social-space",
       detail: "Your edit kept — its unit was removed",
-      details: ["You added this seating in Version 2", "The unit it serves (Dilizie) is removed in this update"],
+      details: [
+        "You added this seating in Version 2",
+        "The unit it serves (Dilizie) is removed in this update",
+      ],
     },
   ];
 }
@@ -1084,27 +1546,42 @@ export const FLOOR_WARNING_DEMO: Record<FloorWarningKind, FloorWarning> = {
  * ⚠️ One constant to revert. Point it at another level and the amber walkthrough goes back to a
  * floor that stayed put — at the cost of nobody being able to reach the notice.
  */
-export function seedFloorWarnings(buildingId: string | undefined, levelIndex: number): FloorWarning[] {
-  if ((buildingId ?? T3_ID) !== T3_ID || levelIndex !== NEW_VERSION_LEVEL) return [];
-  return [FLOOR_WARNING_DEMO["georeference-shifted"], FLOOR_WARNING_DEMO["floorplan-resized"]];
+export function seedFloorWarnings(
+  buildingId: string | undefined,
+  levelIndex: number,
+): FloorWarning[] {
+  if ((buildingId ?? T3_ID) !== T3_ID || levelIndex !== NEW_VERSION_LEVEL)
+    return [];
+  return [
+    FLOOR_WARNING_DEMO["georeference-shifted"],
+    FLOOR_WARNING_DEMO["floorplan-resized"],
+  ];
 }
 
-/** B4 · Arrivals — Terminal 3: the level whose review was concluded with two flags left on it. */
-export const FLAGGED_LEVEL = -4;
+/** B4 · Arrivals — Terminal 3: the level whose review was concluded with two edits on it. */
+export const EDITED_LEVEL = -4;
 
 /**
- * The two flagged changes B4 carries, **with their notes** — a review someone finished and left
- * two things to come back to.
+ * The two changes B4's reviewer **edited** rather than accepted — a review someone finished by
+ * doing the work, which is the whole point of replacing Flag with Edit.
  *
- * This exists because the tree advertised *"2 flagged"* on B4 as a **hardcoded label** with no
- * report behind it, so the map beside it correctly drew nothing and the feature looked broken
- * (found 2026-08-14). A tag that claims work nobody did is worse than no tag: every surface that
- * reads the real data disagrees with it.
+ * ⚠️ **This used to be `seedFlaggedChanges`**, and it existed for a reason worth keeping: the tree
+ * advertised *"2 flagged"* on B4 as a **hardcoded label** with no report behind it, so the map
+ * beside it correctly drew nothing and the feature looked broken (found 2026-08-14). A tag that
+ * claims work nobody did is worse than no tag.
+ *
+ * The tag is gone now, and nothing replaces it — deliberately. Olcay, 2026-08-25: *"once review
+ * concluded the map becomes the current map."* An edit is not an outstanding item; it is the
+ * floor. What survives is the record in the `ReviewOutcome` (`overrides`, keyed the same way as
+ * `decisions`) and the fact that MapScale's **next** run will report these two as `preserved`.
+ *
+ * The changes themselves are still MapScale's, untouched — see `Override` on why the report and
+ * the person's answer to it are stored apart. `seedEditedOverrides` carries the answers.
  *
  * Both names are single features on that floor — `pickFeature` resolves by name, and *"Baggage
  * Reclaim"* would have been ambiguous fourteen ways.
  */
-export function seedFlaggedChanges(): Change[] {
+export function seedEditedChanges(): Change[] {
   return [
     {
       id: "b4-passport",
@@ -1112,9 +1589,9 @@ export function seedFlaggedChanges(): Change[] {
       type: "metadata",
       kind: "checkpoint",
       detail: 'Name: "Passport Control" → "Arrival Passport Control"',
-      details: ['Name changed: from "Passport Control" to "Arrival Passport Control"'],
-      decision: "flag",
-      note: "Check the new name against the airport's signage before this goes in the wayfinding voice prompts.",
+      details: [
+        'Name changed: from "Passport Control" to "Arrival Passport Control"',
+      ],
     },
     {
       id: "b4-customs",
@@ -1123,13 +1600,70 @@ export function seedFlaggedChanges(): Change[] {
       kind: "operational-space",
       similarity: 0.71,
       detail: "Boundary redrawn",
-      details: ["Geometry modified — similarity 0.71", "Area: 940 m² → 1,020 m²"],
-      decision: "flag",
-      note: "The hall now overlaps the queue barriers we drew by hand. Redraw those in the editor.",
+      details: [
+        "Geometry modified — similarity 0.71",
+        "Area: 940 m² → 1,020 m²",
+      ],
     },
   ];
 }
 
-export function seedDiff(magnitudePct = 30, floorWarnings: FloorWarning[] = []): DiffResult {
-  return { changes: seedChanges(magnitudeBand(magnitudePct)), magnitudePct, floorWarnings };
+/**
+ * What B4's reviewer put in place of those two suggestions. Keyed by change id, exactly as a live
+ * review writes them — so the seeded level and a level you review by hand are the same shape.
+ */
+export function seedEditedOverrides(): Record<string, Override> {
+  return {
+    "b4-passport": {
+      name: "Passport Control (Arrivals)",
+      details: [
+        'Name: "Arrival Passport Control" → "Passport Control (Arrivals)" — matches the airport signage',
+      ],
+    },
+    "b4-customs": {
+      geometry: undefined,
+      details: [
+        "Boundary redrawn by hand — the detected hall overlapped the queue barriers",
+      ],
+    },
+  };
+}
+
+/**
+ * **Every seeded override, keyed by change id** — the demo equivalent of what a reviewer types.
+ *
+ * One flat table rather than a per-band function, because an override is keyed by the change it
+ * stands over and change ids are unique across every band. A screen seeds itself by intersecting
+ * this with the ids it actually holds, which is also why an id that is not in the current band
+ * costs nothing.
+ *
+ * `subway` and `ahlan` are the review demo (they were the two seeded *flags* before 2026-08-25);
+ * the `b4-` pair is the concluded-review demo — see `seedEditedOverrides`, which is this table
+ * narrowed to B4 and kept separate because `App` seeds that level before any screen mounts.
+ */
+export const SEEDED_OVERRIDES: Record<string, Override> = {
+  subway: {
+    kind: "quick-service-restaurant",
+    details: [
+      'Type: "Cafe" → "Quick Service Restaurant" — it is a counter-service franchise, not a cafe',
+    ],
+  },
+  ahlan: {
+    name: "Ahlan Services Desk (Arrivals)",
+    details: [
+      'Name: "Ahlan Services Desk" → "Ahlan Services Desk (Arrivals)" — there is a second desk airside',
+    ],
+  },
+  ...seedEditedOverrides(),
+};
+
+export function seedDiff(
+  magnitudePct = 30,
+  floorWarnings: FloorWarning[] = [],
+): DiffResult {
+  return {
+    changes: seedChanges(magnitudeBand(magnitudePct)),
+    magnitudePct,
+    floorWarnings,
+  };
 }

@@ -39,7 +39,8 @@ const BLOCKS = ["INK",
                 "FOCUS-ENGINE",
                 "BOX-ENGINE",
                 "GJRENDER-ENGINE", "GJSWAP-ENGINE",
-                "EDGE-ENGINE", "PATHS-ENGINE", "REACH-ENGINE"];
+                "EDGE-ENGINE", "PATHS-ENGINE", "REACH-ENGINE",
+                "PREVIEW-ENGINE"];
 const found = BLOCKS.map((name) => {
   const from = src.indexOf(`/* ${name}-START`);
   const to = src.indexOf(`/* ${name}-END */`);
@@ -242,6 +243,7 @@ writeFileSync(
       `  wfBuildEdges, wfEnsureEdges, WF_NODES, wfPaint,\n` +
       `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, wfNodeAt, personaOk,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
+      `  outcomeOf, outcomeInk, previewFate, DECISION_INK, OVERRIDE_INK,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
       `export function __setNodes(n) { WF_NODES = n; WF_EDGES = null; }\n` +
@@ -284,6 +286,7 @@ const {
   wfBuildEdges, wfEnsureEdges, wfPaint,
   wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, personaOk,
   editableAt, hoverableAt,
+  outcomeOf, outcomeInk, previewFate, DECISION_INK, OVERRIDE_INK,
   __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __sel, __edges,
   __env, TARGET, prefs, POSTED,
 } = mod;
@@ -2740,6 +2743,54 @@ const LIFT = F("n2", "wayfinding-network", "elevator-node");
   __setReach(null, null, null);
   __setMap(reachMap([ROOM]));
   check("told nothing, nothing is touchable", editableAt([0, 0]) === null);
+}
+
+/* ── P. the review preview — what a decided change does to the map ─────────── */
+
+console.log("\nreview preview");
+
+/* P1. The table itself, every cell. Written out rather than generated, because the point of the
+      test is that somebody reading it can see the asymmetry and agree with it. */
+{
+  const fate = (type, decision, override) => previewFate({ type, decision, override });
+
+  // Undecided: still a diff. This is the only state that asks anything of the reviewer.
+  for (const t of ["new", "geometry", "metadata", "deleted", "preserved"])
+    check(`an undecided ${t} change still paints its type colour`, fate(t, undefined) === "diff");
+
+  // ⚠️ The asymmetry, and the reason this file exists: `reject` means opposite things depending on
+  // what was proposed. Rejecting an ADDITION takes it off the floor; rejecting a REMOVAL keeps it.
+  check("a rejected addition leaves the floor", fate("new", "reject") === "ghost");
+  check("⚠️ a rejected REMOVAL stays — rejecting is how you keep it",
+        fate("deleted", "reject") === "plain");
+  check("a confirmed removal leaves the floor", fate("deleted", "confirm") === "ghost");
+  check("a confirmed addition stays, and stops being a diff",
+        fate("new", "confirm") === "plain");
+
+  // An update never changes whether the feature exists — only what it looks like or is called.
+  for (const d of ["confirm", "reject"])
+    for (const t of ["geometry", "metadata"])
+      check(`a ${d}ed ${t} update keeps the feature on the floor`, fate(t, d) === "plain");
+
+  // An edit outranks whatever was decided before it, for every type — including a removal, where
+  // "I edited it" can only mean "it stays, with my value on it".
+  for (const t of ["new", "geometry", "metadata", "deleted", "preserved"])
+    for (const d of [undefined, "confirm", "reject"])
+      check(`an edited ${t} is mine, whatever was decided first`, fate(t, d, { name: "x" }) === "mine");
+}
+
+/* P2. The outcome, and the ink that follows from it. */
+{
+  check("no decision, no outcome", outcomeOf({ type: "new" }) === null);
+  check("a decision is the outcome", outcomeOf({ type: "new", decision: "reject" }) === "reject");
+  check("⚠️ an override outranks the decision under it",
+        outcomeOf({ type: "new", decision: "confirm", override: { name: "x" } }) === "edited");
+
+  check("a decision draws in muted ink, never green or red",
+        outcomeInk("confirm") === DECISION_INK && outcomeInk("reject") === DECISION_INK);
+  check("an edit draws in the override purple", outcomeInk("edited") === OVERRIDE_INK);
+  check("⚠️ the override purple is `preserved`'s own colour — an edit and a carried-through "
+        + "override are one fact at two ages", OVERRIDE_INK === "#6D28D9");
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */

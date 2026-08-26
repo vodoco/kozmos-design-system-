@@ -34,7 +34,7 @@ import {
   setReviewOutcome,
   updateBuilding,
 } from "../mock/store";
-import type { Change, LevelVersion } from "../mock/diff";
+import type { Change, LevelVersion, Override } from "../mock/diff";
 import {
   ALIGN_COPY,
   FINETUNE_COPY,
@@ -516,20 +516,36 @@ export function BuildingWizard({
    */
   const [reviewingId, setReviewingId] = useState<number | null>(null);
   const [reviews, setReviews] = useState<
-    Record<number, { rows: Change[]; complete: boolean }>
+    Record<
+      number,
+      { rows: Change[]; overrides: Record<string, Override>; complete: boolean }
+    >
   >(() => {
     /**
      * Edit mode picks up where creation left off. A building's levels carry their concluded
-     * reviews in the store (that is how creation's flags reach the level editor at all — answer
-     * 4), so re-entering the wizard through the tree's *Edit building* reads them back rather
-     * than presenting every level as untouched. Version-matched like every other reader: a level
-     * whose floor-plan has been replaced since starts clean.
+     * reviews in the store (that is how creation's own edits reach the level editor at all —
+     * answer 4), so re-entering the wizard through the tree's *Edit building* reads them back
+     * rather than presenting every level as untouched. Version-matched like every other reader: a
+     * level whose floor-plan has been replaced since starts clean.
+     *
+     * ⚠️ **`overrides` rides along with `rows`** and is not derivable from them: a `Change` is
+     * MapScale's report and holds no answer to itself. Reading back the rows alone — which is what
+     * this did before 2026-08-25 — would present a level somebody had edited as one they had
+     * merely confirmed.
      */
     if (!initial?.storeId) return {};
-    const out: Record<number, { rows: Change[]; complete: boolean }> = {};
+    const out: Record<
+      number,
+      { rows: Change[]; overrides: Record<string, Override>; complete: boolean }
+    > = {};
     (initial.levels ?? []).forEach((l, i) => {
       const saved = getReviewOutcome(levelKey(initial.storeId, l.index), 1);
-      if (saved) out[i + 1] = { rows: saved.changes, complete: saved.complete };
+      if (saved)
+        out[i + 1] = {
+          rows: saved.changes,
+          overrides: saved.overrides ?? {},
+          complete: saved.complete,
+        };
     });
     return out;
   });
@@ -597,14 +613,15 @@ export function BuildingWizard({
     if (!r) return "awaiting";
     return r.complete ? "reviewed" : "in-review";
   };
-  const flaggedOf = (l: WizLevel) =>
-    (reviews[l.id]?.rows ?? []).filter((c) => c.decision === "flag").length;
+  /** How many of a level's rows carry the reviewer's own value rather than MapScale's. */
+  const editedOf = (l: WizLevel) =>
+    Object.keys(reviews[l.id]?.overrides ?? {}).length;
   const levelCardFor = (l: WizLevel) => {
     const s = stateOf(l);
     if (s === "mapping") return PHASE_CARD[l.phase];
     const card = {
       state: STATE_CARD[s],
-      note: levelStateLabel(s, levelIssueCount(l.ordinal), flaggedOf(l)),
+      note: levelStateLabel(s, levelIssueCount(l.ordinal), editedOf(l)),
     };
     // Zero-issue and failed levels get no way in: there is nothing to confirm on one, and nothing
     // to confirm *from* on the other (§18 — both are excluded from the review count too).
@@ -730,12 +747,18 @@ export function BuildingWizard({
       confidencePct: levelResult(l.ordinal).confidencePct,
       changes: rowsByLevel[l.id] ?? [],
       onBack: () => setReviewingId(null),
-      onSave: (rows: Change[]) => {
-        setReviews((r) => ({ ...r, [l.id]: { rows, complete: false } }));
+      onSave: (rows: Change[], overrides: Record<string, Override>) => {
+        setReviews((r) => ({
+          ...r,
+          [l.id]: { rows, overrides, complete: false },
+        }));
         setReviewingId(null);
       },
-      onConfirm: (rows: Change[]) => {
-        setReviews((r) => ({ ...r, [l.id]: { rows, complete: true } }));
+      onConfirm: (rows: Change[], overrides: Record<string, Override>) => {
+        setReviews((r) => ({
+          ...r,
+          [l.id]: { rows, overrides, complete: true },
+        }));
         // **No auto-advance** (Olcay's answer 3): completing one level leaves the others exactly
         // where they are, so somebody who wants to stop after one can. This is the single place
         // the wizard deliberately does not copy step 3's alignment cycle, which does advance.
@@ -1041,7 +1064,7 @@ export function BuildingWizard({
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {levelStateLabel(s, issues, flaggedOf(l))}
+                  {levelStateLabel(s, issues, editedOf(l))}
                 </div>
               </div>
               {/* Zero-issue and failed levels offer no way in: there is nothing to confirm on one

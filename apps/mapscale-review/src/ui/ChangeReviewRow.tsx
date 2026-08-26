@@ -1,4 +1,4 @@
-import { Warning } from "./icons";
+import { Warning, Pencil, Reset } from "./icons";
 import { useState } from "react";
 import {
   SegmentedControl,
@@ -8,14 +8,16 @@ import {
 } from "@kozmos/react";
 import {
   changeAccent,
-  decisionInk,
   warningOf,
   DECISION_INK,
+  OVERRIDE_INK,
   WARNING_LABEL,
   WARNING_WHY,
   type Change,
   type Decision,
+  type Override,
 } from "../mock/diff";
+import { typeLabel } from "../mock/taxonomy";
 
 /**
  * Risk is a third axis and is never coloured — traffic-light red/amber/green stays reserved for
@@ -32,8 +34,14 @@ export function WarningGlyph({ size = 14 }: { size?: number }) {
 }
 
 /**
- * The same three marks the map draws on each feature — ✓ / 🚩 / ✗ in neutral black, so a decision
- * never reads as a change type. `currentColor` lets the control tint them when a segment is off.
+ * The same two marks the map draws on each feature — ✓ / ✗. `currentColor` lets the control tint
+ * them when a segment is off.
+ *
+ * ⚠️ **The 🚩 arm was removed 2026-08-25** with flagging itself. These are still hand-drawn paths
+ * on an 18-grid rather than Pointr Icon Library instances, and deliberately: they are **marks**,
+ * sized for a 22px badge and for a centroid mark on the map, where the library's 24-grid at
+ * stroke 2 renders visibly lighter (`./icons` documents exactly that behaviour). The two *new*
+ * controls this row grew — Edit and Revert — are library icons, as the standing rule requires.
  */
 export function DecisionGlyph({
   kind,
@@ -43,11 +51,7 @@ export function DecisionGlyph({
   size?: number;
 }) {
   const d =
-    kind === "confirm"
-      ? "M4 9.5 L7.5 13 L14 5.5"
-      : kind === "reject"
-        ? "M5 5 L13 13 M13 5 L5 13"
-        : "M5.5 4 L5.5 15";
+    kind === "confirm" ? "M4 9.5 L7.5 13 L14 5.5" : "M5 5 L13 13 M13 5 L5 13";
   return (
     <svg
       width={size}
@@ -63,108 +67,164 @@ export function DecisionGlyph({
         strokeWidth="2"
         strokeLinecap="round"
       />
-      {kind === "flag" && (
-        <path d="M5.5 4 L14 6.5 L5.5 9 Z" fill="currentColor" />
-      )}
     </svg>
   );
 }
 
 const ACTIONS: { value: Decision; label: string }[] = [
   { value: "confirm", label: "Confirm" },
-  { value: "flag", label: "Flag for later" },
   { value: "reject", label: "Reject" },
 ];
+
+/**
+ * A small square icon button — Edit and Revert both, so the pair reads as one family beside the
+ * segmented control rather than as two unrelated affordances bolted on.
+ */
+function RowAction({
+  label,
+  ink,
+  onClick,
+  children,
+}: {
+  label: string;
+  ink: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          style={{
+            display: "grid",
+            placeItems: "center",
+            width: 30,
+            height: 30,
+            padding: 0,
+            borderRadius: 6,
+            border: "1px solid var(--primitives-colors-background-100)",
+            background: "#fff",
+            color: ink,
+            cursor: "pointer",
+          }}
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        style={{ maxWidth: 240, whiteSpace: "normal", lineHeight: 1.4 }}
+      >
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 export function ChangeReviewRow({
   change,
   onDecide,
-  override,
+  preserved,
   active,
   onActivate,
-  note,
-  onNote,
+  edit,
+  onEdit,
+  onRevert,
+  onEditShape,
+  onEditEnd,
+  shapeDirty,
 }: {
   change: Change;
-  /** `undefined` clears the decision — how a user override returns to its resting "Kept". */
+  /** `undefined` clears the decision. */
   onDecide: (d: Decision | undefined) => void;
   /**
-   * A user override — carried through untouched, so there is no *change* to confirm or reject.
+   * A `preserved` row — **your override from an earlier run**, carried through untouched, so there
+   * is no incoming *change* to confirm or reject.
+   *
+   * ⚠️ **Renamed from `override` 2026-08-25**, because `Override` now means something specific and
+   * adjacent: the value the user is putting in place of MapScale's *during this review*. A
+   * `preserved` row is the same fact one run older. Two names, so a reader can tell which age is
+   * meant.
    *
    * It used to be `readOnly` and render the bare word "Kept" (Olcay, 2026-08-11: *"maybe we should
-   * allow flagging the user overrides too?"* — and he is right; this is the missing half of US7).
-   * The warned ones are precisely the rows you need to come back to — an override that now
-   * **overlaps** the new content, or that the new floor-plan's boundary **no longer covers**, or
-   * whose **source value moved underneath it** — and "Kept" was a statement with no affordance,
-   * the same gap D17 names for re-removals.
+   * allow flagging the user overrides too?"*), then Kept-or-Flagged. It is now **Kept, with Edit
+   * and Reset** (Olcay, 2026-08-25: *"we should have edit and reset for previous user overrides
+   * too"*) — which is a better answer to the same question flagging was reaching for. The warned
+   * ones are precisely the rows you need to act on: an override that now **overlaps** the new
+   * content, that the new floor-plan's boundary **no longer covers**, or whose **source value moved
+   * underneath it**. "Kept" was a statement with no affordance; now it has two.
    *
-   * **Flag only, and deliberately so.** Confirm would be a no-op: it is already kept. Reject would
-   * mean discarding your own earlier work, which is a destructive act and must not be a ✗ in a
-   * triage list next to twenty ordinary rows. So an override has two states — kept, and kept but
-   * flagged — and flagging one now carries it onto the editor's map like any other flag.
+   * **Reset is still not a ✗.** Discarding your own earlier work is a real act, so it says what it
+   * discards and reads as its own control rather than hiding inside a triage segment.
    */
-  override?: boolean;
-  /** The note written against this flag, if any. Lives in the review outcome, not on the change. */
-  note?: string;
-  /** Omit to render the row without a note field — the map's card does, it has no room. */
-  onNote?: (v: string) => void;
+  preserved?: boolean;
+  /**
+   * **The user's own value for this row**, if they have edited it. Lives in the review outcome
+   * beside the decisions, never on the change — see `Override`.
+   */
+  edit?: Override;
+  /** Commit an edit. Omit to render the row read-only — the map's card does, it has no room. */
+  onEdit?: (o: Override) => void;
+  /** Throw the override away and go back to what MapScale detected. */
+  onRevert?: () => void;
+  /**
+   * Hand the shape to the geometry editor on the review map. Omitted for rows with nothing to
+   * reshape — a `metadata` change is a one-field fix and a `deleted` one has no new outline.
+   */
+  onEditShape?: () => void;
+  /**
+   * The edit form closed, and whether it closed by saving.
+   *
+   * The screen needs this because **the map may be holding a live geometry session** started by
+   * `onEditShape`, and the row is where the one commit point lives: one row, one Save. Without it
+   * the shape and the fields would each have their own idea of when the edit was over, which is
+   * precisely how you end up with a saved name beside a discarded outline.
+   */
+  onEditEnd?: (commit: boolean) => void;
+  /**
+   * **The map's live geometry session has actually moved the outline.**
+   *
+   * Without it, Save cannot tell a shape-only edit from an edit that changed nothing: both arrive
+   * with an empty `details` list, and the second one must *not* leave an override behind (see the
+   * no-op note on Save). Asking the editor whether the shape is dirty is the only honest way to
+   * tell them apart — and it settles it **before** the commit, rather than racing the geometry
+   * message back from the iframe.
+   */
+  shapeDirty?: boolean;
   /** This is the change the map is showing — the two surfaces share one selection. */
   active?: boolean;
   /** Clicking the row anywhere but the decision control makes it the active one. */
   onActivate?: () => void;
 }) {
-  const accent = changeAccent(change);
+  const accent = changeAccent(change, edit);
   const warning = warningOf(change);
   const [expanded, setExpanded] = useState(false);
-  /** A user override's two states: kept, and kept but flagged to come back to. */
-  const overrideItems = [
-    {
-      value: "confirm",
-      label: (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span
-              aria-label="Keep as it is"
-              style={{ fontSize: 12, color: DECISION_INK, padding: "0 2px" }}
-            >
-              Kept
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Keep your edit as it is</TooltipContent>
-        </Tooltip>
-      ),
-    },
-    {
-      value: "flag",
-      label: (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span
-              role="img"
-              aria-label="Flag for later"
-              style={{
-                display: "grid",
-                placeItems: "center",
-                color: decisionInk("flag"),
-              }}
-            >
-              <DecisionGlyph kind="flag" />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Flag for later</TooltipContent>
-        </Tooltip>
-      ),
-    },
-  ];
+  /**
+   * The edit form is open. Local, not lifted: which row you have open is a fact about this row's
+   * own UI, and hoisting it would make the changelog re-render every keystroke.
+   */
+  const [editing, setEditing] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [draftKind, setDraftKind] = useState("");
+  const openEditor = () => {
+    setDraftName(edit?.name ?? change.name);
+    setDraftKind(edit?.kind ?? change.kind ?? "");
+    setEditing(true);
+  };
   /**
    * **D17 (approved 2026-08-13, wording settled the same day).** US7 requires "an option to NOT
    * remove a Map Object", and the only mechanism was the generic ✗ with nothing saying that
    * rejecting a removal is *how you keep it*.
    *
    * The affordance is the **words, not a different control** (Olcay: *"I'd like them consistent so
-   * X is fine, tooltip could say Keep it"*). Every row keeps the same three glyphs — a re-removal
-   * must not grow a fourth-looking control in a list of twenty — and only the reject tooltip
-   * changes. It still writes a plain `reject`, so no new state enters the model.
+   * X is fine, tooltip could say Keep it"*). Every row keeps the same glyphs — a re-removal must
+   * not grow an extra-looking control in a list of twenty — and only the reject tooltip changes.
+   * It still writes a plain `reject`, so no new state enters the model.
    */
   const keepIt = change.warning === "re-removed";
   const items = ACTIONS.map((a) => {
@@ -184,7 +244,7 @@ export function ChangeReviewRow({
               style={{
                 display: "grid",
                 placeItems: "center",
-                color: decisionInk(a.value),
+                color: DECISION_INK,
               }}
             >
               <DecisionGlyph kind={a.value} />
@@ -195,7 +255,6 @@ export function ChangeReviewRow({
       ),
     };
   });
-
   return (
     <div
       data-change-row={change.id}
@@ -320,64 +379,315 @@ export function ChangeReviewRow({
         </div>
         {/* Deciding is not selecting: without this, every ✓ would also fly the map to that feature,
           and working down the list would become a slideshow. */}
-        <div style={{ flex: "0 0 auto" }} onClick={(e) => e.stopPropagation()}>
-          {override ? (
-            /*
-            "Kept" stays a word rather than becoming a ✓, because it is the row's *status* and
-            people read it as one — and because ✓ means "apply this change", which is not what is
-            happening here. It is a segment now instead of a label, so it doubles as the way back
-            out of a flag: within a review you un-flag by picking Kept again.
-          */
-            <SegmentedControl
-              items={overrideItems}
-              /* "Kept" is the resting state, so it is SHOWN selected while the row carries no
-               decision at all — and picking it clears back to none rather than writing `confirm`.
-               Recording a decision here would put a ✓ badge on the map for a feature that was
-               never in question; five overrides would all sprout marks meaning "still kept". */
-              value={change.decision === "flag" ? "flag" : "confirm"}
-              onValueChange={(v) => onDecide(v === "flag" ? "flag" : undefined)}
-            />
+        <div
+          style={{
+            flex: "0 0 auto",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {edit ? (
+            /**
+             * **Edited outranks the decision, and takes its place** (Olcay, 2026-08-25: *"edit
+             * becomes user override which supersedes the incoming change"*).
+             *
+             * There is deliberately no ✓/✗ pair here. Confirm would mean "apply MapScale's
+             * suggestion", and you have just replaced it; reject would mean "keep the published
+             * value", and you have just replaced that too. Both segments would be lies about a row
+             * whose answer is now yours. The way back is **Revert**, which restores the detected
+             * value and puts the pair back — one step, and never a hidden one.
+             */
+            <>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: 0.2,
+                  color: OVERRIDE_INK,
+                  border: `1px solid ${OVERRIDE_INK}`,
+                  borderRadius: 999,
+                  padding: "2px 9px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                EDITED
+              </span>
+              {onEdit && (
+                <RowAction
+                  label="Edit again"
+                  ink={OVERRIDE_INK}
+                  onClick={openEditor}
+                >
+                  <Pencil size={16} />
+                </RowAction>
+              )}
+              {onRevert && (
+                <RowAction
+                  label="Revert to MapScale's detected value"
+                  ink="var(--review-muted)"
+                  onClick={() => {
+                    setEditing(false);
+                    onEditEnd?.(false);
+                    onRevert();
+                  }}
+                >
+                  <Reset size={16} />
+                </RowAction>
+              )}
+            </>
+          ) : preserved ? (
+            /**
+             * "Kept" stays a word rather than becoming a ✓, because it is the row's *status* and
+             * people read it as one — and because ✓ means "apply this change", which is not what
+             * is happening here. Beside it, the two acts Olcay asked for on 2026-08-25: edit your
+             * own earlier override, or reset it back to what the source says.
+             */
+            <>
+              <span
+                style={{ fontSize: 12, color: DECISION_INK, padding: "0 2px" }}
+              >
+                Kept
+              </span>
+              {onEdit && (
+                <RowAction
+                  label="Edit your override"
+                  ink={OVERRIDE_INK}
+                  onClick={openEditor}
+                >
+                  <Pencil size={16} />
+                </RowAction>
+              )}
+              {onRevert && (
+                <RowAction
+                  label="Reset — discard your override and take MapScale's value"
+                  ink="var(--review-muted)"
+                  onClick={onRevert}
+                >
+                  <Reset size={16} />
+                </RowAction>
+              )}
+            </>
           ) : (
-            <SegmentedControl
-              items={items}
-              value={change.decision}
-              onValueChange={(v) => onDecide(v as Decision)}
-            />
+            <>
+              <SegmentedControl
+                items={items}
+                value={change.decision}
+                onValueChange={(v) => onDecide(v as Decision)}
+              />
+              {onEdit && (
+                <RowAction
+                  label="Edit — put your own value in place of this suggestion"
+                  ink={OVERRIDE_INK}
+                  onClick={openEditor}
+                >
+                  <Pencil size={16} />
+                </RowAction>
+              )}
+            </>
           )}
         </div>
       </div>
 
       {/*
-        **The note, and only when the row is flagged** (Olcay, 2026-08-14: *"flag with optional
-        notes"*). A flag says *come back to this* and not what for; a week later that is a mystery
-        to whoever wrote it. It appears on flagging and disappears with the flag, so it can never
-        become a field you scroll past on twenty settled rows.
-
-        Optional, deliberately: requiring it would turn the cheap triage mark into a form, and Flag
-        exists precisely because it is the decision that costs nothing.
+        **What the user put in place of the suggestion**, listed the same way MapScale's own
+        `details` are and directly under them — so the row reads as one story in two voices rather
+        than as a change with a footnote.
       */}
-      {change.decision === "flag" && onNote && (
-        <div style={{ width: "100%" }} onClick={(e) => e.stopPropagation()}>
-          <textarea
-            value={note ?? ""}
-            onChange={(e) => onNote(e.target.value)}
-            rows={note && note.length > 60 ? 2 : 1}
-            placeholder="Add a note — what should you come back for?"
-            aria-label={`Note on ${change.name}`}
+      {edit?.details?.length ? (
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}
+        >
+          {edit.details.map((d) => (
+            <div
+              key={d}
+              style={{
+                fontSize: 12,
+                lineHeight: 1.45,
+                color: OVERRIDE_INK,
+                borderLeft: `3px solid ${OVERRIDE_INK}`,
+                paddingLeft: 8,
+              }}
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/*
+        **The edit form** (Olcay, 2026-08-25: *"remove flagging, instead introduce editing
+        capabilities"*). It replaces the flag's note field, in the same slot and for the opposite
+        reason: the note existed to describe work deferred, and this is the work.
+
+        Metadata inline, geometry on the map. A name and a type are two fields and belong where you
+        are already reading the row; a shape is not something a 440px panel can offer, so **Edit
+        shape** hands the feature to the geometry editor on the review map — the same editor, armed
+        the same way, rather than a second one grown here.
+      */}
+      {editing && onEdit && (
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            padding: 10,
+            borderRadius: 6,
+            border: `1px solid ${OVERRIDE_INK}`,
+            background: "#fff",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <label style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: "var(--review-muted)",
+              }}
+            >
+              NAME
+            </span>
+            <input
+              value={draftName}
+              onChange={(e) => setDraftName(e.target.value)}
+              aria-label={`Name for ${change.name}`}
+              style={{
+                font: "inherit",
+                fontSize: 13,
+                padding: "5px 8px",
+                borderRadius: 6,
+                border: "1px solid var(--primitives-colors-background-100)",
+              }}
+            />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: "var(--review-muted)",
+              }}
+            >
+              TYPE
+            </span>
+            <input
+              value={draftKind}
+              onChange={(e) => setDraftKind(e.target.value)}
+              aria-label={`Type for ${change.name}`}
+              style={{
+                font: "inherit",
+                fontSize: 13,
+                padding: "5px 8px",
+                borderRadius: 6,
+                border: "1px solid var(--primitives-colors-background-100)",
+              }}
+            />
+          </label>
+          <div
             style={{
-              width: "100%",
-              boxSizing: "border-box",
-              resize: "vertical",
-              font: "inherit",
-              fontSize: 12,
-              lineHeight: 1.45,
-              color: "var(--review-ink)",
-              padding: "6px 8px",
-              borderRadius: 6,
-              border: `1px solid ${decisionInk("flag")}55`,
-              background: "#fffdf7",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
             }}
-          />
+          >
+            {onEditShape && (
+              <button
+                type="button"
+                onClick={onEditShape}
+                style={{
+                  font: "inherit",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "5px 10px",
+                  borderRadius: 6,
+                  border: `1px solid ${OVERRIDE_INK}`,
+                  background: "#fff",
+                  color: OVERRIDE_INK,
+                  cursor: "pointer",
+                }}
+              >
+                Edit shape on the map
+              </button>
+            )}
+            <div style={{ flex: "1 1 0" }} />
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                onEditEnd?.(false);
+              }}
+              style={{
+                font: "inherit",
+                fontSize: 12,
+                padding: "5px 10px",
+                borderRadius: 6,
+                border: "1px solid var(--primitives-colors-background-100)",
+                background: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            {/**
+             * ⚠️ **A no-op edit writes no override.** Opening the form, changing nothing and
+             * pressing Save used to be the obvious way to end up with a row marked EDITED that
+             * differs from MapScale in no respect — a purple shape on the map claiming an override
+             * nobody made. The details are computed first, and an empty list means the row goes
+             * back to being undecided rather than becoming a lie.
+             */}
+            <button
+              type="button"
+              onClick={() => {
+                const name = draftName.trim();
+                const kind = draftKind.trim();
+                const details: string[] = [];
+                const next: Override = { details };
+                if (name && name !== change.name) {
+                  next.name = name;
+                  details.push(`Name: “${change.name}” → “${name}”`);
+                }
+                if (kind && kind !== (change.kind ?? "")) {
+                  next.kind = kind;
+                  details.push(
+                    `Type: “${typeLabel(change.kind ?? "")}” → “${typeLabel(kind)}”`,
+                  );
+                }
+                // Keep a shape the user already drew — this form does not own it, so it must
+                // not drop it on the way past.
+                if (edit?.geometry !== undefined) next.geometry = edit.geometry;
+                if (edit?.details?.length)
+                  for (const d of edit.details)
+                    if (!details.includes(d) && d.startsWith("Boundary"))
+                      details.push(d);
+                setEditing(false);
+                onEditEnd?.(true);
+                if (details.length || shapeDirty) onEdit(next);
+                else onRevert?.();
+              }}
+              style={{
+                font: "inherit",
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "5px 12px",
+                borderRadius: 6,
+                border: `1px solid ${OVERRIDE_INK}`,
+                background: OVERRIDE_INK,
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              Save edit
+            </button>
+          </div>
         </div>
       )}
 

@@ -13,6 +13,7 @@ import {
   type Change,
   type ChangeGroup,
   type Decision,
+  type Override,
 } from "../mock/diff";
 
 const LINE = "#e3e4e8";
@@ -54,7 +55,6 @@ function Count({ n, color }: { n: number; color: string }) {
 
 const ACTIONS: { value: Decision; label: string }[] = [
   { value: "confirm", label: "Confirm" },
-  { value: "flag", label: "Flag for later" },
   { value: "reject", label: "Reject" },
 ];
 
@@ -113,10 +113,26 @@ export function ChangeGroupBlock({
   group,
   onDecideOne,
   onDecideGroup,
+  overrides,
+  onEdit,
+  onRevert,
+  onEditShape,
 }: {
   group: ChangeGroup;
   onDecideOne: (id: string, d: Decision | undefined) => void;
   onDecideGroup: (ids: string[], d: Decision) => void;
+  /**
+   * The reviewer's own values, keyed by change id. Threaded through rather than looked up here:
+   * a bucket is a presentation of rows, and where the overrides live is the screen's business.
+   *
+   * ⚠️ **A row inside a collapsed bucket is editable like any other.** The alternative — edit only
+   * the rows that escaped grouping — would make whether you can fix something depend on how many
+   * chairs MapScale happened to add, which is the sort of rule nobody can hold in their head.
+   */
+  overrides?: Record<string, Override>;
+  onEdit?: (id: string, o: Override) => void;
+  onRevert?: (id: string) => void;
+  onEditShape?: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const accent = CHANGE_COLORS[group.changes[0].type];
@@ -200,8 +216,16 @@ export function ChangeGroupBlock({
             <ChangeReviewRow
               key={c.id}
               change={c}
-              override={c.type === "preserved"}
+              preserved={c.type === "preserved"}
+              edit={overrides?.[c.id]}
               onDecide={(d) => onDecideOne(c.id, d)}
+              onEdit={onEdit && ((o) => onEdit(c.id, o))}
+              onRevert={onRevert && (() => onRevert(c.id))}
+              onEditShape={
+                onEditShape && c.type !== "deleted" && c.type !== "metadata"
+                  ? () => onEditShape(c.id)
+                  : undefined
+              }
             />
           ))}
         </div>

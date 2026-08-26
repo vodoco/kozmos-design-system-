@@ -1,9 +1,6 @@
 import { Copy } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
   Button,
   Card,
   Icon,
@@ -22,8 +19,6 @@ import {
   Text,
 } from "@kozmos/react";
 import { PanelHeader, PANEL_PAD } from "./PanelHeader";
-import { DecisionGlyph } from "./ChangeReviewRow";
-import { decisionInk } from "../mock/diff";
 import {
   CLASS_LABEL,
   categoryLabel,
@@ -699,9 +694,6 @@ function AddFieldPicker({
 export function FeaturePanel({
   props: p,
   icon,
-  flagged,
-  flagShared,
-  flagNote,
   onDirtyChange,
   geometryDirty,
   onCommitGeometry,
@@ -718,10 +710,6 @@ export function FeaturePanel({
   /** The tile's own property bag plus any local edits, exactly as the app holds it. */
   props: Record<string, unknown>;
   icon?: React.ReactNode;
-  flagged?: boolean;
-  flagShared?: number;
-  /** What the reviewer wrote when they raised the flag, if anything. */
-  flagNote?: string;
   /**
    * Told whenever the panel gains or loses unsaved changes — the app guards feature switches with
    * it (Olcay: *"warn the user if they changed a POI then tried to select some other POI"*).
@@ -1281,55 +1269,13 @@ export function FeaturePanel({
           </div>
         )}
 
-        {/* A DS `Alert` in its default (neutral) variant, deliberately not `warning`: §3 reserves
-            traffic-light for magnitude, and being flagged is something *you* did, not a size. */}
-        {flagged && !editing && (
-          <Alert style={{ padding: 12, marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <span
-                style={{
-                  flex: "0 0 auto",
-                  marginTop: 1,
-                  color: decisionInk("flag"),
-                }}
-              >
-                <DecisionGlyph kind="flag" size={16} />
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <AlertTitle
-                  style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 2 }}
-                >
-                  Flagged during review
-                </AlertTitle>
-                <AlertDescription
-                  style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.45 }}
-                >
-                  {flagShared
-                    ? `A review flagged “${name}”, and ${flagShared} features on this floor share that name — so the flag may be about any of them. Editing clears it.`
-                    : "Someone marked this to come back to. Editing this feature clears the flag."}
-                </AlertDescription>
-                {/* The note, in the reviewer's own words. Quoted rather than paraphrased into the
-                    sentence above: it is somebody's writing, and this panel is where the person
-                    who has to act on it finally reads it. */}
-                {flagNote && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      paddingLeft: 10,
-                      borderLeft: `3px solid ${decisionInk("flag")}`,
-                      fontSize: 12,
-                      lineHeight: 1.45,
-                      color: "var(--review-ink)",
-                    }}
-                  >
-                    “{flagNote}”
-                  </div>
-                )}
-              </div>
-            </div>
-          </Alert>
-        )}
-
+        {/*
+          ⚠️ **A "Flagged during review" alert stood here until 2026-08-25.** It carried the
+          reviewer's note in their own words, and the honest admission that a flag matched by name
+          might belong to any of the features sharing it. Flagging is gone (Olcay: *"once review
+          concluded the map becomes the current map"*), and with it the one state this panel could
+          inherit from a finished review. A feature you open while browsing is simply a feature.
+        */}
         {!editing ? (
           /* ── reading: the POI card, derived ─────────────────────────────────── */
           <>

@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import type { Change } from "../mock/diff";
+import type { Change, Override } from "../mock/diff";
 import {
   hiddenForSection,
   NON_EDITABLE_MAIN_TYPES,
@@ -14,7 +14,12 @@ import { pointrMapSrc } from "../mock/pointrConfig";
  * loader/modals stay inside the pane and its CSS can't leak into the dashboard. The iframe renders
  * the live indoor map (Dubai · Terminal 3 and B Gates · Departures - Concourse B) with the
  * greyscale focus, the floor-plan outline, and the colour diff highlights drawn as an SVG overlay
- * from the real feature geometry — plus the ✓/🚩/✗ marks and a click-to-inspect tooltip.
+ * from the real feature geometry — plus the ✓/✗ marks and a click-to-inspect tooltip.
+ *
+ * ⚠️ **Since 2026-08-25 the review map is a PREVIEW, not a diff.** A decided change draws as its
+ * outcome — confirmed removals and rejected additions fall back to a muted ghost, an edited row
+ * paints the override purple — and only undecided rows still wear their diff colour. The marks
+ * survive as muted footnotes on a shape that already says the answer.
  *
  * The app owns the diff: `changes` is pushed in and merged by feature name (`Change.name` is what
  * the SDK's vector tiles carry in `properties.name`). `prefs` drives the Map Settings popover.
@@ -92,7 +97,12 @@ export interface PointrMapHandle {
 const PointrMap = forwardRef<
   PointrMapHandle,
   {
-    changes?: Change[];
+    /**
+     * The diff, plus the reviewer's override where they made one. `Change` itself never carries an
+     * override — the review holds them beside its decisions — so the caller marries the two on the
+     * way in. See `ManualReview`'s `mapChanges`.
+     */
+    changes?: (Change & { override?: Override })[];
     prefs?: MapPrefs;
     /** Which building/level the map should show. Omit to keep the page's own default. */
     target?: { building: string; level: number };
@@ -126,10 +136,7 @@ const PointrMap = forwardRef<
      * centroid badge and the changelog row can never disagree about what you decided.
      */
     /** `null` clears it — a user override returning to its resting "Kept" (2026-08-11). */
-    onDecision?: (
-      id: string,
-      decision: "confirm" | "flag" | "reject" | null,
-    ) => void;
+    onDecision?: (id: string, decision: "confirm" | "reject" | null) => void;
     /**
      * The change currently selected, shared with the changelog — one selection, two surfaces.
      * Setting it opens that feature's card and eases the camera onto it; `onSelect` reports the
@@ -559,19 +566,21 @@ const PointrMap = forwardRef<
         {
           type: "changes",
           // `id` rides along so the map can decide a change back at us (the pinned card's
-          // ✓ / 🚩 / ✗) — decisions are keyed by id, and a name can be re-pointed by
-          // `bindToFloor`, so name would be the wrong key even though it is the merge key here.
-          // `markOnly` has to ride along too: this projection is a whitelist, so a field left out
-          // here silently never reaches the map however carefully it was set upstream.
+          // ✓ / ✗) — decisions are keyed by id, and a name can be re-pointed by `bindToFloor`, so
+          // name would be the wrong key even though it is the merge key here.
+          //
+          // ⚠️ **This projection is a whitelist**: a field left out here silently never reaches the
+          // map however carefully it was set upstream. `override` is on it because the preview
+          // cannot be drawn without it — it is what tells the shell to paint purple and to show
+          // your name on the card rather than the detected one.
           changes: latest.current.changes.map(
-            ({ id, name, type, detail, decision, markOnly, note }) => ({
+            ({ id, name, type, detail, decision, override }) => ({
               id,
               name,
               type,
               detail,
               decision,
-              markOnly,
-              note,
+              override,
             }),
           ),
         },

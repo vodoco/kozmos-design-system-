@@ -79,7 +79,11 @@
   #tip .t-name { font-weight: 600; margin: 3px 0 1px; }
   #tip .t-detail { color: #6B7280; }
   #tip .t-decision { display: flex; align-items: center; gap: 6px; margin-top: 8px;
-    padding-top: 8px; border-top: 1px solid #EEF0F3; }
+    padding-top: 8px; border-top: 1px solid #EEF0F3; font-size: 11.5px; }
+  /* What YOU put in place of the suggestion — the changelog row's own treatment, so the two
+     surfaces read as one thing seen twice. */
+  #tip .t-mine { margin-top: 6px; padding-left: 8px; border-left: 3px solid #6D28D9;
+    color: #6D28D9; font-size: 11.5px; line-height: 1.45; }
 
   /* Decide from the map (Olcay, 2026-08-11: "click on the markers, see all options and change to
      something else"). The badge at the centroid already SAYS the decision; this is where you set
@@ -216,10 +220,25 @@ const TOOL_INK = "#051c4f";   // Colors/theme/1000
  * note, which is prose about history rather than a value in use.
  */
 const EDIT_INK = "#0b369c";   // Colors/theme/800
+
+/**
+ * **The review map is a PREVIEW of the finalised floor** (Olcay, 2026-08-25) — mirrored from
+ * `src/mock/diff.ts`, which this page never loads.
+ *
+ * `DECISION_INK` is muted rather than green/red because the shape already says the answer: a
+ * confirmed change is simply the map, a rejected one falls back to a muted ghost, and an edit
+ * paints `OVERRIDE_INK`. Colouring the marks as well would spend the traffic light twice on one
+ * map, which was the original objection to the `COLOURED_DECISIONS` experiment this replaces.
+ *
+ * ⚠️ Change these here **and** in `diff.ts`, or the list and the map will disagree.
+ */
+const DECISION_INK = "#737373";
+/** An edit is your override about to be carried through — the same purple `preserved` wears. */
+const OVERRIDE_INK = "#6D28D9";
 /* INK-END */
 const LINE   = { new:"#1E9E4A", updated:"#1D4ED8", geometry:"#1D4ED8", metadata:"#1D4ED8", deleted:"#B91C1C", preserved:"#6D28D9" };
-// A decision (✓ / 🚩 / ✗) is state, not identity: it never recolours the feature — a flagged
-// "new" feature is still new. Badges are therefore neutral black, distinct from every type colour.
+// A decision (✓ / ✗) is state, not identity: it never recolours the feature. Badges are therefore
+// neutral, distinct from every type colour.
 const INK = "#000000";
 
 // Floor-plan outline = source_ptr wall/space polygons, minus the big grouping layers
@@ -228,14 +247,14 @@ const FP_SKIP = { section:1, transition:1, transportationspace:1 };
 
 const TYPE_LABEL = { new:"NEW", updated:"UPDATED", geometry:"GEOMETRY CHANGED", metadata:"DETAILS CHANGED",
                      deleted:"REMOVED", preserved:"PRESERVED" };
-const DECISION_LABEL = { confirm:"Confirmed", flag:"Flagged for later", reject:"Rejected" };
+const DECISION_LABEL = { confirm:"Confirmed", reject:"Rejected", edited:"Edited by you" };
 
 // The app owns the diff and pushes it in ({type:"changes"}); this seed only keeps the page usable
 // on its own (open /map/index.html directly) and is merged by feature name, never replaced.
 const CHANGES = [
   { name:"Costa Coffee",              type:"new",       decision:"confirm" },
   { name:"Burger King",               type:"updated",   decision:"confirm" },
-  { name:"Subway",                    type:"updated",   decision:"flag"    },
+  { name:"Subway",                    type:"updated",   override:{ details:["Type: “Cafe” → “Quick Service Restaurant”"] } },
   { name:"DDF Pharmacy",              type:"deleted",   decision:"reject"  },
   { name:"Marhaba Reception",         type:"preserved", decision:null      },
 ];
@@ -729,7 +748,20 @@ function resolveChanges() {
     const f = pickFeature(change.name, all, center);
     if (!f) return;
     const rings = ringsOuter(f);
-    RESOLVED.push({ change, rings, centroid: centroid(rings[0]) });
+    /**
+     * ⚠️ **The `fid` and the layers are captured HERE or nowhere.**
+     *
+     * The preview hides a feature by composing `fid != X` onto the layers that draw it — and the
+     * moment that filter is applied the feature stops being findable, which is the same trap
+     * `geomInteriorFeatures` records for Combine. This is the one pass in which the change, its
+     * real tile feature and the layer it came from are all in hand at once.
+     *
+     * ⚠️ **`change.id` is NOT the fid.** It is documented as one and the seeds are authored slugs
+     * (`costa`, `pharmacy`); the fid belongs to the feature `pickFeature` matched by name.
+     */
+    const fid = f.properties && f.properties.fid;
+    RESOLVED.push({ change, rings, centroid: centroid(rings[0]),
+                    fid, layers: layersDrawing(srcLayerOf(f)) });
   });
   RESOLVED.sort((a, b) => CHANGES.indexOf(a.change) - CHANGES.indexOf(b.change));
   // A row clicked before its geometry existed asked for something we couldn't show yet. Now we can.
@@ -864,23 +896,60 @@ function featureRings(fid) {
   return out;
 }
 
-function drawBadge(cx, cy, kind, hasNote){
-  const col = decisionInk(kind);
+/* PREVIEW-ENGINE-START — extracted and tested by scratch/geometry.test.mjs. Pure: a change's
+   recorded answer in, what the map should do about it out. No map, no DOM.
+
+   ⚠️ It is tested because it is a TABLE, and a table is exactly the kind of thing that reads
+   correct and is wrong in one cell — the cell here being that `reject` means opposite things to an
+   addition and to a removal. That asymmetry is the entire feature (Olcay, 2026-08-25: rejecting a
+   removal is how you keep it), and nothing else in this file would notice if it inverted. */
+/**
+ * What a row resolves to: `"edited"` outranks a decision, because an override supersedes the
+ * incoming change and there is nothing left to have confirmed or rejected.
+ */
+function outcomeOf(c) { return c.override ? "edited" : (c.decision || null); }
+
+/** The ink a mark draws in — muted for a decision, the override purple for an edit. */
+function outcomeInk(o) { return o === "edited" ? OVERRIDE_INK : DECISION_INK; }
+
+/**
+ * **Does this feature survive to the finalised floor, and does the map still owe it a colour?**
+ *
+ * The three answers are the whole of the preview:
+ *
+ * - `"diff"`   — undecided. Paint it in its type colour; this is the one that still needs you.
+ * - `"plain"`  — decided, and it stays. Paint **nothing**: the tiles underneath already draw it as
+ *                ordinary floor content, which is exactly what it will be. A confirmed addition, a
+ *                rejected removal, any decided update — they are all just the map now.
+ * - `"ghost"`  — decided, and it goes. A rejected addition or a confirmed removal. The tile feature
+ *                is filtered out and a muted dashed outline is left in its place, so the absence is
+ *                visible and still clickable (Olcay, 2026-08-25: *"let's start with muted"*).
+ *
+ * An **edited** row is neither of the last two: it stays, and it is yours, so it keeps a shape and
+ * paints `OVERRIDE_INK`. That is `"mine"`.
+ */
+function previewFate(c) {
+  const o = outcomeOf(c);
+  if (o === "edited") return "mine";
+  if (!o) return "diff";
+  if (c.type === "new" && o === "reject") return "ghost";
+  if (c.type === "deleted" && o === "confirm") return "ghost";
+  return "plain";
+}
+/* PREVIEW-ENGINE-END */
+
+function drawBadge(cx, cy, kind){
+  const col = outcomeInk(kind);
   const g = el("g", {});
   g.appendChild(el("circle", { cx, cy, r:11, fill:"#fff", stroke:col, "stroke-width":2 }));
-  // A flag carrying a note wears a filled dot, so you can tell WHICH flags have something written
-  // on them without every note being painted across the floor. The note itself appears under the
-  // badge when the feature is the shown one — see `drawNote`.
-  if (kind === "flag" && hasNote)
-    g.appendChild(el("circle", { cx: cx + 8, cy: cy - 8, r: 3.5, fill: col, stroke: "#fff", "stroke-width": 1.5 }));
   const p = el("path", { fill:"none", stroke:col, "stroke-width":2.2, "stroke-linecap":"round", "stroke-linejoin":"round" });
   if (kind==="confirm") p.setAttribute("d", `M${cx-5} ${cy} L${cx-1.5} ${cy+4} L${cx+5.5} ${cy-4.5}`);
   else if (kind==="reject") p.setAttribute("d", `M${cx-4.5} ${cy-4.5} L${cx+4.5} ${cy+4.5} M${cx+4.5} ${cy-4.5} L${cx-4.5} ${cy+4.5}`);
-  else { // flag
-    p.setAttribute("d", `M${cx-4} ${cy-5.5} L${cx-4} ${cy+6}`);
-    const flag = el("path", { fill:col, stroke:col, "stroke-width":1, d:`M${cx-4} ${cy-5.5} L${cx+5.5} ${cy-2.5} L${cx-4} ${cy+0.5} Z` });
-    g.appendChild(p); g.appendChild(flag); return g;
-  }
+  // Edited — a pencil, drawn at mark scale rather than instanced from the Pointr Icon Library for
+  // the same reason ✓ and ✗ are: this is 9px of glyph inside a 22px badge, and the library's
+  // 24-grid at stroke 2 renders visibly lighter here. The library's `edit-02` is what the PANEL
+  // shows beside it, so the two surfaces still agree about what the act is called.
+  else p.setAttribute("d", `M${cx-4.5} ${cy+4.5} L${cx-4.5} ${cy+1.5} L${cx+2.5} ${cy-5.5} L${cx+5.5} ${cy-2.5} L${cx-1.5} ${cy+4.5} Z`);
   g.appendChild(p); return g;
 }
 
@@ -903,22 +972,33 @@ function redraw() {
   const f = fillFactor();
   const marks = [];
   RESOLVED.forEach(({ change, rings, centroid }) => {
-    // `markOnly` — the mark without the diff shape. Browsing is not reviewing: the review is over
-    // and the floor is live, so painting features in diff colours would claim there is something
-    // left to decide. A flag is a note to self that outlived the review, and it still has to be
-    // findable on the map rather than only in the tree.
-    if (change.markOnly) {
-      if (change.decision) { const p = P(centroid); marks.push({ x:p.x, y:p.y, change, centroid }); }
-      return;
-    }
-    const fill = COLORS[change.type];
-    const line = LINE[change.type];
+    /**
+     * ⚠️ **`markOnly` stood here until 2026-08-25** — the mark without the diff shape, so a flag
+     * raised in a finished review stayed findable while browsing the live floor. Nothing outlives a
+     * review now (Olcay: *"once review concluded the map becomes the current map"*), so the app
+     * simply sends no changes to a browsing map and there is nothing for this branch to do.
+     */
+    const fate = previewFate(change);
+    const o = outcomeOf(change);
     const active = shown() === change;
-    rings.forEach(ring => {
+    /**
+     * **A decided change that stays draws NOTHING.** This is the preview: it will be ordinary floor
+     * content, the tiles underneath already draw it as ordinary floor content, so anything painted
+     * over the top would be the map disagreeing with itself about a question that is settled. The
+     * mark still goes down — see below — because the muted footnote is cheap and the shape's
+     * plainness alone cannot distinguish "confirmed" from "was never a change".
+     */
+    if (fate !== "plain") {
+      const ghost = fate === "ghost";
+      const mine = fate === "mine";
+      const fill = ghost ? "none" : mine ? OVERRIDE_INK : COLORS[change.type];
+      const line = ghost ? DECISION_INK : mine ? OVERRIDE_INK : LINE[change.type];
+      rings.forEach(ring => {
       const d = ring.map((c,i) => { const p = P(c); return (i? "L":"M") + p.x + " " + p.y; }).join(" ") + " Z";
-      const path = el("path", { d, fill, "fill-opacity": (active ? 0.6 : 0.42) * f, stroke:line,
-        "stroke-width": active ? 5 : 3, class:"hit",
-        ...(change.type==="deleted" ? { "stroke-dasharray":"9 6" } : {}) });
+      const path = el("path", { d, fill, "fill-opacity": ghost ? 0 : (active ? 0.6 : 0.42) * f, stroke:line,
+        "stroke-width": active ? 5 : ghost ? 2 : 3, class:"hit",
+        ...(ghost ? { "stroke-dasharray":"4 5", "stroke-opacity":0.85 }
+                  : change.type==="deleted" ? { "stroke-dasharray":"9 6" } : {}) });
       path.addEventListener("mouseenter", () => hover(change));
       path.addEventListener("mouseleave", () => hover(null));
       /**
@@ -951,15 +1031,86 @@ function redraw() {
         select(change);
       });
       svg.appendChild(path);
-    });
-    // the ✓ / 🚩 / ✗ mark at the feature's centroid. Keyed on the decision alone — which is what
-    // lets a FLAGGED user override show its mark here like any other flag (2026-08-11); the
-    // comment used to claim preserved was skipped, and it never was.
-    // Collected rather than drawn here, so overlapping marks can cluster — see drawMarks().
-    if (change.decision) { const p = P(centroid); marks.push({ x:p.x, y:p.y, change, centroid }); }
+      });
+    }
+    /**
+     * The ✓ / ✗ / ✎ mark at the feature's centroid, keyed on the **outcome** — so an edited row
+     * wears the pencil rather than whatever decision it carried before you edited it.
+     *
+     * ⚠️ **A `plain` feature still gets one.** It has no shape of ours to hover, so the badge is
+     * its only hit area — the same problem `markOnly` had, and solved the same way: the mark
+     * becomes the target (see `drawMarks`). Without it, confirming a change would make its card
+     * unreachable, and undoing a confirmation would mean finding the row in the list.
+     *
+     * Collected rather than drawn here, so overlapping marks can cluster — see drawMarks().
+     */
+    if (o) { const p = P(centroid); marks.push({ x:p.x, y:p.y, change, centroid, bare: fate === "plain" }); }
   });
   drawMarks(marks);
+  applyPreviewHidden();
   positionTip();
+}
+
+/* ── the preview's vanishing act ──────────────────────────────────────────────
+ *
+ * A rejected addition and a confirmed removal are **not on the finalised floor**, and the review
+ * map is a picture of the finalised floor. Drawing a ghost over the top is not enough on its own:
+ * the vector tiles are still painting the feature underneath in full colour, so the ghost would
+ * read as an outline *around* a room rather than as the room's absence.
+ *
+ * ⚠️ **The tile feature is therefore filtered out**, by `fid`, using the machinery Combine already
+ * built for taking a wall off the map — see `geomApplyHiddenFilter`, which is the single owner of
+ * these composed filters. Two independent composers on one layer would each restore what the other
+ * had applied, so the preview does not get its own; it contributes fids and lets that one function
+ * do the work.
+ */
+
+/** Which fids the preview wants hidden, and the layers drawing them. Rebuilt whole, never patched. */
+let PREVIEW_HIDDEN = { fids: [], layers: [] };
+
+/**
+ * The layers that draw a given source-layer.
+ *
+ * Read off the **style**, not off `queryRenderedFeatures` — which is what `geomInteriorFeatures`
+ * has to use, and which sees only the viewport. A change being reviewed is routinely off-screen
+ * (the camera is wherever you left it), and a feature that never rendered would simply never be
+ * hidden. The style is complete and viewport-independent.
+ *
+ * ⚠️ **GeoJSON clones are not covered.** They carry `__sl` rather than a `source-layer`, so this
+ * finds none of them. That costs nothing today — the review screens fetch no GeoJSON (§12), so a
+ * reviewed floor is always tile-drawn — and it is written down rather than guarded because a guard
+ * would be code nothing exercises.
+ */
+function layersDrawing(sl) {
+  if (!sl) return [];
+  try {
+    return map.getStyle().layers
+      .filter(l => (l["source-layer"] || l.sourceLayer) === sl && l.type !== "background")
+      .map(l => l.id);
+  } catch (e) { return []; }
+}
+
+/**
+ * Recompute what the preview hides, and apply it — but only when it has actually changed.
+ *
+ * ⚠️ **The guard is the whole point.** `redraw()` runs on every render frame, MapLibre renders
+ * continually for symbol fades, and `setFilter` invalidates the layer it touches: re-applying an
+ * identical filter 60 times a second would invalidate tiles faster than they can be parsed. The
+ * same trap the level nudge at `~3s` was written to avoid.
+ */
+let PREVIEW_KEY = "";
+function applyPreviewHidden() {
+  const fids = [], layers = new Set();
+  for (const r of RESOLVED) {
+    if (previewFate(r.change) !== "ghost" || !r.fid) continue;
+    fids.push(r.fid);
+    for (const id of r.layers || []) layers.add(id);
+  }
+  const key = fids.slice().sort().join("|");
+  if (key === PREVIEW_KEY) return;
+  PREVIEW_KEY = key;
+  PREVIEW_HIDDEN = { fids, layers: [...layers] };
+  geomApplyHiddenFilter();
 }
 
 /**
@@ -998,60 +1149,42 @@ function drawMarks(marks) {
     }
     if (group.length === 1) {
       const m = marks[i];
-      const badge = drawBadge(m.x, m.y, m.change.decision, !!m.change.note);
+      const badge = drawBadge(m.x, m.y, outcomeOf(m.change));
       /**
-       * A `markOnly` change draws **no shape**, so it has no hit area — and without one the note
-       * could never be reached, because `shown()` is driven by hovering the feature. The badge
-       * becomes the hit area instead. Only for markOnly: where a shape exists it is the bigger and
-       * better target, and two overlapping hit areas would fight over the hover.
+       * **A `bare` mark is its feature's only hit area.** A decided change that stays on the floor
+       * draws no shape of ours — it is simply the map now — so without this the badge would be the
+       * one thing on screen saying "you decided this" and the one thing you could not click to
+       * change your mind. Only when bare: where a shape exists it is the bigger and better target,
+       * and two overlapping hit areas would fight over the hover.
+       *
+       * ⚠️ This is the same problem `markOnly` had, and it is solved the same way. It outlived
+       * `markOnly` because it was never really about flags — it is about a mark with nothing
+       * underneath it.
        */
-      if (m.change.markOnly) {
+      if (m.bare) {
         badge.setAttribute("class", "hit");
         badge.addEventListener("mouseenter", () => hover(m.change));
         badge.addEventListener("mouseleave", () => hover(null));
+        badge.addEventListener("mouseup", ev => { if (isTap(ev)) { ev.stopPropagation(); select(m.change); } });
       }
       svg.appendChild(badge);
-      // The note reads under its own flag, for the shown feature only. Painting every note at once
-      // is label soup at anything but max zoom — and the dot on the badge already says which flags
-      // have one, so nothing is hidden, it is just not all shouted at the same time.
-      if (m.change.decision === "flag" && m.change.note && shown() === m.change)
-        svg.appendChild(drawNote(m.x, m.y + 16, m.change.note));
     }
     else svg.appendChild(drawCluster(group));
   }
 }
 
-/** The flag's note, as a wrapped chip under the badge. Sized here because SVG will not wrap text. */
-function drawNote(cx, top, text) {
-  const MAXW = 210, SIZE = 11.5, LH = 15, CH = SIZE * 0.55;
-  const words = String(text).split(" ");
-  const lines = [];
-  let line = "";
-  for (const w of words) {
-    const next = line ? line + " " + w : w;
-    if (next.length * CH > MAXW && line) { lines.push(line); line = w; } else line = next;
-  }
-  if (line) lines.push(line);
-  const w = Math.min(MAXW, Math.max.apply(null, lines.map(l => l.length * CH))) + 20;
-  const h = lines.length * LH + 12;
-  const g = el("g", { class: "note" });
-  g.appendChild(el("rect", { x: cx - w / 2, y: top, width: w, height: h, rx: 7,
-                             fill: "#fff", stroke: decisionInk("flag"), "stroke-width": 1.5 }));
-  lines.forEach((l, i) => {
-    const t = el("text", { x: cx, y: top + 15 + i * LH, "text-anchor": "middle",
-                           fill: "#1a1c24", "font-size": SIZE, "font-family": "inherit" });
-    t.textContent = l;
-    g.appendChild(t);
-  });
-  return g;
-}
+/*
+ * ⚠️ **`drawNote` stood here until 2026-08-25** — the flag's note as a wrapped chip under its
+ * badge, painted only for the shown feature because every note at once is label soup at anything
+ * but max zoom. Notes belonged to flagging and went with it.
+ */
 
 /** One bubble standing for N overlapping marks; click it to zoom until they separate. */
 function drawCluster(group) {
   const cx = group.reduce((n, m) => n + m.x, 0) / group.length;
   const cy = group.reduce((n, m) => n + m.y, 0) / group.length;
-  const kinds = new Set(group.map(m => m.change.decision));
-  const col = kinds.size === 1 ? decisionInk([...kinds][0]) : INK;
+  const kinds = new Set(group.map(m => outcomeOf(m.change)));
+  const col = kinds.size === 1 ? outcomeInk([...kinds][0]) : INK;
   const r = Math.min(20, 12 + group.length);
 
   const g = el("g", { class:"cluster" });
@@ -1180,8 +1313,39 @@ function renderTip() {
   type.appendChild(document.createTextNode(TYPE_LABEL[c.type] || ""));
   tip.appendChild(type);
 
-  tip.appendChild(div("t-name", c.name));
+  /**
+   * **The name you gave it wins**, with MapScale's underneath. An edited row IS your value now, so
+   * a card still headed by the detected name would be the map disagreeing with the row beside it.
+   */
+  const mine = c.override || null;
+  tip.appendChild(div("t-name", (mine && mine.name) || c.name));
   if (c.detail) tip.appendChild(div("t-detail", c.detail));
+  if (mine && mine.details)
+    mine.details.forEach(line => tip.appendChild(div("t-mine", line)));
+
+  /**
+   * **What this feature will be on the finalised floor.** The preview says it in geometry — the
+   * shape is there, ghosted, or purple — and this says it in words, because "ghosted" and "not
+   * drawn by us because it is simply the map now" look identical to someone who did not just
+   * press the button.
+   */
+  const out = outcomeOf(c);
+  if (out) {
+    const dline = div("t-decision");
+    const g = drawBadgeGlyph(out === "edited" ? "confirm" : out);
+    if (out === "edited") g.style.display = "none";      // the purple rule above already says it
+    dline.appendChild(g);
+    dline.appendChild(document.createTextNode(
+      DECISION_LABEL[out] +
+      (previewFate(c) === "ghost" ? " — off the floor"
+        : out !== "reject" ? ""
+        // ⚠️ Rejecting a `preserved` row is a different act: there is no incoming change to turn
+        // down, so what you are rejecting is your OWN earlier override — see `revertOrReset`.
+        : c.type === "preserved" ? " — your earlier edit is dropped"
+        : " — the published value stays")));
+    dline.style.color = outcomeInk(out);
+    tip.appendChild(dline);
+  }
 
   // Decide from the card — hovering or pinned, both (Olcay: "how do we change the flags?").
   // It was pinned-only at first, on the theory that a control under a moving cursor is hard to
@@ -1194,8 +1358,14 @@ function renderTip() {
   // to offer overrides nothing at all, which would now disagree with the row beside it.
   // Outside a review the card still REPORTS the decision (the badge and the note say it);
   // what it must not do is offer to change it.
-  if (CAN_DECIDE)
-    tip.appendChild(decisionControl(c, c.type === "preserved" ? OVERRIDE_ACTIONS : ALL_ACTIONS));
+  /**
+   * ⚠️ **An edited row gets no control here.** Its override supersedes the incoming change, so
+   * there is nothing left to confirm or reject — the same reasoning the changelog row follows,
+   * where the ✓/✗ pair is replaced by EDITED and Revert. Reverting is the row's job: it owns the
+   * fields, and one commit point for an edit is the rule the geometry session already follows.
+   */
+  if (CAN_DECIDE && !c.override && c.type !== "preserved")
+    tip.appendChild(decisionControl(c, ALL_ACTIONS));
 
   // A pinned card outlives the cursor, so it needs its own way out (clicking the empty map or the
   // same shape also unpins). Hover cards don't get one — they die when the cursor leaves.
@@ -1374,32 +1544,26 @@ function positionTip() {
  * disagreed, which is the failure this whole protocol is arranged to prevent.
  */
 /**
- * EXPERIMENT, mirrored from diff.ts (Olcay, 2026-08-11: "I'd like to try coloring the flags").
- * ⚠️ Flip BOTH this and `COLOURED_DECISIONS` in src/mock/diff.ts — this page never loads that
- * module, so a change in one place alone makes the map and the list disagree.
- * `false` restores §3's neutral black for ✓ 🚩 ✗.
+ * ⚠️ **`COLOURED_DECISIONS` and `DECISION_COLORS` were retired 2026-08-25**, along with the flag
+ * they were introduced to colour. The ink now lives at the top of this file with the other
+ * constants — see `DECISION_INK` and `OVERRIDE_INK`.
  */
-const COLOURED_DECISIONS = true;
-const DECISION_COLORS = { confirm:"#23b26b", flag:"#D98C0D", reject:"#d41c42" };
-function decisionInk(kind) { return COLOURED_DECISIONS && DECISION_COLORS[kind] ? DECISION_COLORS[kind] : INK; }
 
 const ALL_ACTIONS = [
   ["confirm", "Confirm"],
-  ["flag", "Flag for later"],
   ["reject", "Reject"],
 ];
-/** A user override is already kept; the only thing left to say is "come back to this". */
-const OVERRIDE_ACTIONS = [
-  ["confirm", "Keep as it is"],
-  ["flag", "Flag for later"],
-];
+/**
+ * A `preserved` override is already kept, and this card cannot edit — the editing surface is the
+ * changelog row, which has the fields and the room for them. So the card reports the state and
+ * offers nothing, rather than offering a control the row would then disagree with.
+ */
+const OVERRIDE_ACTIONS = [];
 
 function decisionControl(c, actions) {
   const row = div("t-actions");
   const list = actions || ALL_ACTIONS;
-  // An override with no decision is still *kept* — that is its resting state, not an absence of
-  // one, so "Keep as it is" reads pressed until you flag it. Same rule as the list's segments.
-  const shown = list === OVERRIDE_ACTIONS ? (c.decision === "flag" ? "flag" : "confirm") : c.decision;
+  const shown = c.decision;
   list.forEach(([kind, label]) => {
     const b = document.createElement("button");
     b.setAttribute("aria-pressed", String(shown === kind));
@@ -1408,26 +1572,19 @@ function decisionControl(c, actions) {
     b.appendChild(drawBadgeGlyph(kind));
     b.addEventListener("click", (ev) => {
       ev.stopPropagation();                // else the map's own handler unpins the card
-      // An override's "Keep as it is" CLEARS the decision rather than recording `confirm`: keeping
-      // it is what already happens, and recording it would badge the feature on the map for a
-      // change nobody proposed. The app decides; this only reports.
-      const value = list === OVERRIDE_ACTIONS && kind === "confirm" ? null : kind;
-      post("decision", { id: c.id, name: c.name, decision: value });
+      // Clicking the pressed one clears it, which is how you get back to undecided from the map.
+      post("decision", { id: c.id, name: c.name, decision: shown === kind ? null : kind });
     });
     row.appendChild(b);
   });
   return row;
 }
 
-// the ✓ / 🚩 / ✗ mark on its own, for the tooltip's decision row
+// the ✓ / ✗ mark on its own, for the tooltip's decision row
 function drawBadgeGlyph(kind) {
   const s = el("svg", { width:16, height:16, viewBox:"0 0 18 18" });
-  const d = kind === "confirm" ? "M4 9.5 L7.5 13 L14 5.5"
-    : kind === "reject" ? "M5 5 L13 13 M13 5 L5 13"
-    : "M5.5 4 L5.5 15";
-  const col = decisionInk(kind);
-  s.appendChild(el("path", { d, fill:"none", stroke:col, "stroke-width":2, "stroke-linecap":"round" }));
-  if (kind === "flag") s.appendChild(el("path", { d:"M5.5 4 L14 6.5 L5.5 9 Z", fill:col }));
+  const d = kind === "confirm" ? "M4 9.5 L7.5 13 L14 5.5" : "M5 5 L13 13 M13 5 L5 13";
+  s.appendChild(el("path", { d, fill:"none", stroke:DECISION_INK, "stroke-width":2, "stroke-linecap":"round" }));
   return s;
 }
 
@@ -4791,6 +4948,9 @@ function geomEnd(commit) {
    * committed, because even a committed combine is local.
    */
   GEOM.hidden = { fids: [], labels: [], layers: [] };
+  // Restores the SDK's filters and re-applies whatever the PREVIEW still wants hidden — see the
+  // two-sources note in geomApplyHiddenFilter. Before that union this line put every rejected
+  // addition back on the map the moment an edit session closed.
   geomApplyHiddenFilter();
   wfSetEditing(null);          // the nodes go back to being texture
   GEOM = null;
@@ -6271,8 +6431,19 @@ function geomApplyHiddenFilter() {
     for (const [id, orig] of HIDDEN_FILTERS)
       if (map.getLayer(id)) map.setFilter(id, orig === undefined ? null : orig);
     HIDDEN_FILTERS.clear();
-    const h = GEOM && GEOM.hidden;
-    if (!h || !h.fids.length) return;
+    /**
+     * ⚠️ **TWO sources, one composer** (2026-08-25). Combine hides what stood between the rooms it
+     * joined; the review preview hides what the finalised floor will not contain. Both compose onto
+     * the SDK's own filters, and giving each its own restore-and-reapply pass would mean whichever
+     * ran last silently undid the other. So the fids are unioned here and this stays the only
+     * function in the file that touches these filters.
+     */
+    const g = (GEOM && GEOM.hidden) || { fids: [], layers: [] };
+    const h = {
+      fids: [...new Set(g.fids.concat(PREVIEW_HIDDEN.fids))],
+      layers: [...new Set(g.layers.concat(PREVIEW_HIDDEN.layers))],
+    };
+    if (!h.fids.length) return;
     /**
      * ⚠️ **`any` of `==`, not `["in", …]`.** `in` is fussy about its needle: a feature in one of
      * these layers with no `fid` at all evaluates it against `null`, which is a type error rather
@@ -7591,6 +7762,20 @@ window.addEventListener("message", (ev) => {
   } else if (d.type === "geom") {
     // One entry point for every toolbar command — the app never reaches into the editor's state.
     if (d.cmd === "begin") geomBegin(d.fid);
+    /**
+     * **Begin editing the feature a CHANGE resolved to** (2026-08-25) — how the review page arms
+     * the editor.
+     *
+     * It exists because the app has never held these fids. A change is matched to a real feature
+     * **by name**, here, in `resolveChanges`; the app's `Change.id` is an authored slug. So the
+     * app names the change and this side supplies the fid, rather than the app guessing one and
+     * `geomBegin` quietly editing nothing.
+     */
+    else if (d.cmd === "beginchange") {
+      const r = RESOLVED.find(x => x.change && x.change.id === d.id);
+      if (r && r.fid) geomBegin(r.fid);
+      else post("geomerror", { fid: "", message: "That change has no feature on this floor yet." });
+    }
     else if (d.cmd === "end") geomEnd(!!d.commit);
     else if (d.cmd === "commit") geomCommit();
     else if (d.cmd === "mode") geomSetMode(d.mode);

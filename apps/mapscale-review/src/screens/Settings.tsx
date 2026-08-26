@@ -69,12 +69,44 @@ function useSettings() {
 
 /* ── layout pieces, in the frame's idiom ──────────────────────────────────── */
 
-function Card({ title, sub, children }: { title: string; sub: string; children: React.ReactNode }) {
+function Card({
+  title,
+  sub,
+  children,
+}: {
+  title: string;
+  sub: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{ border: `1px solid ${LINE}`, borderRadius: 8, background: "#fff", marginBottom: 24 }}>
+    <div
+      style={{
+        border: `1px solid ${LINE}`,
+        borderRadius: 8,
+        background: "#fff",
+        marginBottom: 24,
+      }}
+    >
       <div style={{ padding: "18px 20px 14px" }}>
-        <Text style={{ display: "block", fontSize: 15, fontWeight: 600, color: INK }}>{title}</Text>
-        <Text style={{ display: "block", fontSize: 13, color: MUTED, marginTop: 4, lineHeight: 1.5 }}>
+        <Text
+          style={{
+            display: "block",
+            fontSize: 15,
+            fontWeight: 600,
+            color: INK,
+          }}
+        >
+          {title}
+        </Text>
+        <Text
+          style={{
+            display: "block",
+            fontSize: 13,
+            color: MUTED,
+            marginTop: 4,
+            lineHeight: 1.5,
+          }}
+        >
           {sub}
         </Text>
       </div>
@@ -110,12 +142,37 @@ function Row({
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <Text style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: FG }}>{title}</Text>
-        <Text style={{ display: "block", fontSize: 12.5, color: MUTED, marginTop: 3, lineHeight: 1.5 }}>
+        <Text
+          style={{
+            display: "block",
+            fontSize: 13.5,
+            fontWeight: 600,
+            color: FG,
+          }}
+        >
+          {title}
+        </Text>
+        <Text
+          style={{
+            display: "block",
+            fontSize: 12.5,
+            color: MUTED,
+            marginTop: 3,
+            lineHeight: 1.5,
+          }}
+        >
           {detail}
         </Text>
       </div>
-      <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 10, paddingTop: 2 }}>
+      <div
+        style={{
+          flex: "0 0 auto",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          paddingTop: 2,
+        }}
+      >
         {children}
       </div>
     </div>
@@ -142,7 +199,9 @@ function Toggle({
         aria-label={label}
         wrapperClassName="w-auto shrink-0"
       />
-      <Text style={{ fontSize: 12.5, color: on ? LINK : MUTED, minWidth: 66 }}>{state}</Text>
+      <Text style={{ fontSize: 12.5, color: on ? LINK : MUTED, minWidth: 66 }}>
+        {state}
+      </Text>
     </>
   );
 }
@@ -153,15 +212,45 @@ function Toggle({
  */
 function BandLegend({ autoUpdates }: { autoUpdates: boolean }) {
   const items = [
-    { tone: BAND.minor, text: `<${MAGNITUDE.minorBelow}% · ${autoUpdates ? "auto-publish" : "your review"}` },
-    { tone: BAND.medium, text: `${MAGNITUDE.minorBelow}–${MAGNITUDE.largeAbove}% · your review` },
+    {
+      tone: BAND.minor,
+      text: `<${MAGNITUDE.minorBelow}% · ${autoUpdates ? "auto-publish" : "your review"}`,
+    },
+    {
+      tone: BAND.medium,
+      text: `${MAGNITUDE.minorBelow}–${MAGNITUDE.largeAbove}% · your review`,
+    },
     { tone: BAND.large, text: `>${MAGNITUDE.largeAbove}% · rejected` },
   ];
   return (
-    <div style={{ display: "flex", gap: 24, padding: "12px 20px", borderTop: `1px solid ${LINE}`, background: "#fbfcfd" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: 24,
+        padding: "12px 20px",
+        borderTop: `1px solid ${LINE}`,
+        background: "#fbfcfd",
+      }}
+    >
       {items.map((it) => (
-        <span key={it.text} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: MUTED }}>
-          <span style={{ width: 8, height: 8, borderRadius: 4, background: it.tone.solid }} />
+        <span
+          key={it.text}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 12,
+            color: MUTED,
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              background: it.tone.solid,
+            }}
+          />
           {it.text}
         </span>
       ))}
@@ -178,9 +267,11 @@ const SCOPE_TABS: { level: ScopeLevel; label: string }[] = [
 ];
 
 const SCOPE_BLURB: Record<ScopeLevel, string> = {
-  client: "Everyone here is notified about map updates anywhere in the client — every site, every building.",
+  client:
+    "Everyone here is notified about map updates anywhere in the client — every site, every building.",
   site: "Notified about map updates anywhere in this site, on top of the client-level list.",
-  building: "Notified about map updates in this building only, on top of the client and site lists.",
+  building:
+    "Notified about map updates in this building only, on top of the client and site lists.",
 };
 
 function RecipientList() {
@@ -191,7 +282,8 @@ function RecipientList() {
 
   const scope: NotifyScope = useMemo(() => {
     if (level === "client") return { level: "client", name: "Client" };
-    if (level === "site") return { level: "site", id: SITE_ID, name: SITE_NAME };
+    if (level === "site")
+      return { level: "site", id: SITE_ID, name: SITE_NAME };
     const b = SITE_SNAPSHOT.find((x) => x.id === buildingId)!;
     return { level: "building", id: b.id, name: b.name };
   }, [level, buildingId]);
@@ -204,12 +296,29 @@ function RecipientList() {
 
   return (
     <div style={{ padding: "14px 20px 18px", borderTop: `1px solid ${LINE}` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <div style={{ display: "inline-flex", border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexWrap: "wrap",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            border: `1px solid ${LINE}`,
+            borderRadius: 8,
+            overflow: "hidden",
+          }}
+        >
           {SCOPE_TABS.map((t) => (
             <button
               key={t.level}
-              onClick={() => { setLevel(t.level); setAdding(false); }}
+              onClick={() => {
+                setLevel(t.level);
+                setAdding(false);
+              }}
               style={{
                 padding: "6px 14px",
                 fontSize: 12.5,
@@ -225,20 +334,36 @@ function RecipientList() {
           ))}
         </div>
         {level === "building" && (
-          <Select value={buildingId} onValueChange={(v) => { setBuildingId(v); setAdding(false); }}>
+          <Select
+            value={buildingId}
+            onValueChange={(v) => {
+              setBuildingId(v);
+              setAdding(false);
+            }}
+          >
             <SelectTrigger aria-label="Building" style={{ width: 220 }}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {SITE_SNAPSHOT.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         )}
       </div>
 
-      <Text style={{ display: "block", fontSize: 12.5, color: MUTED, marginTop: 10, lineHeight: 1.5 }}>
+      <Text
+        style={{
+          display: "block",
+          fontSize: 12.5,
+          color: MUTED,
+          marginTop: 10,
+          lineHeight: 1.5,
+        }}
+      >
         {SCOPE_BLURB[level]}
       </Text>
 
@@ -246,17 +371,34 @@ function RecipientList() {
       {!admin && (
         <div
           style={{
-            display: "flex", gap: 8, alignItems: "flex-start", marginTop: 12,
-            padding: "10px 12px", background: "#f6f7f9", border: `1px solid ${LINE}`,
-            borderRadius: 8, fontSize: 12.5, color: MUTED, lineHeight: 1.5,
+            display: "flex",
+            gap: 8,
+            alignItems: "flex-start",
+            marginTop: 12,
+            padding: "10px 12px",
+            background: "#f6f7f9",
+            border: `1px solid ${LINE}`,
+            borderRadius: 8,
+            fontSize: 12.5,
+            color: MUTED,
+            lineHeight: 1.5,
           }}
         >
           <Icon name="info-circle" />
-          <span>{NO_ADMIN_REASON} {SELF_REMOVE_NOTE}</span>
+          <span>
+            {NO_ADMIN_REASON} {SELF_REMOVE_NOTE}
+          </span>
         </div>
       )}
 
-      <div style={{ marginTop: 12, border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden" }}>
+      <div
+        style={{
+          marginTop: 12,
+          border: `1px solid ${LINE}`,
+          borderRadius: 8,
+          overflow: "hidden",
+        }}
+      >
         {people.length === 0 && (
           <div style={{ padding: "14px", fontSize: 12.5, color: MUTED }}>
             Nobody is notified at this level.
@@ -269,32 +411,58 @@ function RecipientList() {
             <div
               key={p.id}
               style={{
-                display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "10px 14px",
                 borderTop: i === 0 ? "none" : `1px solid ${LINE}`,
               }}
             >
               <div
                 style={{
-                  width: 28, height: 28, borderRadius: 16, flex: "0 0 auto",
-                  display: "grid", placeItems: "center",
-                  background: TINT, color: LINK, fontSize: 11, fontWeight: 600,
+                  width: 28,
+                  height: 28,
+                  borderRadius: 16,
+                  flex: "0 0 auto",
+                  display: "grid",
+                  placeItems: "center",
+                  background: TINT,
+                  color: LINK,
+                  fontSize: 11,
+                  fontWeight: 600,
                 }}
               >
-                {p.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+                {p.name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .slice(0, 2)
+                  .join("")}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <Text style={{ display: "block", fontSize: 13, color: FG }}>
                   {p.name}
-                  {self && <span style={{ color: MUTED, fontWeight: 400 }}> · you</span>}
+                  {self && (
+                    <span style={{ color: MUTED, fontWeight: 400 }}>
+                      {" "}
+                      · you
+                    </span>
+                  )}
                 </Text>
-                <Text style={{ display: "block", fontSize: 12, color: MUTED }}>{p.email}</Text>
+                <Text style={{ display: "block", fontSize: 12, color: MUTED }}>
+                  {p.email}
+                </Text>
               </div>
               {/* a disabled <button> swallows its own hover, so the reason rides a wrapping span
                   — the same pattern every locked control in the expert hold uses */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span style={{ display: "inline-flex" }}>
-                    <Button size="sm" variant="ghost" disabled={!may} onClick={() => removeRecipient(scope, p.id)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={!may}
+                      onClick={() => removeRecipient(scope, p.id)}
+                    >
                       Remove
                     </Button>
                   </span>
@@ -315,17 +483,30 @@ function RecipientList() {
       <div style={{ marginTop: 12 }}>
         {adding ? (
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <Select value="" onValueChange={(v) => { addRecipient(scope, v); setAdding(false); }}>
-              <SelectTrigger aria-label="Add a recipient" style={{ width: 300 }}>
+            <Select
+              value=""
+              onValueChange={(v) => {
+                addRecipient(scope, v);
+                setAdding(false);
+              }}
+            >
+              <SelectTrigger
+                aria-label="Add a recipient"
+                style={{ width: 300 }}
+              >
                 <SelectValue placeholder="Choose a user…" />
               </SelectTrigger>
               <SelectContent>
                 {available.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>{d.name} · {d.email}</SelectItem>
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name} · {d.email}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>Cancel</Button>
+            <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>
+              Cancel
+            </Button>
           </div>
         ) : (
           <Tooltip>
@@ -362,23 +543,41 @@ export function Settings() {
   const advice = graceAdvice(s.graceSeconds);
 
   return (
-    <div style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#fff" }}>
+    <div
+      style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#fff" }}
+    >
       {/* page header — the frame's own copy, including the auto-save note */}
-      <div style={{ padding: "24px 32px 20px", borderBottom: `1px solid ${LINE}` }}>
-        <Text style={{ display: "block", fontSize: 12.5, color: MUTED }}>Settings</Text>
-        <Text style={{ display: "block", fontSize: 24, fontWeight: 700, color: INK, marginTop: 2 }}>
+      <div
+        style={{ padding: "24px 32px 20px", borderBottom: `1px solid ${LINE}` }}
+      >
+        <Text style={{ display: "block", fontSize: 12.5, color: MUTED }}>
+          Settings
+        </Text>
+        <Text
+          style={{
+            display: "block",
+            fontSize: 24,
+            fontWeight: 700,
+            color: INK,
+            marginTop: 2,
+          }}
+        >
           System Settings
         </Text>
         <Text
           style={{
-            display: "block", fontSize: 13, color: MUTED, marginTop: 6,
-            lineHeight: 1.6, maxWidth: 660,
+            display: "block",
+            fontSize: 13,
+            color: MUTED,
+            marginTop: 6,
+            lineHeight: 1.6,
+            maxWidth: 660,
           }}
         >
-          All platform parameters can be managed below. By default, they apply system-wide but you
-          can override them via Site settings screen. Please note that changes are auto-saved but
-          they are effective only once published by an admin. Parameters can be reset to default
-          anytime.
+          All platform parameters can be managed below. By default, they apply
+          system-wide but you can override them via Site settings screen. Please
+          note that changes are auto-saved but they are effective only once
+          published by an admin. Parameters can be reset to default anytime.
         </Text>
       </div>
 
@@ -436,13 +635,13 @@ export function Settings() {
           </Row>
 
           <Row
-            title="Manual Review"
-            detail="Have your team confirm, flag, or reject each detected change before it's applied. Off = changes apply automatically by magnitude. This is your team's pass, not Pointr's."
+            title="Review & Finalise"
+            detail="Have your team confirm, reject, or edit each detected change before it's applied. Off = changes apply automatically by magnitude. This is your team's pass, not Pointr's."
           >
             <Toggle
               on={s.manualReview}
               onChange={(v) => setSetting("manualReview", v)}
-              label="Manual Review"
+              label="Review & Finalise"
               state={s.manualReview ? "On · default" : "Off"}
             />
           </Row>
@@ -461,7 +660,9 @@ export function Settings() {
               </SelectTrigger>
               <SelectContent>
                 {GRACE_OPTIONS.map((o) => (
-                  <SelectItem key={o.seconds} value={String(o.seconds)}>{o.label}</SelectItem>
+                  <SelectItem key={o.seconds} value={String(o.seconds)}>
+                    {o.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -473,15 +674,23 @@ export function Settings() {
           {advice && (
             <div
               style={{
-                display: "flex", gap: 8, alignItems: "flex-start",
-                margin: "0 20px 16px", padding: "10px 12px", borderRadius: 8,
-                fontSize: 12.5, lineHeight: 1.5,
-                background: advice.tone === "warn" ? BAND.medium.tint : "#f6f7f9",
+                display: "flex",
+                gap: 8,
+                alignItems: "flex-start",
+                margin: "0 20px 16px",
+                padding: "10px 12px",
+                borderRadius: 8,
+                fontSize: 12.5,
+                lineHeight: 1.5,
+                background:
+                  advice.tone === "warn" ? BAND.medium.tint : "#f6f7f9",
                 border: `1px solid ${advice.tone === "warn" ? BAND.medium.border : LINE}`,
                 color: advice.tone === "warn" ? BAND.medium.ink : MUTED,
               }}
             >
-              <Icon name={advice.tone === "warn" ? "alert-triangle" : "info-circle"} />
+              <Icon
+                name={advice.tone === "warn" ? "alert-triangle" : "info-circle"}
+              />
               <span>{advice.text}</span>
             </div>
           )}

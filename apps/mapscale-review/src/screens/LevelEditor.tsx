@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { getReviewOutcome, levelKey, subscribeReviews } from "../mock/store";
 import {
   Button,
@@ -103,14 +110,33 @@ function outcomeFor(
   cause?: RedCause,
 ): { state: MapScaleState; note: string; primary?: string; info?: string } {
   if (cause === "cannot-process")
-    return { state: "failed", note: RED_CAUSE_COPY["cannot-process"].card, info: RED_CAUSE_COPY["cannot-process"].error };
+    return {
+      state: "failed",
+      note: RED_CAUSE_COPY["cannot-process"].card,
+      info: RED_CAUSE_COPY["cannot-process"].error,
+    };
   if (cause === "cannot-match")
-    return { state: "failed", note: RED_CAUSE_COPY["cannot-match"].card, primary: "Review" };
+    return {
+      state: "failed",
+      note: RED_CAUSE_COPY["cannot-match"].card,
+      primary: "Review",
+    };
   if (cause === "large-change" || magnitudeBand(pct) === "large")
-    return { state: "rejected", note: RED_CAUSE_COPY["large-change"].card(pct), info: RED_CAUSE_COPY["large-change"].error };
+    return {
+      state: "rejected",
+      note: RED_CAUSE_COPY["large-change"].card(pct),
+      info: RED_CAUSE_COPY["large-change"].error,
+    };
   if (magnitudeBand(pct) === "minor")
-    return { state: "published", note: `Auto-published · ${pct}% of floor area` };
-  return { state: "user-review", note: `Awaiting your review · ${pct}% of floor area`, primary: "Review" };
+    return {
+      state: "published",
+      note: `Auto-published · ${pct}% of floor area`,
+    };
+  return {
+    state: "user-review",
+    note: `Awaiting your review · ${pct}% of floor area`,
+    primary: "Review",
+  };
 }
 
 /** The traffic light, as a version state — what a finished run writes back to its version. */
@@ -147,7 +173,9 @@ function phaseFor(v: LevelVersion | undefined): Phase {
       // traffic light — so its card says "Auto-published · N%" rather than resting at Completed.
       // A published version with a bigger % went live manually after review; outcomeFor() would
       // mislabel that, so those rest at Completed.
-      return v.changePct !== undefined && magnitudeBand(v.changePct) === "minor" ? "done" : "idle";
+      return v.changePct !== undefined && magnitudeBand(v.changePct) === "minor"
+        ? "done"
+        : "idle";
     default:
       return "idle";
   }
@@ -181,7 +209,12 @@ function RestoreAction({
     <>
       {/* a disabled button swallows hover, so the reason rides a wrapping span */}
       <span title={reason}>
-        <Button variant="link" size="sm" disabled={!!reason} onClick={() => setOpen(true)}>
+        <Button
+          variant="link"
+          size="sm"
+          disabled={!!reason}
+          onClick={() => setOpen(true)}
+        >
           {RESTORE_COPY.action}
         </Button>
       </span>
@@ -197,7 +230,9 @@ function RestoreAction({
         }}
       >
         {RESTORE_COPY.body(v.n, next)}
-        <div style={{ fontSize: 13, color: MUTED, marginTop: 8 }}>{RESTORE_COPY.detail}</div>
+        <div style={{ fontSize: 13, color: MUTED, marginTop: 8 }}>
+          {RESTORE_COPY.detail}
+        </div>
       </ConfirmOverlay>
     </>
   );
@@ -236,13 +271,21 @@ function PreviousVersions({
   return (
     <div style={{ marginTop: 14 }}>
       <div style={{ display: "flex", alignItems: "center", marginBottom: 6 }}>
-        <Text style={{ fontSize: 12, fontWeight: 600, color: MUTED }}>Previous floor-plans</Text>
+        <Text style={{ fontSize: 12, fontWeight: 600, color: MUTED }}>
+          Previous floor-plans
+        </Text>
         <span style={{ flex: 1 }} />
         <Button variant="link" size="sm" onClick={onViewAll}>
           View version history
         </Button>
       </div>
-      <div style={{ border: `1px solid ${LINE}`, borderRadius: 10, overflow: "hidden" }}>
+      <div
+        style={{
+          border: `1px solid ${LINE}`,
+          borderRadius: 10,
+          overflow: "hidden",
+        }}
+      >
         {rows.map((v, i) => {
           const badge = versionBadge(versions, v);
           return (
@@ -284,11 +327,16 @@ function PreviousVersions({
                   {(v.restoredFrom || v.input.kind === "geojson") && (
                     <span style={{ color: MUTED }}>
                       {" · "}
-                      {v.restoredFrom ? `Restored from Version ${v.restoredFrom}` : KIND_LABEL.geojson}
+                      {v.restoredFrom
+                        ? `Restored from Version ${v.restoredFrom}`
+                        : KIND_LABEL.geojson}
                     </span>
                   )}
                 </div>
-                <span onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 8 }}>
+                <span
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ display: "flex", gap: 8 }}
+                >
                   {/* Compare = the two-pane view (S1's Compare mode). The row body previews the
                       checkpoint in the timeline instead — two different questions. */}
                   <Button variant="link" size="sm" onClick={() => onCompare(v)}>
@@ -328,20 +376,27 @@ function PreviousVersions({
                   whether to restore something.
                 */}
                 {(() => {
-                  const rep = getReviewOutcome(levelKey(level.buildingId, level.index), v.n);
+                  const rep = getReviewOutcome(
+                    levelKey(level.buildingId, level.index),
+                    v.n,
+                  );
                   if (!rep) return null;
-                  const flagged = rep.changes.filter((c) => c.decision === "flag").length;
+                  const edited = Object.keys(rep.overrides ?? {}).length;
                   return (
                     <span
                       style={{ fontSize: 11, color: MUTED, flex: "0 0 auto" }}
-                      title={`This version was reviewed${flagged ? `, with ${flagged} change${flagged === 1 ? "" : "s"} flagged to edit later` : ""}. Restoring it brings the report back with it.`}
+                      title={`This version was reviewed${edited ? `, with ${edited} change${edited === 1 ? "" : "s"} edited by hand` : ""}. Restoring it brings the report back with it.`}
                     >
-                      · reviewed{flagged ? ` · ${flagged} flagged` : ""}
+                      · reviewed{edited ? ` · ${edited} edited` : ""}
                     </span>
                   );
                 })()}
                 {typeof v.changePct === "number" && (
-                  <span style={{ fontSize: 11, color: MUTED, flex: "0 0 auto" }}>+{v.changePct}%</span>
+                  <span
+                    style={{ fontSize: 11, color: MUTED, flex: "0 0 auto" }}
+                  >
+                    +{v.changePct}%
+                  </span>
                 )}
                 <span
                   style={{
@@ -402,12 +457,18 @@ export function LevelEditor({
   });
   /** The live building list, for the drop overlay's selector — the map reports it on ready. */
   const [liveBuildings, setLiveBuildings] = useState<MapBuilding[]>([]);
-  const onBuildings = useCallback((b: MapBuilding[]) => setLiveBuildings(b), []);
+  const onBuildings = useCallback(
+    (b: MapBuilding[]) => setLiveBuildings(b),
+    [],
+  );
   /** A file dropped on this pane's map, awaiting the confirmation overlay's answer. */
   const [dropped, setDropped] = useState<string | null>(null);
   /** Upload-over-finished-work confirmation (Olcay, 2026-08-11) — see `restartsWork`. */
   const [confirmUpload, setConfirmUpload] = useState(false);
-  const onFileDrop = useCallback((f: { name: string }) => setDropped(f.name), []);
+  const onFileDrop = useCallback(
+    (f: { name: string }) => setDropped(f.name),
+    [],
+  );
 
   /**
    * The level's version history, newest first — stateful because the mock honours §11's rule that
@@ -454,20 +515,26 @@ export function LevelEditor({
   // Every entry point clears the chain itself before scheduling a new one, and React 18 no longer
   // warns about setState after unmount, so there is nothing left for a teardown to protect.
 
-  const schedule = (fn: () => void, ms: number) => timers.current.push(window.setTimeout(fn, ms));
+  const schedule = (fn: () => void, ms: number) =>
+    timers.current.push(window.setTimeout(fn, ms));
 
   // Show the level being edited, not the map page's own default. Memoised because PointrMap posts
   // whenever this prop's identity changes — an inline object would re-target on every render.
   const mapTarget = useMemo(
-    () => (level.buildingId ? { building: level.buildingId, level: level.index } : undefined),
+    () =>
+      level.buildingId
+        ? { building: level.buildingId, level: level.index }
+        : undefined,
     [level.buildingId, level.index],
   );
 
   /**
-   * A concluded review for the version currently on screen (Olcay, 2026-08-11). Two things hang
-   * off it: the status card stops asking for a review that already happened, and the flagged
-   * changes come back onto this level's map — which is the whole promise decision 2 made when it
-   * chose Flag over Edit.
+   * A concluded review for the version currently on screen (Olcay, 2026-08-11). One thing hangs
+   * off it now: the status card stops asking for a review that already happened.
+   *
+   * ⚠️ It used to bring the **flagged** changes back onto this level's map — the whole promise
+   * decision 2 made when it chose Flag over Edit. That promise was kept and then retired: see
+   * `concludedMarks`.
    *
    * Version-matched on purpose: a newer upload must not inherit an older review's conclusions.
    */
@@ -481,16 +548,23 @@ export function LevelEditor({
    * to its automatic publish — nothing about its state changed — so the card keeps saying so and
    * keeps offering Review. It just adds how far you got, which is the only new fact.
    */
-  const inProgress = forThisVersion && !forThisVersion.complete ? forThisVersion : undefined;
+  const inProgress =
+    forThisVersion && !forThisVersion.complete ? forThisVersion : undefined;
   /**
-   * Only the flagged ones. A confirmed change is applied and a rejected one is discarded — neither
-   * is unfinished business, and drawing all 22 again would say "still to review" when the point is
-   * that you're done. Memoised because PointrMap re-posts on identity.
+   * ⚠️ **Nothing from a concluded review is drawn on this map any more** (Olcay, 2026-08-25: *"once
+   * review concluded the map becomes the current map"*).
+   *
+   * This used to be the flagged rows, and drawing them was the whole of *"keep flagged items
+   * visible to edit later"*. With flagging gone there is no category left to draw: a confirmed
+   * change is applied, a rejected one is discarded, and an **edited** one is simply the floor —
+   * your own value, already live. Painting it would claim there is something still to decide about
+   * a level whose review is over, which is exactly what `markOnly` was invented to avoid and is now
+   * avoided by having nothing to paint.
+   *
+   * Kept as a named constant rather than inlined at the call site so the reasoning has somewhere
+   * to live, and so the day something *does* deserve drawing here, there is one place to put it.
    */
-  const flagged: Change[] = useMemo(
-    () => (concluded ? concluded.changes.filter((c) => concluded.decisions[c.id] === "flag") : []),
-    [concluded],
-  );
+  const concludedMarks: Change[] = NO_CHANGES;
 
   /** Has anything in the metadata block been touched? Drives Done vs Update in the footer. */
   const [metaDirty, setMetaDirty] = useState(false);
@@ -511,10 +585,14 @@ export function LevelEditor({
    */
   const restartsWork =
     !!current &&
-    (["needs-review", "needs-decision", "published"].includes(current.state) || !!forThisVersion);
+    (["needs-review", "needs-decision", "published"].includes(current.state) ||
+      !!forThisVersion);
 
   const outcome = outcomeFor(run.pct, run.cause);
-  const PHASE: Record<Exclude<Phase, "done">, { state: MapScaleState; note?: string; progress?: number; action?: string }> = {
+  const PHASE: Record<
+    Exclude<Phase, "done">,
+    { state: MapScaleState; note?: string; progress?: number; action?: string }
+  > = {
     idle: { state: "completed" },
     queued: { state: "in-queue", action: "Cancel" },
     validating: { state: "validating", action: "Cancel" },
@@ -525,14 +603,17 @@ export function LevelEditor({
    * The card after the review is concluded. It must stop saying "Awaiting your review" with a
    * Review button next to it — the user just finished doing that.
    *
-   * It reports the two things they'd want to know afterwards: whether it went live, and what they
-   * left for later. The flag count is the honest bit — a review you concluded with three flags
-   * isn't finished business, and the card is where that belongs.
+   * It reports the two things they'd want to know afterwards: whether it went live, and how much
+   * of it is theirs rather than MapScale's. The second used to be a flag count — work left over —
+   * and is now an edit count, which is work done; both belong on this card for the same reason,
+   * that it is the last thing you read about a review you have just finished.
    */
-  const reviewedCard = (): { state: MapScaleState; note: string; info?: string } | undefined => {
+  const reviewedCard = ():
+    | { state: MapScaleState; note: string; info?: string }
+    | undefined => {
     if (!concluded) return undefined;
-    const n = flagged.length;
-    const tail = n ? ` · ${n} flagged for later` : "";
+    const n = Object.keys(concluded.overrides ?? {}).length;
+    const tail = n ? ` · ${n} edited by you` : "";
     // Live-ness comes from the version, not from the outcome — the version is what every other
     // surface reads, and an explicit Publish now moves it regardless of the review.
     return versions[0]?.state === "published"
@@ -553,7 +634,9 @@ export function LevelEditor({
    * dropped through to the resting "Completed" card and lost the unfinished review entirely,
    * while the tree simultaneously claimed the level was held out of publishing.
    */
-  const inProgressCard = (): { state: MapScaleState; note: string; primary?: string } | undefined => {
+  const inProgressCard = ():
+    | { state: MapScaleState; note: string; primary?: string }
+    | undefined => {
     if (!inProgress) return undefined;
     return versions[0]?.state === "published"
       ? {
@@ -593,7 +676,8 @@ export function LevelEditor({
         : phase === "done"
           ? outcome
           : PHASE[phase];
-  const running = phase === "queued" || phase === "validating" || phase === "mapping";
+  const running =
+    phase === "queued" || phase === "validating" || phase === "mapping";
 
   /**
    * The hold: warn-but-allow, not read-only (Olcay, 2026-08-10, reversing the built-first hard
@@ -605,8 +689,16 @@ export function LevelEditor({
    * exists and why not now.
    */
   const expertHold = phase === "expert";
-  const uploadReason = expertHold ? EXPERT_HOLD.upload : running ? JOB_RUNNING : undefined;
-  const restoreReason = expertHold ? EXPERT_HOLD.restore : running ? JOB_RUNNING : undefined;
+  const uploadReason = expertHold
+    ? EXPERT_HOLD.upload
+    : running
+      ? JOB_RUNNING
+      : undefined;
+  const restoreReason = expertHold
+    ? EXPERT_HOLD.restore
+    : running
+      ? JOB_RUNNING
+      : undefined;
 
   /**
    * Cancel genuinely cancels: the chain is cleared (it used to keep firing underneath) and the
@@ -617,7 +709,9 @@ export function LevelEditor({
     clearTimers();
     setPhase("idle");
     setVersions((vs) =>
-      vs[0]?.state === "processing" ? [{ ...vs[0], state: "created" }, ...vs.slice(1)] : vs,
+      vs[0]?.state === "processing"
+        ? [{ ...vs[0], state: "created" }, ...vs.slice(1)]
+        : vs,
     );
   };
 
@@ -662,7 +756,12 @@ export function LevelEditor({
       schedule(() => {
         setPhase("done");
         setVersions((vs) =>
-          vs[0]?.n === n ? [{ ...vs[0], state: stateForBand(r.pct), changePct: r.pct }, ...vs.slice(1)] : vs,
+          vs[0]?.n === n
+            ? [
+                { ...vs[0], state: stateForBand(r.pct), changePct: r.pct },
+                ...vs.slice(1),
+              ]
+            : vs,
         );
       }, 1600);
       return;
@@ -673,19 +772,29 @@ export function LevelEditor({
       schedule(() => {
         setPhase("done");
         setVersions((vs) =>
-          vs[0]?.n === n ? [{ ...vs[0], state: "failed", redCause: r.cause }, ...vs.slice(1)] : vs,
+          vs[0]?.n === n
+            ? [{ ...vs[0], state: "failed", redCause: r.cause }, ...vs.slice(1)]
+            : vs,
         );
       }, 2600);
       return;
     }
     schedule(() => setPhase("mapping"), 1900);
     if (expertReviewEnabled()) schedule(() => setPhase("expert"), 3400);
-    schedule(() => {
-      setPhase("done");
-      setVersions((vs) =>
-        vs[0]?.n === n ? [{ ...vs[0], state: stateForBand(r.pct), changePct: r.pct }, ...vs.slice(1)] : vs,
-      );
-    }, expertReviewEnabled() ? 5200 : 3600);
+    schedule(
+      () => {
+        setPhase("done");
+        setVersions((vs) =>
+          vs[0]?.n === n
+            ? [
+                { ...vs[0], state: stateForBand(r.pct), changePct: r.pct },
+                ...vs.slice(1),
+              ]
+            : vs,
+        );
+      },
+      expertReviewEnabled() ? 5200 : 3600,
+    );
   };
 
   /**
@@ -698,7 +807,9 @@ export function LevelEditor({
     consumedUpload.current = true;
     uploadNew(uploadFile);
     onUploadStarted?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Deliberately empty: this must fire once, for the upload it was mounted with. (The directive
+    // that used to sit here named `react-hooks/exhaustive-deps`, which the root eslint config does
+    // not register — it was inert, and eslint 9 errors on the unknown name.)
   }, []);
 
   /**
@@ -715,7 +826,7 @@ export function LevelEditor({
     consumedBrowse.current = true;
     onBrowseConsumed?.();
     fileInput.current?.click();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Deliberately empty — see the note on the upload effect above.
   }, []);
 
   /**
@@ -797,7 +908,14 @@ export function LevelEditor({
           />
         </div>
         <div style={{ padding: "0 20px 8px", overflow: "auto", flex: 1 }}>
-          <Text style={{ fontSize: 13, fontWeight: 600, display: "block", marginTop: 12 }}>
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              display: "block",
+              marginTop: 12,
+            }}
+          >
             Metadata
           </Text>
           {/*
@@ -813,7 +931,12 @@ export function LevelEditor({
           <div
             onInput={() => setMetaDirty(true)}
             onChange={() => setMetaDirty(true)}
-            style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+              marginTop: 12,
+            }}
           >
             {/*
               Level Type is the sector list (Olcay, 2026-08-10), not free text: sector groups,
@@ -832,7 +955,9 @@ export function LevelEditor({
                   {PICKER_SECTORS.map((s) =>
                     s.subsectors.length ? (
                       <SelectGroup key={s.name}>
-                        <SelectLabel title={s.description}>{s.name}</SelectLabel>
+                        <SelectLabel title={s.description}>
+                          {s.name}
+                        </SelectLabel>
                         {s.subsectors.map((sub) => (
                           <SelectItem
                             key={sub.name}
@@ -844,7 +969,11 @@ export function LevelEditor({
                         ))}
                       </SelectGroup>
                     ) : (
-                      <SelectItem key={s.name} value={sectorKey(s.name)} title={s.description}>
+                      <SelectItem
+                        key={s.name}
+                        value={sectorKey(s.name)}
+                        title={s.description}
+                      >
                         {s.name}
                       </SelectItem>
                     ),
@@ -855,17 +984,31 @@ export function LevelEditor({
             {/* both are short values, so they share a row (Olcay, 2026-08-10) — like v9's level row */}
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <Input label="Level Index" type="number" defaultValue={String(level.index)} />
+                <Input
+                  label="Level Index"
+                  type="number"
+                  defaultValue={String(level.index)}
+                />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <Input label="Short Name" defaultValue={level.short} />
               </div>
             </div>
             <Input label="Long Name" defaultValue={level.name} />
-            <Input label="External Identifier" placeholder={`DXB-${level.short}`} />
+            <Input
+              label="External Identifier"
+              placeholder={`DXB-${level.short}`}
+            />
           </div>
 
-          <Text style={{ fontSize: 13, fontWeight: 600, display: "block", marginTop: 24 }}>
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              display: "block",
+              marginTop: 24,
+            }}
+          >
             Floor-plan
           </Text>
 
@@ -882,11 +1025,26 @@ export function LevelEditor({
             to do.
           */}
           {current && (
-          <div data-tour="floorplan" style={{ border: `1px solid ${LINE}`, borderRadius: 10, marginTop: 8, overflow: "hidden" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: 10 }}>
-              {/* the v9 Level Manager thumbnail (18833:214839): a real preview, tap for larger */}
-              <FloorPlanThumb file={current.input.file} />
-              {/*
+            <div
+              data-tour="floorplan"
+              style={{
+                border: `1px solid ${LINE}`,
+                borderRadius: 10,
+                marginTop: 8,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  padding: 10,
+                }}
+              >
+                {/* the v9 Level Manager thumbnail (18833:214839): a real preview, tap for larger */}
+                <FloorPlanThumb file={current.input.file} />
+                {/*
                 The card's anatomy, reworked per Olcay (2026-08-10 evening): file name with the
                 Current chip top-right (the spot Upload new vacated), then one line saying who sent
                 it and when. The version *number* is gone — the section shows the current
@@ -895,64 +1053,90 @@ export function LevelEditor({
                 in the rows below). The blueprint link is gone: the overlay toggle lives in Map
                 Settings, one handle instead of two.
               */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{ fontSize: 13, color: "var(--review-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                  title={current.input.file}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: "var(--review-ink)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                    title={current.input.file}
+                  >
+                    {current.input.file}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginTop: 3,
+                      fontSize: 12,
+                      color: MUTED,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <SourcePill source={current.source} />
+                    {current.restoredFrom ? (
+                      <span>
+                        · Restored from Version {current.restoredFrom}
+                      </span>
+                    ) : null}
+                    <span>· {current.at}</span>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: 0.3,
+                    color: "#0b369c",
+                    background: "#eef3ff",
+                    border: "1px solid #cfdcff",
+                    borderRadius: 999,
+                    padding: "0 7px",
+                    lineHeight: 1.7,
+                    flex: "0 0 auto",
+                  }}
                 >
-                  {current.input.file}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3, fontSize: 12, color: MUTED, whiteSpace: "nowrap" }}>
-                  <SourcePill source={current.source} />
-                  {current.restoredFrom ? <span>· Restored from Version {current.restoredFrom}</span> : null}
-                  <span>· {current.at}</span>
-                </div>
+                  Current
+                </span>
               </div>
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: 0.3,
-                  color: "#0b369c",
-                  background: "#eef3ff",
-                  border: "1px solid #cfdcff",
-                  borderRadius: 999,
-                  padding: "0 7px",
-                  lineHeight: 1.7,
-                  flex: "0 0 auto",
-                }}
-              >
-                Current
-              </span>
-            </div>
-            {/* this floor-plan's own MapScale job — attached, because it belongs to it — with the
+              {/* this floor-plan's own MapScale job — attached, because it belongs to it — with the
                 way to replace the file right under the state that would make you want to */}
-            <div style={{ padding: "0 8px 8px" }}>
-              <AiMappingStatus
-                state={card.state}
-                note={card.note}
-                progress={card.progress}
-                action={card.action}
-                onAction={cancelRun}
-                primary={card.primary}
-                onPrimary={() => onReview(run.pct, run.cause)}
-                /* the slot explains what offers no action: the hold, or cause C's error details */
-                info={expertHold ? EXPERT_HOLD.what : card.info}
-              />
-              {/* under the hold or mid-run the button stays visible, disabled with its reason */}
-              <span data-tour="upload" title={uploadReason} style={{ display: "block", marginTop: 8 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => (restartsWork ? setConfirmUpload(true) : uploadNew())}
-                  disabled={!!uploadReason}
-                  className="w-full"
+              <div style={{ padding: "0 8px 8px" }}>
+                <AiMappingStatus
+                  state={card.state}
+                  note={card.note}
+                  progress={card.progress}
+                  action={card.action}
+                  onAction={cancelRun}
+                  primary={card.primary}
+                  onPrimary={() => onReview(run.pct, run.cause)}
+                  /* the slot explains what offers no action: the hold, or cause C's error details */
+                  info={expertHold ? EXPERT_HOLD.what : card.info}
+                />
+                {/* under the hold or mid-run the button stays visible, disabled with its reason */}
+                <span
+                  data-tour="upload"
+                  title={uploadReason}
+                  style={{ display: "block", marginTop: 8 }}
                 >
-                  Upload new
-                </Button>
-              </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      restartsWork ? setConfirmUpload(true) : uploadNew()
+                    }
+                    disabled={!!uploadReason}
+                    className="w-full"
+                  >
+                    Upload new
+                  </Button>
+                </span>
+              </div>
             </div>
-          </div>
           )}
 
           <PreviousVersions
@@ -965,9 +1149,18 @@ export function LevelEditor({
             onCompare={(v) => onHistory(v.n, "compare")}
           />
 
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 24 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12,
+              marginTop: 24,
+            }}
+          >
             <div style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: 600, display: "block" }}>Auto-Map Updates</Text>
+              <Text style={{ fontSize: 13, fontWeight: 600, display: "block" }}>
+                Auto-Map Updates
+              </Text>
               <Text style={{ fontSize: 12, color: MUTED }}>
                 Auto-publish minor changes; larger updates go to review.
               </Text>
@@ -1008,10 +1201,17 @@ export function LevelEditor({
         </div>
       </div>
 
-      <div style={{ position: "relative", flex: 1, background: "#EDEEF0", minWidth: 0 }}>
+      <div
+        style={{
+          position: "relative",
+          flex: 1,
+          background: "#EDEEF0",
+          minWidth: 0,
+        }}
+      >
         <PointrMap
-          /* the flags you left behind, and nothing else — see `flagged` */
-          changes={flagged.length ? flagged : NO_CHANGES}
+          /* nothing from a concluded review is drawn here — see `concludedMarks` */
+          changes={concludedMarks}
           prefs={prefs}
           target={mapTarget}
           onBuildings={onBuildings}
@@ -1032,7 +1232,8 @@ export function LevelEditor({
               setDropped(null);
               // dropping on the level you're already editing uploads right here; retargeting
               // hands the parcel to App, which switches editors and carries the file
-              if (l.buildingId === level.buildingId && l.index === level.index) uploadNew(f);
+              if (l.buildingId === level.buildingId && l.index === level.index)
+                uploadNew(f);
               else onUploadTo?.(l, f);
             }}
             onCancel={() => setDropped(null)}

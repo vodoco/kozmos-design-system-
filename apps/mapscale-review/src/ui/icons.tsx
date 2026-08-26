@@ -232,7 +232,3 @@ export const ChevronLeft = icon("chevron-left", "1007:9370", [
 export const ChevronRight = icon("chevron-right", "1007:9376", [
   "M9 18L15 12L9 6",
 ]);
-
-export const Flag = icon("flag-01", "1007:11779", [
-  "M4 15C4 15 5 14 8 14C11 14 13 16 16 16C19 16 20 15 20 15V3C20 3 19 4 16 4C13 4 11 2 8 2C5 2 4 3 4 3L4 22",
-]);

@@ -53,13 +53,11 @@ import {
   EXPERT_REVIEW_LEVEL,
   GRACE_DAYS,
   NEW_VERSION_LEVEL,
-  decisionInk,
   expertReviewEnabled,
   isUnderExpertReview,
   seedVersions,
   type Change,
 } from "../mock/diff";
-import { DecisionGlyph } from "../ui/ChangeReviewRow";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { LevelSelector } from "../ui/LevelSelector";
@@ -76,7 +74,6 @@ import {
   getCreatedBuildings,
   getLevelVersions,
   getReviewOutcome,
-  setReviewOutcome,
   levelKey,
   subscribeCreatedBuildings,
   subscribeReviews,
@@ -430,106 +427,25 @@ function levelTagsFor(
  * it became: published, and whatever you left flagged.
  */
 /**
- * Which features on this floor are **flagged** — the names, so the tree and the POI panel can mark
- * them (Olcay's standing "flagged-items appearance" ask, §7).
+ * ⚠️ **Four flag readers stood here until 2026-08-25** — `flaggedNamesFor`, `flagNoteFor`,
+ * `flaggedChangesFor` and `clearFlagForName` — and the reasoning they carried is worth keeping
+ * even though the code is not.
  *
- * Until now a flag was only visible in the two places you *review* — the changelog and the diff
- * map. But a flag means *"come back to this"*, and where you come back to things is the content
- * tree. A flag nobody can find while browsing is a note written on the inside of a closed drawer.
+ * They existed because a flag meant *"come back to this"*, and where you come back to things is
+ * the content tree: a flag visible only in the changelog and the diff map was a note written on
+ * the inside of a closed drawer. So a concluded review's flags reached the tree rows, the type
+ * counts, the POI panel and the live map as `markOnly` marks.
  *
- * ⚠️ **Matched by NAME, and that is the honest bridge, not laziness.** `Change.id` is documented as
- * the feature's `fid` but the seeds are authored slugs (`costa`, `burgerking`), and `bindToFloor()`
- * re-points a row's **name** to a real feature on the floor while leaving the id alone. Name is
- * therefore the only thing a change and a tree row genuinely share — and it is already the key the
- * map merges highlights on. The limit rides with it: **a rename between review and browse breaks
- * the link**, which is the same weakness the audit records for the whole name-based matcher (D5),
- * and the real fix is the same one — the client-side diff carrying real feature ids.
+ * Olcay, 2026-08-25: *"once review concluded the map becomes the current map."* Nothing outlives
+ * a review any more, so there is nothing for browsing to display. Two consequences are deliberate
+ * and should not be re-litigated as bugs:
  *
- * Version-matched like every other reader: ask for the newest version's report, so a fresh upload
- * doesn't inherit flags raised against a floor-plan that has since been replaced.
- */
-function flaggedNamesFor(
-  buildingId: string,
-  index: number,
-  short: string,
-): Set<string> {
-  const key = levelKey(buildingId, index);
-  const newest = getLevelVersions(key, () =>
-    seedVersions(short, index, buildingId),
-  )[0];
-  const outcome = getReviewOutcome(key, newest?.n);
-  if (!outcome) return EMPTY_FLAGS;
-  const out = new Set<string>();
-  for (const c of outcome.changes)
-    if (outcome.decisions[c.id] === "flag") out.add(c.name);
-  return out.size ? out : EMPTY_FLAGS;
-}
-
-/** One identity for "nothing flagged", so an unflagged level can't re-render its subtree forever. */
-const EMPTY_FLAGS: Set<string> = new Set();
-
-/**
- * The note written against a flag on this feature, if there is one. Name-matched like every other
- * flag reader here — see `TypeRow`'s note on why the count is of flagged *things*, not rows.
- */
-function flagNoteFor(
-  buildingId: string,
-  index: number,
-  short: string,
-  name: string,
-): string | undefined {
-  const key = levelKey(buildingId, index);
-  const newest = getLevelVersions(key, () =>
-    seedVersions(short, index, buildingId),
-  )[0];
-  const outcome = getReviewOutcome(key, newest?.n);
-  if (!outcome?.notes) return undefined;
-  for (const c of outcome.changes)
-    if (
-      c.name === name &&
-      outcome.decisions[c.id] === "flag" &&
-      outcome.notes[c.id]
-    )
-      return outcome.notes[c.id];
-  return undefined;
-}
-
-/**
- * The flagged changes for a level, as marks for the map (Olcay, 2026-08-14: *"I'd like to see
- * visible flags on the map for those that are flagged"*).
+ * - **Nothing marks an edited feature while browsing.** An edit is not outstanding work; it is the
+ *   floor. It shows up again on the *next* MapScale run, as a `preserved` override.
+ * - **`clearFlagForName` is gone with the state it cleared.** Editing a feature used to clear its
+ *   flag implicitly (§18a's ruling, name-matched, and with duplicate names it cleared them
+ *   together — the D18 ambiguity). No flag, no clearing, no ambiguity to warn about.
  *
- * The tree already says *"2 flagged"* on the level and marks the rows — but the map beside it drew
- * nothing at all, because Map Content passed it an empty `changes` list. A flag means *come back to
- * this*, and the one surface that can show you **where** it is was the one staying silent.
- *
- * These carry `markOnly`, so the pennant appears without the floor being repainted as a diff: the
- * review concluded and this version is live. Same version-matching as `flaggedNamesFor` — a flag
- * raised against a floor-plan that has since been replaced is not this floor's flag.
- */
-function flaggedChangesFor(
-  buildingId: string,
-  index: number,
-  short: string,
-): Change[] {
-  const key = levelKey(buildingId, index);
-  const newest = getLevelVersions(key, () =>
-    seedVersions(short, index, buildingId),
-  )[0];
-  const outcome = getReviewOutcome(key, newest?.n);
-  if (!outcome) return NO_CHANGES;
-  const out = outcome.changes
-    .filter((c) => outcome.decisions[c.id] === "flag")
-    // the note comes from the outcome, not the change: `changes` is the report as it arrived
-    .map((c) => ({
-      ...c,
-      decision: "flag" as const,
-      markOnly: true,
-      note: outcome.notes?.[c.id],
-    }));
-  return out.length ? out : NO_CHANGES;
-}
-
-/**
  * The half of a feature's bag the editor may never touch — which feature it is, and where it lives.
  * Kept aside so a save can *replace* the editable half wholesale (a removed field must actually go)
  * without the identity going with it.
@@ -539,40 +455,6 @@ function pickIdentity(props: Record<string, unknown>): Record<string, unknown> {
   for (const k of ["fid", "bid", "sid", "lvl", "mainType", "mapPersonas"])
     if (k in props) out[k] = props[k];
   return out;
-}
-
-/**
- * **Editing a feature clears its flag** — §18a's ruling, finally implemented.
- *
- * Olcay ruled de-flagging *implicit on edit* on 2026-08-11, and the handoff has said ever since
- * that "there is no de-flag affordance in the app and there should not be one… it arrives with
- * US8's Edit". Until the properties panel gained an edit mode, nothing in the app could edit a
- * feature — so no flag could ever be cleared, by design. Saving an edit is that arrival.
- *
- * ⚠️ **It clears by NAME, so with duplicate names it clears them together** — editing one of B2's
- * four *Food Court* features clears the flag for all four. That is not a bug introduced here, it is
- * the same ambiguity D18 records: the review recorded a name, and a name cannot pick one of four.
- * The panel says so before you edit.
- */
-function clearFlagForName(
-  buildingId: string,
-  index: number,
-  short: string,
-  name: string,
-) {
-  const key = levelKey(buildingId, index);
-  const newest = getLevelVersions(key, () =>
-    seedVersions(short, index, buildingId),
-  )[0];
-  const outcome = getReviewOutcome(key, newest?.n);
-  if (!outcome) return;
-  const ids = outcome.changes.filter(
-    (c) => c.name === name && outcome.decisions[c.id] === "flag",
-  );
-  if (!ids.length) return;
-  const decisions = { ...outcome.decisions };
-  for (const c of ids) decisions[c.id] = undefined;
-  setReviewOutcome(key, { ...outcome, decisions });
 }
 
 function liveTagsFor(
@@ -601,9 +483,6 @@ function liveTagsFor(
    * every other surface reads, and an explicit publish moves it whatever the review is doing.
    */
   const live = newest.state === "published";
-  const flags = Object.values(outcome.decisions).filter(
-    (d) => d === "flag",
-  ).length;
   const tags: LevelTag[] = [];
 
   if (live)
@@ -633,14 +512,11 @@ function liveTagsFor(
         : "You saved this review part-way. It won't publish — automatically or otherwise — until you complete it.",
     });
 
-  if (outcome.complete && flags)
-    tags.push({
-      kind: "flagged",
-      label: `${flags} flagged`,
-      tone: "neutral",
-      title: `${flags} change${flags === 1 ? "" : "s"} flagged for a later dashboard edit`,
-    });
-
+  /**
+   * ⚠️ **A completed review adds no third tag.** It used to add *"N flagged"*, which was the tree's
+   * whole reason to know about flags. A completed review now leaves nothing outstanding — an edit
+   * is the floor, not a to-do — so the level says *Published* and stops talking.
+   */
   return tags.length ? tags : seeded;
 }
 
@@ -1043,32 +919,6 @@ function CountChip({ n }: { n: number }) {
   );
 }
 
-/**
- * The 🚩 a flagged feature wears wherever it is listed — **the review's own glyph, in the review's
- * own ink**, not a new symbol invented for the tree.
- *
- * That is the whole point: §3 says marks are what you *decided*, and a decision must read the same
- * everywhere or it becomes two different facts. Reusing `DecisionGlyph` also means it follows the
- * `COLOURED_DECISIONS` experiment automatically — flip that one switch and this moves with it,
- * rather than quietly staying black while the review turns amber.
- */
-function FlagMark({ title }: { title: string }) {
-  return (
-    <span
-      title={title}
-      aria-label={title}
-      style={{
-        flex: "0 0 auto",
-        display: "grid",
-        placeItems: "center",
-        color: decisionInk("flag"),
-      }}
-    >
-      <DecisionGlyph kind="flag" size={14} />
-    </span>
-  );
-}
-
 /** A single feature under its type — the leaf of the tree, and the only row you edit. */
 function FeatureRow({
   name,
@@ -1076,16 +926,12 @@ function FeatureRow({
   fid,
   buildingId,
   index,
-  flagged,
-  sharing = 1,
 }: {
   name: string;
   unnamed: boolean;
   fid?: string;
   buildingId: string;
   index: number;
-  flagged?: boolean;
-  sharing?: number;
 }) {
   const [hover, setHover] = useState(false);
   const {
@@ -1166,16 +1012,6 @@ function FeatureRow({
           }}
         />
       )}
-      {flagged && (
-        <FlagMark
-          title={
-            sharing > 1
-              ? // Say it plainly rather than let the mark imply a precision the data hasn't got.
-                `Flagged during review. ${sharing} features here share the name “${name}”, so the flag may belong to any of them.`
-              : "Flagged during review — come back to this"
-          }
-        />
-      )}
       <RowMenu
         label={name}
         show={hover}
@@ -1203,40 +1039,17 @@ function TypeRow({
   all,
   buildingId,
   index,
-  flagged,
 }: {
   row: LevelTypeCount;
   all: LevelTypeCount[];
   buildingId: string;
   index: number;
-  flagged: Set<string>;
 }) {
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
   const { hover: onHover } = useContext(LevelTypesContext);
   const names = row.names ?? [];
   const label = rowLabel(row, all);
-  /**
-   * How many of this type are flagged — because a **collapsed** row is the case that matters. The
-   * feature marks below are useless until you open the type, so without this a flag stays hidden
-   * behind exactly the chevron you have no reason to click.
-   *
-   * ⚠️ **Distinct NAMES, not matching rows — and that distinction is load-bearing.** Counting rows
-   * read `Circulation Space 🚩4` when exactly **one** change had been flagged: B2 has four features
-   * all named *Food Court*, and the name bridge cannot tell them apart, so every one of them
-   * matched. A count that says 4 when you flagged 1 is not a rounding error, it is the chip lying
-   * about your own work. Counting the flagged *things* keeps it truthful; the rows below still all
-   * carry a mark, because which of the four it was is genuinely unknown (and the map highlights all
-   * four for the same reason).
-   */
-  const flaggedHere = flagged.size
-    ? [
-        ...new Set(
-          names.filter((n) => n.name && flagged.has(n.name)).map((n) => n.name),
-        ),
-      ]
-    : [];
-  const flags = flaggedHere.length;
   return (
     <>
       <div
@@ -1287,26 +1100,6 @@ function TypeRow({
           {label}
         </span>
         <CountChip n={row.count} />
-        {/* Beside the count, not out at the right edge: it qualifies the count ("7, two of which
-            want another look"), and §0's rule that a number belongs next to its word applies just
-            as much to this one. */}
-        {flags > 0 && (
-          <span
-            title={`${flags} flagged during review`}
-            style={{
-              flex: "0 0 auto",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 2,
-              fontSize: 11,
-              fontWeight: 600,
-              color: decisionInk("flag"),
-            }}
-          >
-            <DecisionGlyph kind="flag" size={12} />
-            {flags}
-          </span>
-        )}
         <span style={{ flex: 1 }} />
         {/* A whole type is something you act on in bulk — pick it out on the map, or hand the lot
             to someone. Editing or deleting belongs to the individual feature, not to the type. */}
@@ -1325,11 +1118,6 @@ function TypeRow({
             fid={n.fid}
             buildingId={buildingId}
             index={index}
-            // `n.name`, never the numbered fallback label — "Wall 3" is ours, not the floor's
-            flagged={!!n.name && flagged.has(n.name)}
-            // How many features here share this name — so a mark can say when it is one of several
-            // candidates rather than implying this exact unit was the one flagged.
-            sharing={n.name ? names.filter((o) => o.name === n.name).length : 1}
           />
         ))}
       {open && row.count > names.length && (
@@ -1352,11 +1140,9 @@ function TypeRow({
 function LevelTypes({
   buildingId,
   index,
-  flagged,
 }: {
   buildingId: string;
   index: number;
-  flagged: Set<string>;
 }) {
   const { byLevel, section } = useContext(LevelTypesContext);
   const counts = byLevel[`${buildingId}:${index}`];
@@ -1428,7 +1214,6 @@ function LevelTypes({
               all={counts}
               buildingId={buildingId}
               index={index}
-              flagged={flagged}
             />
           ))}
         </div>
@@ -1510,12 +1295,6 @@ function LevelRow({
   const { shown: shownTags, hidden: hiddenTags } = resolveTags(
     liveTagsFor(buildingId, level.index, level.short),
   );
-  /**
-   * Derived at render for exactly the reason the tags above are: the screen already re-renders on
-   * `subscribeReviews`, and reading both facts from the same store in the same pass is what stops
-   * the tags and the marks describing two different reviews.
-   */
-  const flagged = flaggedNamesFor(buildingId, level.index, level.short);
   const lockedByExperts = isUnderExpertReview(level.index, buildingId);
 
   return (
@@ -1702,13 +1481,7 @@ function LevelRow({
         so a floor whose far end has never been in view under-reports. Hence "as loaded" in the
         header rather than a bare total — the real dashboard reads these from the content API.
       */}
-      {open && (
-        <LevelTypes
-          buildingId={buildingId}
-          index={level.index}
-          flagged={flagged}
-        />
-      )}
+      {open && <LevelTypes buildingId={buildingId} index={level.index} />}
     </>
   );
 }
@@ -2661,53 +2434,14 @@ export function MapContent({
   }, [shownProps, props?.fid]);
 
   /**
-   * Is the feature in the panel flagged? Read for the level the map is actually on, which is the
-   * level the focused feature belongs to — `focus()` switches the target before it sets `focused`.
+   * ⚠️ **`mapFlagMarks`, `focusedFlagged` and `focusedSharing` stood here until 2026-08-25.** They
+   * put a concluded review's flags onto the live map and into the properties panel — including the
+   * *"N features here share this name, so the flag may be about any of them"* admission, which was
+   * the honest half of matching a review to a floor by name. Nothing outlives a review now, so
+   * there is nothing to place and nothing to admit. The name-matching weakness itself (D5/D18) is
+   * unchanged and still applies to `bindToFloor`.
    */
-  /**
-   * The flags for the level the map is on, as marks. Memoised on the target rather than computed
-   * inline: `changes` is a prop the map diffs against its previous value, and a fresh array every
-   * render would re-post the whole set and restart feature resolution on every keystroke.
-   */
-  const mapFlagMarks = useMemo(
-    () =>
-      target
-        ? flaggedChangesFor(
-            target.building,
-            target.level,
-            live
-              .find((b) => b.id === target.building)
-              ?.levels.find((l) => l.index === target.level)?.short ?? "",
-          )
-        : NO_CHANGES,
-    [target, live],
-  );
-  const focusedFlagged =
-    !!shownProps &&
-    !!shownProps.name &&
-    !!target &&
-    flaggedNamesFor(
-      target.building,
-      target.level,
-      live
-        .find((b) => b.id === target.building)
-        ?.levels.find((l) => l.index === target.level)?.short ?? "",
-    ).has(String(shownProps.name));
-  /**
-   * How many features on this floor share the panelled feature's name — so the flag notice can
-   * admit when it might belong to one of several, rather than asserting this exact unit was the
-   * one flagged. Same reason as the tree's mark; see `TypeRow`'s note.
-   */
-  const focusedSharing =
-    shownProps && target
-      ? (typesByLevel[`${target.building}:${target.level}`] ?? []).reduce(
-          (n, t) =>
-            n +
-            (t.names ?? []).filter((x) => x.name && x.name === shownProps.name)
-              .length,
-          0,
-        )
-      : 1;
+
   /**
    * Which subTypes this feature's mainType offers — taken from **the floor's own types**, so the
    * list can't drift from the taxonomy the rest of the screen is drawn from. A type the floor
@@ -2780,21 +2514,14 @@ export function MapContent({
         for (const k of removed ?? []) delete base[k];
         propsOfRef.current[fid] = { ...base, ...next };
       }
-      const short =
-        live
-          .find((b) => b.id === target.building)
-          ?.levels.find((l) => l.index === target.level)?.short ?? "";
-      // Clear against the name it had when it was flagged — a rename would otherwise orphan the flag
-      // under the old string, leaving it stuck on a feature that no longer answers to it.
-      if (shownProps?.name)
-        clearFlagForName(
-          target.building,
-          target.level,
-          short,
-          String(shownProps.name),
-        );
+      /**
+       * ⚠️ **Saving used to clear the feature's flag here** — §18a's *de-flagging is implicit on
+       * edit*, cleared by NAME and therefore clearing all four of B2's *Food Court* features at
+       * once (the D18 ambiguity). Both the state and its ambiguity went with flagging on
+       * 2026-08-25; a save is now just a save.
+       */
     },
-    [focused, target, live, shownProps],
+    [focused, target],
   );
   /**
    * **Update closes the panel and says so** (Olcay, 2026-08-15: *"update a feature should close the
@@ -3167,7 +2894,8 @@ export function MapContent({
                 : "This feature has edits you have not saved. Opening another one will lose them."}
           </ConfirmOverlay>
           <PointrMap
-            changes={mapFlagMarks}
+            /* Browsing is not reviewing, and a concluded review leaves nothing to draw. */
+            changes={NO_CHANGES}
             prefs={prefs}
             onBuildings={onBuildings}
             onLevel={onLevel}
@@ -3238,21 +2966,6 @@ export function MapContent({
               onDirtyChange={onDirtyChange}
               geometryDirty={!!geom.dirty}
               onCommitGeometry={() => sendGeom({ cmd: "commit" })}
-              flagged={focusedFlagged}
-              flagNote={
-                focusedFlagged && shownProps?.name && target
-                  ? flagNoteFor(
-                      target.building,
-                      target.level,
-                      live
-                        .find((b) => b.id === target.building)
-                        ?.levels.find((l) => l.index === target.level)?.short ??
-                        "",
-                      String(shownProps.name),
-                    )
-                  : undefined
-              }
-              flagShared={focusedSharing > 1 ? focusedSharing : undefined}
               subTypeOptions={subTypeOptions}
               onEdited={onEdited}
               onSaved={onSaved}
