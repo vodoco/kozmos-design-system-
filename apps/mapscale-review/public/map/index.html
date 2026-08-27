@@ -915,6 +915,16 @@ function featureRings(fid) {
  */
 function outcomeOf(c) { return c.override ? "edited" : (c.decision || null); }
 
+/**
+ * **The change whose editor is open right now**, or `null`. Set by `beginchange`, cleared by `end`.
+ *
+ * ⚠️ It lives INSIDE this engine block because `previewFate` reads it, and the block is extracted
+ * and evaluated on its own by the harness — a variable declared outside would make the generated
+ * module throw rather than fail a check.
+ */
+let EDITING_CHANGE = null;
+function setEditingChange(id) { EDITING_CHANGE = id || null; }
+
 /** The ink a mark draws in — muted for a decision, the override purple for an edit. */
 function outcomeInk(o) { return o === "edited" ? OVERRIDE_INK : DECISION_INK; }
 
@@ -934,6 +944,16 @@ function outcomeInk(o) { return o === "edited" ? OVERRIDE_INK : DECISION_INK; }
  * An **edited** row is neither of the last two: it stays, and it is yours, so it keeps a shape and
  * paints `OVERRIDE_INK`. That is `"mine"`.
  *
+ * ⚠️ **An OPEN edit session previews its own outcome** (Olcay, 2026-08-26, ruling that a removal may
+ * be edited). While you are editing a change, the map draws it as `"mine"` — because that is what
+ * saving will make true — and Cancel puts it back.
+ *
+ * It is not a courtesy. A confirmed removal is a **ghost**: filtered out of the layers that draw it,
+ * left as a dashed outline with no fill. **You cannot edit a shape you cannot see**, and the same is
+ * true of a rejected addition. Rather than special-case those two, the session simply shows its own
+ * result — which is also what this screen already promises out loud: *the map shows the floor as it
+ * will be*, and that should not have to wait for a Save.
+ *
  * ⚠️ **An UNDECIDED removal keeps its diff colour — it is NOT taken off the floor yet.** Decided by
  * Olcay, 2026-08-27, against the reading that would remove it: *"keep the diff until decided."*
  *
@@ -949,6 +969,7 @@ function outcomeInk(o) { return o === "edited" ? OVERRIDE_INK : DECISION_INK; }
  * `diff` is the queue.
  */
 function previewFate(c) {
+  if (EDITING_CHANGE && c.id === EDITING_CHANGE) return "mine";
   const o = outcomeOf(c);
   if (o === "edited") return "mine";
   if (!o) return "diff";
@@ -4550,7 +4571,10 @@ let GEOM = null;
 const SNAP_PX = 10;
 const HANDLE_R = 5;
 
-function geomBegin(fid) {
+/**
+ * @param fallbackRings rings to open on when the tiles cannot answer — see the `!f` branch.
+ */
+function geomBegin(fid, fallbackRings) {
   /**
    * ⚠️ **Opening the feature that is already open does nothing at all.**
    *
@@ -4574,7 +4598,21 @@ function geomBegin(fid) {
    * network; the node you clicked is merely where in it you are.
    */
   const net = wfNetOf(fid);
-  const f = net >= 0 ? { kind: "network", net, nodes: wfNetworkNodes(net) } : geomFind(fid);
+  /**
+   * ⚠️ **The fallback is not belt-and-braces, it is the removal case.**
+   *
+   * `geomFind` prefers `LEVEL_GEOM` — the **draft** — and a feature MapScale removed is by
+   * definition not in the draft, so it falls through to the tiles. That should answer, because
+   * `featuresWithFid` queries **source** data and a layer filter does not reach it. But a confirmed
+   * removal is also *ghosted*, and `resolveChanges` warns in its own comment that a filtered feature
+   * "stops being findable" — a warning that was earned. `beginchange` already holds the rings from
+   * the resolve pass, so it hands them over rather than leaving this to an argument about
+   * MapLibre's query semantics.
+   */
+  let f = net >= 0 ? { kind: "network", net, nodes: wfNetworkNodes(net) } : geomFind(fid);
+  if (!f && fallbackRings && fallbackRings.length)
+    f = { kind: "area", rings: fallbackRings.map(r => r.map(c => c.slice())),
+          tiles: 1, src: "resolved" };
   if (!f) {
     /**
      * ⚠️ Clear the editor rather than just refusing. This used to `return` with `GEOM` untouched,
@@ -7875,10 +7913,36 @@ window.addEventListener("message", (ev) => {
      */
     else if (d.cmd === "beginchange") {
       const r = RESOLVED.find(x => x.change && x.change.id === d.id);
-      if (r && r.fid) geomBegin(r.fid);
+      if (r && r.fid) {
+        /**
+         * ⚠️ **The session previews its own outcome, and it must be set BEFORE the redraw.**
+         * Otherwise a confirmed removal is still ghosted at the moment its handles go down — and a
+         * dashed outline with no fill is not a thing you can edit. See `previewFate`.
+         */
+        setEditingChange(d.id);
+        /**
+         * **The pinned card goes.** It carries a duplicate ✓ ✎ ✗ for the very change now open in a
+         * 360px panel, and it would sit under it or argue with it. One surface at a time.
+         */
+        SELECTED = null; renderTip(); tip.classList.remove("pinned");
+        applyPreviewHidden(); redraw();
+        geomBegin(r.fid, r.rings);
+        /**
+         * **The panel needs the feature's own property bag, and the app has never held these fids** —
+         * which is the whole reason `beginchange` exists. This side has the fid, and `featureprops`
+         * is the message Map Content already listens to, so the review gets the panel filled by
+         * reusing what is there rather than by growing a second protocol.
+         */
+        sendFeatureProps(r.fid);
+      }
       else post("geomerror", { fid: "", message: "That change has no feature on this floor yet." });
     }
-    else if (d.cmd === "end") geomEnd(!!d.commit);
+    else if (d.cmd === "end") {
+      geomEnd(!!d.commit);
+      // The session is over: whatever the row decided is what the map should show again.
+      setEditingChange(null);
+      applyPreviewHidden(); redraw();
+    }
     else if (d.cmd === "commit") geomCommit();
     else if (d.cmd === "mode") geomSetMode(d.mode);
     else if (d.cmd === "snap") geomToggleSnap();

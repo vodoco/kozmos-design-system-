@@ -7,6 +7,15 @@
 import { getSettings, graceDays } from "./settings";
 // Which building each demo state belongs to — see `seedVersions`.
 import { CONCOURSE_A_ID, T3_ID } from "./site";
+// The override's own sentence-shaping — dependency-free so the harness can exercise it.
+// Re-exported so callers keep importing the override's vocabulary from the model it belongs to.
+export {
+  overrideDetails,
+  overrideLine,
+  splitOverrideLines,
+  REMOVAL_OVERRIDDEN,
+  SHOWN_LINES,
+} from "./overrideLines";
 
 /**
  * The MapScale Update Report's taxonomy — Add Feature · Delete Feature · Modify Geometry ·
@@ -61,6 +70,22 @@ export interface Override {
   kind?: string;
   /** GeoJSON.Geometry — the shape the user drew, if they reshaped it. */
   geometry?: unknown;
+  /**
+   * **Every other field the panel settled** (Olcay, 2026-08-26: *"go with the full property bag"*).
+   *
+   * ⚠️ `name` and `kind` stay first-class beside this rather than folding into it. The map's pinned
+   * card reads `mine.name` directly — *"the name you gave it wins"* — and `changeAccent` reads the
+   * type. Folding them in would be tidier and would break two surfaces for nothing.
+   */
+  props?: Record<string, unknown>;
+  /**
+   * The fields the panel **binned**.
+   *
+   * ⚠️ **This has to be said out loud**, for the reason `FeaturePanel.save()` already documents:
+   * absent from `props` means *leave this alone*, so a removed field that is merely missing would
+   * silently do nothing.
+   */
+  removedProps?: string[];
   /** What the user changed, in the changelog's own voice — one line each, same as `details`. */
   details?: string[];
 }

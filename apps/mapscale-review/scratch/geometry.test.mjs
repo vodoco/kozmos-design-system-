@@ -243,7 +243,7 @@ writeFileSync(
       `  wfBuildEdges, wfEnsureEdges, WF_NODES, wfPaint,\n` +
       `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, wfNodeAt, personaOk,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
-      `  outcomeOf, outcomeInk, previewFate, DECISION_INK, OVERRIDE_INK,\n` +
+      `  outcomeOf, outcomeInk, previewFate, setEditingChange, DECISION_INK, OVERRIDE_INK,\n` +
       `  fpMode, FP_PREFIX,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
@@ -287,7 +287,7 @@ const {
   wfBuildEdges, wfEnsureEdges, wfPaint,
   wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, personaOk,
   editableAt, hoverableAt,
-  outcomeOf, outcomeInk, previewFate, DECISION_INK, OVERRIDE_INK,
+  outcomeOf, outcomeInk, previewFate, setEditingChange, DECISION_INK, OVERRIDE_INK,
   fpMode, FP_PREFIX,
   __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __sel, __edges,
   __env, TARGET, prefs, POSTED,
@@ -2822,6 +2822,153 @@ console.log("\nfloor-plan source");
   check("the tiles prefix is a prefix of the other two — teardown must key on the MODE, not a "
         + "string match",
         FP_PREFIX.gj.startsWith(FP_PREFIX.tiles) && FP_PREFIX.draft.startsWith(FP_PREFIX.tiles));
+}
+
+/* P6. An OPEN edit session previews its own outcome — the rule that makes a removal editable. */
+{
+  const ghosted = { id: "pharmacy", type: "deleted", decision: "confirm" };
+  const rejectedNew = { id: "costa", type: "new", decision: "reject" };
+
+  check("a confirmed removal is a ghost while nothing is open",
+        previewFate(ghosted) === "ghost");
+  check("a rejected addition is a ghost too", previewFate(rejectedNew) === "ghost");
+
+  setEditingChange("pharmacy");
+  // ⚠️ This is the whole reason the rule exists: a ghost is a dashed outline with NO FILL, and you
+  // cannot edit a shape you cannot see.
+  check("opening its editor makes the removal draw as YOURS",
+        previewFate(ghosted) === "mine");
+  check("and it generalises — the rejected addition is untouched while a DIFFERENT change is open",
+        previewFate(rejectedNew) === "ghost");
+
+  setEditingChange("costa");
+  check("the rule is not special-cased to removals",
+        previewFate(rejectedNew) === "mine");
+  check("and the removal goes back to being a ghost", previewFate(ghosted) === "ghost");
+
+  setEditingChange(null);
+  check("cancelling puts everything back", previewFate(ghosted) === "ghost");
+  check("...both of them", previewFate(rejectedNew) === "ghost");
+
+  // An open session must not invent an outcome for a row that has none.
+  setEditingChange("nothing-open");
+  check("an id that matches no change changes nothing",
+        previewFate({ id: "costa", type: "new" }) === "diff");
+  setEditingChange(null);
+}
+
+/* ── Q. the override's vocabulary — what an edit PRINTS ────────────────────── */
+
+console.log("\noverride lines");
+
+/**
+ * ⚠️ `src/mock/overrideLines.ts` imports NOTHING, which is the only reason this can reach it: the
+ * module is transpiled type-stripped and imported directly. Everything else under `src/` pulls a
+ * graph the harness cannot resolve, which is exactly why the override's two TABLES — the sentence
+ * and the order — were put in a module of their own rather than left in `diff.ts`.
+ */
+const ovSrc = readFileSync(join(here, "..", "src", "mock", "overrideLines.ts"), "utf8");
+const ovJs = join(here, `.overrideLines.${process.pid}.mjs`);
+writeFileSync(
+  ovJs,
+  ts.transpileModule(ovSrc, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText,
+);
+let ov;
+try {
+  ov = await import(pathToFileURL(ovJs).href);
+} finally {
+  unlinkSync(ovJs);
+}
+const { overrideLine, overrideDetails, splitOverrideLines, REMOVAL_OVERRIDDEN, SHOWN_LINES, FITS } = ov;
+
+/* Q1. The sentence table, cell by cell. Written out rather than generated: the point is that
+      somebody reading it can see the rule — print the change when it fits, name it when it does
+      not — and agree with it. */
+{
+  const L = (a, b) => overrideLine("Name", a, b);
+
+  check("nothing to nothing says nothing", L(undefined, undefined) === null);
+  check("nothing to an empty string says nothing", L(undefined, "") === null);
+  check("whitespace is nothing", L(undefined, "   ") === null);
+  check("unchanged says nothing", L("Costa", "Costa") === null);
+
+  check("a value arriving prints it", L(undefined, "Costa") === 'Name: “Costa”');
+  check("a value leaving is NAMED, never printed", L("Costa", undefined) === "Name removed");
+  check("a change that fits is printed",
+        L("Costa", "Costa Coffee") === 'Name: “Costa” → “Costa Coffee”');
+
+  const long = "x".repeat(FITS + 1);
+  check("too long on the RIGHT is named", L("Costa", long) === "Name changed");
+  check("too long on the LEFT is named", L(long, "Costa") === "Name changed");
+  check("too long arriving is named", L(undefined, long) === "Name added");
+  check(`exactly ${FITS} still fits`,
+        L("a", "x".repeat(FITS)) === `Name: “a” → “${"x".repeat(FITS)}”`);
+}
+
+/* Q2. Quoting is for STRINGS only. `Cuisines: “3 values”` reads as though the value were that
+      literal text — the cell most likely to be wrong, and invisible in a screenshot. */
+{
+  check("a boolean is bare, not quoted",
+        overrideLine("Has Wifi", false, true) === "Has Wifi: no → yes");
+  check("false is a VALUE, not an absence",
+        overrideLine("Has Wifi", undefined, false) === "Has Wifi: no");
+  check("a number is bare", overrideLine("Seats", 4, 12) === "Seats: 4 → 12");
+  check("a list reports its COUNT, bare",
+        overrideLine("Cuisines", ["a", "b"], ["a", "b", "c"]) === "Cuisines: 2 values → 3 values");
+  check("one item is singular", overrideLine("Cuisines", undefined, ["a"]) === "Cuisines: 1 value");
+  check("an empty list is nothing", overrideLine("Cuisines", undefined, []) === null);
+  check("a same-length list still reports change only when the count moves",
+        overrideLine("Cuisines", ["a", "b"], ["c", "d"]) === null);
+}
+
+/* Q3. The ORDER, which is what makes the three-line cap safe: the identity set comes first, so the
+      common edit never truncates. */
+{
+  const label = { type: (s) => s.toUpperCase(), prop: (s) => "P:" + s };
+  const change = { type: "deleted", name: "DDF Pharmacy", kind: "retail" };
+  const lines = overrideDetails(
+    change,
+    {
+      name: "DDF Pharmacy — Gate B22",
+      kind: "pharmacy",
+      details: ["Boundary redrawn by hand"],
+      props: { openingHours: "24h" },
+      removedProps: ["phone"],
+    },
+    { openingHours: "06:00–22:00", phone: "+971" },
+    label,
+  );
+  check("a removal that is overridden says so FIRST", lines[0] === REMOVAL_OVERRIDDEN);
+  check("then Name", lines[1].startsWith("Name: "));
+  check("then Type", lines[2].startsWith("Type: "));
+  check("then the boundary", lines[3] === "Boundary redrawn by hand");
+  check("then the properties", lines[4] === "P:openingHours: “06:00–22:00” → “24h”");
+  check("then what was binned", lines[5] === "P:phone removed");
+  check("and nothing else", lines.length === 6);
+
+  // ⚠️ The removal line must not appear on an override that settled nothing — that is the no-op
+  // guard's own case, and a purple row claiming an override nobody made is what it exists to stop.
+  check("an EMPTY override on a removal says nothing at all",
+        overrideDetails(change, {}, undefined, label).length === 0);
+  check("a non-removal never gets the removal line",
+        !overrideDetails({ type: "new", name: "Costa" }, { name: "Costa Coffee" }, undefined, label)
+          .includes(REMOVAL_OVERRIDDEN));
+  check("binning a field that was never set says nothing",
+        overrideDetails({ type: "new", name: "C" }, { removedProps: ["phone"] }, {}, label)
+          .length === 0);
+}
+
+/* Q4. The cap. Three shown, the rest behind the Details cap — NOT dropped. */
+{
+  const many = ["a", "b", "c", "d", "e"];
+  const { shown, capped } = splitOverrideLines(many);
+  check(`${SHOWN_LINES} lines are shown`, shown.length === SHOWN_LINES);
+  check("the remainder is CAPPED, not lost", capped.join() === "d,e");
+  check("nothing is dropped", shown.length + capped.length === many.length);
+  const few = splitOverrideLines(["a", "b"]);
+  check("a short override caps nothing", few.capped.length === 0 && few.shown.length === 2);
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */
