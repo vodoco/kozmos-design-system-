@@ -71,60 +71,26 @@ export function DecisionGlyph({
   );
 }
 
-const ACTIONS: { value: Decision; label: string }[] = [
-  { value: "confirm", label: "Confirm" },
-  { value: "reject", label: "Reject" },
-];
-
 /**
- * A small square icon button — Edit and Revert both, so the pair reads as one family beside the
- * segmented control rather than as two unrelated affordances bolted on.
+ * **Every act the row offers, in one tray** (Olcay, 2026-08-26: *"I don't like the edit button being
+ * there. Let's put it in place of where flag was."*).
+ *
+ * Edit used to be a bordered icon button bolted beside the ✓/✗ pair — a second affordance family on
+ * a row that has twenty siblings, and the middle segment was standing empty where `flag` had been.
+ * Putting it there costs nothing and gives the row's text its width back.
+ *
+ * ⚠️ **`edit` is not a `Decision` and never becomes one.** It opens the editor; an override is what
+ * results, and `outcomeOf()` then supersedes whatever was decided. The tray is a list of *acts*, and
+ * only two of them write a decision — see `onTray`.
  */
-function RowAction({
-  label,
-  ink,
-  onClick,
-  children,
-}: {
-  label: string;
-  ink: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={label}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick();
-          }}
-          style={{
-            display: "grid",
-            placeItems: "center",
-            width: 30,
-            height: 30,
-            padding: 0,
-            borderRadius: 6,
-            border: "1px solid var(--primitives-colors-background-100)",
-            background: "#fff",
-            color: ink,
-            cursor: "pointer",
-          }}
-        >
-          {children}
-        </button>
-      </TooltipTrigger>
-      <TooltipContent
-        style={{ maxWidth: 240, whiteSpace: "normal", lineHeight: 1.4 }}
-      >
-        {label}
-      </TooltipContent>
-    </Tooltip>
-  );
-}
+type TrayAction = Decision | "edit" | "revert";
+
+const TRAY_LABEL: Record<TrayAction, string> = {
+  confirm: "Confirm",
+  edit: "Edit — put your own value in place of this suggestion",
+  reject: "Reject",
+  revert: "Revert to MapScale's detected value",
+};
 
 export function ChangeReviewRow({
   change,
@@ -227,34 +193,61 @@ export function ChangeReviewRow({
    * It still writes a plain `reject`, so no new state enters the model.
    */
   const keepIt = change.warning === "re-removed";
-  const items = ACTIONS.map((a) => {
-    const label =
-      keepIt && a.value === "reject"
-        ? "Keep it — this object stays on the map"
-        : a.label;
-    return {
-      value: a.value,
-      label: (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {/* the label lives in the tooltip, so the glyph still needs an accessible name */}
-            <span
-              role="img"
-              aria-label={label}
-              style={{
-                display: "grid",
-                placeItems: "center",
-                color: DECISION_INK,
-              }}
-            >
-              <DecisionGlyph kind={a.value} />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{label}</TooltipContent>
-        </Tooltip>
-      ),
-    };
-  });
+  /**
+   * ⚠️ **✎ draws in `OVERRIDE_INK` in every state; ✓ ✗ ⟲ stay muted.** It is the override axis, not
+   * a decision, and the colour is the only thing that says so — the same split `outcomeInk()` makes.
+   * The white pill still means what it always meant: *where this row currently stands*.
+   */
+  const tray = (actions: TrayAction[]) =>
+    actions.map((a) => {
+      const label =
+        keepIt && a === "reject"
+          ? "Keep it — this object stays on the map"
+          : TRAY_LABEL[a];
+      return {
+        value: a,
+        label: (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {/* the label lives in the tooltip, so the glyph still needs an accessible name */}
+              <span
+                role="img"
+                aria-label={label}
+                style={{
+                  display: "grid",
+                  placeItems: "center",
+                  color: a === "edit" ? OVERRIDE_INK : DECISION_INK,
+                }}
+              >
+                {a === "edit" ? (
+                  <Pencil size={18} />
+                ) : a === "revert" ? (
+                  <Reset size={18} />
+                ) : (
+                  <DecisionGlyph kind={a} />
+                )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+          </Tooltip>
+        ),
+      };
+    });
+  /**
+   * One dispatcher, because the tray now mixes decisions with acts. Reverting closes the editor
+   * first: leaving a form open over a row whose override has just been deleted would offer to save
+   * an edit that no longer has anything to supersede.
+   */
+  const onTray = (v: string) => {
+    if (v === "edit") return openEditor();
+    if (v === "revert") {
+      setEditing(false);
+      onEditEnd?.(false);
+      onRevert?.();
+      return;
+    }
+    onDecide(v as Decision);
+  };
   return (
     <div
       data-change-row={change.id}
@@ -393,56 +386,33 @@ export function ChangeReviewRow({
              * **Edited outranks the decision, and takes its place** (Olcay, 2026-08-25: *"edit
              * becomes user override which supersedes the incoming change"*).
              *
-             * There is deliberately no ✓/✗ pair here. Confirm would mean "apply MapScale's
-             * suggestion", and you have just replaced it; reject would mean "keep the published
-             * value", and you have just replaced that too. Both segments would be lies about a row
-             * whose answer is now yours. The way back is **Revert**, which restores the detected
-             * value and puts the pair back — one step, and never a hidden one.
+             * There is deliberately no ✓/✗ pair here (Olcay, 2026-08-26: *"too many buttons side by
+             * side when revert is added too"*). Confirm would mean "apply MapScale's suggestion",
+             * and you have just replaced it; reject would mean "keep the published value", and you
+             * have just replaced that too. Both segments would be lies about a row whose answer is
+             * now yours, and the bar's own law already says **hide what cannot apply**. The way back
+             * is **Revert**, which restores the detected value and puts the pair back.
+             *
+             * ⚠️ **The `EDITED` pill went with them.** A selected purple ✎ says it, beside a row
+             * whose left accent is already purple and whose override line is printed underneath —
+             * the pill was the third voice. It also made the edited row the only one with a
+             * different silhouette, which is what D17 forbids.
              */
-            <>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                  color: OVERRIDE_INK,
-                  border: `1px solid ${OVERRIDE_INK}`,
-                  borderRadius: 999,
-                  padding: "2px 9px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                EDITED
-              </span>
-              {onEdit && (
-                <RowAction
-                  label="Edit again"
-                  ink={OVERRIDE_INK}
-                  onClick={openEditor}
-                >
-                  <Pencil size={16} />
-                </RowAction>
-              )}
-              {onRevert && (
-                <RowAction
-                  label="Revert to MapScale's detected value"
-                  ink="var(--review-muted)"
-                  onClick={() => {
-                    setEditing(false);
-                    onEditEnd?.(false);
-                    onRevert();
-                  }}
-                >
-                  <Reset size={16} />
-                </RowAction>
-              )}
-            </>
+            <SegmentedControl
+              items={tray(["edit", "revert"])}
+              value="edit"
+              onValueChange={onTray}
+            />
           ) : preserved ? (
             /**
              * "Kept" stays a word rather than becoming a ✓, because it is the row's *status* and
              * people read it as one — and because ✓ means "apply this change", which is not what
              * is happening here. Beside it, the two acts Olcay asked for on 2026-08-25: edit your
              * own earlier override, or reset it back to what the source says.
+             *
+             * ⚠️ **Neither segment is selected at rest**, and that is deliberate — this row stands
+             * at *Kept*, which is the word beside the tray, not at either act. ✎ takes the pill only
+             * while the editor is open.
              */
             <>
               <span
@@ -450,42 +420,24 @@ export function ChangeReviewRow({
               >
                 Kept
               </span>
-              {onEdit && (
-                <RowAction
-                  label="Edit your override"
-                  ink={OVERRIDE_INK}
-                  onClick={openEditor}
-                >
-                  <Pencil size={16} />
-                </RowAction>
-              )}
-              {onRevert && (
-                <RowAction
-                  label="Reset — discard your override and take MapScale's value"
-                  ink="var(--review-muted)"
-                  onClick={onRevert}
-                >
-                  <Reset size={16} />
-                </RowAction>
-              )}
+              <SegmentedControl
+                items={tray(["edit", "revert"])}
+                value={editing ? "edit" : undefined}
+                onValueChange={onTray}
+              />
             </>
           ) : (
-            <>
-              <SegmentedControl
-                items={items}
-                value={change.decision}
-                onValueChange={(v) => onDecide(v as Decision)}
-              />
-              {onEdit && (
-                <RowAction
-                  label="Edit — put your own value in place of this suggestion"
-                  ink={OVERRIDE_INK}
-                  onClick={openEditor}
-                >
-                  <Pencil size={16} />
-                </RowAction>
-              )}
-            </>
+            /**
+             * ⚠️ **`editing` takes the pill**, so pressing ✎ has feedback in the row and not only in
+             * the form that opens below it. It is the tray's own grammar — white says where this row
+             * currently stands — and it is why the edited state above draws ✎ selected too: the pill
+             * appears when the session opens and simply stays if the edit is saved.
+             */
+            <SegmentedControl
+              items={tray(["confirm", "edit", "reject"])}
+              value={editing ? "edit" : change.decision}
+              onValueChange={onTray}
+            />
           )}
         </div>
       </div>
