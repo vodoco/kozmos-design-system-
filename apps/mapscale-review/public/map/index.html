@@ -933,6 +933,20 @@ function outcomeInk(o) { return o === "edited" ? OVERRIDE_INK : DECISION_INK; }
  *
  * An **edited** row is neither of the last two: it stays, and it is yours, so it keeps a shape and
  * paints `OVERRIDE_INK`. That is `"mine"`.
+ *
+ * ⚠️ **An UNDECIDED removal keeps its diff colour — it is NOT taken off the floor yet.** Decided by
+ * Olcay, 2026-08-27, against the reading that would remove it: *"keep the diff until decided."*
+ *
+ * It is worth stating because the opposite is arguable and someone will argue it. The standing rule
+ * for the map is *"remove it first, then bring it back if the user rejected the removal"* (Olcay,
+ * 2026-08-27), and an undecided change **applies as detected** — the Complete-review overlay says so
+ * out loud. So strictly, the preview of the upcoming floor would already be missing it.
+ *
+ * It stays because this screen is two things at once, and `diff` is the half that is not the
+ * preview: it is the one fate that means **"this still needs you"**. Taking an undecided removal off
+ * the floor would show you the answer to a question you have not been asked, and the row would be
+ * the only place left that the feature was ever there. `plain` and `ghost` are both decided states;
+ * `diff` is the queue.
  */
 function previewFate(c) {
   const o = outcomeOf(c);
