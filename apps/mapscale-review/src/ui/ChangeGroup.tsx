@@ -114,9 +114,10 @@ export function ChangeGroupBlock({
   onDecideOne,
   onDecideGroup,
   overrides,
-  onEdit,
+  onOpenEditor,
   onRevert,
-  onEditShape,
+  editingId,
+  editBlocked,
 }: {
   group: ChangeGroup;
   onDecideOne: (id: string, d: Decision | undefined) => void;
@@ -130,9 +131,18 @@ export function ChangeGroupBlock({
    * chairs MapScale happened to add, which is the sort of rule nobody can hold in their head.
    */
   overrides?: Record<string, Override>;
-  onEdit?: (id: string, o: Override) => void;
+  /**
+   * ✎ on a row inside the bucket. ⚠️ **Not gated by change type any more.** It used to skip
+   * `deleted` and `metadata` because there was no outline to hand the geometry editor; the panel
+   * opens on every row, and Olcay ruled on 2026-08-26 that **a removal may be edited** — an
+   * override on one keeps the feature.
+   */
+  onOpenEditor?: (id: string) => void;
   onRevert?: (id: string) => void;
-  onEditShape?: (id: string) => void;
+  /** Which row's panel is open, if any — the session belongs to the screen. */
+  editingId?: string | null;
+  /** Why ✎ is unavailable, when the map could not resolve a change to a feature. */
+  editBlocked?: string;
 }) {
   const [open, setOpen] = useState(false);
   const accent = CHANGE_COLORS[group.changes[0].type];
@@ -219,13 +229,10 @@ export function ChangeGroupBlock({
               preserved={c.type === "preserved"}
               edit={overrides?.[c.id]}
               onDecide={(d) => onDecideOne(c.id, d)}
-              onEdit={onEdit && ((o) => onEdit(c.id, o))}
+              onOpenEditor={onOpenEditor && (() => onOpenEditor(c.id))}
               onRevert={onRevert && (() => onRevert(c.id))}
-              onEditShape={
-                onEditShape && c.type !== "deleted" && c.type !== "metadata"
-                  ? () => onEditShape(c.id)
-                  : undefined
-              }
+              editing={editingId === c.id}
+              editBlocked={editBlocked}
             />
           ))}
         </div>

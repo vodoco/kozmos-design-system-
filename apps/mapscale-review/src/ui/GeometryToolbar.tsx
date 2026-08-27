@@ -377,6 +377,7 @@ function Tile({
 export function GeometryToolbar({
   state,
   notice,
+  padLeft = 0,
   padRight = 0,
   onCommand,
 }: {
@@ -396,6 +397,18 @@ export function GeometryToolbar({
    * the map the user can actually see is the same correction `focusPadRight` already makes for the
    * camera.
    */
+  /**
+   * ⚠️ **The reservation on the LEFT, and it exists because of a real collision.**
+   *
+   * With a panel open, `padRight` moves the bar's centre left — and on a 1440 window its left edge
+   * lands on **x = 16**, exactly where the `MapSettings` button sits (`left 16, bottom 16`, 44×44).
+   * The bar occupies `bottom 32…89`; they overlap by **44 × 28**. It happens in Map Content today
+   * and nothing about it is visible until a panel is there, which is why it went unreported.
+   *
+   * Reserving the left is the mechanism this bar already has, mirrored — 72 clears the control
+   * (44 + its 16 inset + a 12 gap).
+   */
+  padLeft?: number;
   padRight?: number;
   onCommand: (c: GeomCommand) => void;
 }) {
@@ -529,8 +542,8 @@ export function GeometryToolbar({
         // border, which reads as clipped rather than floating — and on a short map it collided
         // with the attribution strip.
         bottom: 32,
-        // Centre of the map you can SEE, not of the map element — see `padRight`.
-        left: `calc(50% - ${padRight / 2}px)`,
+        // Centre of the map you can SEE, not of the map element — see `padRight`/`padLeft`.
+        left: `calc(50% + ${padLeft / 2}px - ${padRight / 2}px)`,
         transform: "translateX(-50%)",
         zIndex: 4,
         display: "flex",
@@ -539,7 +552,7 @@ export function GeometryToolbar({
         gap: 8,
         // The bar is 707px. Once the panel takes 384 of a 1280 window there is not room for it, so
         // it scrolls rather than hiding its right-hand end again — the failure it just came from.
-        maxWidth: `calc(100% - ${padRight + 32}px)`,
+        maxWidth: `calc(100% - ${padLeft + padRight + 32}px)`,
       }}
     >
       {/**

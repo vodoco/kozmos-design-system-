@@ -3732,6 +3732,14 @@ function focusPan(box, view) {
 }
 /* FOCUS-ENGINE-END */
 
+/**
+ * How much of the map's right edge a panel is covering, as the app last reported it with `active`.
+ *
+ * ⚠️ **`focusChange` is NOT `focusFeature`.** The latter has taken a `padRight` since the properties
+ * panel existed; this one is the review's path — click a row, fly to the change — and it framed
+ * against the whole pane, so with a 360px panel open the feature it centred landed behind it.
+ */
+let ACTIVE_PAD_RIGHT = 0;
 function focusChange(change) {
   if (!map) return;
   const hit = RESOLVED.find(r => r.change === change);
@@ -3744,7 +3752,10 @@ function focusChange(change) {
     map.fitBounds([[minx,miny],[maxx,maxy]], {
       // room for the card, which sits above the shape and would otherwise cover the neighbours
       // that tell you where you are
-      padding: { top: 190, bottom: 90, left: 90, right: 90 },
+      // ⚠️ `top: 190` is room for the pinned card above the shape. While an editor is open there is
+      // no card (see `beginchange`), but the reservation is harmless and one number is easier to
+      // reason about than two.
+      padding: { top: 190, bottom: 90, left: 90, right: 90 + ACTIVE_PAD_RIGHT },
       maxZoom: FOCUS_MAX_ZOOM,
       duration: 650,
       essential: true,                    // survives prefers-reduced-motion being set
@@ -7855,6 +7866,7 @@ window.addEventListener("message", (ev) => {
     focusFeature(d.fid, 0, d.padRight);
     sendFeatureProps(d.fid);
   } else if (d.type === "active") {
+    ACTIVE_PAD_RIGHT = Number(d.padRight) || 0;
     // A changelog row was clicked — mirror it here. Deferred until geometry exists, because a
     // row can be clicked before `resolveChanges()` has caught up and there'd be nothing to fly to.
     PENDING_ACTIVE = d.id ?? null;

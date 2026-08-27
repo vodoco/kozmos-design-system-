@@ -15,6 +15,7 @@ const ROWS: {
   change: Change;
   edit?: Override;
   preserved?: boolean;
+  blocked?: string;
 }[] = [
   {
     caption: "undecided — [✓ ✎ ✗], nothing selected",
@@ -84,12 +85,65 @@ const ROWS: {
       warning: "re-removed",
     },
   },
+  {
+    caption: "a WIDE BAG — three lines show, the rest behind the Details cap",
+    change: {
+      id: "bk",
+      name: "Burger King",
+      type: "geometry",
+      kind: "food-beverage-space",
+      detail: "Geometry modified — similarity 0.73",
+      details: ["Geometry modified — similarity 0.73", "Area: 84 m² → 96 m²"],
+    },
+    edit: {
+      name: "Burger King Express",
+      details: [
+        "Name: “Burger King” → “Burger King Express”",
+        "Boundary redrawn by hand",
+        "Price Range: “$$” → “$”",
+        "Cuisines: 2 values → 3 values",
+        "Has Wifi: no → yes",
+        "Description changed",
+      ],
+    },
+  },
+  {
+    caption: "a REMOVAL, edited — the override keeps it, and says so first",
+    change: {
+      id: "pharm2",
+      name: "DDF Pharmacy",
+      type: "deleted",
+      kind: "retail-space",
+      detail: "Removed from floor plan",
+    },
+    edit: {
+      details: [
+        "Removal overridden — the feature stays",
+        "Name: “DDF Pharmacy” → “DDF Pharmacy — Gate B22”",
+        "Opening Hours changed",
+      ],
+    },
+  },
+  {
+    caption: "✎ BLOCKED — the map could not resolve this change to a feature",
+    change: {
+      id: "ghost",
+      name: "Ahlan Lounge",
+      type: "new",
+      kind: "lounge",
+      detail: "New lounge",
+    },
+    blocked: "That change has no feature on this floor yet.",
+  },
 ];
 
 function Bench() {
   const [decisions, setDecisions] = useState<
     Record<string, Decision | undefined>
   >({});
+  // ⚠️ The session belongs to the SCREEN now, not the row — which is the whole change. The bench
+  // owns it here for the same reason ManualReview does.
+  const [openOn, setOpenOn] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<
     Record<string, Override | undefined>
   >(
@@ -132,7 +186,9 @@ function Bench() {
             preserved={r.preserved}
             edit={overrides[r.change.id]}
             onDecide={(d) => setDecisions((p) => ({ ...p, [r.change.id]: d }))}
-            onEdit={(o) => setOverrides((p) => ({ ...p, [r.change.id]: o }))}
+            onOpenEditor={() => setOpenOn(r.change.id)}
+            editing={openOn === r.change.id}
+            editBlocked={r.blocked}
             onRevert={() =>
               setOverrides((p) => ({ ...p, [r.change.id]: undefined }))
             }

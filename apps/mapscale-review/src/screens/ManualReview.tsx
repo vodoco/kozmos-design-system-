@@ -9,12 +9,17 @@ import {
   SelectValue,
 } from "@kozmos/react";
 import { ChangeGroupBlock } from "../ui/ChangeGroup";
+import { FeaturePanel, FEATURE_PANEL_WIDTH } from "../ui/FeaturePanel";
+import { typeLabel } from "../mock/taxonomy";
+import { propertyLabel } from "../mock/properties";
+import { ChevronLeft, ChevronRight } from "../ui/icons";
 import {
   GeometryToolbar,
   type GeomCommand,
   type GeomState,
 } from "../ui/GeometryToolbar";
 import { ChangeReviewRow, WarningGlyph } from "../ui/ChangeReviewRow";
+import { overrideDetails } from "../mock/overrideLines";
 import { ConfirmOverlay } from "../ui/ConfirmOverlay";
 import { PANEL_WIDTH } from "../ui/Chrome";
 import { MapSettings } from "../ui/MapSettings";
@@ -396,11 +401,6 @@ export function ManualReview({
    * second editor inside the review would have been two editors to keep in step, and this screen
    * is the one place where a divergence would be invisible until it shipped.
    */
-  const setOverride = useCallback(
-    (id: string, o: Override) =>
-      setOverrides((p) => ({ ...p, [id]: { ...p[id], ...o } })),
-    [],
-  );
   /** Revert — the override is simply deleted, and MapScale's detected value is what is underneath. */
   const revertOverride = useCallback(
     (id: string) =>
@@ -469,53 +469,198 @@ export function ManualReview({
    * shell grew `beginchange` rather than the app guessing one.
    */
   const geomFor = useRef<string | null>(null);
-  const editShape = useCallback(
+
+  /* ── the panel session ───────────────────────────────────────────────────
+   *
+   * **✎ opens the standard properties panel with the geometry live** (Olcay, 2026-08-26: *"edit
+   * should bring in the edit panel as if it's normal feature edit. geometry becomes editable."*).
+   *
+   * It replaced an inline row form plus a separate *"Edit shape on the map"* button. The panel is
+   * the SAME `FeaturePanel` Map Content opens, in the same place — measured, it leaves 532×741 of
+   * map at 1440, which is the identical number Map Content leaves with its tree open. The
+   * composition is not new; it is the one the geometry editor already runs in.
+   */
+
+  /** Which change the panel is open on, and the feature's own property bag once the map answers. */
+  const [panelFor, setPanelFor] = useState<string | null>(null);
+  /** The changelog's own collapse, remembered for the session — never automatic. See the handle. */
+  const [listOpen, setListOpen] = useState(true);
+  const [panelProps, setPanelProps] = useState<Record<string, unknown> | null>(
+    null,
+  );
+  /** Why ✎ is unavailable — the map could not resolve a change to a feature on this floor. */
+  const [editBlocked, setEditBlocked] = useState<string | undefined>();
+  /** The panel's own report: is there anything to save, and may it be saved? */
+  const [dirty, setDirty] = useState(false);
+  const [canSave, setCanSave] = useState(false);
+  const [saveSignal, setSaveSignal] = useState(0);
+  const onDirtyChange = useCallback((d: boolean, can: boolean) => {
+    setDirty(d);
+    setCanSave(can);
+  }, []);
+  const onFeatureProps = useCallback(
+    (_fid: string, props: Record<string, unknown>) => setPanelProps(props),
+    [],
+  );
+  const onGeomError = useCallback(
+    (_fid: string, message: string) => setEditBlocked(message),
+    [],
+  );
+
+  /** The labels the override's vocabulary prints with — the taxonomy's, never invented. */
+  const labels = useMemo(() => ({ type: typeLabel, prop: propertyLabel }), []);
+  /** Read from handlers that must not be re-registered when the baseline changes. */
+  const baseline = useRef<Record<string, unknown> | null>(null);
+  baseline.current = panelProps;
+  const changesRef = useRef(changes);
+  changesRef.current = changes;
+
+  const openEditorNow = useCallback(
     (id: string) => {
       geomFor.current = id;
+      setPanelFor(id);
+      setPanelProps(null);
+      setEditBlocked(undefined);
+      setDirty(false);
+      setActive({ id, from: "list" });
       sendGeom({ cmd: "beginchange", id });
     },
     [sendGeom],
   );
-  /**
-   * The edit form closed. One commit point — the row — for both halves of an edit, so a saved name
-   * can never sit beside a discarded outline.
-   *
-   * The commit is gated on `dirty` as well as on the user's answer: ending a session that changed
-   * nothing with `commit: true` would post a `geometry` message and write an override recording an
-   * outline identical to the detected one.
-   */
-  const endShapeEdit = useCallback(
+  const closeEditor = useCallback(
     (commit: boolean) => {
-      if (!geomFor.current) return;
-      sendGeom({ cmd: "end", commit: commit && !!geom.dirty });
-      geomFor.current = null;
+      if (geomFor.current) {
+        sendGeom({ cmd: "end", commit: commit && !!geom.dirty });
+        geomFor.current = null;
+      }
+      setPanelFor(null);
+      setPanelProps(null);
+      setDirty(false);
     },
     [sendGeom, geom.dirty],
   );
+
   /**
-   * A committed outline, merged into that row's override rather than replacing it — the name and
-   * the shape are two halves of one answer, and the form has usually written the first already.
+   * **One unsaved-work conversation, and it now has FOUR ways in.**
+   *
+   * Map Content guards three: the panel's ✕, Escape over the map, and opening another feature. The
+   * review adds a fourth — **deciding any row**, including a bulk *Confirm all* / *Reject all* and
+   * *Complete review*. That is the one that bites: bulk actions already skip rows that carry an
+   * override, but a **dirty, unsaved session is not an override yet**, so without this they would
+   * erase a half-made edit without asking.
+   */
+  const [pendingExit, setPendingExit] = useState<{
+    kind: "close" | "switch" | "decide";
+    run: () => void;
+  } | null>(null);
+  /** Everything that can interrupt an edit goes through here, so none of them can forget to ask. */
+  const guard = useCallback(
+    (kind: "close" | "switch" | "decide", run: () => void) => {
+      if (panelFor && dirty) return setPendingExit({ kind, run });
+      run();
+    },
+    [panelFor, dirty],
+  );
+  const openEditor = useCallback(
+    (id: string) => {
+      if (id === panelFor) return;
+      guard("switch", () => openEditorNow(id));
+    },
+    [guard, openEditorNow, panelFor],
+  );
+
+  /**
+   * **Update wrote the feature; here it writes an OVERRIDE.** The panel does not know changes exist
+   * and must not learn — it reports what the user settled, and this decides what that means.
+   */
+  const onEdited = useCallback(
+    (next: Record<string, unknown>, removed?: string[]) => {
+      const id = panelFor;
+      if (!id) return;
+      const c = changesRef.current.find((x) => x.id === id);
+      if (!c) return;
+      const before = baseline.current ?? {};
+      setOverrides((p) => {
+        const cur = p[id] ?? {};
+        const o: Override = { ...cur };
+        // ⚠️ The baseline is MapScale's DETECTED value, not the published one — Revert deletes the
+        // override and what is underneath is the detected value by construction.
+        const name =
+          typeof next.name === "string" ? next.name.trim() : undefined;
+        if (name !== undefined && name !== c.name) o.name = name;
+        else delete o.name;
+        const kind =
+          typeof next.subType === "string" ? next.subType : undefined;
+        if (kind !== undefined && kind !== (c.kind ?? "")) o.kind = kind;
+        else delete o.kind;
+
+        const props: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(next)) {
+          if (k === "name" || k === "subType") continue;
+          if (JSON.stringify(v) !== JSON.stringify(before[k])) props[k] = v;
+        }
+        o.props = Object.keys(props).length ? props : undefined;
+        // ⚠️ Said out loud, because absent from `props` already means *leave this alone*.
+        const gone = (removed ?? []).filter((k) => before[k] !== undefined);
+        o.removedProps = gone.length ? gone : undefined;
+
+        o.details = overrideDetails(c, o, before, labels);
+        /**
+         * ⚠️ **An edit that settled nothing writes no override.** Opening the panel, changing
+         * nothing and pressing Update would otherwise leave a purple row on the map claiming an
+         * override nobody made. This matters MORE with a wide bag, not less: there are more ways to
+         * open a panel and settle nothing.
+         */
+        if (!o.details.length && o.geometry === undefined) {
+          const rest = { ...p };
+          delete rest[id];
+          return rest;
+        }
+        return { ...p, [id]: o };
+      });
+    },
+    [panelFor, labels],
+  );
+  /** Update finished. The shape commits first (see `FeaturePanel.save`), then the panel closes. */
+  const onSaved = useCallback(() => closeEditor(true), [closeEditor]);
+  const activeChange = useMemo(
+    () => changes.find((c) => c.id === panelFor),
+    [changes, panelFor],
+  );
+
+  /**
+   * A committed outline. It rebuilds the whole line list rather than appending, so the boundary
+   * lands in reading order — after Name and Type — however late the map's message arrives.
    */
   const onGeometry = useCallback(
     (_fid: string, rings: number[][][], pieces: number) => {
       const id = geomFor.current;
       if (!id) return;
+      const c = changesRef.current.find((x) => x.id === id);
+      const before = baseline.current ?? {};
       setOverrides((p) => {
         const cur = p[id] ?? {};
         const line =
           pieces > 1
             ? `Boundary redrawn by hand — now ${pieces} pieces`
             : "Boundary redrawn by hand";
-        const details = (cur.details ?? []).filter(
-          (d) => !d.startsWith("Boundary"),
-        );
+        const o: Override = {
+          ...cur,
+          geometry: rings,
+          details: [
+            ...(cur.details ?? []).filter((d) => !d.startsWith("Boundary")),
+            line,
+          ],
+        };
         return {
           ...p,
-          [id]: { ...cur, geometry: rings, details: [...details, line] },
+          [id]: c
+            ? { ...o, details: overrideDetails(c, o, before, labels) }
+            : o,
         };
       });
     },
-    [],
+    [labels],
   );
 
   /**
@@ -774,12 +919,14 @@ export function ManualReview({
 
   return (
     <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-      {/* Left drawer */}
+      {/* Left drawer — collapsible, so the map can be worked on. See the handle on the map's edge. */}
       <div
         style={{
-          width: PANEL_WIDTH,
-          flex: `0 0 ${PANEL_WIDTH}px`,
-          borderRight: "1px solid #E7E9EE",
+          width: listOpen ? PANEL_WIDTH : 0,
+          flex: `0 0 ${listOpen ? PANEL_WIDTH : 0}px`,
+          overflow: "hidden",
+          transition: "width .16s ease, flex-basis .16s ease",
+          borderRight: listOpen ? "1px solid #E7E9EE" : "none",
           background: "#fff",
           display: "flex",
           flexDirection: "column",
@@ -1331,12 +1478,17 @@ export function ManualReview({
                     <ChangeGroupBlock
                       key={g.key}
                       group={g}
-                      onDecideOne={setOne}
-                      onDecideGroup={setMany}
+                      onDecideOne={(id, d) =>
+                        guard("decide", () => setOne(id, d))
+                      }
+                      onDecideGroup={(ids, d) =>
+                        guard("decide", () => setMany(ids, d))
+                      }
                       overrides={overrides}
-                      onEdit={setOverride}
+                      onOpenEditor={openEditor}
                       onRevert={revertOrReset}
-                      onEditShape={editShape}
+                      editingId={panelFor}
+                      editBlocked={editBlocked}
                     />
                   ))}
                   {s.rows.map((c) => (
@@ -1344,26 +1496,22 @@ export function ManualReview({
                       key={c.id}
                       change={c}
                       preserved={c.type === "preserved"}
-                      onDecide={(d) => setOne(c.id, d)}
+                      onDecide={(d) => guard("decide", () => setOne(c.id, d))}
                       active={activeId === c.id}
                       onActivate={() => activate(c.id)}
                       edit={overrides[c.id]}
-                      onEdit={(o) => setOverride(c.id, o)}
+                      /**
+                       * ⚠️ **Every type opens the panel, including a removal.** It used to skip
+                       * `deleted` and `metadata` because neither had an outline worth handing the
+                       * geometry editor. The panel is not the geometry editor — it is the feature —
+                       * and Olcay ruled on 2026-08-26 that a removal may be edited: an override on
+                       * one **keeps** the feature, which is a thing you may well want to do while
+                       * changing its name.
+                       */
+                      onOpenEditor={() => openEditor(c.id)}
                       onRevert={() => revertOrReset(c.id)}
-                      /*
-                      **Nothing to reshape on a metadata change or a removal.** A `metadata` row is
-                      a one-field fix by definition, and a `deleted` one has no new outline — the
-                      shape it would open is the published one, which rejecting the row already
-                      keeps. Offering the editor there would be a button that opens an editor with
-                      nothing to do in it.
-                    */
-                      onEditShape={
-                        c.type !== "deleted" && c.type !== "metadata"
-                          ? () => editShape(c.id)
-                          : undefined
-                      }
-                      onEditEnd={endShapeEdit}
-                      shapeDirty={geomFor.current === c.id && !!geom.dirty}
+                      editing={panelFor === c.id}
+                      editBlocked={editBlocked}
                     />
                   ))}
                 </div>
@@ -1489,6 +1637,42 @@ export function ManualReview({
           minWidth: 0,
         }}
       >
+        {/*
+          **The changelog collapses**, exactly as Map Content's tree does and for the same reason —
+          editing happens on the map with the panel on the right, and once you have arrived the 440px
+          you came through is 440px of the thing you are working on that you cannot see.
+
+          ⚠️ **A remembered toggle, never automatic.** Collapsing the list out from under someone the
+          moment they press ✎ moves the ground they are standing on, which is worse than a click. And
+          the changelog must stay by default: you are working down a list.
+        */}
+        <button
+          type="button"
+          onClick={() => setListOpen((v) => !v)}
+          aria-expanded={listOpen}
+          aria-label={listOpen ? "Hide the changelog" : "Show the changelog"}
+          title={listOpen ? "Hide the changelog" : "Show the changelog"}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 16,
+            zIndex: 3,
+            width: 22,
+            height: 44,
+            display: "grid",
+            placeItems: "center",
+            padding: 0,
+            cursor: "pointer",
+            border: `1px solid ${LINE}`,
+            borderLeft: "none",
+            borderRadius: "0 8px 8px 0",
+            background: "#fff",
+            color: "var(--review-muted)",
+            boxShadow: "0 1px 4px rgba(0,0,0,.10)",
+          }}
+        >
+          {listOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+        </button>
         <PointrMap
           changes={mapChanges}
           prefs={prefs}
@@ -1501,15 +1685,101 @@ export function ManualReview({
           geomCommands={geomCommands}
           onGeomState={onGeomState}
           onGeometry={onGeometry}
+          onFeatureProps={onFeatureProps}
+          onGeomError={onGeomError}
+          /* Escape over the map is the same act as the panel's ✕ — it must ask the same question. */
+          onEscape={() => guard("close", () => closeEditor(false))}
           levelGeometry={levelGeom}
+          /**
+           * The camera must frame the feature in the map the panel leaves — see the note on
+           * `focusChange` in the shell, which had no reservation of its own until now.
+           */
+          focusPadRight={panelFor ? FEATURE_PANEL_WIDTH + 24 : 0}
         />
         {/*
-          The same bar Map Content uses, on the same map, driven by the same queue. `padRight` is 0
-          here: the changelog is a *sibling pane* to the left, not an overlay on the right, so the
-          bar's centre and the map's centre are already the same point — the correction that pane
-          needs is the one this screen does not.
+          The same bar Map Content uses, on the same map, driven by the same queue.
+
+          ⚠️ **`padLeft` exists because of a collision `padRight` uncovers.** With the panel open the
+          bar's centre moves left, and its LEFT EDGE lands on x=16 — exactly where the Map Settings
+          button sits (`left 16, bottom 16`, 44×44). They overlap by 44×28. It happens in Map Content
+          today too, on any 1440 window with the tree open, and nothing about it is visible until a
+          panel is there. Reserving the left is the bar's own mechanism, mirrored.
         */}
-        <GeometryToolbar state={geom} onCommand={onGeomCommand} />
+        <GeometryToolbar
+          state={geom}
+          padLeft={panelFor ? 72 : 0}
+          padRight={panelFor ? FEATURE_PANEL_WIDTH + 24 : 0}
+          onCommand={onGeomCommand}
+        />
+        {panelFor && (
+          <FeaturePanel
+            props={panelProps ?? { name: activeChange?.name ?? "" }}
+            /**
+             * ⚠️ **The subtitle is the one string that varies by change type.** *"Your value
+             * replaces MapScale's"* is true of a removal and useless: it does not say the deletion
+             * stops happening.
+             */
+            reviewNote={
+              activeChange?.type === "deleted"
+                ? "MapScale removes this feature. Saving keeps it, with your values."
+                : "Your value replaces MapScale’s for this change."
+            }
+            reviewFootnote="Your override is kept with this review and applies when you complete it. Nothing is written back to Pointr Cloud."
+            onDirtyChange={onDirtyChange}
+            geometryDirty={!!geom.dirty}
+            onCommitGeometry={() => sendGeom({ cmd: "commit" })}
+            onEdited={onEdited}
+            onSaved={onSaved}
+            onCancelEdit={() => guard("close", () => closeEditor(false))}
+            saveSignal={saveSignal}
+            onClose={() => guard("close", () => closeEditor(false))}
+          />
+        )}
+        {/**
+         * The same conversation Map Content has, with a fourth way in — deciding another row. The
+         * primary is **Save changes** when it can be saved, because saving is the safe answer and
+         * the destructive one must never be what Enter presses.
+         */}
+        <ConfirmOverlay
+          open={!!pendingExit}
+          tone="warning"
+          title="You have unsaved changes"
+          confirmLabel={canSave ? "Save changes" : "Discard changes"}
+          altLabel={canSave ? "Discard changes" : undefined}
+          cancelLabel="Keep editing"
+          onConfirm={() => {
+            const run = pendingExit?.run;
+            setPendingExit(null);
+            if (canSave) {
+              // Save through the panel's own `save()`, so it cannot walk around a rule the Update
+              // button enforces; the queued act runs once the panel has closed itself.
+              setSaveSignal((n) => n + 1);
+              queueMicrotask(() => run?.());
+            } else {
+              closeEditor(false);
+              run?.();
+            }
+          }}
+          onAlt={
+            canSave
+              ? () => {
+                  const run = pendingExit?.run;
+                  setPendingExit(null);
+                  closeEditor(false);
+                  run?.();
+                }
+              : undefined
+          }
+          onCancel={() => setPendingExit(null)}
+        >
+          {!canSave
+            ? "This edit cannot be saved — the feature needs a name. Go back and give it one, or discard the changes."
+            : pendingExit?.kind === "close"
+              ? "This feature has edits you have not saved. Closing will lose them."
+              : pendingExit?.kind === "decide"
+                ? "This feature has edits you have not saved. Deciding another row will lose them."
+                : "This feature has edits you have not saved. Opening another one will lose them."}
+        </ConfirmOverlay>
         <MapChrome prefs={prefs} onPrefs={setPrefs} focus={!matchFailed} />
       </div>
     </div>
