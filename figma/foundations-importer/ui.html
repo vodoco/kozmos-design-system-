@@ -1220,6 +1220,7 @@
           <button id="documentComponents">Document Components</button>
           <button id="fixAuditIssues">Fix Audit Issues</button>
           <button id="applyTextStyles">Apply Text Styles</button>
+          <button id="updateAllProductSdk">Update All Product / SDK</button>
           <button id="surfaceQa">Build Surface QA</button>
           <button id="reorganizeComponents">Reorganize Components</button>
         </div>
@@ -1341,6 +1342,9 @@
       const fixAuditIssuesButton = document.getElementById("fixAuditIssues");
       const surfaceQaButton = document.getElementById("surfaceQa");
       const applyTextStylesButton = document.getElementById("applyTextStyles");
+      const updateAllProductSdkButton = document.getElementById(
+        "updateAllProductSdk",
+      );
       const reorganizeComponentsButton = document.getElementById(
         "reorganizeComponents",
       );
@@ -2322,6 +2326,16 @@
           label: "Transparent surface QA",
           messageType: "build-surface-qa",
           progress: "Creating Light/Dark Surface/0 and product-map QA panels.",
+        });
+      });
+
+      updateAllProductSdkButton.addEventListener("click", () => {
+        runComponentMessage({
+          action: "update all Product / SDK",
+          label: "Product / SDK sets",
+          messageType: "update-all-product-sdk",
+          progress:
+            "Updating all 24 Product / SDK and platform sets in place, then reorganizing once. Node IDs are preserved.",
         });
       });
 

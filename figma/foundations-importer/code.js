@@ -9005,6 +9005,95 @@ function postAuditProgress(step, title, detail) {
   });
 }
 
+// Every Product / SDK and platform set, in picker order. These share the
+// productSdkSlot / productSdkControlButton / productSdkText helpers, so a change
+// to any of them makes all of these stale at once — which is exactly the
+// situation that makes updating them one at a time tedious.
+const PRODUCT_SDK_UPDATE_SEQUENCE = [
+  ["AdaptiveMapShell", updateAdaptiveMapShellComponent],
+  ["BrowseCategoriesPanel", updateBrowseCategoriesPanelComponent],
+  ["CategoryTile", updateCategoryTileComponent],
+  ["DirectionStep", updateDirectionStepComponent],
+  ["FloorSelector", updateFloorSelectorComponent],
+  ["LocationPin", updateLocationPinComponent],
+  ["MapControlButton", updateMapControlButtonComponent],
+  ["MapControlsGroup", updateMapControlsGroupComponent],
+  ["MapOverlay", updateMapOverlayComponent],
+  ["MapView", updateMapViewComponent],
+  ["POICard", updatePOICardComponent],
+  ["POIDetailPanel", updatePOIDetailPanelComponent],
+  ["POIMediaGallery", updatePOIMediaGalleryComponent],
+  ["POIResultCard", updatePOIResultCardComponent],
+  ["POIResultList", updatePOIResultListComponent],
+  ["RouteOptionCard", updateRouteOptionCardComponent],
+  ["RoutePreviewPanel", updateRoutePreviewPanelComponent],
+  ["RouteSummary", updateRouteSummaryComponent],
+  ["RoutingInputGroup", updateRoutingInputGroupComponent],
+  ["SaveLocationCard", updateSaveLocationCardComponent],
+  ["UserLocationMarker", updateUserLocationMarkerComponent],
+  ["WayfindingCard", updateWayfindingCardComponent],
+  ["DynamicIsland", updateDynamicIslandComponent],
+  ["FeedbackCard", updateFeedbackCardComponent],
+];
+
+async function updateAllProductSdkComponents() {
+  const stats = {
+    updatedComponents: 0,
+    skipped: [],
+    failures: [],
+    perComponent: [],
+    warnings: [],
+  };
+
+  suppressAutoReorganize = true;
+
+  try {
+    for (
+      let index = 0;
+      index < PRODUCT_SDK_UPDATE_SEQUENCE.length;
+      index += 1
+    ) {
+      const entry = PRODUCT_SDK_UPDATE_SEQUENCE[index];
+      const name = entry[0];
+      postAuditProgress(
+        index + 1,
+        `Updating ${name}`,
+        `${index + 1} of ${PRODUCT_SDK_UPDATE_SEQUENCE.length}`,
+      );
+
+      try {
+        const result = await entry[1]();
+        const record = { name, variants: result.variants || 0 };
+        if (result.updated) stats.updatedComponents += 1;
+        else stats.skipped.push(name);
+        if (Array.isArray(result.warnings) && result.warnings.length > 0) {
+          record.warnings = result.warnings;
+          for (const warning of result.warnings) {
+            stats.warnings.push(`${name}: ${warning}`);
+          }
+        }
+        stats.perComponent.push(record);
+      } catch (error) {
+        // One failing set must not strand the other twenty-three.
+        const message = error instanceof Error ? error.message : String(error);
+        stats.failures.push(`${name}: ${message}`);
+        stats.perComponent.push({ name, failed: message });
+      }
+    }
+  } finally {
+    suppressAutoReorganize = false;
+  }
+
+  stats.layout = await reorganizeComponentsPage();
+  stats.message =
+    `Updated ${stats.updatedComponents} of ${PRODUCT_SDK_UPDATE_SEQUENCE.length} Product / SDK set(s) in place, then reorganized once.` +
+    (stats.failures.length > 0 ? ` ${stats.failures.length} failed.` : "") +
+    (stats.skipped.length > 0
+      ? ` ${stats.skipped.length} not present and skipped.`
+      : "");
+  return stats;
+}
+
 function additionalComponentActionHandlers() {
   return {
     "build-tag": buildTagComponent,
@@ -9089,6 +9178,7 @@ function additionalComponentActionHandlers() {
     "build-feedback-card": buildFeedbackCardComponent,
     "update-feedback-card": updateFeedbackCardComponent,
     "rebuild-feedback-card": rebuildFeedbackCardComponent,
+    "update-all-product-sdk": updateAllProductSdkComponents,
     "build-adaptive-map-shell": buildAdaptiveMapShellComponent,
     "update-adaptive-map-shell": updateAdaptiveMapShellComponent,
     "rebuild-adaptive-map-shell": rebuildAdaptiveMapShellComponent,
@@ -12753,7 +12843,16 @@ function removeDuplicateGeneratedComponentSetsForName(
   return removed;
 }
 
+// Set while a bulk update is running. Each single update reorganizes the whole
+// Components page, which is fine once and pointless twenty-four times over a
+// 94-set page; the bulk runner reorganizes once at the end instead.
+let suppressAutoReorganize = false;
+
 async function reorganizeAfterGeneratedComponentMutation(stats) {
+  if (suppressAutoReorganize) {
+    stats.layoutDeferred = true;
+    return null;
+  }
   stats.layout = await reorganizeComponentsPage();
   return stats.layout;
 }
