@@ -765,8 +765,14 @@ export const CHANGE_COLORS: Record<ChangeType, string> = {
  * Which leaves the mark as a footnote on a shape that already says the answer — so it is drawn in
  * muted ink, and never in green or red. Spending the traffic light twice on one map was the
  * original objection and it was always the right one.
+ *
+ * ⚠️ **`#5d626f`, not `#737373` — ruled 2026-08-27.** Figma's tray drew `background-600` while the
+ * app drew `--review-muted`, and the two greys had been a hair apart since the marks were built.
+ * Olcay chose Figma's. It is also the better one: **6.10:1** on white against 4.74:1, which matters
+ * for an 18px glyph and for the ghost's dashed hairline, and it sits closer to the ✎'s 7.10 so the
+ * tray reads as one family rather than as two weights.
  */
-export const DECISION_INK = "#737373";
+export const DECISION_INK = "#5d626f"; // Colors/background/600
 
 /**
  * The ink an **edited** row draws in — the override purple, and the same fact `preserved` wears.

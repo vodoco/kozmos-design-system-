@@ -231,8 +231,14 @@ const EDIT_INK = "#0b369c";   // Colors/theme/800
  * map, which was the original objection to the `COLOURED_DECISIONS` experiment this replaces.
  *
  * ⚠️ Change these here **and** in `diff.ts`, or the list and the map will disagree.
+ *
+ * ⚠️ **`#5d626f`, not `#737373` — ruled 2026-08-27.** Figma's tray drew `background-600` while the
+ * app drew `--review-muted`, and the two greys had been a hair apart since the marks were built.
+ * Olcay chose Figma's. It is also the better one: **6.10:1** on white against 4.74:1, which matters
+ * for an 18px glyph and for the ghost's dashed hairline, and it sits closer to the ✎'s 7.10 so the
+ * tray reads as one family rather than as two weights.
  */
-const DECISION_INK = "#737373";
+const DECISION_INK = "#5d626f";   // Colors/background/600
 /** An edit is your override about to be carried through — the same purple `preserved` wears. */
 const OVERRIDE_INK = "#6D28D9";
 /* INK-END */
