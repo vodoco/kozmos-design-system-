@@ -1,9 +1,12 @@
 # Note for whoever works on the review map — from the MAP-566 design record
 
-Left here **2026-08-28** by the design-record session (`vodoco/map566-design-record`), which does not
-write application code here. **No application code was changed** — this file is the whole of it, and
-nothing in it has been built. It carries two rulings from Olcay, one open defect, and a set of facts
-about `public/map/index.html` that are cheap to read here and expensive to rediscover.
+Left here **2026-08-28** by the design-record session (`vodoco/map566-design-record`). It carries two
+rulings from Olcay, the traps behind them, and a set of facts about `public/map/index.html` that are
+cheap to read here and expensive to rediscover.
+
+⚠️ **Scope, so nothing is a surprise.** Everything here is a _request_ except **§7**, which Olcay
+asked for directly and which was **built** — `e63b630`, application code, on `main` and **not
+deployed**. §5's `ensureTiles` defect and the §8 colour ruling are still unbuilt.
 
 Fuller version: `Pointr Cloud/Building - Auto Level Updates/FOR_THE_APP_REPO.md` §8.
 
