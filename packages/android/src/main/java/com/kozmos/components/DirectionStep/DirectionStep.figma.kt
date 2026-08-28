@@ -1,3 +1,37 @@
 package com.kozmos.components.directionstep
 
-// Placeholder
+import androidx.compose.runtime.Composable
+import com.figma.code.connect.Figma
+import com.figma.code.connect.FigmaConnect
+import com.figma.code.connect.FigmaProperty
+import com.figma.code.connect.FigmaType
+
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6763")
+class KozmosDirectionStepConnect {
+    @FigmaProperty(FigmaType.Text, "Instruction Text")
+    val instruction: String = "Continue past the escalators"
+
+    @FigmaProperty(FigmaType.Text, "Distance Text")
+    val distance: String = "40 m"
+
+    @FigmaProperty(FigmaType.Text, "Duration Text")
+    val duration: String = "1 min"
+
+    @FigmaProperty(FigmaType.Enum, "Type")
+    val type: DirectionType = Figma.mapping(
+        "Straight" to DirectionType.Straight,
+        "Left" to DirectionType.Left,
+        "Right" to DirectionType.Right,
+        "Destination" to DirectionType.Destination
+    )
+
+    @Composable
+    fun ComponentExample() {
+        KozmosDirectionStep(
+            type = type,
+            instruction = instruction,
+            distance = distance,
+            duration = duration
+        )
+    }
+}
