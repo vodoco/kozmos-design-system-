@@ -616,6 +616,29 @@ the previous one came to verify nothing. iPhone 16 / iOS 18.4 was chosen over
 the newer simulators on this machine for the same reason: it is likelier to
 exist on a hosted runner.
 
+**The Android goldens are recorded on macOS and CI verifies them on
+ubuntu-latest.** That mismatch is not new — `f225c26`, "stabilize ... Android
+snapshot gates", was a bare re-record of the PNG, and CI has been green since
+only because the 0.1% default was loose enough to absorb both cross-platform
+rasterisation _and_ real changes. Tightening to 0.0 removes the second half of
+that and may expose the first. Rendering is deterministic on one machine —
+re-recording produces a byte-identical file on both platforms, checked — but
+macOS versus Linux is untested from here, and Docker is installed but not
+running so it could not be settled.
+
+If the Android job reddens on an unchanged render, that is the cause. Re-record
+on the CI platform; do not widen the tolerance back out, because 0.1% is above
+the 0.1069% that a doubled corner radius moves and the gate returns to
+verifying nothing. That the signal is that close to the threshold is itself the
+finding: the frame is mostly empty background, so more components rendered
+tighter is the real fix.
+
+**This is safer than it sounds**, because the bug class that started all of
+this — a token not reaching a component — is gated separately and
+platform-independently by `tokens:radius:check` and `tokens:typography:check`.
+The pixel gates are for layout and visual drift, and a layout regression moves
+far more than 0.1% of a frame.
+
 Coverage is one component. That is the repair, not the finished job: the
 harness works and is extensible, and Button was chosen because it exercises
 radius, colour, type and state at once. Widening it to the rest of the library
