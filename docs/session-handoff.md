@@ -1,6 +1,6 @@
 # Session Handoff
 
-Written 2026-08-24, updated 2026-08-25. Everything below was verified by
+Written 2026-08-24, updated 2026-08-28. Everything below was verified by
 running it, not recalled.
 Branch: `codex/wave-2-figma-components`.
 
@@ -39,9 +39,11 @@ loop:
 
 - **`pnpm figma:verify`** reads the file over the REST API and reports drift
   from the terminal: sets present, axis names and values, collapsed text nodes,
-  and WCAG AA on every visible text node. It answers "did my change land?"
-  in seconds, which is what several rounds of audits and screenshots were doing
-  by hand.
+  text truncated by its own box, and WCAG AA on every visible text node. It
+  answers "did my change land?" in seconds, which is what several rounds of
+  audits and screenshots were doing by hand. **It currently reports 9
+  truncations** — the ones this session fixed in code. They clear when the
+  plugin is next run; see §4.
 - **Update All Product / SDK** in the plugin regenerates all 24 sets in one
   press, deferring the page reorganize until the end.
 
@@ -54,6 +56,15 @@ the REST API resolves variables in the file's default mode. It cannot check
 component descriptions either: Figma only exposes those for _published_ library
 components, so `componentSets` metadata reads as empty until the library is
 published. The plugin's own audit remains the authority on both.
+
+**It also never compares text _content_,** and that is a live gap, not a
+theoretical one. RoutingInputGroup's fields read "Start", "Start", "Start" in
+the file while `code.js` has said `["Start", "Add stop", "Destination"]` since
+the builder was written. Every structural check passes on it, because a wrong
+string is a perfectly well-formed node. Whatever the cause — a failed entry in
+an `Update All` run is the likeliest, since that loop deliberately lets one set
+fail without stranding the rest — the lesson is that green from `figma:verify`
+means the file is structurally current, not that it says the right words.
 
 ### CI status
 
@@ -108,11 +119,14 @@ Three CI failures were real and are fixed:
 | Variant-axis gaps   | reference   | 0/26      | 0/26      | 0/26         | **1/26**  |
 | Code Connect linked | **92/92**   | **92/92** | **92/92** | —            | —         |
 
-The three components with no Figma set are all intentional: `Icon` (source
-components on the `Icons` page), `FieldWrapper` (covered by the `FormField` set
-via a documented Code Connect override), and `GlassSettingsPanel`
-(internal-only, excluded from STATUS.md). The one variant-axis gap is `Icon`,
-for the same reason.
+Four of the 97 have no Figma set, not three, and the earlier list named the
+wrong ones. The analyzer reports `FieldWrapper` (covered by the `FormField` set
+via a documented Code Connect override), `Icon` (source components live on the
+`Icons` page), `NavigationAnnouncer` (a screen-reader live region with nothing
+to draw) and `ThemeProvider` (a context provider, likewise) — all intentional,
+and all marked `—` in their STATUS.md Figma columns. `GlassSettingsPanel` is
+not among them: it has no implementation anywhere in `packages/`, appearing
+only in STATUS.md and the docs. The one variant-axis gap is `Icon`.
 
 **Code Connect is complete**: 92/92 linked on React, SwiftUI and Compose, with
 no scaffolds left on any platform. All 24 Product / SDK and platform sets are
@@ -138,8 +152,11 @@ Original nine commits `0ac20a1`..`ab23fec`, plus this session:
 - `a91cdce` Contract assertion made whitespace-tolerant.
 - `6803f20` Fixed text collapsing to zero width in the built Figma sets.
 - `ab23fec` Off-floor pins render as a hollow ring, not a cogwheel.
-- **This session**: Components page grid layout, the remaining 18 Figma builders,
-  and the §5 risk cleanups. See §3.
+- Components page grid layout, the remaining 18 Figma builders, and the §5 risk
+  cleanups. See §3.
+- **This session** (2026-08-28): the visual pass on the 24 Product / SDK sets,
+  the four defects it found, and a fifth `figma:verify` check. `fc135b3`,
+  `681de17`. See the end of §3.
 
 ## 3. Done This Session
 
@@ -277,25 +294,95 @@ against the merged `package.json` files rather than resolved by hand.
   silently dropped axes and reported them as "component absent from Figma". It
   now ends at the function's own closing brace.
 
+### The visual pass, and what looking actually found
+
+§4 used to end with "no gate can judge whether they _look_ right". Rendering
+each of the 24 sets through the REST image API and reading the images turned
+that into four defects, one of them in Core. Every one passed all five existing
+gates.
+
+**Slot labels truncate.** `productSdkSlot` pads every slot by 12px whatever its
+size. On a 240px content slot that is right; on a 40px icon slot it leaves 14px,
+and Figma renders "Icon" as a bare ellipsis. Seven nodes across five sets:
+"Logo" as "L", "Controls" as "Co", "Leading" as "Le", "Trailing" as "Tra".
+
+A second cause compounds it, and it is worth knowing generally:
+**`productSdkText`'s `fontSize` and `lineHeight` arguments are dead.**
+`applyTextStyleToNodeAsync` runs after them and overwrites both from the text
+style's own spec. Roughly a dozen call sites pass `fontSize: 12` and render at 14. The width budget was computed for a size the node never had.
+
+`fitProductSdkSlotLabel` measures instead of guessing — a text node set to size
+itself reports the exact width of its own string, so Figma is asked rather than
+modelled — then steps padding 12 → 4 and, if still short, the style
+`cardDescription` → `fieldMeta` (14/20 → 12/16). It also clamps vertical
+padding, which on DynamicIsland's 24px-tall slots was consuming the entire box.
+A label that fits at neither size now raises a warning rather than truncating in
+silence.
+
+**FileUpload's file meta, same symptom, different cause, and it is Core.**
+"2.4 MB" rendered as "2.4" and an ellipsis. `setHorizontalFillTextSizing` ends
+on `layoutAlign = "CENTER"`, which is the right cross-axis answer inside a
+horizontal row and the wrong one in the vertical copy stack it was called in:
+it overwrites the `FILL` set a line earlier and freezes the node at its natural
+width. `setVerticalStackChildSizing` is the helper that fits. Only these two
+call sites were changed — the check below is what should find any others,
+rather than a sweep across the 19 call sites.
+
+**POIDetailPanel's action glyphs were `actionLabel.charAt(0)`** — a literal
+"N", "S" and "S" on the three buttons, two of them identical, all three reading
+as a placeholder nobody filled in. Every other builder uses a real mark.
+
+**Two component sets were mostly empty.** WayfindingCard's frame was 700x1058
+around 700x134 of variants — 87% dead space — and POICard 74%. A component set
+is a frame, and a frame keeps its size when its children shrink; both were left
+over from taller earlier layouts. `layoutSingleAxisVariants` now refits the set.
+This is not only cosmetic: the Components page packs blocks by bounding box, so
+an 87%-empty block was costing a real column slot in the grid built last
+session. The other 22 sets measured 0% dead space, so these two were the whole
+of it.
+
+**And a fifth check, so none of it returns quietly.** A truncated node is
+indistinguishable from a healthy one in the REST payload — same type, same
+width, full `characters` — so the check measures the string. There is no font
+metric in the API, so the width model approximates Inter by character class and
+deliberately runs narrow: it should miss a marginal case rather than invent
+one. Validated against the 1,758 `TRUNCATE` nodes on the Components page, it
+flags exactly 9, and all 9 were confirmed by eye in the render. Zero false
+positives at that threshold.
+
+What the pass did **not** find is worth recording too, since it is evidence the
+sets are broadly sound: no contrast failures, no collapsed text, no axis drift,
+correct off-floor rings on LocationPin, and correct geometry on the other 22
+sets. FeedbackCard's Success variant looked squashed and is not — 16px padding
+all round, it is simply a one-line state.
+
 ## 4. Immediate Next Actions, In Order
 
 Everything the design system can do from code is done. What remains is either a
 Figma action, a decision, or work outside this lane.
 
 1. **Run `Update All Product / SDK` in the plugin, then `pnpm figma:verify`.**
-   Two contrast fixes — the meta text on the selected card tint in
-   POIResultCard and RouteOptionCard — are committed but not yet rendered into
-   the file. The verifier should then report clean on all four checks. This is
-   the only outstanding item that blocks nothing else but is trivially done.
+   This session's four fixes are code-only and none is in the file yet. Success
+   is the truncation check going from 9 to 0 and the other four staying clean.
+   (The contrast fixes the previous handoff listed here **are** already in the
+   file — the meta text reads `#464A53` in POIResultCard and RouteOptionCard,
+   confirmed over the API. That item is done.)
+
+   **Read the run's `failures` and `warnings` before closing the loop.**
+   RoutingInputGroup is the reason: its fields say "Start", "Start", "Start" in
+   the file where the code says `["Start", "Add stop", "Destination"]`, so
+   something in a previous `Update All` did not take. If it fails again the run
+   will now say so, and if it succeeds the labels will correct themselves —
+   either way, look. `fitProductSdkSlotLabel` also warns by name if any label
+   still will not fit.
+
 2. **Publish the library from Figma.** That is Figma's own action, in the
    Assets panel — not something the importer or any script here touches. The
    file is current once step 1 is done.
-3. **Visual pass on the 24 Product / SDK sets.** No gate can judge whether they
-   _look_ right. They are structurally verified — variants, axes, tokens,
-   contrast, no collapsed text — but nothing has confirmed the layouts read
-   well. This is the largest genuinely unverified surface.
-4. **Native test coverage.** 8 test files each against 97 components on iOS and
-   Android. Now the weakest link by a wide margin.
+3. **Native test coverage.** 8 test files each against 97 components on iOS and
+   Android. Now the weakest link by a clear margin — the Product / SDK sets
+   have been looked at, and this has not.
+4. **Decide RoutePreviewPanel's states** — see §5. A design call, not a defect.
 5. **Dashboard items outside the design system** — raised but never scoped.
    Likely adds genuinely new components rather than variants.
 
@@ -328,6 +415,14 @@ These need a human call; none are blocked on code.
 - **LocationPin `variant` and `labelPlacement` in Figma.** Recorded as
   intentional (colour is a token override, label placement is renderer layout).
   `Size` was added. Revisit only if designers ask.
+- **RoutePreviewPanel's five states look like two.** Only `Ready` renders
+  RouteOptionCard slots; the other four show the same generic "Status content
+  slot" placeholder, so Loading, Empty and Error are distinguishable from each
+  other only by the header line — and Error only because it turns red. Nothing
+  is broken and every gate passes; the question is whether a designer opening
+  the set can tell the states apart, and that is a call for whoever owns the
+  routing flow. Differentiating them means giving each state its own placeholder
+  anatomy rather than sharing one.
 - **MapOverlay `position` in Figma.** The set carries `Width` only. Crossing 6
   positions with 5 widths would be 30 variants for what is renderer placement.
   Recorded in the set description; revisit if designers ask.
@@ -359,6 +454,20 @@ These need a human call; none are blocked on code.
   `##[group]Run` block as echoed script source, which looks alarming and means
   nothing.
 
+- **`figma:verify` green does not mean the file says the right words.** It
+  checks structure — presence, axes, geometry, contrast, and now truncation —
+  and never compares text content against the builder. RoutingInputGroup has
+  been wrong in the file for the whole life of the set without a single check
+  noticing. If you want this class closed properly, the shape is for the plugin
+  to stamp each set with a fingerprint of the builder source at generation time
+  and for the verifier to compare it; that was scoped and deliberately not
+  built here.
+- **`productSdkText` ignores the `fontSize` and `lineHeight` you pass it.**
+  `applyTextStyleToNodeAsync` runs after both assignments and overwrites them
+  from the style spec, so a call site asking for 12 renders at 14. Around a
+  dozen call sites do exactly that. Nothing currently breaks because of it, but
+  any width arithmetic derived from the argument is wrong — which is half of
+  why the slot labels truncated.
 - **Prose and code samples are unverified by default.** The MDX platform
   snippets are template strings; nothing compiled them, and four wrong type
   names shipped looking perfectly plausible. `docs:snippets:check` closes the
