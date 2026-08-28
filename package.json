@@ -40,6 +40,7 @@
     "figma:publish:native:linked:dry": "pnpm figma:publish:ios:linked:dry && pnpm figma:publish:android:linked:dry",
     "components:contract:check": "node scripts/check-component-contracts.mjs",
     "docs:snippets:check": "node scripts/check-doc-snippets.mjs",
+    "figma:verify": "node scripts/verify-figma-library.mjs",
     "components:variant:check": "node scripts/skills/check-variant-parity.mjs",
     "tokens:contrast:check": "node scripts/check-token-contrast.mjs",
     "update-tokens": "tsx scripts/update-tokens.ts",
