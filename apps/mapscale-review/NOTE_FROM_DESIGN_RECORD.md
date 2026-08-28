@@ -2,8 +2,8 @@
 
 Left here **2026-08-28** by the design-record session (`vodoco/map566-design-record`), which does not
 write application code here. **No application code was changed** — this file is the whole of it, and
-nothing in it has been built. It carries a ruling from Olcay plus four facts about
-`public/map/index.html` that are cheap to read here and expensive to rediscover.
+nothing in it has been built. It carries two rulings from Olcay, one open defect, and a set of facts
+about `public/map/index.html` that are cheap to read here and expensive to rediscover.
 
 Fuller version: `Pointr Cloud/Building - Auto Level Updates/FOR_THE_APP_REPO.md` §8.
 
@@ -166,3 +166,27 @@ likely to be got wrong:
 
 Still explicitly out: Combine's wall `DELETE`, the wayfinding network's site-wide destructive
 `POST …/sites/{sid}/paths`, and creating features or network edges.
+
+---
+
+## 7. 🔴 DEFECT — the persona rule is written twice and the two copies disagree
+
+Found 2026-08-28. Full write-up: `FOR_THE_APP_REPO.md` §14.
+
+`personaOk()` in this file normalises **both shapes** — a real array, and the string a vector tile
+flattens it to — and its comment says so. `visibleToPersona()` in `src/mock/pointrConfig.ts`
+understands **only the array**, so a string falls straight through as "visible" and the filter
+silently does nothing. It also has no empty-persona guard, where this file does.
+
+**Both string forms occur.** Sampled off the B2 tiles, a wall carries
+`mapPersonas: "[\"visitor\",\"customer\",\"staff\",\"facilityManager\",\"contractor\",\"vip\"]"` — a string.
+
+⚠️ **This file's own comment claims tests hold the two together. They do not.**
+`scratch/geometry.test.mjs` asks `personaOk` 11 questions, including both string forms;
+`grep -c visibleToPersona scratch/geometry.test.mjs` returns **0**. That sentence is the reason
+nobody looked — worth fixing along with the code.
+
+It gates `levelFeatures.ts:128` (editor geometry, tree counts, the GeoJSON floor render) and
+`levelPaths.ts:132` (the wayfinding graph). If the draft endpoint returns the string form, the app's
+persona filter is a no-op on all of them while the tile-drawn floor stays filtered — the
+one-path-filtered-the-other-not split, still live.
