@@ -5,8 +5,8 @@ rulings from Olcay, the traps behind them, and a set of facts about `public/map/
 cheap to read here and expensive to rediscover.
 
 ⚠️ **Scope, so nothing is a surprise.** Everything here is a _request_ except **§7**, which Olcay
-asked for directly and which was **built** — `e63b630`, application code, on `main` and **not
-deployed**. §5's `ensureTiles` defect and the §8 colour ruling are still unbuilt.
+asked for directly and which was **built and deployed** — `e63b630`, application code, on `main`.
+§5's `ensureTiles` defect and the §8 colour ruling are still unbuilt.
 
 Fuller version: `Pointr Cloud/Building - Auto Level Updates/FOR_THE_APP_REPO.md` §8.
 
@@ -176,7 +176,7 @@ Still explicitly out: Combine's wall `DELETE`, the wayfinding network's site-wid
 
 ## 7. ✅ FIXED 2026-08-28 — the persona rule is written twice and the two copies disagreed
 
-Found and fixed 2026-08-28 (`e63b630`, **not deployed**). Full write-up: `FOR_THE_APP_REPO.md` §14.
+Found, fixed and **deployed** 2026-08-28 (`e63b630`; live bundle `index-Bqj6DzdT.js`). Full write-up: `FOR_THE_APP_REPO.md` §14.
 The rule now lives in a dependency-free `src/mock/personaVisibility.ts` — `pointrConfig.ts` reads
 `import.meta.env` at module scope, so nothing in it can be imported by the harness, which is why
 this drifted unnoticed. `visibleToPersona` stays as the binding to `MAP_PERSONA`; no call site
