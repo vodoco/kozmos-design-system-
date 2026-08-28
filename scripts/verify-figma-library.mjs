@@ -167,6 +167,10 @@ async function main() {
     for (const variant of set.children || []) {
       const inactive = isInactive(String(variant.name));
       (function walk(node, bg, dimmed) {
+        // Hidden nodes carry component properties without ever being seen —
+        // Avatar's "Image URL" and "Alt Text" are text nodes at visible:false.
+        // Contrast on something nobody can look at is not a finding.
+        if (node.visible === false) return;
         const faded = dimmed || (node.opacity !== undefined && node.opacity < 0.9);
         const surface = solidFill(node) || bg;
         if (node.type === "TEXT") {
