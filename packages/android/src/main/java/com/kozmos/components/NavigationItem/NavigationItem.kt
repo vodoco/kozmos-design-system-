@@ -79,7 +79,7 @@ fun KozmosNavigationItem(
     val isSelected = selected || state == KozmosNavigationItemState.Selected
     val isDisabled = !enabled || state == KozmosNavigationItemState.Disabled
     val isFocusVisible = focusVisible || state == KozmosNavigationItemState.Focus
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
     val minHeight = when (placement) {
         KozmosNavigationItemPlacement.Rail -> if (density == KozmosNavigationItemDensity.Compact) 64.dp else 72.dp
         else -> 44.dp

@@ -74,7 +74,7 @@ fun KozmosFloorSelector(
         Box(
             modifier = Modifier
                 .size(KozmosDimensions.primitivesLayoutSizing500)
-                .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
+                .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel))
                 .background(
                     if (isSelected) KozmosColors.primitivesColorsTheme500 else Color.Transparent
                 )
@@ -123,10 +123,10 @@ fun KozmosFloorSelector(
     }
 
     val rootModifier = modifier
-        .shadow(4.dp, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
+        .shadow(4.dp, RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel))
         .background(
             KozmosColors.primitivesColorsBackground0,
-            RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300)
+            RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel)
         )
         .padding(KozmosDimensions.primitivesLayoutSpacing50)
         .semantics { contentDescription = label }

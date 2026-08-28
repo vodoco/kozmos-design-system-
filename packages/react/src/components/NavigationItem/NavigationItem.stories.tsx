@@ -12,7 +12,7 @@ type Story = StoryObj<typeof NavigationItem>;
 
 export const Side: Story = {
   render: () => (
-    <nav className="flex w-64 flex-col gap-1 rounded-md border bg-background p-3">
+    <nav className="flex w-64 flex-col gap-1 rounded-control border bg-background p-3">
       <NavigationItem icon={<Home className="h-5 w-5" />} selected>
         Overview
       </NavigationItem>
@@ -39,7 +39,7 @@ export const Side: Story = {
 
 export const Top: Story = {
   render: () => (
-    <nav className="flex items-center gap-1 rounded-md border bg-background p-2">
+    <nav className="flex items-center gap-1 rounded-control border bg-background p-2">
       <NavigationItem placement="top" selected>
         Overview
       </NavigationItem>
@@ -51,7 +51,7 @@ export const Top: Story = {
 
 export const Rail: Story = {
   render: () => (
-    <nav className="flex w-20 flex-col items-center gap-2 rounded-md border bg-background p-2">
+    <nav className="flex w-20 flex-col items-center gap-2 rounded-control border bg-background p-2">
       <NavigationItem
         content="icon-label"
         icon={<Home className="h-6 w-6" />}

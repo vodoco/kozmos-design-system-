@@ -62,9 +62,9 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
                         .frame(maxWidth: .infinity)
                         .padding(KozmosDimensions.primitivesLayoutSpacing300)
                         .background(KozmosColors.primitivesColorsBackground100.opacity(0.4))
-                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous)
+                            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                                 .strokeBorder(
                                     KozmosColors.primitivesColorsForeground300,
                                     style: StrokeStyle(lineWidth: 1, dash: [4, 4])

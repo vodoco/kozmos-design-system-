@@ -499,7 +499,7 @@ const TreeItemRow = React.forwardRef<HTMLDivElement, TreeItemRowProps>(
         data-focus-visible={focusVisible || undefined}
         data-disabled={disabled || undefined}
         className={cn(
-          "group/treeitem flex w-full cursor-pointer items-center gap-2 rounded-md px-2 text-left outline-none transition-colors",
+          "group/treeitem flex w-full cursor-pointer items-center gap-2 rounded-control px-2 text-left outline-none transition-colors",
           density === "compact" ? "min-h-8 py-1" : "min-h-10 py-1.5",
           "hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           selected && "bg-muted text-foreground",
@@ -532,7 +532,7 @@ const TreeItemRow = React.forwardRef<HTMLDivElement, TreeItemRowProps>(
         <span className="flex min-w-0 flex-1 items-center gap-1.5">
           <span className="min-w-0 truncate">{name}</span>
           {count !== undefined && count !== null && (
-            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full border border-border bg-muted px-1.5 text-xs font-medium leading-none text-foreground">
+            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-pill border border-border bg-muted px-1.5 text-xs font-medium leading-none text-foreground">
               {count}
             </span>
           )}

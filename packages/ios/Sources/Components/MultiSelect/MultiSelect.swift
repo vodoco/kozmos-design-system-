@@ -112,9 +112,9 @@ public struct KozmosMultiSelect: View {
             .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing75)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .background(fieldBackgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(fieldBorderColor, lineWidth: 1)
             )
 
@@ -126,9 +126,9 @@ public struct KozmosMultiSelect: View {
                         .padding(KozmosDimensions.primitivesLayoutSpacing150)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(KozmosColors.primitivesColorsBackground0)
-                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                         .overlay(
-                            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                                 .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
                         )
                 } else {

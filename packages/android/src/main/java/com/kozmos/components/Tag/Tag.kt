@@ -38,7 +38,7 @@ fun KozmosTag(
     onRemove: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer)
     val backgroundColor = when (variant) {
         KozmosTagVariant.Default -> KozmosColors.primitivesColorsTheme500
         KozmosTagVariant.Secondary -> KozmosColors.primitivesColorsBackground100

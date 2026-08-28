@@ -50,7 +50,7 @@ public struct KozmosFloorSelector: View {
         container
             .padding(KozmosDimensions.primitivesLayoutSpacing75)
             .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
-            .cornerRadius(KozmosDimensions.primitivesLayoutRadius300)
+            .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
             .shadow(
                 color: KozmosColors.primitivesColorsForeground900.opacity(0.1),
                 radius: 4,
@@ -103,7 +103,7 @@ public struct KozmosFloorSelector: View {
                         ? KozmosColors.primitivesColorsBackground0
                         : KozmosColors.primitivesColorsForeground100
                 )
-                .cornerRadius(KozmosDimensions.primitivesLayoutRadius300)
+                .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(floor)

@@ -71,7 +71,7 @@ fun KozmosPOIResultList(
         if (items.isEmpty()) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300),
+                shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
                 color = KozmosColors.primitivesColorsBackground100.copy(alpha = 0.4f),
                 border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
             ) {

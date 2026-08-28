@@ -46,9 +46,9 @@ public struct KozmosAlert<Content: View>: View {
         }
         .padding()
         .background(KozmosColors.semanticsSurface0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+        .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(variant.borderColor, lineWidth: 1)
         )
     }

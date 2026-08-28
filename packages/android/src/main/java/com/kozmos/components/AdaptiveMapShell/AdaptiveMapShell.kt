@@ -120,7 +120,7 @@ fun KozmosAdaptiveMapShell(
         }
 
         if (panel != null) {
-            val radius = KozmosDimensions.primitivesLayoutRadius300
+            val radius = KozmosDimensions.semanticsRadiusPanel
 
             if (isRegularWidth) {
                 // 42% of the shell, capped at 416.dp — computed rather than

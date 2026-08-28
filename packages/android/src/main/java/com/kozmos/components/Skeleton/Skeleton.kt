@@ -58,7 +58,7 @@ fun KozmosSkeleton(
 ) {
     Box(
         modifier = modifier
-            .background(KozmosColors.primitivesColorsBackground100, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius50))
+            .background(KozmosColors.primitivesColorsBackground100, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
             .shimmer()
     )
 }

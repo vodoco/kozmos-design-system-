@@ -266,22 +266,22 @@ private fun androidx.compose.foundation.layout.BoxScope.closeButtonModifier(side
 private fun drawerShape(side: KozmosDrawerSide): RoundedCornerShape =
     when (side) {
         KozmosDrawerSide.Left -> RoundedCornerShape(
-            topEnd = KozmosDimensions.primitivesLayoutRadius100,
-            bottomEnd = KozmosDimensions.primitivesLayoutRadius100
+            topEnd = KozmosDimensions.semanticsRadiusControl,
+            bottomEnd = KozmosDimensions.semanticsRadiusControl
         )
 
         KozmosDrawerSide.Right -> RoundedCornerShape(
-            topStart = KozmosDimensions.primitivesLayoutRadius100,
-            bottomStart = KozmosDimensions.primitivesLayoutRadius100
+            topStart = KozmosDimensions.semanticsRadiusControl,
+            bottomStart = KozmosDimensions.semanticsRadiusControl
         )
 
         KozmosDrawerSide.Top -> RoundedCornerShape(
-            bottomStart = KozmosDimensions.primitivesLayoutRadius100,
-            bottomEnd = KozmosDimensions.primitivesLayoutRadius100
+            bottomStart = KozmosDimensions.semanticsRadiusControl,
+            bottomEnd = KozmosDimensions.semanticsRadiusControl
         )
 
         KozmosDrawerSide.Bottom -> RoundedCornerShape(
-            topStart = KozmosDimensions.primitivesLayoutRadius100,
-            topEnd = KozmosDimensions.primitivesLayoutRadius100
+            topStart = KozmosDimensions.semanticsRadiusControl,
+            topEnd = KozmosDimensions.semanticsRadiusControl
         )
     }

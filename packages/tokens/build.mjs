@@ -1,107 +1,122 @@
-
-import StyleDictionary from 'style-dictionary';
-import { register } from '@tokens-studio/sd-transforms';
-import fs from 'fs';
-import path from 'path';
+import StyleDictionary from "style-dictionary";
+import { register } from "@tokens-studio/sd-transforms";
+import fs from "fs";
+import path from "path";
 
 register(StyleDictionary);
 
-console.log('🏗️  Starting Style Dictionary Build (v5)...');
+console.log("🏗️  Starting Style Dictionary Build (v5)...");
 
 const pointrPaletteDir = process.env.POINTR_COLOR_PALETTE_DIR;
 
 function optionalPointrPlatform(destination) {
-    if (!pointrPaletteDir) return {};
+  if (!pointrPaletteDir) return {};
 
-    const buildPath = pointrPaletteDir.endsWith(path.sep)
-        ? pointrPaletteDir
-        : `${pointrPaletteDir}${path.sep}`;
+  const buildPath = pointrPaletteDir.endsWith(path.sep)
+    ? pointrPaletteDir
+    : `${pointrPaletteDir}${path.sep}`;
 
-    return {
-        pointr: {
-            transformGroup: 'css',
-            buildPath,
-            files: [{
-                destination,
-                format: 'pointr/color-palette'
-            }]
-        }
-    };
+  return {
+    pointr: {
+      transformGroup: "css",
+      buildPath,
+      files: [
+        {
+          destination,
+          format: "pointr/color-palette",
+        },
+      ],
+    },
+  };
 }
 
 // Helper to merge Dark tokens into Light tokens as 'darkValue'
 function mergeDarkTokens(light, dark) {
-    for (const key in light) {
-        if (dark && dark[key]) {
-            if (light[key].hasOwnProperty('value') || light[key].hasOwnProperty('$value')) {
-                const darkVal = dark[key].value || dark[key].$value;
-                if (darkVal) {
-                    if (!light[key].attributes) light[key].attributes = {};
-                    light[key].attributes.darkValue = darkVal;
-                }
-            } else if (typeof light[key] === 'object') {
-                // It's a group, recurse
-                mergeDarkTokens(light[key], dark[key]);
-            }
+  for (const key in light) {
+    if (dark && dark[key]) {
+      if (
+        light[key].hasOwnProperty("value") ||
+        light[key].hasOwnProperty("$value")
+      ) {
+        const darkVal = dark[key].value || dark[key].$value;
+        if (darkVal) {
+          if (!light[key].attributes) light[key].attributes = {};
+          light[key].attributes.darkValue = darkVal;
         }
+      } else if (typeof light[key] === "object") {
+        // It's a group, recurse
+        mergeDarkTokens(light[key], dark[key]);
+      }
     }
-    return light;
+  }
+  return light;
 }
 
 // Helper for camelCase
 function toCamelCase(path) {
-    let result = path.join(' ')
-        .split(/[^a-zA-Z0-9]+/)
-        .filter(Boolean)
-        .map((part, index) => {
-            if (index === 0) return part.toLowerCase();
-            return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
-        }).join('');
-        
-    // Prevent invalid identifiers in Swift/Kotlin
-    if (/^[0-9]/.test(result)) {
-        result = '_' + result;
-    }
-    return result;
+  let result = path
+    .join(" ")
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean)
+    .map((part, index) => {
+      if (index === 0) return part.toLowerCase();
+      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+    })
+    .join("");
+
+  // Prevent invalid identifiers in Swift/Kotlin
+  if (/^[0-9]/.test(result)) {
+    result = "_" + result;
+  }
+  return result;
 }
 
 StyleDictionary.registerTransform({
-    name: 'name/kozmos/camel',
-    type: 'name',
-    transform: (token) => toCamelCase(token.path || [token.name])
+  name: "name/kozmos/camel",
+  type: "name",
+  transform: (token) => toCamelCase(token.path || [token.name]),
 });
 
 // Fix for Android AAPT not allowing floats in <integer>
 function fixAndroidXML(filePath) {
-    if (fs.existsSync(filePath)) {
-        let content = fs.readFileSync(filePath, 'utf8');
-        // Replace <integer> with float value to <item type="dimen" format="float">
-        content = content.replace(/<integer name="([^"]+)">([-0-9]+\.[0-9]+)<\/integer>/g, '<item name="$1" type="dimen" format="float">$2</item>');
-        
-        // Convert rem to dp (1rem = 16dp) and string to dimen
-        content = content.replace(/<string name="([^"]+)">([-0-9.]+)rem<\/string>/g, (match, name, val) => {
-            return `<dimen name="${name}">${parseFloat(val) * 16}dp</dimen>`;
-        });
+  if (fs.existsSync(filePath)) {
+    let content = fs.readFileSync(filePath, "utf8");
+    // Replace <integer> with float value to <item type="dimen" format="float">
+    content = content.replace(
+      /<integer name="([^"]+)">([-0-9]+\.[0-9]+)<\/integer>/g,
+      '<item name="$1" type="dimen" format="float">$2</item>',
+    );
 
-        // Convert px string to dimen
-        content = content.replace(/<string name="([^"]+)">([-0-9.]+)px<\/string>/g, '<dimen name="$1">$2px</dimen>');
+    // Convert rem to dp (1rem = 16dp) and string to dimen
+    content = content.replace(
+      /<string name="([^"]+)">([-0-9.]+)rem<\/string>/g,
+      (match, name, val) => {
+        return `<dimen name="${name}">${parseFloat(val) * 16}dp</dimen>`;
+      },
+    );
 
-        // Ensure all names are valid for AAPT (no hyphens, no periods)
-        content = content.replace(/name="([^"]+)"/g, (match, name) => {
-            let sanitized = name.replace(/[-.\s]/g, '_');
-            if (/^[0-9]/.test(sanitized)) sanitized = '_' + sanitized;
-            return `name="${sanitized}"`;
-        });
+    // Convert px string to dimen
+    content = content.replace(
+      /<string name="([^"]+)">([-0-9.]+)px<\/string>/g,
+      '<dimen name="$1">$2px</dimen>',
+    );
 
-        fs.writeFileSync(filePath, content);
-    }
+    // Ensure all names are valid for AAPT (no hyphens, no periods)
+    content = content.replace(/name="([^"]+)"/g, (match, name) => {
+      let sanitized = name.replace(/[-.\s]/g, "_");
+      if (/^[0-9]/.test(sanitized)) sanitized = "_" + sanitized;
+      return `name="${sanitized}"`;
+    });
+
+    fs.writeFileSync(filePath, content);
+  }
 }
 
 // Custom Format for iOS Dynamic Colors
 StyleDictionary.registerFormat({
-    name: 'ios-swift/dynamic',
-    format: ({ dictionary }) => {
-        return `import SwiftUI
+  name: "ios-swift/dynamic",
+  format: ({ dictionary }) => {
+    return `import SwiftUI
 
 #if canImport(UIKit)
 import UIKit
@@ -160,22 +175,24 @@ extension NSColor {
 
 public class KozmosColors {
 ${dictionary.allTokens
-                .filter(token => {
-                    const isColor = (token.attributes && token.attributes.category === 'color') ||
-                        (token.type === 'color') ||
-                        (token.$type === 'color') ||
-                        (token.path[0] === 'color') ||
-                        (token.name.toLowerCase().includes('color'));
-                    return isColor;
-                })
-                .map(token => {
-                    // Try all possible value locations (StyleDictionary puts custom properties in token.original)
-                    const lightVal = token.value || token.$value || (token.original && token.original.value) || (token.original && token.original.$value);
-                    const darkVal = (token.attributes && token.attributes.darkValue) || lightVal;
+  .filter((token) => {
+    const isColor =
+      (token.attributes && token.attributes.category === "color") ||
+      token.type === "color" ||
+      token.$type === "color" ||
+      token.path[0] === "color" ||
+      token.name.toLowerCase().includes("color");
+    return isColor;
+  })
+  .map((token) => {
+    // Try all possible value locations (StyleDictionary puts custom properties in token.original)
+    const lightVal = firstDefinedTokenValue(token);
+    const darkVal =
+      (token.attributes && token.attributes.darkValue) || lightVal;
 
-                    const varName = toCamelCase(token.path);
+    const varName = toCamelCase(token.path);
 
-                    return `    public static var ${varName}: Color {
+    return `    public static var ${varName}: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "${darkVal}") : UIColor(hex: "${lightVal}")
@@ -188,160 +205,217 @@ ${dictionary.allTokens
         return Color.clear
         #endif
     }`;
-                }).join('\n')}
+  })
+  .join("\n")}
 }`;
-    }
+  },
 });
 
+// A token whose value is 0 is a real value, not a missing one. The old
+// `token.value || token.$value || ...` chain treated it as absent and fell
+// through to the unresolved alias string, so a zero-valued dimension that
+// arrived by reference was dropped from the native outputs entirely.
+function firstDefinedTokenValue(token) {
+  const candidates = [
+    token.value,
+    token.$value,
+    token.original && token.original.value,
+    token.original && token.original.$value,
+  ];
+  for (const candidate of candidates) {
+    if (candidate !== undefined && candidate !== null) return candidate;
+  }
+  return undefined;
+}
+
 StyleDictionary.registerFormat({
-    name: 'android-compose/dimensions',
-    format: ({ dictionary, options }) => {
-        const className = options.className || 'KozmosDimensions';
-        return `// Do not edit directly, this file was auto-generated.
+  name: "android-compose/dimensions",
+  format: ({ dictionary, options }) => {
+    const className = options.className || "KozmosDimensions";
+    return `// Do not edit directly, this file was auto-generated.
 package com.kozmos.tokens
 
 import androidx.compose.ui.unit.dp
 
 object ${className} {
 ${dictionary.allTokens
-        .filter(token => {
-            return (token.attributes && token.attributes.category === 'dimension') ||
-                   (token.type === 'dimension') ||
-                   (token.$type === 'dimension') ||
-                   (token.path.includes('radius') || token.path.includes('spacing') || token.path.includes('dimension') || token.path.includes('Layout') || token.path.includes('Width'));
-        })
-        .map(token => {
-            const lightVal = token.value || token.$value || (token.original && token.original.value) || (token.original && token.original.$value);
-            const varName = toCamelCase(token.path);
-            
-            let val = parseFloat(lightVal);
-            if (isNaN(val)) return '';
-            
-            return "  val " + varName + " = " + val + ".dp";
-        }).filter(Boolean).join('\n')}
+  .filter((token) => {
+    return (
+      (token.attributes && token.attributes.category === "dimension") ||
+      token.type === "dimension" ||
+      token.$type === "dimension" ||
+      token.path.includes("radius") ||
+      token.path.includes("spacing") ||
+      token.path.includes("dimension") ||
+      token.path.includes("Layout") ||
+      token.path.includes("Width")
+    );
+  })
+  .map((token) => {
+    const lightVal = firstDefinedTokenValue(token);
+    const varName = toCamelCase(token.path);
+
+    let val = parseFloat(lightVal);
+    if (isNaN(val)) return "";
+
+    return "  val " + varName + " = " + val + ".dp";
+  })
+  .filter(Boolean)
+  .join("\n")}
 }`;
-    }
+  },
 });
 
 StyleDictionary.registerFormat({
-    name: 'ios-swift/dimensions',
-    format: ({ dictionary, options }) => {
-        const className = options.className || 'KozmosDimensions';
-        return `import Foundation
+  name: "ios-swift/dimensions",
+  format: ({ dictionary, options }) => {
+    const className = options.className || "KozmosDimensions";
+    return `import Foundation
 import CoreGraphics
 
 public struct ${className} {
 ${dictionary.allTokens
-        .filter(token => {
-            return (token.attributes && token.attributes.category === 'dimension') ||
-                   (token.type === 'dimension') ||
-                   (token.$type === 'dimension') ||
-                   (token.path.includes('radius') || token.path.includes('spacing') || token.path.includes('dimension') || token.path.includes('Layout') || token.path.includes('Width'));
-        })
-        .map(token => {
-            const lightVal = token.value || token.$value || (token.original && token.original.value) || (token.original && token.original.$value);
-            const varName = toCamelCase(token.path);
-            
-            let val = parseFloat(lightVal);
-            if (isNaN(val)) return '';
-            
-            return "    public static let " + varName + ": CGFloat = " + val;
-        }).filter(Boolean).join('\n')}
+  .filter((token) => {
+    return (
+      (token.attributes && token.attributes.category === "dimension") ||
+      token.type === "dimension" ||
+      token.$type === "dimension" ||
+      token.path.includes("radius") ||
+      token.path.includes("spacing") ||
+      token.path.includes("dimension") ||
+      token.path.includes("Layout") ||
+      token.path.includes("Width")
+    );
+  })
+  .map((token) => {
+    const lightVal = firstDefinedTokenValue(token);
+    const varName = toCamelCase(token.path);
+
+    let val = parseFloat(lightVal);
+    if (isNaN(val)) return "";
+
+    return "    public static let " + varName + ": CGFloat = " + val;
+  })
+  .filter(Boolean)
+  .join("\n")}
 }`;
-    }
+  },
 });
 
 StyleDictionary.registerFormat({
-    name: 'android-compose/exact',
-    format: ({ dictionary, options }) => {
-        const className = options.className || 'KozmosColors';
-        return `// Do not edit directly, this file was auto-generated.
+  name: "android-compose/exact",
+  format: ({ dictionary, options }) => {
+    const className = options.className || "KozmosColors";
+    return `// Do not edit directly, this file was auto-generated.
 package com.kozmos.tokens
 
 import androidx.compose.ui.graphics.Color
 
 object ${className} {
 ${dictionary.allTokens
-        .filter(token => {
-            return (token.attributes && token.attributes.category === 'color') ||
-                   (token.type === 'color') ||
-                   (token.$type === 'color') ||
-                   (token.path[0] === 'color') ||
-                   (token.name && token.name.toLowerCase().includes('color')) ||
-                   token.path.includes('Colors') || token.path.includes('colors');
-        })
-        .map(token => {
-            const lightVal = token.value || token.$value || (token.original && token.original.value) || (token.original && token.original.$value);
-            const varName = toCamelCase(token.path);
-            
-            // Extract pre-compiled Tokens Studio compose payloads explicitly ignoring double wraps natively
-            const composeMatch = String(lightVal).match(/Color\(0x([0-9a-fA-F]{8})\)/i);
-            if (composeMatch) {
-                return `  val ${varName} = Color(0x${composeMatch[1]})`;
-            }
-            
-            let val = String(lightVal || '#000000');
-            const rgbaMatch = val.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/);
-            if (rgbaMatch) {
-                const r = parseInt(rgbaMatch[1], 10).toString(16).padStart(2, '0');
-                const g = parseInt(rgbaMatch[2], 10).toString(16).padStart(2, '0');
-                const b = parseInt(rgbaMatch[3], 10).toString(16).padStart(2, '0');
-                const a = rgbaMatch[4] ? Math.round(parseFloat(rgbaMatch[4]) * 255).toString(16).padStart(2, '0') : 'ff';
-                val = `#${r}${g}${b}${a}`;
-            }
+  .filter((token) => {
+    return (
+      (token.attributes && token.attributes.category === "color") ||
+      token.type === "color" ||
+      token.$type === "color" ||
+      token.path[0] === "color" ||
+      (token.name && token.name.toLowerCase().includes("color")) ||
+      token.path.includes("Colors") ||
+      token.path.includes("colors")
+    );
+  })
+  .map((token) => {
+    const lightVal = firstDefinedTokenValue(token);
+    const varName = toCamelCase(token.path);
 
-            // Format CSS Hex to Kotlin 0xAARRGGBB
-            let hex = val.replace('#', '').toLowerCase();
-            if (hex.length === 6) hex = 'ff' + hex;
-            if (hex.length === 3) hex = 'ff' + hex.split('').map(c => c+c).join('');
-            if (hex.length === 8) {
-                // CSS is #RRGGBBAA. Android is #AARRGGBB.
-                const r = hex.substr(0,2);
-                const g = hex.substr(2,2);
-                const b = hex.substr(4,2);
-                const a = hex.substr(6,2);
-                hex = a + r + g + b;
-            }
-
-            return `  val ${varName} = Color(0x${hex})`;
-        }).join('\n')}
-}`;
+    // Extract pre-compiled Tokens Studio compose payloads explicitly ignoring double wraps natively
+    const composeMatch = String(lightVal).match(/Color\(0x([0-9a-fA-F]{8})\)/i);
+    if (composeMatch) {
+      return `  val ${varName} = Color(0x${composeMatch[1]})`;
     }
+
+    let val = String(lightVal || "#000000");
+    const rgbaMatch = val.match(
+      /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/,
+    );
+    if (rgbaMatch) {
+      const r = parseInt(rgbaMatch[1], 10).toString(16).padStart(2, "0");
+      const g = parseInt(rgbaMatch[2], 10).toString(16).padStart(2, "0");
+      const b = parseInt(rgbaMatch[3], 10).toString(16).padStart(2, "0");
+      const a = rgbaMatch[4]
+        ? Math.round(parseFloat(rgbaMatch[4]) * 255)
+            .toString(16)
+            .padStart(2, "0")
+        : "ff";
+      val = `#${r}${g}${b}${a}`;
+    }
+
+    // Format CSS Hex to Kotlin 0xAARRGGBB
+    let hex = val.replace("#", "").toLowerCase();
+    if (hex.length === 6) hex = "ff" + hex;
+    if (hex.length === 3)
+      hex =
+        "ff" +
+        hex
+          .split("")
+          .map((c) => c + c)
+          .join("");
+    if (hex.length === 8) {
+      // CSS is #RRGGBBAA. Android is #AARRGGBB.
+      const r = hex.substr(0, 2);
+      const g = hex.substr(2, 2);
+      const b = hex.substr(4, 2);
+      const a = hex.substr(6, 2);
+      hex = a + r + g + b;
+    }
+
+    return `  val ${varName} = Color(0x${hex})`;
+  })
+  .join("\n")}
+}`;
+  },
 });
 
 StyleDictionary.registerFormat({
-    name: 'android-compose/shadows',
-    format: ({ dictionary, options }) => {
-        const className = options.className || 'KozmosShadows';
-        return `// Do not edit directly, this file was auto-generated.
+  name: "android-compose/shadows",
+  format: ({ dictionary, options }) => {
+    const className = options.className || "KozmosShadows";
+    return `// Do not edit directly, this file was auto-generated.
 package com.kozmos.tokens
 
 import androidx.compose.ui.unit.dp
 
 object ${className} {
 ${dictionary.allTokens
-        .filter(token => token.type === 'shadow' || token.$type === 'shadow' || (token.attributes && token.attributes.category === 'shadow'))
-        .map(token => {
-            const lightVal = token.value || token.$value;
-            const varName = toCamelCase(token.path);
-            
-            const parts = lightVal.split('px');
-            if (parts.length > 2) {
-                let val = parseFloat(parts[1].trim());
-                if (isNaN(val)) val = 4;
-                return "  val " + varName + " = " + val + ".dp";
-            }
-            return "";
-        }).filter(Boolean).join('\n')}
-}`;
+  .filter(
+    (token) =>
+      token.type === "shadow" ||
+      token.$type === "shadow" ||
+      (token.attributes && token.attributes.category === "shadow"),
+  )
+  .map((token) => {
+    const lightVal = token.value || token.$value;
+    const varName = toCamelCase(token.path);
+
+    const parts = lightVal.split("px");
+    if (parts.length > 2) {
+      let val = parseFloat(parts[1].trim());
+      if (isNaN(val)) val = 4;
+      return "  val " + varName + " = " + val + ".dp";
     }
+    return "";
+  })
+  .filter(Boolean)
+  .join("\n")}
+}`;
+  },
 });
 
 StyleDictionary.registerFormat({
-    name: 'ios-swift/shadows',
-    format: ({ dictionary, options }) => {
-        const className = options.className || 'KozmosShadows';
-        return `import Foundation
+  name: "ios-swift/shadows",
+  format: ({ dictionary, options }) => {
+    const className = options.className || "KozmosShadows";
+    return `import Foundation
 import CoreGraphics
 import SwiftUI
 
@@ -354,267 +428,360 @@ public struct ShadowToken {
 
 public struct ${className} {
 ${dictionary.allTokens
-        .filter(token => token.type === 'shadow' || token.$type === 'shadow' || (token.attributes && token.attributes.category === 'shadow'))
-        .map(token => {
-            const lightVal = token.value || token.$value;
-            const varName = toCamelCase(token.path);
-            
-            const rgbaMatch = lightVal.match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?\\s*\\)/);
-            let r = 0, g = 0, b = 0, a = 0.1;
-            if (rgbaMatch) {
-               r = parseInt(rgbaMatch[1], 10) / 255;
-               g = parseInt(rgbaMatch[2], 10) / 255;
-               b = parseInt(rgbaMatch[3], 10) / 255;
-               a = parseFloat(rgbaMatch[4] || '1');
-            }
-            
-            const dimMatch = lightVal.match(/([\\d.-]+)(px)?/g);
-            let x = 0, y = 4, blur = 8;
-            if (dimMatch && dimMatch.length >= 3) {
-                 x = parseFloat(dimMatch[0]);
-                 y = parseFloat(dimMatch[1]);
-                 blur = parseFloat(dimMatch[2]);
-            }
-            
-            return "    public static let " + varName + " = ShadowToken(color: Color(red: " + r + ", green: " + g + ", blue: " + b + ", opacity: " + a + "), radius: " + blur + ", x: " + x + ", y: " + y + ")";
-        }).filter(Boolean).join('\n')}
-}`;
+  .filter(
+    (token) =>
+      token.type === "shadow" ||
+      token.$type === "shadow" ||
+      (token.attributes && token.attributes.category === "shadow"),
+  )
+  .map((token) => {
+    const lightVal = token.value || token.$value;
+    const varName = toCamelCase(token.path);
+
+    const rgbaMatch = lightVal.match(
+      /rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?\\s*\\)/,
+    );
+    let r = 0,
+      g = 0,
+      b = 0,
+      a = 0.1;
+    if (rgbaMatch) {
+      r = parseInt(rgbaMatch[1], 10) / 255;
+      g = parseInt(rgbaMatch[2], 10) / 255;
+      b = parseInt(rgbaMatch[3], 10) / 255;
+      a = parseFloat(rgbaMatch[4] || "1");
     }
+
+    const dimMatch = lightVal.match(/([\\d.-]+)(px)?/g);
+    let x = 0,
+      y = 4,
+      blur = 8;
+    if (dimMatch && dimMatch.length >= 3) {
+      x = parseFloat(dimMatch[0]);
+      y = parseFloat(dimMatch[1]);
+      blur = parseFloat(dimMatch[2]);
+    }
+
+    return (
+      "    public static let " +
+      varName +
+      " = ShadowToken(color: Color(red: " +
+      r +
+      ", green: " +
+      g +
+      ", blue: " +
+      b +
+      ", opacity: " +
+      a +
+      "), radius: " +
+      blur +
+      ", x: " +
+      x +
+      ", y: " +
+      y +
+      ")"
+    );
+  })
+  .filter(Boolean)
+  .join("\n")}
+}`;
+  },
 });
 
 StyleDictionary.registerFormat({
-    name: 'pointr/color-palette',
-    format: ({ dictionary, file }) => {
-        const colors = {};
-        dictionary.allTokens.forEach(token => {
-            const isColor = (token.attributes && token.attributes.category === 'color') ||
-                            (token.type === 'color') ||
-                            (token.$type === 'color') ||
-                            (token.path[0] === 'color') ||
-                            (token.name.toLowerCase().includes('color'));
-            if (isColor) {
-                // Pointr MapLibre style JSON expects snake_case for Python $var regex compatibility
-                const name = token.name.replace(/-/g, '_'); 
-                let val = token.value || token.$value || (token.original && token.original.value) || (token.original && token.original.$value);
-                
-                colors[name] = val;
-            }
-        });
-        
-        const isDark = file.destination.includes('dark');
-        const payload = {
-            name: `Kozmos Design System (${isDark ? 'Dark' : 'Light'})`,
-            description: "Automatically synced from Kozmos Design System Tokens",
-            created_at: new Date().toISOString(),
-            colors: colors,
-            updated_at: new Date().toISOString()
-        };
-        
-        return JSON.stringify(payload, null, 2);
-    }
+  name: "pointr/color-palette",
+  format: ({ dictionary, file }) => {
+    const colors = {};
+    dictionary.allTokens.forEach((token) => {
+      const isColor =
+        (token.attributes && token.attributes.category === "color") ||
+        token.type === "color" ||
+        token.$type === "color" ||
+        token.path[0] === "color" ||
+        token.name.toLowerCase().includes("color");
+      if (isColor) {
+        // Pointr MapLibre style JSON expects snake_case for Python $var regex compatibility
+        const name = token.name.replace(/-/g, "_");
+        let val =
+          token.value ||
+          token.$value ||
+          (token.original && token.original.value) ||
+          (token.original && token.original.$value);
+
+        colors[name] = val;
+      }
+    });
+
+    const isDark = file.destination.includes("dark");
+    const payload = {
+      name: `Kozmos Design System (${isDark ? "Dark" : "Light"})`,
+      description: "Automatically synced from Kozmos Design System Tokens",
+      created_at: new Date().toISOString(),
+      colors: colors,
+      updated_at: new Date().toISOString(),
+    };
+
+    return JSON.stringify(payload, null, 2);
+  },
 });
 
 async function build() {
-    try {
-        // 1. Light Mode (CSS)
-        console.log('\n☀️  Building Light Mode...');
-        const sdLight = new StyleDictionary({
-            log: { verbosity: "verbose" },
-            source: ['src/tokens-light.json'],
-            platforms: {
-                css: {
-                    transformGroup: 'css',
-                    buildPath: 'dist/css/',
-                    files: [{
-                        destination: 'variables-light.css',
-                        format: 'css/variables',
-                        options: { selector: ':root' }
-                    }]
-                },
-                ...optionalPointrPlatform('kozmos-light.json')
-            }
-        });
-        await sdLight.buildAllPlatforms();
+  try {
+    // 1. Light Mode (CSS)
+    console.log("\n☀️  Building Light Mode...");
+    const sdLight = new StyleDictionary({
+      log: { verbosity: "verbose" },
+      source: ["src/tokens-light.json"],
+      platforms: {
+        css: {
+          transformGroup: "css",
+          buildPath: "dist/css/",
+          files: [
+            {
+              destination: "variables-light.css",
+              format: "css/variables",
+              options: { selector: ":root" },
+            },
+          ],
+        },
+        ...optionalPointrPlatform("kozmos-light.json"),
+      },
+    });
+    await sdLight.buildAllPlatforms();
 
-        // 2. Dark Mode (CSS)
-        console.log('\n🌙  Building Dark Mode...');
-        const sdDark = new StyleDictionary({
-            source: ['src/tokens-dark.json'],
-            platforms: {
-                css: {
-                    transformGroup: 'css',
-                    buildPath: 'dist/css/',
-                    files: [{
-                        destination: 'variables-dark.css',
-                        format: 'css/variables',
-                        options: { selector: "[data-theme='dark']" }
-                    }]
-                },
-                ...optionalPointrPlatform('kozmos-dark.json')
-            }
-        });
-        await sdDark.buildAllPlatforms();
+    // 2. Dark Mode (CSS)
+    console.log("\n🌙  Building Dark Mode...");
+    const sdDark = new StyleDictionary({
+      source: ["src/tokens-dark.json"],
+      platforms: {
+        css: {
+          transformGroup: "css",
+          buildPath: "dist/css/",
+          files: [
+            {
+              destination: "variables-dark.css",
+              format: "css/variables",
+              options: { selector: "[data-theme='dark']" },
+            },
+          ],
+        },
+        ...optionalPointrPlatform("kozmos-dark.json"),
+      },
+    });
+    await sdDark.buildAllPlatforms();
 
-        // 3. JS
-        console.log('\n📦  Building JS/TS...');
-        const sdJS = new StyleDictionary({
-            source: ['src/tokens-light.json'],
-            platforms: {
-                js: {
-                    transformGroup: 'js',
-                    buildPath: 'dist/js/',
-                    files: [
-                        { destination: 'tokens.js', format: 'javascript/module-flat' },
-                        { destination: 'tokens.mjs', format: 'javascript/es6' },
-                        { destination: 'tokens.d.ts', format: 'typescript/es6-declarations' }
-                    ]
-                }
-            }
-        });
-        await sdJS.buildAllPlatforms();
+    // 3. JS
+    console.log("\n📦  Building JS/TS...");
+    const sdJS = new StyleDictionary({
+      source: ["src/tokens-light.json"],
+      platforms: {
+        js: {
+          transformGroup: "js",
+          buildPath: "dist/js/",
+          files: [
+            { destination: "tokens.js", format: "javascript/module-flat" },
+            { destination: "tokens.mjs", format: "javascript/es6" },
+            {
+              destination: "tokens.d.ts",
+              format: "typescript/es6-declarations",
+            },
+          ],
+        },
+      },
+    });
+    await sdJS.buildAllPlatforms();
 
-        // 4. Android
-        console.log('\n🤖 Building Android (XML Resources)...');
-        const sdAndroidLight = new StyleDictionary({
-            source: ['src/tokens-light.json'],
-            platforms: {
-                android: {
-                    transformGroup: 'android',
-                    buildPath: 'dist/android/src/main/res/values/',
-                    files: [{ destination: 'colors.xml', format: 'android/resources', options: { outputReferences: true } }]
-                }
-            }
-        });
-        await sdAndroidLight.buildAllPlatforms();
-        fixAndroidXML('dist/android/src/main/res/values/colors.xml');
+    // 4. Android
+    console.log("\n🤖 Building Android (XML Resources)...");
+    const sdAndroidLight = new StyleDictionary({
+      source: ["src/tokens-light.json"],
+      platforms: {
+        android: {
+          transformGroup: "android",
+          buildPath: "dist/android/src/main/res/values/",
+          files: [
+            {
+              destination: "colors.xml",
+              format: "android/resources",
+              options: { outputReferences: true },
+            },
+          ],
+        },
+      },
+    });
+    await sdAndroidLight.buildAllPlatforms();
+    fixAndroidXML("dist/android/src/main/res/values/colors.xml");
 
-        const sdAndroidDark = new StyleDictionary({
-            source: ['src/tokens-dark.json'],
-            platforms: {
-                android: {
-                    transformGroup: 'android',
-                    buildPath: 'dist/android/src/main/res/values-night/',
-                    files: [{ destination: 'colors.xml', format: 'android/resources', options: { outputReferences: true } }]
-                }
-            }
-        });
-        await sdAndroidDark.buildAllPlatforms();
-        fixAndroidXML('dist/android/src/main/res/values-night/colors.xml');
+    const sdAndroidDark = new StyleDictionary({
+      source: ["src/tokens-dark.json"],
+      platforms: {
+        android: {
+          transformGroup: "android",
+          buildPath: "dist/android/src/main/res/values-night/",
+          files: [
+            {
+              destination: "colors.xml",
+              format: "android/resources",
+              options: { outputReferences: true },
+            },
+          ],
+        },
+      },
+    });
+    await sdAndroidDark.buildAllPlatforms();
+    fixAndroidXML("dist/android/src/main/res/values-night/colors.xml");
 
-        StyleDictionary.registerFilter({
-            name: 'isColor',
-            filter: function(token) {
-                return token.$type === 'color' || token.type === 'color';
-            }
-        });
+    StyleDictionary.registerFilter({
+      name: "isColor",
+      filter: function (token) {
+        return token.$type === "color" || token.type === "color";
+      },
+    });
 
-        StyleDictionary.registerFilter({
-            name: 'isSemanticOrComponentColor',
-            filter: function(token) {
-                const isColor = token.$type === 'color' || token.type === 'color';
-                return isColor && (token.path.includes('Semantics') || token.path.includes('semantics') || token.path.includes('Components') || token.path.includes('components'));
-            }
-        });
+    StyleDictionary.registerFilter({
+      name: "isSemanticOrComponentColor",
+      filter: function (token) {
+        const isColor = token.$type === "color" || token.type === "color";
+        return (
+          isColor &&
+          (token.path.includes("Semantics") ||
+            token.path.includes("semantics") ||
+            token.path.includes("Components") ||
+            token.path.includes("components"))
+        );
+      },
+    });
 
-        const sdAndroidCompose = new StyleDictionary({
-            source: ['src/tokens-light.json'],
-            platforms: {
-                androidCompose: {
-                    transformGroup: 'compose',
-                    buildPath: 'dist/android/src/main/java/com/kozmos/tokens/',
-                    files: [
-                        { destination: 'KozmosColors.kt', format: 'android-compose/exact', filter: 'isColor', options: { className: 'KozmosColors' } },
-                        { destination: 'KozmosDesignTokens.kt', format: 'android-compose/exact', filter: 'isSemanticOrComponentColor', options: { className: 'KozmosDesignTokens' } }
-                    ]
-                }
-            }
-        });
-        await sdAndroidCompose.buildAllPlatforms();
+    const sdAndroidCompose = new StyleDictionary({
+      source: ["src/tokens-light.json"],
+      platforms: {
+        androidCompose: {
+          transformGroup: "compose",
+          buildPath: "dist/android/src/main/java/com/kozmos/tokens/",
+          files: [
+            {
+              destination: "KozmosColors.kt",
+              format: "android-compose/exact",
+              filter: "isColor",
+              options: { className: "KozmosColors" },
+            },
+            {
+              destination: "KozmosDesignTokens.kt",
+              format: "android-compose/exact",
+              filter: "isSemanticOrComponentColor",
+              options: { className: "KozmosDesignTokens" },
+            },
+          ],
+        },
+      },
+    });
+    await sdAndroidCompose.buildAllPlatforms();
 
-        const sdAndroidComposeDimensions = new StyleDictionary({
-            source: ['src/tokens-light.json'],
-            platforms: {
-                androidCompose: {
-                    transformGroup: 'compose',
-                    buildPath: 'dist/android/src/main/java/com/kozmos/tokens/',
-                    files: [
-                        { destination: 'KozmosDimensions.kt', format: 'android-compose/dimensions', options: { className: 'KozmosDimensions' } },
-                        { destination: 'KozmosShadows.kt', format: 'android-compose/shadows', options: { className: 'KozmosShadows' } }
-                    ]
-                }
-            }
-        });
-        await sdAndroidComposeDimensions.buildAllPlatforms();
+    const sdAndroidComposeDimensions = new StyleDictionary({
+      source: ["src/tokens-light.json"],
+      platforms: {
+        androidCompose: {
+          transformGroup: "compose",
+          buildPath: "dist/android/src/main/java/com/kozmos/tokens/",
+          files: [
+            {
+              destination: "KozmosDimensions.kt",
+              format: "android-compose/dimensions",
+              options: { className: "KozmosDimensions" },
+            },
+            {
+              destination: "KozmosShadows.kt",
+              format: "android-compose/shadows",
+              options: { className: "KozmosShadows" },
+            },
+          ],
+        },
+      },
+    });
+    await sdAndroidComposeDimensions.buildAllPlatforms();
 
-        const sdAndroidComposeDark = new StyleDictionary({
-            source: ['src/tokens-dark.json'],
-            platforms: {
-                androidCompose: {
-                    transformGroup: 'compose',
-                    buildPath: 'dist/android/src/main/java/com/kozmos/tokens/',
-                    files: [
-                        { destination: 'KozmosColorsDark.kt', format: 'android-compose/exact', filter: 'isColor', options: { className: 'KozmosColorsDark' } }
-                    ]
-                }
-            }
-        });
-        await sdAndroidComposeDark.buildAllPlatforms();
+    const sdAndroidComposeDark = new StyleDictionary({
+      source: ["src/tokens-dark.json"],
+      platforms: {
+        androidCompose: {
+          transformGroup: "compose",
+          buildPath: "dist/android/src/main/java/com/kozmos/tokens/",
+          files: [
+            {
+              destination: "KozmosColorsDark.kt",
+              format: "android-compose/exact",
+              filter: "isColor",
+              options: { className: "KozmosColorsDark" },
+            },
+          ],
+        },
+      },
+    });
+    await sdAndroidComposeDark.buildAllPlatforms();
 
+    // 5. iOS (Swift Dynamic)
+    console.log("\n🍎 Building iOS (Dynamic Swift)...");
 
-        // 5. iOS (Swift Dynamic)
-        console.log('\n🍎 Building iOS (Dynamic Swift)...');
+    // Load and Merge Tokens
+    const lightTokens = JSON.parse(
+      fs.readFileSync("src/tokens-light.json", "utf8"),
+    );
+    const darkTokens = JSON.parse(
+      fs.readFileSync("src/tokens-dark.json", "utf8"),
+    );
 
-        // Load and Merge Tokens
-        const lightTokens = JSON.parse(fs.readFileSync('src/tokens-light.json', 'utf8'));
-        const darkTokens = JSON.parse(fs.readFileSync('src/tokens-dark.json', 'utf8'));
+    // Mutate lightTokens
+    const mergedTokens = mergeDarkTokens(lightTokens, darkTokens);
+    fs.writeFileSync(
+      "src/tokens-merged-temp.json",
+      JSON.stringify(mergedTokens, null, 2),
+    );
 
-        // Mutate lightTokens
-        const mergedTokens = mergeDarkTokens(lightTokens, darkTokens);
-        fs.writeFileSync('src/tokens-merged-temp.json', JSON.stringify(mergedTokens, null, 2));
+    const sdIOS = new StyleDictionary({
+      log: { verbosity: "verbose" },
+      source: ["src/tokens-merged-temp.json"],
+      platforms: {
+        ios: {
+          transforms: ["attribute/cti", "name/kozmos/camel"],
+          buildPath: "dist/ios/",
+          files: [
+            {
+              destination: "KozmosColors.swift",
+              format: "ios-swift/dynamic",
+              options: {
+                className: "KozmosColors",
+              },
+            },
+            {
+              destination: "KozmosDimensions.swift",
+              format: "ios-swift/dimensions",
+              options: {
+                className: "KozmosDimensions",
+              },
+            },
+            {
+              destination: "KozmosShadows.swift",
+              format: "ios-swift/shadows",
+              options: {
+                className: "KozmosShadows",
+              },
+            },
+          ],
+        },
+      },
+    });
+    await sdIOS.buildAllPlatforms();
 
-        const sdIOS = new StyleDictionary({
-            log: { verbosity: "verbose" },
-            source: ['src/tokens-merged-temp.json'],
-            platforms: {
-                ios: {
-                    transforms: ['attribute/cti', 'name/kozmos/camel'],
-                    buildPath: 'dist/ios/',
-                    files: [
-                        {
-                            destination: 'KozmosColors.swift',
-                            format: 'ios-swift/dynamic',
-                            options: {
-                                className: 'KozmosColors'
-                            }
-                        },
-                        {
-                            destination: 'KozmosDimensions.swift',
-                            format: 'ios-swift/dimensions',
-                            options: {
-                                className: 'KozmosDimensions'
-                            }
-                        },
-                        {
-                            destination: 'KozmosShadows.swift',
-                            format: 'ios-swift/shadows',
-                            options: {
-                                className: 'KozmosShadows'
-                            }
-                        }
-                    ]
-                }
-            }
-        });
-        await sdIOS.buildAllPlatforms();
+    if (fs.existsSync("src/tokens-merged-temp.json"))
+      fs.unlinkSync("src/tokens-merged-temp.json");
 
-        if (fs.existsSync('src/tokens-merged-temp.json')) fs.unlinkSync('src/tokens-merged-temp.json');
-
-        console.log('\n✅ Build Complete.');
-    } catch (error) {
-        console.error('❌ Build Failed:', error);
-        if (fs.existsSync('src/tokens-merged-temp.json')) fs.unlinkSync('src/tokens-merged-temp.json');
-        process.exit(1);
-    }
+    console.log("\n✅ Build Complete.");
+  } catch (error) {
+    console.error("❌ Build Failed:", error);
+    if (fs.existsSync("src/tokens-merged-temp.json"))
+      fs.unlinkSync("src/tokens-merged-temp.json");
+    process.exit(1);
+  }
 }
 
 build();

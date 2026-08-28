@@ -17,7 +17,7 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         ref={ref}
         size={size}
         variant={variant}
-        className={cn("rounded-full", iconButtonSizeClass(size), className)}
+        className={cn("rounded-pill", iconButtonSizeClass(size), className)}
         {...props}
       />
     );

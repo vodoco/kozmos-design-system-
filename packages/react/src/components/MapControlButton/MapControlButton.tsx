@@ -42,7 +42,7 @@ const MapControlButton = React.forwardRef<
         aria-label={accessibleLabel}
         aria-pressed={pressed}
         className={cn(
-          "min-h-11 rounded-[var(--primitives-radius-lg)] bg-background/90 text-foreground shadow-md ring-1 ring-border backdrop-blur-xl hover:bg-secondary",
+          "min-h-11 rounded-container bg-background/90 text-foreground shadow-md ring-1 ring-border backdrop-blur-xl hover:bg-secondary",
           presentation === "icon-only" ? "w-11 px-0" : "max-w-64 gap-2 px-3.5",
           pressed && "shadow-sm",
           className,

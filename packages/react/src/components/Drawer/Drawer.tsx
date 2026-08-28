@@ -19,11 +19,11 @@ export type DrawerContentProps = React.ComponentPropsWithoutRef<
 
 const drawerSideClasses: Record<DrawerSide, string> = {
   bottom:
-    "inset-x-0 bottom-0 max-h-[80vh] rounded-t-lg border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-  left: "inset-y-0 left-0 h-full w-[min(100vw,24rem)] rounded-r-lg border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+    "inset-x-0 bottom-0 max-h-[80vh] rounded-t-container border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+  left: "inset-y-0 left-0 h-full w-[min(100vw,24rem)] rounded-r-container border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
   right:
-    "inset-y-0 right-0 h-full w-[min(100vw,24rem)] rounded-l-lg border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
-  top: "inset-x-0 top-0 max-h-[80vh] rounded-b-lg border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+    "inset-y-0 right-0 h-full w-[min(100vw,24rem)] rounded-l-container border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+  top: "inset-x-0 top-0 max-h-[80vh] rounded-b-container border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
 };
 
 const Drawer = ({ onOpenChange, ...props }: DrawerProps) => {
@@ -83,7 +83,7 @@ const DrawerContent = React.forwardRef<
       >
         {children}
         {showClose ? (
-          <DialogPrimitive.Close className="absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none">
+          <DialogPrimitive.Close className="absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-control text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none">
             <X aria-hidden="true" className="h-4 w-4" />
             <span className="sr-only">Close drawer</span>
           </DialogPrimitive.Close>

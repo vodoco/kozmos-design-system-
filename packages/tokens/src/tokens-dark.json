@@ -2363,6 +2363,11 @@
             "com.figma.variableId": "VariableID:1440:2648",
             "com.figma.isOverride": true
           }
+        },
+        "full": {
+          "$type": "number",
+          "$value": 9999,
+          "$description": "Maximum roundness. Completes the numeric scale so every semantic radius alias resolves to a plain number."
         }
       }
     }
@@ -2398,41 +2403,65 @@
         }
       }
     },
+    "Radius": {
+      "None": {
+        "$value": "{Primitives.Layout.radius.0}",
+        "$type": "dimension",
+        "$description": "Flush edges: sidebars, navbars, table shells, anything meeting a viewport edge."
+      },
+      "Marker": {
+        "$value": "{Primitives.Layout.radius.50}",
+        "$type": "dimension",
+        "$description": "Small marks that sit inside something else: badges, checkboxes, colour swatches."
+      },
+      "Control": {
+        "$value": "{Primitives.Layout.radius.200}",
+        "$type": "dimension",
+        "$description": "Interactive controls: buttons, inputs, selects, list rows, toasts, tooltips. The workhorse role - repoint this one alias to change how round the product feels. Moved from radius.100 (8) to radius.200 (16) on 2026-08-28; web was already 16, so that change converged iOS, Android and Figma onto it."
+      },
+      "Container": {
+        "$value": "{Primitives.Layout.radius.200}",
+        "$type": "dimension",
+        "$description": "Cards and dialogs: a surface that holds controls."
+      },
+      "Panel": {
+        "$value": "{Primitives.Layout.radius.300}",
+        "$type": "dimension",
+        "$description": "Large panels and sheets, mostly the Product / SDK map surfaces."
+      },
+      "Pill": {
+        "$value": "{Primitives.Layout.radius.full}",
+        "$type": "dimension",
+        "$description": "Fully rounded: chips, avatars, switches, segmented controls."
+      }
+    },
     "Diff": {
       "New": {
         "$value": "#4FD98D",
         "$type": "color",
         "$extensions": {
-          "com.figma.scopes": [
-            "ALL_SCOPES"
-          ]
+          "com.figma.scopes": ["ALL_SCOPES"]
         }
       },
       "Updated": {
         "$value": "#6BA5FF",
         "$type": "color",
         "$extensions": {
-          "com.figma.scopes": [
-            "ALL_SCOPES"
-          ]
+          "com.figma.scopes": ["ALL_SCOPES"]
         }
       },
       "Deleted": {
         "$value": "#FF6B6B",
         "$type": "color",
         "$extensions": {
-          "com.figma.scopes": [
-            "ALL_SCOPES"
-          ]
+          "com.figma.scopes": ["ALL_SCOPES"]
         }
       },
       "Override": {
         "$value": "#B48CFF",
         "$type": "color",
         "$extensions": {
-          "com.figma.scopes": [
-            "ALL_SCOPES"
-          ]
+          "com.figma.scopes": ["ALL_SCOPES"]
         }
       }
     },

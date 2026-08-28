@@ -8,8 +8,8 @@ figma.connect(
     props: {
       className: figma.enum("Surface", {
         Transparent: "",
-        Surface: "rounded-md bg-card p-4 text-card-foreground",
-        Outlined: "rounded-md border bg-card p-4 text-card-foreground",
+        Surface: "rounded-control bg-card p-4 text-card-foreground",
+        Outlined: "rounded-control border bg-card p-4 text-card-foreground",
       }),
       children: figma.slot("Content Slot") ?? figma.children(["Content Slot"]),
     },

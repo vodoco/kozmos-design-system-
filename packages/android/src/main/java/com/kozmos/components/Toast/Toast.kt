@@ -80,7 +80,7 @@ fun KozmosToast(
 ) {
     Surface(
         modifier = modifier.widthIn(min = 320.dp, max = 420.dp),
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
         color = KozmosThemeTokens.primitivesColorsBackground0,
         shadowElevation = 8.dp,
         border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsForeground400)

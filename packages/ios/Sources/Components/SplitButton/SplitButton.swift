@@ -19,7 +19,7 @@ public struct KozmosSplitButton: View {
                     .background(KozmosColors.primitivesColorsTheme500)
                     .foregroundColor(KozmosColors.primitivesColorsBackground0)
             }
-            .clipShape(UnevenRoundedRectangle(topLeadingRadius: KozmosDimensions.primitivesLayoutRadius100, bottomLeadingRadius: KozmosDimensions.primitivesLayoutRadius100, bottomTrailingRadius: KozmosDimensions.primitivesLayoutRadius0, topTrailingRadius: KozmosDimensions.primitivesLayoutRadius0))
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: KozmosDimensions.semanticsRadiusControl, bottomLeadingRadius: KozmosDimensions.semanticsRadiusControl, bottomTrailingRadius: KozmosDimensions.semanticsRadiusNone, topTrailingRadius: KozmosDimensions.semanticsRadiusNone))
             
             Menu {
                 ForEach(menuItems.indices, id: \.self) { index in
@@ -33,7 +33,7 @@ public struct KozmosSplitButton: View {
                     .background(KozmosColors.primitivesColorsTheme500)
                     .foregroundColor(KozmosColors.primitivesColorsBackground0)
             }
-            .clipShape(UnevenRoundedRectangle(topLeadingRadius: KozmosDimensions.primitivesLayoutRadius0, bottomLeadingRadius: KozmosDimensions.primitivesLayoutRadius0, bottomTrailingRadius: KozmosDimensions.primitivesLayoutRadius100, topTrailingRadius: KozmosDimensions.primitivesLayoutRadius100))
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: KozmosDimensions.semanticsRadiusNone, bottomLeadingRadius: KozmosDimensions.semanticsRadiusNone, bottomTrailingRadius: KozmosDimensions.semanticsRadiusControl, topTrailingRadius: KozmosDimensions.semanticsRadiusControl))
         }
     }
 }

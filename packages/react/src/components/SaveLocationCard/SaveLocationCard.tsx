@@ -45,7 +45,7 @@ const SaveLocationCard = React.forwardRef<
         <div className="flex items-center gap-4">
           <div
             className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5 dark:ring-white/10",
+              "w-12 h-12 rounded-pill flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5 dark:ring-white/10",
               isSaved
                 ? "bg-primary text-primary-foreground"
                 : "bg-white dark:bg-black/50 text-foreground",

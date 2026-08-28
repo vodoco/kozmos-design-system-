@@ -65,9 +65,9 @@ public struct KozmosOTPInput: View {
             .disabled(disabled || readOnly)
             .frame(width: 44, height: 50)
             .background(cellBackgroundColor)
-            .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+            .cornerRadius(KozmosDimensions.semanticsRadiusControl)
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(cellBorderColor(for: index), lineWidth: focusedField == index ? 2 : 1)
             )
             .font(.subheadline.weight(.semibold))
@@ -79,9 +79,9 @@ public struct KozmosOTPInput: View {
             .disabled(disabled || readOnly)
             .frame(width: 44, height: 50)
             .background(cellBackgroundColor)
-            .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+            .cornerRadius(KozmosDimensions.semanticsRadiusControl)
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(cellBorderColor(for: index), lineWidth: focusedField == index ? 2 : 1)
             )
             .font(.subheadline.weight(.semibold))

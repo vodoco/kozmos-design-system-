@@ -119,9 +119,9 @@ public struct KozmosDrawer<Content: View>: View {
             alignment: .topLeading
         )
         .background(KozmosColors.semanticsSurface0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+        .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground400, lineWidth: 1)
         )
         .shadow(color: KozmosColors.primitivesColorsForeground0.opacity(0.16), radius: 20, x: 0, y: 10)

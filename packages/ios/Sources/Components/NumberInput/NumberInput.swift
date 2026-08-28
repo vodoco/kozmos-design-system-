@@ -85,7 +85,7 @@ public struct KozmosNumberInput: View {
                     }
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
 
             if let supportingText = supportingText, !supportingText.isEmpty {
                 Text(supportingText)

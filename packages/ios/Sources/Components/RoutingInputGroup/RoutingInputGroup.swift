@@ -54,7 +54,7 @@ public struct KozmosRoutingInputGroup: View {
                         .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
                         .frame(height: 40)
                         .background(KozmosColors.primitivesColorsForeground900.opacity(0.05))
-                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous))
 
                         if canRemove(index: index), let onRemovePoint {
                             Button {
@@ -92,9 +92,9 @@ public struct KozmosRoutingInputGroup: View {
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing200)
         .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                 .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
         )
         .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.12), radius: 14, x: 0, y: 8)

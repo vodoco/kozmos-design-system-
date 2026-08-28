@@ -317,7 +317,7 @@ public struct KozmosNavigationItem: View {
     }
 
     private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+        RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
     }
 
     private var backgroundColor: Color {

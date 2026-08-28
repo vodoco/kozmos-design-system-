@@ -51,10 +51,10 @@ public struct KozmosToggleButton: View {
                 isOn ? (variant == .outline ? KozmosColors.primitivesColorsForeground100 : KozmosColors.primitivesColorsBackground0) : KozmosColors.primitivesColorsForeground100
             )
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(variant == .outline ? KozmosColors.primitivesColorsBackground400 : Color.clear, lineWidth: variant == .outline ? 1 : 0)
             )
-            .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+            .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         }
     }
 }

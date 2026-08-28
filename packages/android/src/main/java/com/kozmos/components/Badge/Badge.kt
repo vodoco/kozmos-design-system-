@@ -60,11 +60,11 @@ fun KozmosBadge(
         modifier = modifier
             .height(44.dp)
             .then(if (size == BadgeSize.Icon) Modifier.width(44.dp) else Modifier)
-            .background(containerColor, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .background(containerColor, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .border(
                 width = if (variant == BadgeVariant.Outline) 1.dp else 0.dp,
                 color = if (variant == BadgeVariant.Outline) contentColor else Color.Transparent,
-                shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+                shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
             )
             .padding(horizontal = horizontalPadding, vertical = 0.dp),
         contentAlignment = Alignment.Center

@@ -20,7 +20,7 @@ export const Default: Story = {
     action: <Button variant="outline">Clear Search</Button>,
   },
   render: (args) => (
-    <div className="w-[360px] h-[400px] border rounded-lg bg-card flex">
+    <div className="w-[360px] h-[400px] border rounded-container bg-card flex">
       <EmptyState {...args} />
     </div>
   ),

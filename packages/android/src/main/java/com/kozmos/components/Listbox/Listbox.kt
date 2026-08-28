@@ -45,7 +45,7 @@ fun KozmosListbox(
     enabled: Boolean = true,
     maxHeight: androidx.compose.ui.unit.Dp = 256.dp
 ) {
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
 
     Column(
         modifier = modifier
@@ -60,7 +60,7 @@ fun KozmosListbox(
     ) {
         options.forEach { option ->
             val selected = selectedValues.contains(option.value)
-            val rowShape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+            val rowShape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

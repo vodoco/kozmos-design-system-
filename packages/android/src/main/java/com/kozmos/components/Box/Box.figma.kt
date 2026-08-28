@@ -32,7 +32,7 @@ class KozmosBoxConnect {
     }
 
     private fun surfaceModifier(): Modifier {
-        val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+        val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
         return when (surface) {
             "surface" -> Modifier
                 .background(KozmosColors.primitivesColorsBackground0, shape)

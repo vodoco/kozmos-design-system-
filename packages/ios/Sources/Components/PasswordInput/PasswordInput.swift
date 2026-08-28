@@ -88,9 +88,9 @@ public struct KozmosPasswordInput: View {
             }
             .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
             .background(fieldBackgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(fieldBorderColor, lineWidth: 1)
             )
 

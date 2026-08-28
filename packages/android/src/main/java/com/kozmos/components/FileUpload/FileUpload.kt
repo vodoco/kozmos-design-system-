@@ -61,7 +61,7 @@ fun KozmosFileUpload(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(KozmosDimensions.primitivesLayoutSpacing100)
-                .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+                .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                 .padding(KozmosDimensions.primitivesLayoutSpacing150),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -82,11 +82,11 @@ fun KozmosFileUpload(
             modifier = modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+                .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                 .border(
                     width = 2.dp,
                     color = KozmosColors.primitivesColorsBackground300,
-                    shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+                    shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
                     // Note: Dashed border support in Compose often requires custom Canvas drawing
                     // We'll stick to solid for now or implement custom modifier later if needed
                 )

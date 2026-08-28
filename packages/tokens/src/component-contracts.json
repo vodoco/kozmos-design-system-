@@ -14,17 +14,37 @@
       ],
       "states": ["default", "disabled", "loading"],
       "sizes": {
-        "small": { "width": 96, "height": 44, "paddingX": 12, "gap": 8 },
-        "default": { "width": 112, "height": 44, "paddingX": 16, "gap": 8 },
-        "large": { "width": 136, "height": 44, "paddingX": 32, "gap": 8 },
-        "icon": { "width": 44, "height": 44, "paddingX": 0, "gap": 0 }
+        "small": {
+          "width": 96,
+          "height": 44,
+          "paddingX": 12,
+          "gap": 8
+        },
+        "default": {
+          "width": 112,
+          "height": 44,
+          "paddingX": 16,
+          "gap": 8
+        },
+        "large": {
+          "width": 136,
+          "height": 44,
+          "paddingX": 32,
+          "gap": 8
+        },
+        "icon": {
+          "width": 44,
+          "height": 44,
+          "paddingX": 0,
+          "gap": 0
+        }
       },
       "content": {
         "labelFontSize": 14,
         "labelLineHeight": 20,
         "iconSize": 16,
         "spinnerSize": 14,
-        "radius": 8,
+        "radius": 16,
         "strokeWidth": 1
       }
     },
@@ -67,8 +87,16 @@
     "counter": {
       "tones": ["neutral", "brand", "destructive", "inverse"],
       "sizes": {
-        "small": { "height": 18, "minWidth": 18, "paddingX": 5 },
-        "default": { "height": 20, "minWidth": 20, "paddingX": 6 }
+        "small": {
+          "height": 18,
+          "minWidth": 18,
+          "paddingX": 5
+        },
+        "default": {
+          "height": 20,
+          "minWidth": 20,
+          "paddingX": 6
+        }
       },
       "content": {
         "fontSizeSmall": 11,
@@ -88,10 +116,23 @@
         "link"
       ],
       "sizes": {
-        "small": { "height": 44, "paddingX": 12 },
-        "default": { "height": 44, "paddingX": 16 },
-        "large": { "height": 44, "paddingX": 32 },
-        "icon": { "width": 44, "height": 44, "paddingX": 0 }
+        "small": {
+          "height": 44,
+          "paddingX": 12
+        },
+        "default": {
+          "height": 44,
+          "paddingX": 16
+        },
+        "large": {
+          "height": 44,
+          "paddingX": 32
+        },
+        "icon": {
+          "width": 44,
+          "height": 44,
+          "paddingX": 0
+        }
       },
       "content": {
         "labelFontSize": 14,
@@ -104,7 +145,7 @@
         "counterRadius": 9999,
         "counterFontSize": 12,
         "counterLineHeight": 16,
-        "radius": 8,
+        "radius": 16,
         "strokeWidth": 1
       }
     },
@@ -174,7 +215,7 @@
         "labelLineHeight": 20,
         "textFontSize": 14,
         "textLineHeight": 20,
-        "radius": 8,
+        "radius": 16,
         "strokeWidth": 1
       }
     }

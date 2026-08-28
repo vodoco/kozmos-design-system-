@@ -23,8 +23,8 @@ fun KozmosMapView(
         modifier = modifier
             .defaultMinSize(minHeight = 400.dp)
             .background(KozmosColors.primitivesColorsBackground100)
-            .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
-            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
     ) {
         Box(
             modifier = Modifier

@@ -55,9 +55,9 @@ fun KozmosDirectionStep(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .background(KozmosColors.primitivesColorsBackground0)
-            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(KozmosDimensions.primitivesLayoutSpacing150),
         verticalAlignment = Alignment.CenterVertically
     ) {

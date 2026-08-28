@@ -81,9 +81,9 @@ public struct KozmosMapControlButton<Icon: View>: View {
             .frame(maxWidth: presentation == .labelled ? 256 : nil)
             .padding(.horizontal, presentation == .labelled ? KozmosDimensions.primitivesLayoutSpacing150 : 0)
             .background(backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                     .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
             )
             .shadow(

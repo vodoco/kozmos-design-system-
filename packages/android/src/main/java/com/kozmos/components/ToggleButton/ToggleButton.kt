@@ -77,7 +77,7 @@ fun KozmosToggleButton(
             trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "ToggleButton", eventName = "toggle_pressed", properties = mapOf("pressed" to it.toString())))
             onCheckedChange(it) 
         },
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
         color = backgroundColor,
         modifier = modifier
             .defaultMinSize(minHeight = minHeight)
@@ -86,7 +86,7 @@ fun KozmosToggleButton(
                     Modifier.border(
                         1.dp,
                         if (checked) KozmosColors.primitivesColorsBackground400 else KozmosColors.primitivesColorsBackground300,
-                        RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+                        RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
                     )
                 } else Modifier
             )

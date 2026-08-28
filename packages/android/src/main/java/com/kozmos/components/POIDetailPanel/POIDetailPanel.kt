@@ -104,7 +104,7 @@ fun KozmosPOIDetailPanel(
     servicesHeading: String = "Service options",
     presentation: KozmosPOIDetailPanelPresentation = KozmosPOIDetailPanelPresentation.Inline
 ) {
-    val radius = KozmosDimensions.primitivesLayoutRadius300
+    val radius = KozmosDimensions.semanticsRadiusPanel
     val shape = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) {
         RoundedCornerShape(topStart = radius, topEnd = radius)
     } else {
@@ -219,7 +219,7 @@ fun KozmosPOIDetailPanel(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+                                .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                                 .background(KozmosColors.primitivesColorsBackground100)
                                 .padding(
                                     horizontal = KozmosDimensions.primitivesLayoutSpacing150,
@@ -239,7 +239,7 @@ fun KozmosPOIDetailPanel(
                                 contentDescription =
                                     "$accessRestrictionsHeading, $accessRestrictionsLabel"
                             },
-                        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+                        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
                         color = KozmosColors.primitivesColorsBackground100.copy(alpha = 0.4f),
                         border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
                     ) {
@@ -406,7 +406,7 @@ private fun Services(
 @Composable
 private fun POILogo(poi: KozmosPOIPresentation) {
     val logo = poi.logo
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
 
     if (logo != null) {
         AsyncImage(

@@ -19,9 +19,9 @@ public struct KozmosTable<Data: RandomAccessCollection, RowContent: View>: View 
             }
         }
         .background(KozmosColors.primitivesColorsBackground0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+        .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsBackground300, lineWidth: 1)
         )
     }

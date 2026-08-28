@@ -43,7 +43,7 @@ const RouteSummary = React.forwardRef<HTMLDivElement, RouteSummaryProps>(
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             {transportModeIcon && (
-              <div className="w-10 h-10 rounded-full bg-secondary text-primary flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-pill bg-secondary text-primary flex items-center justify-center shrink-0">
                 {transportModeIcon}
               </div>
             )}
@@ -60,7 +60,7 @@ const RouteSummary = React.forwardRef<HTMLDivElement, RouteSummaryProps>(
             <Button
               variant="destructive"
               size="icon"
-              className="h-11 w-11 shrink-0 rounded-full"
+              className="h-11 w-11 shrink-0 rounded-pill"
               onClick={onEndRoute}
               aria-label={endRouteLabel}
             >
@@ -73,7 +73,7 @@ const RouteSummary = React.forwardRef<HTMLDivElement, RouteSummaryProps>(
         {state === "preview" && onStartNavigation && (
           <Button
             size="lg"
-            className="w-full h-12 rounded-full font-semibold text-base shadow-sm"
+            className="w-full h-12 rounded-pill font-semibold text-base shadow-sm"
             onClick={onStartNavigation}
           >
             <Navigation aria-hidden="true" className="w-5 h-5 mr-2" />

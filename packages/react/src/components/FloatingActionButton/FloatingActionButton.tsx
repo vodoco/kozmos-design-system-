@@ -35,7 +35,7 @@ const FloatingActionButton = React.forwardRef<
         variant={variant}
         size={size}
         className={cn(
-          "rounded-full p-0 shadow-lg",
+          "rounded-pill p-0 shadow-lg",
           floatingActionButtonSizeClass[
             size as keyof typeof floatingActionButtonSizeClass
           ] || floatingActionButtonSizeClass.icon,

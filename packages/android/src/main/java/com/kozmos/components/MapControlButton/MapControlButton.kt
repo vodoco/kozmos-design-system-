@@ -70,7 +70,7 @@ fun KozmosMapControlButton(
                 selected = pressed
             },
         enabled = enabled,
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
         color = if (pressed) {
             KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle
         } else {

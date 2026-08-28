@@ -61,7 +61,7 @@ fun KozmosPasswordInput(
     val isVisible = visible ?: internalVisible
     val effectiveStatus = if (error) KozmosInputStatus.Error else status
     val supportingText = errorMessage ?: helperText
-    val fieldShape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val fieldShape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
     val statusColor = when (effectiveStatus) {
         KozmosInputStatus.Error -> KozmosThemeTokens.primitivesColorsEmotionalDanger600
         KozmosInputStatus.Warning -> KozmosThemeTokens.primitivesColorsEmotionalAlert600

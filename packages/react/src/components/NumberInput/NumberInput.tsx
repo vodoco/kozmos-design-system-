@@ -133,7 +133,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
               type="button"
               aria-label="Decrease value"
               className={cn(
-                "flex h-11 w-11 shrink-0 items-center justify-center rounded-l-md border border-r-0 bg-background text-foreground ring-offset-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-l-control border border-r-0 bg-background text-foreground ring-offset-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
                 stepperToneClass,
               )}
               disabled={stepperDisabled}
@@ -167,7 +167,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
               type="button"
               aria-label="Increase value"
               className={cn(
-                "flex h-11 w-11 shrink-0 items-center justify-center rounded-r-md border border-l-0 bg-background text-foreground ring-offset-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-r-control border border-l-0 bg-background text-foreground ring-offset-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
                 stepperToneClass,
               )}
               disabled={stepperDisabled}

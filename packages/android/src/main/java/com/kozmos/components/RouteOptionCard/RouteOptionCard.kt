@@ -62,7 +62,7 @@ fun KozmosRouteOptionCard(
                 selected = option.selected
             },
         enabled = isEnabled,
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
         color = if (option.selected) {
             KozmosColors.primitivesColorsTheme500.copy(alpha = 0.05f)
         } else {

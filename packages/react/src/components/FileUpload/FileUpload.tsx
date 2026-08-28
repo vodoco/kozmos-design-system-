@@ -230,7 +230,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
             aria-controls={inputId}
             aria-disabled={disabled || undefined}
             className={cn(
-              "flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed bg-background px-4 py-6 text-center ring-offset-background transition-colors",
+              "flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-container border border-dashed bg-background px-4 py-6 text-center ring-offset-background transition-colors",
               "border-[color:var(--primitives-colors-foreground-500)] hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               dragActive && "border-primary bg-primary/5",
               disabled &&
@@ -273,7 +273,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
               {files.map((file) => (
                 <li
                   key={`${file.name}-${file.size}-${file.lastModified}`}
-                  className="flex min-h-11 items-center gap-3 rounded-lg border bg-card px-3 py-2"
+                  className="flex min-h-11 items-center gap-3 rounded-container border bg-card px-3 py-2"
                 >
                   <FileIcon
                     aria-hidden="true"

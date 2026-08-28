@@ -99,7 +99,7 @@ public struct KozmosPOIResultCard: View {
                 .background(KozmosColors.componentsPrimaryButtonsAlertButtonBackgroundIdle)
                 .clipShape(
                     RoundedRectangle(
-                        cornerRadius: KozmosDimensions.primitivesLayoutRadius100,
+                        cornerRadius: KozmosDimensions.semanticsRadiusControl,
                         style: .continuous
                     )
                 )
@@ -184,9 +184,9 @@ public struct KozmosPOIResultCard: View {
             }
         }
         .background(KozmosColors.primitivesColorsBackground0)
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                 .stroke(
                     result.selected
                         ? KozmosColors.primitivesColorsTheme500
@@ -215,10 +215,10 @@ public struct KozmosPOIResultCard: View {
             }
             .frame(width: 40, height: 40)
             .clipShape(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
                     .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
             )
             .accessibilityLabel(logo.alt)
@@ -229,7 +229,7 @@ public struct KozmosPOIResultCard: View {
                 .frame(width: 40, height: 40)
                 .background(KozmosColors.primitivesColorsBackground100)
                 .clipShape(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
                 )
                 .accessibilityHidden(true)
         }

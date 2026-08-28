@@ -52,9 +52,9 @@ public struct KozmosMapControlsGroup: View {
                 )
             }
             .background(surfaceColor)
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius200, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius200, style: .continuous)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer, style: .continuous)
                     .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
             )
             .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.12), radius: 12, x: 0, y: 8)
@@ -68,7 +68,7 @@ public struct KozmosMapControlsGroup: View {
                 )
                 .rotationEffect(.degrees(compassBearing))
                 .background(surfaceColor)
-                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius200, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer, style: .continuous))
                 .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.12), radius: 12, x: 0, y: 8)
             }
 

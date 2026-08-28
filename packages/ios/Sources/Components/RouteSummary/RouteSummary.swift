@@ -75,9 +75,9 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing200)
         .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                 .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
         )
         .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.14), radius: 16, x: 0, y: 10)

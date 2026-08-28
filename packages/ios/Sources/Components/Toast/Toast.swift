@@ -94,9 +94,9 @@ public struct KozmosToast: View {
         .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing200)
         .frame(maxWidth: 420)
         .background(KozmosColors.primitivesColorsBackground0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+        .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground400, lineWidth: 1)
         )
         .shadow(color: KozmosColors.primitivesColorsForeground0.opacity(0.12), radius: 16, x: 0, y: 8)

@@ -129,9 +129,9 @@ public struct KozmosDialog<Content: View>: View {
         .padding(KozmosDimensions.primitivesLayoutSpacing300)
         .frame(maxWidth: 512)
         .background(KozmosColors.semanticsSurface0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius200)
+        .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius200)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer)
                 .stroke(KozmosColors.primitivesColorsForeground400, lineWidth: 1)
         )
         .shadow(color: KozmosColors.primitivesColorsForeground0.opacity(0.16), radius: 20, x: 0, y: 10)

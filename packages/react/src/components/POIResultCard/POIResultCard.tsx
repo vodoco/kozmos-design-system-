@@ -57,7 +57,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
       <article
         ref={ref}
         className={cn(
-          "relative rounded-[var(--primitives-radius-lg)] border bg-card text-card-foreground shadow-sm transition-shadow",
+          "relative rounded-container border bg-card text-card-foreground shadow-sm transition-shadow",
           result.selected
             ? "border-primary ring-2 ring-primary/20"
             : "border-border",
@@ -71,7 +71,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
         {...props}
       >
         {result.featured && (
-          <span className="absolute bottom-full left-4 inline-flex h-6 items-center gap-1 rounded-t-md bg-warning px-2 text-xs font-semibold text-warning-foreground">
+          <span className="absolute bottom-full left-4 inline-flex h-6 items-center gap-1 rounded-t-control bg-warning px-2 text-xs font-semibold text-warning-foreground">
             <Star aria-hidden="true" className="h-3.5 w-3.5 fill-current" />
             {featuredLabel}
           </span>
@@ -86,7 +86,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
           onClick={handleSelect}
           type="button"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-pill bg-primary text-sm font-bold text-primary-foreground">
             {result.resultIndex}
           </span>
 
@@ -121,13 +121,13 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
             {poi.logo ? (
               <img
                 alt={poi.logo.alt}
-                className="h-10 w-10 rounded-md border border-border object-contain"
+                className="h-10 w-10 rounded-control border border-border object-contain"
                 src={poi.logo.src}
               />
             ) : (
               <span
                 aria-hidden="true"
-                className="flex h-10 w-10 items-center justify-center rounded-md bg-muted text-sm font-bold text-muted-foreground"
+                className="flex h-10 w-10 items-center justify-center rounded-control bg-muted text-sm font-bold text-muted-foreground"
               >
                 {poi.name.slice(0, 1).toUpperCase()}
               </span>

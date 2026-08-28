@@ -45,7 +45,7 @@ fun KozmosRouteSummary(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
         color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,

@@ -259,7 +259,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
             {canClear && (
               <button
                 type="button"
-                className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground ring-offset-background hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded-control text-muted-foreground ring-offset-background hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 aria-label="Clear selection"
                 onClick={clearSelection}
               >
@@ -268,7 +268,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
             )}
             <button
               type="button"
-              className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground ring-offset-background hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded-control text-muted-foreground ring-offset-background hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={open ? "Close options" : "Open options"}
               disabled={disabled || readOnly}
               onClick={() => setOpen((current) => !current)}
@@ -286,7 +286,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
             <div
               id={listboxId}
               role="listbox"
-              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-1 text-popover-foreground shadow-md"
             >
               {filteredOptions.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-muted-foreground">
@@ -305,7 +305,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
                       aria-selected={selected}
                       aria-disabled={option.disabled || undefined}
                       className={cn(
-                        "flex cursor-pointer items-start gap-2 rounded-sm px-3 py-2 text-sm outline-none",
+                        "flex cursor-pointer items-start gap-2 rounded-marker px-3 py-2 text-sm outline-none",
                         active && "bg-accent text-accent-foreground",
                         option.disabled &&
                           "cursor-not-allowed text-muted-foreground opacity-60",

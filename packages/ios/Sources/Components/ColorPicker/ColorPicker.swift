@@ -70,11 +70,11 @@ public struct KozmosColorPicker: View {
 
             Button(action: toggleOpen) {
                 HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius50)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusMarker)
                         .fill(color)
                         .frame(width: 32, height: 32)
                         .overlay(
-                            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius50)
+                            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusMarker)
                                 .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
                         )
 
@@ -93,9 +93,9 @@ public struct KozmosColorPicker: View {
                 .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
                 .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
                 .background(fieldBackgroundColor)
-                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                 .overlay(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                         .stroke(fieldBorderColor, lineWidth: 1)
                 )
             }
@@ -147,9 +147,9 @@ public struct KozmosColorPicker: View {
         .padding(KozmosDimensions.primitivesLayoutSpacing150)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(KozmosColors.primitivesColorsBackground0)
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
         )
         .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.18), radius: 8, x: 0, y: 4)
@@ -162,7 +162,7 @@ public struct KozmosColorPicker: View {
             let handleY = max(0, proxy.size.height - handleSize) * CGFloat(1 - (currentHsl.l / 100))
 
             ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .fill(
                         LinearGradient(
                             colors: [.white, hueColor],
@@ -176,7 +176,7 @@ public struct KozmosColorPicker: View {
                             startPoint: .top,
                             endPoint: .bottom
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                     )
 
                 Circle()
@@ -188,9 +188,9 @@ public struct KozmosColorPicker: View {
             }
         }
         .frame(maxWidth: .infinity, minHeight: 144, maxHeight: 144)
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
         )
         .accessibilityLabel("Saturation and lightness")
@@ -226,9 +226,9 @@ public struct KozmosColorPicker: View {
             .frame(height: 36)
             .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing100)
             .background(KozmosColors.primitivesColorsBackground0)
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
             )
 
@@ -239,9 +239,9 @@ public struct KozmosColorPicker: View {
                     .frame(minWidth: currentFormat == .hex ? 104 : 44, maxWidth: currentFormat == .hex ? .infinity : 56, minHeight: 36)
                     .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing100)
                     .background(KozmosColors.primitivesColorsBackground0)
-                    .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+                    .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                     .overlay(
-                        RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                        RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                             .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
                     )
             }
@@ -251,9 +251,9 @@ public struct KozmosColorPicker: View {
                 .foregroundColor(KozmosColors.primitivesColorsForeground0)
                 .frame(minWidth: 52, minHeight: 36)
                 .background(KozmosColors.primitivesColorsBackground0)
-                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                 .overlay(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                         .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
                 )
         }
@@ -273,9 +273,9 @@ public struct KozmosColorPicker: View {
         .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
         .frame(maxWidth: .infinity, minHeight: 40)
         .background(KozmosColors.primitivesColorsBackground0)
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
         )
     }
@@ -288,11 +288,11 @@ public struct KozmosColorPicker: View {
         ) {
             ForEach(presets.map(normalizedHexColor), id: \.self) { preset in
                 Button(action: { commitValue(preset) }) {
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius50)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusMarker)
                         .fill(colorFromHex(preset))
                         .aspectRatio(1, contentMode: .fit)
                         .overlay(
-                            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius50)
+                            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusMarker)
                                 .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: preset == normalizedValue ? 2 : 1)
                         )
                 }

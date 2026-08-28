@@ -82,7 +82,6 @@ module.exports = {
         ring: "var(--primitives-colors-theme-600)",
       },
       borderRadius: {
-        none: "var(--primitives-radius-none)",
         sm: "var(--primitives-radius-sm)",
         md: "var(--primitives-radius-md)", // Alias for Base in new system, or strictly md
         lg: "var(--primitives-radius-lg)",
@@ -93,6 +92,22 @@ module.exports = {
         card: "var(--primitives-radius-card)",
         input: "var(--primitives-radius-input)",
         button: "var(--primitives-radius-button)",
+
+        // Semantic radius roles. This is the vocabulary to reach for: name the
+        // job, not the size. Changing how round the product feels is then one
+        // alias edit in packages/tokens/src/tokens-*.json under
+        // Semantics.Radius, not a sweep through class names.
+        //
+        // The variables are unitless numbers on purpose — they resolve to the
+        // same numeric scale iOS and Android read, so the three platforms
+        // cannot drift the way rounded-md (16px) and radius100 (8px) did.
+        // Hence the calc.
+        none: "calc(var(--semantics-radius-none) * 1px)",
+        marker: "calc(var(--semantics-radius-marker) * 1px)",
+        control: "calc(var(--semantics-radius-control) * 1px)",
+        container: "calc(var(--semantics-radius-container) * 1px)",
+        panel: "calc(var(--semantics-radius-panel) * 1px)",
+        pill: "calc(var(--semantics-radius-pill) * 1px)",
       },
       opacity: {
         0: "var(--primitives-opacity-0)",

@@ -75,7 +75,7 @@ fun KozmosCombobox(
             (option.description?.lowercase()?.contains(query) == true)
     }
     val colors = selectionFieldColors(effectiveStatus, enabled, readOnly)
-    val fieldShape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val fieldShape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
 
     Column(
         modifier = modifier.fillMaxWidth(),

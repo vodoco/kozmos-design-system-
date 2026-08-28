@@ -95,9 +95,9 @@ public struct KozmosRoutePreviewPanel<StatusContent: View, AlertContent: View>: 
                             .frame(maxWidth: .infinity)
                             .padding(KozmosDimensions.primitivesLayoutSpacing300)
                             .background(KozmosColors.primitivesColorsBackground100.opacity(0.4))
-                            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
                             .overlay(
-                                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous)
+                                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                                     .strokeBorder(
                                         KozmosColors.primitivesColorsForeground300,
                                         style: StrokeStyle(lineWidth: 1, dash: [4, 4])
@@ -130,7 +130,7 @@ public struct KozmosRoutePreviewPanel<StatusContent: View, AlertContent: View>: 
                             .background(KozmosColors.primitivesColorsEmotionalAlert500.opacity(0.15))
                             .clipShape(
                                 RoundedRectangle(
-                                    cornerRadius: KozmosDimensions.primitivesLayoutRadius100,
+                                    cornerRadius: KozmosDimensions.semanticsRadiusControl,
                                     style: .continuous
                                 )
                             )

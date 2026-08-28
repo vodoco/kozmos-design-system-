@@ -142,13 +142,13 @@ public struct KozmosPOIDetailPanel: View {
                             .background(KozmosColors.primitivesColorsBackground100.opacity(0.4))
                             .clipShape(
                                 RoundedRectangle(
-                                    cornerRadius: KozmosDimensions.primitivesLayoutRadius100,
+                                    cornerRadius: KozmosDimensions.semanticsRadiusControl,
                                     style: .continuous
                                 )
                             )
                             .overlay(
                                 RoundedRectangle(
-                                    cornerRadius: KozmosDimensions.primitivesLayoutRadius100,
+                                    cornerRadius: KozmosDimensions.semanticsRadiusControl,
                                     style: .continuous
                                 )
                                 .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
@@ -191,7 +191,7 @@ public struct KozmosPOIDetailPanel: View {
 
     private var panelShape: KozmosPanelShape {
         KozmosPanelShape(
-            radius: KozmosDimensions.primitivesLayoutRadius300,
+            radius: KozmosDimensions.semanticsRadiusPanel,
             roundsBottom: presentation != .sheet
         )
     }
@@ -279,7 +279,7 @@ public struct KozmosPOIDetailPanel: View {
                     .background(KozmosColors.primitivesColorsBackground100)
                     .clipShape(
                         RoundedRectangle(
-                            cornerRadius: KozmosDimensions.primitivesLayoutRadius100,
+                            cornerRadius: KozmosDimensions.semanticsRadiusControl,
                             style: .continuous
                         )
                     )
@@ -323,10 +323,10 @@ public struct KozmosPOIDetailPanel: View {
             }
             .frame(width: 48, height: 48)
             .clipShape(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
                     .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
             )
             .accessibilityLabel(logo.alt)
@@ -337,7 +337,7 @@ public struct KozmosPOIDetailPanel: View {
                 .frame(width: 48, height: 48)
                 .background(KozmosColors.primitivesColorsBackground100)
                 .clipShape(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
                 )
                 .accessibilityHidden(true)
         }

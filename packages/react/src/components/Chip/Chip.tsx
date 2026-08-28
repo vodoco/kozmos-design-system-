@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { cn } from "../../utils";
 
 export const chipVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
   {
     variants: {
       variant: {
@@ -82,7 +82,7 @@ export const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
     const isInteractive = Boolean(onClick);
     const label = chipLabel(children);
     const contentClassName = cn(
-      "inline-flex min-h-[inherit] items-center justify-center gap-1.5 rounded-full text-inherit",
+      "inline-flex min-h-[inherit] items-center justify-center gap-1.5 rounded-pill text-inherit",
       chipContentPadding[size ?? "default"],
       onRemove && "pr-2",
     );
@@ -150,7 +150,7 @@ export const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
           <button
             aria-label={removeLabel ?? `Remove ${label}`}
             className={cn(
-              "ml-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "ml-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-pill transition-colors hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               isSelected && "hover:bg-background/20",
             )}
             disabled={disabled}

@@ -100,7 +100,7 @@ export const PasswordInput = React.forwardRef<
               type="button"
               aria-label={isVisible ? hidePasswordLabel : showPasswordLabel}
               aria-pressed={isVisible}
-              className="absolute right-0 inline-flex h-11 w-11 items-center justify-center rounded-r-md text-muted-foreground ring-offset-background transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-muted-foreground"
+              className="absolute right-0 inline-flex h-11 w-11 items-center justify-center rounded-r-control text-muted-foreground ring-offset-background transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-muted-foreground"
               disabled={disabled}
               onClick={handleToggle}
             >

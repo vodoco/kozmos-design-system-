@@ -31,7 +31,7 @@ public struct KozmosWayfindingCard<Content: View>: View {
                 .padding(.bottom)
         }
         .background(KozmosColors.primitivesColorsBackground0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius200)
+        .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
         .shadow(radius: 5)
     }
 }
@@ -63,8 +63,8 @@ public struct KozmosWayfindingInputRow: View {
             TextField(originPlaceholder, text: $originValue)
                 .padding(KozmosDimensions.primitivesLayoutSpacing150)
                 .background(KozmosColors.primitivesColorsBackground0)
-                .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
-                .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100).stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1))
+                .cornerRadius(KozmosDimensions.semanticsRadiusControl)
+                .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl).stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1))
             
             HStack {
                 Spacer()
@@ -81,8 +81,8 @@ public struct KozmosWayfindingInputRow: View {
             TextField(destinationPlaceholder, text: $destinationValue)
                 .padding(KozmosDimensions.primitivesLayoutSpacing150)
                 .background(KozmosColors.primitivesColorsBackground0)
-                .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
-                .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100).stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1))
+                .cornerRadius(KozmosDimensions.semanticsRadiusControl)
+                .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl).stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1))
         }
     }
 }

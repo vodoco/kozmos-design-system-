@@ -40,8 +40,8 @@ fun KozmosAlert(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(KozmosColors.semanticsSurface0, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
-            .border(1.dp, borderColor, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .background(KozmosColors.semanticsSurface0, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, borderColor, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(KozmosDimensions.primitivesLayoutSpacing200),
         verticalAlignment = Alignment.Top
     ) {

@@ -38,9 +38,9 @@ const TimelineItem = React.forwardRef<HTMLLIElement, TimelineItemProps>(
       <span
         aria-hidden="true"
         data-timeline-marker
-        className="absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full bg-secondary ring-8 ring-background"
+        className="absolute -left-3 flex h-6 w-6 items-center justify-center rounded-pill bg-secondary ring-8 ring-background"
       >
-        <span data-timeline-dot className="h-2 w-2 rounded-full bg-primary" />
+        <span data-timeline-dot className="h-2 w-2 rounded-pill bg-primary" />
       </span>
       {children}
     </li>

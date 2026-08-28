@@ -48,7 +48,7 @@ fun KozmosMapControlsGroup(
         verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100)
     ) {
         Surface(
-            shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+            shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
             color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
             tonalElevation = 6.dp,
             shadowElevation = 8.dp,
@@ -78,7 +78,7 @@ fun KozmosMapControlsGroup(
         onCompassReset?.let { reset ->
             Surface(
                 modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+                shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
                 color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
                 tonalElevation = 6.dp,
                 shadowElevation = 8.dp

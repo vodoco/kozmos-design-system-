@@ -130,7 +130,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                 .background(KozmosColors.primitivesColorsBackground0)
                 .clipShape(
                     RoundedRectangle(
-                        cornerRadius: KozmosDimensions.primitivesLayoutRadius300,
+                        cornerRadius: KozmosDimensions.semanticsRadiusPanel,
                         style: .continuous
                     )
                 )
@@ -150,7 +150,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                 .background(KozmosColors.primitivesColorsBackground0)
                 .clipShape(
                     KozmosPanelShape(
-                        radius: KozmosDimensions.primitivesLayoutRadius300,
+                        radius: KozmosDimensions.semanticsRadiusPanel,
                         roundsBottom: false
                     )
                 )

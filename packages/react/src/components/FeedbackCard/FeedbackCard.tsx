@@ -48,7 +48,7 @@ const FeedbackCard = React.forwardRef<HTMLDivElement, FeedbackCardProps>(
       >
         {submitted ? (
           <div className="flex flex-col items-center justify-center py-6 gap-2 text-center animate-in fade-in zoom-in duration-300">
-            <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-2">
+            <div className="w-12 h-12 rounded-pill bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-2">
               <span className="text-2xl">🎉</span>
             </div>
             <h4 className="font-semibold text-foreground text-lg">
@@ -73,7 +73,7 @@ const FeedbackCard = React.forwardRef<HTMLDivElement, FeedbackCardProps>(
                 placeholder="Tell us more about your experience..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                className="min-h-[80px] resize-none bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 focus-visible:ring-0 transition-all duration-300 rounded-xl"
+                className="min-h-[80px] resize-none bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 focus-visible:ring-0 transition-all duration-300 rounded-panel"
               />
               <Button
                 className="w-full font-medium"

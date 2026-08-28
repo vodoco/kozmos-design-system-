@@ -127,7 +127,7 @@ fun KozmosPOIMediaGallery(
                     modifier = Modifier
                         .width(260.dp)
                         .height(195.dp)
-                        .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300))
+                        .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel))
                 )
             }
         }

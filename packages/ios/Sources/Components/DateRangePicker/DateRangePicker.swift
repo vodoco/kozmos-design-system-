@@ -87,9 +87,9 @@ public struct KozmosDateRangePicker: View {
         .padding(KozmosDimensions.primitivesLayoutSpacing150)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(KozmosColors.primitivesColorsBackground0)
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
         )
     }
@@ -158,9 +158,9 @@ private struct KozmosDateRangeField: View {
             .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
             .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
             .background(fieldBackgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(fieldBorderColor, lineWidth: 1)
             )
         }

@@ -67,7 +67,7 @@ const FloorSelector = React.forwardRef<HTMLDivElement, FloorSelectorProps>(
             selectedOption ? `${label}: ${selectedOption.label}` : label
           }
           className={cn(
-            "flex min-h-11 w-fit items-center overflow-hidden rounded-[var(--primitives-radius-lg)] border border-border bg-background/90 shadow-md backdrop-blur-sm",
+            "flex min-h-11 w-fit items-center overflow-hidden rounded-container border border-border bg-background/90 shadow-md backdrop-blur-sm",
             className,
           )}
           role="group"
@@ -112,7 +112,7 @@ const FloorSelector = React.forwardRef<HTMLDivElement, FloorSelectorProps>(
         ref={ref}
         aria-label={label}
         className={cn(
-          "flex w-fit rounded-[var(--primitives-radius-lg)] border border-border bg-background/80 p-1 shadow-md backdrop-blur-sm",
+          "flex w-fit rounded-container border border-border bg-background/80 p-1 shadow-md backdrop-blur-sm",
           variant === "vertical-list"
             ? "flex-col"
             : "max-w-full flex-row overflow-x-auto",

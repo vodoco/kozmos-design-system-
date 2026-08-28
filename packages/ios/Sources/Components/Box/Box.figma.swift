@@ -28,7 +28,7 @@ struct KozmosBoxConnect: FigmaConnect {
                 Text("Content")
                     .padding()
                     .background(KozmosColors.primitivesColorsBackground0)
-                    .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+                    .cornerRadius(KozmosDimensions.semanticsRadiusControl)
             )
         case "outlined":
             return AnyView(
@@ -36,7 +36,7 @@ struct KozmosBoxConnect: FigmaConnect {
                     .padding()
                     .background(KozmosColors.primitivesColorsBackground0)
                     .overlay(
-                        RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                        RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                             .stroke(KozmosColors.primitivesColorsBackground300, lineWidth: 1)
                     )
             )

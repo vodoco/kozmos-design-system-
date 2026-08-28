@@ -65,7 +65,7 @@ fun KozmosCategoryTile(
                 category.resultCountLabel?.let { stateDescription = it }
             },
         enabled = isEnabled,
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
         color = if (category.selected) {
             KozmosColors.primitivesColorsTheme500.copy(alpha = 0.05f)
         } else {

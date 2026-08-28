@@ -741,7 +741,7 @@ assertContains(
 assertContains(
   files.reactButton,
   source.reactButton,
-  /sm:\s*["']h-11 rounded-md px-3["']/,
+  /sm:\s*["']h-11 rounded-control px-3["']/,
   "44px small Button class",
 );
 assertContains(
@@ -807,7 +807,7 @@ assertContains(
 assertContains(
   files.reactBadge,
   source.reactBadge,
-  /sm:\s*["']h-11 rounded-md px-3["']/,
+  /sm:\s*["']h-11 rounded-control px-3["']/,
   "44px small Badge class",
 );
 assertContains(
@@ -825,7 +825,7 @@ assertContains(
 assertContains(
   files.reactBadge,
   source.reactBadge,
-  "gap-1 rounded-md",
+  "gap-1 rounded-control",
   "React Badge uses 4px content gap",
 );
 assertContains(
@@ -903,8 +903,8 @@ assertContains(
 assertContains(
   files.reactInput,
   source.reactInput,
-  "rounded-md",
-  "React Input 8px radius class",
+  "rounded-control",
+  "React Input radius class uses the Control role",
 );
 assertContains(
   files.reactInput,
@@ -1263,7 +1263,7 @@ assertContains(
 assertContains(
   files.reactSkeletonFigma,
   source.reactSkeletonFigma,
-  'Circle: "h-10 w-10 rounded-full"',
+  'Circle: "h-10 w-10 rounded-pill"',
   "Skeleton Code Connect circle composition",
 );
 assertContains(
@@ -3487,7 +3487,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenValuePattern("Tooltip/radius", 8),
+  tokenValuePattern("Tooltip/radius", 16),
   "Tooltip radius token",
 );
 assertContains(
@@ -4902,14 +4902,14 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  /name: "SplitButton\/radius",[\s\S]*?value: 8,[\s\S]*?alias: "Button\/radius"/,
+  /name: "SplitButton\/radius",[\s\S]*?value: 16,[\s\S]*?alias: "Button\/radius"/,
   "SplitButton radius token follows the core Button radius",
 );
 assertContains(
   files.figma,
   source.figma,
-  /async function updateSplitButtonVariant[\s\S]*?component\.cornerRadius = 8;[\s\S]*?syncFocusRing\(component,[\s\S]*?radius: 8,/,
-  "SplitButton radius and focus ring use the core Button 8px base",
+  /async function updateSplitButtonVariant[\s\S]*?component\.cornerRadius = KOZMOS_RADIUS\.control;[\s\S]*?syncFocusRing\(component,[\s\S]*?radius: KOZMOS_RADIUS\.control,/,
+  "SplitButton radius and focus ring follow the core Button control role",
 );
 assertContains(
   files.figma,
@@ -4938,8 +4938,8 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  /async function createButtonVariant[\s\S]*?component\.cornerRadius = 8;[\s\S]*?async function updateButtonVariant[\s\S]*?component\.cornerRadius = 8;/,
-  "Button create and update paths share the same 8px radius",
+  /async function createButtonVariant[\s\S]*?component\.cornerRadius = KOZMOS_RADIUS\.control;[\s\S]*?async function updateButtonVariant[\s\S]*?component\.cornerRadius = KOZMOS_RADIUS\.control;/,
+  "Button create and update paths share the same Control radius",
 );
 assertContains(
   files.figmaLinked,
@@ -7255,7 +7255,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenValuePattern("DatePicker/calendar/radius", 8),
+  tokenValuePattern("DatePicker/calendar/radius", 16),
   "Figma DatePicker calendar radius token",
 );
 assertContains(
@@ -7369,7 +7369,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenValuePattern("DateRangePicker/calendar/radius", 8),
+  tokenValuePattern("DateRangePicker/calendar/radius", 16),
   "Figma DateRangePicker calendar radius token",
 );
 assertContains(
@@ -7459,7 +7459,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenValuePattern("TimePicker/listbox/radius", 8),
+  tokenValuePattern("TimePicker/listbox/radius", 16),
   "Figma TimePicker listbox radius token",
 );
 assertContains(
@@ -7519,7 +7519,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenValuePattern("FileUpload/dropzone/radius", 8),
+  tokenValuePattern("FileUpload/dropzone/radius", 16),
   "Figma FileUpload dropzone radius token",
 );
 assertContains(
@@ -7615,7 +7615,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenValuePattern("ColorPicker/popover/radius", 8),
+  tokenValuePattern("ColorPicker/popover/radius", 16),
   "Figma ColorPicker popover radius token",
 );
 assertContains(
@@ -7801,7 +7801,7 @@ assertContains(
 assertContains(
   files.reactColorPicker,
   source.reactColorPicker,
-  '"h-8 w-full min-w-8 rounded-md',
+  '"h-8 w-full min-w-8 rounded-control',
   "React ColorPicker preset swatches fill their responsive grid cells",
 );
 assertContains(
@@ -7991,7 +7991,7 @@ assertContains(
 assertContains(
   files.reactEmptyState,
   source.reactEmptyState,
-  "w-16 h-16 rounded-full bg-muted",
+  "w-16 h-16 rounded-pill bg-muted",
   "React EmptyState icon container matches Figma geometry",
 );
 assertContains(
@@ -8286,14 +8286,14 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenValuePattern("Combobox/listbox/radius", 8),
+  tokenValuePattern("Combobox/listbox/radius", 16),
   "Figma Combobox dropdown radius token",
 );
 assertContains(
   files.figma,
   source.figma,
-  tokenAliasPattern("Combobox/listbox/radius", "Radius/DEFAULT"),
-  "Figma Combobox dropdown radius aliases to the 8px primitive",
+  tokenAliasPattern("Combobox/listbox/radius", "Semantics/Radius/Control"),
+  "Figma Combobox dropdown radius aliases to the Control radius role",
 );
 assertContains(
   files.figma,
@@ -8328,7 +8328,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenValuePattern("MultiSelect/listbox/radius", 8),
+  tokenValuePattern("MultiSelect/listbox/radius", 16),
   "Figma MultiSelect dropdown radius token",
 );
 assertContains(
@@ -8364,7 +8364,7 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenValuePattern("Listbox/radius", 8),
+  tokenValuePattern("Listbox/radius", 16),
   "Figma Listbox radius token",
 );
 assertContains(
@@ -9368,8 +9368,8 @@ assertContains(
 assertContains(
   files.iosInput,
   source.iosInput,
-  "primitivesLayoutRadius100",
-  "iOS Input 8px field radius",
+  "semanticsRadiusControl",
+  "iOS Input field radius uses the Control role",
 );
 assertContains(
   files.iosInput,
@@ -9831,8 +9831,8 @@ assertContains(
 assertContains(
   files.androidInput,
   source.androidInput,
-  "primitivesLayoutRadius100",
-  "Android Input 8px field radius",
+  "semanticsRadiusControl",
+  "Android Input field radius uses the Control role",
 );
 assertContains(
   files.androidThemeTokens,

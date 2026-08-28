@@ -23,7 +23,7 @@ export const Default: Story = {
     ),
   },
   render: (args) => (
-    <div className="relative h-[480px] bg-muted overflow-hidden rounded-lg border">
+    <div className="relative h-[480px] bg-muted overflow-hidden rounded-container border">
       <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
         Map SDK renderer slot
       </div>

@@ -31,7 +31,7 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
         ref={ref}
         aria-pressed={category.selected}
         className={cn(
-          "flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-[var(--primitives-radius-lg)] border bg-background p-3 text-center text-sm font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-container border bg-background p-3 text-center text-sm font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           category.selected
             ? "border-primary bg-primary/5 ring-1 ring-primary/20"
             : "border-border hover:bg-muted/60",

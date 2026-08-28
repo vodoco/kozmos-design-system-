@@ -72,7 +72,7 @@ fun KozmosMultiSelect(
     val effectiveStatus = if (error) KozmosInputStatus.Error else status
     val supportingText = errorMessage ?: helperText
     val colors = selectionFieldColors(effectiveStatus, enabled, readOnly)
-    val fieldShape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val fieldShape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
     val selectedOptions = selectedValues.mapNotNull { value ->
         options.firstOrNull { it.value == value }
     }

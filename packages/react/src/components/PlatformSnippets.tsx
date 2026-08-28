@@ -42,7 +42,7 @@ export const PlatformSnippets = ({
   return (
     <Tabs
       defaultValue={snippets[0].value}
-      className="w-full mt-6 border rounded-md"
+      className="w-full mt-6 border rounded-control"
     >
       <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
         {snippets.map((snippet) => (

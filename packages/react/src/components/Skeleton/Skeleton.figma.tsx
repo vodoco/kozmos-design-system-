@@ -9,7 +9,7 @@ figma.connect(
       className: figma.enum("Shape", {
         Line: "h-4 w-40",
         Block: "h-20 w-64",
-        Circle: "h-10 w-10 rounded-full",
+        Circle: "h-10 w-10 rounded-pill",
       }),
     },
     example: (props) => <Skeleton className={props.className} />,

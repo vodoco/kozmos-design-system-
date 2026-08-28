@@ -260,7 +260,7 @@ export const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
     const currentHsl = rgbToHsl(hexToRgb(currentValue));
     const hueColor = rgbToHex(hslToRgb({ h: currentHsl.h, s: 100, l: 50 }));
     const compactControlClassName =
-      "h-9 min-w-0 rounded-md border border-[color:var(--primitives-colors-foreground-500)] bg-background px-2 text-sm";
+      "h-9 min-w-0 rounded-control border border-[color:var(--primitives-colors-foreground-500)] bg-background px-2 text-sm";
     const describedBy = fieldDescriptionIds({
       description,
       descriptionId,
@@ -357,7 +357,7 @@ export const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
             <input
               type="color"
               aria-label={label ? `${label} color` : "Choose color"}
-              className="absolute left-2 z-10 h-8 w-8 cursor-pointer rounded-md border border-[color:var(--primitives-colors-foreground-500)] bg-transparent p-0 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="absolute left-2 z-10 h-8 w-8 cursor-pointer rounded-control border border-[color:var(--primitives-colors-foreground-500)] bg-transparent p-0 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={currentValue}
               disabled={pickerDisabled}
               onChange={(event) => commitValue(event.currentTarget.value)}
@@ -405,7 +405,7 @@ export const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
                 aria-label={isOpen ? "Hide color picker" : "Show color picker"}
                 aria-controls={panelId}
                 aria-expanded={isOpen}
-                className="absolute right-1 inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground ring-offset-background transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="absolute right-1 inline-flex h-9 w-9 items-center justify-center rounded-control text-muted-foreground ring-offset-background transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={disabled}
                 onClick={() => setOpen(!isOpen)}
               >
@@ -421,12 +421,12 @@ export const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
           {showPickerPanel && isOpen && (
             <div
               id={panelId}
-              className="w-full min-w-0 space-y-3 rounded-lg border border-[color:var(--primitives-colors-foreground-500)] bg-popover p-3 text-popover-foreground shadow-md"
+              className="w-full min-w-0 space-y-3 rounded-container border border-[color:var(--primitives-colors-foreground-500)] bg-popover p-3 text-popover-foreground shadow-md"
             >
               <button
                 type="button"
                 aria-label="Choose saturation and lightness"
-                className="relative h-36 w-full overflow-hidden rounded-lg border border-[color:var(--primitives-colors-foreground-500)] ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                className="relative h-36 w-full overflow-hidden rounded-container border border-[color:var(--primitives-colors-foreground-500)] ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={pickerDisabled}
                 style={{
                   background: `linear-gradient(to top, #000000, transparent), linear-gradient(to right, #ffffff, ${hueColor})`,
@@ -469,7 +469,7 @@ export const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
               >
                 <span
                   aria-hidden="true"
-                  className="absolute h-5 w-5 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.45)]"
+                  className="absolute h-5 w-5 rounded-pill border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.45)]"
                   style={{
                     left: `${currentHsl.s}%`,
                     top: `${100 - currentHsl.l}%`,
@@ -711,7 +711,7 @@ export const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
                       aria-label={`Use ${preset}`}
                       aria-pressed={preset === currentValue}
                       className={cn(
-                        "h-8 w-full min-w-8 rounded-md border border-[color:var(--primitives-colors-foreground-500)] ring-offset-background transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                        "h-8 w-full min-w-8 rounded-control border border-[color:var(--primitives-colors-foreground-500)] ring-offset-background transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                         preset === currentValue &&
                           "ring-2 ring-ring ring-offset-2",
                       )}

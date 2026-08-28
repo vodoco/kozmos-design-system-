@@ -102,7 +102,7 @@ public struct KozmosPOIMediaGallery: View {
                                 .clipped()
                                 .clipShape(
                                     RoundedRectangle(
-                                        cornerRadius: KozmosDimensions.primitivesLayoutRadius300,
+                                        cornerRadius: KozmosDimensions.semanticsRadiusPanel,
                                         style: .continuous
                                     )
                                 )

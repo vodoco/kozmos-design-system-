@@ -80,7 +80,7 @@ const RoutePreviewPanel = React.forwardRef<HTMLElement, RoutePreviewPanelProps>(
 
           {status !== "ready" && statusContent ? (
             <div
-              className="rounded-[var(--primitives-radius-lg)] border border-dashed border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground"
+              className="rounded-container border border-dashed border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground"
               role={
                 status === "error" || status === "no-route" ? "alert" : "status"
               }
@@ -110,7 +110,7 @@ const RoutePreviewPanel = React.forwardRef<HTMLElement, RoutePreviewPanelProps>(
 
           {alert && (
             <div
-              className="mt-3 rounded-md bg-warning/15 px-3 py-2 text-sm text-warning-foreground"
+              className="mt-3 rounded-control bg-warning/15 px-3 py-2 text-sm text-warning-foreground"
               role="status"
             >
               {alert}

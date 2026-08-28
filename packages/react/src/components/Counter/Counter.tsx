@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../utils";
 
 export const counterVariants = cva(
-  "inline-flex items-center justify-center rounded-full font-semibold leading-none tabular-nums",
+  "inline-flex items-center justify-center rounded-pill font-semibold leading-none tabular-nums",
   {
     variants: {
       tone: {

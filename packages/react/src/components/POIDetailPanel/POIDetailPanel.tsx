@@ -81,10 +81,10 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
         className={cn(
           "flex min-w-0 flex-col bg-background text-foreground",
           presentation === "inline" &&
-            "rounded-[var(--primitives-radius-lg)] border border-border shadow-lg",
-          presentation === "sheet" && "rounded-t-[var(--primitives-radius-lg)]",
+            "rounded-container border border-border shadow-lg",
+          presentation === "sheet" && "rounded-t-container",
           presentation === "panel" &&
-            "rounded-[var(--primitives-radius-lg)] border border-border shadow-xl",
+            "rounded-container border border-border shadow-xl",
           className,
         )}
         data-presentation={presentation}
@@ -94,13 +94,13 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
           {poi.logo ? (
             <img
               alt={poi.logo.alt}
-              className="h-12 w-12 shrink-0 rounded-md border border-border object-contain"
+              className="h-12 w-12 shrink-0 rounded-control border border-border object-contain"
               src={poi.logo.src}
             />
           ) : (
             <span
               aria-hidden="true"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-muted text-base font-bold text-muted-foreground"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-muted text-base font-bold text-muted-foreground"
             >
               {poi.name.slice(0, 1).toUpperCase()}
             </span>
@@ -181,7 +181,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
             return (
               <p
                 className={cn(
-                  "mb-3 rounded-md bg-muted px-3 py-2 text-sm",
+                  "mb-3 rounded-control bg-muted px-3 py-2 text-sm",
                   state.messageTone === "error" && "text-destructive",
                 )}
                 key={`${action}-message`}
@@ -197,7 +197,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
             poi.accessRestrictionsLabel && (
               <section
                 aria-label={accessRestrictionsHeading}
-                className="mb-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm"
+                className="mb-4 rounded-control border border-border bg-muted/40 px-3 py-2 text-sm"
               >
                 {poi.accessRestrictionsLabel}
               </section>
@@ -216,7 +216,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
               <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
                 {poi.services.map((service) => (
                   <li
-                    className="rounded-full border border-border bg-background px-3 py-2 text-sm"
+                    className="rounded-pill border border-border bg-background px-3 py-2 text-sm"
                     key={service.id}
                   >
                     {service.label}

@@ -116,11 +116,11 @@ fun KozmosOTPInput(
                                 modifier = Modifier
                                     .width(44.dp)
                                     .height(50.dp)
-                                    .background(fieldBackground, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+                                    .background(fieldBackground, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                                     .border(
                                         width = if (isActive) 2.dp else 1.dp,
                                         color = borderColor,
-                                        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+                                        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {

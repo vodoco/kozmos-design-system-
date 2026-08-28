@@ -15,6 +15,6 @@ public struct KozmosTimePicker: View {
             .labelsHidden()
             .padding(KozmosDimensions.primitivesLayoutSpacing100)
             .background(KozmosColors.primitivesColorsBackground100)
-            .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+            .cornerRadius(KozmosDimensions.semanticsRadiusControl)
     }
 }

@@ -36,9 +36,9 @@ public struct KozmosPaginationLink: View {
                 .frame(minWidth: 36, minHeight: 36)
                 .background(isActive ? KozmosColors.primitivesColorsTheme500.opacity(0.1) : Color.clear)
                 .foregroundColor(isActive ? KozmosColors.primitivesColorsTheme500 : KozmosColors.primitivesColorsForeground100)
-                .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+                .cornerRadius(KozmosDimensions.semanticsRadiusControl)
                 .overlay(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                         .stroke(isActive ? KozmosColors.primitivesColorsTheme500 : Color.clear, lineWidth: 1)
                 )
         }

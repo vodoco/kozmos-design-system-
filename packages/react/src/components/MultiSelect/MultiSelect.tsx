@@ -244,7 +244,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
           <div
             ref={setRefs}
             className={cn(
-              "flex min-h-11 w-full items-center gap-2 rounded-md border border-[color:var(--primitives-colors-foreground-500)] bg-background px-2 py-1 ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+              "flex min-h-11 w-full items-center gap-2 rounded-control border border-[color:var(--primitives-colors-foreground-500)] bg-background px-2 py-1 ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
               resolvedStatus === "error" &&
                 "border-destructive focus-within:ring-destructive",
               resolvedStatus === "warning" &&
@@ -323,7 +323,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
             {canClear && (
               <button
                 type="button"
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground ring-offset-background hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-muted-foreground ring-offset-background hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 aria-label="Clear selected options"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -335,7 +335,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
             )}
             <button
               type="button"
-              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground ring-offset-background hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-muted-foreground ring-offset-background hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={open ? "Close options" : "Open options"}
               disabled={disabled || readOnly}
               onClick={(event) => {
@@ -358,7 +358,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
               id={listboxId}
               role="listbox"
               aria-multiselectable="true"
-              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-1 text-popover-foreground shadow-md"
             >
               {filteredOptions.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-muted-foreground">
@@ -379,7 +379,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                       aria-selected={selected}
                       aria-disabled={disabledOption || undefined}
                       className={cn(
-                        "flex cursor-pointer items-start gap-2 rounded-sm px-3 py-2 text-sm outline-none",
+                        "flex cursor-pointer items-start gap-2 rounded-marker px-3 py-2 text-sm outline-none",
                         active && "bg-accent text-accent-foreground",
                         disabledOption &&
                           "cursor-not-allowed text-muted-foreground opacity-60",

@@ -18,7 +18,7 @@ const List = React.forwardRef<HTMLUListElement, ListProps>(
       ref={ref}
       data-density={density}
       className={cn(
-        "m-0 flex w-full list-none flex-col overflow-hidden rounded-md border bg-background p-0 text-sm text-foreground",
+        "m-0 flex w-full list-none flex-col overflow-hidden rounded-control border bg-background p-0 text-sm text-foreground",
         listDensityClasses[density],
         className,
       )}

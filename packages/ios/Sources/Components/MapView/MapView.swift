@@ -13,9 +13,9 @@ public struct KozmosMapView<Content: View>: View {
 
             content()
         }
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+        .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsBackground300, lineWidth: 1)
         )
         .frame(minHeight: 400)

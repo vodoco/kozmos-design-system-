@@ -72,10 +72,10 @@ public struct KozmosSaveLocationCard: View {
                 .foregroundColor(isSaved ? KozmosColors.primitivesColorsTheme500 : KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle)
                 .background(isSaved ? Color.clear : KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle)
                 .overlay(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
                         .stroke(isSaved ? KozmosColors.primitivesColorsTheme500 : Color.clear, lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous))
                 .buttonStyle(.plain)
 
                 if isSaved, let onRouteToLocation {
@@ -89,16 +89,16 @@ public struct KozmosSaveLocationCard: View {
                     }
                     .foregroundColor(KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle)
                     .background(KozmosColors.primitivesColorsEmotionalSuccess600)
-                    .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous))
                     .buttonStyle(.plain)
                 }
             }
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing300)
         .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                 .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
         )
         .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.14), radius: 16, x: 0, y: 10)

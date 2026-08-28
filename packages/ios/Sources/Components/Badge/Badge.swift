@@ -54,9 +54,9 @@ public struct KozmosBadge: View {
             .frame(minWidth: size == .icon ? 44 : nil, minHeight: 44)
             .background(backgroundColor)
             .foregroundColor(foregroundColor)
-            .cornerRadius(KozmosDimensions.primitivesLayoutRadius50)
+            .cornerRadius(KozmosDimensions.semanticsRadiusMarker)
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius50)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusMarker)
                     .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
             )
     }

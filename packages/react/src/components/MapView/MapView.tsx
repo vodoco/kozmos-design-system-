@@ -16,7 +16,7 @@ const MapView = React.forwardRef<HTMLDivElement, MapViewProps>(
       ref={ref}
       aria-label={mapLabel}
       className={cn(
-        "relative w-full h-full min-h-[400px] bg-muted overflow-hidden rounded-[var(--primitives-radius-lg)] border border-border",
+        "relative w-full h-full min-h-[400px] bg-muted overflow-hidden rounded-container border border-border",
         className,
       )}
       role={role}

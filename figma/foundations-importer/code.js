@@ -352,6 +352,21 @@ const NAVBAR_DEFAULT_HEIGHT = 64;
 const NAVBAR_CONTEXT_SLOT_WIDTH = 184;
 const NAVBAR_CONTEXT_SLOT_HEIGHT = 44;
 const NAVBAR_CONTEXT_TEXT_WIDTH = 162;
+// Semantic corner radii, mirroring Semantics.Radius in
+// packages/tokens/src/tokens-light.json. The plugin cannot read the token JSON
+// at runtime, so these are copied — and `pnpm tokens:radius:check` fails if the
+// copy drifts from the source. Name the job, not the size: the whole point is
+// that changing how round the product feels is one alias edit in the tokens,
+// not a sweep through 162 hardcoded numbers, which is what this replaced.
+const KOZMOS_RADIUS = {
+  none: 0,
+  marker: 4,
+  control: 16,
+  container: 16,
+  panel: 24,
+  pill: 9999,
+};
+
 const SIDEBAR_CONTENT = ["Basic", "Sections", "Tools", "Rail"];
 const SIDEBAR_SLOT_NAMES = [
   "Header Slot",
@@ -3722,8 +3737,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Button/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -3882,7 +3897,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "SplitButton/radius",
-    value: 8,
+    value: 16,
     alias: "Button/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -4072,7 +4087,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Badge/radius",
-    value: 8,
+    value: 16,
     alias: "Button/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -4374,8 +4389,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "List/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4420,8 +4435,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "DirectionStep/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4469,8 +4484,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "FloorSelector/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4508,8 +4523,8 @@ const COMPONENT_FLOAT_TOKENS = [
   { name: "MapView/height/default", value: 320, scopes: ["WIDTH_HEIGHT"] },
   {
     name: "MapView/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4609,8 +4624,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Tree/item/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4660,8 +4675,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "NavigationItem/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4711,8 +4726,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Table/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4838,8 +4853,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Sidebar/item/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5097,7 +5112,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Input/field/radius",
-    value: 8,
+    value: 16,
     alias: "Button/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -5164,7 +5179,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "PasswordInput/field/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -5194,7 +5209,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "PasswordInput/toggle/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -5302,7 +5317,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "NumberInput/field/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -5374,7 +5389,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "OTPInput/cell/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -5434,8 +5449,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Tooltip/radius",
-    value: 8,
-    alias: "Radius/md",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5592,8 +5607,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Drawer/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5728,8 +5743,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Popover/radius",
-    value: 8,
-    alias: "Radius/md",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5777,8 +5792,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Menu/radius",
-    value: 8,
-    alias: "Radius/md",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5865,8 +5880,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Toast/radius",
-    value: 8,
-    alias: "Radius/md",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5884,8 +5899,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Toast/action/radius",
-    value: 8,
-    alias: "Radius/md",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   { name: "Toast/close/size", value: 24, scopes: ["WIDTH_HEIGHT"] },
@@ -5940,7 +5955,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Textarea/field/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6001,7 +6016,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Search/field/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6068,7 +6083,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Select/trigger/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6122,7 +6137,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Combobox/field/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6163,8 +6178,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Combobox/listbox/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -6253,7 +6268,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "MultiSelect/field/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6312,7 +6327,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "MultiSelect/listbox/radius",
-    value: 8,
+    value: 16,
     alias: "Combobox/listbox/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6384,7 +6399,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Listbox/radius",
-    value: 8,
+    value: 16,
     alias: "Combobox/listbox/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6473,7 +6488,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "DatePicker/field/radius",
-    value: 8,
+    value: 16,
     alias: "Input/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6515,7 +6530,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "DatePicker/calendar/radius",
-    value: 8,
+    value: 16,
     alias: "Combobox/listbox/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6543,8 +6558,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "DatePicker/calendar/day/radius",
-    value: 8,
-    alias: "Radius/md",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -6613,7 +6628,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "DateRangePicker/field/radius",
-    value: 8,
+    value: 16,
     alias: "DatePicker/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6666,7 +6681,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "DateRangePicker/calendar/radius",
-    value: 8,
+    value: 16,
     alias: "DatePicker/calendar/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6688,7 +6703,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "DateRangePicker/calendar/day/radius",
-    value: 8,
+    value: 16,
     alias: "DatePicker/calendar/day/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6754,7 +6769,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "TimePicker/field/radius",
-    value: 8,
+    value: 16,
     alias: "DatePicker/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6796,7 +6811,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "TimePicker/listbox/radius",
-    value: 8,
+    value: 16,
     alias: "Combobox/listbox/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6872,7 +6887,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "FileUpload/dropzone/radius",
-    value: 8,
+    value: 16,
     alias: "Combobox/listbox/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6906,7 +6921,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "FileUpload/file-row/radius",
-    value: 8,
+    value: 16,
     alias: "Combobox/listbox/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -6982,7 +6997,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "ColorPicker/field/radius",
-    value: 8,
+    value: 16,
     alias: "DatePicker/field/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -7041,7 +7056,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "ColorPicker/popover/radius",
-    value: 8,
+    value: 16,
     alias: "Combobox/listbox/radius",
     scopes: ["CORNER_RADIUS"],
   },
@@ -7058,8 +7073,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "ColorPicker/color-area/radius",
-    value: 8,
-    alias: "Radius/md",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7420,8 +7435,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Skeleton/radius/default",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7440,8 +7455,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Box/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7482,8 +7497,8 @@ const COMPONENT_FLOAT_TOKENS = [
   { name: "Stack/item/height", value: 32, scopes: ["WIDTH_HEIGHT"] },
   {
     name: "Stack/item/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   { name: "Grid/width/default", value: 360, scopes: ["WIDTH_HEIGHT"] },
@@ -7539,8 +7554,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Container/content-radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7657,8 +7672,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Pagination/item/radius",
-    value: 8,
-    alias: "Radius/DEFAULT",
+    value: 16,
+    alias: "Semantics/Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -11044,7 +11059,7 @@ function createExampleMapStage({
       const segment = figma.createRectangle();
       segment.name = "Route Segment";
       segment.resizeWithoutConstraints(segmentWidth, 4);
-      segment.cornerRadius = 999;
+      segment.cornerRadius = KOZMOS_RADIUS.pill;
       segment.fills = [
         paintFromVariable("Colors/theme/500", "#135BEC", variableByName, stats),
       ];
@@ -11429,7 +11444,7 @@ function createExamplePlaceholder({
   placeholder.paddingRight = 12;
   placeholder.paddingTop = 8;
   placeholder.paddingBottom = 8;
-  placeholder.cornerRadius = 8;
+  placeholder.cornerRadius = KOZMOS_RADIUS.control;
   placeholder.resizeWithoutConstraints(width, height);
   placeholder.fills = [
     paintFromVariable("Surface/200", "#ECEEF2", variableByName, stats),
@@ -12343,7 +12358,7 @@ function createSurfaceQaHeader(fonts) {
   header.paddingRight = 36;
   header.paddingBottom = 32;
   header.paddingLeft = 36;
-  header.cornerRadius = 16;
+  header.cornerRadius = KOZMOS_RADIUS.container;
   header.fills = solidPaint(1, 1, 1);
   header.strokes = solidPaint(0.88, 0.89, 0.92);
   header.strokeWeight = 1;
@@ -12395,7 +12410,7 @@ function createSurfaceQaPanel(
   panel.paddingRight = 32;
   panel.paddingBottom = 36;
   panel.paddingLeft = 32;
-  panel.cornerRadius = 16;
+  panel.cornerRadius = KOZMOS_RADIUS.container;
   panel.clipsContent = false;
   panel.fills = panelSpec.fillToken
     ? [
@@ -12504,7 +12519,7 @@ function createProductMapSurfacePreview(panelSpec, fonts) {
   route.resize(420, 8);
   route.x = 176;
   route.y = 104;
-  route.cornerRadius = 9999;
+  route.cornerRadius = KOZMOS_RADIUS.pill;
   route.rotation = -8;
   route.fills = [dark ? paintFromHex("#57C7FF") : paintFromHex("#135BEC")];
   map.appendChild(route);
@@ -12649,7 +12664,7 @@ function createSurfaceQaMissingNode(fonts, message) {
   frame.paddingRight = 12;
   frame.paddingBottom = 10;
   frame.paddingLeft = 12;
-  frame.cornerRadius = 8;
+  frame.cornerRadius = KOZMOS_RADIUS.control;
   frame.fills = [paintFromHex("#FFF7ED")];
   frame.strokes = [paintFromHex("#FDBA74")];
   frame.strokeWeight = 1;
@@ -12951,7 +12966,7 @@ function createDocsCatalogHeaderFrame(fonts) {
   header.paddingRight = 40;
   header.paddingBottom = 40;
   header.paddingLeft = 40;
-  header.cornerRadius = 16;
+  header.cornerRadius = KOZMOS_RADIUS.container;
   header.fills = solidPaint(1, 1, 1);
   header.strokes = solidPaint(0.88, 0.89, 0.92);
   header.strokeWeight = 1;
@@ -13007,7 +13022,7 @@ function createComponentDocsRoot(doc, componentSet, fonts, stats) {
   root.paddingRight = DOCS_SECTION_PADDING;
   root.paddingBottom = DOCS_SECTION_PADDING_BOTTOM;
   root.paddingLeft = DOCS_SECTION_PADDING;
-  root.cornerRadius = 16;
+  root.cornerRadius = KOZMOS_RADIUS.container;
   root.fills = solidPaint(1, 1, 1);
   root.strokes = solidPaint(0.88, 0.89, 0.92);
   root.strokeWeight = 1;
@@ -13505,7 +13520,7 @@ function createMissingNestedComponentNode(name, message, stats) {
   frame.paddingRight = 12;
   frame.paddingTop = 8;
   frame.paddingBottom = 8;
-  frame.cornerRadius = 8;
+  frame.cornerRadius = KOZMOS_RADIUS.control;
   frame.fills = [];
   frame.strokes = [];
   frame.resizeWithoutConstraints(180, 44);
@@ -36557,7 +36572,7 @@ async function updateTagVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(64, 32);
-  component.cornerRadius = 9999;
+  component.cornerRadius = KOZMOS_RADIUS.pill;
   component.clipsContent = false;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Tag");
@@ -36825,7 +36840,7 @@ async function updateTreeVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(metrics.width, metrics.height);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -37050,7 +37065,7 @@ async function syncTreeRowNode(
   rowNode.paddingTop = 0;
   rowNode.paddingBottom = 0;
   rowNode.resizeWithoutConstraints(metrics.width, metrics.rowHeight);
-  rowNode.cornerRadius = 8;
+  rowNode.cornerRadius = KOZMOS_RADIUS.control;
   rowNode.clipsContent = false;
   rowNode.fills = highlighted
     ? [
@@ -37106,7 +37121,7 @@ async function syncTreeRowNode(
   labelGroup.paddingTop = 0;
   labelGroup.paddingBottom = 0;
   labelGroup.resizeWithoutConstraints(120, metrics.rowHeight);
-  labelGroup.cornerRadius = 0;
+  labelGroup.cornerRadius = KOZMOS_RADIUS.none;
   labelGroup.clipsContent = false;
   labelGroup.fills = [];
   labelGroup.strokes = [];
@@ -37165,7 +37180,7 @@ async function syncTreeRowNode(
     enabled: row.focused,
     width: metrics.width,
     height: metrics.rowHeight,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: "Colors/theme/500",
     fallback: "#135BEC",
     variableByName,
@@ -37245,7 +37260,7 @@ async function createTreeCount({ name, value, variableByName, fonts, stats }) {
   count.paddingBottom = 0;
   count.itemSpacing = 0;
   count.resizeWithoutConstraints(metrics.minWidth, metrics.height);
-  count.cornerRadius = 9999;
+  count.cornerRadius = KOZMOS_RADIUS.pill;
   count.clipsContent = false;
   count.fills = [
     paintFromVariable(
@@ -37297,7 +37312,7 @@ async function createTreeActions({ actions, metrics, variableByName, stats }) {
     actions.length * metrics.actionSize + Math.max(0, actions.length - 1) * 2,
     metrics.actionSize,
   );
-  group.cornerRadius = 0;
+  group.cornerRadius = KOZMOS_RADIUS.none;
   group.clipsContent = false;
   group.fills = [];
   group.strokes = [];
@@ -37398,7 +37413,7 @@ async function updateTimelineVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(metrics.width, metrics.height);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -37459,7 +37474,7 @@ async function updateScrollAreaVariant(
   component.paddingTop = paddingTop;
   component.paddingBottom = paddingBottom;
   component.resizeWithoutConstraints(metrics.width, metrics.height);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -37590,7 +37605,7 @@ async function updateBottomNavigationVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(width, height);
-  component.cornerRadius = 16;
+  component.cornerRadius = KOZMOS_RADIUS.container;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -37677,7 +37692,7 @@ async function updateNavigationItemVariant(
   component.paddingTop = metrics.paddingY;
   component.paddingBottom = metrics.paddingY;
   component.resizeWithoutConstraints(metrics.width, metrics.height);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.opacity = 1;
   component.fills =
@@ -37766,7 +37781,7 @@ async function updateNavigationItemVariant(
     enabled: !disabled,
     width: metrics.width,
     height: metrics.height,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: "Colors/theme/500",
     fallback: "#135BEC",
     variableByName,
@@ -38023,7 +38038,7 @@ async function updateNavbarVariant(
     NAVBAR_DEFAULT_WIDTH,
     NAVBAR_DEFAULT_HEIGHT,
   );
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -38365,7 +38380,7 @@ async function createNavbarPrimaryActionSlot({
   action.paddingTop = 0;
   action.paddingBottom = 0;
   action.resizeWithoutConstraints(92, 40);
-  action.cornerRadius = 8;
+  action.cornerRadius = KOZMOS_RADIUS.control;
   action.clipsContent = false;
   action.fills = [
     paintFromVariable("Colors/theme/600", "#1051E8", variableByName, stats),
@@ -38481,7 +38496,7 @@ async function createNavigationItemNestedInstance({
     placement === "Rail" ? 72 : 112,
     placement === "Rail" ? 72 : 44,
   );
-  frame.cornerRadius = 8;
+  frame.cornerRadius = KOZMOS_RADIUS.control;
   frame.clipsContent = false;
   frame.fills =
     state === "Selected"
@@ -38584,7 +38599,7 @@ async function createNavbarActionsSlot({
   action.paddingTop = 0;
   action.paddingBottom = 0;
   action.resizeWithoutConstraints(80, 40);
-  action.cornerRadius = 8;
+  action.cornerRadius = KOZMOS_RADIUS.control;
   action.clipsContent = false;
   action.fills = [];
   action.strokes = [
@@ -38654,7 +38669,7 @@ async function createNavbarUtilitySlot({
   button.paddingTop = 0;
   button.paddingBottom = 0;
   button.resizeWithoutConstraints(40, 40);
-  button.cornerRadius = 8;
+  button.cornerRadius = KOZMOS_RADIUS.control;
   button.clipsContent = false;
   button.fills = [];
   button.strokes = [];
@@ -38709,7 +38724,7 @@ async function createNavbarAccountSlot({
   avatar.paddingTop = 0;
   avatar.paddingBottom = 0;
   avatar.resizeWithoutConstraints(32, 32);
-  avatar.cornerRadius = 16;
+  avatar.cornerRadius = KOZMOS_RADIUS.container;
   avatar.clipsContent = false;
   avatar.fills = [
     paintFromVariable(
@@ -38790,7 +38805,7 @@ async function updateSidebarVariant(
     isRail ? SIDEBAR_RAIL_WIDTH : SIDEBAR_DEFAULT_WIDTH,
     SIDEBAR_DEFAULT_HEIGHT,
   );
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -39255,7 +39270,7 @@ function createBrandMark(variableByName, stats, size) {
   mark.paddingTop = 0;
   mark.paddingBottom = 0;
   mark.resizeWithoutConstraints(size, size);
-  mark.cornerRadius = 8;
+  mark.cornerRadius = KOZMOS_RADIUS.control;
   mark.fills = [
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
@@ -39327,12 +39342,12 @@ async function updateBottomSheetVariant(
   component.paddingBottom = 24;
   component.resizeWithoutConstraints(360, 280);
   try {
-    component.topLeftRadius = 16;
-    component.topRightRadius = 16;
-    component.bottomLeftRadius = 0;
-    component.bottomRightRadius = 0;
+    component.topLeftRadius = KOZMOS_RADIUS.container;
+    component.topRightRadius = KOZMOS_RADIUS.container;
+    component.bottomLeftRadius = KOZMOS_RADIUS.none;
+    component.bottomRightRadius = KOZMOS_RADIUS.none;
   } catch (_error) {
-    component.cornerRadius = 16;
+    component.cornerRadius = KOZMOS_RADIUS.container;
   }
   component.clipsContent = false;
   component.fills = [
@@ -40384,7 +40399,7 @@ function appendScrollAreaScrollbar({
     vertical ? 6 : metrics.width - 32,
     vertical ? metrics.height - 32 : 6,
   );
-  track.cornerRadius = 9999;
+  track.cornerRadius = KOZMOS_RADIUS.pill;
   track.fills = [
     paintFromVariableWithOpacity(
       "Colors/foreground/500",
@@ -40411,7 +40426,7 @@ function appendScrollAreaScrollbar({
   const thumb = figma.createRectangle();
   thumb.name = vertical ? "Vertical Thumb" : "Horizontal Thumb";
   thumb.resizeWithoutConstraints(vertical ? 6 : 120, vertical ? 72 : 6);
-  thumb.cornerRadius = 9999;
+  thumb.cornerRadius = KOZMOS_RADIUS.pill;
   thumb.fills = [
     paintFromVariable(
       "Colors/foreground/400",
@@ -40514,7 +40529,7 @@ async function createTimelineItem({
   item.paddingTop = 0;
   item.paddingBottom = 0;
   item.resizeWithoutConstraints(metrics.width, metrics.itemHeight);
-  item.cornerRadius = 0;
+  item.cornerRadius = KOZMOS_RADIUS.none;
   item.clipsContent = false;
   item.fills = [];
   item.strokes = [];
@@ -40629,7 +40644,7 @@ function createTimelineRail({
     connector.resizeWithoutConstraints(2, Math.max(1, height - 18));
     connector.x = (width - 2) / 2;
     connector.y = 18;
-    connector.cornerRadius = 9999;
+    connector.cornerRadius = KOZMOS_RADIUS.pill;
     connector.fills = [
       paintFromVariable(
         active ? "Colors/theme/500" : "Colors/background/200",
@@ -42676,7 +42691,7 @@ async function updateMapViewVariant(
   component.paddingBottom = 12;
   component.resizeWithoutConstraints(480, 320);
   component.clipsContent = true;
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   // The map canvas itself is renderer output; Figma only models the surface.
   component.fills = [
     paintFromVariable(
@@ -42714,7 +42729,7 @@ async function updateMapViewVariant(
     slot.paddingTop = 12;
     slot.paddingBottom = 12;
     slot.resizeWithoutConstraints(456, 64);
-    slot.cornerRadius = 8;
+    slot.cornerRadius = KOZMOS_RADIUS.control;
     slot.fills = [
       paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
     ];
@@ -43422,7 +43437,7 @@ async function productSdkSlot({
     width,
     height,
   });
-  slot.cornerRadius = 8;
+  slot.cornerRadius = KOZMOS_RADIUS.control;
   slot.fills = [
     paintFromVariable(
       muted ? "Surface/100" : "Colors/background/100",
@@ -43545,7 +43560,7 @@ async function productSdkControlButton({
     width: 44,
     height: 44,
   });
-  button.cornerRadius = 8;
+  button.cornerRadius = KOZMOS_RADIUS.control;
   button.fills = [
     paintFromVariable(
       pressed ? "Colors/theme/100" : "Surface/0",
@@ -43723,7 +43738,7 @@ async function updateAdaptiveMapShellVariant(
     width: 432,
     height: 344,
   });
-  mapSurface.cornerRadius = 8;
+  mapSurface.cornerRadius = KOZMOS_RADIUS.control;
   mapSurface.clipsContent = true;
   mapSurface.fills = [
     paintFromVariable(
@@ -43878,7 +43893,7 @@ async function updateMapControlButtonVariant(
       height: 44,
     },
   );
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
@@ -44280,9 +44295,9 @@ async function updatePOIDetailPanelVariant(
   // carries a grabber. Inline sits in the document flow with no elevation
   // affordance at all. Panel is the free-standing docked card.
   if (value === "Sheet") {
-    component.cornerRadius = 0;
-    component.topLeftRadius = 16;
-    component.topRightRadius = 16;
+    component.cornerRadius = KOZMOS_RADIUS.none;
+    component.topLeftRadius = KOZMOS_RADIUS.container;
+    component.topRightRadius = KOZMOS_RADIUS.container;
 
     const grabber = productSdkFrame("Grabber", {
       primarySizing: "FIXED",
@@ -44312,7 +44327,7 @@ async function updatePOIDetailPanelVariant(
     appendWithSizing(component, grabberRow, "FILL", "FIXED");
   } else if (value === "Inline") {
     component.strokes = [];
-    component.cornerRadius = 0;
+    component.cornerRadius = KOZMOS_RADIUS.none;
   }
 
   const header = await productSdkPanelHeader({
@@ -45397,7 +45412,7 @@ async function updateRouteOptionCardVariant(
     stats,
     muted: true,
   });
-  mode.cornerRadius = 24;
+  mode.cornerRadius = KOZMOS_RADIUS.panel;
   appendWithSizing(component, mode, "FIXED", "FIXED");
 
   const copy = productSdkFrame("Option Copy", {
@@ -48211,7 +48226,7 @@ async function createButtonVariant({
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(metrics.width, metrics.height);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Button");
@@ -48304,7 +48319,7 @@ async function createButtonVariant({
     enabled: state === "Default",
     width: metrics.width,
     height: metrics.height,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: "Colors/theme/500",
     fallback: "#135BEC",
     variableByName,
@@ -48359,7 +48374,7 @@ async function updateButtonVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(metrics.width, metrics.height);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Button");
@@ -48429,7 +48444,7 @@ async function updateButtonVariant(
     enabled: state === "Default",
     width: metrics.width,
     height: metrics.height,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: "Colors/theme/500",
     fallback: "#135BEC",
     variableByName,
@@ -48798,7 +48813,7 @@ async function updateSplitButtonVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(metrics.width, metrics.height);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "SplitButton");
@@ -48855,7 +48870,7 @@ async function updateSplitButtonVariant(
   );
   mainAction.fills = [];
   mainAction.strokes = [];
-  mainAction.cornerRadius = 0;
+  mainAction.cornerRadius = KOZMOS_RADIUS.none;
   mainAction.clipsContent = false;
   setHorizontalStackFillChildSizing(mainAction);
 
@@ -48936,7 +48951,7 @@ async function updateSplitButtonVariant(
   trigger.resizeWithoutConstraints(metrics.triggerWidth, metrics.height);
   trigger.fills = [];
   trigger.strokes = [];
-  trigger.cornerRadius = 0;
+  trigger.cornerRadius = KOZMOS_RADIUS.none;
   trigger.clipsContent = false;
   setFixedChildSizing(trigger);
 
@@ -48971,7 +48986,7 @@ async function updateSplitButtonVariant(
     enabled: state !== "Disabled",
     width: metrics.width,
     height: metrics.height,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: "Colors/theme/500",
     fallback: "#135BEC",
     variableByName,
@@ -49796,7 +49811,7 @@ async function updateBoxVariant(component, { value, variableByName, stats }) {
   component.paddingTop = 16;
   component.paddingBottom = 16;
   component.resizeWithoutConstraints(320, 120);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Box");
@@ -50262,7 +50277,7 @@ async function updateContainerVariant(
   content.paddingTop = 16;
   content.paddingBottom = 16;
   content.resizeWithoutConstraints(contentWidth, 64);
-  content.cornerRadius = 8;
+  content.cornerRadius = KOZMOS_RADIUS.control;
   content.fills = [
     paintFromVariable(
       "Colors/background/100",
@@ -51308,7 +51323,7 @@ async function updateChipVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(metrics.minWidth, metrics.height);
-  component.cornerRadius = 9999;
+  component.cornerRadius = KOZMOS_RADIUS.pill;
   component.clipsContent = false;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Chip");
@@ -51350,7 +51365,7 @@ async function updateChipVariant(
     enabled: state !== "Disabled",
     width: Math.max(metrics.minWidth, component.width),
     height: metrics.height,
-    radius: 9999,
+    radius: KOZMOS_RADIUS.pill,
     variableName: "Colors/theme/500",
     fallback: "#135BEC",
     variableByName,
@@ -51531,7 +51546,7 @@ async function updateCounterVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(metrics.minWidth, metrics.height);
-  component.cornerRadius = 9999;
+  component.cornerRadius = KOZMOS_RADIUS.pill;
   component.clipsContent = false;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
@@ -51604,7 +51619,7 @@ async function updateBadgeVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(metrics.width, metrics.height);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Badge");
@@ -51697,7 +51712,7 @@ async function updateCardVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(360, 100);
-  component.cornerRadius = 16;
+  component.cornerRadius = KOZMOS_RADIUS.container;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -51798,7 +51813,7 @@ async function updateListVariant(
     metrics.width,
     metrics.rowHeight * itemCount,
   );
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = true;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -51890,7 +51905,7 @@ async function updateTableVariant(
     metrics.width,
     metrics.rowHeight * metrics.rowCount,
   );
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = true;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -51984,7 +51999,7 @@ async function updateTabsVariant(
   component.paddingTop = 4;
   component.paddingBottom = 4;
   component.resizeWithoutConstraints(width, 44);
-  component.cornerRadius = 16;
+  component.cornerRadius = KOZMOS_RADIUS.container;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable(
@@ -52060,7 +52075,7 @@ async function updateTooltipVariant(
   component.paddingRight = 12;
   component.paddingTop = 6;
   component.paddingBottom = 6;
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -52136,7 +52151,7 @@ async function updateDialogVariant(
   component.paddingTop = 24;
   component.paddingBottom = 24;
   component.resizeWithoutConstraints(512, 100);
-  component.cornerRadius = 16;
+  component.cornerRadius = KOZMOS_RADIUS.container;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -52223,7 +52238,7 @@ async function updateDrawerVariant(
   component.paddingTop = 24;
   component.paddingBottom = 24;
   component.resizeWithoutConstraints(size.width, size.height);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -52301,7 +52316,7 @@ async function updatePopoverVariant(
   component.paddingTop = 16;
   component.paddingBottom = 16;
   component.resizeWithoutConstraints(288, 100);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -52377,7 +52392,7 @@ async function updateMenuVariant(
   component.paddingTop = 4;
   component.paddingBottom = 4;
   component.resizeWithoutConstraints(192, 100);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -52465,7 +52480,7 @@ async function updateCheckboxVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(176, 44);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -52544,7 +52559,7 @@ async function updateRadioVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(176, 44);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -52623,7 +52638,7 @@ async function updateSwitchVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(176, 44);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -52711,7 +52726,7 @@ async function updateInputVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, 96);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -52810,7 +52825,7 @@ async function updatePasswordInputVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, 96);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -52919,7 +52934,7 @@ async function updateFormFieldVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, height);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -53020,7 +53035,7 @@ async function updateNumberInputVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, 96);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -53121,7 +53136,7 @@ async function updateOTPInputVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, 96);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -53223,7 +53238,7 @@ async function updateComboboxVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, isOpen ? 236 : 96);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -53325,7 +53340,7 @@ async function updateMultiSelectVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, isOpen ? 272 : 96);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -53420,7 +53435,7 @@ async function updateListboxVariant(
   component.paddingTop = 4;
   component.paddingBottom = 4;
   component.resizeWithoutConstraints(320, 176);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -53532,7 +53547,7 @@ async function updateDatePickerVariant(
     320,
     isOpen ? DATE_PICKER_OPEN_VARIANT_HEIGHT : 96,
   );
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -53637,7 +53652,7 @@ async function updateDateRangePickerVariant(
     672,
     isOpen ? DATE_RANGE_PICKER_OPEN_VARIANT_HEIGHT : 116,
   );
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -53739,7 +53754,7 @@ async function updateTimePickerVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, isOpen ? 292 : 96);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -53841,7 +53856,7 @@ async function updateFileUploadVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(384, hasFiles ? 302 : 218);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -53949,7 +53964,7 @@ async function updateColorPickerVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, isOpen ? 520 : 96);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -54034,7 +54049,7 @@ async function updateTextareaVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, 132);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -54092,7 +54107,7 @@ async function updateSearchVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, 96);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -54150,7 +54165,7 @@ async function updateSelectVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, 44);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -54234,7 +54249,7 @@ async function updateSliderVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, 70);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -54312,7 +54327,7 @@ async function updateRatingVariant(
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(220, 44);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -54401,7 +54416,7 @@ async function updateStepperVariant(
   component.name = `Count=${count}, Current=${current}`;
   component.layoutMode = "NONE";
   component.resizeWithoutConstraints(width, 72);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -54480,7 +54495,7 @@ async function createRatingStar({
   cell.primaryAxisAlignItems = "CENTER";
   cell.counterAxisAlignItems = "CENTER";
   cell.resizeWithoutConstraints(44, 44);
-  cell.cornerRadius = 8;
+  cell.cornerRadius = KOZMOS_RADIUS.control;
   cell.clipsContent = false;
   cell.fills = [];
   cell.strokes = [];
@@ -54633,7 +54648,7 @@ async function createStepperStepItem({
   indicator.primaryAxisAlignItems = "CENTER";
   indicator.counterAxisAlignItems = "CENTER";
   indicator.resizeWithoutConstraints(32, 32);
-  indicator.cornerRadius = 9999;
+  indicator.cornerRadius = KOZMOS_RADIUS.pill;
   indicator.clipsContent = false;
   indicator.fills = [
     paintFromVariable(
@@ -54715,7 +54730,7 @@ function createStepperConnector({ index, active, variableByName, stats }) {
   const connector = figma.createRectangle();
   connector.name = `Step ${index + 1} Connector`;
   connector.resizeWithoutConstraints(92, 2);
-  connector.cornerRadius = 9999;
+  connector.cornerRadius = KOZMOS_RADIUS.pill;
   connector.fills = [
     paintFromVariable(
       active ? "Colors/theme/500" : "Colors/foreground/500",
@@ -54753,7 +54768,7 @@ async function updateProgressVariant(
   component.name = `Value=${value}`;
   component.layoutMode = "NONE";
   component.resizeWithoutConstraints(320, 8);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -54792,7 +54807,7 @@ async function updateSpinnerVariant(
   component.name = `Size=${value}`;
   component.layoutMode = "NONE";
   component.resizeWithoutConstraints(metrics.size, metrics.size);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -54838,7 +54853,7 @@ async function updateAvatarVariant(
   component.name = `Content=${value}`;
   component.layoutMode = "NONE";
   component.resizeWithoutConstraints(40, 40);
-  component.cornerRadius = 9999;
+  component.cornerRadius = KOZMOS_RADIUS.pill;
   component.clipsContent = true;
   component.fills = [
     paintFromVariable(
@@ -54964,7 +54979,7 @@ async function updateEmptyStateVariant(
   component.paddingTop = 32;
   component.paddingBottom = 32;
   component.resizeWithoutConstraints(360, 196);
-  component.cornerRadius = 0;
+  component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
   component.strokes = [];
@@ -55011,7 +55026,7 @@ async function updateToastVariant(
   component.paddingTop = 24;
   component.paddingBottom = 24;
   component.resizeWithoutConstraints(420, 100);
-  component.cornerRadius = 8;
+  component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
   component.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
@@ -56873,7 +56888,7 @@ async function syncBottomSheetVariantChildren({
   const handle = figma.createRectangle();
   handle.name = "Drag Handle";
   handle.resizeWithoutConstraints(48, 5);
-  handle.cornerRadius = 9999;
+  handle.cornerRadius = KOZMOS_RADIUS.pill;
   handle.fills = [
     paintFromVariableWithOpacity(
       "Colors/foreground/500",
@@ -58678,7 +58693,7 @@ async function syncMenuItemRow({
   row.paddingTop = 0;
   row.paddingBottom = 0;
   row.resizeWithoutConstraints(184, 32);
-  row.cornerRadius = 4;
+  row.cornerRadius = KOZMOS_RADIUS.marker;
   row.fills = [];
   row.strokes = [];
   row.clipsContent = false;
@@ -58896,7 +58911,7 @@ async function syncToastVariantChildren({
     action.paddingTop = 0;
     action.paddingBottom = 0;
     action.resizeWithoutConstraints(66, 32);
-    action.cornerRadius = 8;
+    action.cornerRadius = KOZMOS_RADIUS.control;
     action.fills = [];
     action.strokes = [
       paintFromVariable(
@@ -59477,7 +59492,7 @@ async function syncCheckboxVariantChildren({
 
   control.layoutMode = "NONE";
   control.resizeWithoutConstraints(20, 20);
-  control.cornerRadius = 4;
+  control.cornerRadius = KOZMOS_RADIUS.marker;
   control.clipsContent = false;
   control.setSharedPluginData(RUN_NAMESPACE, "kind", "checkbox-control");
   control.fills = config.controlFill
@@ -59513,7 +59528,7 @@ async function syncCheckboxVariantChildren({
     enabled: state !== "Disabled",
     width: 20,
     height: 20,
-    radius: 4,
+    radius: KOZMOS_RADIUS.marker,
     variableName: focusRingVariableForState(state),
     fallback: focusRingFallbackForState(state),
     variableByName,
@@ -59662,7 +59677,7 @@ async function syncRadioVariantChildren({
 
   control.layoutMode = "NONE";
   control.resizeWithoutConstraints(20, 20);
-  control.cornerRadius = 9999;
+  control.cornerRadius = KOZMOS_RADIUS.pill;
   control.clipsContent = false;
   control.setSharedPluginData(RUN_NAMESPACE, "kind", "radio-control");
   control.fills = [];
@@ -59704,7 +59719,7 @@ async function syncRadioVariantChildren({
     enabled: state !== "Disabled",
     width: 20,
     height: 20,
-    radius: 9999,
+    radius: KOZMOS_RADIUS.pill,
     variableName: focusRingVariableForState(state),
     fallback: focusRingFallbackForState(state),
     variableByName,
@@ -59762,7 +59777,7 @@ async function syncSwitchVariantChildren({
 
   track.layoutMode = "NONE";
   track.resizeWithoutConstraints(44, 24);
-  track.cornerRadius = 9999;
+  track.cornerRadius = KOZMOS_RADIUS.pill;
   track.clipsContent = false;
   track.setSharedPluginData(RUN_NAMESPACE, "kind", "switch-track");
   track.fills = [
@@ -59813,7 +59828,7 @@ async function syncSwitchVariantChildren({
     enabled: state !== "Disabled",
     width: 44,
     height: 24,
-    radius: 9999,
+    radius: KOZMOS_RADIUS.pill,
     variableName: focusRingVariableForState(state),
     fallback: focusRingFallbackForState(state),
     variableByName,
@@ -59904,7 +59919,7 @@ async function syncInputVariantChildren({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(320, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -59955,7 +59970,7 @@ async function syncInputVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -60057,7 +60072,7 @@ async function syncPasswordInputVariantChildren({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(320, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -60134,7 +60149,7 @@ async function syncPasswordInputVariantChildren({
   toggle.paddingTop = 0;
   toggle.paddingBottom = 0;
   toggle.resizeWithoutConstraints(44, 44);
-  toggle.cornerRadius = 8;
+  toggle.cornerRadius = KOZMOS_RADIUS.control;
   toggle.fills = [];
   toggle.strokes = [];
   toggle.clipsContent = false;
@@ -60162,7 +60177,7 @@ async function syncPasswordInputVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -60536,7 +60551,7 @@ async function syncNumberInputVariantChildren({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(320, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -60659,7 +60674,7 @@ async function syncNumberInputVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -60891,7 +60906,7 @@ async function createOTPInputCell({
   cell.paddingTop = 0;
   cell.paddingBottom = 0;
   cell.resizeWithoutConstraints(44, 44);
-  cell.cornerRadius = 8;
+  cell.cornerRadius = KOZMOS_RADIUS.control;
   cell.fills = [
     paintFromVariable(
       config.fieldFill,
@@ -60939,7 +60954,7 @@ async function createOTPInputCell({
     enabled: state !== "Disabled" && isActive,
     width: 44,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -61089,7 +61104,7 @@ async function syncComboboxVariantChildren({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(320, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -61160,7 +61175,7 @@ async function syncComboboxVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -61185,7 +61200,7 @@ async function syncComboboxVariantChildren({
     listbox.paddingTop = 4;
     listbox.paddingBottom = 4;
     listbox.resizeWithoutConstraints(320, 144);
-    listbox.cornerRadius = 8;
+    listbox.cornerRadius = KOZMOS_RADIUS.control;
     listbox.clipsContent = false;
     listbox.setSharedPluginData(RUN_NAMESPACE, "kind", "combobox-listbox");
     listbox.fills = [
@@ -61289,7 +61304,7 @@ async function createComboboxOption({
   option.paddingTop = 0;
   option.paddingBottom = 0;
   option.resizeWithoutConstraints(312, 44);
-  option.cornerRadius = 4;
+  option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "combobox-option");
   option.fills = selected
@@ -61408,7 +61423,7 @@ async function syncMultiSelectVariantChildren({
   field.paddingTop = 4;
   field.paddingBottom = 4;
   field.resizeWithoutConstraints(320, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -61512,7 +61527,7 @@ async function syncMultiSelectVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -61536,7 +61551,7 @@ async function syncMultiSelectVariantChildren({
     listbox.paddingTop = 4;
     listbox.paddingBottom = 4;
     listbox.resizeWithoutConstraints(320, 144);
-    listbox.cornerRadius = 8;
+    listbox.cornerRadius = KOZMOS_RADIUS.control;
     listbox.clipsContent = false;
     listbox.setSharedPluginData(RUN_NAMESPACE, "kind", "multiselect-listbox");
     listbox.fills = [
@@ -61676,7 +61691,7 @@ async function createMultiSelectChip({
   chip.paddingTop = 0;
   chip.paddingBottom = 0;
   chip.resizeWithoutConstraints(72, 24);
-  chip.cornerRadius = 9999;
+  chip.cornerRadius = KOZMOS_RADIUS.pill;
   chip.clipsContent = false;
   chip.setSharedPluginData(RUN_NAMESPACE, "kind", "multiselect-chip");
   chip.fills = [
@@ -61752,7 +61767,7 @@ async function createMultiSelectOption({
   option.paddingTop = 0;
   option.paddingBottom = 0;
   option.resizeWithoutConstraints(312, 44);
-  option.cornerRadius = 4;
+  option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "multiselect-option");
   option.fills =
@@ -61867,7 +61882,7 @@ async function syncListboxVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 176,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: "Colors/theme/500",
     fallback: "#135BEC",
     variableByName,
@@ -61910,7 +61925,7 @@ async function createListboxOption({
   option.paddingTop = 6;
   option.paddingBottom = 6;
   option.resizeWithoutConstraints(312, 52);
-  option.cornerRadius = 4;
+  option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "listbox-option");
   option.fills =
@@ -62085,7 +62100,7 @@ async function syncDatePickerVariantChildren({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(320, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -62155,7 +62170,7 @@ async function syncDatePickerVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -62299,7 +62314,7 @@ async function createDatePickerCalendar({
   calendar.paddingTop = 12;
   calendar.paddingBottom = 12;
   calendar.resizeWithoutConstraints(320, DATE_PICKER_CALENDAR_HEIGHT);
-  calendar.cornerRadius = 8;
+  calendar.cornerRadius = KOZMOS_RADIUS.control;
   calendar.clipsContent = false;
   calendar.setSharedPluginData(RUN_NAMESPACE, "kind", "datepicker-calendar");
   calendar.fills = [
@@ -62533,7 +62548,7 @@ async function createDatePickerCalendarNavButton({
   button.paddingTop = 0;
   button.paddingBottom = 0;
   button.resizeWithoutConstraints(32, 32);
-  button.cornerRadius = 8;
+  button.cornerRadius = KOZMOS_RADIUS.control;
   button.clipsContent = false;
   button.fills = [];
   button.strokes = [];
@@ -62574,7 +62589,7 @@ async function createDatePickerCalendarDay({
   day.paddingTop = 0;
   day.paddingBottom = 0;
   day.resizeWithoutConstraints(36, 36);
-  day.cornerRadius = 8;
+  day.cornerRadius = KOZMOS_RADIUS.control;
   day.clipsContent = false;
   day.setSharedPluginData(RUN_NAMESPACE, "kind", "datepicker-day");
   day.setSharedPluginData(
@@ -62735,7 +62750,7 @@ async function syncDateRangePickerVariantChildren({
     enabled: state !== "Disabled",
     width: 330,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -62745,7 +62760,7 @@ async function syncDateRangePickerVariantChildren({
     enabled: state !== "Disabled",
     width: 330,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -62889,7 +62904,7 @@ async function createDateRangePickerField({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(330, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.clipsContent = false;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
@@ -62970,7 +62985,7 @@ async function createDateRangePickerCalendar({
   calendar.paddingTop = 12;
   calendar.paddingBottom = 12;
   calendar.resizeWithoutConstraints(672, DATE_RANGE_PICKER_CALENDAR_HEIGHT);
-  calendar.cornerRadius = 8;
+  calendar.cornerRadius = KOZMOS_RADIUS.control;
   calendar.clipsContent = false;
   calendar.setSharedPluginData(RUN_NAMESPACE, "kind", "daterange-calendar");
   calendar.fills = [
@@ -63234,7 +63249,7 @@ async function createDateRangePickerCalendarDay({
   day.paddingTop = 0;
   day.paddingBottom = 0;
   day.resizeWithoutConstraints(40, 40);
-  day.cornerRadius = 8;
+  day.cornerRadius = KOZMOS_RADIUS.control;
   day.clipsContent = false;
   day.setSharedPluginData(RUN_NAMESPACE, "kind", "daterange-day");
   day.setSharedPluginData(
@@ -63358,7 +63373,7 @@ async function syncTimePickerVariantChildren({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(320, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -63428,7 +63443,7 @@ async function syncTimePickerVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -63453,7 +63468,7 @@ async function syncTimePickerVariantChildren({
     listbox.paddingTop = 4;
     listbox.paddingBottom = 4;
     listbox.resizeWithoutConstraints(320, 188);
-    listbox.cornerRadius = 8;
+    listbox.cornerRadius = KOZMOS_RADIUS.control;
     listbox.clipsContent = false;
     listbox.setSharedPluginData(RUN_NAMESPACE, "kind", "timepicker-listbox");
     listbox.fills = [
@@ -63560,7 +63575,7 @@ async function createTimePickerOption({
   option.paddingTop = 0;
   option.paddingBottom = 0;
   option.resizeWithoutConstraints(312, 44);
-  option.cornerRadius = 4;
+  option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "timepicker-option");
   option.fills =
@@ -63685,7 +63700,7 @@ async function syncFileUploadVariantChildren({
   dropzone.paddingTop = 24;
   dropzone.paddingBottom = 24;
   dropzone.resizeWithoutConstraints(384, 144);
-  dropzone.cornerRadius = 8;
+  dropzone.cornerRadius = KOZMOS_RADIUS.control;
   dropzone.clipsContent = false;
   dropzone.setSharedPluginData(RUN_NAMESPACE, "kind", "file-upload-dropzone");
   dropzone.fills = [
@@ -63811,7 +63826,7 @@ async function syncFileUploadVariantChildren({
     enabled: !disabled,
     width: 384,
     height: 144,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -63932,7 +63947,7 @@ async function createFileUploadFileRow({
   row.paddingTop = 8;
   row.paddingBottom = 8;
   row.resizeWithoutConstraints(384, 44);
-  row.cornerRadius = 8;
+  row.cornerRadius = KOZMOS_RADIUS.control;
   row.clipsContent = false;
   row.setSharedPluginData(RUN_NAMESPACE, "kind", "file-upload-file-row");
   row.fills = [
@@ -64110,7 +64125,7 @@ async function syncColorPickerVariantChildren({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(320, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -64180,7 +64195,7 @@ async function syncColorPickerVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -64382,7 +64397,7 @@ async function createColorPickerPopover({
   popover.paddingTop = 12;
   popover.paddingBottom = 12;
   popover.resizeWithoutConstraints(320, 350);
-  popover.cornerRadius = 8;
+  popover.cornerRadius = KOZMOS_RADIUS.control;
   popover.clipsContent = false;
   popover.setSharedPluginData(RUN_NAMESPACE, "kind", "colorpicker-popover");
   popover.fills = [
@@ -64674,7 +64689,7 @@ async function createColorPickerMiniField({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(width, 36);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.clipsContent = false;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "colorpicker-compact-field");
   field.fills = [
@@ -64772,7 +64787,7 @@ async function createColorPickerPaletteSelect({
   select.paddingTop = 0;
   select.paddingBottom = 0;
   select.resizeWithoutConstraints(296, 36);
-  select.cornerRadius = 8;
+  select.cornerRadius = KOZMOS_RADIUS.control;
   select.clipsContent = false;
   select.setSharedPluginData(RUN_NAMESPACE, "kind", "colorpicker-select");
   select.fills = [
@@ -64934,7 +64949,7 @@ function createColorPickerColorArea({
   area.layoutMode = "NONE";
   setLayoutSizingHorizontal(area, "FILL");
   area.resizeWithoutConstraints(296, 160);
-  area.cornerRadius = 8;
+  area.cornerRadius = KOZMOS_RADIUS.control;
   area.clipsContent = false;
   area.setSharedPluginData(RUN_NAMESPACE, "kind", "colorpicker-color-area");
   area.fills = disabled
@@ -65098,7 +65113,7 @@ async function createColorPickerSlider({
   } catch (_error) {
     // Constraints are unavailable on some older plugin runtimes.
   }
-  track.cornerRadius = 999;
+  track.cornerRadius = KOZMOS_RADIUS.pill;
   track.fills = disabled
     ? [
         paintFromVariable(
@@ -65272,7 +65287,7 @@ async function syncTextareaVariantChildren({
   field.paddingTop = 8;
   field.paddingBottom = 8;
   field.resizeWithoutConstraints(320, 80);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -65331,7 +65346,7 @@ async function syncTextareaVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 80,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -65388,7 +65403,7 @@ async function syncSearchVariantChildren({
   field.paddingTop = 0;
   field.paddingBottom = 0;
   field.resizeWithoutConstraints(320, 44);
-  field.cornerRadius = 8;
+  field.cornerRadius = KOZMOS_RADIUS.control;
   field.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   field.fills = [
     paintFromVariable(
@@ -65457,7 +65472,7 @@ async function syncSearchVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -65503,7 +65518,7 @@ async function syncSelectVariantChildren({
   trigger.paddingTop = 0;
   trigger.paddingBottom = 0;
   trigger.resizeWithoutConstraints(320, 44);
-  trigger.cornerRadius = 8;
+  trigger.cornerRadius = KOZMOS_RADIUS.control;
   trigger.setSharedPluginData(RUN_NAMESPACE, "kind", "input-field");
   trigger.fills = [
     paintFromVariable(
@@ -65572,7 +65587,7 @@ async function syncSelectVariantChildren({
     enabled: state !== "Disabled",
     width: 320,
     height: 44,
-    radius: 8,
+    radius: KOZMOS_RADIUS.control,
     variableName: focusRingVariableForInputStatus(status),
     fallback: focusRingFallbackForInputStatus(status),
     variableByName,
@@ -65646,7 +65661,7 @@ async function syncSliderVariantChildren({
   } catch (_error) {
     // Constraints are unavailable on some older plugin runtimes.
   }
-  track.cornerRadius = 9999;
+  track.cornerRadius = KOZMOS_RADIUS.pill;
   track.fills = [
     paintFromVariable(
       config.trackFill,
@@ -65687,7 +65702,7 @@ async function syncSliderVariantChildren({
   } catch (_error) {
     // Constraints are unavailable on some older plugin runtimes.
   }
-  range.cornerRadius = 9999;
+  range.cornerRadius = KOZMOS_RADIUS.pill;
   range.fills = [
     paintFromVariable(
       config.rangeFill,
@@ -65795,7 +65810,7 @@ async function syncSliderVariantChildren({
     } catch (_error) {
       // Constraints are unavailable on some older plugin runtimes.
     }
-    thumb.cornerRadius = 9999;
+    thumb.cornerRadius = KOZMOS_RADIUS.pill;
     thumb.clipsContent = false;
     thumb.fills = [
       paintFromVariable(
@@ -65820,7 +65835,7 @@ async function syncSliderVariantChildren({
       enabled: state !== "Disabled" && spec.focus,
       width: SLIDER_THUMB_SIZE,
       height: SLIDER_THUMB_SIZE,
-      radius: 9999,
+      radius: KOZMOS_RADIUS.pill,
       variableName: focusRingVariableForInputStatus(status),
       fallback: focusRingFallbackForInputStatus(status),
       variableByName,
@@ -65868,7 +65883,7 @@ async function syncProgressVariantChildren({
   track.resizeWithoutConstraints(320, 8);
   track.x = 0;
   track.y = 0;
-  track.cornerRadius = 9999;
+  track.cornerRadius = KOZMOS_RADIUS.pill;
   track.fills = [
     paintFromVariable(
       config.trackFill,
@@ -65904,7 +65919,7 @@ async function syncProgressVariantChildren({
   range.resizeWithoutConstraints(rangeWidth, 8);
   range.x = 0;
   range.y = 0;
-  range.cornerRadius = 9999;
+  range.cornerRadius = KOZMOS_RADIUS.pill;
   range.visible = value !== "0";
   range.fills = [
     paintFromVariable(
@@ -66203,7 +66218,7 @@ async function syncEmptyStateVariantChildren({
     iconContainer.paddingTop = 0;
     iconContainer.paddingBottom = 0;
     iconContainer.resizeWithoutConstraints(64, 64);
-    iconContainer.cornerRadius = 9999;
+    iconContainer.cornerRadius = KOZMOS_RADIUS.pill;
     iconContainer.clipsContent = false;
     iconContainer.fills = [
       paintFromVariable(

@@ -137,7 +137,7 @@ fun KozmosRoutePreviewPanel(
             if (status != KozmosRouteReadiness.Ready && statusContent != null) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300),
+                    shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
                     color = KozmosColors.primitivesColorsBackground100.copy(alpha = 0.4f),
                     border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
                 ) {
@@ -180,7 +180,7 @@ fun KozmosRoutePreviewPanel(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+                        .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                         .background(KozmosColors.primitivesColorsEmotionalAlert500.copy(alpha = 0.15f))
                         .padding(KozmosDimensions.primitivesLayoutSpacing150)
                 ) {

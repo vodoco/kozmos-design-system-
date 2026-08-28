@@ -52,7 +52,7 @@ const BrowseCategoriesPanel = React.forwardRef<
         )}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {categories.length === 0 ? (
-            <div className="rounded-[var(--primitives-radius-lg)] border border-dashed border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
+            <div className="rounded-container border border-dashed border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
               {emptyState}
             </div>
           ) : (

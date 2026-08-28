@@ -76,9 +76,9 @@ public struct KozmosRouteOptionCard<Icon: View>: View {
                     ? KozmosColors.primitivesColorsTheme500.opacity(0.05)
                     : KozmosColors.primitivesColorsBackground0
             )
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius300, style: .continuous)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                     .stroke(
                         option.selected
                             ? KozmosColors.primitivesColorsTheme500

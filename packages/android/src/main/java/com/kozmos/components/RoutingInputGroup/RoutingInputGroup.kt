@@ -55,7 +55,7 @@ fun KozmosRoutingInputGroup(
 
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
         color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,
@@ -85,7 +85,7 @@ fun KozmosRoutingInputGroup(
                             placeholder = { Text(point.placeholder ?: defaultPlaceholder(index)) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+                            shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = KozmosColors.primitivesColorsTheme500,
                                 unfocusedBorderColor = KozmosColors.primitivesColorsForeground300

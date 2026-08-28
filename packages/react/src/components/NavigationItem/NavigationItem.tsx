@@ -11,7 +11,7 @@ export type NavigationItemState =
   | "disabled";
 
 const navigationItemVariants = cva(
-  "group/navigation-item relative min-w-0 select-none rounded-md font-medium outline-none ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+  "group/navigation-item relative min-w-0 select-none rounded-control font-medium outline-none ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
   {
     variants: {
       placement: {
@@ -204,7 +204,7 @@ const NavigationItem = React.forwardRef<HTMLElement, NavigationItemProps>(
         {shouldRenderBadge && !isIconOnly ? (
           <span
             className={cn(
-              "inline-flex shrink-0 items-center justify-center rounded-full border border-border bg-background px-1.5 text-xs leading-5 text-foreground",
+              "inline-flex shrink-0 items-center justify-center rounded-pill border border-border bg-background px-1.5 text-xs leading-5 text-foreground",
               isRail ? "" : "ml-auto",
             )}
           >

@@ -53,14 +53,14 @@ fun KozmosPaginationLink(
         modifier = modifier
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing50)
             .defaultMinSize(minWidth = 36.dp, minHeight = 36.dp)
-            .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .background(if (isActive) KozmosColors.primitivesColorsTheme500.copy(alpha = 0.1f) else Color.Transparent)
             .clickable { 
                 trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Pagination", eventName = "page_changed"))
                 onClick() 
             }
             .then(
-                if (isActive) Modifier.border(1.dp, KozmosColors.primitivesColorsTheme500, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+                if (isActive) Modifier.border(1.dp, KozmosColors.primitivesColorsTheme500, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                 else Modifier
             ),
         contentAlignment = Alignment.Center
@@ -82,7 +82,7 @@ fun KozmosPaginationPrevious(
         modifier = modifier
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing50)
             .defaultMinSize(minHeight = 36.dp)
-            .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .clickable(onClick = onClick)
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing100),
         contentAlignment = Alignment.Center
@@ -104,7 +104,7 @@ fun KozmosPaginationNext(
         modifier = modifier
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing50)
             .defaultMinSize(minHeight = 36.dp)
-            .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .clickable(onClick = onClick)
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing100),
         contentAlignment = Alignment.Center

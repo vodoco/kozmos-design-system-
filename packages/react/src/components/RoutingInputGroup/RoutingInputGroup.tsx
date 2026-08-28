@@ -74,7 +74,7 @@ const RoutingInputGroup = React.forwardRef<
                 ) : (
                   <Circle
                     className={cn(
-                      "w-3.5 h-3.5 shrink-0 border-2 rounded-full",
+                      "w-3.5 h-3.5 shrink-0 border-2 rounded-pill",
                       isFirst
                         ? "text-primary border-primary bg-primary/20"
                         : "text-muted-foreground border-current",
@@ -83,7 +83,7 @@ const RoutingInputGroup = React.forwardRef<
                 )}
 
                 {!isLast && (
-                  <div className="w-[2px] h-9 bg-border rounded-full" />
+                  <div className="w-[2px] h-9 bg-border rounded-pill" />
                 )}
               </React.Fragment>
             );
@@ -101,7 +101,7 @@ const RoutingInputGroup = React.forwardRef<
                   point.placeholder ||
                   (index === 0 ? "Choose Starting Point" : "Choose Destination")
                 }
-                className="h-10 text-sm bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 focus-visible:ring-0 rounded-xl transition-all duration-300"
+                className="h-10 text-sm bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 focus-visible:ring-0 rounded-panel transition-all duration-300"
               />
               {points.length > 2 &&
                 index > 0 &&

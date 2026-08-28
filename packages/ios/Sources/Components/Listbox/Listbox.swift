@@ -77,7 +77,7 @@ public struct KozmosListbox: View {
                         .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing100)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(rowBackground(for: option))
-                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+                        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                     }
                     .buttonStyle(.plain)
                     .disabled(disabled || option.disabled)
@@ -89,9 +89,9 @@ public struct KozmosListbox: View {
         }
         .frame(maxWidth: .infinity, maxHeight: maxHeight, alignment: .topLeading)
         .background(KozmosColors.primitivesColorsBackground0)
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
         )
         .opacity(disabled ? 0.6 : 1)

@@ -114,7 +114,7 @@ fun KozmosPOIResultCard(
                 selected = result.selected
             },
         enabled = available,
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius300),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
         color = KozmosColors.primitivesColorsBackground0,
         border = BorderStroke(
             width = if (result.selected) 2.dp else 1.dp,
@@ -133,7 +133,7 @@ fun KozmosPOIResultCard(
                             start = KozmosDimensions.primitivesLayoutSpacing200,
                             top = KozmosDimensions.primitivesLayoutSpacing100
                         )
-                        .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+                        .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                         .background(KozmosColors.componentsPrimaryButtonsAlertButtonBackgroundIdle)
                         .padding(
                             horizontal = KozmosDimensions.primitivesLayoutSpacing100,
@@ -295,7 +295,7 @@ fun KozmosPOIResultCard(
 @Composable
 private fun POILogo(poi: KozmosPOIPresentation) {
     val logo = poi.logo
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
 
     if (logo != null) {
         AsyncImage(

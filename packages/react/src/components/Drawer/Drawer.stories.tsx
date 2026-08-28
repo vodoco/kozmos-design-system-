@@ -43,7 +43,7 @@ export const Default: Story = {
             Review visibility, routing, and publishing settings for this map.
           </DrawerDescription>
         </DrawerHeader>
-        <div className="rounded-md border border-border bg-muted/40 p-4 text-sm">
+        <div className="rounded-control border border-border bg-muted/40 p-4 text-sm">
           Drawer body content stays generic in Core. Product-specific content
           belongs in composed dashboard, SDK, or CMS components.
         </div>

@@ -401,6 +401,77 @@ correct off-floor rings on LocationPin, and correct geometry on the other 22
 sets. FeedbackCard's Success variant looked squashed and is not — 16px padding
 all round, it is simply a one-line state.
 
+### The semantic radius layer
+
+"Change the roundness from 8 to 16" turned out not to be a config change,
+because there was no place to make it. Radius had **four** sources of truth and
+they already disagreed. A button was 16px on web (Tailwind `rounded-md` -> a
+1rem token), 8px on iOS and Android (`primitivesLayoutRadius100`), and 8px in
+Figma (a hardcoded number, one of 162). Nothing compared them: the contract
+check compares variant axes and props, not styling values, so the drift sat
+there unseen. Web had quietly been the odd one out all along — which is why the
+change asked for was half-done before it started.
+
+`Semantics.Radius` in `packages/tokens/src/tokens-*.json` is now the source, and
+the roles are named for the job rather than the size:
+
+| Role        | Value | What it is                                                 |
+| ----------- | ----- | ---------------------------------------------------------- |
+| `none`      | 0     | flush edges: sidebars, navbars, table shells               |
+| `marker`    | 4     | small marks inside something else: badges, checkboxes      |
+| `control`   | 16    | buttons, inputs, selects, rows, toasts — **the workhorse** |
+| `container` | 16    | cards and dialogs                                          |
+| `panel`     | 24    | large panels and sheets, mostly Product / SDK              |
+| `pill`      | 9999  | chips, avatars, switches, segmented controls               |
+
+**To change how round the product feels, repoint one alias.** `Control` moved
+from `radius.100` to `radius.200` and that single edit is what took iOS, Android
+and Figma from 8 to 16; web did not move, because it was already there. Then
+`pnpm tokens:build`, copy the two generated `KozmosDimensions` files into
+`packages/ios/Sources` and `packages/android/.../tokens/`, and re-run the
+plugin.
+
+The migration: **168** React class occurrences, **239** native references,
+**136** plugin `cornerRadius` literals, **32** focus-ring and per-corner radii,
+and **48** of the plugin's Figma corner-radius variables.
+
+Two things worth knowing before touching this again:
+
+- **A bound Figma variable beats the node's `cornerRadius`.** 73 components call
+  `bindFloatVariable(component, "cornerRadius", "Button/radius", ...)`, so
+  migrating the literal assignments alone would have been inert for most of the
+  library — the plugin would have said 16 while the file rendered 8. The
+  variables were the real lever and are migrated too; the parity check now
+  covers them for exactly this reason.
+- **The plugin's variables alias `Semantics/Radius/Control` by name.** If that
+  variable does not exist in the Figma file yet, the importer warns
+  (`alias target ... was not found`) and falls back to the numeric value, which
+  is also 16 — so it degrades to the right answer either way. Run the
+  foundations/variables import once to make the alias resolve properly.
+
+`pnpm tokens:radius:check` is the guard. It asserts the plugin's
+`KOZMOS_RADIUS`, its corner-radius variables, the Tailwind utilities and the
+native sources all still agree with the tokens, and it reports anything sitting
+off every role rather than failing on it. Eight component variables are off
+scale on purpose (`ToggleButton` 12, `Alert` 12, `POICard` 12, `WayfindingCard`
+12, `Tabs/trigger` 12, `FloorSelector/item` 6, two `ColorPicker` swatches 6), as
+are 26 plugin literals and four web uses of the 32px `2xl`. Moving those is a
+design decision, not a cleanup, so they were left.
+
+Three latent bugs fell out of the work, all fixed:
+
+- `Primitives.Radius.md` and `.lg` are both `1rem`. The rem scale has no 8px
+  step except `DEFAULT`, so `rounded-md` was almost certainly meant to be 8px
+  and has been rendering 16 instead. That is the whole origin of the drift.
+- `build.mjs` resolved token values with `token.value || token.$value || ...`,
+  so a value of **0** was treated as missing and fell through to the unresolved
+  alias string. Every zero-valued dimension arriving by reference was silently
+  dropped from the native outputs. Fixed at all four call sites.
+- A literal `9999` with `$type: dimension` picked up a rem transform and emitted
+  `9999rem` in CSS and `159984.dp` on Android. `Primitives.Layout.radius.full`
+  now completes the numeric scale so every semantic alias resolves to a plain
+  number.
+
 ## 4. Immediate Next Actions, In Order
 
 Everything the design system can do from code is done. What remains is either a
@@ -424,14 +495,18 @@ Figma action, a decision, or work outside this lane.
    Connect declarations pin will change. `FileUpload` is where the two
    remaining truncations live; its fix is in the row builder, so the set needs
    regenerating.
-3. **Publish the library from Figma.** That is Figma's own action, in the
+3. **Re-run the plugin for the radius change.** The semantic layer is code-only
+   so far. Run the foundations/variables import once so
+   `Semantics/Radius/Control` exists, then `Update All Product / SDK` and the
+   Core sets. Expect controls to go from 8px to 16px across the file.
+4. **Publish the library from Figma.** That is Figma's own action, in the
    Assets panel — not something the importer or any script here touches. The
    file is current once step 1 is done.
-4. **Native test coverage.** 8 test files each against 97 components on iOS and
+5. **Native test coverage.** 8 test files each against 97 components on iOS and
    Android. Now the weakest link by a clear margin — the Product / SDK sets
    have been looked at, and this has not.
-5. **Decide RoutePreviewPanel's states** — see §5. A design call, not a defect.
-6. **Dashboard items outside the design system** — raised but never scoped.
+6. **Decide RoutePreviewPanel's states** — see §5. A design call, not a defect.
+7. **Dashboard items outside the design system** — raised but never scoped.
    Likely adds genuinely new components rather than variants.
 
 ### Not blocking, and not this branch's to fix
@@ -602,6 +677,7 @@ pnpm figma:plugin:check           # no spread / ?. / ?? in the plugin source
 pnpm components:contract:check    # React/native/Figma contract parity
 pnpm components:variant:check     # variant axes across all four platforms
 pnpm tokens:contrast:check        # token pair contrast, light + dark
+pnpm tokens:radius:check          # all four surfaces agree on corner radius
 pnpm docs:snippets:check          # MDX snippets name real identifiers
 pnpm exec tsx scripts/skills/check-completion.ts --check   # STATUS.md current
 pnpm figma:publish:linked:dry            # React Code Connect vs the live file

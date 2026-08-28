@@ -140,7 +140,7 @@ private fun DateRangeField(
         calendar.get(Calendar.MONTH),
         calendar.get(Calendar.DAY_OF_MONTH)
     )
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
     val borderColor = dateRangeStatusColor(status) ?: KozmosThemeTokens.primitivesColorsForeground500
     val background = if (!enabled || readOnly) {
         KozmosThemeTokens.primitivesColorsBackground100
@@ -201,7 +201,7 @@ private fun DateRangePreview(value: KozmosDateRangeValue, enabled: Boolean) {
     } else {
         KozmosThemeTokens.primitivesColorsForeground500
     }
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
     Row(
         modifier = Modifier
             .fillMaxWidth()

@@ -72,7 +72,7 @@ fun KozmosColorPicker(
     val normalizedValue = normalizeHexColor(value)
     val color = colorFromHex(normalizedValue)
     val hsl = rgbToHsl(hexToRgb(normalizedValue))
-    val fieldShape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val fieldShape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
     val borderColor = statusColor(status) ?: KozmosThemeTokens.primitivesColorsForeground500
     val fieldBackground = if (!enabled || readOnly) {
         KozmosThemeTokens.primitivesColorsBackground100
@@ -106,8 +106,8 @@ fun KozmosColorPicker(
             Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .background(color, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius50))
-                    .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius50))
+                    .background(color, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
+                    .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
             )
             Text(
                 text = normalizedValue,
@@ -184,7 +184,7 @@ fun KozmosColorPicker(
 
 @Composable
 private fun ColorArea(color: Color, hsl: HslColor) {
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
@@ -291,8 +291,8 @@ private fun CompactValueBox(text: String, modifier: Modifier = Modifier) {
         color = KozmosThemeTokens.primitivesColorsForeground0,
         modifier = modifier
             .height(36.dp)
-            .background(KozmosThemeTokens.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
-            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .background(KozmosThemeTokens.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing100, vertical = KozmosDimensions.primitivesLayoutSpacing75)
     )
 }
@@ -303,8 +303,8 @@ private fun PaletteSelector(label: String) {
         modifier = Modifier
             .fillMaxWidth()
             .height(40.dp)
-            .background(KozmosThemeTokens.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
-            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .background(KozmosThemeTokens.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing150),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -344,11 +344,11 @@ private fun PresetGrid(
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
-                            .background(colorFromHex(preset), RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius50))
+                            .background(colorFromHex(preset), RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
                             .border(
                                 if (preset == selectedValue) 2.dp else 1.dp,
                                 KozmosThemeTokens.primitivesColorsForeground500,
-                                RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius50)
+                                RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker)
                             )
                             .clickable(enabled = enabled) { onValueChange(preset) }
                     )

@@ -22,8 +22,8 @@ const UserLocationMarker = React.forwardRef<
       {...props}
     >
       {/* Pulsing ring background */}
-      <div className="absolute h-10 w-10 rounded-full bg-data-blue opacity-30 animate-pulse outline-none pointer-events-none" />
-      <div className="absolute h-14 w-14 rounded-full bg-data-blue opacity-10 animate-ping outline-none pointer-events-none" />
+      <div className="absolute h-10 w-10 rounded-pill bg-data-blue opacity-30 animate-pulse outline-none pointer-events-none" />
+      <div className="absolute h-14 w-14 rounded-pill bg-data-blue opacity-10 animate-ping outline-none pointer-events-none" />
 
       {/* Heading Cone (if active) */}
       {showHeading && (
@@ -60,7 +60,7 @@ const UserLocationMarker = React.forwardRef<
       )}
 
       {/* Core Dot bordered with white */}
-      <div className="relative h-[18px] w-[18px] rounded-full border-2 border-background bg-data-blue shadow-md z-10" />
+      <div className="relative h-[18px] w-[18px] rounded-pill border-2 border-background bg-data-blue shadow-md z-10" />
     </div>
   );
 });

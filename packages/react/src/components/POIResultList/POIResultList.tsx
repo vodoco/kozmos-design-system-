@@ -50,7 +50,7 @@ const POIResultList = React.forwardRef<HTMLElement, POIResultListProps>(
           {resultCountLabel}
         </p>
         {items.length === 0 ? (
-          <div className="rounded-[var(--primitives-radius-lg)] border border-dashed border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
+          <div className="rounded-container border border-dashed border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
             {emptyState}
           </div>
         ) : (

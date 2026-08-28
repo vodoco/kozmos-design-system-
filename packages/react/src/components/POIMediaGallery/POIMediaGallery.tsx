@@ -110,7 +110,7 @@ const POIMediaGallery = React.forwardRef<HTMLElement, POIMediaGalleryProps>(
             >
               <img
                 alt={item.alt}
-                className="aspect-[4/3] w-full rounded-[var(--primitives-radius-lg)] bg-muted object-cover"
+                className="aspect-[4/3] w-full rounded-container bg-muted object-cover"
                 loading={index === 0 ? "eager" : "lazy"}
                 src={item.src}
               />

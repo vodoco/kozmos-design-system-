@@ -31,7 +31,7 @@ public struct KozmosFileUpload: View {
                 }
                 .padding()
                 .background(KozmosColors.primitivesColorsBackground100)
-                .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+                .cornerRadius(KozmosDimensions.semanticsRadiusControl)
             } else {
                 Button(action: { isImporting = true }) {
                     VStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
@@ -43,7 +43,7 @@ public struct KozmosFileUpload: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 120)
                     .background(
-                        RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                        RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                             .stroke(style: StrokeStyle(lineWidth: 2, dash: [5]))
                             .foregroundColor(KozmosColors.primitivesColorsForeground400.opacity(0.5))
                     )

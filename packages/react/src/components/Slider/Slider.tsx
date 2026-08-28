@@ -74,7 +74,7 @@ const Slider = React.forwardRef<
           aria-describedby={hasError && isStringError ? errorId : undefined}
           className={cn(
             "relative flex w-full touch-none select-none items-center",
-            hasError && "ring-1 ring-destructive rounded-full",
+            hasError && "ring-1 ring-destructive rounded-pill",
             className,
           )}
           {...props}
@@ -84,7 +84,7 @@ const Slider = React.forwardRef<
             props.onValueCommit?.(value);
           }}
         >
-          <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full border border-[color:var(--primitives-colors-foreground-500)] bg-secondary">
+          <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-pill border border-[color:var(--primitives-colors-foreground-500)] bg-secondary">
             <SliderPrimitive.Range
               className={cn(
                 "absolute h-full bg-primary",
@@ -106,7 +106,7 @@ const Slider = React.forwardRef<
                   : label)
               }
               className={cn(
-                "block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                "block h-5 w-5 rounded-pill border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
                 hasError && "border-destructive",
               )}
             />

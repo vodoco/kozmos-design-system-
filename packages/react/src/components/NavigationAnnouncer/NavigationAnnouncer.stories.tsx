@@ -20,7 +20,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: (args) => (
     <AnalyticsProvider>
-      <div className="rounded-md border border-border bg-background p-4 text-sm text-muted-foreground">
+      <div className="rounded-control border border-border bg-background p-4 text-sm text-muted-foreground">
         <NavigationAnnouncer {...args} />
         <span aria-hidden="true">{args.message}</span>
       </div>
