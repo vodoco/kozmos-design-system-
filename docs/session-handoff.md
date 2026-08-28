@@ -59,12 +59,17 @@ published. The plugin's own audit remains the authority on both.
 
 **It also never compares text _content_,** and that is a live gap, not a
 theoretical one. RoutingInputGroup's fields read "Start", "Start", "Start" in
-the file while `code.js` has said `["Start", "Add stop", "Destination"]` since
-the builder was written. Every structural check passes on it, because a wrong
-string is a perfectly well-formed node. Whatever the cause — a failed entry in
-an `Update All` run is the likeliest, since that loop deliberately lets one set
-fail without stranding the rest — the lesson is that green from `figma:verify`
-means the file is structurally current, not that it says the right words.
+the file while `code.js` clearly assigned `["Start", "Add stop",
+"Destination"]`. Every structural check passed on it, because a wrong string is
+a perfectly well-formed node. The cause was in the code, not a stale file — see
+§3 — but the point stands either way: green from `figma:verify` means the file
+is structurally current, not that it says the right words.
+
+It is also **not wired into CI**. `figma:verify` is a `package.json` script and
+nothing else runs it, which is defensible — it fails whenever the code is ahead
+of the file, which is the normal state between a commit and a plugin run, so as
+a build gate it would be red most of the time. Just do not mistake a green CI
+for a verified file.
 
 ### CI status
 
@@ -338,8 +343,17 @@ is a frame, and a frame keeps its size when its children shrink; both were left
 over from taller earlier layouts. `layoutSingleAxisVariants` now refits the set.
 This is not only cosmetic: the Components page packs blocks by bounding box, so
 an 87%-empty block was costing a real column slot in the grid built last
-session. The other 22 sets measured 0% dead space, so these two were the whole
-of it.
+session.
+
+Measuring all 94 sets rather than only these 24 puts that in proportion: 66 sit
+flush against their variants, one (`Link`) carries a deliberate symmetric inset,
+and 27 have right/bottom slack. Almost all of that is a trailing grid gutter of
+26–80px, which is tidy-up rather than defect. Three are not: POICard, and
+WayfindingCard, and `List` at 359px of slack on the right. All three are on the
+single-axis layout path, so the refit above covers them — but `List` is Core, so
+it only moves when someone rebuilds `List`, not on an `Update All Product / SDK`.
+Every set has its children flush at the origin, which is what makes refitting
+safe; there is no left/top padding anywhere to preserve except `Link`'s.
 
 **And a fifth check, so none of it returns quietly.** A truncated node is
 indistinguishable from a healthy one in the REST payload — same type, same
@@ -349,6 +363,37 @@ deliberately runs narrow: it should miss a marginal case rather than invent
 one. Validated against the 1,758 `TRUNCATE` nodes on the Components page, it
 flags exactly 9, and all 9 were confirmed by eye in the render. Zero false
 positives at that threshold.
+
+### Two things the first pass got wrong
+
+Re-auditing it caught both, and both are now fixed. They are recorded because
+the mistakes are instructive, not because the outcome changed.
+
+**RoutingInputGroup was diagnosed as a stale file. It was not.** Every field was
+named `Point Field Slot`, and `configureNamedTextProperty` binds by node name
+across the whole component set — so the one `Point Label Text` property captured
+all three fields and painted its default over the labels the builder had just
+set. The code produced exactly what the file showed; re-running the plugin would
+have changed nothing. The first pass compared code to file, saw a mismatch, and
+reached for "the file is behind" without following the property binding. Each
+route role now has its own node name, chosen by role rather than position, so
+that with two points the second field still carries the destination's name.
+`Point Label Text` keeps its name and its node, so Code Connect on all three
+platforms still validates — checked, not assumed.
+
+**The verifier was reading the page at `depth=8`.** That silently cut the tree
+at the sixth level inside a variant and hid 1,120 text nodes — 17% of the page —
+from the collapsed, truncation and contrast walks. It had been that way since
+the verifier was written, so "the first clean audit run" in `f52c27f` was clean
+over 83% of the text. Full depth costs 1.7 MB more and no extra time; the walk
+now reaches 5,987 visible text nodes instead of 4,867. Nothing new failed in the
+newly visible 23%, which is worth stating plainly: the blind spot was real and
+had not been hiding anything.
+
+One glyph is worth a glance on the next run. `↗` for Share is the only mark in
+the Product / SDK lane not yet seen in a render. Inter's coverage in this file
+is demonstrably wide — `⇅`, `◌`, `✎` and `◈` all render — so it should be fine,
+but it is an inference rather than an observation.
 
 What the pass did **not** find is worth recording too, since it is evidence the
 sets are broadly sound: no contrast failures, no collapsed text, no axis drift,
@@ -369,12 +414,17 @@ Figma action, a decision, or work outside this lane.
    confirmed over the API. That item is done.)
 
    **Read the run's `failures` and `warnings` before closing the loop.**
-   RoutingInputGroup is the reason: its fields say "Start", "Start", "Start" in
-   the file where the code says `["Start", "Add stop", "Destination"]`, so
-   something in a previous `Update All` did not take. If it fails again the run
-   will now say so, and if it succeeds the labels will correct themselves —
-   either way, look. `fitProductSdkSlotLabel` also warns by name if any label
-   still will not fit.
+   `fitProductSdkSlotLabel` warns by name if a slot label still will not fit at
+   the smaller style, which is the one outcome the terminal check cannot predict
+   ahead of the run. RoutingInputGroup's three fields should come back reading
+   Start / Add stop / Destination — they were never a stale-file problem, so
+   this run is the first that can produce them.
+
+   Two things this run changes that no check will flag, so look at them: the
+   POIDetailPanel action row (`→ Navigate`, `☆ Save`, `↗ Share` — the `↗` is
+   the one glyph never yet seen in a render), and the WayfindingCard and POICard
+   set frames, which should come back tight around their variants instead of
+   eight times too tall.
 
 2. **Publish the library from Figma.** That is Figma's own action, in the
    Assets panel — not something the importer or any script here touches. The
@@ -456,12 +506,24 @@ These need a human call; none are blocked on code.
 
 - **`figma:verify` green does not mean the file says the right words.** It
   checks structure — presence, axes, geometry, contrast, and now truncation —
-  and never compares text content against the builder. RoutingInputGroup has
-  been wrong in the file for the whole life of the set without a single check
-  noticing. If you want this class closed properly, the shape is for the plugin
-  to stamp each set with a fingerprint of the builder source at generation time
-  and for the verifier to compare it; that was scoped and deliberately not
-  built here.
+  and never compares text content against the builder. RoutingInputGroup read
+  "Start" three times for the whole life of the set without a check noticing.
+  If you want this class closed properly, the shape is for the plugin to stamp
+  each set with a fingerprint of the builder source at generation time and for
+  the verifier to compare it; that was scoped and deliberately not built here.
+  It is also not run in CI at all — see §1.
+- **A text property binds by node name across the entire component set.**
+  `configureNamedTextProperty` walks every variant and binds every TEXT node
+  carrying the given name, then paints the property's single default over all of
+  them. Two sibling nodes sharing a name is therefore not a cosmetic
+  duplication; it silently collapses them to one value. That is what happened to
+  RoutingInputGroup's three fields. If a builder emits N of the same thing, give
+  each its own name — FileUpload's `File Meta Text` / `File Meta Text 2` is the
+  convention.
+- **Query the file at full depth.** `depth=8` on the nodes endpoint looks like a
+  harmless optimisation and drops 17% of the page's text nodes on the floor,
+  with no error and no truncation marker in the response. Any new check that
+  walks the tree should fetch without a depth cap.
 - **`productSdkText` ignores the `fontSize` and `lineHeight` you pass it.**
   `applyTextStyleToNodeAsync` runs after both assignments and overwrites them
   from the style spec, so a call site asking for 12 renders at 14. Around a
