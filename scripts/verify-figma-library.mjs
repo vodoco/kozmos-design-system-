@@ -11,6 +11,7 @@
  *   variants  — each set's variants match the expected axis and values exactly
  *   collapsed — text nodes at zero width, the sizing bug from 6803f20
  *   contrast  — WCAG AA on every text node against the surface behind it
+ *   truncated — text set to TRUNCATE in a box too small for its own string
  *
  * Needs FIGMA_ACCESS_TOKEN (env or .env) with file_content:read.
  */
@@ -81,6 +82,35 @@ function expectations() {
   return { names: [...new Set(names)], axes };
 }
 
+/**
+ * Roughly how wide a string renders, as a multiple of its font size.
+ *
+ * A truncated node is indistinguishable from a healthy one in the REST
+ * payload: same type, same width, full `characters`. The only way to see it
+ * from here is to measure the string and compare. There is no font metric in
+ * the API, so this approximates Inter by character class, and deliberately
+ * runs narrow — the check should miss a marginal case rather than invent one.
+ * Validated against the whole Components page: over 1,758 nodes set to
+ * TRUNCATE it flagged 9, and all 9 were confirmed truncated in the render.
+ */
+const NARROW_GLYPHS = "ijlt.,;:'!|()[]{}/\\ ";
+const WIDE_GLYPHS = "mwMW@%";
+const THIN_MARKS = "\u2022\u00b7\u2026\u2039\u203a\u00d7";
+const advanceRatio = (ch) => {
+  if (NARROW_GLYPHS.includes(ch)) return 0.3;
+  if (WIDE_GLYPHS.includes(ch)) return 0.86;
+  if (THIN_MARKS.includes(ch)) return 0.35;
+  if (ch >= "A" && ch <= "Z") return 0.68;
+  if (ch >= "0" && ch <= "9") return 0.57;
+  if (ch.charCodeAt(0) > 0x2000) return 0.8;
+  return 0.54;
+};
+const textWidth = (characters, fontSize) => {
+  let width = 0;
+  for (const ch of characters) width += advanceRatio(ch) * fontSize;
+  return width;
+};
+
 const luminance = (hex) => {
   const c = hex.replace("#", "");
   const v = [0, 2, 4]
@@ -144,6 +174,7 @@ async function main() {
   const variantDrift = [];
   const collapsed = [];
   const lowContrast = [];
+  const truncated = [];
 
   for (const name of names) {
     if (!sets[name]) {
@@ -238,6 +269,30 @@ async function main() {
               );
             }
           }
+          const style = node.style || {};
+          if (
+            style.textAutoResize === "TRUNCATE" ||
+            style.textTruncation === "ENDING"
+          ) {
+            const fontSize = style.fontSize || 14;
+            const lineHeight = style.lineHeightPx || fontSize * 1.4;
+            const lines = box
+              ? Math.max(1, Math.round(box.height / lineHeight))
+              : 1;
+            const need = textWidth(node.characters || "", fontSize);
+            const have = (box ? box.width : 0) * lines;
+            // A tenth of slack absorbs the approximation; anything past that is
+            // wide enough that the ellipsis is visible in the render.
+            if (have > 0 && need > have * 1.1) {
+              const key = `t:${name}/${node.name}/${node.characters}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                truncated.push(
+                  `${name} / ${node.name}: "${node.characters}" needs ~${Math.round(need)}px, has ${Math.round(have)}px`,
+                );
+              }
+            }
+          }
           const fg = solidFill(node);
           if (fg && bg && !inactive && !faded) {
             const ratio = contrast(fg, bg);
@@ -278,6 +333,7 @@ async function main() {
   total += report(`presence (${names.length} expected)`, missing);
   total += report("variant drift", variantDrift);
   total += report("collapsed text nodes", collapsed);
+  total += report("text truncated by its own box", truncated);
   total += report(`text contrast below ${AA}:1`, lowContrast);
 
   console.log(

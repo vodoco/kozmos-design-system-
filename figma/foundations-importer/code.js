@@ -43447,8 +43447,64 @@ async function productSdkSlot({
     width: Math.max(24, width - 24),
   });
   text.textAlignHorizontal = "CENTER";
+  await fitProductSdkSlotLabel(slot, text, width, height, stats);
   appendWithSizing(slot, text, "FILL", null);
   return slot;
+}
+
+/**
+ * Give a slot's label the room it needs, or shrink it until it has room.
+ *
+ * A flat 12px padding is right on a 240px content slot and impossible on a
+ * 40px icon one: 24px of it left 14px for the word "Icon", which Figma
+ * truncated to an ellipsis. Seven slots across five sets shipped that way --
+ * "Logo" as "L", "Controls" as "Co", "Trailing" as "Tra" -- and no gate saw
+ * it, because a truncated node is a normal node at a normal width.
+ *
+ * Measuring beats guessing: a text node set to size itself reports the exact
+ * width of its own string in its own font, so ask Figma rather than modelling
+ * advance widths. Step the padding down first, then the text style, and stop
+ * as soon as the label fits. Both steps land on values the system already
+ * uses, so nothing here invents a new size.
+ */
+async function fitProductSdkSlotLabel(slot, text, width, height, stats) {
+  const measure = () => {
+    text.textAutoResize = "WIDTH_AND_HEIGHT";
+    const measured = { width: text.width, height: text.height };
+    text.textAutoResize = "TRUNCATE";
+    return measured;
+  };
+  // The 1px stroke is drawn inside the frame, so it costs a pixel each side.
+  const roomAt = (pad) => width - 2 * pad - 2;
+
+  let padding = 12;
+  let size = measure();
+  if (size.width > roomAt(padding)) padding = 4;
+  if (size.width > roomAt(padding)) {
+    await applyTextStyleToNodeAsync(text, "fieldMeta", stats);
+    size = measure();
+  }
+  if (size.width > roomAt(padding)) {
+    pushUniqueWarning(
+      stats,
+      "slot-label-fit:" + slot.name,
+      `"${text.characters}" needs ${Math.ceil(size.width)}px but ${slot.name} offers ${roomAt(padding)}px, so it will truncate.`,
+    );
+  }
+
+  // A 24px-tall slot has no room for 12px above and below either.
+  const vertical = Math.max(
+    0,
+    Math.min(padding, Math.floor((height - size.height) / 2)),
+  );
+  slot.paddingLeft = padding;
+  slot.paddingRight = padding;
+  slot.paddingTop = vertical;
+  slot.paddingBottom = vertical;
+  text.resizeWithoutConstraints(
+    Math.max(1, roomAt(padding)),
+    Math.max(1, size.height),
+  );
 }
 
 /**
@@ -44171,6 +44227,16 @@ async function rebuildMapOverlayComponent() {
 
 // --- POIDetailPanel --------------------------------------------------------
 
+// The glyph used to be actionLabel.charAt(0), which put a literal "N", "S"
+// and "S" on the three buttons -- two of them identical, and all three reading
+// as a placeholder someone forgot to fill in. Every other builder here uses a
+// real mark, so these do too; the star matches SaveLocationCard's.
+const POI_DETAIL_PANEL_ACTION_GLYPHS = {
+  Navigate: "→",
+  Save: "☆",
+  Share: "↗",
+};
+
 async function createPOIDetailPanelVariant(args) {
   const component = figma.createComponent();
   await updatePOIDetailPanelVariant(component, args);
@@ -44319,7 +44385,7 @@ async function updatePOIDetailPanelVariant(
   for (const actionLabel of ["Navigate", "Save", "Share"]) {
     const action = await productSdkControlButton({
       name: actionLabel + " Action",
-      glyph: actionLabel.charAt(0),
+      glyph: POI_DETAIL_PANEL_ACTION_GLYPHS[actionLabel],
       label: actionLabel,
       fonts,
       variableByName,
@@ -46814,6 +46880,13 @@ function layoutSingleAxisVariants(componentSet, config) {
     child.x = valueIndex * config.xStep;
     child.y = 0;
   }
+
+  // A component set is a frame, and a frame keeps its size when its children
+  // shrink. WayfindingCard was 700x1058 around 700x134 of variants -- 87% dead
+  // space -- and POICard 74%, both left over from taller earlier layouts. The
+  // Components page packs by bounding box, so an empty block costs a real
+  // column slot, not just looks.
+  resizeComponentSetToContainChildren(componentSet);
 }
 
 function layoutTextVariants(componentSet) {
@@ -63866,7 +63939,12 @@ async function createFileUploadFileRow({
     stats,
   );
   nameText.characters = fileName;
-  setHorizontalFillTextSizing(nameText);
+  // The copy block is a VERTICAL stack, so horizontal is its counter axis.
+  // setHorizontalFillTextSizing ends on layoutAlign = "CENTER", which is the
+  // right cross-axis answer inside a horizontal row and the wrong one here: it
+  // overwrites the FILL set a line earlier and leaves the node frozen at its
+  // own natural width. "2.4 MB" then rendered as "2.4" plus an ellipsis.
+  setVerticalStackChildSizing(nameText);
   setTextAutoResize(nameText, "TRUNCATE");
   nameText.fills = [
     paintFromVariable(
@@ -63883,7 +63961,7 @@ async function createFileUploadFileRow({
   metaText.name = index === 0 ? "File Meta Text" : "File Meta Text 2";
   await applyFileUploadMetaTypography(metaText, fonts, variableByName, stats);
   metaText.characters = fileMeta;
-  setHorizontalFillTextSizing(metaText);
+  setVerticalStackChildSizing(metaText);
   setTextAutoResize(metaText, "TRUNCATE");
   metaText.fills = [
     paintFromVariable(
