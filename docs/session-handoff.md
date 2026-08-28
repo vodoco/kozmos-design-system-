@@ -32,6 +32,29 @@ All gates pass on a clean checkout as of this handoff:
 | iOS                                          | `swift build` exit 0                         |
 | Android                                      | `assembleDebug` + `testDebugUnitTest` exit 0 |
 
+### Keeping the Figma file honest
+
+Two things exist now that did not when this branch started, and they change the
+loop:
+
+- **`pnpm figma:verify`** reads the file over the REST API and reports drift
+  from the terminal: sets present, axis names and values, collapsed text nodes,
+  and WCAG AA on every visible text node. It answers "did my change land?"
+  in seconds, which is what several rounds of audits and screenshots were doing
+  by hand.
+- **Update All Product / SDK** in the plugin regenerates all 24 sets in one
+  press, deferring the page reorganize until the end.
+
+The working loop is: change code -> Update All Product / SDK -> `pnpm
+figma:verify` -> then Figma's own Publish. Only the middle step needs Figma
+open.
+
+`figma:verify` cannot see everything. Contrast is **light theme only**, because
+the REST API resolves variables in the file's default mode. It cannot check
+component descriptions either: Figma only exposes those for _published_ library
+components, so `componentSets` metadata reads as empty until the library is
+published. The plugin's own audit remains the authority on both.
+
 ### CI status
 
 Local gates green does not mean CI green — the two disagreed for most of this
@@ -86,7 +109,7 @@ Two CI failures were real and are fixed:
 | ------------------- | ----------- | ----- | ------- | ------------ | --------- |
 | Components          | 97/97       | 97/97 | 97/97   | 100 wrappers | **94/97** |
 | Variant-axis gaps   | reference   | 0/26  | 0/26    | 0/26         | **1/26**  |
-| Code Connect linked | 68/92       | 68/92 | 68/92   | —            | —         |
+| Code Connect linked | **92/92**   | 68/92 | 68/92   | —            | —         |
 
 The three components with no Figma set are all intentional: `Icon` (source
 components on the `Icons` page), `FieldWrapper` (covered by the `FormField` set
@@ -94,8 +117,12 @@ via a documented Code Connect override), and `GlassSettingsPanel`
 (internal-only, excluded from STATUS.md). The one variant-axis gap is `Icon`,
 for the same reason.
 
-The weakest link is now **Code Connect**, not component presence: Core is
-complete at 68/92, Product / SDK is at zero. Native test coverage is second — 8
+The weakest link is now **native Code Connect**. React is complete at 92/92
+including all 24 Product / SDK sets. iOS and Android are still 68/92: for this
+lane that is 48 files — 12 placeholder stubs to replace (DirectionStep,
+FloorSelector, LocationPin, MapView, POICard, WayfindingCard, on each platform)
+and 36 that do not exist. Node IDs for all 24 sets are in the React
+`.figma.tsx` files, so they can be copied rather than re-derived. Native test coverage is second — 8
 test files each against 97 components.
 
 ## 2. What This Branch Changed
@@ -340,6 +367,13 @@ These need a human call; none are blocked on code.
   branch ended up with 79 committed components while every report said 97. A
   `git worktree add --detach /tmp/verify HEAD` costs seconds and is the only
   thing that measures what CI will see.
+- **`Sidebar` Content=Rail is the one audit warning left, and it is Core.** The
+  rail builds its navigation rows as plain frames (`Item 1 Text Rail Row`)
+  where the audit expects live instances — the Footer Slot beside it uses a
+  real instance, which is the contrast. Fixing it means composing
+  `NavigationItem` instances in the Rail variant of the Sidebar builder. Core
+  v1 is documented as frozen since the 2026-05-20 audit, so this is a decision
+  rather than a defect to sweep up.
 - **The new sets have never been run in Figma.** Every builder is statically
   audited — axis names agree across config, variant root, and parser; every
   handler action resolves; every `productSdkText` call has an explicit width, the
