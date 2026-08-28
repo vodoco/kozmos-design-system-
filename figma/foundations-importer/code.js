@@ -1144,11 +1144,16 @@ const COMPONENT_DOCS = [
     ],
     api: [
       "Content covers two points and an added intermediate stop.",
-      "Point Field Slots map to points; Point Label Text maps to point.placeholder.",
+      "Point Field Slots map to points; Point Label Text maps to points[0].placeholder and Destination Point Label Text to the last point's.",
+      "The intermediate stop carries a static label because it exists only in ThreePoints.",
       "Swap Button maps to onSwap.",
       "onAddPoint and onRemovePoint are behaviour with no visual slot.",
     ],
-    properties: ["Content: TwoPoints, ThreePoints", "Point Label Text"],
+    properties: [
+      "Content: TwoPoints, ThreePoints",
+      "Point Label Text",
+      "Destination Point Label Text",
+    ],
     accessibility: [
       "Labels follow route order, so a third point reads as a stop between start and destination.",
       "Swapping must move focus predictably and announce the new order.",
@@ -41907,6 +41912,10 @@ async function productSdkText({
   text.fontSize = fontSize;
   text.lineHeight = { unit: "PIXELS", value: lineHeight };
   text.textAutoResize = wrap ? "HEIGHT" : "TRUNCATE";
+  // This overwrites fontSize and lineHeight from the style's own spec, so the
+  // two arguments above are only a fallback for a styleKey with no spec. A
+  // caller asking for 12 renders at cardDescription's 14. Do not size a box
+  // from the argument — that is half of why the slot labels truncated.
   await applyTextStyleToNodeAsync(text, styleKey, stats);
   text.characters = characters;
   text.fills = [
@@ -45892,6 +45901,22 @@ async function rebuildRouteSummaryComponent() {
 
 // --- RoutingInputGroup -----------------------------------------------------
 
+// One node name per route role. Every field used to be called "Point Field
+// Slot", and configureNamedTextProperty binds by name across the whole set —
+// so the single "Point Label Text" property captured all of them and painted
+// its default over every field. The file read "Start", "Start", "Start" for
+// the life of the set, and no check saw it: a wrong string is a well-formed
+// node. Suffixes follow FileUpload's "File Meta Text 2" convention.
+const ROUTING_INPUT_GROUP_POINTS = [
+  { slot: "Point Field Slot", label: "Start", property: "Point Label Text" },
+  { slot: "Point Field Slot 2", label: "Add stop", property: null },
+  {
+    slot: "Point Field Slot 3",
+    label: "Destination",
+    property: "Destination Point Label Text",
+  },
+];
+
 async function createRoutingInputGroupVariant(args) {
   const component = figma.createComponent();
   await updateRoutingInputGroupVariant(component, args);
@@ -45929,15 +45954,19 @@ async function updateRoutingInputGroupVariant(
     height: pointCount * 52,
   });
 
-  const labels = ["Start", "Add stop", "Destination"];
   for (let index = 0; index < pointCount; index += 1) {
     // Three points inserts the intermediate stop between start and
-    // destination, so the labels track the route order, not the array index.
-    const label =
-      pointCount === 3 ? labels[index] : labels[index === 0 ? 0 : 2];
+    // destination, so the fields track the route order, not the array index.
+    // The name is per role rather than per position for the same reason: with
+    // two points the second field IS the destination, so it takes the
+    // destination's name in both variants.
+    const point =
+      pointCount === 3
+        ? ROUTING_INPUT_GROUP_POINTS[index]
+        : ROUTING_INPUT_GROUP_POINTS[index === 0 ? 0 : 2];
     const field = await productSdkSlot({
-      name: "Point Field Slot",
-      label,
+      name: point.slot,
+      label: point.label,
       width: fieldWidth,
       height: 44,
       fonts,
@@ -45961,19 +45990,26 @@ async function updateRoutingInputGroupVariant(
 }
 
 function configureRoutingInputGroupProperties(componentSet, stats) {
-  configureNamedTextProperty(
-    componentSet,
-    "Point Field Slot Text",
-    "Point Label Text",
-    "Start",
-    stats,
-  );
+  // The stop deliberately gets no property: it exists only in ThreePoints, and
+  // a property that is dead in half the set is worse UX in the Figma panel
+  // than a static string. Start and destination are in both variants.
+  for (const point of ROUTING_INPUT_GROUP_POINTS) {
+    if (!point.property) continue;
+    configureNamedTextProperty(
+      componentSet,
+      point.slot + " Text",
+      point.property,
+      point.label,
+      stats,
+    );
+  }
 }
 
 const ROUTING_INPUT_GROUP_DESCRIPTION = [
   "Kozmos RoutingInputGroup generated from the React RoutingInputGroup API.",
   "Content covers the two-point origin/destination case and an added intermediate stop.",
-  "Point Field Slots map to points; Point Label Text maps to point.placeholder.",
+  "Point Label Text maps to points[0].placeholder, Destination Point Label Text to the last point's.",
+  "The intermediate stop carries a static label because it exists only in ThreePoints.",
   "Swap Button maps to onSwap; onAddPoint and onRemovePoint are behaviour.",
   "Labels follow route order, so a third point reads as a stop between start and destination.",
 ];

@@ -151,8 +151,12 @@ async function main() {
     process.exit(2);
   }
 
+  // No depth cap. It used to be depth=8, which looked harmless and hid 1,120
+  // text nodes — 17% of the page — from the collapsed, truncation and contrast
+  // walks below, including everything nested past a variant's sixth level.
+  // Fetching the whole tree costs 1.7 MB more and no extra time.
   const res = await fetch(
-    `https://api.figma.com/v1/files/${FILE_KEY}/nodes?ids=${encodeURIComponent(PAGE_NODE)}&depth=8`,
+    `https://api.figma.com/v1/files/${FILE_KEY}/nodes?ids=${encodeURIComponent(PAGE_NODE)}`,
     { headers: { "X-Figma-Token": t } },
   );
   if (res.status !== 200) {
