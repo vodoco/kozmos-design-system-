@@ -63,30 +63,24 @@ branch's life. Open PR: `vodoco/kozmos-design-system-#1`, rebased on current
 updating this doc changes them, so any number written down is stale on arrival.
 Read them off the PR.)
 
-Status on `61c09ca`, attempt 3, after the token was rotated on 2026-08-26:
+All six jobs pass on `db0d918`:
 
-| Job              | Result   | Note                                          |
-| ---------------- | -------- | --------------------------------------------- |
-| `analyze-bundle` | pass     | was ours — budget raised, see below           |
-| `lighthouse`     | pass     | —                                             |
-| `Run Chromatic`  | pass     | —                                             |
-| iOS Build        | **pass** | Code Connect verified against Figma           |
-| Android Build    | **pass** | Code Connect verified against Figma           |
-| Web Build & Test | —        | last checked in progress; verify the same way |
+| Job              | Result |
+| ---------------- | ------ |
+| Web Build & Test | pass   |
+| iOS Build        | pass   |
+| Android Build    | pass   |
+| `analyze-bundle` | pass   |
+| `lighthouse`     | pass   |
+| `Run Chromatic`  | pass   |
 
-iOS and Android were confirmed to have genuinely run rather than skipped: the
-step logged `All Code Connect files are valid` and emitted no `Skipping`
-annotation. Do the same check rather than trusting the green — see §6 on why an
-empty secret produces a passing job that verified nothing.
+A green Code Connect job is not by itself proof it ran. Check the log says
+`All Code Connect files are valid` and that no `Skipping` annotation was
+emitted — §6 explains why an empty secret produces a passing job that verified
+nothing. The skip text also appears in the `##[group]Run` block as echoed
+script source, which looks alarming and means nothing.
 
-The Web job also gained a `Verify Documentation Snippets` step (see §3). It runs
-before the Figma steps, so it is exercised regardless of token state.
-
-For most of this branch's life these three failed on an expired
-`FIGMA_ACCESS_TOKEN`, which was pre-existing on `main` rather than introduced
-here. §6 has the recurrence date and the procedure.
-
-Two CI failures were real and are fixed:
+Three CI failures were real and are fixed:
 
 - **Lint**, which fails on `main` at `apps/mapscale-review`: four unescaped JSX
   apostrophes, and two `eslint-disable` directives naming
@@ -102,6 +96,9 @@ Two CI failures were real and are fixed:
   budget. The raw ceiling is now 300 KB. **Next time this is hit, do subpath
   exports rather than another bump**: one entry point means every consumer pays
   for ColorPicker whether they import it or not.
+- **An expired `FIGMA_ACCESS_TOKEN`**, which failed all three Code Connect
+  steps with a 403 and was pre-existing on `main`. Rotated 2026-08-26; §6 has
+  the recurrence date and the procedure.
 
 ### Platform coverage
 
@@ -282,27 +279,36 @@ against the merged `package.json` files rather than resolved by hand.
 
 ## 4. Immediate Next Actions, In Order
 
-1. **Run Update All Product / SDK once more.** Two contrast fixes — the meta
-   text on the selected card tint in POIResultCard and RouteOptionCard — are in
-   code but not yet in the file. `pnpm figma:verify` should then report clean.
-2. **Build the 18 new sets in Figma.** Use **Build** for these (they do not exist
-   yet), then **Update** from then on. Keep the logs — each prints the URL-safe
-   node ID, which the Code Connect step needs.
-3. **Re-run `Update` on the six existing Product / SDK sets** to apply `6803f20`
-   and `ab23fec`. Update preserves node IDs; Build would not.
-4. **Run `Reorganize`** and confirm the page really lands near the simulated
-   near-square. Measured after the first rebuild it was 21,952 x 30,054, 1.37:1.
-   Use `pnpm figma:verify` rather than eyeballing.
-5. **Run `Audit Library`** and keep the JSON. Watch for the new layout-sizing
-   warnings — they will now appear where they were previously silent.
-6. **Write the Code Connect files** for all 24 Product / SDK sets (React,
-   SwiftUI, Compose) from the node IDs. That is **72 files, of which 0 exist**:
-   12 are placeholder stubs to replace (DirectionStep, FloorSelector,
-   LocationPin, MapView, POICard, WayfindingCard, on iOS and Android each) and
-   60 do not exist at all — including every React `.figma.tsx` for this lane, then run `figma:publish:linked:dry` and
-   `figma:publish:native:linked:dry`. These are the same commands CI runs, so
-   they need a working `FIGMA_ACCESS_TOKEN` in `.env` — see §6.
-7. **Dashboard items outside the design system** — raised but never scoped.
+Everything the design system can do from code is done. What remains is either a
+Figma action, a decision, or work outside this lane.
+
+1. **Run `Update All Product / SDK` in the plugin, then `pnpm figma:verify`.**
+   Two contrast fixes — the meta text on the selected card tint in
+   POIResultCard and RouteOptionCard — are committed but not yet rendered into
+   the file. The verifier should then report clean on all four checks. This is
+   the only outstanding item that blocks nothing else but is trivially done.
+2. **Publish the library from Figma.** That is Figma's own action, in the
+   Assets panel — not something the importer or any script here touches. The
+   file is current once step 1 is done.
+3. **Visual pass on the 24 Product / SDK sets.** No gate can judge whether they
+   _look_ right. They are structurally verified — variants, axes, tokens,
+   contrast, no collapsed text — but nothing has confirmed the layouts read
+   well. This is the largest genuinely unverified surface.
+4. **Native test coverage.** 8 test files each against 97 components on iOS and
+   Android. Now the weakest link by a wide margin.
+5. **Dashboard items outside the design system** — raised but never scoped.
+   Likely adds genuinely new components rather than variants.
+
+### Not blocking, and not this branch's to fix
+
+- `apps/mapscale-review` has one lint error (`UploadDropConfirm.tsx:69`, an
+  unescaped apostrophe) and three unused-variable warnings. Since CI no longer
+  gates the design system on that app, none of it blocks a merge.
+- That app has never been prettier-formatted. Any commit touching it sweeps a
+  wholesale reformat into the diff — which is exactly how a 1,300-line
+  reformat once landed in a design-system branch and collided with in-flight
+  MAP-566 work. Run prettier over it once, deliberately, as its own commit,
+  at a moment when nothing is in flight there.
 
 ## 5. Open Decisions
 
@@ -399,7 +405,51 @@ These need a human call; none are blocked on code.
   before pushing.
 - **~588 files remain uncommitted** and are untouched pre-existing work.
 
-## 7. The Variant Analyzer
+## 7. How To Check Anything Here
+
+Every claim in this document was produced by one of these. None needs Figma
+open except where noted.
+
+```bash
+pnpm figma:verify                 # is the Figma file behind the code?
+pnpm figma:plugin:check           # no spread / ?. / ?? in the plugin source
+pnpm components:contract:check    # React/native/Figma contract parity
+pnpm components:variant:check     # variant axes across all four platforms
+pnpm tokens:contrast:check        # token pair contrast, light + dark
+pnpm docs:snippets:check          # MDX snippets name real identifiers
+pnpm exec tsx scripts/skills/check-completion.ts --check   # STATUS.md current
+pnpm figma:publish:linked:dry            # React Code Connect vs the live file
+pnpm figma:publish:native:linked:dry     # SwiftUI + Compose likewise
+cd packages/ios && swift build && swift test
+cd packages/android && ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew assembleDebug testDebugUnitTest
+```
+
+Verify against a clean checkout, not the working tree:
+
+```bash
+git worktree add --detach /tmp/verify HEAD && cd /tmp/verify
+```
+
+### Traps that cost real time here
+
+- **The working tree is not the branch.** This branch once had 97 components in
+  the tree and 79 committed, and every coverage number reported was measured
+  against the tree. A clean checkout is the only thing that measures what CI
+  sees.
+- **`lint-staged` prettiers whatever you stage.** On a file that has never been
+  formatted this turns a six-line fix into a 1,300-line reformat, attached to
+  your commit without comment. Check `git show --stat` before describing what a
+  commit does.
+- **Regex over Swift and Kotlin signatures gives wrong answers in both
+  directions.** Single-line inits are missed; files declaring a helper struct
+  beside the component yield the wrong init. Read the file.
+- **A bulk regex across files you just wrote will reach files you did not.** One
+  here added duplicate imports to seven pre-existing Core files. Always check
+  `git status` for modified files you did not intend to touch.
+- **GitHub check annotations point at workflow line numbers**, not the failing
+  command. Read the job log.
+
+## 8. The Variant Analyzer
 
 `pnpm components:variant:check` — reads React cva blocks and union props,
 SwiftUI/Compose enums (declared _and_ parameter-typed), and the Figma plugin's
@@ -412,7 +462,7 @@ specific finding before acting on it.
 Decisions on record live in its `INTENTIONAL` registry with the reasoning
 inline. Full write-up: `docs/component-variant-gap-analysis.md`.
 
-## 8. Key Facts
+## 9. Key Facts
 
 - Figma file: `Kozmos DS - Core Library`, key `Yj4O8p6Y9h2Sa9zJVoAiVY`.
 - Components page node: `4:4`. Product / SDK section: `1340:6764`.
