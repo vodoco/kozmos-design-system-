@@ -31,7 +31,6 @@ Generated from the component directories by `scripts/skills/check-completion.ts`
 | FileUpload           | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
 | FloatingActionButton | ✅         | ✅          | ✅         | ✅                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
 | FloorSelector        | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
-| GlassSettingsPanel   | ✅         | ❌          | ❌         | ❌                      | ❌                        | ❌           | ✅           | ❌         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
 | Grid                 | ✅         | ✅          | ✅         | ✅                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
 | Heading              | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
 | Icon                 | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ❌                        | ✅             | ✅                          | ❌                            |
@@ -88,17 +87,17 @@ Generated from the component directories by `scripts/skills/check-completion.ts`
 
 ## Summary
 
-- Web components: 79/79
-- Web stories: 69/79
-- Web tests: 64/79
-- Web Code Connect files: 29/79
-- Web Code Connect scaffolds: 6/79
-- Web Code Connect linked: 23/79
-- iOS components: 69/79
-- iOS Code Connect files: 63/79
-- iOS Code Connect scaffolds: 59/79
-- iOS Code Connect linked: 4/79
-- Android components: 79/79
-- Android Code Connect files: 63/79
-- Android Code Connect scaffolds: 59/79
-- Android Code Connect linked: 4/79
+- Web components: 78/78
+- Web stories: 69/78
+- Web tests: 64/78
+- Web Code Connect files: 29/78
+- Web Code Connect scaffolds: 6/78
+- Web Code Connect linked: 23/78
+- iOS components: 69/78
+- iOS Code Connect files: 63/78
+- iOS Code Connect scaffolds: 59/78
+- iOS Code Connect linked: 4/78
+- Android components: 78/78
+- Android Code Connect files: 63/78
+- Android Code Connect scaffolds: 59/78
+- Android Code Connect linked: 4/78
