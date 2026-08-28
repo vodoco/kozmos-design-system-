@@ -105,11 +105,11 @@ Two CI failures were real and are fixed:
 
 ### Platform coverage
 
-|                     | Web (React) | iOS   | Android | Vue          | Figma     |
-| ------------------- | ----------- | ----- | ------- | ------------ | --------- |
-| Components          | 97/97       | 97/97 | 97/97   | 100 wrappers | **94/97** |
-| Variant-axis gaps   | reference   | 0/26  | 0/26    | 0/26         | **1/26**  |
-| Code Connect linked | **92/92**   | 68/92 | 68/92   | —            | —         |
+|                     | Web (React) | iOS       | Android   | Vue          | Figma     |
+| ------------------- | ----------- | --------- | --------- | ------------ | --------- |
+| Components          | 97/97       | 97/97     | 97/97     | 100 wrappers | **94/97** |
+| Variant-axis gaps   | reference   | 0/26      | 0/26      | 0/26         | **1/26**  |
+| Code Connect linked | **92/92**   | **92/92** | **92/92** | —            | —         |
 
 The three components with no Figma set are all intentional: `Icon` (source
 components on the `Icons` page), `FieldWrapper` (covered by the `FormField` set
@@ -117,13 +117,13 @@ via a documented Code Connect override), and `GlassSettingsPanel`
 (internal-only, excluded from STATUS.md). The one variant-axis gap is `Icon`,
 for the same reason.
 
-The weakest link is now **native Code Connect**. React is complete at 92/92
-including all 24 Product / SDK sets. iOS and Android are still 68/92: for this
-lane that is 48 files — 12 placeholder stubs to replace (DirectionStep,
-FloorSelector, LocationPin, MapView, POICard, WayfindingCard, on each platform)
-and 36 that do not exist. Node IDs for all 24 sets are in the React
-`.figma.tsx` files, so they can be copied rather than re-derived. Native test coverage is second — 8
-test files each against 97 components.
+**Code Connect is complete**: 92/92 linked on React, SwiftUI and Compose, with
+no scaffolds left on any platform. All 24 Product / SDK and platform sets are
+mapped, validated against the live Figma file by
+`figma:publish:{linked,ios:linked,android:linked}:dry`.
+
+The weakest link is now **native test coverage** — 8 test files each against 97
+components — and the Figma sets' visual fidelity, which no gate can judge.
 
 ## 2. What This Branch Changed
 
@@ -282,24 +282,27 @@ against the merged `package.json` files rather than resolved by hand.
 
 ## 4. Immediate Next Actions, In Order
 
-1. **Build the 18 new sets in Figma.** Use **Build** for these (they do not exist
+1. **Run Update All Product / SDK once more.** Two contrast fixes — the meta
+   text on the selected card tint in POIResultCard and RouteOptionCard — are in
+   code but not yet in the file. `pnpm figma:verify` should then report clean.
+2. **Build the 18 new sets in Figma.** Use **Build** for these (they do not exist
    yet), then **Update** from then on. Keep the logs — each prints the URL-safe
    node ID, which the Code Connect step needs.
-2. **Re-run `Update` on the six existing Product / SDK sets** to apply `6803f20`
+3. **Re-run `Update` on the six existing Product / SDK sets** to apply `6803f20`
    and `ab23fec`. Update preserves node IDs; Build would not.
-3. **Run `Reorganize`** and confirm the page really lands near the simulated
+4. **Run `Reorganize`** and confirm the page really lands near the simulated
    near-square. Measured after the first rebuild it was 21,952 x 30,054, 1.37:1.
    Use `pnpm figma:verify` rather than eyeballing.
-4. **Run `Audit Library`** and keep the JSON. Watch for the new layout-sizing
+5. **Run `Audit Library`** and keep the JSON. Watch for the new layout-sizing
    warnings — they will now appear where they were previously silent.
-5. **Write the Code Connect files** for all 24 Product / SDK sets (React,
+6. **Write the Code Connect files** for all 24 Product / SDK sets (React,
    SwiftUI, Compose) from the node IDs. That is **72 files, of which 0 exist**:
    12 are placeholder stubs to replace (DirectionStep, FloorSelector,
    LocationPin, MapView, POICard, WayfindingCard, on iOS and Android each) and
    60 do not exist at all — including every React `.figma.tsx` for this lane, then run `figma:publish:linked:dry` and
    `figma:publish:native:linked:dry`. These are the same commands CI runs, so
    they need a working `FIGMA_ACCESS_TOKEN` in `.env` — see §6.
-6. **Dashboard items outside the design system** — raised but never scoped.
+7. **Dashboard items outside the design system** — raised but never scoped.
 
 ## 5. Open Decisions
 
