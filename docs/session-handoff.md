@@ -406,25 +406,16 @@ all round, it is simply a one-line state.
 Everything the design system can do from code is done. What remains is either a
 Figma action, a decision, or work outside this lane.
 
-1. **Run `Update All Product / SDK` in the plugin, then `pnpm figma:verify`.**
-   This session's four fixes are code-only and none is in the file yet. Success
-   is the truncation check going from 9 to 0 and the other four staying clean.
-   (The contrast fixes the previous handoff listed here **are** already in the
-   file — the meta text reads `#464A53` in POIResultCard and RouteOptionCard,
-   confirmed over the API. That item is done.)
+1. **Done — `Update All Product / SDK` has been run.** The seven Product / SDK
+   truncations cleared, so `fitProductSdkSlotLabel` works against the real
+   Figma text engine and not just on paper. RoutingInputGroup's fields should
+   now read Start / Add stop / Destination. `pnpm figma:verify` reports two
+   items left, both `FileUpload`, which is Core and outside that run's scope.
 
-   **Read the run's `failures` and `warnings` before closing the loop.**
-   `fitProductSdkSlotLabel` warns by name if a slot label still will not fit at
-   the smaller style, which is the one outcome the terminal check cannot predict
-   ahead of the run. RoutingInputGroup's three fields should come back reading
-   Start / Add stop / Destination — they were never a stale-file problem, so
-   this run is the first that can produce them.
-
-   Two things this run changes that no check will flag, so look at them: the
-   POIDetailPanel action row (`→ Navigate`, `☆ Save`, `↗ Share` — the `↗` is
-   the one glyph never yet seen in a render), and the WayfindingCard and POICard
-   set frames, which should come back tight around their variants instead of
-   eight times too tall.
+   Still worth a look, because no check covers them: the POIDetailPanel action
+   row (`→ Navigate`, `☆ Save`, `↗ Share` — the `↗` is the one glyph never yet
+   seen in a render), and the WayfindingCard and POICard set frames, which
+   should now sit tight around their variants instead of eight times too tall.
 
 2. **Run `Update Sidebar`, and `Rebuild FileUpload`.** Two Core sets that
    `Update All Product / SDK` does not touch. `Update Sidebar` clears the last
