@@ -2336,10 +2336,21 @@ function personaOk(p) {
     : String(m).replace(/[[\]"\s]/g, "").split(",").filter(Boolean);
   /**
    * ⚠️ **An empty list is "carrying no personas", which is VISIBLE** — the same as the field being
-   * absent. This is the one place the rule is written twice (the app has `visibleToPersona`, and
-   * this file cannot import from it), and the two disagreed here until a test asked them the same
-   * question. When a rule has to live in two places, the tests are the only thing holding them
-   * together.
+   * absent.
+   *
+   * ⚠️ **This is the one place the rule is written twice** — the app's is
+   * `src/mock/personaVisibility.ts`, and this file cannot import from it.
+   *
+   * ⚠️ **This comment used to claim the tests held the two together. It was not true**, and that is
+   * why the drift survived: the suite asked THIS function eleven questions and never named the
+   * app's copy once. The app's tested `Array.isArray` and so answered "visible" to the very string
+   * shape the block below exists to normalise — so on tile-shaped data its filter did nothing,
+   * silently, while this one worked. Fixed 2026-08-28.
+   *
+   * Both are now run against **one shared table** in the `persona` block of
+   * `scratch/geometry.test.mjs` — every case, both implementations, a divergence failing on its own
+   * line. When a rule has to live in two places that table is the only thing holding them together,
+   * and unlike the sentence it replaces, it is checked.
    */
   if (!list.length) return true;
   return list.indexOf(CONN.persona) >= 0;

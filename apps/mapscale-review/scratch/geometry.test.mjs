@@ -2655,31 +2655,82 @@ const node = (fid, at, nb, tr) => ({
    whole point is that the list and the map agree. */
 console.log("\npersona");
 
+/**
+ * ⚠️ **The rule is written TWICE and this block is the only thing holding the two together** — the
+ * shell's `personaOk()` (it cannot import from `src/`) and the app's `isVisibleToPersona()`.
+ *
+ * That sentence used to be in the shell and was **false**: this block asked only `personaOk`, and
+ * `visibleToPersona` was never named here once. It had drifted — it tested `Array.isArray` and so
+ * returned "visible" for the string shape a vector tile produces, meaning the app's persona filter
+ * silently did nothing on tile-shaped data while the shell's worked. Fixed 2026-08-28.
+ *
+ * So every case below runs through **both**, and a divergence fails on its own line. Adding a case
+ * to the table is the whole cost of keeping them honest.
+ */
+const personaSrc = readFileSync(join(here, "..", "src", "mock", "personaVisibility.ts"), "utf8");
+const personaJs = join(here, `.personaVisibility.${process.pid}.mjs`);
+writeFileSync(
+  personaJs,
+  ts.transpileModule(personaSrc, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText,
+);
+let personaMod;
+try {
+  personaMod = await import(pathToFileURL(personaJs).href);
+} finally {
+  unlinkSync(personaJs);
+}
+const { isVisibleToPersona } = personaMod;
+
 {
-  check("a feature meant for this persona is visible",
-        personaOk({ mapPersonas: ["staff", "facilityManager"] }));
-  check("…and one that is not, is not", !personaOk({ mapPersonas: ["customer", "visitor"] }));
+  const PERSONA = "facilityManager";
 
   /**
-   * ⚠️ **No `mapPersonas` at all means VISIBLE** — the platform's own rule, and the safer
-   * direction: unmarked is unclassified, not private. Reading it the other way would quietly empty
-   * a floor whose content predates personas.
+   * One table, both implementations. `props` is what the shell is handed (a property bag);
+   * `isVisibleToPersona` takes the field itself, which is the only difference in their signatures.
    */
-  check("unmarked is unclassified, not private", personaOk({ name: "Costa" }));
-  check("…and so is an empty list", personaOk({ mapPersonas: [] }));
-  check("no properties at all does not throw", personaOk(null) && personaOk(undefined));
+  const table = [
+    ["a feature meant for this persona is visible", { mapPersonas: ["staff", "facilityManager"] }, true],
+    ["…and one that is not, is not", { mapPersonas: ["customer", "visitor"] }, false],
+
+    /* ⚠️ No `mapPersonas` at all means VISIBLE — unmarked is unclassified, not private. Reading it
+       the other way would quietly empty a floor whose content predates personas. */
+    ["unmarked is unclassified, not private", { name: "Costa" }, true],
+    ["…and so is an empty list", { mapPersonas: [] }, true],
+    ["…and so is an empty string", { mapPersonas: "" }, true],
+
+    /* ⚠️ A vector tile flattens an array property to a string. The same feature arrives as a real
+       array from our own GeoJSON and as "customer,facilityManager" from the tiles — so the rule has
+       to read both, or the persona applies on one render path and not the other. THIS is the pair
+       the app's copy failed. */
+    ["a tile's flattened list is read too", { mapPersonas: "staff,facilityManager" }, true],
+    ["…including the bracketed form", { mapPersonas: '["vip","facilityManager"]' }, true],
+    ["…and the bracketed form still excludes", { mapPersonas: '["customer","visitor"]' }, false],
+    ["…and the flattened form still excludes", { mapPersonas: "customer,visitor" }, false],
+    ["whitespace in a flattened list is ignored", { mapPersonas: "customer, facilityManager" }, true],
+
+    // ⚠️ Not a substring match: "facilityManagerAssistant" is a different persona.
+    ["it matches whole keys, not substrings", { mapPersonas: "facilityManagerAssistant" }, false],
+  ];
+
+  for (const [name, props, expected] of table) {
+    check(`${name} · shell`, personaOk(props) === expected);
+    check(`${name} · app`, isVisibleToPersona(props.mapPersonas, PERSONA) === expected);
+  }
+
+  check("no properties at all does not throw · shell", personaOk(null) && personaOk(undefined));
+  check("no properties at all does not throw · app",
+        isVisibleToPersona(null, PERSONA) && isVisibleToPersona(undefined, PERSONA));
 
   /**
-   * ⚠️ **A vector tile flattens an array property to a string.** The same feature arrives as a real
-   * array from our own GeoJSON and as `"customer,facilityManager"` from the tiles — so the rule has
-   * to read both, or the persona would apply on one render path and not the other, which is the
-   * very inconsistency this exists to remove.
+   * ⚠️ **No persona means no filtering.** Without this guard an empty persona matches nothing and
+   * every marked feature on the floor disappears — a blank building presented as a working one.
+   * The shell has always guarded it; the app's copy did not until 2026-08-28. `MAP_PERSONA` uses
+   * `??`, which does NOT catch an env var set to the empty string, so this is reachable.
    */
-  check("a tile's flattened list is read too", personaOk({ mapPersonas: "staff,facilityManager" }));
-  check("…including the bracketed form", personaOk({ mapPersonas: '["vip","facilityManager"]' }));
-  check("…and it still excludes", !personaOk({ mapPersonas: "customer,visitor" }));
-  // ⚠️ Not a substring match: "facilityManagerAssistant" is a different persona.
-  check("it matches whole keys, not substrings", !personaOk({ mapPersonas: "facilityManagerAssistant" }));
+  check("an empty persona filters nothing, it does not hide everything",
+        isVisibleToPersona(["staff", "customer"], "") === true);
 }
 
 /* ══ REACH — what a section lets you touch ══════════════════════════════════
