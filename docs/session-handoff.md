@@ -576,6 +576,51 @@ styles; not Android, which hardcodes `14.sp` and `12.sp`; not web, where Tailwin
 has no `fontSize` override at all and its own scale applies. Sizes are the next
 layer down and are entirely untokenised.
 
+### The visual regression gates, repaired
+
+Both native screenshot gates were inert. They are not any more, and both fixes
+were proved the same way — break the thing on purpose, watch the gate go red.
+
+**Android was a tolerance problem.** `Paparazzi()` defaults to
+`maxPercentDifference = 0.1`, and taking a button's corner radius from 8dp to
+16dp moves 0.1069% of the pixels in the frame — measured, not estimated, by
+diffing the two goldens. A change nobody could miss by eye sat within a
+hair of the default tolerance. layoutlib renders deterministically, so any
+tolerance at all only buys silence: it is `0.0` now. With the radius set to
+2dp the suite fails; at 16dp it passes.
+
+**iOS had no rendering at all.** `KozmosButtonSnapshotTests` asserted
+`view.label` and `view.variant` and never produced an image, while
+`swift-snapshot-testing` sat in `Package.swift` as a dependency nothing
+imported. It is renamed `KozmosButtonAPITests` — the name was part of why this
+went unnoticed — and `KozmosButtonImageSnapshotTests` renders four states on a
+simulator. Same proof: at 2pt the run reports "Snapshot does not match
+reference" and fails.
+
+The iOS snapshots do **not** run under `swift test`. That runs on the host,
+where SwiftUI renders through AppKit rather than UIKit, so the file is behind
+`#if os(iOS)` and compiles to nothing there; the 27 host tests are unaffected.
+Rendering needs a simulator:
+
+```bash
+pnpm ios:snapshot:verify     # iPhone 16, iOS 18.4
+pnpm ios:snapshot:record     # re-record after an intended change
+```
+
+**They are deliberately not wired into CI yet, and this is the decision to
+make.** References are tied to the simulator's iOS version — baselines taken on
+18.4 will not match 26.5 — so the CI job needs the runner image and the
+simulator pinned together, and `macos-latest` moves. A gate that goes red
+because a runner updated is a gate somebody switches off, which is exactly how
+the previous one came to verify nothing. iPhone 16 / iOS 18.4 was chosen over
+the newer simulators on this machine for the same reason: it is likelier to
+exist on a hosted runner.
+
+Coverage is one component. That is the repair, not the finished job: the
+harness works and is extensible, and Button was chosen because it exercises
+radius, colour, type and state at once. Widening it to the rest of the library
+is follow-on work.
+
 ## 4. Immediate Next Actions, In Order
 
 Everything the design system can do from code is done. What remains is either a
@@ -606,12 +651,29 @@ Figma action, a decision, or work outside this lane.
 4. **Publish the library from Figma.** That is Figma's own action, in the
    Assets panel — not something the importer or any script here touches. The
    file is current once step 1 is done.
-5. **Native test coverage.** 8 test files each against 97 components on iOS and
-   Android. Now the weakest link by a clear margin — the Product / SDK sets
-   have been looked at, and this has not.
-6. **Decide RoutePreviewPanel's states** — see §5. A design call, not a defect.
-7. **Dashboard items outside the design system** — raised but never scoped.
-   Likely adds genuinely new components rather than variants.
+5. **Decide how the iOS snapshots run in CI**, then widen coverage. The
+   harness works; what it needs is a pinned runner image plus simulator, and
+   then more components than Button. See §3.
+6. **Script-aware typography.** Nine components apply `tracking-tight`
+   (Tailwind's default `-0.025em`, since the config overrides no
+   `letterSpacing`). Negative tracking makes CJK glyphs collide and disrupts
+   Arabic cursive joining, and the product ships both. Line heights are
+   Latin-tuned too, and CJK and Arabic diacritics want more room. The
+   `letterSpacing` and `line.height` token scales are unused by every platform,
+   so there is nowhere to say "tighter for Latin, normal for CJK" even if you
+   wanted to.
+7. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
+   (0-1500) is read by no platform: iOS uses Dynamic Type styles, Android
+   hardcodes `14.sp`, and Tailwind has no `fontSize` override. Same shape of
+   problem the radius and family layers solved.
+8. **Decide the brand font's fate.** Readex Pro covers Latin and Arabic and has
+   no CJK, so Chinese was always falling back to a system font whatever the
+   tokens said. Either drop it, or scope it to Latin with `unicode-range` — and
+   note that a single `size-adjust` ratio cannot work across scripts, so the
+   metric-matched fallback needs per-script faces if it happens at all.
+9. **Decide RoutePreviewPanel's states** — see §5. A design call, not a defect.
+10. **Dashboard items outside the design system** — raised but never scoped.
+    Likely adds genuinely new components rather than variants.
 
 ### Not blocking, and not this branch's to fix
 
@@ -783,6 +845,7 @@ pnpm components:variant:check     # variant axes across all four platforms
 pnpm tokens:contrast:check        # token pair contrast, light + dark
 pnpm tokens:radius:check          # all four surfaces agree on corner radius
 pnpm tokens:typography:check      # all surfaces read the same font family role
+pnpm ios:snapshot:verify          # iOS renders match their baselines (needs a simulator)
 node scripts/measure-font-metrics.mjs <brand> <fallback>   # real size-adjust numbers
 pnpm docs:snippets:check          # MDX snippets name real identifiers
 pnpm exec tsx scripts/skills/check-completion.ts --check   # STATUS.md current

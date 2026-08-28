@@ -2,7 +2,14 @@ import XCTest
 import SwiftUI
 @testable import Kozmos
 
-final class KozmosButtonSnapshotTests: XCTestCase {
+/// Property assertions on the Button's API — not snapshots, despite what this
+/// file used to be called. It was `KozmosButtonSnapshotTests` and contained no
+/// snapshot at all, which is a large part of why nobody noticed that iOS had no
+/// visual regression coverage while `swift-snapshot-testing` sat in
+/// Package.swift as a dependency nothing imported.
+///
+/// Rendering lives in `KozmosButtonImageSnapshotTests`.
+final class KozmosButtonAPITests: XCTestCase {
     func testButtonDefaultVariant() {
         let view = KozmosButton("Label Binding", action: {})
         

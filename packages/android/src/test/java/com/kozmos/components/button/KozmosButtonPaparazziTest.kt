@@ -12,7 +12,13 @@ import org.junit.Test
 
 class KozmosButtonPaparazziTest {
     @get:Rule
-    val paparazzi = Paparazzi()
+    val paparazzi = Paparazzi(
+        // Paparazzi defaults to maxPercentDifference = 0.1, and layoutlib renders
+        // deterministically, so any tolerance at all just buys silence. Taking a
+        // button's corner radius from 8dp to 16dp moves 0.1069% of the pixels —
+        // a change nobody could miss by eye — and sailed through the default.
+        maxPercentDifference = 0.0,
+    )
 
     @Test
     fun defaultButtonSnapshot() {
