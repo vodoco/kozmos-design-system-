@@ -4,9 +4,9 @@ package com.kozmos.tokens
 import androidx.compose.ui.unit.dp
 
 object KozmosDimensions {
-  val primitivesRadiusCard = 1.dp
-  val primitivesRadiusInput = 1.dp
-  val primitivesRadiusButton = 1.dp
+  val primitivesRadiusCard = 16.dp
+  val primitivesRadiusInput = 16.dp
+  val primitivesRadiusButton = 16.dp
   val primitivesScreenMobile = 6000.dp
   val primitivesScreenTablet = 12288.dp
   val primitivesScreenLaptop = 16384.dp

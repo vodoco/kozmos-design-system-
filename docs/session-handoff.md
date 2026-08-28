@@ -458,6 +458,37 @@ scale on purpose (`ToggleButton` 12, `Alert` 12, `POICard` 12, `WayfindingCard`
 are 26 plugin literals and four web uses of the 32px `2xl`. Moving those is a
 design decision, not a cleanup, so they were left.
 
+Auditing the radius work afterwards turned up more than the work itself did.
+
+**`verifyPaparazziDebug` does not verify anything.** This is the one to fix
+first, because it has been giving false confidence for a while and it is in the
+documented Android build command. Proved by experiment, not inference: with the
+golden recorded at 16dp, `semanticsRadiusControl` was set to **2dp** — an eight
+fold change, unmissable by eye — and `./gradlew verifyPaparazziDebug
+--rerun-tasks` ran all 17 tasks, re-rendered, regenerated the report, and exited
+**0**. The `-Dpaparazzi.test.verify=true` property _is_ passed to the test JVM
+(confirmed in the worker command line), and `build/paparazzi/failures/` stays
+empty, so the comparison is reached and silently agrees with itself. Paparazzi
+1.3.5. Recording proves the render really does change: `recordPaparazziDebug`
+wrote a visibly rounder button and a different checksum. The updated golden is
+committed; the broken gate is not fixed.
+
+**The iOS snapshot test never renders anything.**
+`KozmosButtonSnapshotTests.swift` asserts properties — `view.label`,
+`view.variant`, `view.isDisabled` — and never produces an image, despite
+`swift-snapshot-testing` being a checked-out dependency. So between the two,
+native visual regression coverage is effectively **zero**, which sharpens §4's
+note that native testing is the weakest link: it is not thin, it is absent.
+
+**The `roundness` config on web is dead code.** `DesignConfigContext` exposes
+`roundness: number // 0 - 2x` and sets six CSS variables from it —
+`--radius-sm` through `--radius-full`. Nothing reads any of them; `var(--radius-`
+appears nowhere else in the repo. It is a roundness slider wired to nothing.
+Worth knowing before anyone wires it up: a runtime, web-only radius multiplier
+would re-create exactly the cross-platform drift the semantic layer just
+removed, since native radii are compile-time constants. Deleting it is the
+tidier option, but that is a product call.
+
 Three latent bugs fell out of the work, all fixed:
 
 - `Primitives.Radius.md` and `.lg` are both `1rem`. The rem scale has no 8px
@@ -471,6 +502,21 @@ Three latent bugs fell out of the work, all fixed:
   `9999rem` in CSS and `159984.dp` on Android. `Primitives.Layout.radius.full`
   now completes the numeric scale so every semantic alias resolves to a plain
   number.
+- `parseFloat("1rem")` is `1`, so the three rem-valued dimensions that reach the
+  native outputs — `primitivesRadiusCard`, `Input` and `Button` — emitted **one
+  point** instead of sixteen. Unused, which is the only reason nobody ever saw a
+  hairline corner on a card, but a live trap in a public generated API. The
+  dimensions formats convert rem to px now; exactly those three constants moved,
+  1 to 16.
+
+One thing that could not be checked from here: the plugin's corner-radius
+variables alias `Semantics/Radius/Control` **by name**, and whether that
+variable exists in the file depends on the foundations import creating
+`Semantics/*` variables from the tokens. The REST variables endpoint needs
+`file_variables:read`, which is Enterprise-only and returns 403 on this token,
+so it could not be confirmed without opening Figma. It fails safe either way:
+an unresolved alias warns (`alias target ... was not found`) and falls back to
+the numeric value, which is also 16.
 
 ## 4. Immediate Next Actions, In Order
 

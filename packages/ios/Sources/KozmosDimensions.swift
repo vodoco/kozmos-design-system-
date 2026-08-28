@@ -2,9 +2,9 @@ import Foundation
 import CoreGraphics
 
 public struct KozmosDimensions {
-    public static let primitivesRadiusCard: CGFloat = 1
-    public static let primitivesRadiusInput: CGFloat = 1
-    public static let primitivesRadiusButton: CGFloat = 1
+    public static let primitivesRadiusCard: CGFloat = 16
+    public static let primitivesRadiusInput: CGFloat = 16
+    public static let primitivesRadiusButton: CGFloat = 16
     public static let primitivesScreenMobile: CGFloat = 375
     public static let primitivesScreenTablet: CGFloat = 768
     public static let primitivesScreenLaptop: CGFloat = 1024

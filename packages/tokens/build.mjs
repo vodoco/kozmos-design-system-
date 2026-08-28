@@ -215,6 +215,18 @@ ${dictionary.allTokens
 // `token.value || token.$value || ...` chain treated it as absent and fell
 // through to the unresolved alias string, so a zero-valued dimension that
 // arrived by reference was dropped from the native outputs entirely.
+// parseFloat("1rem") is 1, so a rem-valued dimension reached the native
+// outputs as one point instead of sixteen: primitivesRadiusCard, Input and
+// Button all emitted `1`. Nothing used them, which is the only reason it never
+// showed up as a hairline corner on a card.
+function toNumericPx(value) {
+  if (typeof value === "string" && value.trim().endsWith("rem")) {
+    const rem = Number.parseFloat(value);
+    return Number.isNaN(rem) ? Number.NaN : rem * 16;
+  }
+  return Number.parseFloat(value);
+}
+
 function firstDefinedTokenValue(token) {
   const candidates = [
     token.value,
@@ -255,7 +267,7 @@ ${dictionary.allTokens
     const lightVal = firstDefinedTokenValue(token);
     const varName = toCamelCase(token.path);
 
-    let val = parseFloat(lightVal);
+    let val = toNumericPx(lightVal);
     if (isNaN(val)) return "";
 
     return "  val " + varName + " = " + val + ".dp";
@@ -291,7 +303,7 @@ ${dictionary.allTokens
     const lightVal = firstDefinedTokenValue(token);
     const varName = toCamelCase(token.path);
 
-    let val = parseFloat(lightVal);
+    let val = toNumericPx(lightVal);
     if (isNaN(val)) return "";
 
     return "    public static let " + varName + ": CGFloat = " + val;
