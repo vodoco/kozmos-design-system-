@@ -6,7 +6,7 @@ import com.figma.code.connect.FigmaProperty
 import com.figma.code.connect.FigmaType
 import com.figma.code.connect.FigmaVariant
 
-@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8101")
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=143-13060")
 @FigmaVariant("Content", "Basic")
 class KozmosDialogBasicConnect {
     @FigmaProperty(FigmaType.Text, "Title Text")
@@ -29,7 +29,7 @@ class KozmosDialogBasicConnect {
     }
 }
 
-@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8101")
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=143-13060")
 @FigmaVariant("Content", "Form")
 class KozmosDialogFormConnect {
     @FigmaProperty(FigmaType.Text, "Title Text")
@@ -54,7 +54,7 @@ class KozmosDialogFormConnect {
     }
 }
 
-@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8101")
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=143-13060")
 @FigmaVariant("Content", "Footer")
 class KozmosDialogFooterConnect {
     @FigmaProperty(FigmaType.Text, "Title Text")

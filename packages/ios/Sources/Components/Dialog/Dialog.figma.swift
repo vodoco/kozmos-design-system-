@@ -3,7 +3,7 @@ import Figma
 
 struct KozmosDialogBasicConnect: FigmaConnect {
     let component = KozmosDialog<EmptyView>.self
-    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8101"
+    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=143-13060"
     var variant = ["Content": "Basic"]
 
     @FigmaString("Title Text")
@@ -27,7 +27,7 @@ struct KozmosDialogBasicConnect: FigmaConnect {
 
 struct KozmosDialogFormConnect: FigmaConnect {
     let component = KozmosDialog<EmptyView>.self
-    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8101"
+    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=143-13060"
     var variant = ["Content": "Form"]
 
     @FigmaString("Title Text")
@@ -53,7 +53,7 @@ struct KozmosDialogFormConnect: FigmaConnect {
 
 struct KozmosDialogFooterConnect: FigmaConnect {
     let component = KozmosDialog<EmptyView>.self
-    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8101"
+    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=143-13060"
     var variant = ["Content": "Footer"]
 
     @FigmaString("Title Text")
