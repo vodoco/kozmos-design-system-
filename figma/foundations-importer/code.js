@@ -59214,12 +59214,24 @@ function isGeneratedSidebarNavigationSlotChild(node) {
   if (!node) return false;
   if (isGeneratedNavigationItemShellInstance(node)) return true;
   if (node.type === "TEXT" && node.name === "Section Text") return true;
-  return (
-    generatedKind(node) === "missing-nested-component" &&
-    /^(Item \d+ Text(?: Rail)? Row|Tool Text Row|Settings Text Row)$/.test(
+  if (
+    !/^(Item \d+ Text(?: Rail)? Row|Tool Text Row|Settings Text Row)$/.test(
       node.name || "",
     )
-  );
+  ) {
+    return false;
+  }
+  if (generatedKind(node) === "missing-nested-component") return true;
+
+  // Sidebar was built before NavigationItem existed, so every row fell back to
+  // a plain frame — and that was before the fallback learned to stamp itself
+  // "missing-nested-component". Those legacy frames carry no shared plugin data
+  // at all, so demanding the stamp made them permanently unrefreshable: Update
+  // reused them for ever, and only Rebuild would replace them, at the cost of
+  // the node ID that six Code Connect declarations pin across React, SwiftUI
+  // and Compose. An unstamped frame sitting under a generated row name is ours.
+  // Navbar's predicate below has the same shape but no legacy nodes to heal.
+  return generatedKind(node) === "" && node.type === "FRAME";
 }
 
 function isGeneratedNavbarNavigationSlotChild(node) {

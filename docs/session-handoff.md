@@ -426,14 +426,21 @@ Figma action, a decision, or work outside this lane.
    set frames, which should come back tight around their variants instead of
    eight times too tall.
 
-2. **Publish the library from Figma.** That is Figma's own action, in the
+2. **Run `Update Sidebar`, and `Rebuild FileUpload`.** Two Core sets that
+   `Update All Product / SDK` does not touch. `Update Sidebar` clears the last
+   audit warning by replacing its legacy fallback frames with real
+   `NavigationItem` instances — Update, not Rebuild, or the node ID six Code
+   Connect declarations pin will change. `FileUpload` is where the two
+   remaining truncations live; its fix is in the row builder, so the set needs
+   regenerating.
+3. **Publish the library from Figma.** That is Figma's own action, in the
    Assets panel — not something the importer or any script here touches. The
    file is current once step 1 is done.
-3. **Native test coverage.** 8 test files each against 97 components on iOS and
+4. **Native test coverage.** 8 test files each against 97 components on iOS and
    Android. Now the weakest link by a clear margin — the Product / SDK sets
    have been looked at, and this has not.
-4. **Decide RoutePreviewPanel's states** — see §5. A design call, not a defect.
-5. **Dashboard items outside the design system** — raised but never scoped.
+5. **Decide RoutePreviewPanel's states** — see §5. A design call, not a defect.
+6. **Dashboard items outside the design system** — raised but never scoped.
    Likely adds genuinely new components rather than variants.
 
 ### Not blocking, and not this branch's to fix
@@ -547,13 +554,30 @@ These need a human call; none are blocked on code.
   branch ended up with 79 committed components while every report said 97. A
   `git worktree add --detach /tmp/verify HEAD` costs seconds and is the only
   thing that measures what CI will see.
-- **`Sidebar` Content=Rail is the one audit warning left, and it is Core.** The
-  rail builds its navigation rows as plain frames (`Item 1 Text Rail Row`)
-  where the audit expects live instances — the Footer Slot beside it uses a
-  real instance, which is the contrast. Fixing it means composing
-  `NavigationItem` instances in the Rail variant of the Sidebar builder. Core
-  v1 is documented as frozen since the 2026-05-20 audit, so this is a decision
-  rather than a defect to sweep up.
+- **`Sidebar`'s rows are stale frames, not a frozen-Core decision.** The one
+  audit warning left reads `sidebar-navigation-slot-overflow (Content=Rail /
+Navigation Slot)`, and the earlier diagnosis here — that the builder emits
+  plain frames where the audit wants instances, so fixing it means composing
+  `NavigationItem` instances into the Rail variant — was wrong on both counts.
+  The builder already composes them: `createSidebarRailNavigationRow` calls
+  `createNavigationItemNestedInstance`. The set is simply older than
+  `NavigationItem` (node `752:6807` versus `861:7297`), so at build time the
+  lookup failed and every row fell back to a frame. All four variants are
+  frames, not just Rail; Rail is only the one that overflows, by 4px, because
+  its fallback frames are 80px tall where a real instance is 72 — 3x80 + 2x8 =
+  256 against 252 of slot. `Navbar` came through the same code later and is
+  entirely instances, which is the contrast.
+
+  It could not be healed either way until now. `Update Sidebar` reuses the
+  existing rows unless `shouldRefreshGeneratedShellSlotDefaults` says otherwise,
+  and that demanded a `missing-nested-component` stamp these frames predate — so
+  Update was a no-op on them for ever. `Rebuild Sidebar` would have worked and
+  changed the set's node ID, which six Code Connect declarations pin across
+  React, SwiftUI and Compose. The predicate now also accepts an unstamped frame
+  under a generated row name, so **`Update Sidebar` heals it in place**, node ID
+  intact. Every variant fits afterwards: Side instances are 248x44 (3x44 + 2x8 =
+  148 of 220) and Rail 72x72 (232 of 252).
+
 - **The new sets have never been run in Figma.** Every builder is statically
   audited — axis names agree across config, variant root, and parser; every
   handler action resolves; every `productSdkText` call has an explicit width, the
