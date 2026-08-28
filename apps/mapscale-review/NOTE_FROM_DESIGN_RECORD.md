@@ -154,10 +154,12 @@ likely to be got wrong:
    never happened. Gate on **what the user pressed** — an explicit Update in the panel — not on
    whether the fid is real. **The fid is always real**: `beginchange` resolves a change to a real
    tile feature by name, so "is this a genuine feature?" is the wrong question and always answers yes.
-2. ⚠️ **Never `PUT …/levels/{lvl}/features`.** `levelGeometry()` drops features at ingest via
-   `visibleToPersona()` and merely counts them, so the cached collection is the level **minus
-   everything `facilityManager` cannot see**. Writing it back as the whole collection would silently
-   destroy every feature the persona filtered out.
+2. ⚠️ **Never `PUT …/levels/{lvl}/features`.** `levelGeometry()` runs every feature through
+   `visibleToPersona()` and merely counts the rejects, so what the app holds is a **filtered view,
+   never a faithful copy of the level** — writing it back as the whole collection is unsafe by
+   construction. (An earlier draft said the filter _does_ drop features today; that depends on the
+   shape `mapPersonas` arrives in and is unverified — see §7. The instruction is unchanged either
+   way; only the reason differs.)
 3. ⚠️ **The "nothing is written back to Pointr Cloud" promise appears in five places**, two of them
    user-visible copy, and one of them is **decision D3**. Retract them in the same commit as the
    write — a UI that still promises nothing is written while it writes is worse than either state.
