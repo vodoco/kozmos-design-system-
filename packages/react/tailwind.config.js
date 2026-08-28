@@ -136,11 +136,20 @@ module.exports = {
         lg: "var(--primitives-border-width-lg)",
       },
       fontFamily: {
-        sans: [
-          "var(--primitives-typography-font-family-primary)",
-          "sans-serif",
-        ],
-        mono: ["var(--primitives-typography-font-family-mono)", "monospace"],
+        // `sans` used to be ["var(--primitives-typography-font-family-primary)",
+        // "sans-serif"], i.e. `"Readex Pro", sans-serif` — and Readex Pro has
+        // never been loaded anywhere: no @font-face, no webfont link, no file in
+        // the repo. Every page has quietly been rendering the generic
+        // sans-serif, which on macOS is Helvetica, while iOS rendered SF Pro and
+        // Android rendered Roboto. The system role makes that deliberate instead
+        // of accidental, and puts the whole stack in the token rather than here.
+        sans: "var(--semantics-typography-family-system)",
+        mono: "var(--semantics-typography-family-mono)",
+        // Opt-in, and it falls back to the system stack rather than to a generic
+        // family, so an unloaded brand font degrades to the same thing everything
+        // else uses instead of to Helvetica.
+        brand:
+          "var(--semantics-typography-family-brand), var(--semantics-typography-family-system)",
       },
       screens: {
         mobile: "375px",

@@ -55,14 +55,14 @@ public struct KozmosRouteOptionCard<Icon: View>: View {
                     Spacer(minLength: KozmosDimensions.primitivesLayoutSpacing150)
 
                     Text(option.distanceLabel)
-                        .font(.caption)
+                        .font(KozmosTypography.caption)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
                 .padding(.top, KozmosDimensions.primitivesLayoutSpacing150)
 
                 if let warning = option.warning {
                     Text(warning)
-                        .font(.caption)
+                        .font(KozmosTypography.caption)
                         .foregroundColor(KozmosColors.primitivesColorsEmotionalAlert600)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, KozmosDimensions.primitivesLayoutSpacing100)

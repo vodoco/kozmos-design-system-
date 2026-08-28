@@ -52,7 +52,7 @@ public struct KozmosCategoryTile<Icon: View>: View {
 
                 if let resultCountLabel = category.resultCountLabel {
                     Text(resultCountLabel)
-                        .font(.caption)
+                        .font(KozmosTypography.caption)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
             }

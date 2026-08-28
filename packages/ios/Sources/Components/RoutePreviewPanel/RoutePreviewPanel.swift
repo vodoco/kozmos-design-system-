@@ -117,14 +117,14 @@ public struct KozmosRoutePreviewPanel<StatusContent: View, AlertContent: View>: 
 
                         if options.count > 1, let optionsCountLabel {
                             Text(optionsCountLabel)
-                                .font(.caption)
+                                .font(KozmosTypography.caption)
                                 .foregroundColor(KozmosColors.primitivesColorsForeground500)
                         }
                     }
 
                     if hasAlert {
                         alert
-                            .font(.subheadline)
+                            .font(KozmosTypography.subheadline)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(KozmosDimensions.primitivesLayoutSpacing150)
                             .background(KozmosColors.primitivesColorsEmotionalAlert500.opacity(0.15))

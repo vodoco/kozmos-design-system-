@@ -36,7 +36,7 @@ public struct KozmosAccordionTrigger: View {
         }) {
             HStack {
                 Text(title)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(KozmosColors.primitivesColorsForeground100)
                 Spacer()
                 Image(systemName: "chevron.down")

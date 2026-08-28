@@ -9,6 +9,6 @@ public struct KozmosText: View {
     
     public var body: some View {
         Text(text)
-            .font(.body)
+            .font(KozmosTypography.body)
     }
 }

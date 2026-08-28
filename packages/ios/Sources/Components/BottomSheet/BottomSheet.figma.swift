@@ -17,7 +17,7 @@ struct KozmosBottomSheetBasicConnect: FigmaConnect {
             AnyView(
                 VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing200) {
                     Text(self.title)
-                        .font(.headline)
+                        .font(KozmosTypography.headline)
                     Text(self.description)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
@@ -43,7 +43,7 @@ struct KozmosBottomSheetFormConnect: FigmaConnect {
             AnyView(
                 VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing300) {
                     Text(self.title)
-                        .font(.headline)
+                        .font(KozmosTypography.headline)
                     Text(self.description)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                     TextField("Search places", text: .constant(""))
@@ -71,7 +71,7 @@ struct KozmosBottomSheetFooterConnect: FigmaConnect {
             AnyView(
                 VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing300) {
                     Text(self.title)
-                        .font(.headline)
+                        .font(KozmosTypography.headline)
                     Text(self.description)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                     HStack {

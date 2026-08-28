@@ -2435,6 +2435,25 @@
         "$description": "Fully rounded: chips, avatars, switches, segmented controls."
       }
     },
+    "Typography": {
+      "Family": {
+        "System": {
+          "$value": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+          "$type": "fontFamilies",
+          "$description": "The default. Resolves to SF Pro on Apple platforms, Roboto on Android and Segoe UI on Windows. ui-sans-serif leads and system-ui follows it rather than standing alone, because bare system-ui has resolved to fonts with broken non-Latin coverage on some Linux and ChromeOS builds."
+        },
+        "Brand": {
+          "$value": "{Primitives.Typography.font.family.primary}",
+          "$type": "fontFamilies",
+          "$description": "Readex Pro, opt-in. Nothing loads it today: there is no @font-face, no webfont link and no font file in the repo, so web has been falling through to generic sans-serif. Using it means shipping the file and measuring its metrics - see scripts/measure-font-metrics.mjs."
+        },
+        "Mono": {
+          "$value": "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace",
+          "$type": "fontFamilies",
+          "$description": "Code, coordinates, IDs and anything that wants to align in columns."
+        }
+      }
+    },
     "Diff": {
       "New": {
         "$value": "#4FD98D",

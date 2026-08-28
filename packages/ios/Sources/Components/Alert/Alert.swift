@@ -64,7 +64,7 @@ public struct KozmosAlertIcon: View {
     public var body: some View {
         Image(systemName: variant.icon)
             .foregroundColor(variant.foregroundColor)
-            .font(.title3)
+            .font(KozmosTypography.title3)
     }
 }
 
@@ -93,7 +93,7 @@ public struct KozmosAlertTitle: View {
 
     public var body: some View {
         Text(title)
-            .font(.headline)
+            .font(KozmosTypography.headline)
             .bold()
             .foregroundColor(color)
     }
@@ -110,7 +110,7 @@ public struct KozmosAlertDescription: View {
 
     public var body: some View {
         Text(description)
-            .font(.subheadline)
+            .font(KozmosTypography.subheadline)
             .foregroundColor(color)
     }
 }

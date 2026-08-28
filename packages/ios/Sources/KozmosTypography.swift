@@ -1,0 +1,51 @@
+import SwiftUI
+
+/// One place that decides what the design system renders text in.
+///
+/// Every component used to reach for `.font(.subheadline)` directly, which was
+/// not wrong — it is the platform UI font, and that is the intent — but it left
+/// the decision spread across ninety-odd call sites with nothing naming it. The
+/// same choice was being made three times over: web asked for `"Readex Pro",
+/// sans-serif` and, because nothing has ever loaded Readex Pro, rendered generic
+/// sans-serif; Android took Roboto by default; this package took SF Pro. Three
+/// platforms, three fonts, no decision recorded anywhere.
+///
+/// System-first is now deliberate. These wrappers resolve to the platform's own
+/// UI font and keep Dynamic Type intact, because `Font.system(_:)` scales with
+/// the reader's text-size setting exactly as the bare styles did.
+///
+/// Nothing here has ever bundled a font file, which is why an App Clip can drop
+/// the brand font without the design system noticing.
+///
+/// To render a brand font instead, this is the only file that changes:
+///
+/// ```swift
+/// public static var brandFamily: String?   // e.g. "Readex Pro", once bundled
+///
+/// public static func font(_ style: Font.TextStyle) -> Font {
+///     guard let family = brandFamily else { return .system(style) }
+///     // relativeTo keeps Dynamic Type working; size is the style's own.
+///     return .custom(family, size: pointSize(for: style), relativeTo: style)
+/// }
+/// ```
+///
+/// A brand font also needs its metrics measured against the system font, or the
+/// same point size renders visibly different: run
+/// `node scripts/measure-font-metrics.mjs <brand> <fallback>` and apply the
+/// scale it reports. Guessing that ratio is how text ends up subtly wrong on
+/// every screen at once.
+public enum KozmosTypography {
+    /// The platform UI font at a Dynamic Type style.
+    public static func font(_ style: Font.TextStyle) -> Font {
+        .system(style)
+    }
+
+    public static var body: Font { font(.body) }
+    public static var headline: Font { font(.headline) }
+    public static var subheadline: Font { font(.subheadline) }
+    public static var footnote: Font { font(.footnote) }
+    public static var caption: Font { font(.caption) }
+    public static var caption2: Font { font(.caption2) }
+    public static var title2: Font { font(.title2) }
+    public static var title3: Font { font(.title3) }
+}

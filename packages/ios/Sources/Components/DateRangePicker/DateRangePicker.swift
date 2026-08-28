@@ -68,7 +68,7 @@ public struct KozmosDateRangePicker: View {
 
             if let helperText = helperText, !helperText.isEmpty {
                 Text(helperText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(helperTextColor)
             }
         }

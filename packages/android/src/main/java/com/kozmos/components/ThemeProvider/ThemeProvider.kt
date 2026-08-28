@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.kozmos.tokens.KozmosTypography
 import com.kozmos.tokens.LocalKozmosUseDarkTokens
 
 enum class KozmosThemeMode {
@@ -54,6 +55,10 @@ fun KozmosThemeProvider(
     ) {
         MaterialTheme(
             colorScheme = colors,
+            // The theme carried colours only, so the font family was whatever
+            // Material defaulted to. It is the same font today; the difference
+            // is that it is now a decision with an address.
+            typography = KozmosTypography.typography(),
             content = content
         )
     }

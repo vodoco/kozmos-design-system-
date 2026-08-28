@@ -73,7 +73,7 @@ public struct KozmosMenu: View {
         Menu(title) {
             if let label = content.label {
                 Text(label)
-                    .font(.caption)
+                    .font(KozmosTypography.caption)
                     .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 Divider()
             }

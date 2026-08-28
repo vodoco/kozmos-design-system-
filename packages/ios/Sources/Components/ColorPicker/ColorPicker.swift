@@ -111,7 +111,7 @@ public struct KozmosColorPicker: View {
 
             if let helperText = helperText, !helperText.isEmpty {
                 Text(helperText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(helperTextColor)
             }
         }
@@ -204,7 +204,7 @@ public struct KozmosColorPicker: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing50) {
             Text(label)
-                .font(.caption)
+                .font(KozmosTypography.caption)
                 .foregroundColor(KozmosColors.primitivesColorsForeground500)
             KozmosSlider(value: value, range: range)
                 .disabled(disabled || readOnly)
@@ -262,7 +262,7 @@ public struct KozmosColorPicker: View {
     private var paletteSelector: some View {
         HStack {
             Text(paletteLabel)
-                .font(.subheadline)
+                .font(KozmosTypography.subheadline)
                 .foregroundColor(KozmosColors.primitivesColorsForeground0)
                 .lineLimit(1)
             Spacer(minLength: KozmosDimensions.primitivesLayoutSpacing100)

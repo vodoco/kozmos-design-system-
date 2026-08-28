@@ -215,7 +215,7 @@ public struct KozmosNavigationItem: View {
 
             if shouldRenderLabel, let label = label {
                 Text(label)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .fontWeight(.medium)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -227,7 +227,7 @@ public struct KozmosNavigationItem: View {
 
             if shouldRenderBadge, let badge = badge {
                 badge
-                    .font(.caption)
+                    .font(KozmosTypography.caption)
                     .padding(.horizontal, 6)
                     .frame(minHeight: 20)
                     .background(KozmosColors.primitivesColorsBackground0)
@@ -251,7 +251,7 @@ public struct KozmosNavigationItem: View {
 
             if shouldRenderLabel, let label = label {
                 Text(label)
-                    .font(.caption)
+                    .font(KozmosTypography.caption)
                     .fontWeight(.semibold)
                     .lineLimit(1)
                     .truncationMode(.tail)

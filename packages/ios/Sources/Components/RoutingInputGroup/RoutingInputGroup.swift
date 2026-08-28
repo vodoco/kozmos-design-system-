@@ -50,7 +50,7 @@ public struct KozmosRoutingInputGroup: View {
                             )
                         )
                         .textFieldStyle(.plain)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
                         .frame(height: 40)
                         .background(KozmosColors.primitivesColorsForeground900.opacity(0.05))

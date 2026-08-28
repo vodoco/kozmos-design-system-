@@ -15,7 +15,7 @@ public struct KozmosWayfindingCard<Content: View>: View {
         VStack(spacing: KozmosDimensions.primitivesLayoutSpacing0) {
             HStack {
                 Text(title)
-                    .font(.headline)
+                    .font(KozmosTypography.headline)
                 Spacer()
                 if let onClose = onClose {
                     Button(action: onClose) {
@@ -74,7 +74,7 @@ public struct KozmosWayfindingInputRow: View {
                 }) {
                     Image(systemName: "arrow.up.arrow.down.circle.fill")
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
-                        .font(.title2)
+                        .font(KozmosTypography.title2)
                 }
             }
             

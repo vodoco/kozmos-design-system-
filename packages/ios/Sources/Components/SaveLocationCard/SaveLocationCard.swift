@@ -43,7 +43,7 @@ public struct KozmosSaveLocationCard: View {
                         .foregroundColor(KozmosColors.primitivesColorsForeground100)
 
                     Text(description)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
 

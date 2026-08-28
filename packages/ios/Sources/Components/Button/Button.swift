@@ -50,7 +50,7 @@ public struct KozmosButton: View {
                         .tint(foregroundColor)
                 }
                 Text(label)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .fontWeight(.medium)
             }
             .padding(padding)

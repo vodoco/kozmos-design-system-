@@ -14,7 +14,7 @@ public struct KozmosNavbar: View {
         @ViewBuilder leading: () -> L,
         @ViewBuilder trailing: () -> T
     ) {
-        self.logo = AnyView(Text(title).font(.headline))
+        self.logo = AnyView(Text(title).font(KozmosTypography.headline))
         self.context = AnyView(leading())
         self.navigation = nil
         self.primaryAction = nil
@@ -24,7 +24,7 @@ public struct KozmosNavbar: View {
     }
 
     public init(title: String) {
-        self.logo = AnyView(Text(title).font(.headline))
+        self.logo = AnyView(Text(title).font(KozmosTypography.headline))
         self.context = nil
         self.navigation = nil
         self.primaryAction = nil

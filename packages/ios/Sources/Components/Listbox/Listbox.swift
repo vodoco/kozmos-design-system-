@@ -59,7 +59,7 @@ public struct KozmosListbox: View {
 
                                 if let description = option.description, !description.isEmpty {
                                     Text(description)
-                                        .font(.caption)
+                                        .font(KozmosTypography.caption)
                                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                                         .lineLimit(1)
                                 }

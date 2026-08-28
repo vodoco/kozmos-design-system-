@@ -75,7 +75,7 @@ public struct KozmosMultiSelect: View {
                 HStack(spacing: 0) {
                     TextField(selectedValues.isEmpty ? placeholder : "", text: $searchValue)
                         .disabled(disabled || readOnly)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .foregroundColor(textColor)
                         .frame(height: 36)
                         .onTapGesture {
@@ -121,7 +121,7 @@ public struct KozmosMultiSelect: View {
             if isOpen {
                 if filteredOptions.isEmpty {
                     Text(emptyText)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                         .padding(KozmosDimensions.primitivesLayoutSpacing150)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -147,7 +147,7 @@ public struct KozmosMultiSelect: View {
 
             if let supportingText = supportingText, !supportingText.isEmpty {
                 Text(supportingText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(supportingTextColor)
             }
         }

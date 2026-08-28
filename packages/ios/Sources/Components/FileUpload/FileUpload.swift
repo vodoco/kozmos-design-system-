@@ -36,9 +36,9 @@ public struct KozmosFileUpload: View {
                 Button(action: { isImporting = true }) {
                     VStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                         Image(systemName: "arrow.up.doc")
-                            .font(.title2)
+                            .font(KozmosTypography.title2)
                         Text("Tap to upload file")
-                            .font(.body)
+                            .font(KozmosTypography.body)
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 120)

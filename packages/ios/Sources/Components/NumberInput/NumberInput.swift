@@ -76,7 +76,7 @@ public struct KozmosNumberInput: View {
                     Rectangle()
                         .stroke(fieldBorderColor, lineWidth: 1)
                 )
-                .font(.subheadline)
+                .font(KozmosTypography.subheadline)
                 .foregroundColor(textColor)
 
                 if showSteppers {
@@ -89,7 +89,7 @@ public struct KozmosNumberInput: View {
 
             if let supportingText = supportingText, !supportingText.isEmpty {
                 Text(supportingText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(supportingTextColor)
             }
         }

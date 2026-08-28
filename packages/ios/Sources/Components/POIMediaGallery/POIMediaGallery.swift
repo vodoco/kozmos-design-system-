@@ -59,7 +59,7 @@ public struct KozmosPOIMediaGallery: View {
                 VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                     HStack {
                         Text(positionLabel(currentIndex + 1, media.count))
-                            .font(.caption)
+                            .font(KozmosTypography.caption)
                             .foregroundColor(KozmosColors.primitivesColorsForeground500)
                             .accessibilityAddTraits(.updatesFrequently)
 

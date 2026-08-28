@@ -518,6 +518,64 @@ so it could not be confirmed without opening Figma. It fails safe either way:
 an unresolved alias warns (`alias target ... was not found`) and falls back to
 the numeric value, which is also 16.
 
+### The semantic typography layer
+
+Typography had drifted further than radius, and more quietly, because the
+brand font was never actually delivered anywhere.
+
+Web asked for `"Readex Pro", sans-serif` — and **nothing in this repo has ever
+loaded Readex Pro**. No `@font-face`, no webfont link, no font file. Storybook's
+`preview-head.html` loads Inter, Plus Jakarta Sans and Space Grotesk, none of
+them the brand font. So every page fell through to generic `sans-serif`, which
+on macOS is Helvetica. Meanwhile iOS reached for `.font(.subheadline)` and got
+SF Pro, and Android set no family at all and got Roboto. **The Figma plugin is
+the only surface that really renders Readex Pro**, so the mockups have been
+describing type that no platform ships.
+
+`Semantics.Typography.Family` holds the decision now — `System` (the default),
+`Brand` (opt-in, aliasing the Readex Pro primitive) and `Mono`. The system stack
+leads with `ui-sans-serif` and puts `system-ui` behind it rather than alone,
+because bare `system-ui` has resolved to fonts with broken non-Latin coverage on
+some Linux and ChromeOS builds.
+
+Each platform now has one address for the decision, and none of them changed
+what they render:
+
+- **Web** — Tailwind's `sans` resolves to the System role. This _is_ a visible
+  change: Helvetica to SF Pro on macOS, because the previous rendering was an
+  accident. `font-brand` exists and falls back to the system stack rather than
+  to a generic family.
+- **iOS** — `KozmosTypography` wraps the Dynamic Type styles; 106 call sites
+  moved off bare `.font(.subheadline)`. `Font.system(_:)` still scales with the
+  reader's text-size setting, so accessibility behaviour is untouched. The
+  brand-font branch is documented in the file rather than written, because
+  writing it would mean shipping an unmeasured scale constant.
+- **Android** — `KozmosTypography.typography()` is passed to `MaterialTheme`,
+  which previously carried only a colour scheme. `FontFamily.Default` is the
+  same font it already used.
+
+`pnpm tokens:typography:check` guards it, and `scripts/measure-font-metrics.mjs`
+computes real `size-adjust` / `ascent-override` / `descent-override` descriptors
+by parsing sfnt tables directly — no dependency, no need for the font to be
+installed. It was validated field-by-field against fontTools on SFNS and Arial.
+
+Two things are deliberately **not** done:
+
+- **The metric-matched fallback needs the Readex Pro file.** That is the piece
+  that would let an App Clip drop the font and look identical rather than subtly
+  different, and it is the whole point of `size-adjust`. It cannot be built
+  honestly without measuring the real font; a hardcoded ratio is exactly the
+  guess that puts text subtly wrong on every screen at once.
+- **Figma still renders Readex Pro.** Switching it restyles all 94 sets at once,
+  which is a design call. It is one field in the plugin's Typography box. Until
+  then the parity check reports the divergence on every run.
+
+And a finding that belongs to nobody yet: **`Primitives.Typography.font.size`
+(the 0-1500 scale) is used by zero platforms.** Not iOS, which uses Dynamic Type
+styles; not Android, which hardcodes `14.sp` and `12.sp`; not web, where Tailwind
+has no `fontSize` override at all and its own scale applies. Sizes are the next
+layer down and are entirely untokenised.
+
 ## 4. Immediate Next Actions, In Order
 
 Everything the design system can do from code is done. What remains is either a
@@ -724,6 +782,8 @@ pnpm components:contract:check    # React/native/Figma contract parity
 pnpm components:variant:check     # variant axes across all four platforms
 pnpm tokens:contrast:check        # token pair contrast, light + dark
 pnpm tokens:radius:check          # all four surfaces agree on corner radius
+pnpm tokens:typography:check      # all surfaces read the same font family role
+node scripts/measure-font-metrics.mjs <brand> <fallback>   # real size-adjust numbers
 pnpm docs:snippets:check          # MDX snippets name real identifiers
 pnpm exec tsx scripts/skills/check-completion.ts --check   # STATUS.md current
 pnpm figma:publish:linked:dry            # React Code Connect vs the live file

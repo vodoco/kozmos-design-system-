@@ -123,7 +123,7 @@ public struct KozmosPOIDetailPanel: View {
                 VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing200) {
                     if let description = poi.description {
                         Text(description)
-                            .font(.subheadline)
+                            .font(KozmosTypography.subheadline)
                             .foregroundColor(KozmosColors.primitivesColorsForeground500)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -136,7 +136,7 @@ public struct KozmosPOIDetailPanel: View {
 
                     if showsAccessRestrictions, let accessRestrictionsLabel = poi.accessRestrictionsLabel {
                         Text(accessRestrictionsLabel)
-                            .font(.subheadline)
+                            .font(KozmosTypography.subheadline)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(KozmosDimensions.primitivesLayoutSpacing150)
                             .background(KozmosColors.primitivesColorsBackground100.opacity(0.4))
@@ -210,10 +210,10 @@ public struct KozmosPOIDetailPanel: View {
 
                 HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
                     Image(systemName: "mappin.and.ellipse")
-                        .font(.footnote)
+                        .font(KozmosTypography.footnote)
                         .accessibilityHidden(true)
                     Text(poi.locationLabel)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .lineLimit(1)
                 }
                 .foregroundColor(KozmosColors.primitivesColorsForeground500)
@@ -267,7 +267,7 @@ public struct KozmosPOIDetailPanel: View {
         ForEach(poi.actions.filter { actionStates[$0]?.message != nil }, id: \.self) { action in
             if let state = actionStates[action], let message = state.message {
                 Text(message)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(
                         state.messageTone == .error
                             ? KozmosColors.primitivesColorsEmotionalDanger600
@@ -297,7 +297,7 @@ public struct KozmosPOIDetailPanel: View {
             FlowLayout(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                 ForEach(services) { service in
                     Text(service.label)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
                         .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing100)
                         .background(KozmosColors.primitivesColorsBackground0)

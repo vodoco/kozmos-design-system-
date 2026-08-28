@@ -58,12 +58,12 @@ public struct KozmosInput: View {
                     RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                         .stroke(fieldBorderColor, lineWidth: 1)
                 )
-                .font(.subheadline)
+                .font(KozmosTypography.subheadline)
                 .foregroundColor(textColor)
 
             if let supportingText = supportingText, !supportingText.isEmpty {
                 Text(supportingText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(supportingTextColor)
             }
         }

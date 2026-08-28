@@ -31,7 +31,7 @@ public struct KozmosLabel: View {
                     .accessibilityHidden(true)
             } else if let optionalText {
                 Text(optionalText)
-                    .font(.caption)
+                    .font(KozmosTypography.caption)
                     .foregroundColor(KozmosColors.primitivesColorsForeground500)
             }
         }

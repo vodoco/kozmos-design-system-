@@ -91,7 +91,7 @@ public struct KozmosFloorSelector: View {
             select(floor)
         } label: {
             Text(floor)
-                .font(.subheadline)
+                .font(KozmosTypography.subheadline)
                 .bold()
                 .frame(
                     width: KozmosDimensions.primitivesLayoutSizing500,

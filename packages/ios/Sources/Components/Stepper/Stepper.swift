@@ -21,18 +21,18 @@ public struct KozmosStepper: View {
                         
                         if index < currentStep {
                             Image(systemName: "checkmark")
-                                .font(.caption)
+                                .font(KozmosTypography.caption)
                                 .fontWeight(.bold)
                                 .foregroundColor(KozmosColors.primitivesColorsBackground0)
                         } else {
                             Text("\(index + 1)")
-                                .font(.caption)
+                                .font(KozmosTypography.caption)
                                 .foregroundColor(index == currentStep ? KozmosColors.primitivesColorsTheme500 : KozmosColors.primitivesColorsForeground400)
                         }
                     }
                     
                     Text(steps[index])
-                        .font(.caption)
+                        .font(KozmosTypography.caption)
                         .foregroundColor(index == currentStep ? KozmosColors.primitivesColorsForeground100 : KozmosColors.primitivesColorsForeground500)
                 }
                 

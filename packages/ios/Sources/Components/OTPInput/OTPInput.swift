@@ -50,7 +50,7 @@ public struct KozmosOTPInput: View {
 
             if let supportingText = supportingText, !supportingText.isEmpty {
                 Text(supportingText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(supportingTextColor)
             }
         }

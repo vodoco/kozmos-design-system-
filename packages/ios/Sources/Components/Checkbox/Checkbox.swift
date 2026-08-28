@@ -34,7 +34,7 @@ public struct KozmosCheckbox: View {
                     
                     if checked {
                         Image(systemName: "checkmark")
-                            .font(.caption)
+                            .font(KozmosTypography.caption)
                             .bold()
                             .foregroundColor(markColor)
                     }
@@ -42,7 +42,7 @@ public struct KozmosCheckbox: View {
                 
                 if let label = label {
                     Text(label)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .foregroundColor(labelColor)
                 }
             }

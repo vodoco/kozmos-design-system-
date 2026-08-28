@@ -52,13 +52,13 @@ public struct KozmosToast: View {
         HStack(alignment: .center, spacing: KozmosDimensions.primitivesLayoutSpacing200) {
             VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing50) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(KozmosColors.primitivesColorsForeground100)
 
                 if let description {
                     Text(description)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
             }
@@ -67,7 +67,7 @@ public struct KozmosToast: View {
             if let actionTitle, let onAction {
                 Button(action: onAction) {
                     Text(actionTitle)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(KozmosColors.primitivesColorsTheme500)
                         .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)

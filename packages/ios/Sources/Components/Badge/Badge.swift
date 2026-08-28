@@ -41,7 +41,7 @@ public struct KozmosBadge: View {
     public var body: some View {
         HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
             Text(text)
-                .font(.subheadline)
+                .font(KozmosTypography.subheadline)
                 .fontWeight(.medium)
                 .underline(variant == .link)
 

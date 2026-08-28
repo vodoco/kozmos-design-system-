@@ -32,7 +32,7 @@ public struct KozmosPaginationLink: View {
             action()
         }) {
             Text(text)
-                .font(.subheadline)
+                .font(KozmosTypography.subheadline)
                 .frame(minWidth: 36, minHeight: 36)
                 .background(isActive ? KozmosColors.primitivesColorsTheme500.opacity(0.1) : Color.clear)
                 .foregroundColor(isActive ? KozmosColors.primitivesColorsTheme500 : KozmosColors.primitivesColorsForeground100)
@@ -57,9 +57,9 @@ public struct KozmosPaginationPrevious: View {
         Button(action: action) {
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
                 Image(systemName: "chevron.left")
-                    .font(.caption)
+                    .font(KozmosTypography.caption)
                 Text("Previous")
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
             }
             .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing100)
             .frame(minHeight: 36)
@@ -79,9 +79,9 @@ public struct KozmosPaginationNext: View {
         Button(action: action) {
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
                 Text("Next")
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                 Image(systemName: "chevron.right")
-                    .font(.caption)
+                    .font(KozmosTypography.caption)
             }
             .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing100)
             .frame(minHeight: 36)

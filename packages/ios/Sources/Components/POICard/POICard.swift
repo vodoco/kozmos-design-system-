@@ -37,11 +37,11 @@ public struct KozmosPOICard<ImageContent: View, DescriptionContent: View, Action
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing50) {
                         Text(title)
-                            .font(.headline)
+                            .font(KozmosTypography.headline)
                         
                         if let category = category {
                             Text(category)
-                                .font(.subheadline)
+                                .font(KozmosTypography.subheadline)
                                 .foregroundColor(KozmosColors.primitivesColorsForeground500)
                         }
                     }

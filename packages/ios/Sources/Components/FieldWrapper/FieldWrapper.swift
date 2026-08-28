@@ -57,7 +57,7 @@ public struct KozmosFieldWrapper<Content: View>: View {
 
                     if let optionalText = optionalDisplayText {
                         Text(optionalText)
-                            .font(.caption)
+                            .font(KozmosTypography.caption)
                             .foregroundColor(metaColor)
                     }
                 }
@@ -65,7 +65,7 @@ public struct KozmosFieldWrapper<Content: View>: View {
 
             if let description = description, !description.isEmpty {
                 Text(description)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(metaColor)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -75,7 +75,7 @@ public struct KozmosFieldWrapper<Content: View>: View {
 
             if let supportingText = supportingText, !supportingText.isEmpty {
                 Text(supportingText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(supportingTextColor)
                     .fixedSize(horizontal: false, vertical: true)
             }

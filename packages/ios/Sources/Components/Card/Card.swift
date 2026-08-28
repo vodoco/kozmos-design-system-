@@ -45,7 +45,7 @@ public struct KozmosCardTitle: View {
     
     public var body: some View {
         Text(title)
-            .font(.title3)
+            .font(KozmosTypography.title3)
             .fontWeight(.semibold)
             .foregroundColor(KozmosColors.primitivesColorsForeground100)
     }
@@ -60,7 +60,7 @@ public struct KozmosCardDescription: View {
     
     public var body: some View {
         Text(description)
-            .font(.subheadline)
+            .font(KozmosTypography.subheadline)
             .foregroundColor(KozmosColors.primitivesColorsForeground400)
     }
 }

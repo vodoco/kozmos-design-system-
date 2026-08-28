@@ -71,7 +71,7 @@ public struct KozmosPasswordInput: View {
                 .padding(.leading, KozmosDimensions.primitivesLayoutSpacing150)
                 .padding(.trailing, showToggle ? 0 : KozmosDimensions.primitivesLayoutSpacing150)
                 .frame(height: 44, alignment: .center)
-                .font(.subheadline)
+                .font(KozmosTypography.subheadline)
                 .foregroundColor(textColor)
 
                 if showToggle {
@@ -96,7 +96,7 @@ public struct KozmosPasswordInput: View {
 
             if let supportingText = supportingText, !supportingText.isEmpty {
                 Text(supportingText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(supportingTextColor)
             }
         }

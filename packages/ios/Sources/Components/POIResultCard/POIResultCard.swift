@@ -88,7 +88,7 @@ public struct KozmosPOIResultCard: View {
             if result.featured {
                 HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
                     Image(systemName: "star.fill")
-                        .font(.caption2)
+                        .font(KozmosTypography.caption2)
                         .accessibilityHidden(true)
                     Text(featuredLabel)
                         .font(.caption.weight(.semibold))
@@ -124,17 +124,17 @@ public struct KozmosPOIResultCard: View {
 
                         if let categoryLabel = poi.categoryLabel {
                             Text(categoryLabel)
-                                .font(.subheadline)
+                                .font(KozmosTypography.subheadline)
                                 .foregroundColor(KozmosColors.primitivesColorsForeground500)
                                 .lineLimit(1)
                         }
 
                         HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
                             Image(systemName: "mappin.and.ellipse")
-                                .font(.footnote)
+                                .font(KozmosTypography.footnote)
                                 .accessibilityHidden(true)
                             Text(poi.locationLabel)
-                                .font(.subheadline)
+                                .font(KozmosTypography.subheadline)
                                 .lineLimit(1)
                         }
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
@@ -157,7 +157,7 @@ public struct KozmosPOIResultCard: View {
                         if let travelEstimate = result.travelEstimate {
                             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
                                 Image(systemName: "clock")
-                                    .font(.caption2)
+                                    .font(KozmosTypography.caption2)
                                     .accessibilityHidden(true)
                                 Text(travelEstimate.durationLabel)
                                     .font(.caption.weight(.medium))
@@ -177,7 +177,7 @@ public struct KozmosPOIResultCard: View {
                 Divider().overlay(KozmosColors.primitivesColorsForeground300)
 
                 Text(unavailableReason)
-                    .font(.caption)
+                    .font(KozmosTypography.caption)
                     .foregroundColor(KozmosColors.primitivesColorsForeground500)
                     .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
                     .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing100)

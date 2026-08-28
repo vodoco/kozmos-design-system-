@@ -60,7 +60,7 @@ public struct KozmosCombobox: View {
             HStack(spacing: 0) {
                 TextField(placeholder, text: $inputValue)
                     .disabled(disabled || readOnly)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(textColor)
                     .padding(.leading, KozmosDimensions.primitivesLayoutSpacing150)
                     .frame(height: 44)
@@ -104,7 +104,7 @@ public struct KozmosCombobox: View {
             if isOpen {
                 if filteredOptions.isEmpty {
                     Text(emptyText)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                         .padding(KozmosDimensions.primitivesLayoutSpacing150)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -131,7 +131,7 @@ public struct KozmosCombobox: View {
 
             if let supportingText = supportingText, !supportingText.isEmpty {
                 Text(supportingText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(supportingTextColor)
             }
         }
