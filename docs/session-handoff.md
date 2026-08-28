@@ -660,13 +660,25 @@ Figma action, a decision, or work outside this lane.
    seen in a render), and the WayfindingCard and POICard set frames, which
    should now sit tight around their variants instead of eight times too tall.
 
-2. **Run `Update Sidebar`, and `Rebuild FileUpload`.** Two Core sets that
-   `Update All Product / SDK` does not touch. `Update Sidebar` clears the last
-   audit warning by replacing its legacy fallback frames with real
-   `NavigationItem` instances — Update, not Rebuild, or the node ID six Code
-   Connect declarations pin will change. `FileUpload` is where the two
-   remaining truncations live; its fix is in the row builder, so the set needs
-   regenerating.
+2. **Press `Fix Audit Issues`, then update `FileUpload`.** Two Core sets that
+   `Update All Product / SDK` does not touch. **Nothing in the plugin is
+   Rebuild.** `Rebuild` mints a fresh node ID, and Code Connect pins the
+   existing one — six declarations for `Sidebar` (`752-6807`), one for
+   `FileUpload` (`444-12724`).
+
+   `Fix Audit Issues` is the right button rather than the per-component one: it
+   updates Separator, Slider, **NavigationItem, then Navbar and Sidebar**, then
+   Dialog and BottomSheet — and NavigationItem landing before Sidebar is what
+   Sidebar needs, since it composes NavigationItem instances. The blue **Fix**
+   button on a selected component is the same `update` action under a different
+   label; `selectedRecommendation()` returns `action: "update"` and only renames
+   the button when warnings exist. It is safe, just narrower.
+
+   For `FileUpload`, plain **Update** reaches the fix:
+   `updateFileUploadVariant` calls `syncFileUploadVariantChildren`, which calls
+   the repaired `createFileUploadFileRow`. An earlier draft of this document
+   said Rebuild; that was wrong and would have broken its Code Connect anchor.
+
 3. **Re-run the plugin for the radius change.** The semantic layer is code-only
    so far. Run the foundations/variables import once so
    `Semantics/Radius/Control` exists, then `Update All Product / SDK` and the
