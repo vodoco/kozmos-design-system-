@@ -171,9 +171,14 @@ Still explicitly out: Combine's wall `DELETE`, the wayfinding network's site-wid
 
 ---
 
-## 7. 🔴 DEFECT — the persona rule is written twice and the two copies disagree
+## 7. ✅ FIXED 2026-08-28 — the persona rule is written twice and the two copies disagreed
 
-Found 2026-08-28. Full write-up: `FOR_THE_APP_REPO.md` §14.
+Found and fixed 2026-08-28 (`e63b630`, **not deployed**). Full write-up: `FOR_THE_APP_REPO.md` §14.
+The rule now lives in a dependency-free `src/mock/personaVisibility.ts` — `pointrConfig.ts` reads
+`import.meta.env` at module scope, so nothing in it can be imported by the harness, which is why
+this drifted unnoticed. `visibleToPersona` stays as the binding to `MAP_PERSONA`; no call site
+changed. Both implementations now run against one shared table: **680 checks**, and the old logic
+fails 4 of them. What follows is the diagnosis as it stood.
 
 `personaOk()` in this file normalises **both shapes** — a real array, and the string a vector tile
 flattens it to — and its comment says so. `visibleToPersona()` in `src/mock/pointrConfig.ts`
