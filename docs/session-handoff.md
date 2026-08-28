@@ -128,8 +128,11 @@ vertically, and each section's sets stacked vertically inside it. The page was
 Both levels now flow into newspaper-style columns via `packBlocksIntoColumns`,
 which tries every column count and picks the one whose bounding box is closest
 to square. There is no target-height constant to re-tune as sets are added.
-Simulated against the plugin's own constants and footprint floors: **13,020 x
-15,580px, 1.20:1, 5.9x shorter.** Reading order stays column-major, so each
+Measured from the file after the rebuild: **21,952 x 30,054px, aspect
+1.37:1 — 3.1x shorter than before**, and that is while carrying 18 more sets
+than the old page did. (An earlier simulation predicted 13,020 x 15,580; it
+modelled the 76 sets that existed at the time, so it understated the real
+result. The near-square goal holds; the specific figures did not.) Reading order stays column-major, so each
 column holds a contiguous slice of the alphabetized list.
 
 `stats` now records `sectionColumns`, `pageWidth`, `pageHeight`, and a
@@ -258,14 +261,15 @@ against the merged `package.json` files rather than resolved by hand.
 2. **Re-run `Update` on the six existing Product / SDK sets** to apply `6803f20`
    and `ab23fec`. Update preserves node IDs; Build would not.
 3. **Run `Reorganize`** and confirm the page really lands near the simulated
-   13,020 x 15,580. The simulation used `COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS` as a
-   stand-in for measured footprints; it reproduced the old page height to within
-   1.5%, but the real numbers come from Figma.
+   near-square. Measured after the first rebuild it was 21,952 x 30,054, 1.37:1.
+   Use `pnpm figma:verify` rather than eyeballing.
 4. **Run `Audit Library`** and keep the JSON. Watch for the new layout-sizing
    warnings — they will now appear where they were previously silent.
 5. **Write the Code Connect files** for all 24 Product / SDK sets (React,
-   SwiftUI, Compose) from the node IDs, replace the six native `// Placeholder`
-   stubs, then run `figma:publish:linked:dry` and
+   SwiftUI, Compose) from the node IDs. That is **72 files, of which 0 exist**:
+   12 are placeholder stubs to replace (DirectionStep, FloorSelector,
+   LocationPin, MapView, POICard, WayfindingCard, on iOS and Android each) and
+   60 do not exist at all — including every React `.figma.tsx` for this lane, then run `figma:publish:linked:dry` and
    `figma:publish:native:linked:dry`. These are the same commands CI runs, so
    they need a working `FIGMA_ACCESS_TOKEN` in `.env` — see §6.
 6. **Dashboard items outside the design system** — raised but never scoped.
