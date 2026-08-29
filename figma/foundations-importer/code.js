@@ -9271,12 +9271,36 @@ async function fixCurrentAuditIssues() {
     mergeAuditIssueFixResult(stats, operation.componentName, result);
   }
 
+  // Sweep the whole page, not just the components above. The seam-level sweep
+  // in the shared build and update helpers keeps new drift out, but 61 of the
+  // 87 property configurators are called from bespoke update functions that
+  // never touch those helpers — MultiSelect and ColorPicker among them — so
+  // anything already carrying a dead property would sit there until someone
+  // happened to rebuild it. Figma refuses to publish a set with an unused
+  // property, so leaving them is not cosmetic.
+  const sweptPage = await ensurePage("Components");
+  await figma.setCurrentPageAsync(sweptPage);
+  await sweptPage.loadAsync();
+  let propertiesRemoved = 0;
+  for (const node of sweptPage.children) {
+    if (node.type !== "COMPONENT_SET") continue;
+    propertiesRemoved += removeUnboundComponentProperties(node, stats);
+  }
+  if (propertiesRemoved > 0) stats.updated = true;
+
   const refreshed = stats.operations
     .filter((operation) => operation.changed)
     .map((operation) => operation.componentName);
   if (refreshed.length > 0) {
     stats.updated = true;
-    stats.message = `Refreshed ${refreshed.join(", ")}. Run Audit Again to confirm the live file state.`;
+    stats.message =
+      `Refreshed ${refreshed.join(", ")}.` +
+      (propertiesRemoved > 0
+        ? ` Removed ${propertiesRemoved} unbound component propert${propertiesRemoved === 1 ? "y" : "ies"}.`
+        : "") +
+      " Run Audit Again to confirm the live file state.";
+  } else if (propertiesRemoved > 0) {
+    stats.message = `Removed ${propertiesRemoved} unbound component propert${propertiesRemoved === 1 ? "y" : "ies"}. Run Audit Again to confirm the live file state.`;
   } else {
     stats.message =
       "No known audit issue component was changed. Review the warnings and run the individual component update if needed.";
@@ -35036,6 +35060,7 @@ async function buildStateStatusComponent(config) {
     stats,
   );
   await config.configureProperties(componentSet, stats, variableByName);
+  removeUnboundComponentProperties(componentSet, stats);
   await reorganizeAfterGeneratedComponentMutation(stats);
   return stats;
 }
@@ -35145,6 +35170,7 @@ async function updateStateStatusComponent(config) {
     stats,
   );
   await config.configureProperties(existing, stats, variableByName);
+  removeUnboundComponentProperties(existing, stats);
   await reorganizeAfterGeneratedComponentMutation(stats);
   return stats;
 }
@@ -35254,6 +35280,7 @@ async function buildPlannedMatrixComponent(config) {
     stats,
   );
   await config.configureProperties(componentSet, stats, variableByName);
+  removeUnboundComponentProperties(componentSet, stats);
   runGeneratedComponentPostUpdateMaintenance(
     componentSet,
     config.componentName,
@@ -35416,6 +35443,7 @@ async function updatePlannedMatrixComponent(config) {
     stats,
   );
   await config.configureProperties(existing, stats, variableByName);
+  removeUnboundComponentProperties(existing, stats);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
     config.componentName,
@@ -46796,6 +46824,7 @@ async function buildSingleAxisComponent(config) {
     stats,
   );
   await config.configureProperties(componentSet, stats, variableByName);
+  removeUnboundComponentProperties(componentSet, stats);
   runGeneratedComponentPostUpdateMaintenance(
     componentSet,
     config.componentName,
@@ -46904,6 +46933,7 @@ async function updateSingleAxisComponent(config) {
     stats,
   );
   await config.configureProperties(existing, stats, variableByName);
+  removeUnboundComponentProperties(existing, stats);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
     config.componentName,
@@ -68286,6 +68316,79 @@ function bindVisibilityProperty(node, propertyName, stats) {
       `Could not bind visibility property (${messageFor(error)}).`,
     );
   }
+}
+
+/**
+ * Remove component properties that control nothing.
+ *
+ * Figma's publish dialog calls these "Unused properties" and refuses to publish
+ * the set that carries them — five components were held back that way:
+ * TreeChildItem's "Action 2 Icon", MultiSelect's "Chip 1/2 Text", ColorPicker's
+ * "Hex Label Text" and "Palette Text", and hand-made Slots on NavigationItem
+ * and Drawer. Every one was left over from an earlier shape of the component.
+ * MultiSelect is the clearest: its chips became nested Chip instances, whose
+ * label is driven by the Chip's own "Label Text" property, so a MultiSelect
+ * property binding a layer of that name can never attach to anything.
+ *
+ * The helpers already counted their bindings — `stats.labelTextBindings` and
+ * friends — and never looked at whether the count was zero. This closes that:
+ * a property nothing references is deleted, and every deletion is reported, so
+ * a slot somebody meant to wire up later shows in the run log rather than
+ * vanishing quietly.
+ *
+ * VARIANT properties are exempt. They are carried by the variant's name rather
+ * than by a reference on a layer, so they look unbound to any reference scan —
+ * which is exactly why Figma flags five sets here and not all ninety-four.
+ */
+function removeUnboundComponentProperties(componentSet, stats) {
+  if (!componentSet || componentSet.type !== "COMPONENT_SET") return 0;
+  if (!componentSet.deleteComponentProperty) return 0;
+
+  const read = safeComponentPropertyDefinitions(
+    componentSet,
+    stats,
+    "remove unbound component properties",
+  );
+  if (read.error) return 0;
+  const definitions = read.definitions;
+
+  const referenced = {};
+  (function collect(node) {
+    const references = node.componentPropertyReferences;
+    if (references) {
+      for (const field of Object.keys(references)) {
+        referenced[references[field]] = true;
+      }
+    }
+    if (node.children) {
+      for (const child of node.children) collect(child);
+    }
+  })(componentSet);
+
+  let removed = 0;
+  for (const propertyName of Object.keys(definitions)) {
+    if (definitions[propertyName].type === "VARIANT") continue;
+    if (referenced[propertyName]) continue;
+
+    try {
+      componentSet.deleteComponentProperty(propertyName);
+      removed += 1;
+      stats.componentPropertiesRemoved =
+        (stats.componentPropertiesRemoved || 0) + 1;
+      pushUniqueWarning(
+        stats,
+        "unbound-property:" + componentSet.name + ":" + propertyName,
+        `${componentSet.name}: removed "${propertyName.split("#")[0]}" (${definitions[propertyName].type}); no layer referenced it, and Figma will not publish a set that carries one.`,
+      );
+    } catch (error) {
+      pushUniqueWarning(
+        stats,
+        "unbound-property-failed:" + componentSet.name + ":" + propertyName,
+        `${componentSet.name}: could not remove unbound property "${propertyName.split("#")[0]}" (${messageFor(error)}).`,
+      );
+    }
+  }
+  return removed;
 }
 
 function deleteComponentPropertiesByBaseName(

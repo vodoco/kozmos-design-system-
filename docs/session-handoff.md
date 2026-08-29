@@ -644,6 +644,63 @@ harness works and is extensible, and Button was chosen because it exercises
 radius, colour, type and state at once. Widening it to the rest of the library
 is follow-on work.
 
+### Unused component properties, and a blind analyzer
+
+Figma's publish dialog listed **Invalid assets (5)** — `TreeChildItem`,
+`ColorPicker`, `MultiSelect`, `NavigationItem` and `Drawer`, all "Unused
+properties". Figma will not publish a set that carries one, so five components,
+two of them Core, were being held out of the library.
+
+Eleven properties, every one a leftover from an earlier shape of its component,
+confirmed by the node simply not existing: `TreeChildItem`'s `Action 2 Icon`
+(the builder declares three action slots and creates one), `MultiSelect`'s
+`Chip 1/2 Text`, `ColorPicker`'s `Hex Label Text` and `Palette Text`, and
+hand-made Figma **Slots** on `NavigationItem` and `Drawer` — `Slot`, `Slot2`,
+`Drawer Body` — which the importer never created, because it has no slot-property
+code at all.
+
+`MultiSelect` shows the mechanism best. Its chips became nested `Chip`
+instances, and a nested instance's label is driven by the _Chip's_ own
+`Label Text` property, so a MultiSelect property binding a layer of that name
+can never attach to anything. The property outlived the structure.
+
+`removeUnboundComponentProperties` deletes any non-VARIANT property nothing
+references, and reports every deletion rather than doing it quietly. VARIANT is
+exempt because those live in the variant's name rather than in a layer
+reference — which is exactly why Figma flags five sets and not all ninety-four,
+and why a naive scan appears to condemn everything. Dry-run against all 94 sets
+over the REST API: **11 properties, 5 sets, nothing else touched.**
+
+It runs in two places. The six shared build and update seams keep new drift out;
+and because **61 of the 87 property configurators are called from bespoke update
+functions that never touch those seams** — `MultiSelect` and `ColorPicker` among
+them — `Fix Audit Issues` now also sweeps every set on the page, so what is
+already there gets cleared in one press.
+
+**The variant analyzer was blind to single quotes.** Fixing the properties was
+not what surfaced this; `components:variant:check` quietly went from 1 gap to 2
+during the radius work, and the cause was that `Link.tsx` had never been through
+prettier. Its `variant?: 'default' | 'subtle'` used single quotes, the analyzer's
+union-prop regex matched only double, and lint-staged reformatting the file as a
+side effect of an unrelated change made a real gap appear from nowhere. That is
+the same species as `a91cdce` and the quote normalisation in
+`check-component-contracts` — a check asserting on formatting rather than on
+code, for the third time in this repo.
+
+With both quote styles accepted the real numbers are **29 components declaring
+variants and 3 gaps**, not 26 and 1:
+
+| Component | Gap                                                      |
+| --------- | -------------------------------------------------------- |
+| `Icon`    | absent from Figma — intentional, source lives on `Icons` |
+| `Link`    | **iOS and Android** missing `variant (default, subtle)`  |
+| `Spinner` | **iOS and Android** missing `size (sm, md, lg, xl)`      |
+
+So §1's "0/26 variant-axis gaps" on iOS and Android was measured with an
+analyzer that could not see two of them. Closing them means new public enums on
+both native packages, which is API design rather than a sweep — it belongs with
+the naming decision in §5, not bolted onto a publishing fix.
+
 ## 4. Immediate Next Actions, In Order
 
 Everything the design system can do from code is done. What remains is either a
@@ -660,7 +717,9 @@ Figma action, a decision, or work outside this lane.
    seen in a render), and the WayfindingCard and POICard set frames, which
    should now sit tight around their variants instead of eight times too tall.
 
-2. **Press `Fix Audit Issues`, then update `FileUpload`.** Two Core sets that
+2. **Press `Fix Audit Issues`, then update `FileUpload`.** `Fix Audit Issues`
+   now also clears the 11 unbound properties that were holding five components
+   out of the publish — see §3. Two Core sets that
    `Update All Product / SDK` does not touch. **Nothing in the plugin is
    Rebuild.** `Rebuild` mints a fresh node ID, and Code Connect pins the
    existing one — six declarations for `Sidebar` (`752-6807`), one for

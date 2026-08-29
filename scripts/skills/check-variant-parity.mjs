@@ -356,11 +356,18 @@ function reactAxes(component) {
     new RegExp(`export interface ${component}Props[\\s\\S]*?\\n\\}`),
   );
   if (propsMatch) {
+    // Accept either quote style. Matching only double quotes made the analyzer
+    // blind to any component whose file had never been through prettier — Link
+    // declared `variant?: 'default' | 'subtle'` from the first commit and went
+    // unseen until an unrelated change caused lint-staged to reformat it, at
+    // which point a real iOS parity gap appeared out of nowhere. Same species
+    // as a91cdce and the quote normalisation in check-component-contracts:
+    // a check asserting on formatting rather than on code.
     for (const match of propsMatch[0].matchAll(
-      /^\s+([a-zA-Z][a-zA-Z0-9]*)\??:\s*((?:"[^"]+"\s*\|\s*)+"[^"]+")\s*;/gm,
+      /^\s+([a-zA-Z][a-zA-Z0-9]*)\??:\s*((?:["'][^"']+["']\s*\|\s*)+["'][^"']+["'])\s*;/gm,
     )) {
       const axis = match[1];
-      const values = [...match[2].matchAll(/"([^"]+)"/g)].map((v) => v[1]);
+      const values = [...match[2].matchAll(/["']([^"']+)["']/g)].map((v) => v[1]);
       if (values.length > 1) {
         axes[axis] = [...new Set([...(axes[axis] || []), ...values])];
       }
