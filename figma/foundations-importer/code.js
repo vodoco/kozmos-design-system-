@@ -9291,6 +9291,18 @@ async function fixCurrentAuditIssues() {
     propertiesRemoved += removeUnboundComponentProperties(componentSet, stats);
   }
   if (propertiesRemoved > 0) stats.updated = true;
+  // The counts are in the message on purpose. Two attempts at this sweep looked
+  // identical from outside — one sweeping nothing, one finding nothing — and a
+  // silent no-op is indistinguishable from success. "sweep v2" also proves which
+  // build of code.js Figma actually loaded; if the message lacks it, the plugin
+  // is running a stale copy and nothing below it can be trusted.
+  stats.unboundSweepReport =
+    `sweep v2: ${stats.unboundSweepSetsScanned || 0} set(s) scanned, ` +
+    `${stats.unboundSweepCandidates || 0} non-variant propert(y|ies) examined, ` +
+    `${stats.unboundSweepUnreferenced || 0} unreferenced, ` +
+    `${propertiesRemoved} removed, ` +
+    `${stats.unboundSweepReadErrors || 0} unreadable set(s).`;
+  stats.warnings.push(stats.unboundSweepReport);
 
   const refreshed = stats.operations
     .filter((operation) => operation.changed)
@@ -68348,12 +68360,17 @@ function removeUnboundComponentProperties(componentSet, stats) {
   if (!componentSet || componentSet.type !== "COMPONENT_SET") return 0;
   if (!componentSet.deleteComponentProperty) return 0;
 
+  stats.unboundSweepSetsScanned = (stats.unboundSweepSetsScanned || 0) + 1;
+
   const read = safeComponentPropertyDefinitions(
     componentSet,
     stats,
     "remove unbound component properties",
   );
-  if (read.error) return 0;
+  if (read.error) {
+    stats.unboundSweepReadErrors = (stats.unboundSweepReadErrors || 0) + 1;
+    return 0;
+  }
   const definitions = read.definitions;
 
   const referenced = {};
@@ -68372,7 +68389,9 @@ function removeUnboundComponentProperties(componentSet, stats) {
   let removed = 0;
   for (const propertyName of Object.keys(definitions)) {
     if (definitions[propertyName].type === "VARIANT") continue;
+    stats.unboundSweepCandidates = (stats.unboundSweepCandidates || 0) + 1;
     if (referenced[propertyName]) continue;
+    stats.unboundSweepUnreferenced = (stats.unboundSweepUnreferenced || 0) + 1;
 
     try {
       componentSet.deleteComponentProperty(propertyName);
