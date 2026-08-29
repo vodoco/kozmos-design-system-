@@ -677,6 +677,16 @@ functions that never touch those seams** — `MultiSelect` and `ColorPicker` amo
 them — `Fix Audit Issues` now also sweeps every set on the page, so what is
 already there gets cleared in one press.
 
+The page sweep was wrong on its first attempt, and the file said so: invalid
+assets went 5 to 4 rather than 5 to 0. It iterated `page.children`, and the
+Components page holds **15 SECTION nodes and not one component set at the top
+level**, so it reached nothing — `collectComponentSetsInPage` reaches all 94.
+`NavigationItem` cleared anyway because it is in the operations list above and
+its update path runs through a seam; `Drawer` is not in that list, which is
+exactly why it survived a run that fixed its neighbour. Worth remembering that
+the giveaway was the count, not the code: a sweep that silently touches nothing
+looks identical to a sweep that finds nothing wrong.
+
 **The variant analyzer was blind to single quotes.** Fixing the properties was
 not what surfaced this; `components:variant:check` quietly went from 1 gap to 2
 during the radius work, and the cause was that `Link.tsx` had never been through

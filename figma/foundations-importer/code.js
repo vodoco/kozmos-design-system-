@@ -9281,10 +9281,14 @@ async function fixCurrentAuditIssues() {
   const sweptPage = await ensurePage("Components");
   await figma.setCurrentPageAsync(sweptPage);
   await sweptPage.loadAsync();
+  // collectComponentSetsInPage, not page.children: the Components page holds 15
+  // SECTION nodes and not one component set at the top level, so iterating the
+  // direct children swept nothing at all. NavigationItem cleared on the first
+  // run only because it is in the operations list above and its update reaches
+  // the seam sweep; Drawer is not in that list, which is why it survived.
   let propertiesRemoved = 0;
-  for (const node of sweptPage.children) {
-    if (node.type !== "COMPONENT_SET") continue;
-    propertiesRemoved += removeUnboundComponentProperties(node, stats);
+  for (const componentSet of collectComponentSetsInPage(sweptPage)) {
+    propertiesRemoved += removeUnboundComponentProperties(componentSet, stats);
   }
   if (propertiesRemoved > 0) stats.updated = true;
 
