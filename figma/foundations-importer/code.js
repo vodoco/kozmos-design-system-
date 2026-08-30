@@ -37279,13 +37279,22 @@ function treeLabelTextWidth(row, metrics) {
   const rowPaddingRight = metrics.paddingX;
   const iconWidth = 16 + metrics.iconSize;
   const actionsVisible = shouldShowTreeActions(row);
+  // Only the visible actions take space. TreeChildItem renders five action
+  // buttons and hides four of them by default — a hidden child occupies no room
+  // in an auto-layout frame, so counting all five reserved 120px the render
+  // never used and squeezed the label past the floor below: "Place item" came
+  // out 40px wide against the ~69px it needs, at Depth=2 where the indent is
+  // widest. Every action row in the file is affected, not just the deep ones.
+  const visibleActions =
+    actionsVisible && row.actions
+      ? row.actions.filter((action) => action.visible !== false)
+      : [];
   const actionsWidth =
-    actionsVisible && row.actions && row.actions.length > 0
-      ? row.actions.length * metrics.actionSize +
-        Math.max(0, row.actions.length - 1) * 2
+    visibleActions.length > 0
+      ? visibleActions.length * metrics.actionSize +
+        Math.max(0, visibleActions.length - 1) * 2
       : 0;
-  const directChildGapCount =
-    actionsVisible && row.actions && row.actions.length > 0 ? 4 : 3;
+  const directChildGapCount = visibleActions.length > 0 ? 4 : 3;
   const countMetrics = counterMetrics("Small");
   const countWidth = row.count
     ? Math.max(
