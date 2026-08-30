@@ -27,7 +27,10 @@ figma.connect(NavigationItem, navigationItemUrl, {
     }),
     focusVisible: figma.boolean("Focus Visible"),
     label: figma.string("Label Text"),
-    leadingIconSlot: figma.slot("Leading Icon Slot"),
+    // An instance-swap rather than a slot: Figma will not let a component's own
+    // property drive a node inside that component's slot, and Sidebar's rows
+    // set their icons through this property. Badge and Trailing are real slots.
+    leadingIcon: figma.instance("Leading Icon"),
     placement: figma.enum("Placement", {
       Top: "top",
       Side: "side",
@@ -56,7 +59,7 @@ figma.connect(NavigationItem, navigationItemUrl, {
     disabled,
     focusVisible,
     label,
-    leadingIconSlot,
+    leadingIcon,
     placement,
     selected,
     state,
@@ -68,7 +71,7 @@ figma.connect(NavigationItem, navigationItemUrl, {
       density={density}
       disabled={disabled}
       focusVisible={focusVisible}
-      icon={leadingIconSlot}
+      icon={leadingIcon}
       placement={placement}
       selected={selected}
       state={state}

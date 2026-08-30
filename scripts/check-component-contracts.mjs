@@ -5689,8 +5689,11 @@ assertContains(
 assertContains(
   files.reactNavigationItemFigma,
   source.reactNavigationItemFigma,
-  /figma\.connect\(NavigationItem[\s\S]*?figma\.boolean\("Focus Visible"\)[\s\S]*?figma\.slot\("Leading Icon Slot"\)[\s\S]*?figma\.enum\("Placement"/,
-  "React NavigationItem Code Connect maps placement, slots, and focus visibility",
+  // The leading region is an instance-swap, not a slot: a component property
+  // cannot drive a node inside its own component's slot, and Sidebar's rows set
+  // their icons through this one. Badge and Trailing are the real slots.
+  /figma\.connect\(NavigationItem[\s\S]*?figma\.boolean\("Focus Visible"\)[\s\S]*?figma\.instance\("Leading Icon"\)[\s\S]*?figma\.enum\("Placement"/,
+  "React NavigationItem Code Connect maps placement, the leading icon swap, and focus visibility",
 );
 assertNotContains(
   files.reactNavigationItemMdx,

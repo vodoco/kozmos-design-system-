@@ -367,15 +367,15 @@ const NAVBAR_SLOT_NAMES = [
   "Utility Slot",
   "Account Slot",
 ];
-// NavigationItem's slot API. These were declared as properties long before any
-// of the three regions was a real slot: the builder made plain frames, a frame
-// cannot carry a slot binding, and so the set shipped three properties attached
-// to nothing — which is why Figma listed NavigationItem under Invalid assets.
-const NAVIGATION_ITEM_SLOT_NAMES = [
-  "Leading Icon Slot",
-  "Badge Slot",
-  "Trailing Slot",
-];
+// NavigationItem's slot API. All three regions were declared as slot properties
+// long before any of them was a real slot: the builder made plain frames, a
+// frame cannot carry a slot binding, and so the set shipped three properties
+// attached to nothing — which is why Figma listed it under Invalid assets.
+//
+// Only two of them became slots. The leading region keeps its `Leading Icon`
+// instance-swap instead, because a property cannot drive a node inside its own
+// component's slot and Sidebar's rows depend on that property for their icons.
+const NAVIGATION_ITEM_SLOT_NAMES = ["Badge Slot", "Trailing Slot"];
 const NAVBAR_DEFAULT_WIDTH = 880;
 const NAVBAR_DEFAULT_HEIGHT = 64;
 const NAVBAR_CONTEXT_SLOT_WIDTH = 184;
@@ -1707,7 +1707,7 @@ const COMPONENT_DOCS = [
     api: [
       "Placement maps to NavigationItem.placement.",
       "Content maps to NavigationItem.content and optional icon, badge, and trailing slots.",
-      "Leading Icon maps to the default icon instance-swap inside Leading Icon Slot.",
+      "Leading Icon maps to the leading icon instance-swap, which is a picker rather than a slot: a component property cannot drive a node inside its own slot.",
       "Density maps to default and compact row rhythm.",
       "State maps to selected, disabled, focus-visible, and hover preview states.",
       "Label Text maps to NavigationItem children.",
@@ -1719,7 +1719,6 @@ const COMPONENT_DOCS = [
       "State: Default, Hover, Selected, Focus, Disabled",
       "Label Text",
       "Leading Icon",
-      "Leading Icon Slot",
       "Badge Slot",
       "Trailing Slot",
       "Focus Visible",
@@ -36002,7 +36001,7 @@ function navigationItemComponentConfig() {
       "Kozmos NavigationItem component set generated from React NavigationItem API.",
       "Placement maps to Top, Side, and Rail item anatomy.",
       "Content maps to label, icon-label, icon-only, badge, and trailing slot examples.",
-      "Leading Icon maps to the default icon instance-swap nested inside Leading Icon Slot.",
+      "Leading Icon maps to the leading icon instance-swap; Badge Slot and Trailing Slot are real slots.",
       "Density maps to default and compact row rhythm.",
       "State maps to default, hover, selected, focus, and disabled visual examples.",
       "Focus Visible controls the generated focus ring.",
@@ -37803,7 +37802,6 @@ async function updateNavigationItemVariant(
   // variant has no builder for would leave it parked as a stray child, since
   // nothing downstream appends it. Content=Label has none of the three.
   const requiredSlotNames = [];
-  if (hasIcon) requiredSlotNames.push("Leading Icon Slot");
   if (hasBadge) requiredSlotNames.push("Badge Slot");
   if (hasTrailing) requiredSlotNames.push("Trailing Slot");
   const reusableSlots = extractReusableSlotsByName(
@@ -37815,12 +37813,10 @@ async function updateNavigationItemVariant(
   removeDirectChildrenExceptMany(component, Object.values(reusableSlots));
 
   if (hasIcon) {
-    const iconSlot = await createNavigationItemLeadingIconSlot({
+    const iconSlot = await createNavigationItemLeadingIconFrame({
       active: selected,
-      component,
       disabled,
       rail,
-      reusableSlot: reusableSlotNamed(reusableSlots, "Leading Icon Slot"),
       variableByName,
       stats,
     });
@@ -38010,30 +38006,46 @@ function bindNavigationItemGeometryVariables(
   );
 }
 
-async function createNavigationItemLeadingIconSlot({
+/**
+ * The leading region is a frame, not a slot, and that is deliberate.
+ *
+ * Figma will not let a component's own property drive a node inside that
+ * component's slot — across all 94 sets in this file, 5,785 own-property
+ * references exist and not one of them is inside a slot. So wrapping the icon
+ * in a slot silently unbinds `Leading Icon`, and Sidebar's rows lose the
+ * per-row icons they set through it: Overview, Explore and Settings all render
+ * the same home glyph. An icon picker beats a drop target here, so the slot is
+ * the half that goes. `Badge Slot` and `Trailing Slot` have no competing
+ * property and stay real slots.
+ *
+ * Note the name. A frame called "Leading Icon Slot" is exactly the thing that
+ * caused the original bug — it reads as a slot everywhere except where it
+ * counts.
+ */
+async function createNavigationItemLeadingIconFrame({
   active,
-  component,
   disabled,
   rail,
-  reusableSlot,
   variableByName,
   stats,
 }) {
-  const shell = createOrReuseShellSlot({
-    component,
-    reusableSlot,
-    ownerName: "NavigationItem",
-    stats,
-    slotName: "Leading Icon Slot",
-    width: rail ? 24 : 20,
-    height: rail ? 24 : 20,
-    layoutMode: "HORIZONTAL",
-    itemSpacing: 0,
-  });
-  const slot = shell.node;
-  slot.primaryAxisAlignItems = "CENTER";
-  slot.counterAxisAlignItems = "CENTER";
-  if (shell.reusedContent) return slot;
+  const frame = figma.createFrame();
+  frame.name = "Leading Icon Frame";
+  frame.layoutMode = "HORIZONTAL";
+  frame.primaryAxisSizingMode = "FIXED";
+  frame.counterAxisSizingMode = "FIXED";
+  frame.primaryAxisAlignItems = "CENTER";
+  frame.counterAxisAlignItems = "CENTER";
+  frame.itemSpacing = 0;
+  frame.paddingLeft = 0;
+  frame.paddingRight = 0;
+  frame.paddingTop = 0;
+  frame.paddingBottom = 0;
+  frame.resizeWithoutConstraints(rail ? 24 : 20, rail ? 24 : 20);
+  frame.fills = [];
+  frame.strokes = [];
+  frame.clipsContent = false;
+  frame.setSharedPluginData(RUN_NAMESPACE, "kind", "leading-icon-frame");
 
   const icon = await createFixedIconInstance(
     "home-line",
@@ -38048,9 +38060,9 @@ async function createNavigationItemLeadingIconSlot({
     rail ? 20 : 18,
   );
   icon.name = "Leading Icon";
-  slot.appendChild(icon);
+  frame.appendChild(icon);
   setHugChildSizing(icon);
-  return slot;
+  return frame;
 }
 
 async function createNavigationItemBadgeSlot({
@@ -39935,6 +39947,17 @@ async function configureNavigationItemProperties(
     NAVIGATION_ITEM_SLOT_NAMES,
     stats,
   );
+  // The file already carries a "Leading Icon Slot" SLOT property from when the
+  // leading region was briefly a slot. It cannot coexist with the instance-swap
+  // — a property cannot drive a node inside its own component's slot — so it is
+  // removed by name rather than left for the stray sweep, which would only
+  // reach it once it happened to be unbound.
+  deleteComponentPropertiesByBaseName(
+    componentSet,
+    ["Leading Icon Slot"],
+    ["SLOT"],
+    stats,
+  );
   configureFocusVisibleProperty(componentSet, stats);
   await configureNavigationItemIconSlots(componentSet, variableByName, stats);
 }
@@ -39967,8 +39990,11 @@ async function configureNavigationItemIconSlots(
   for (const child of componentSet.children) {
     if (child.type !== "COMPONENT") continue;
 
-    const iconSlot = directChildNamed(child, "Leading Icon Slot");
-    const icon = directChildNamed(iconSlot || { children: [] }, "Leading Icon");
+    const iconFrame = directChildNamed(child, "Leading Icon Frame");
+    const icon = directChildNamed(
+      iconFrame || { children: [] },
+      "Leading Icon",
+    );
     if (icon && icon.type === "INSTANCE") {
       bindInstanceSwapProperty(icon, propertyName, stats);
       boundCount += 1;
@@ -59610,7 +59636,7 @@ function isGeneratedNavigationItemSlotChild(node) {
   // The frames these slots are migrating off predate the stamps above, so match
   // the names the builder assigns as well — the same allowance Sidebar's rows
   // needed, and for the same reason.
-  return /^(Leading Icon|Trailing Icon|Badge Text|Icon)$/.test(node.name || "");
+  return /^(Trailing Icon|Badge Text|Icon)$/.test(node.name || "");
 }
 
 function isGeneratedSidebarNavigationSlotChild(node) {
