@@ -9,18 +9,30 @@ Branch: `codex/wave-2-figma-components`.
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing               | State                                                  |
-| ------------------- | ------------------------------------------------------ |
-| `pnpm figma:verify` | **clean on all five checks**                           |
-| Plugin audit        | **0 warnings**, 94 sets                                |
-| Figma publish       | **blocked**: 4 sets carry 8 unbound properties (below) |
-| Working tree        | clean; everything committed                            |
-| Local gates         | all green — see §7 for the list                        |
+| Thing               | State                                           |
+| ------------------- | ----------------------------------------------- |
+| `pnpm figma:verify` | **clean on all five checks**                    |
+| Plugin audit        | **0 warnings**, 94 sets                         |
+| Figma publish       | **blocked**: 5 sets carry 11 unbound properties |
+| Working tree        | clean; everything committed                     |
+| Local gates         | all green — see §7 for the list                 |
+| **Figma plugin**    | **running stale code — start here**             |
 
-**The one thing blocking publishing** is Figma's "Invalid assets (4)":
-`TreeChildItem`, `Drawer`, `MultiSelect`, `ColorPicker`. Fixes for the first
-three are committed and **need a plugin run to land**; `ColorPicker` needs a
-decision, not code. §3 has the causes — three different ones behind one symptom.
+**Start with the plugin, not the components.** A run on 2026-08-30 at 10:56Z
+executed a `code.js` that predates the last three commits. Checked against the
+file rather than assumed: `Drawer` has no `Header Slot` or `Footer Slot`, and
+`TreeChildItem`'s `Tree Actions` still holds one `Edit Action` instead of five.
+Invalid assets went back to **5** — `NavigationItem` rejoining is simply the old
+code behaving as it did before any of this.
+
+It is not a problem in the repo. All six markers from those commits are present
+in `figma/foundations-importer/code.js`, the working copy is identical to HEAD,
+`manifest.json` points straight at `code.js` with no build step, and the file was
+written at 09:10Z — nearly two hours before the run.
+
+So the fixes for `Drawer`, `TreeChildItem` and `MultiSelect` are committed and
+unproven. `ColorPicker` needs a decision, not code. §3 has the causes — three
+different ones behind one symptom.
 
 **Nothing in the plugin should ever be `Rebuild`.** It mints a fresh node ID and
 Code Connect pins the existing one. `Update`, or the blue `Fix` button, which is
@@ -836,58 +848,73 @@ orphans, and `MultiSelect` is a structure that changed under a property. Only
 Everything the design system can do from code is done. What remains is a Figma
 run, a decision, or work outside this lane.
 
-1. **Reopen the plugin, then update `Drawer`, `TreeChildItem` and
-   `MultiSelect`.** Reopening matters: Figma has to reload `code.js` or none of
-   the three fixes are in play. `Fix Audit Issues` covers Drawer among its
-   operations; the other two want their own `Update`. Each should drop off
-   Figma's Invalid assets list afterwards.
+1. **Get Figma to load the current `code.js`.** Nothing else on this list can
+   be trusted until this is settled, and two runs have already been spent on
+   conclusions drawn from stale code.
 
-   Then `Audit Again` and reopen the Publish dialog. Expect Invalid assets to
-   fall from 4 to 1 and the change count to rise.
+   First rule out the boring cause: `Plugins > Development > Manage plugins in
+development` and confirm the manifest path is
+   `/Volumes/4TB Depo/development/K/kozmos-design-system-dev/figma/foundations-importer/manifest.json`.
+   If it points at another checkout, edits here never reach Figma. Then quit
+   Figma entirely and relaunch — reopening the plugin _panel_ does not always
+   reload the code, because Figma reads a development plugin's files when the
+   plugin launches.
 
-2. **Decide `ColorPicker`.** `Hex Label Text` and `Palette Text` have no nodes,
+   Two binary tests, so nobody has to interpret anything:
+   - **The marker.** Run `Fix Audit Issues`, then `Copy Log`. Current code emits
+     a line beginning `unbound properties: N set(s) scanned,`. If it is absent
+     the plugin is stale and the rest of that run means nothing.
+   - **The file.** Run `Update Drawer` and check whether a `Header Slot` node
+     appears — over the API, or in the layers panel. It either did or it did not.
+
+2. **Then update `Drawer`, `TreeChildItem` and `MultiSelect`.** `Fix Audit
+Issues` covers Drawer among its operations; the other two want their own
+   `Update`. Afterwards `Audit Again` and reopen Publish: Invalid assets should
+   fall to 1 — `ColorPicker`, which is the decision below.
+
+3. **Decide `ColorPicker`.** `Hex Label Text` and `Palette Text` have no nodes,
    and three siblings — `Mode Text`, `Hue Label Text`, `Alpha Label Text` — were
    already deleted rather than wired in an earlier pass. So: does ColorPicker
    want a HEX label and a palette name at all? If yes the nodes get built; if
    no, deleting those two is correct and consistent with what the family already
    decided. This is the last invalid asset and it is not a code question.
 
-3. **Run the foundations/variables import, then `Update All Product / SDK` and
+4. **Run the foundations/variables import, then `Update All Product / SDK` and
    the Core sets.** The radius and typography layers are code-only so far.
    The import creates `Semantics/Radius/Control` so the plugin's aliases resolve
    by name; without it they warn and fall back to the same numbers, so this is
    tidiness rather than correctness. Expect controls to move 8px to 16px across
    the file.
 
-4. **Publish the library from Figma**, once Invalid assets is 0. That is Figma's
+5. **Publish the library from Figma**, once Invalid assets is 0. That is Figma's
    own action in the Assets panel; nothing here touches it.
 
-5. **Decide how the iOS snapshots run in CI**, then widen coverage past Button.
+6. **Decide how the iOS snapshots run in CI**, then widen coverage past Button.
    The harness works; it needs a pinned runner image plus simulator. See §3.
 
-6. **Script-aware typography.** Nine components apply `tracking-tight`
+7. **Script-aware typography.** Nine components apply `tracking-tight`
    (Tailwind's default `-0.025em`, since the config overrides no
    `letterSpacing`). Negative tracking collides CJK glyphs and disrupts Arabic
    cursive joining, and the product ships both. Line heights are Latin-tuned
    too. The `letterSpacing` and `line.height` token scales are unused by every
    platform, so there is nowhere to say "tighter for Latin, normal for CJK".
 
-7. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
+8. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
    (0-1500) is read by no platform. Same shape as the radius and family layers.
 
-8. **Decide the brand font's fate.** Readex Pro covers Latin and Arabic and has
+9. **Decide the brand font's fate.** Readex Pro covers Latin and Arabic and has
    no CJK, so Chinese always fell back to a system font whatever the tokens
    said. Drop it, or scope it to Latin with `unicode-range` — and note that one
    `size-adjust` ratio cannot work across scripts.
 
-9. **`Link` and `Spinner` are each missing a variant axis on iOS and Android.**
-   Found once the analyzer stopped being blind to single quotes. Closing them
-   means new public enums on both native packages, so it belongs with the naming
-   decision in §5.
+10. **`Link` and `Spinner` are each missing a variant axis on iOS and Android.**
+    Found once the analyzer stopped being blind to single quotes. Closing them
+    means new public enums on both native packages, so it belongs with the naming
+    decision in §5.
 
-10. **`RoutePreviewPanel`'s five states look like two** — see §5.
+11. **`RoutePreviewPanel`'s five states look like two** — see §5.
 
-11. **The Pointr Cloud dashboard work**, planned in
+12. **The Pointr Cloud dashboard work**, planned in
     `docs/figma-upcoming-components.md`. Drawer slots, TreeChildItem actions and
     MultiSelect forwarding are done; what remains there is the `Example /
 Dashboard Review Panel` composition, three icons the set lacks (eye, flag,
@@ -987,6 +1014,18 @@ These need a human call; none are blocked on code.
   dozen call sites do exactly that. Nothing currently breaks because of it, but
   any width arithmetic derived from the argument is wrong — which is half of
   why the slot labels truncated.
+- **A plugin run may be executing stale code, and it looks identical to a run
+  that did nothing.** Figma reads a development plugin's files when the plugin
+  launches, so a panel left open keeps whatever it loaded first. Two runs this
+  session were read as "the fix did not work" when the fix had never been
+  loaded: `code.js` held all six markers, the working copy matched HEAD, the
+  manifest pointed straight at it with no build step, and the file had been
+  written two hours before the run. Verify with the marker — `Fix Audit Issues`
+  logs `unbound properties: N set(s) scanned,` — or by checking for a node only
+  the new code creates, such as Drawer's `Header Slot`. Quitting Figma entirely
+  is more reliable than reopening the plugin panel, and it is worth confirming
+  `Plugins > Development > Manage plugins in development` points at this
+  checkout rather than another copy of the repo.
 - **Prose and code samples are unverified by default.** The MDX platform
   snippets are template strings; nothing compiled them, and four wrong type
   names shipped looking perfectly plausible. `docs:snippets:check` closes the
