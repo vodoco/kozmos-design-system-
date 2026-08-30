@@ -367,6 +367,15 @@ const NAVBAR_SLOT_NAMES = [
   "Utility Slot",
   "Account Slot",
 ];
+// NavigationItem's slot API. These were declared as properties long before any
+// of the three regions was a real slot: the builder made plain frames, a frame
+// cannot carry a slot binding, and so the set shipped three properties attached
+// to nothing — which is why Figma listed NavigationItem under Invalid assets.
+const NAVIGATION_ITEM_SLOT_NAMES = [
+  "Leading Icon Slot",
+  "Badge Slot",
+  "Trailing Slot",
+];
 const NAVBAR_DEFAULT_WIDTH = 880;
 const NAVBAR_DEFAULT_HEIGHT = 64;
 const NAVBAR_CONTEXT_SLOT_WIDTH = 184;
@@ -16641,7 +16650,7 @@ function auditComponentSlotContract(componentSet, propertyDefinitions) {
 
     for (const slotName of expectedSlotNames) {
       const nodes = descendantNodesNamed(child, slotName).filter(
-        isSlotReferenceCandidate,
+        isReusableSlotContainer,
       );
       const slotRecord = result.slots[slotName];
       const propertyName = slotRecord ? slotRecord.propertyName : null;
@@ -37784,13 +37793,34 @@ async function updateNavigationItemVariant(
   component.setSharedPluginData(RUN_NAMESPACE, "component", "NavigationItem");
 
   bindNavigationItemGeometryVariables(component, props, variableByName, stats);
-  removeDirectChildren(component);
+
+  // Keep the slot nodes across an update. A slot that is dropped and recreated
+  // takes a new property with it, and on a 150-variant set that is 450 fresh
+  // properties per run for the dedupe to clean up afterwards. Reuse also
+  // carries a designer's own content forward, which is the point of the slot.
+  //
+  // Only the regions this variant actually renders: preserving a slot the
+  // variant has no builder for would leave it parked as a stray child, since
+  // nothing downstream appends it. Content=Label has none of the three.
+  const requiredSlotNames = [];
+  if (hasIcon) requiredSlotNames.push("Leading Icon Slot");
+  if (hasBadge) requiredSlotNames.push("Badge Slot");
+  if (hasTrailing) requiredSlotNames.push("Trailing Slot");
+  const reusableSlots = extractReusableSlotsByName(
+    component,
+    requiredSlotNames,
+    stats,
+    "NavigationItem",
+  );
+  removeDirectChildrenExceptMany(component, Object.values(reusableSlots));
 
   if (hasIcon) {
     const iconSlot = await createNavigationItemLeadingIconSlot({
       active: selected,
+      component,
       disabled,
       rail,
+      reusableSlot: reusableSlotNamed(reusableSlots, "Leading Icon Slot"),
       variableByName,
       stats,
     });
@@ -37831,9 +37861,11 @@ async function updateNavigationItemVariant(
 
   if (hasBadge) {
     const badgeSlot = await createNavigationItemBadgeSlot({
-      variableByName,
+      component,
       fonts,
+      reusableSlot: reusableSlotNamed(reusableSlots, "Badge Slot"),
       stats,
+      variableByName,
     });
     component.appendChild(badgeSlot);
     setHugChildSizing(badgeSlot);
@@ -37841,8 +37873,10 @@ async function updateNavigationItemVariant(
 
   if (hasTrailing) {
     const trailingSlot = await createNavigationItemTrailingSlot({
-      variableByName,
+      component,
+      reusableSlot: reusableSlotNamed(reusableSlots, "Trailing Slot"),
       stats,
+      variableByName,
     });
     component.appendChild(trailingSlot);
     setHugChildSizing(trailingSlot);
@@ -37978,20 +38012,28 @@ function bindNavigationItemGeometryVariables(
 
 async function createNavigationItemLeadingIconSlot({
   active,
+  component,
   disabled,
   rail,
+  reusableSlot,
   variableByName,
   stats,
 }) {
-  const slot = createSampleSlotFrame({
-    name: "Leading Icon Slot",
+  const shell = createOrReuseShellSlot({
+    component,
+    reusableSlot,
+    ownerName: "NavigationItem",
+    stats,
+    slotName: "Leading Icon Slot",
     width: rail ? 24 : 20,
     height: rail ? 24 : 20,
     layoutMode: "HORIZONTAL",
     itemSpacing: 0,
   });
+  const slot = shell.node;
   slot.primaryAxisAlignItems = "CENTER";
   slot.counterAxisAlignItems = "CENTER";
+  if (shell.reusedContent) return slot;
 
   const icon = await createFixedIconInstance(
     "home-line",
@@ -38011,14 +38053,25 @@ async function createNavigationItemLeadingIconSlot({
   return slot;
 }
 
-async function createNavigationItemBadgeSlot({ variableByName, fonts, stats }) {
-  const slot = createSampleSlotFrame({
-    name: "Badge Slot",
+async function createNavigationItemBadgeSlot({
+  component,
+  fonts,
+  reusableSlot,
+  stats,
+  variableByName,
+}) {
+  const shell = createOrReuseShellSlot({
+    component,
+    reusableSlot,
+    ownerName: "NavigationItem",
+    stats,
+    slotName: "Badge Slot",
     width: 24,
     height: 20,
     layoutMode: "HORIZONTAL",
     itemSpacing: 0,
   });
+  const slot = shell.node;
   slot.primaryAxisAlignItems = "CENTER";
   slot.counterAxisAlignItems = "CENTER";
   slot.paddingLeft = 6;
@@ -38036,6 +38089,7 @@ async function createNavigationItemBadgeSlot({ variableByName, fonts, stats }) {
     ),
   ];
   slot.strokeWeight = 1;
+  if (shell.reusedContent) return slot;
 
   const text = figma.createText();
   text.name = "Badge Text";
@@ -38052,16 +38106,27 @@ async function createNavigationItemBadgeSlot({ variableByName, fonts, stats }) {
   return slot;
 }
 
-async function createNavigationItemTrailingSlot({ variableByName, stats }) {
-  const slot = createSampleSlotFrame({
-    name: "Trailing Slot",
+async function createNavigationItemTrailingSlot({
+  component,
+  reusableSlot,
+  stats,
+  variableByName,
+}) {
+  const shell = createOrReuseShellSlot({
+    component,
+    reusableSlot,
+    ownerName: "NavigationItem",
+    stats,
+    slotName: "Trailing Slot",
     width: 20,
     height: 20,
     layoutMode: "HORIZONTAL",
     itemSpacing: 0,
   });
+  const slot = shell.node;
   slot.primaryAxisAlignItems = "CENTER";
   slot.counterAxisAlignItems = "CENTER";
+  if (shell.reusedContent) return slot;
 
   const icon = await createFixedIconInstance(
     "chevron-right",
@@ -39299,34 +39364,6 @@ async function createSidebarFooterSlot({
   return slot;
 }
 
-function createSampleSlotFrame({
-  name,
-  width,
-  height,
-  layoutMode,
-  itemSpacing,
-}) {
-  const slot = figma.createFrame();
-  slot.name = name;
-  slot.layoutMode = layoutMode;
-  slot.primaryAxisSizingMode = "FIXED";
-  slot.counterAxisSizingMode = "FIXED";
-  slot.primaryAxisAlignItems = "MIN";
-  slot.counterAxisAlignItems = layoutMode === "VERTICAL" ? "MIN" : "CENTER";
-  slot.itemSpacing = itemSpacing;
-  slot.paddingLeft = 0;
-  slot.paddingRight = 0;
-  slot.paddingTop = 0;
-  slot.paddingBottom = 0;
-  slot.resizeWithoutConstraints(width, height);
-  slot.fills = [];
-  slot.strokes = [];
-  slot.clipsContent = false;
-  slot.setSharedPluginData(RUN_NAMESPACE, "kind", "content-slot");
-  slot.setSharedPluginData(RUN_NAMESPACE, "slot-kind", "frame-default");
-  return slot;
-}
-
 function createBrandMark(variableByName, stats, size) {
   const mark = figma.createFrame();
   mark.name = "Brand Mark";
@@ -39895,7 +39932,7 @@ async function configureNavigationItemProperties(
   );
   configureSharedSlotProperties(
     componentSet,
-    ["Leading Icon Slot", "Badge Slot", "Trailing Slot"],
+    NAVIGATION_ITEM_SLOT_NAMES,
     stats,
   );
   configureFocusVisibleProperty(componentSet, stats);
@@ -41284,9 +41321,14 @@ function configureColorPickerProperties(componentSet, stats) {
     "#135BEC",
     stats,
   );
+  // The format label is variant-driven: "Mode Text" reads HEX / HSL / RGB from
+  // the Format axis, so a text property beside it could only ever disagree with
+  // the variant. "Hex Label Text" is the last survivor of that family and joins
+  // the three siblings already deleted here — it is the ColorPicker half of the
+  // unbound properties that keep the set out of the published library.
   deleteComponentPropertiesByBaseName(
     componentSet,
-    ["Mode Text", "Hue Label Text", "Alpha Label Text"],
+    ["Mode Text", "Hue Label Text", "Alpha Label Text", "Hex Label Text"],
     ["TEXT"],
     stats,
   );
@@ -58245,25 +58287,29 @@ function bindSlotPropertyToNodesNamed(
     stats,
     `bind ${slotName} slot property`,
   );
-  if (read.error) return { attempted: 0, bound: 0, failed: 0 };
-  const bindings = { attempted: 0, bound: 0, failed: 0 };
+  if (read.error) return { attempted: 0, bound: 0, failed: 0, impostors: 0 };
+  const bindings = { attempted: 0, bound: 0, failed: 0, impostors: 0 };
 
   function walk(node) {
     if (!node) return;
-    if (node.name === slotName && isSlotReferenceCandidate(node)) {
-      bindings.attempted += 1;
-      if (
-        bindSlotProperty(
-          node,
-          componentSet,
-          propertyName,
-          read.definitions,
-          stats,
-        )
-      ) {
-        bindings.bound += 1;
+    if (node.name === slotName) {
+      if (isSlotReferenceCandidate(node)) {
+        bindings.attempted += 1;
+        if (
+          bindSlotProperty(
+            node,
+            componentSet,
+            propertyName,
+            read.definitions,
+            stats,
+          )
+        ) {
+          bindings.bound += 1;
+        } else {
+          bindings.failed += 1;
+        }
       } else {
-        bindings.failed += 1;
+        bindings.impostors += 1;
       }
     }
 
@@ -58272,10 +58318,52 @@ function bindSlotPropertyToNodesNamed(
   }
 
   walk(componentSet);
+
+  // A layer named like a slot but built as a frame is the failure this reports.
+  // It reads as a slot in the layers panel and in any name-based check, while
+  // the property it was meant to drive stays attached to nothing — and Figma
+  // refuses to publish a set carrying an unused property. NavigationItem sat in
+  // exactly this state: three declared slot properties, 180 correctly named
+  // frames, and no binding between them.
+  if (bindings.bound === 0 && bindings.impostors > 0) {
+    pushUniqueWarning(
+      stats,
+      "slot-not-a-slot:" + componentSet.name + ":" + slotName,
+      `${componentSet.name}: "${slotName}" matches ${bindings.impostors} layer(s), but they are frames rather than slots, so the slot property binds to nothing and Figma will not publish the set. Build the region with createSlot() — see Navbar's Logo Slot — or drop the slot property.`,
+    );
+  }
+
   return bindings;
 }
 
+/**
+ * Only a real SLOT node can carry a slot binding.
+ *
+ * This accepted FRAME as well, on the reasonable-looking theory that the frame
+ * fallback in `createComponentContentSlot` still wanted a binding. The file
+ * disagrees: all 142 slot references on the Components page sit on SLOT nodes
+ * under the `slotContentId` field, and not one frame carries one — including
+ * NavigationItem's 180 frames, which were walked by this function on every run
+ * since the slot property was declared and never bound once. Accepting frames
+ * did not make them bindable; it only hid the failure behind a counter that
+ * said "attempted".
+ */
 function isSlotReferenceCandidate(node) {
+  return node && node.type === "SLOT";
+}
+
+/**
+ * A node whose children can be carried across an update, which is a weaker test
+ * than being bindable.
+ *
+ * These two questions used to share one predicate, and conflating them is what
+ * let a frame look like a working slot: it was "slot-compatible" enough to be
+ * preserved, so it survived every update, and the binding it could never accept
+ * was never missed. A frame is a fine place to keep content until a real slot
+ * exists to move it into — `createOrReuseShellSlot` does exactly that — and it
+ * is never a place to attach a slot property.
+ */
+function isReusableSlotContainer(node) {
   return node && (node.type === "FRAME" || node.type === "SLOT");
 }
 
@@ -59471,7 +59559,7 @@ function extractReusableSlotsByName(parent, slotNames, stats, ownerName) {
     );
     if (!node) continue;
 
-    if (!isSlotReferenceCandidate(node)) {
+    if (!isReusableSlotContainer(node)) {
       if (stats && stats.warnings) {
         stats.warnings.push(
           `${ownerName} ${slotName}: preserved node is not a slot-compatible frame.`,
@@ -59502,7 +59590,27 @@ function shouldRefreshGeneratedShellSlotDefaults(ownerName, slotName, slot) {
     return slot.children.every(isGeneratedNavbarNavigationSlotChild);
   }
 
+  // NavigationItem's slot contents are state-dependent — the leading icon is
+  // blue when Selected and grey when Disabled — so reusing them verbatim would
+  // freeze every variant at the colour it was first built with. Refresh what
+  // the plugin made; leave anything a designer put there alone.
+  if (ownerName === "NavigationItem") {
+    return slot.children.every(isGeneratedNavigationItemSlotChild);
+  }
+
   return false;
+}
+
+function isGeneratedNavigationItemSlotChild(node) {
+  if (!node) return false;
+  const kind = generatedKind(node);
+  if (kind === "icon-slot-instance" || kind === "missing-nested-component") {
+    return true;
+  }
+  // The frames these slots are migrating off predate the stamps above, so match
+  // the names the builder assigns as well — the same allowance Sidebar's rows
+  // needed, and for the same reason.
+  return /^(Leading Icon|Trailing Icon|Badge Text|Icon)$/.test(node.name || "");
 }
 
 function isGeneratedSidebarNavigationSlotChild(node) {
