@@ -537,50 +537,51 @@ real `Content Slot [SLOT]` node. They are a half-finished attempt at exactly the
 slot API the dashboard needs, never attached. That is why Figma refuses to
 publish the set, and why deleting them would have been the wrong move.
 
-### Missing from Core
+### Primitives, not screens
 
-| Component          | From                 | Measured | Notes                                                                                      |
-| ------------------ | -------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| **ActionBar**      | `Metadata Buttons`   | 400x68   | Cancel left, action group right. Horizontal auto-layout with a spacer, not a Stack.        |
-| **StatusStrip**    | `FateStrip · step 7` | 400x37   | One line of tonal status ("Published just now"). Despite the name it is not a `Stepper`.   |
-| **MagnitudeBlock** | `magnitude`          | 400x118  | `banner` (400x66) over `metrics` (400x52). A summary-plus-stats block.                     |
-| **ChangeList**     | `changelog`          | 400x1105 | Four groups — new, updated, deleted, preserved — each a header over rows.                  |
-| **DrawerToolbar**  | `content-filter`     | 320x80   | Search plus filter buttons between header and body. Likely a Drawer slot, not a component. |
+The approach is settled and it is already the written policy: this file's own
+Core audit says not to promote domain cards or analytics into Core, because
+"those should be SDK, dashboard, CMS, or product-library compositions". The
+library ships parts with slots; products assemble the screens. The `Examples`
+page is the proof it already works that way — six **frames**, not component
+sets, including `Example / Mobile Drawer Flow` and
+`Example / Dashboard Table Page`.
 
-`ChangeList` has its colour foundation already: `Semantics.Diff.New`,
-`.Updated`, `.Deleted` and `.Override` were added in `5589dfd` for exactly this
-app. Only the fourth needs a decision — the changelog's group is "preserved",
-the token is "Override", and they may not be the same idea.
+That reframes what looked like five missing components. Most are compositions:
 
-### Fixes to existing Core components
+| Pattern            | Verdict                                                                                   |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| `content-filter`   | A **Drawer slot**, not a component. Search plus filters is content the product supplies.  |
+| `Metadata Buttons` | A composition — buttons in a row with a spacer. Nothing to build.                         |
+| `FateStrip`        | Closest to an **`Alert` tonal variant** (no icon, no dismiss, full width) than a new set. |
+| `magnitude`        | A composition of a banner over metrics.                                                   |
+| `changelog`        | A composition of rows grouped by `Semantics.Diff.*`, which already exist.                 |
 
-- **`TreeChildItem` needs more actions.** A Pointr `listItem` row carries five
-  — edit, lock, eye, flag, overflow — plus a show/hide toggle. Core declares two
-  action icon slots and renders one, which is why `Action 2 Icon` is unbound.
-  This wants an `Actions` count axis, not a second hardcoded slot.
-- **`MultiSelect` chip labels.** `Chip 1 Text` and `Chip 2 Text` cannot bind,
-  because the chips are nested `Chip` instances whose label is driven by the
-  Chip's own `Label Text`. Forwarding the nested instance's property is the fix.
-  The dashboard uses 100 `Tags`, so this is not hypothetical.
-- **`Drawer` slots.** Bind `Drawer Body` to the real `Content Slot` node and
-  drop the stray `Slot` / `Slot2`.
-- **`ColorPicker`.** `Hex Label Text` and `Palette Text` have no nodes. Three
-  siblings — `Mode Text`, `Hue Label Text`, `Alpha Label Text` — were already
-  deleted rather than wired. Decide whether this family is wanted at all.
+So the Core work is the slots and axes those compositions need, and the screens
+themselves become an example.
 
-### Sequence
+### The real Core work
 
-1. **Unblock publishing.** The four sets above carry eight unbound properties
-   and Figma will not publish them. Wiring `Drawer` and `MultiSelect` is the
-   real fix; removing `ColorPicker`'s two is likely right; `TreeChildItem`'s
-   waits on the actions axis.
-2. **Drawer slot API**, since it is the component the dashboard leans on hardest
-   and the work is already half done.
-3. **ActionBar and StatusStrip** — small, self-contained, and used on both
-   screens.
-4. **ChangeList and MagnitudeBlock** — larger, and specific to the review flow.
-5. **`TreeChildItem` actions axis** — needs a decision on maximum count before
-   it can be built.
+1. **`Drawer` slot API** — bind `Drawer Body` to the existing `Content Slot`
+   node, drop the stray `Slot` / `Slot2`, and decide whether a toolbar slot sits
+   between header and body. This is the component the dashboard leans on hardest
+   and the work is already half done. Lane: `Overlay`, where Drawer already is.
+2. **`TreeChildItem` actions axis** — a Pointr row carries five actions plus a
+   show/hide toggle; Core declares two slots and renders one. An `Actions` count
+   axis, not more hardcoded slots. Lane: `Data display`.
+3. **`MultiSelect` chip labels** — forward the nested `Chip` instance's
+   `Label Text` so `Chip 1/2 Text` can bind. Lane: `Inputs`.
+4. **`Alert` tonal variant**, if `FateStrip` is judged to be one.
+
+Each of 1-3 also clears an invalid asset, so the publishing blockage and the
+dashboard's needs are the same piece of work.
+
+### And an example, not a component
+
+`Example / Dashboard Review Panel` joins the existing six example builders,
+composed from those primitives. It is where the Save and Complete review footer,
+the changelog groups and the magnitude block get expressed — as an assembly
+anyone can copy, not as a set that has to be maintained forever.
 
 ### Decisions needed before building
 
@@ -588,6 +589,11 @@ the token is "Override", and they may not be the same idea.
 - How many row actions `TreeChildItem` should support, and whether the overflow
   ("dots-horizontal") is one of them or separate.
 - Whether "preserved" maps to `Semantics.Diff.Override` or wants its own token.
-- Whether these live in Core or in a Pointr Cloud lane beside Product / SDK.
-  They are dashboard patterns, not wayfinding ones, and Core is domain-neutral
-  by policy — see `docs/figma-core-gap-audit.md`.
+- Whether `FateStrip` is an `Alert` variant or genuinely its own thing.
+
+The lane question is answered: **no new lane.** The Components page carries 15
+sections — 13 domain-neutral ones that constitute Core, plus `Product / SDK`
+(22 sets, wayfinding) and `Platform / Form-Factor` (2 sets, device-specific).
+Dashboard patterns are compositions by the audit's own rule, so nothing new goes
+into Product / SDK and no Cloud lane is needed. The primitives above land in the
+Core lanes they already belong to, and the screens land on `Examples`.
