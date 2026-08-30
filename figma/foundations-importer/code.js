@@ -41090,21 +41090,17 @@ function configureComboboxProperties(componentSet, stats) {
 
 function configureMultiSelectProperties(componentSet, stats) {
   configureLabelTextProperty(componentSet, "Facilities", stats);
-  // The chips are nested Chip instances, so these forward rather than bind.
-  configureNestedInstanceTextProperty(
+  // The chips are nested Chip instances, and a parent property cannot drive
+  // text inside one. An earlier attempt to forward MultiSelect's property under
+  // the Chip's own property key never bound anything — `componentPropertyReferences`
+  // takes `characters`, `visible`, `mainComponent` and `slotContentId`, and
+  // nothing else — so these two properties existed only to block publishing.
+  // The capability is real and lives on the chip: each instance is exposed, so
+  // its own Label Text is editable from the properties panel.
+  deleteComponentPropertiesByBaseName(
     componentSet,
-    "MultiSelect Chip 1",
-    "Label Text",
-    "Chip 1 Text",
-    "Metro",
-    stats,
-  );
-  configureNestedInstanceTextProperty(
-    componentSet,
-    "MultiSelect Chip 2",
-    "Label Text",
-    "Chip 2 Text",
-    "Bus",
+    ["Chip 1 Text", "Chip 2 Text"],
+    ["TEXT"],
     stats,
   );
   configurePlaceholderTextProperty(componentSet, "Select options", stats);
@@ -41358,11 +41354,13 @@ function configureColorPickerProperties(componentSet, stats) {
     ["TEXT"],
     stats,
   );
-  configureNamedTextProperty(
+  // Same shape as MultiSelect's chip labels: the palette name is rendered by
+  // the nested Select instance's own Placeholder Text, so a ColorPicker-level
+  // property has nothing it can attach to. The Select is exposed instead.
+  deleteComponentPropertiesByBaseName(
     componentSet,
-    "Palette Text",
-    "Palette Text",
-    "Kozmos Design System 2.0",
+    ["Palette Text"],
+    ["TEXT"],
     stats,
   );
   for (const [nodeName, defaultValue] of [
@@ -65174,6 +65172,14 @@ async function createColorPickerPaletteSelect({
         `ColorPicker Palette Select: could not set Select variant properties (${messageFor(error)}).`,
       );
     }
+    // Exposed so the palette name stays editable from the properties panel.
+    // ColorPicker cannot carry that property itself — the text lives inside
+    // this instance — so the instance's own Placeholder Text is the API.
+    try {
+      selectInstance.isExposedInstance = true;
+    } catch (_error) {
+      // Older Figma runtimes may not support exposing nested instances.
+    }
     setInstanceTextProperty(
       selectInstance,
       created.componentSet,
@@ -68653,116 +68659,6 @@ function updateBooleanPropertyDefault(
     componentSet.editComponentProperty(propertyName, { defaultValue });
   } catch (_error) {
     // Older plugin runtimes may not support editing the default value in place.
-  }
-}
-
-/**
- * Surface a nested instance's text property on the containing component.
- *
- * A layer inside an instance cannot carry the parent's property: its text is
- * driven by the nested component's own. MultiSelect's chips are `Chip`
- * instances whose label is `Label Text` on Chip, so MultiSelect's "Chip 1 Text"
- * had nothing to attach to and sat unbound — declared by an older builder,
- * recreated by none, and enough to have Figma refuse to publish the set.
- *
- * Forwarding is the mechanism Figma provides: the instance references the
- * parent's property under the *nested* property's key rather than under
- * `characters`. The nested key is discovered at runtime because it carries
- * Chip's own id suffix, which differs per file.
- *
- * `isExposedInstance` is the other route and the chips already set it, but it
- * surfaces the whole nested property set under the instance's name. Forwarding
- * gives the parent a named, curated property instead, which is what the set
- * already claimed to have.
- */
-function forwardNestedInstanceTextProperty(
-  instance,
-  nestedBaseName,
-  parentPropertyName,
-  stats,
-) {
-  if (!instance || instance.type !== "INSTANCE") return false;
-
-  let properties = null;
-  try {
-    properties = instance.componentProperties || {};
-  } catch (error) {
-    pushUniqueWarning(
-      stats,
-      "nested-forward-read:" + nestedBaseName,
-      `Could not read nested properties while forwarding "${parentPropertyName}" (${messageFor(error)}).`,
-    );
-    return false;
-  }
-
-  let nestedKey = null;
-  for (const key of Object.keys(properties)) {
-    if (key.split("#")[0] !== nestedBaseName) continue;
-    if (properties[key] && properties[key].type !== "TEXT") continue;
-    nestedKey = key;
-    break;
-  }
-  if (!nestedKey) return false;
-
-  try {
-    const references = {};
-    const existing = instance.componentPropertyReferences || {};
-    for (const key of Object.keys(existing)) references[key] = existing[key];
-    references[nestedKey] = parentPropertyName;
-    instance.componentPropertyReferences = references;
-    return true;
-  } catch (error) {
-    pushUniqueWarning(
-      stats,
-      "nested-forward-bind:" + parentPropertyName,
-      `Could not forward "${parentPropertyName}" into ${instance.name} (${messageFor(error)}).`,
-    );
-    return false;
-  }
-}
-
-/** Ensure a text property on the set and forward it into instances by name. */
-function configureNestedInstanceTextProperty(
-  componentSet,
-  instanceName,
-  nestedBaseName,
-  propertyName,
-  defaultValue,
-  stats,
-) {
-  const resolvedPropertyName = ensureTextProperty(
-    componentSet,
-    propertyName,
-    defaultValue,
-    stats,
-  );
-  if (!resolvedPropertyName) return;
-
-  let boundCount = 0;
-  (function walk(node) {
-    if (node.type === "INSTANCE" && node.name === instanceName) {
-      if (
-        forwardNestedInstanceTextProperty(
-          node,
-          nestedBaseName,
-          resolvedPropertyName,
-          stats,
-        )
-      ) {
-        boundCount += 1;
-      }
-    }
-    if (node.children) {
-      for (const child of node.children) walk(child);
-    }
-  })(componentSet);
-
-  if (boundCount === 0) {
-    pushUniqueWarning(
-      stats,
-      "nested-forward-none:" + componentSet.name + ":" + propertyName,
-      `${componentSet.name}: "${propertyName}" forwarded into no ${instanceName}; Figma will treat it as unused.`,
-    );
   }
 }
 
