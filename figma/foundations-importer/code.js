@@ -53,6 +53,26 @@ const TREE_EXPANDED = ["False", "True"];
 const TREE_DENSITIES = ["Default", "Compact"];
 const TREE_STATES = ["Idle", "Hover", "Selected", "Focus"];
 const TREE_ITEM_TYPES = ["Parent", "Child"];
+// Five row actions, because a Pointr Cloud listItem carries five — edit, lock,
+// eye, flag and overflow — and that is the densest actions case the product
+// has. The count is a property, not a variant axis. An axis applies to every
+// variant in a set, so crossing five values into Content x Depth x Density x
+// State takes TreeChildItem from 72 variants to 360 — to express something five
+// booleans say without adding one.
+//
+// The icons are instance-swap defaults, not a fixed vocabulary; a product swaps
+// in what it needs. Overflow is deliberately just another action rather than a
+// special case, so a row wanting six puts the overflow in the fifth.
+//
+// Only the first is visible by default, which keeps the existing Actions
+// variants looking exactly as they do now.
+const TREE_ITEM_ACTIONS = [
+  { name: "Edit Action", iconName: "edit-01", visible: true },
+  { name: "Lock Action", iconName: "lock-01", visible: false },
+  { name: "Delete Action", iconName: "trash-01", visible: false },
+  { name: "Export Action", iconName: "download-01", visible: false },
+  { name: "More Action", iconName: "settings-01", visible: false },
+];
 const TREE_ITEM_DEPTHS = ["0", "1", "2"];
 const TIMELINE_CONTENT = ["Basic", "Detailed"];
 const TIMELINE_DENSITIES = ["Default", "Compact"];
@@ -36809,7 +36829,7 @@ function treeItemRow(props) {
           { name: "Lock Action", iconName: "lock-01" },
         ]
       : withActions
-        ? [{ name: "Edit Action", iconName: "edit-01" }]
+        ? TREE_ITEM_ACTIONS
         : [];
 
   return {
@@ -37016,9 +37036,7 @@ function treeRows(props) {
         text: "Place item",
         countName: "Leaf Count Text",
         count: withCounts ? "4" : null,
-        actions: withActions
-          ? [{ name: "Edit Action", iconName: "edit-01" }]
-          : [],
+        actions: withActions ? TREE_ITEM_ACTIONS : [],
         depth: 2,
         expandable: false,
         expanded: false,
@@ -37032,7 +37050,7 @@ function treeRows(props) {
     text: "Settings",
     countName: "Sibling Count Text",
     count: withCounts ? "12" : null,
-    actions: withActions ? [{ name: "Edit Action", iconName: "edit-01" }] : [],
+    actions: withActions ? TREE_ITEM_ACTIONS : [],
     iconName: "settings-01",
     depth: 0,
     expandable: false,
@@ -37383,6 +37401,10 @@ async function createTreeActions({ actions, metrics, variableByName, stats }) {
     button.fills = [];
     button.strokes = [];
     button.setSharedPluginData(RUN_NAMESPACE, "kind", "tree-action-button");
+    // Hidden buttons still carry their instance-swap and visibility properties,
+    // so "Action 2 Icon" binds a real node instead of being the unused property
+    // that kept TreeChildItem out of the published library.
+    button.visible = action.visible !== false;
 
     const icon = await createFixedIconInstance(
       action.iconName,
@@ -40008,7 +40030,43 @@ async function configureTreeItemProperties(
     stats,
   );
   configureFocusVisibleProperty(componentSet, stats);
+  configureTreeActionVisibilityProperties(componentSet, stats);
   await configureTreeItemIconSlots(componentSet, variableByName, stats);
+}
+
+/**
+ * One boolean per row action, so the count is a property rather than an axis.
+ *
+ * A Pointr Cloud listItem row carries five actions. As a variant axis that
+ * would take TreeChildItem from 72 variants to 360, since an axis applies to
+ * every variant in the set. Products turn on the
+ * actions they need and swap the icons; only the first is on by default, which
+ * leaves the existing Actions variants looking exactly as they did.
+ */
+function configureTreeActionVisibilityProperties(componentSet, stats) {
+  let boundCount = 0;
+
+  for (const action of TREE_ITEM_ACTIONS) {
+    const propertyName = ensureBooleanProperty(
+      componentSet,
+      `Show ${action.name}`,
+      action.visible !== false,
+      stats,
+    );
+    if (!propertyName) continue;
+
+    (function walk(node) {
+      if (node.name === action.name && node.type === "FRAME") {
+        bindVisibilityProperty(node, propertyName, stats);
+        boundCount += 1;
+      }
+      if (node.children) {
+        for (const child of node.children) walk(child);
+      }
+    })(componentSet);
+  }
+
+  stats.treeActionVisibilityBindings = boundCount;
 }
 
 async function configureTreeItemIconSlots(componentSet, variableByName, stats) {
@@ -40025,29 +40083,28 @@ async function configureTreeItemIconSlots(componentSet, variableByName, stats) {
     (await findKozmosIconSourceComponent(
       isChildSet ? "marker-pin-01" : "map-01",
     )) || defaultIcon;
-  const actionOneDefault =
-    (await findKozmosIconSourceComponent(isChildSet ? "edit-01" : "x-close")) ||
-    defaultIcon;
-  const actionTwoDefault =
-    (await findKozmosIconSourceComponent("lock-01")) || defaultIcon;
-
   const slots = [
     {
       nodeName: "Leading Icon",
       propertyName: "Leading Icon",
       defaultComponent: leadingDefault,
     },
-    {
-      nodeName: "Action 1 Icon",
-      propertyName: "Action 1 Icon",
-      defaultComponent: actionOneDefault,
-    },
-    {
-      nodeName: "Action 2 Icon",
-      propertyName: "Action 2 Icon",
-      defaultComponent: actionTwoDefault,
-    },
   ];
+  for (let index = 0; index < TREE_ITEM_ACTIONS.length; index += 1) {
+    // The parent set opens with a close affordance rather than an edit one.
+    const iconName =
+      index === 0 && !isChildSet
+        ? "x-close"
+        : TREE_ITEM_ACTIONS[index].iconName;
+    const resolved =
+      (await findKozmosIconSourceComponent(iconName)) || defaultIcon;
+    if (!resolved) continue;
+    slots.push({
+      nodeName: `Action ${index + 1} Icon`,
+      propertyName: `Action ${index + 1} Icon`,
+      defaultComponent: resolved,
+    });
+  }
 
   for (const slot of slots) {
     if (!slot.defaultComponent) continue;

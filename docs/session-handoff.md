@@ -747,6 +747,31 @@ decision respectively.
 four `Side` variants needs a plugin run; the REST API can confirm the outcome
 but not the execution.
 
+### TreeChildItem's row actions
+
+A Pointr Cloud `listItem` row carries five actions — edit, lock, eye, flag and
+overflow — plus a show/hide toggle. Core rendered one and declared two, which is
+why `Action 2 Icon` was unbound and the set would not publish.
+
+It now renders five, and **the count is a property rather than a variant axis**.
+That was the design question. A Figma axis applies to every variant in the set,
+so crossing five values into Content x Depth x Density x State takes
+TreeChildItem from **72 variants to 360** — to express something five booleans
+say without adding one. So each action gets an instance-swap `Action N Icon` and
+a boolean `Show <Name>`, and only the first is on by default, which leaves the
+existing Actions variants looking exactly as they did.
+
+**Overflow is not special-cased.** It is just another action, so a row that
+needs six puts the overflow in the fifth. Treating it as a distinct affordance
+would have meant a sixth slot with different semantics for no gain.
+
+**The icon set cannot express the Pointr row.** Of its five icons, only edit and
+lock have equivalents in the 38 Kozmos icons: there is no eye, no flag and no
+dots/overflow glyph. The defaults are therefore generic — edit, lock, delete,
+export, settings — and are instance-swap defaults rather than a vocabulary. If
+those rows are to be rebuilt on Core, the icon set needs three additions; that
+is a separate piece of work and nothing here is blocked on it.
+
 ## 4. Immediate Next Actions, In Order
 
 Everything the design system can do from code is done. What remains is either a
