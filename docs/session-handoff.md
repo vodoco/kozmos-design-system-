@@ -1,8 +1,35 @@
 # Session Handoff
 
-Written 2026-08-24, updated 2026-08-28. Everything below was verified by
+Written 2026-08-24, updated 2026-08-30. Everything below was verified by
 running it, not recalled.
 Branch: `codex/wave-2-figma-components`.
+
+## 0. Where things stand right now
+
+This document is long because it records reasoning, not just state. If you are
+picking the work up cold, this is the whole picture in one screen.
+
+| Thing               | State                                                  |
+| ------------------- | ------------------------------------------------------ |
+| `pnpm figma:verify` | **clean on all five checks**                           |
+| Plugin audit        | **0 warnings**, 94 sets                                |
+| Figma publish       | **blocked**: 4 sets carry 8 unbound properties (below) |
+| Working tree        | clean; everything committed                            |
+| Local gates         | all green — see §7 for the list                        |
+
+**The one thing blocking publishing** is Figma's "Invalid assets (4)":
+`TreeChildItem`, `Drawer`, `MultiSelect`, `ColorPicker`. Fixes for the first
+three are committed and **need a plugin run to land**; `ColorPicker` needs a
+decision, not code. §3 has the causes — three different ones behind one symptom.
+
+**Nothing in the plugin should ever be `Rebuild`.** It mints a fresh node ID and
+Code Connect pins the existing one. `Update`, or the blue `Fix` button, which is
+the same action relabelled.
+
+The Pointr Cloud dashboard work is planned in
+`docs/figma-upcoming-components.md`, not here. Its conclusion: the library ships
+parts with slots, products assemble screens, and the composed screens go on the
+`Examples` page as frames rather than becoming component sets.
 
 ## 1. Verified State
 
@@ -41,9 +68,9 @@ loop:
   from the terminal: sets present, axis names and values, collapsed text nodes,
   text truncated by its own box, and WCAG AA on every visible text node. It
   answers "did my change land?" in seconds, which is what several rounds of
-  audits and screenshots were doing by hand. **It currently reports 9
-  truncations** — the ones this session fixed in code. They clear when the
-  plugin is next run; see §4.
+  audits and screenshots were doing by hand. It reports **clean on all five
+  checks** as of this handoff — every truncation it found has been fixed in code
+  and rendered into the file.
 - **Update All Product / SDK** in the plugin regenerates all 24 sets in one
   press, deferring the page reorganize until the end.
 
@@ -806,71 +833,65 @@ orphans, and `MultiSelect` is a structure that changed under a property. Only
 
 ## 4. Immediate Next Actions, In Order
 
-Everything the design system can do from code is done. What remains is either a
-Figma action, a decision, or work outside this lane.
+Everything the design system can do from code is done. What remains is a Figma
+run, a decision, or work outside this lane.
 
-1. **Done — `Update All Product / SDK` has been run.** The seven Product / SDK
-   truncations cleared, so `fitProductSdkSlotLabel` works against the real
-   Figma text engine and not just on paper. RoutingInputGroup's fields should
-   now read Start / Add stop / Destination. `pnpm figma:verify` reports two
-   items left, both `FileUpload`, which is Core and outside that run's scope.
+1. **Reopen the plugin, then update `Drawer`, `TreeChildItem` and
+   `MultiSelect`.** Reopening matters: Figma has to reload `code.js` or none of
+   the three fixes are in play. `Fix Audit Issues` covers Drawer among its
+   operations; the other two want their own `Update`. Each should drop off
+   Figma's Invalid assets list afterwards.
 
-   Still worth a look, because no check covers them: the POIDetailPanel action
-   row (`→ Navigate`, `☆ Save`, `↗ Share` — the `↗` is the one glyph never yet
-   seen in a render), and the WayfindingCard and POICard set frames, which
-   should now sit tight around their variants instead of eight times too tall.
+   Then `Audit Again` and reopen the Publish dialog. Expect Invalid assets to
+   fall from 4 to 1 and the change count to rise.
 
-2. **Press `Fix Audit Issues`, then update `FileUpload`.** `Fix Audit Issues`
-   now also clears the 11 unbound properties that were holding five components
-   out of the publish — see §3. Two Core sets that
-   `Update All Product / SDK` does not touch. **Nothing in the plugin is
-   Rebuild.** `Rebuild` mints a fresh node ID, and Code Connect pins the
-   existing one — six declarations for `Sidebar` (`752-6807`), one for
-   `FileUpload` (`444-12724`).
+2. **Decide `ColorPicker`.** `Hex Label Text` and `Palette Text` have no nodes,
+   and three siblings — `Mode Text`, `Hue Label Text`, `Alpha Label Text` — were
+   already deleted rather than wired in an earlier pass. So: does ColorPicker
+   want a HEX label and a palette name at all? If yes the nodes get built; if
+   no, deleting those two is correct and consistent with what the family already
+   decided. This is the last invalid asset and it is not a code question.
 
-   `Fix Audit Issues` is the right button rather than the per-component one: it
-   updates Separator, Slider, **NavigationItem, then Navbar and Sidebar**, then
-   Dialog and BottomSheet — and NavigationItem landing before Sidebar is what
-   Sidebar needs, since it composes NavigationItem instances. The blue **Fix**
-   button on a selected component is the same `update` action under a different
-   label; `selectedRecommendation()` returns `action: "update"` and only renames
-   the button when warnings exist. It is safe, just narrower.
+3. **Run the foundations/variables import, then `Update All Product / SDK` and
+   the Core sets.** The radius and typography layers are code-only so far.
+   The import creates `Semantics/Radius/Control` so the plugin's aliases resolve
+   by name; without it they warn and fall back to the same numbers, so this is
+   tidiness rather than correctness. Expect controls to move 8px to 16px across
+   the file.
 
-   For `FileUpload`, plain **Update** reaches the fix:
-   `updateFileUploadVariant` calls `syncFileUploadVariantChildren`, which calls
-   the repaired `createFileUploadFileRow`. An earlier draft of this document
-   said Rebuild; that was wrong and would have broken its Code Connect anchor.
+4. **Publish the library from Figma**, once Invalid assets is 0. That is Figma's
+   own action in the Assets panel; nothing here touches it.
 
-3. **Re-run the plugin for the radius change.** The semantic layer is code-only
-   so far. Run the foundations/variables import once so
-   `Semantics/Radius/Control` exists, then `Update All Product / SDK` and the
-   Core sets. Expect controls to go from 8px to 16px across the file.
-4. **Publish the library from Figma.** That is Figma's own action, in the
-   Assets panel — not something the importer or any script here touches. The
-   file is current once step 1 is done.
-5. **Decide how the iOS snapshots run in CI**, then widen coverage. The
-   harness works; what it needs is a pinned runner image plus simulator, and
-   then more components than Button. See §3.
+5. **Decide how the iOS snapshots run in CI**, then widen coverage past Button.
+   The harness works; it needs a pinned runner image plus simulator. See §3.
+
 6. **Script-aware typography.** Nine components apply `tracking-tight`
    (Tailwind's default `-0.025em`, since the config overrides no
-   `letterSpacing`). Negative tracking makes CJK glyphs collide and disrupts
-   Arabic cursive joining, and the product ships both. Line heights are
-   Latin-tuned too, and CJK and Arabic diacritics want more room. The
-   `letterSpacing` and `line.height` token scales are unused by every platform,
-   so there is nowhere to say "tighter for Latin, normal for CJK" even if you
-   wanted to.
+   `letterSpacing`). Negative tracking collides CJK glyphs and disrupts Arabic
+   cursive joining, and the product ships both. Line heights are Latin-tuned
+   too. The `letterSpacing` and `line.height` token scales are unused by every
+   platform, so there is nowhere to say "tighter for Latin, normal for CJK".
+
 7. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
-   (0-1500) is read by no platform: iOS uses Dynamic Type styles, Android
-   hardcodes `14.sp`, and Tailwind has no `fontSize` override. Same shape of
-   problem the radius and family layers solved.
+   (0-1500) is read by no platform. Same shape as the radius and family layers.
+
 8. **Decide the brand font's fate.** Readex Pro covers Latin and Arabic and has
-   no CJK, so Chinese was always falling back to a system font whatever the
-   tokens said. Either drop it, or scope it to Latin with `unicode-range` — and
-   note that a single `size-adjust` ratio cannot work across scripts, so the
-   metric-matched fallback needs per-script faces if it happens at all.
-9. **Decide RoutePreviewPanel's states** — see §5. A design call, not a defect.
-10. **Dashboard items outside the design system** — raised but never scoped.
-    Likely adds genuinely new components rather than variants.
+   no CJK, so Chinese always fell back to a system font whatever the tokens
+   said. Drop it, or scope it to Latin with `unicode-range` — and note that one
+   `size-adjust` ratio cannot work across scripts.
+
+9. **`Link` and `Spinner` are each missing a variant axis on iOS and Android.**
+   Found once the analyzer stopped being blind to single quotes. Closing them
+   means new public enums on both native packages, so it belongs with the naming
+   decision in §5.
+
+10. **`RoutePreviewPanel`'s five states look like two** — see §5.
+
+11. **The Pointr Cloud dashboard work**, planned in
+    `docs/figma-upcoming-components.md`. Drawer slots, TreeChildItem actions and
+    MultiSelect forwarding are done; what remains there is the `Example /
+Dashboard Review Panel` composition, three icons the set lacks (eye, flag,
+    overflow), and the decisions that file lists.
 
 ### Not blocking, and not this branch's to fix
 
@@ -1050,6 +1071,7 @@ pnpm figma:publish:linked:dry            # React Code Connect vs the live file
 pnpm figma:publish:native:linked:dry     # SwiftUI + Compose likewise
 cd packages/ios && swift build && swift test
 cd packages/android && ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew assembleDebug testDebugUnitTest
+cd packages/android && ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew verifyPaparazziDebug   # goldens are macOS-recorded, CI verifies on Linux — see §3
 ```
 
 Verify against a clean checkout, not the working tree:
