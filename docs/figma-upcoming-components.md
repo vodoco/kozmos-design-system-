@@ -490,3 +490,104 @@ creating a large number of Figma-only or code-only placeholders.
    DateRangePicker, TimePicker, and FileUpload from the importer. SearchBar can
    follow once we decide whether it remains a Search variant or becomes a
    separate component.
+
+---
+
+## Pointr Cloud dashboard — what Core actually needs (2026-08-30)
+
+Read from the product file `O1piybZEETp5oSqTtGjH39` over the REST API, not from
+screenshots: `2007:24537` (Buildings Listed during Expert Review), `2007:26407`
+(Scope:Campus), `3704:29452` (Review panel). Sizes below are measured.
+
+**The headline is that most of it already exists.** The dashboard is built from
+an older product library — `listItem`, `foldersIcons`, `showHideButton`,
+`.Buttons Master *`, `Text-Inputs`, `notifierBox/Side-Drawer-Footer` — none of
+which are Core names. So the gap is mostly _adoption_, not construction, and the
+genuinely new components are fewer than the screens suggest.
+
+### The drawer already has the anatomy that was asked about
+
+Core's `Drawer` (`232:2042`) is built as:
+
+```
+Side=Right
+  Drawer Header   Drawer Header Content  +  Drawer Close (44x44)
+  Drawer Body     Body Text  +  Content Slot [SLOT]
+  Drawer Footer   Secondary Action  +  Primary Action
+```
+
+That is header-with-close, a real body slot, and a two-action footer — the Save
+and Exit row and the close button, already there. Pointr's `sideDrawer`
+(400x765) matches it structurally: `drawerHeader` + `x-close`, a `body`, and
+`notifierBox/Side-Drawer-Footer` (400x80) holding two 180x48 buttons.
+
+Three differences worth deciding on rather than copying:
+
+- Pointr's close is **24x24**; Core's `Drawer Close` is **44x44** and meets the
+  touch minimum. Core is right; the product should adopt the larger target.
+- Pointr's footer is **80** tall with 48px buttons, Core's is **44** with 44px.
+  Someone has to pick.
+- Pointr's footer is an instance of `notifierBox/Side-Drawer-Footer` — a
+  notifier box doing double duty as a footer. Core should not copy that
+  conflation.
+
+And this is where the invalid assets come from. `Drawer` carries three unbound
+SLOT properties — `Drawer Body`, `Slot`, `Slot2` — while the set contains one
+real `Content Slot [SLOT]` node. They are a half-finished attempt at exactly the
+slot API the dashboard needs, never attached. That is why Figma refuses to
+publish the set, and why deleting them would have been the wrong move.
+
+### Missing from Core
+
+| Component          | From                 | Measured | Notes                                                                                      |
+| ------------------ | -------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| **ActionBar**      | `Metadata Buttons`   | 400x68   | Cancel left, action group right. Horizontal auto-layout with a spacer, not a Stack.        |
+| **StatusStrip**    | `FateStrip · step 7` | 400x37   | One line of tonal status ("Published just now"). Despite the name it is not a `Stepper`.   |
+| **MagnitudeBlock** | `magnitude`          | 400x118  | `banner` (400x66) over `metrics` (400x52). A summary-plus-stats block.                     |
+| **ChangeList**     | `changelog`          | 400x1105 | Four groups — new, updated, deleted, preserved — each a header over rows.                  |
+| **DrawerToolbar**  | `content-filter`     | 320x80   | Search plus filter buttons between header and body. Likely a Drawer slot, not a component. |
+
+`ChangeList` has its colour foundation already: `Semantics.Diff.New`,
+`.Updated`, `.Deleted` and `.Override` were added in `5589dfd` for exactly this
+app. Only the fourth needs a decision — the changelog's group is "preserved",
+the token is "Override", and they may not be the same idea.
+
+### Fixes to existing Core components
+
+- **`TreeChildItem` needs more actions.** A Pointr `listItem` row carries five
+  — edit, lock, eye, flag, overflow — plus a show/hide toggle. Core declares two
+  action icon slots and renders one, which is why `Action 2 Icon` is unbound.
+  This wants an `Actions` count axis, not a second hardcoded slot.
+- **`MultiSelect` chip labels.** `Chip 1 Text` and `Chip 2 Text` cannot bind,
+  because the chips are nested `Chip` instances whose label is driven by the
+  Chip's own `Label Text`. Forwarding the nested instance's property is the fix.
+  The dashboard uses 100 `Tags`, so this is not hypothetical.
+- **`Drawer` slots.** Bind `Drawer Body` to the real `Content Slot` node and
+  drop the stray `Slot` / `Slot2`.
+- **`ColorPicker`.** `Hex Label Text` and `Palette Text` have no nodes. Three
+  siblings — `Mode Text`, `Hue Label Text`, `Alpha Label Text` — were already
+  deleted rather than wired. Decide whether this family is wanted at all.
+
+### Sequence
+
+1. **Unblock publishing.** The four sets above carry eight unbound properties
+   and Figma will not publish them. Wiring `Drawer` and `MultiSelect` is the
+   real fix; removing `ColorPicker`'s two is likely right; `TreeChildItem`'s
+   waits on the actions axis.
+2. **Drawer slot API**, since it is the component the dashboard leans on hardest
+   and the work is already half done.
+3. **ActionBar and StatusStrip** — small, self-contained, and used on both
+   screens.
+4. **ChangeList and MagnitudeBlock** — larger, and specific to the review flow.
+5. **`TreeChildItem` actions axis** — needs a decision on maximum count before
+   it can be built.
+
+### Decisions needed before building
+
+- Footer height and button size: Pointr's 80/48 or Core's 44/44.
+- How many row actions `TreeChildItem` should support, and whether the overflow
+  ("dots-horizontal") is one of them or separate.
+- Whether "preserved" maps to `Semantics.Diff.Override` or wants its own token.
+- Whether these live in Core or in a Pointr Cloud lane beside Product / SDK.
+  They are dashboard patterns, not wayfinding ones, and Core is domain-neutral
+  by policy — see `docs/figma-core-gap-audit.md`.
