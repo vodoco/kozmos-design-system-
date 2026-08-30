@@ -9286,21 +9286,21 @@ async function fixCurrentAuditIssues() {
   // direct children swept nothing at all. NavigationItem cleared on the first
   // run only because it is in the operations list above and its update reaches
   // the seam sweep; Drawer is not in that list, which is why it survived.
-  let propertiesRemoved = 0;
+  let propertiesUnbound = 0;
   for (const componentSet of collectComponentSetsInPage(sweptPage)) {
-    propertiesRemoved += removeUnboundComponentProperties(componentSet, stats);
+    propertiesUnbound += reportUnboundComponentProperties(componentSet, stats);
   }
-  if (propertiesRemoved > 0) stats.updated = true;
+
   // The counts are in the message on purpose. Two attempts at this sweep looked
   // identical from outside — one sweeping nothing, one finding nothing — and a
   // silent no-op is indistinguishable from success. "sweep v2" also proves which
   // build of code.js Figma actually loaded; if the message lacks it, the plugin
   // is running a stale copy and nothing below it can be trusted.
   stats.unboundSweepReport =
-    `sweep v2: ${stats.unboundSweepSetsScanned || 0} set(s) scanned, ` +
+    `unbound properties: ${stats.unboundSweepSetsScanned || 0} set(s) scanned, ` +
     `${stats.unboundSweepCandidates || 0} non-variant propert(y|ies) examined, ` +
     `${stats.unboundSweepUnreferenced || 0} unreferenced, ` +
-    `${propertiesRemoved} removed, ` +
+    `${propertiesUnbound} unbound, ` +
     `${stats.unboundSweepReadErrors || 0} unreadable set(s).`;
   stats.warnings.push(stats.unboundSweepReport);
 
@@ -9311,12 +9311,12 @@ async function fixCurrentAuditIssues() {
     stats.updated = true;
     stats.message =
       `Refreshed ${refreshed.join(", ")}.` +
-      (propertiesRemoved > 0
-        ? ` Removed ${propertiesRemoved} unbound component propert${propertiesRemoved === 1 ? "y" : "ies"}.`
+      (propertiesUnbound > 0
+        ? ` ${propertiesUnbound} unbound component propert${propertiesUnbound === 1 ? "y" : "ies"} reported; each needs attaching to a layer before its set will publish.`
         : "") +
       " Run Audit Again to confirm the live file state.";
-  } else if (propertiesRemoved > 0) {
-    stats.message = `Removed ${propertiesRemoved} unbound component propert${propertiesRemoved === 1 ? "y" : "ies"}. Run Audit Again to confirm the live file state.`;
+  } else if (propertiesUnbound > 0) {
+    stats.message = `${propertiesUnbound} unbound component propert${propertiesUnbound === 1 ? "y" : "ies"} reported; each needs attaching to a layer before its set will publish.`;
   } else {
     stats.message =
       "No known audit issue component was changed. Review the warnings and run the individual component update if needed.";
@@ -35076,7 +35076,7 @@ async function buildStateStatusComponent(config) {
     stats,
   );
   await config.configureProperties(componentSet, stats, variableByName);
-  removeUnboundComponentProperties(componentSet, stats);
+  reportUnboundComponentProperties(componentSet, stats);
   await reorganizeAfterGeneratedComponentMutation(stats);
   return stats;
 }
@@ -35186,7 +35186,7 @@ async function updateStateStatusComponent(config) {
     stats,
   );
   await config.configureProperties(existing, stats, variableByName);
-  removeUnboundComponentProperties(existing, stats);
+  reportUnboundComponentProperties(existing, stats);
   await reorganizeAfterGeneratedComponentMutation(stats);
   return stats;
 }
@@ -35296,7 +35296,7 @@ async function buildPlannedMatrixComponent(config) {
     stats,
   );
   await config.configureProperties(componentSet, stats, variableByName);
-  removeUnboundComponentProperties(componentSet, stats);
+  reportUnboundComponentProperties(componentSet, stats);
   runGeneratedComponentPostUpdateMaintenance(
     componentSet,
     config.componentName,
@@ -35459,7 +35459,7 @@ async function updatePlannedMatrixComponent(config) {
     stats,
   );
   await config.configureProperties(existing, stats, variableByName);
-  removeUnboundComponentProperties(existing, stats);
+  reportUnboundComponentProperties(existing, stats);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
     config.componentName,
@@ -46840,7 +46840,7 @@ async function buildSingleAxisComponent(config) {
     stats,
   );
   await config.configureProperties(componentSet, stats, variableByName);
-  removeUnboundComponentProperties(componentSet, stats);
+  reportUnboundComponentProperties(componentSet, stats);
   runGeneratedComponentPostUpdateMaintenance(
     componentSet,
     config.componentName,
@@ -46949,7 +46949,7 @@ async function updateSingleAxisComponent(config) {
     stats,
   );
   await config.configureProperties(existing, stats, variableByName);
-  removeUnboundComponentProperties(existing, stats);
+  reportUnboundComponentProperties(existing, stats);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
     config.componentName,
@@ -68335,37 +68335,32 @@ function bindVisibilityProperty(node, propertyName, stats) {
 }
 
 /**
- * Remove component properties that control nothing.
+ * Report component properties that no layer references.
  *
- * Figma's publish dialog calls these "Unused properties" and refuses to publish
- * the set that carries them — five components were held back that way:
- * TreeChildItem's "Action 2 Icon", MultiSelect's "Chip 1/2 Text", ColorPicker's
- * "Hex Label Text" and "Palette Text", and hand-made Slots on NavigationItem
- * and Drawer. Every one was left over from an earlier shape of the component.
- * MultiSelect is the clearest: its chips became nested Chip instances, whose
- * label is driven by the Chip's own "Label Text" property, so a MultiSelect
- * property binding a layer of that name can never attach to anything.
+ * Figma calls these "Unused properties", marks the set an invalid asset and
+ * refuses to publish it. This used to delete them, which was wrong: they are
+ * capabilities that were declared and never wired up, not litter. The Pointr
+ * Cloud dashboard settles it — a single `listItem` row there carries five
+ * actions (edit, lock, eye, flag, overflow), while TreeChildItem declares two
+ * action slots and renders one. Deleting `Action 2 Icon` would have removed the
+ * hook the product actually needs.
  *
- * The helpers already counted their bindings — `stats.labelTextBindings` and
- * friends — and never looked at whether the count was zero. This closes that:
- * a property nothing references is deleted, and every deletion is reported, so
- * a slot somebody meant to wire up later shows in the run log rather than
- * vanishing quietly.
+ * So this names them and leaves them alone. A property that binds nothing is a
+ * job someone started; the fix is to attach it to a layer, and only the person
+ * who knows the intent can decide which layer.
  *
- * VARIANT properties are exempt. They are carried by the variant's name rather
- * than by a reference on a layer, so they look unbound to any reference scan —
- * which is exactly why Figma flags five sets here and not all ninety-four.
+ * VARIANT properties are exempt — they are carried by the variant's name rather
+ * than by a layer reference, which is why Figma flags a handful of sets here
+ * and not all ninety-four.
  */
-function removeUnboundComponentProperties(componentSet, stats) {
+function reportUnboundComponentProperties(componentSet, stats) {
   if (!componentSet || componentSet.type !== "COMPONENT_SET") return 0;
-  if (!componentSet.deleteComponentProperty) return 0;
-
   stats.unboundSweepSetsScanned = (stats.unboundSweepSetsScanned || 0) + 1;
 
   const read = safeComponentPropertyDefinitions(
     componentSet,
     stats,
-    "remove unbound component properties",
+    "report unbound component properties",
   );
   if (read.error) {
     stats.unboundSweepReadErrors = (stats.unboundSweepReadErrors || 0) + 1;
@@ -68386,32 +68381,21 @@ function removeUnboundComponentProperties(componentSet, stats) {
     }
   })(componentSet);
 
-  let removed = 0;
+  let unbound = 0;
   for (const propertyName of Object.keys(definitions)) {
     if (definitions[propertyName].type === "VARIANT") continue;
     stats.unboundSweepCandidates = (stats.unboundSweepCandidates || 0) + 1;
     if (referenced[propertyName]) continue;
-    stats.unboundSweepUnreferenced = (stats.unboundSweepUnreferenced || 0) + 1;
-
-    try {
-      componentSet.deleteComponentProperty(propertyName);
-      removed += 1;
-      stats.componentPropertiesRemoved =
-        (stats.componentPropertiesRemoved || 0) + 1;
-      pushUniqueWarning(
-        stats,
-        "unbound-property:" + componentSet.name + ":" + propertyName,
-        `${componentSet.name}: removed "${propertyName.split("#")[0]}" (${definitions[propertyName].type}); no layer referenced it, and Figma will not publish a set that carries one.`,
-      );
-    } catch (error) {
-      pushUniqueWarning(
-        stats,
-        "unbound-property-failed:" + componentSet.name + ":" + propertyName,
-        `${componentSet.name}: could not remove unbound property "${propertyName.split("#")[0]}" (${messageFor(error)}).`,
-      );
-    }
+    unbound += 1;
+    pushUniqueWarning(
+      stats,
+      "unbound-property:" + componentSet.name + ":" + propertyName,
+      `${componentSet.name}: "${propertyName.split("#")[0]}" (${definitions[propertyName].type}) is declared but no layer references it. Figma will not publish this set until it is attached to a layer or removed by hand.`,
+    );
   }
-  return removed;
+  stats.unboundSweepUnreferenced =
+    (stats.unboundSweepUnreferenced || 0) + unbound;
+  return unbound;
 }
 
 function deleteComponentPropertiesByBaseName(
