@@ -772,6 +772,38 @@ export, settings — and are instance-swap defaults rather than a vocabulary. If
 those rows are to be rebuilt on Core, the icon set needs three additions; that
 is a separate piece of work and nothing here is blocked on it.
 
+### MultiSelect's chip labels, and nested property forwarding
+
+`Chip 1 Text` and `Chip 2 Text` could not bind because the chips are nested
+`Chip` instances: a layer inside an instance is driven by the _nested_
+component's property, not the parent's. And unlike `TreeChildItem`'s
+`Action 2 Icon`, these were never declared by the current builder at all —
+`configureMultiSelectProperties` sets Label, Placeholder, three Options and
+Helper, and no chip text. They were residue from an older structure, recreated
+by nothing.
+
+Residue is not the same as unwanted, though, and the capability is real: a
+hundred `Tags` on one Pointr screen say chip labels get set. So rather than
+delete them, the plugin gains the mechanism they were missing.
+
+`forwardNestedInstanceTextProperty` has the instance reference the parent's
+property under the **nested property's key** rather than under `characters`.
+The key is discovered at runtime because it carries Chip's own id suffix
+(`Label Text#227:0` in this file), which differs per file and cannot be
+hardcoded. `configureNestedInstanceTextProperty` wraps that with
+`ensureTextProperty` and warns when a property forwards into nothing, so the
+next one fails loudly instead of surfacing months later at publish.
+
+The chips already set `isExposedInstance`, which is Figma's other route — but it
+surfaces Chip's whole property set under the instance name. Forwarding gives
+MultiSelect the named, curated property its set already claimed to have. Both
+can be true at once; they answer different needs.
+
+This is the third distinct cause behind one symptom. `TreeChildItem` was a
+declared capability never rendered, `Drawer` was `createSlot()` churn leaving
+orphans, and `MultiSelect` is a structure that changed under a property. Only
+`ColorPicker` is left, and it is a decision rather than code.
+
 ## 4. Immediate Next Actions, In Order
 
 Everything the design system can do from code is done. What remains is either a
