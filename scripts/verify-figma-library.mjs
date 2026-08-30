@@ -179,6 +179,7 @@ async function main() {
   const collapsed = [];
   const lowContrast = [];
   const truncated = [];
+  const unbound = [];
 
   for (const name of names) {
     if (!sets[name]) {
@@ -240,6 +241,36 @@ async function main() {
     if (unique.length) {
       variantDrift.push(
         `${name}: ${unique.slice(0, 3).join("; ")}${unique.length > 3 ? ` (+${unique.length - 3})` : ""}`,
+      );
+    }
+  }
+
+  // Figma refuses to publish a component set carrying a property no layer
+  // references, so this is the check that answers "can the library ship?" —
+  // and the five checks above all passed while eleven such properties held
+  // five sets, two of them Core, out of the library. Reading it from the
+  // terminal beats reading it off the publish dialog: the dialog names the
+  // sets, this names the properties.
+  //
+  // VARIANT is exempt because a variant property lives in the variant's name
+  // rather than in a layer reference, which is why a naive scan appears to
+  // condemn every set in the file.
+  for (const [name, set] of Object.entries(sets)) {
+    const definitions = set.componentPropertyDefinitions || {};
+    const referenced = new Set();
+    (function walk(node) {
+      const refs = node.componentPropertyReferences;
+      if (refs)
+        for (const field of Object.keys(refs)) referenced.add(refs[field]);
+      if (node.children) node.children.forEach(walk);
+    })(set);
+
+    for (const property of Object.keys(definitions)) {
+      const definition = definitions[property];
+      if (definition.type === "VARIANT") continue;
+      if (referenced.has(property)) continue;
+      unbound.push(
+        `${name} / ${property.split("#")[0]} (${definition.type}) — declared, referenced by no layer`,
       );
     }
   }
@@ -339,6 +370,7 @@ async function main() {
   total += report("collapsed text nodes", collapsed);
   total += report("text truncated by its own box", truncated);
   total += report(`text contrast below ${AA}:1`, lowContrast);
+  total += report("properties bound to no layer (blocks publishing)", unbound);
 
   console.log(
     total === 0
