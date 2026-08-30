@@ -368,6 +368,11 @@ const KOZMOS_RADIUS = {
 };
 
 const SIDEBAR_CONTENT = ["Basic", "Sections", "Tools", "Rail"];
+// Drawer's slot API. Header and Footer join the Content Slot that was already
+// there, so a product can supply its own title row and its own action row
+// instead of forking the component — which is what the Pointr Cloud sideDrawer
+// does today, with a search-and-filter header and a Save / Exit footer.
+const DRAWER_SLOT_NAMES = ["Header Slot", "Content Slot", "Footer Slot"];
 const SIDEBAR_SLOT_NAMES = [
   "Header Slot",
   "Navigation Slot",
@@ -47656,7 +47661,7 @@ function configureDrawerProperties(componentSet, stats) {
     "Drawer body content can hold filters, navigation, or compact product workflows.",
     stats,
   );
-  configureSharedSlotProperties(componentSet, ["Content Slot"], stats);
+  configureSharedSlotProperties(componentSet, DRAWER_SLOT_NAMES, stats);
 }
 
 function configurePopoverProperties(componentSet, stats) {
@@ -57551,13 +57556,17 @@ async function syncDrawerVariantChildren({
   fonts,
   stats,
 }) {
-  const reusableContentSlot = extractDescendantNamed(
+  // Keep every slot across an update, not just the content one. A slot that is
+  // dropped and recreated takes a new property with it, which is how Drawer
+  // accumulated "Drawer Body", "Slot" and "Slot2" bound to nothing.
+  const reusableSlots = extractReusableSlotsByName(
     component,
-    "Content Slot",
+    DRAWER_SLOT_NAMES,
     stats,
-    "Drawer content slot",
+    "Drawer",
   );
-  removeDirectChildrenExcept(component, reusableContentSlot);
+  removeDirectChildrenExceptMany(component, Object.values(reusableSlots));
+  const reusableContentSlot = reusableSlotNamed(reusableSlots, "Content Slot");
   const size = drawerVariantSize(side);
   const contentWidth = size.width - 48;
 
@@ -57644,6 +57653,19 @@ async function syncDrawerVariantChildren({
   setLayoutSizingHorizontal(headerContent, "FILL");
   setLayoutSizingVertical(headerContent, "HUG");
 
+  const headerSlot = appendDrawerRegionSlot({
+    component,
+    parent: header,
+    slotName: "Header Slot",
+    reusableSlot: reusableSlotNamed(reusableSlots, "Header Slot"),
+    layoutMode: "HORIZONTAL",
+    width: 96,
+    height: 24,
+    stats,
+  });
+  setLayoutSizingHorizontal(headerSlot, "HUG");
+  setLayoutSizingVertical(headerSlot, "HUG");
+
   const close = await syncInlineCloseButton({
     parent: header,
     name: "Drawer Close",
@@ -57721,6 +57743,19 @@ async function syncDrawerVariantChildren({
   footer.strokes = [];
   footer.clipsContent = false;
 
+  const footerSlot = appendDrawerRegionSlot({
+    component,
+    parent: footer,
+    slotName: "Footer Slot",
+    reusableSlot: reusableSlotNamed(reusableSlots, "Footer Slot"),
+    layoutMode: "HORIZONTAL",
+    width: 96,
+    height: 44,
+    stats,
+  });
+  setLayoutSizingHorizontal(footerSlot, "HUG");
+  setLayoutSizingVertical(footerSlot, "FIXED");
+
   await syncDrawerFooterAction({
     footer,
     name: "Secondary Action",
@@ -57748,6 +57783,68 @@ async function syncDrawerVariantChildren({
     variableByName,
     stats,
   );
+}
+
+/**
+ * Append a Drawer region slot, reusing the existing node when there is one.
+ *
+ * Reuse is the point. `createSlot()` mints a fresh SLOT property every time and
+ * the rename only catches the newest one, so recreating a slot on each update
+ * leaves the old property behind bound to nothing — which is exactly how Drawer
+ * ended up carrying "Drawer Body", "Slot" and "Slot2" and being refused at
+ * publish.
+ */
+function appendDrawerRegionSlot({
+  component,
+  parent,
+  slotName,
+  reusableSlot,
+  layoutMode,
+  width,
+  height,
+  stats,
+}) {
+  if (reusableSlot) {
+    configureContentSlotNode(reusableSlot, {
+      height,
+      itemSpacing: 8,
+      layoutMode,
+      slotKind:
+        reusableSlot.getSharedPluginData &&
+        reusableSlot.getSharedPluginData(RUN_NAMESPACE, "slot-kind")
+          ? reusableSlot.getSharedPluginData(RUN_NAMESPACE, "slot-kind")
+          : "native",
+      slotName,
+      width,
+    });
+    try {
+      parent.appendChild(reusableSlot);
+      return reusableSlot;
+    } catch (error) {
+      if (stats && stats.warnings) {
+        stats.warnings.push(
+          `Drawer ${component.name}: could not reuse ${slotName} (${messageFor(error)}); creating a fresh slot.`,
+        );
+      }
+      try {
+        reusableSlot.remove();
+      } catch (_removeError) {
+        // Figma may already have detached it.
+      }
+    }
+  }
+
+  return appendComponentContentSlot({
+    component,
+    height,
+    itemSpacing: 8,
+    layoutMode,
+    ownerName: "Drawer",
+    parent,
+    slotName,
+    stats,
+    width,
+  });
 }
 
 function appendDrawerContentSlot({
@@ -57995,6 +58092,69 @@ function configureSharedSlotProperties(componentSet, slotNames, stats) {
         ["SLOT"],
         propertyName,
         stats,
+      );
+    }
+  }
+
+  removeStraySlotProperties(componentSet, slotNames, stats);
+}
+
+/**
+ * Drop SLOT properties that are outside the declared API and bound to nothing.
+ *
+ * `createSlot()` mints a fresh property each time it is called and the rename
+ * only catches the newest one, so a component whose slots are recreated on
+ * every update accumulates orphans — Drawer was carrying "Drawer Body", "Slot"
+ * and "Slot2" beside its one real Content Slot, which is why Figma refused to
+ * publish the set.
+ *
+ * Both conditions matter. Being outside the declared list is not enough on its
+ * own: a slot somebody added deliberately and wired to a node is a capability,
+ * and deleting those was the mistake this replaces. Bound properties survive
+ * whether or not the builder knows about them.
+ */
+function removeStraySlotProperties(componentSet, slotNames, stats) {
+  if (!componentSet.deleteComponentProperty) return;
+
+  const read = safeComponentPropertyDefinitions(
+    componentSet,
+    stats,
+    "remove stray slot properties",
+  );
+  if (read.error) return;
+
+  const referenced = {};
+  (function collect(node) {
+    const references = node.componentPropertyReferences;
+    if (references) {
+      for (const field of Object.keys(references)) {
+        referenced[references[field]] = true;
+      }
+    }
+    if (node.children) {
+      for (const child of node.children) collect(child);
+    }
+  })(componentSet);
+
+  for (const propertyName of Object.keys(read.definitions)) {
+    if (read.definitions[propertyName].type !== "SLOT") continue;
+    if (slotNames.indexOf(propertyName.split("#")[0]) !== -1) continue;
+    if (referenced[propertyName]) continue;
+
+    try {
+      componentSet.deleteComponentProperty(propertyName);
+      stats.componentPropertiesRemoved =
+        (stats.componentPropertiesRemoved || 0) + 1;
+      pushUniqueWarning(
+        stats,
+        "stray-slot:" + componentSet.name + ":" + propertyName,
+        `${componentSet.name}: removed stray slot property "${propertyName.split("#")[0]}" — outside the component's slot API and bound to no node.`,
+      );
+    } catch (error) {
+      pushUniqueWarning(
+        stats,
+        "stray-slot-failed:" + componentSet.name + ":" + propertyName,
+        `${componentSet.name}: could not remove stray slot property "${propertyName.split("#")[0]}" (${messageFor(error)}).`,
       );
     }
   }

@@ -711,6 +711,42 @@ analyzer that could not see two of them. Closing them means new public enums on
 both native packages, which is API design rather than a sweep — it belongs with
 the naming decision in §5, not bolted onto a publishing fix.
 
+### The Drawer slot API
+
+The first piece of the Pointr Cloud work, and the one that also unblocks
+publishing. `Drawer` now declares three slots rather than one:
+`Header Slot`, `Content Slot`, `Footer Slot`.
+
+The regions already existed — `Drawer Header` with a 44x44 `Drawer Close`,
+`Drawer Body`, `Drawer Footer` with Secondary and Primary actions. What was
+missing was somewhere for a product to put its own content, which is what the
+Pointr `sideDrawer` needs: its own title row, and a Save / Exit footer. The
+defaults stay, following the `Drawer Body` precedent of `Body Text` beside
+`Content Slot` — the built-in content is the example, the slot is the API.
+
+**Why the orphans existed.** `createSlot()` mints a fresh SLOT property every
+call, and `renameContentSlotProperty` only renames the newest one. Drawer
+recreated its slot on each update, so the old properties stayed behind bound to
+nothing: `Drawer Body`, `Slot`, `Slot2`. `extractReusableSlotsByName` now keeps
+every slot across an update, so the property is reused instead of replaced —
+which stops it recurring rather than cleaning up after it.
+
+`removeStraySlotProperties` clears what is already there, and both of its
+conditions matter: a slot property is removed only if it is **outside the
+component's declared slot API and bound to no node**. NavigationItem declares
+`Leading Icon Slot`, `Badge Slot` and `Trailing Slot`, so those are never
+touched even when a binding fails — deleting declared-but-unbound slots was the
+mistake this replaces. Checked against the file: the rule reaches exactly
+Drawer's three.
+
+That leaves `TreeChildItem`, `MultiSelect` and `ColorPicker` invalid, which is
+the next tranche — an actions axis, nested-instance label forwarding, and a
+decision respectively.
+
+**Not verified from here.** Whether the two new slots bind cleanly across all
+four `Side` variants needs a plugin run; the REST API can confirm the outcome
+but not the execution.
+
 ## 4. Immediate Next Actions, In Order
 
 Everything the design system can do from code is done. What remains is either a
