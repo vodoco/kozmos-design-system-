@@ -114,21 +114,31 @@ for a verified file.
 ### CI status
 
 Local gates green does not mean CI green — the two disagreed for most of this
-branch's life. Open PR: `vodoco/kozmos-design-system-#1`, rebased on current
-`main`, mergeable. (Commit and file counts are deliberately not quoted here —
+branch's life. Open PR: `vodoco/kozmos-design-system-#1`, merged with current
+`main` and mergeable. (Commit and file counts are deliberately not quoted here —
 updating this doc changes them, so any number written down is stale on arrival.
 Read them off the PR.)
 
-All six jobs pass on `db0d918`:
+**Read the run status off the PR rather than this table.** Six jobs passed on
+`db0d918`; everything since has been rerun after a merge, and a table here goes
+stale the moment anything is pushed. What is worth keeping is the two ways this
+repo's CI has gone red without the code being wrong — both below, and both
+looking exactly like a build failure.
 
-| Job              | Result |
-| ---------------- | ------ |
-| Web Build & Test | pass   |
-| iOS Build        | pass   |
-| Android Build    | pass   |
-| `analyze-bundle` | pass   |
-| `lighthouse`     | pass   |
-| `Run Chromatic`  | pass   |
+Two things a PR needs before CI will even schedule:
+
+- **The PR must not be conflicting.** All four workflows trigger on
+  `pull_request`, and GitHub cannot compute the merge ref for a conflicting PR,
+  so it schedules nothing at all — no runs, no annotations, no indication that
+  anything is waiting on you. On 2026-08-31 a push landed 33 commits and
+  produced zero runs for that reason; the tell is that the PR says
+  `CONFLICTING` while the run list still shows an older SHA.
+- **The account's Actions billing must be current.** A failed payment or a
+  reached spending limit fails every job in 2-3 seconds with no step recorded
+  and the annotation "The job was not started because recent account payments
+  have failed or your spending limit needs to be increased." Four seconds and no
+  failing step is the signature; it is not a code failure and no amount of
+  reading the diff will explain it.
 
 A green Code Connect job is not by itself proof it ran. Check the log says
 `All Code Connect files are valid` and that no `Skipping` annotation was
