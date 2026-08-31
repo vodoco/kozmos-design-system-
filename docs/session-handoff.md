@@ -673,8 +673,14 @@ only because the 0.1% default was loose enough to absorb both cross-platform
 rasterisation _and_ real changes. Tightening to 0.0 removes the second half of
 that and may expose the first. Rendering is deterministic on one machine —
 re-recording produces a byte-identical file on both platforms, checked — but
-macOS versus Linux is untested from here, and Docker is installed but not
-running so it could not be settled.
+macOS versus Linux could not be settled from here, with Docker installed and
+not running.
+
+**CI settled it on 2026-08-31: it passes.** `verifyPaparazziDebug` ran on
+ubuntu-latest against goldens recorded on macOS, at 0.0 tolerance, and the
+Android job went green. So the cross-platform half of that worry was
+unfounded, and the gate is now known to verify rather than absorb. The
+paragraph below still applies if it ever reddens on an unchanged render.
 
 If the Android job reddens on an unchanged render, that is the cause. Re-record
 on the CI platform; do not widen the tolerance back out, because 0.1% is above
