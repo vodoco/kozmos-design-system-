@@ -513,15 +513,47 @@ function levelApplied() {
  * site's CDN version + the global config. On a cold load that can run before the config lands and
  * the URL is set to "" — map opens on the right level, renders nothing. Re-issue until it sticks.
  */
+/**
+ * The url `source_ptr` carried the FIRST time the style was ready — i.e. before `updateMapTiles()`
+ * has had any chance to replace it. Anything different from this came from the SDK, which is the
+ * only thing that knows the indoor url.
+ */
+let firstTileUrl = null;
+
+/**
+ * ⚠️ **Basemap tile hosts.** Only used to catch the case where the style ships a placeholder AND the
+ * SDK never replaces it — `firstTileUrl` catches every other shape on its own, so this list does not
+ * have to be exhaustive to be useful.
+ */
+const BASEMAP_TILES = /api\.maptiler\.com|openmaptiles|basemaps\.|tile\.openstreetmap/i;
+
 function ensureTiles(cb, tries) {
   tries = tries || 0;
   if (styleReady()) {
     const src = (() => { try { return map.getSource("source_ptr"); } catch(e) { return null; } })();
-    if (src && src.url) return cb();
+    const url = (src && src.url) || "";
+    if (firstTileUrl === null) firstTileUrl = url;
     // Only once the style exists — calling this earlier throws inside the SDK's own source-url
     // setter. Re-issue every ~3s rather than every tick: until the site's CDN version resolves it
     // sets the url to "", and each of those throws again inside MapLibre.
     if (tries % 6 === 0) { try { pw.uiController.mapViewController.updateMapTiles(TARGET.site); } catch(e){} }
+    /**
+     * ⚠️ **A url is not the same thing as the INDOOR url, and this gate used to confuse them.**
+     * It read `if (src && src.url) return cb()`, which is true of *any* url — including the
+     * `api.maptiler.com` basemap this style can ship `source_ptr` pointing at. When that happened
+     * the gate passed on the very first call, `updateMapTiles()` above was never reached, and boot
+     * then waited for ever on `poll(levelIsRendering, start, …)` — because a basemap has no `wall`
+     * layer, so the level can never start rendering. Blank indoor map, console full of
+     * `Source layer "wall" does not exist on source "source_ptr"`, and it reads as an SDK fault.
+     * It was also **intermittent**: the same session saw the style arrive both ways.
+     *
+     * Two independent tests, because either alone has a hole. `url !== firstTileUrl` means the SDK
+     * has replaced whatever the style shipped, which is the real signal and needs no host list —
+     * and it covers the documented `""` case for free, since anything beats empty. `BASEMAP_TILES`
+     * then catches the one case that leaves behind: a style that ships a placeholder the SDK never
+     * replaces, where the url would sit unchanged and look acceptable for ever.
+     */
+    if (url && url !== firstTileUrl && !BASEMAP_TILES.test(url)) return cb();
   }
   if (tries > 60) return post("error", { message: "indoor tile url never resolved" });
   setTimeout(() => ensureTiles(cb, tries + 1), 500);
