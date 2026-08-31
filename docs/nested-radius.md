@@ -149,10 +149,11 @@ real question is upstream and is a role decision: if MultiSelect's chips were
 `marker` (4) rather than `pill`, the field's 16 would already be almost exactly
 right, since 4 + 12 = 16.
 
-**Should Product / SDK cards stay at 12?** They were moved to `container` (16)
-on 2026-08-31, and it is worth recording that this **did not resolve a single
-nesting finding** — 50 before, 50 after, simulated against the file before the
-change was made. An earlier draft of this section claimed it would fix most of
+**Should Product / SDK cards stay at 12?** All sixteen — the fifteen Product /
+SDK sets plus FeedbackCard from Platform / Form-Factor — were moved to
+`container` (16) on 2026-08-31, and it is worth recording that this **did not
+resolve a single nesting finding** — 50 before, 50 after, simulated against the
+file before the change was made. An earlier draft of this section claimed it would fix most of
 them, which was wrong and arithmetically obvious in hindsight: a 16 card holding
 a 16 slot across 13px of padding wants 29, so raising the card from 12 to 16
 narrows the gap and never closes it.

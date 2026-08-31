@@ -46757,7 +46757,7 @@ async function updateFeedbackCardVariant(
     width,
     height: 240,
   });
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   // Success replaces the form outright. Leaving a disabled form behind the
   // confirmation would suggest the rating is still editable.

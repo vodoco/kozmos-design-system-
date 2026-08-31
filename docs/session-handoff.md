@@ -1072,8 +1072,8 @@ These need a human call; none are blocked on code.
   declines to judge them. The question is really upstream: if MultiSelect's
   chips were `marker` (4) rather than `pill`, the field's 16 would already be
   right, since 4 + 12 = 16. Full write-up in `docs/nested-radius.md`.
-- **The 15 Product / SDK cards are on `container` (16) as of 2026-08-31**, off
-  the off-scale 12. Recorded because the reasoning given for it was wrong: it
+- **The 15 Product / SDK cards and FeedbackCard are on `container` (16) as of
+  2026-08-31**, off the off-scale 12. Recorded because the reasoning given for it was wrong: it
   resolves **none** of the 50 nesting findings (50 before, 50 after, simulated
   before the change). A 16 card holding a 16 slot across 13px of padding wants 29. The move was still right — those sets now read from the semantic scale
   rather than a literal — but the nesting fix is the **slot**, which wants
