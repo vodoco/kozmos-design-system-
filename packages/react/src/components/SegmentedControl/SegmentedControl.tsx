@@ -82,7 +82,23 @@ export interface SegmentedControlProps
   fullWidth?: boolean;
   items: SegmentedControlItem[];
   label?: string;
-  onValueChange?: (value: string) => void;
+  /**
+   * Called with the pressed value, or `undefined` when the reviewer presses the
+   * segment that already holds the pill and takes their choice back.
+   *
+   * The `undefined` is the point. Radix reports a deselect as `""`, which is a
+   * value no `items` entry can ever have, and every consumer had to know that
+   * and guard it. One of them cast it to a union that did not include it, and
+   * the cast laundered an impossible value past TypeScript — it survived only
+   * because `""` is falsy and every reader happened to treat it as "nothing
+   * chosen". Normalising to `undefined` makes the empty case something the type
+   * system can see, so the compiler asks the question instead of the reviewer
+   * discovering it.
+   *
+   * A consumer that wants "exactly one, always" should control `value` and
+   * ignore the `undefined` rather than expect the component to refuse it.
+   */
+  onValueChange?: (value: string | undefined) => void;
   size?: "sm" | "default" | "lg";
   value?: string;
   wrapperClassName?: string;
@@ -141,7 +157,18 @@ export const SegmentedControl = React.forwardRef<
           disabled={disabled}
           id={inputId}
           onValueChange={(nextValue) => {
-            if (!nextValue) return;
+            // Radix's single-mode toggle group reports a deselect as "".
+            // Forward it as undefined: "" is not a selection, and passing it on
+            // as a string makes every consumer responsible for knowing that.
+            //
+            // The analytics guard stays deliberately — an un-decide is a real
+            // action, but "segmented_control_toggled" with no value would change
+            // what that event means for anything already counting it. Worth
+            // revisiting as its own decision rather than as a side effect here.
+            if (!nextValue) {
+              onValueChange?.(undefined);
+              return;
+            }
             trackEvent("SegmentedControl", "segmented_control_toggled", {
               value: nextValue,
             });

@@ -55,4 +55,41 @@ describe("SegmentedControl", () => {
     expect(screen.getByRole("group")).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByText("Choose one")).toBeInTheDocument();
   });
+
+  it("reports a deselect as undefined, not as an empty string", async () => {
+    // Pressing the segment that already holds the pill takes the choice back.
+    // Radix calls that "", which is a value no `items` entry can have — so a
+    // consumer typing its handler against its own union had to remember to
+    // guard, and one of them cast instead and laundered "" past TypeScript.
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <SegmentedControl
+        defaultValue="one"
+        items={items}
+        onValueChange={onValueChange}
+      />,
+    );
+
+    await user.click(screen.getByRole("radio", { name: "One" }));
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith(undefined);
+    expect(onValueChange).not.toHaveBeenCalledWith("");
+  });
+
+  it("still reports a normal selection as its value", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <SegmentedControl
+        defaultValue="one"
+        items={items}
+        onValueChange={onValueChange}
+      />,
+    );
+
+    await user.click(screen.getByRole("radio", { name: "Two" }));
+    expect(onValueChange).toHaveBeenCalledWith("two");
+  });
 });
