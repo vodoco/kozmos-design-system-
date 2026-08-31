@@ -247,7 +247,7 @@ export function ChangeReviewRow({
    * first: leaving a form open over a row whose override has just been deleted would offer to save
    * an edit that no longer has anything to supersede.
    */
-  const onTray = (v: string) => {
+  const onTray = (v: string | undefined) => {
     /**
      * ⚠️ **A deselect arrives here as `""`, and it used to be written as a decision.**
      * The DS `SegmentedControl` is a Radix `ToggleGroup` with `type="single"`, which *deselects*
