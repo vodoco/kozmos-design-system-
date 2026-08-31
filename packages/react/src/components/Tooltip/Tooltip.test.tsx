@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from "./Tooltip";
 import { describe, it, expect } from "vitest";
+import { axe } from "vitest-axe";
 import "@testing-library/jest-dom/vitest";
 
 describe("Tooltip", () => {
@@ -74,5 +75,37 @@ describe("Tooltip", () => {
     );
 
     expect(document.querySelector("[data-disabled-trigger]")).toBeNull();
+  });
+
+  it("describes a disabled trigger to a screen reader, not just to the eye", async () => {
+    // Focus alone shows the bubble to a sighted keyboard user and announces
+    // nothing. A focusable wrapper with no description reaches the reason
+    // silently — the same failure as the missing tab stop, one step later.
+    // Radix wires describedby because the wrapper IS the trigger; a
+    // hand-rolled bubble has to do it by hand and usually doesn't.
+    const { container } = render(
+      <TooltipProvider>
+        <Tooltip open>
+          <TooltipTrigger disabled>
+            <button disabled>Combine</button>
+          </TooltipTrigger>
+          <TooltipContent>Shift-click another feature first</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>,
+    );
+
+    const wrapper = screen.getByText("Combine").parentElement as HTMLElement;
+    const describedby = wrapper.getAttribute("aria-describedby");
+    expect(describedby).toBeTruthy();
+    expect(
+      document.getElementById(describedby as string)?.textContent,
+    ).toContain("Shift-click");
+
+    // A focusable element with no accessible name is the trap this could
+    // have introduced.
+    const results = await axe(container);
+    expect(
+      (results as unknown as { violations: unknown[] }).violations,
+    ).toHaveLength(0);
   });
 });
