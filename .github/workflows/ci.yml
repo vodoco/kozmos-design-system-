@@ -3,6 +3,15 @@ name: CI
 on:
   push:
     branches: ["main"]
+    # Documentation-only pushes do not need the matrix. This job set includes a `macos-latest`
+    # runner, which GitHub bills at 10x minutes — on 2026-08-28 six of eight pushes to main were
+    # markdown-only and each ran the full matrix, which is how the spending limit was reached.
+    # Deliberately NOT applied to `pull_request`: a required check that never reports blocks a PR.
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".vscode/**"
+      - "LICENSE"
   pull_request:
     types: [opened, synchronize]
 
