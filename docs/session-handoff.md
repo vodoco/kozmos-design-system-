@@ -1,6 +1,6 @@
 # Session Handoff
 
-Written 2026-08-24, updated 2026-08-30. Everything below was verified by
+Written 2026-08-24, updated 2026-08-31. Everything below was verified by
 running it, not recalled.
 Branch: `codex/wave-2-figma-components`.
 
@@ -9,54 +9,40 @@ Branch: `codex/wave-2-figma-components`.
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing               | State                                                  |
-| ------------------- | ------------------------------------------------------ |
-| `pnpm figma:verify` | 5 checks clean; the 6th lists 11 publish blockers      |
-| Plugin audit        | **0 warnings**, 94 sets                                |
-| Figma publish       | **blocked in the file**: 5 sets, 11 unbound properties |
-| Fixes for all five  | **committed, none proven** — every one needs a run     |
-| Working tree        | clean; everything committed                            |
-| Local gates         | all green — see §7 for the list                        |
-| **Figma plugin**    | **running stale code — start here**                    |
+| Thing               | State                                         |
+| ------------------- | --------------------------------------------- |
+| `pnpm figma:verify` | **clean on all six checks**                   |
+| Figma publish       | **unblocked** — 0 unbound properties, 94 sets |
+| Plugin audit        | **0 warnings**, 94 sets                       |
+| Working tree        | clean; everything committed                   |
+| Local gates         | all green — see §7 for the list               |
 
-**Start with the plugin, not the components.** A run on 2026-08-30 at 10:56Z
-executed a `code.js` that predates the last three commits. Checked against the
-file rather than assumed: `Drawer` has no `Header Slot` or `Footer Slot`, and
-`TreeChildItem`'s `Tree Actions` still holds one `Edit Action` instead of five.
-Invalid assets went back to **5** — `NavigationItem` rejoining is simply the old
-code behaving as it did before any of this.
+**The library publishes.** Eleven unbound properties across five sets, two of
+them Core, had held it out of Figma; on 2026-08-31 all five were fixed, run
+through the plugin, and confirmed at zero over the REST API. That was the last
+blocker on this branch.
 
-It is not a problem in the repo. All six markers from those commits are present
-in `figma/foundations-importer/code.js`, the working copy is identical to HEAD,
-`manifest.json` points straight at `code.js` with no build step, and the file was
-written at 09:10Z — nearly two hours before the run.
+It took five different fixes, because the single symptom — Figma's
+"Invalid assets ... Unused properties" — had five unrelated causes:
 
-So the fixes for all five blocked sets are committed and unproven. §3 has the
-causes — five different ones behind one symptom, which is the reason no single
-press clears them:
+| Set              | Cause                                                    |
+| ---------------- | -------------------------------------------------------- |
+| `TreeChildItem`  | a declared capability that was never rendered            |
+| `Drawer`         | `createSlot()` churn leaving orphaned properties         |
+| `NavigationItem` | frames named like slots; a frame cannot carry a binding  |
+| `MultiSelect`    | text inside a nested instance, which no parent can drive |
+| `ColorPicker`    | one property superseded by a variant axis, one nested    |
 
-| Set              | Cause                                                   |
-| ---------------- | ------------------------------------------------------- |
-| `TreeChildItem`  | a declared capability that was never rendered           |
-| `Drawer`         | `createSlot()` churn leaving orphaned properties        |
-| `MultiSelect`    | a structure that changed under a property               |
-| `NavigationItem` | frames named like slots; a frame cannot carry a binding |
-| `ColorPicker`    | a text property superseded by a variant axis            |
+Two rules came out of it that are worth knowing before touching any component
+set, because both fail silently and both cost a round trip here:
 
-`ColorPicker` was recorded here as needing a decision rather than code. It did
-not: `Palette Text` was already fixed and waiting for a run — the builder names
-the node `Palette Text` where the file still says `Placeholder Text` — and
-`Hex Label Text` duplicates what the `Format` axis already says, so it joins the
-three siblings deleted before it.
+- **Only a `SLOT` node can carry a slot binding.** A frame named "... Slot"
+  reads as one everywhere except where it counts.
+- **A component's own property cannot drive a node inside that component's
+  slot, or inside a nested instance.** Bound defaults sit _beside_ a slot —
+  Drawer's `Title Text` beside `Header Slot` is the pattern.
 
-**Nothing in the plugin should ever be `Rebuild`.** It mints a fresh node ID and
-Code Connect pins the existing one. `Update`, or the blue `Fix` button, which is
-the same action relabelled.
-
-The Pointr Cloud dashboard work is planned in
-`docs/figma-upcoming-components.md`, not here. Its conclusion: the library ships
-parts with slots, products assemble screens, and the composed screens go on the
-`Examples` page as frames rather than becoming component sets.
+§3 has both in full, with the measurements behind them.
 
 ## 1. Verified State
 
@@ -794,13 +780,11 @@ touched even when a binding fails — deleting declared-but-unbound slots was th
 mistake this replaces. Checked against the file: the rule reaches exactly
 Drawer's three.
 
-That leaves `TreeChildItem`, `MultiSelect` and `ColorPicker` invalid, which is
-the next tranche — an actions axis, nested-instance label forwarding, and a
-decision respectively.
-
-**Not verified from here.** Whether the two new slots bind cleanly across all
-four `Side` variants needs a plugin run; the REST API can confirm the outcome
-but not the execution.
+**Since confirmed by a run.** All three slots are native `SLOT` nodes on all
+four `Side` variants and all three properties bind; the orphans are gone. Drawer
+was the first of the five to clear, and it is the reference for the shape —
+`Title Text` and `Body Text` sit beside their slots rather than inside them,
+which is what makes them bindable. The other four are covered below.
 
 ### TreeChildItem's row actions
 
@@ -916,86 +900,118 @@ sweeps the page but only _reports_ unbound properties (§3 above), and the plugi
 cannot be run from CI or from a terminal. The check belongs where it can be run
 without Figma open.
 
+### Clearing the last blockers, and the two rules behind them
+
+Five sets went in, and each needed its own fix. Two findings generalise well
+past this branch.
+
+**A component's own property cannot drive text inside a nested instance.**
+MultiSelect's chips are `Chip` instances and ColorPicker's palette name lives
+inside a `Select` instance, so `Chip 1 Text`, `Chip 2 Text` and `Palette Text`
+had nothing to attach to. `forwardNestedInstanceTextProperty` existed for
+exactly this and had never worked once: counted across the whole Components
+page, every `componentPropertyReferences` key in the file is `characters`,
+`visible`, `mainComponent` or `slotContentId` — 6,771 of them — and not one is a
+nested property key. Figma rejects the assignment. The helper is deleted rather
+than left looking like a mechanism, the properties are gone, and the capability
+sits where the text does: both nested instances are `isExposedInstance`, so a
+designer sets a chip label by selecting the chip.
+
+**NavigationItem could not have all three slots**, and that took two rounds to
+see. The slots bound fine; wrapping the leading icon in one silently unbound
+`Leading Icon`, because the same rule applies to slot content. Sidebar's rows
+are nested NavigationItem instances that set their icon through that property —
+Overview, Explore and Settings would all have rendered the same home glyph. So
+`Badge Slot` and `Trailing Slot` are real slots and the leading region is a
+frame holding an instance-swap picker, which is the better affordance for an
+icon anyway. Its node is called `Leading Icon Frame`, deliberately: naming a
+frame "... Slot" is what caused the original bug.
+
+Drawer shows the arrangement that works, and it is the rule to follow: **bound
+defaults sit beside the slot, never inside it** — `Title Text` beside
+`Header Slot`, `Body Text` beside `Content Slot`.
+
+Two truncations surfaced once the sets rendered, both introduced by this
+branch's own changes:
+
+- **Tree rows reserved width for buttons nobody can see.** TreeChildItem draws
+  five action buttons and hides four; a hidden child takes no room in an
+  auto-layout frame, but the width maths counted all five and handed 120px to
+  the spacer. The label was then clamped by a 40px floor, which made it look
+  like a minimum-width problem. Measured across the depths: 66 / 46 / 40px
+  before, a uniform 75px after, against the ~69px "Place item" needs.
+- **One placeholder cannot serve a 278px row and an 81px one.** MultiSelect's
+  hint has the whole row when empty and 81px once two chips, a clear button and
+  a chevron are in there. The builder already asked for a different string when
+  selections existed and could not get one: every node named `Placeholder Text`
+  binds to one property, and that property paints its single default over all of
+  them, so the branch was dead. The filled states have their own node and
+  property now — `Filter Text`, defaulting to "Filter" at ~37px, which leaves
+  44px of headroom rather than the 8px the builder's own "Type to filter" would
+  have left. Third time this repo has needed per-node names for this exact
+  reason, after RoutingInputGroup's three "Start" fields and FileUpload's
+  `File Meta Text`.
+
+`figma:verify` gained a sixth check in the same session, because the first five
+were all green while eleven properties held the library out of Figma entirely.
+It reads every set's `componentPropertyDefinitions`, walks its
+`componentPropertyReferences`, and reports the difference — naming the
+properties, which the publish dialog does not.
+
 ## 4. Immediate Next Actions, In Order
 
-Everything the design system can do from code is done, including all five
-publish blockers. What remains is a Figma run, or work outside this lane.
+Publishing is done; the list below is what comes after it. Nothing here is
+blocked on a decision any more.
 
-1. **Get Figma to load the current `code.js`.** Nothing else on this list can
-   be trusted until this is settled, and two runs have already been spent on
-   conclusions drawn from stale code.
+**Before any plugin run, make Figma load the current `code.js`.** Not a step of
+its own, but the thing that has wasted the most time on this branch. Figma reads
+a development plugin's files when the plugin _launches_, so quit Figma entirely
+(⌘Q) and relaunch after every code change — reopening the panel is not enough.
+If a run's result is surprising, check this before believing it, and confirm
+`Plugins > Development > Manage plugins in development` points at
+`/Volumes/4TB Depo/development/K/kozmos-design-system-dev/figma/foundations-importer/manifest.json`
+rather than another checkout. `pnpm figma:verify` is the cheap way to tell
+whether a run landed: it reads the file, not the plugin's own report.
 
-   First rule out the boring cause: `Plugins > Development > Manage plugins in
-development` and confirm the manifest path is
-   `/Volumes/4TB Depo/development/K/kozmos-design-system-dev/figma/foundations-importer/manifest.json`.
-   If it points at another checkout, edits here never reach Figma. Then quit
-   Figma entirely and relaunch — reopening the plugin _panel_ does not always
-   reload the code, because Figma reads a development plugin's files when the
-   plugin launches.
-
-   Two binary tests, so nobody has to interpret anything:
-   - **The marker.** Run `Fix Audit Issues`, then `Copy Log`. Current code emits
-     a line beginning `unbound properties: N set(s) scanned,`. If it is absent
-     the plugin is stale and the rest of that run means nothing.
-   - **The file.** Run `Update Drawer` and check whether a `Header Slot` node
-     appears — over the API, or in the layers panel. It either did or it did not.
-
-2. **Then `Update` all five blocked sets:** `Drawer`, `TreeChildItem`,
-   `MultiSelect`, `NavigationItem`, `ColorPicker`. Each carries its own fix and
-   none of them clears without its own run — the page sweep only reports, it
-   does not delete. Then `pnpm figma:verify` from the terminal: its sixth check
-   lists every property bound to no layer, which is the same list Figma's
-   publish dialog is refusing on. **Expect zero.** If any survive, the check
-   names the property, which the dialog does not.
-
-   `NavigationItem` is worth watching on this run, because it is the only one
-   whose nodes change type. Its three regions were plain frames pretending to be
-   slots; they are native slots now, and the first run migrates each frame's
-   contents into a real slot and removes the frame. 180 slots across 150
-   variants, which is an order of magnitude more than this machinery has done
-   before (Navbar has 3 variants, Drawer 4) — so if anything misbehaves it will
-   be here. Every subsequent run reuses them.
-
-3. **Run the foundations/variables import, then `Update All Product / SDK` and
+1. **Run the foundations/variables import, then `Update All Product / SDK` and
    the Core sets.** The radius and typography layers are code-only so far.
    The import creates `Semantics/Radius/Control` so the plugin's aliases resolve
    by name; without it they warn and fall back to the same numbers, so this is
    tidiness rather than correctness. Expect controls to move 8px to 16px across
    the file.
 
-4. **Publish the library from Figma**, once Invalid assets is 0. That is Figma's
-   own action in the Assets panel; nothing here touches it.
-
-5. **Decide how the iOS snapshots run in CI**, then widen coverage past Button.
+2. **Decide how the iOS snapshots run in CI**, then widen coverage past Button.
    The harness works; it needs a pinned runner image plus simulator. See §3.
 
-6. **Script-aware typography.** Nine components apply `tracking-tight`
+3. **Script-aware typography.** Nine components apply `tracking-tight`
    (Tailwind's default `-0.025em`, since the config overrides no
    `letterSpacing`). Negative tracking collides CJK glyphs and disrupts Arabic
    cursive joining, and the product ships both. Line heights are Latin-tuned
    too. The `letterSpacing` and `line.height` token scales are unused by every
    platform, so there is nowhere to say "tighter for Latin, normal for CJK".
 
-7. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
+4. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
    (0-1500) is read by no platform. Same shape as the radius and family layers.
 
-8. **Decide the brand font's fate.** Readex Pro covers Latin and Arabic and has
+5. **Decide the brand font's fate.** Readex Pro covers Latin and Arabic and has
    no CJK, so Chinese always fell back to a system font whatever the tokens
    said. Drop it, or scope it to Latin with `unicode-range` — and note that one
    `size-adjust` ratio cannot work across scripts.
 
-9. **`Link` and `Spinner` are each missing a variant axis on iOS and Android.**
+6. **`Link` and `Spinner` are each missing a variant axis on iOS and Android.**
    Found once the analyzer stopped being blind to single quotes. Closing them
    means new public enums on both native packages, so it belongs with the naming
    decision in §5.
 
-10. **`RoutePreviewPanel`'s five states look like two** — see §5.
+7. **`RoutePreviewPanel`'s five states look like two** — see §5.
 
-11. **The Pointr Cloud dashboard work**, planned in
-    `docs/figma-upcoming-components.md`. Drawer slots, TreeChildItem actions and
-    MultiSelect forwarding are done; what remains there is the `Example /
-Dashboard Review Panel` composition, three icons the set lacks (eye, flag,
-    overflow), and the decisions that file lists.
+8. **The Pointr Cloud dashboard work**, planned in
+   `docs/figma-upcoming-components.md`. Drawer's slots and TreeChildItem's five
+   row actions are done and rendered. MultiSelect's chip labels are not
+   "forwarded" and never will be — that is set on the nested Chip, which is
+   exposed for the purpose. What remains is the `Example / Dashboard Review
+Panel` composition, three icons the set lacks (eye, flag, overflow), and the
+   decisions that file lists.
 
 ### Not blocking, and not this branch's to fix
 
@@ -1081,6 +1097,17 @@ These need a human call; none are blocked on code.
   RoutingInputGroup's three fields. If a builder emits N of the same thing, give
   each its own name — FileUpload's `File Meta Text` / `File Meta Text 2` is the
   convention.
+- **A component's own property cannot drive a node inside its own slot, or
+  inside a nested instance.** Both fail the same way: the property is created,
+  nothing binds to it, and Figma refuses to publish the set without saying which
+  property or why. Measured on this file — 5,785 own-property references, none
+  of them inside a slot, and every reference key in the whole page is
+  `characters`, `visible`, `mainComponent` or `slotContentId`. So bound defaults
+  sit _beside_ a slot (Drawer's `Title Text` beside `Header Slot`), and text
+  inside a nested instance belongs to that instance — expose it with
+  `isExposedInstance` rather than trying to forward it upward. There is no
+  forwarding mechanism; the one that used to be in `code.js` never bound
+  anything in any run.
 - **A frame named like a slot binds to nothing, silently.** Figma's slot
   properties attach only to `SLOT` nodes, under the `componentPropertyReferences`
   field `slotContentId`. A frame with the right name reads as a slot in the
