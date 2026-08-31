@@ -109,11 +109,11 @@ before anyone proposes a sweep.
 
 Two shapes account for nearly all of it:
 
-- **A child rounder than its parent.** Product / SDK cards sit at 12 — one of
-  the documented off-scale exceptions — while the slots inside them use
-  `control` at 16, with 13-17px of padding. Geometrically a 12-radius card with
-  13px of inset can only hold a square-cornered child, so the correction is to
-  square the slot rather than to open the card to 29.
+- **A child as round as, or rounder than, its parent.** Product / SDK cards sat
+  at 12 and now sit at `container` 16, while the slots inside them use `control`
+  at 16, with 13-17px of padding. Either way the child is at least as round as
+  the box around it, and geometrically a 16-radius card with 13px of inset can
+  only hold a child of about 3. The correction is the slot, not the card.
 - **A parent much rounder than a small child needs.** Listbox and MultiSelect
   put 4-radius options inside a 16-radius popover with 4-5px of padding. The
   concentric answer is a popover at 8-9, or options at 11-12.
@@ -149,10 +149,19 @@ real question is upstream and is a role decision: if MultiSelect's chips were
 `marker` (4) rather than `pill`, the field's 16 would already be almost exactly
 right, since 4 + 12 = 16.
 
-**Should Product / SDK cards stay at 12?** They are off the semantic scale on
-purpose, and that is what puts them below the radius of their own contents. Move
-them to `container` (16) and most of the first group resolves without touching
-the slots.
+**Should Product / SDK cards stay at 12?** They were moved to `container` (16)
+on 2026-08-31, and it is worth recording that this **did not resolve a single
+nesting finding** — 50 before, 50 after, simulated against the file before the
+change was made. An earlier draft of this section claimed it would fix most of
+them, which was wrong and arithmetically obvious in hindsight: a 16 card holding
+a 16 slot across 13px of padding wants 29, so raising the card from 12 to 16
+narrows the gap and never closes it.
+
+The move was still right, for a different reason: it put 15 sets on the semantic
+scale instead of an off-scale literal, so `Control` and `Container` now reach
+them. But the nesting fix is the **child**, in every one of these pairs. With
+the card at 16 and 13px of inset, the slot wants roughly 3 — which is to say
+square, or `marker` at 4 if a hint of rounding is wanted.
 
 Both are design calls. The checker reports; it does not decide.
 

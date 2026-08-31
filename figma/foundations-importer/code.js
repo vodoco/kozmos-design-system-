@@ -4594,7 +4594,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "POICard/radius",
-    value: 12,
+    value: 16,
+    alias: "Radius/Container",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4626,7 +4627,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "WayfindingCard/radius",
-    value: 12,
+    value: 16,
+    alias: "Radius/Container",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -43091,7 +43093,7 @@ async function updatePOICardVariant(
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(320, 200);
   component.clipsContent = true;
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "POICard");
 
@@ -43375,7 +43377,7 @@ async function updateWayfindingCardVariant(
   component.paddingBottom = 16;
   component.resizeWithoutConstraints(320, 160);
   component.clipsContent = false;
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "WayfindingCard");
 
@@ -43909,7 +43911,7 @@ async function updateAdaptiveMapShellVariant(
       height: 440,
     },
   );
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   const topBar = await productSdkSlot({
     name: "Top Bar Slot",
@@ -44365,7 +44367,7 @@ async function updateMapOverlayVariant(
     width,
     height: 96,
   });
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   const title = await productSdkText({
     name: "Overlay Title Text",
@@ -44496,7 +44498,7 @@ async function updatePOIDetailPanelVariant(
     width,
     height: 420,
   });
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   // Sheet is anchored to the bottom edge, so only its top corners round and it
   // carries a grabber. Inline sits in the document flow with no elevation
@@ -44737,7 +44739,7 @@ async function updateBrowseCategoriesPanelVariant(
       height: 360,
     },
   );
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   const heading = await productSdkText({
     name: "Panel Label Text",
@@ -44909,7 +44911,7 @@ async function updateCategoryTileVariant(
     width: 120,
     height: 104,
   });
-  component.cornerRadius = 12;
+  component.cornerRadius = KOZMOS_RADIUS.container;
   component.fills = [
     paintFromVariable(
       selected ? "Colors/theme/100" : "Surface/0",
@@ -45048,7 +45050,7 @@ async function updatePOIMediaGalleryVariant(
     width,
     height: 220,
   });
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   if (value === "Empty") {
     const empty = await productSdkSlot({
@@ -45219,7 +45221,7 @@ async function updatePOIResultCardVariant(
     width,
     height: 92,
   });
-  component.cornerRadius = 12;
+  component.cornerRadius = KOZMOS_RADIUS.container;
   component.fills = [
     paintFromVariable(
       selected ? "Colors/theme/100" : "Surface/0",
@@ -45441,7 +45443,7 @@ async function updatePOIResultListVariant(
     width,
     height: 360,
   });
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   const count = await productSdkText({
     name: "Result Count Text",
@@ -45589,7 +45591,7 @@ async function updateRouteOptionCardVariant(
     width,
     height: warning ? 104 : 84,
   });
-  component.cornerRadius = 12;
+  component.cornerRadius = KOZMOS_RADIUS.container;
   component.fills = [
     paintFromVariable(
       selected ? "Colors/theme/100" : "Surface/0",
@@ -45786,7 +45788,7 @@ async function updateRoutePreviewPanelVariant(
     width,
     height: 380,
   });
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   const header = await productSdkPanelHeader({
     title: "Kozmos Cafe",
@@ -45984,7 +45986,7 @@ async function updateRouteSummaryVariant(
     width,
     height: 76,
   });
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   const mode = await productSdkSlot({
     name: "Transport Mode Slot",
@@ -46166,7 +46168,7 @@ async function updateRoutingInputGroupVariant(
     width,
     height: pointCount * 52 + 24,
   });
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   const fields = productSdkFrame("Point Fields", {
     primarySizing: "AUTO",
@@ -46305,7 +46307,7 @@ async function updateSaveLocationCardVariant(
     width,
     height: 160,
   });
-  productSdkSurface(component, 12, variableByName, stats);
+  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
   const title = await productSdkText({
     name: "Title Text",
