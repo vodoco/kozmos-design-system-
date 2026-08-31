@@ -242,7 +242,6 @@ const DECISION_INK = "#5d626f";   // Colors/background/600
 /** An edit is your override about to be carried through — the same purple `preserved` wears. */
 const OVERRIDE_INK = "#6D28D9";
 /* INK-END */
-const LINE   = { new:"#1E9E4A", updated:"#1D4ED8", geometry:"#1D4ED8", metadata:"#1D4ED8", deleted:"#B91C1C", preserved:"#6D28D9" };
 // A decision (✓ / ✗) is state, not identity: it never recolours the feature. Badges are therefore
 // neutral, distinct from every type colour.
 const INK = "#000000";
@@ -1031,18 +1030,10 @@ function drawBadge(cx, cy, kind){
 // framing (~z16.7) the fill fades toward a floor and the outline, the dash and the badge carry
 // the identity instead. Strokes stay constant: colour never disappears, it just stops painting
 // over the map you zoomed in to read.
-function fillFactor() {
-  const z = map.getZoom();
-  if (z <= 17.5) return 1;
-  if (z >= 20) return 0.2;
-  return 1 - 0.8 * (z - 17.5) / 2.5;
-}
-
 function redraw() {
   if (!map) return;
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const P = c => map.project(c);
-  const f = fillFactor();
   const marks = [];
   RESOLVED.forEach(({ change, rings, centroid }) => {
     /**
@@ -1064,14 +1055,41 @@ function redraw() {
     if (fate !== "plain") {
       const ghost = fate === "ghost";
       const mine = fate === "mine";
-      const fill = ghost ? "none" : mine ? OVERRIDE_INK : COLORS[change.type];
-      const line = ghost ? DECISION_INK : mine ? OVERRIDE_INK : LINE[change.type];
+      /**
+       * ⚠️ **Nothing here is a filled shape any more** (Olcay, 2026-08-28: *"The map should not have
+       * colored shapes"*, and *"the hidden/confirmed removals should have nothing. Or very very thin
+       * dashed outline — right now it's so thick"*).
+       *
+       * The map is a picture of the **finalised floor**, so the product's own rendering should be
+       * what you see; anything of ours painted over the top competes with it. What is left is the
+       * thinnest thing that still says *where*: an outline, and for a removal barely that.
+       *
+       * ⚠️ **The type colours are gone from the geometry on purpose.** `COLORS`/`LINE` said *what a
+       * feature is* — new, updated, deleted — in a filled polygon. That is the card's job and the
+       * mark's job now. Losing it is the cost of the ruling, and it was made knowingly.
+       */
+      const ink = mine ? OVERRIDE_INK : DECISION_INK;
       rings.forEach(ring => {
       const d = ring.map((c,i) => { const p = P(c); return (i? "L":"M") + p.x + " " + p.y; }).join(" ") + " Z";
-      const path = el("path", { d, fill, "fill-opacity": ghost ? 0 : (active ? 0.6 : 0.42) * f, stroke:line,
-        "stroke-width": active ? 5 : ghost ? 2 : 3, class:"hit",
-        ...(ghost ? { "stroke-dasharray":"4 5", "stroke-opacity":0.85 }
-                  : change.type==="deleted" ? { "stroke-dasharray":"9 6" } : {}) });
+      const path = el("path", { d,
+        /**
+         * ⚠️ **Painted, but invisible — NOT `fill: "none"`.** An unpainted fill is not hit-tested
+         * (`pointer-events: visiblePainted`), so the interior would stop answering the pointer and
+         * only the stroke would select. That matters most for an **undecided** change, which has no
+         * mark (`redraw` only pushes one when there is an outcome) — its outline would be its sole
+         * hit area, and now a 2px one.
+         */
+        fill: ink, "fill-opacity": 0,
+        stroke: ink, class:"hit",
+        /**
+         * ⚠️ **Dashed is reserved for a ghost, and solid for everything else** — that pair is the
+         * only thing telling an *absence* from a feature that is still there. A ghost is dashed over
+         * a hole (its feature is hidden by fid); an undecided change is solid over the real feature,
+         * still drawn beneath. The old `deleted` dash on an undecided removal is gone for exactly
+         * this reason: it made the two look alike.
+         */
+        "stroke-width": ghost ? (active ? 2 : 1) : (active ? 3 : 2),
+        ...(ghost ? { "stroke-dasharray":"2 4", "stroke-opacity":0.55 } : {}) });
       path.addEventListener("mouseenter", () => hover(change));
       path.addEventListener("mouseleave", () => hover(null));
       /**

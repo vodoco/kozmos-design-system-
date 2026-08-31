@@ -308,9 +308,14 @@ export function ManualReview({
     () => initialChanges.map((c) => ({ ...c, decision: decisions[c.id] })),
     [initialChanges, decisions],
   );
-  // Greyscale focus exists to see the diff (§3); cause B has none, so its map opens in colour.
+  /**
+   * ⚠️ **The review map opens in FULL COLOUR** (Olcay, 2026-08-28: *"let's also make default
+   * colorful not greyscale"*). Greyscale existed to make the coloured diff overlay legible against
+   * the floor — and the overlay is not coloured any more, so desaturating the real map now costs
+   * the floor and buys nothing. The toggle stays; only the default moved.
+   */
   const [prefs, setPrefs] = useState<MapPrefs>({
-    greyscale: !matchFailed,
+    greyscale: false,
     hidePoiLabels: false,
     floorplan: true,
     basemap: "vector",
