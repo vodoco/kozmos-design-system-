@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@kozmos/react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@kozmos/react";
 import { ConfirmOverlay } from "./ConfirmOverlay";
 import type { MapBuilding } from "../map/PointrMap";
 import type { LevelRef } from "../screens/MapContent";
@@ -43,17 +49,22 @@ export function UploadDropConfirm({
   onCancel: () => void;
 }) {
   const [buildingId, setBuildingId] = useState(initialBuildingId);
-  const [levelIndex, setLevelIndex] = useState<number | typeof NEW_LEVEL>(initialLevel);
+  const [levelIndex, setLevelIndex] = useState<number | typeof NEW_LEVEL>(
+    initialLevel,
+  );
   const building = buildings.find((b) => b.id === buildingId) ?? buildings[0];
   // A building with no levels is a real data shape (the SDK returns `levels: []`), so never spread
   // an empty array into Math.max — that yields -Infinity and offers to create "Level -Infinity".
   const hasLevels = building.levels.length > 0;
   const addingNew = levelIndex === NEW_LEVEL || !hasLevels;
   // a new level takes the next free index above the building's top floor
-  const newIndex = hasLevels ? Math.max(...building.levels.map((l) => l.index)) + 1 : 0;
+  const newIndex = hasLevels
+    ? Math.max(...building.levels.map((l) => l.index)) + 1
+    : 0;
   const level = addingNew
     ? { index: newIndex, short: `L${newIndex}`, long: `New Level ${newIndex}` }
-    : (building.levels.find((l) => l.index === levelIndex) ?? building.levels[0]);
+    : (building.levels.find((l) => l.index === levelIndex) ??
+      building.levels[0]);
 
   if (!dropKind(file)) {
     return (
@@ -66,8 +77,8 @@ export function UploadDropConfirm({
         onConfirm={onCancel}
         onCancel={onCancel}
       >
-        <b>{file}</b> can't be uploaded — floor-plans arrive as GeoJSON, DWG/DXF or PDF
-        (experimental).
+        <b>{file}</b> can’t be uploaded — floor-plans arrive as GeoJSON, DWG/DXF
+        or PDF (experimental).
       </ConfirmOverlay>
     );
   }
@@ -95,13 +106,19 @@ export function UploadDropConfirm({
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <span>
-          Did you want to upload <b style={{ wordBreak: "break-all" }}>{file}</b> as a new
-          floor-plan for:
+          Did you want to upload{" "}
+          <b style={{ wordBreak: "break-all" }}>{file}</b> as a new floor-plan
+          for:
         </span>
         <div>
           <label
             htmlFor="drop-building"
-            style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6 }}
+            style={{
+              display: "block",
+              fontSize: 12,
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
           >
             Building
           </label>
@@ -131,13 +148,20 @@ export function UploadDropConfirm({
         <div>
           <label
             htmlFor="drop-level"
-            style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6 }}
+            style={{
+              display: "block",
+              fontSize: 12,
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
           >
             Level
           </label>
           <Select
             value={addingNew ? NEW_LEVEL : String(level.index)}
-            onValueChange={(v) => setLevelIndex(v === NEW_LEVEL ? NEW_LEVEL : Number(v))}
+            onValueChange={(v) =>
+              setLevelIndex(v === NEW_LEVEL ? NEW_LEVEL : Number(v))
+            }
           >
             <SelectTrigger id="drop-level" aria-label="Level">
               <SelectValue />
@@ -153,9 +177,16 @@ export function UploadDropConfirm({
             </SelectContent>
           </Select>
           {addingNew && (
-            <div style={{ fontSize: 12, color: "#5d626f", marginTop: 6, lineHeight: 1.4 }}>
-              Creates <b>{level.short}</b> (index {level.index}) in {building.name} — rename it in
-              the editor once it opens.
+            <div
+              style={{
+                fontSize: 12,
+                color: "#5d626f",
+                marginTop: 6,
+                lineHeight: 1.4,
+              }}
+            >
+              Creates <b>{level.short}</b> (index {level.index}) in{" "}
+              {building.name} — rename it in the editor once it opens.
             </div>
           )}
         </div>

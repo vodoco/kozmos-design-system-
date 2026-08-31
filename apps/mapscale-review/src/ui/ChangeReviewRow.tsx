@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@kozmos/react";
+import { splitOverrideLines } from "../mock/overrideLines";
 import {
   changeAccent,
   warningOf,
@@ -17,7 +18,6 @@ import {
   type Decision,
   type Override,
 } from "../mock/diff";
-import { typeLabel } from "../mock/taxonomy";
 
 /**
  * Risk is a third axis and is never coloured — traffic-light red/amber/green stays reserved for
@@ -71,60 +71,26 @@ export function DecisionGlyph({
   );
 }
 
-const ACTIONS: { value: Decision; label: string }[] = [
-  { value: "confirm", label: "Confirm" },
-  { value: "reject", label: "Reject" },
-];
-
 /**
- * A small square icon button — Edit and Revert both, so the pair reads as one family beside the
- * segmented control rather than as two unrelated affordances bolted on.
+ * **Every act the row offers, in one tray** (Olcay, 2026-08-26: *"I don't like the edit button being
+ * there. Let's put it in place of where flag was."*).
+ *
+ * Edit used to be a bordered icon button bolted beside the ✓/✗ pair — a second affordance family on
+ * a row that has twenty siblings, and the middle segment was standing empty where `flag` had been.
+ * Putting it there costs nothing and gives the row's text its width back.
+ *
+ * ⚠️ **`edit` is not a `Decision` and never becomes one.** It opens the editor; an override is what
+ * results, and `outcomeOf()` then supersedes whatever was decided. The tray is a list of *acts*, and
+ * only two of them write a decision — see `onTray`.
  */
-function RowAction({
-  label,
-  ink,
-  onClick,
-  children,
-}: {
-  label: string;
-  ink: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={label}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick();
-          }}
-          style={{
-            display: "grid",
-            placeItems: "center",
-            width: 30,
-            height: 30,
-            padding: 0,
-            borderRadius: 6,
-            border: "1px solid var(--primitives-colors-background-100)",
-            background: "#fff",
-            color: ink,
-            cursor: "pointer",
-          }}
-        >
-          {children}
-        </button>
-      </TooltipTrigger>
-      <TooltipContent
-        style={{ maxWidth: 240, whiteSpace: "normal", lineHeight: 1.4 }}
-      >
-        {label}
-      </TooltipContent>
-    </Tooltip>
-  );
-}
+type TrayAction = Decision | "edit" | "revert";
+
+const TRAY_LABEL: Record<TrayAction, string> = {
+  confirm: "Confirm",
+  edit: "Edit — put your own value in place of this suggestion",
+  reject: "Reject",
+  revert: "Revert to MapScale's detected value",
+};
 
 export function ChangeReviewRow({
   change,
@@ -133,11 +99,10 @@ export function ChangeReviewRow({
   active,
   onActivate,
   edit,
-  onEdit,
+  onOpenEditor,
+  editing,
+  editBlocked,
   onRevert,
-  onEditShape,
-  onEditEnd,
-  shapeDirty,
 }: {
   change: Change;
   /** `undefined` clears the decision. */
@@ -168,34 +133,33 @@ export function ChangeReviewRow({
    * beside the decisions, never on the change — see `Override`.
    */
   edit?: Override;
-  /** Commit an edit. Omit to render the row read-only — the map's card does, it has no room. */
-  onEdit?: (o: Override) => void;
-  /** Throw the override away and go back to what MapScale detected. */
+  /**
+   * ✎ pressed. **The row no longer edits anything itself** (Olcay, 2026-08-26: *"edit should bring
+   * in the edit panel as if it's normal feature edit. geometry becomes editable."*) — it asks the
+   * screen to open the standard properties panel on this change, and the screen owns the session
+   * from there.
+   *
+   * ⚠️ The inline name/type form that used to live here is **gone**, and with it the separate
+   * *"Edit shape on the map"* button. It was the right answer while the review was not allowed a
+   * second editing surface; the ruling supersedes it, and the panel does both halves at once.
+   */
+  onOpenEditor?: () => void;
+  /**
+   * This row's session is open. **Lifted, not local**: the panel belongs to the screen now, so
+   * which row it is on is a fact about the review, not about this row's own UI.
+   */
+  editing?: boolean;
+  /**
+   * Why ✎ cannot be pressed, when it cannot. The map answers `beginchange` with *"that change has
+   * no feature on this floor yet"*, and with the panel as the only way in, a ✎ that silently does
+   * nothing is worse than one that says why.
+   */
+  editBlocked?: string;
+  /**
+   * Revert (an ordinary row) or Reset (a `preserved` one) — the screen decides which act it is,
+   * because only it knows whether the override belongs to this run or an earlier one.
+   */
   onRevert?: () => void;
-  /**
-   * Hand the shape to the geometry editor on the review map. Omitted for rows with nothing to
-   * reshape — a `metadata` change is a one-field fix and a `deleted` one has no new outline.
-   */
-  onEditShape?: () => void;
-  /**
-   * The edit form closed, and whether it closed by saving.
-   *
-   * The screen needs this because **the map may be holding a live geometry session** started by
-   * `onEditShape`, and the row is where the one commit point lives: one row, one Save. Without it
-   * the shape and the fields would each have their own idea of when the edit was over, which is
-   * precisely how you end up with a saved name beside a discarded outline.
-   */
-  onEditEnd?: (commit: boolean) => void;
-  /**
-   * **The map's live geometry session has actually moved the outline.**
-   *
-   * Without it, Save cannot tell a shape-only edit from an edit that changed nothing: both arrive
-   * with an empty `details` list, and the second one must *not* leave an override behind (see the
-   * no-op note on Save). Asking the editor whether the shape is dirty is the only honest way to
-   * tell them apart — and it settles it **before** the commit, rather than racing the geometry
-   * message back from the iframe.
-   */
-  shapeDirty?: boolean;
   /** This is the change the map is showing — the two surfaces share one selection. */
   active?: boolean;
   /** Clicking the row anywhere but the decision control makes it the active one. */
@@ -208,14 +172,7 @@ export function ChangeReviewRow({
    * The edit form is open. Local, not lifted: which row you have open is a fact about this row's
    * own UI, and hoisting it would make the changelog re-render every keystroke.
    */
-  const [editing, setEditing] = useState(false);
-  const [draftName, setDraftName] = useState("");
-  const [draftKind, setDraftKind] = useState("");
-  const openEditor = () => {
-    setDraftName(edit?.name ?? change.name);
-    setDraftKind(edit?.kind ?? change.kind ?? "");
-    setEditing(true);
-  };
+
   /**
    * **D17 (approved 2026-08-13, wording settled the same day).** US7 requires "an option to NOT
    * remove a Map Object", and the only mechanism was the generic ✗ with nothing saying that
@@ -227,34 +184,76 @@ export function ChangeReviewRow({
    * It still writes a plain `reject`, so no new state enters the model.
    */
   const keepIt = change.warning === "re-removed";
-  const items = ACTIONS.map((a) => {
-    const label =
-      keepIt && a.value === "reject"
-        ? "Keep it — this object stays on the map"
-        : a.label;
-    return {
-      value: a.value,
-      label: (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {/* the label lives in the tooltip, so the glyph still needs an accessible name */}
-            <span
-              role="img"
-              aria-label={label}
-              style={{
-                display: "grid",
-                placeItems: "center",
-                color: DECISION_INK,
-              }}
-            >
-              <DecisionGlyph kind={a.value} />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{label}</TooltipContent>
-        </Tooltip>
-      ),
-    };
-  });
+  /**
+   * **Three of your lines show; the rest go behind the cap that is already there.**
+   *
+   * The row draws MapScale's own `details` behind `Details ▼` and yours uncapped — which was safe
+   * while an override was a name and a type, and stops being safe the moment it carries a whole
+   * property bag: eight edited fields would make a ~200px row in a 440px triage list, and the block
+   * that exists to make an edit obvious would bury the twenty rows under it.
+   *
+   * ⚠️ The remainder is **not dropped** — see the cap below, where it is drawn in override ink so it
+   * still reads as yours. Putting the whole block behind the cap would be the failure the block was
+   * built to prevent.
+   */
+  const mine = splitOverrideLines(edit?.details ?? []);
+  /**
+   * ⚠️ **✎ draws in `OVERRIDE_INK` in every state; ✓ ✗ ⟲ stay muted.** It is the override axis, not
+   * a decision, and the colour is the only thing that says so — the same split `outcomeInk()` makes.
+   * The white pill still means what it always meant: *where this row currently stands*.
+   */
+  const tray = (actions: TrayAction[]) =>
+    actions.map((a) => {
+      const label =
+        a === "edit" && editBlocked
+          ? editBlocked
+          : keepIt && a === "reject"
+            ? "Keep it — this object stays on the map"
+            : TRAY_LABEL[a];
+      return {
+        value: a,
+        label: (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {/* the label lives in the tooltip, so the glyph still needs an accessible name */}
+              <span
+                role="img"
+                aria-label={label}
+                style={{
+                  display: "grid",
+                  placeItems: "center",
+                  color: a === "edit" ? OVERRIDE_INK : DECISION_INK,
+                  /* Faded rather than removed: the tray must keep its silhouette (D17), and the
+                     tooltip is where the reason lives. `onTray` refuses the press. */
+                  opacity: a === "edit" && editBlocked ? 0.35 : 1,
+                }}
+              >
+                {a === "edit" ? (
+                  <Pencil size={18} />
+                ) : a === "revert" ? (
+                  <Reset size={18} />
+                ) : (
+                  <DecisionGlyph kind={a} />
+                )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+          </Tooltip>
+        ),
+      };
+    });
+  /**
+   * One dispatcher, because the tray now mixes decisions with acts. Reverting closes the editor
+   * first: leaving a form open over a row whose override has just been deleted would offer to save
+   * an edit that no longer has anything to supersede.
+   */
+  const onTray = (v: string) => {
+    // A blocked ✎ is drawn faded and says why in its tooltip; pressing it does nothing rather than
+    // opening a panel onto a feature the map could not find.
+    if (v === "edit") return editBlocked ? undefined : onOpenEditor?.();
+    if (v === "revert") return onRevert?.();
+    onDecide(v as Decision);
+  };
   return (
     <div
       data-change-row={change.id}
@@ -393,99 +392,64 @@ export function ChangeReviewRow({
              * **Edited outranks the decision, and takes its place** (Olcay, 2026-08-25: *"edit
              * becomes user override which supersedes the incoming change"*).
              *
-             * There is deliberately no ✓/✗ pair here. Confirm would mean "apply MapScale's
-             * suggestion", and you have just replaced it; reject would mean "keep the published
-             * value", and you have just replaced that too. Both segments would be lies about a row
-             * whose answer is now yours. The way back is **Revert**, which restores the detected
-             * value and puts the pair back — one step, and never a hidden one.
+             * There is deliberately no ✓/✗ pair here (Olcay, 2026-08-26: *"too many buttons side by
+             * side when revert is added too"*). Confirm would mean "apply MapScale's suggestion",
+             * and you have just replaced it; reject would mean "keep the published value", and you
+             * have just replaced that too. Both segments would be lies about a row whose answer is
+             * now yours, and the bar's own law already says **hide what cannot apply**. The way back
+             * is **Revert**, which restores the detected value and puts the pair back.
+             *
+             * ⚠️ **The `EDITED` pill went with them.** A selected purple ✎ says it, beside a row
+             * whose left accent is already purple and whose override line is printed underneath —
+             * the pill was the third voice. It also made the edited row the only one with a
+             * different silhouette, which is what D17 forbids.
              */
-            <>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                  color: OVERRIDE_INK,
-                  border: `1px solid ${OVERRIDE_INK}`,
-                  borderRadius: 999,
-                  padding: "2px 9px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                EDITED
-              </span>
-              {onEdit && (
-                <RowAction
-                  label="Edit again"
-                  ink={OVERRIDE_INK}
-                  onClick={openEditor}
-                >
-                  <Pencil size={16} />
-                </RowAction>
-              )}
-              {onRevert && (
-                <RowAction
-                  label="Revert to MapScale's detected value"
-                  ink="var(--review-muted)"
-                  onClick={() => {
-                    setEditing(false);
-                    onEditEnd?.(false);
-                    onRevert();
-                  }}
-                >
-                  <Reset size={16} />
-                </RowAction>
-              )}
-            </>
+            <SegmentedControl
+              items={tray(["edit", "revert"])}
+              value="edit"
+              onValueChange={onTray}
+            />
           ) : preserved ? (
             /**
              * "Kept" stays a word rather than becoming a ✓, because it is the row's *status* and
              * people read it as one — and because ✓ means "apply this change", which is not what
              * is happening here. Beside it, the two acts Olcay asked for on 2026-08-25: edit your
              * own earlier override, or reset it back to what the source says.
+             *
+             * ⚠️ **Neither segment is selected at rest**, and that is deliberate — this row stands
+             * at *Kept*, which is the word beside the tray, not at either act. ✎ takes the pill only
+             * while the editor is open.
              */
             <>
+              {/**
+               * ⚠️ **The label READS the decision.** It was the literal string `"Kept"` until
+               * 2026-08-27, so pressing Reset recorded the decision, the map drew a muted ✗ on the
+               * feature — and the row went on saying *Kept*. The row and the map telling different
+               * stories is the one failure this screen's whole message protocol exists to prevent.
+               */}
               <span
                 style={{ fontSize: 12, color: DECISION_INK, padding: "0 2px" }}
               >
-                Kept
+                {change.decision === "reject" ? "Dropped" : "Kept"}
               </span>
-              {onEdit && (
-                <RowAction
-                  label="Edit your override"
-                  ink={OVERRIDE_INK}
-                  onClick={openEditor}
-                >
-                  <Pencil size={16} />
-                </RowAction>
-              )}
-              {onRevert && (
-                <RowAction
-                  label="Reset — discard your override and take MapScale's value"
-                  ink="var(--review-muted)"
-                  onClick={onRevert}
-                >
-                  <Reset size={16} />
-                </RowAction>
-              )}
+              <SegmentedControl
+                items={tray(["edit", "revert"])}
+                value={editing ? "edit" : undefined}
+                onValueChange={onTray}
+              />
             </>
           ) : (
-            <>
-              <SegmentedControl
-                items={items}
-                value={change.decision}
-                onValueChange={(v) => onDecide(v as Decision)}
-              />
-              {onEdit && (
-                <RowAction
-                  label="Edit — put your own value in place of this suggestion"
-                  ink={OVERRIDE_INK}
-                  onClick={openEditor}
-                >
-                  <Pencil size={16} />
-                </RowAction>
-              )}
-            </>
+            /**
+             * ⚠️ **`editing` takes the pill**, so pressing ✎ has feedback in the row and not only in
+             * the form that opens below it. It is the tray's own grammar — white says where this row
+             * currently stands — and it is why the edited state above draws ✎ selected too: the pill
+             * appears when the session opens and simply stays if the edit is saved.
+             */
+            <SegmentedControl
+              items={tray(["confirm", "edit", "reject"])}
+              value={editing ? "edit" : change.decision}
+              onValueChange={onTray}
+            />
           )}
         </div>
       </div>
@@ -495,7 +459,7 @@ export function ChangeReviewRow({
         `details` are and directly under them — so the row reads as one story in two voices rather
         than as a change with a footnote.
       */}
-      {edit?.details?.length ? (
+      {mine.shown.length ? (
         <div
           style={{
             width: "100%",
@@ -504,7 +468,7 @@ export function ChangeReviewRow({
             gap: 3,
           }}
         >
-          {edit.details.map((d) => (
+          {mine.shown.map((d) => (
             <div
               key={d}
               style={{
@@ -522,175 +486,15 @@ export function ChangeReviewRow({
       ) : null}
 
       {/*
-        **The edit form** (Olcay, 2026-08-25: *"remove flagging, instead introduce editing
-        capabilities"*). It replaces the flag's note field, in the same slot and for the opposite
-        reason: the note existed to describe work deferred, and this is the work.
+        ⚠️ **The inline form stood here until 2026-08-27.** A name + type pair that expanded inside
+        the row, plus a separate *"Edit shape on the map"* button that armed the geometry editor.
+        Olcay: *"edit should bring in the edit panel as if it's normal feature edit. geometry
+        becomes editable."* — so ✎ now opens the **standard properties panel**, which does both
+        halves in one movement, and the row is a list again rather than a workspace.
 
-        Metadata inline, geometry on the map. A name and a type are two fields and belong where you
-        are already reading the row; a shape is not something a 440px panel can offer, so **Edit
-        shape** hands the feature to the geometry editor on the review map — the same editor, armed
-        the same way, rather than a second one grown here.
+        What it took with it: `onEdit`, `onEditShape`, `onEditEnd` and `shapeDirty`. The row no
+        longer commits anything, so it no longer needs a commit point.
       */}
-      {editing && onEdit && (
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            padding: 10,
-            borderRadius: 6,
-            border: `1px solid ${OVERRIDE_INK}`,
-            background: "#fff",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <label style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: "var(--review-muted)",
-              }}
-            >
-              NAME
-            </span>
-            <input
-              value={draftName}
-              onChange={(e) => setDraftName(e.target.value)}
-              aria-label={`Name for ${change.name}`}
-              style={{
-                font: "inherit",
-                fontSize: 13,
-                padding: "5px 8px",
-                borderRadius: 6,
-                border: "1px solid var(--primitives-colors-background-100)",
-              }}
-            />
-          </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: "var(--review-muted)",
-              }}
-            >
-              TYPE
-            </span>
-            <input
-              value={draftKind}
-              onChange={(e) => setDraftKind(e.target.value)}
-              aria-label={`Type for ${change.name}`}
-              style={{
-                font: "inherit",
-                fontSize: 13,
-                padding: "5px 8px",
-                borderRadius: 6,
-                border: "1px solid var(--primitives-colors-background-100)",
-              }}
-            />
-          </label>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              flexWrap: "wrap",
-            }}
-          >
-            {onEditShape && (
-              <button
-                type="button"
-                onClick={onEditShape}
-                style={{
-                  font: "inherit",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  padding: "5px 10px",
-                  borderRadius: 6,
-                  border: `1px solid ${OVERRIDE_INK}`,
-                  background: "#fff",
-                  color: OVERRIDE_INK,
-                  cursor: "pointer",
-                }}
-              >
-                Edit shape on the map
-              </button>
-            )}
-            <div style={{ flex: "1 1 0" }} />
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(false);
-                onEditEnd?.(false);
-              }}
-              style={{
-                font: "inherit",
-                fontSize: 12,
-                padding: "5px 10px",
-                borderRadius: 6,
-                border: "1px solid var(--primitives-colors-background-100)",
-                background: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
-            {/**
-             * ⚠️ **A no-op edit writes no override.** Opening the form, changing nothing and
-             * pressing Save used to be the obvious way to end up with a row marked EDITED that
-             * differs from MapScale in no respect — a purple shape on the map claiming an override
-             * nobody made. The details are computed first, and an empty list means the row goes
-             * back to being undecided rather than becoming a lie.
-             */}
-            <button
-              type="button"
-              onClick={() => {
-                const name = draftName.trim();
-                const kind = draftKind.trim();
-                const details: string[] = [];
-                const next: Override = { details };
-                if (name && name !== change.name) {
-                  next.name = name;
-                  details.push(`Name: “${change.name}” → “${name}”`);
-                }
-                if (kind && kind !== (change.kind ?? "")) {
-                  next.kind = kind;
-                  details.push(
-                    `Type: “${typeLabel(change.kind ?? "")}” → “${typeLabel(kind)}”`,
-                  );
-                }
-                // Keep a shape the user already drew — this form does not own it, so it must
-                // not drop it on the way past.
-                if (edit?.geometry !== undefined) next.geometry = edit.geometry;
-                if (edit?.details?.length)
-                  for (const d of edit.details)
-                    if (!details.includes(d) && d.startsWith("Boundary"))
-                      details.push(d);
-                setEditing(false);
-                onEditEnd?.(true);
-                if (details.length || shapeDirty) onEdit(next);
-                else onRevert?.();
-              }}
-              style={{
-                font: "inherit",
-                fontSize: 12,
-                fontWeight: 600,
-                padding: "5px 12px",
-                borderRadius: 6,
-                border: `1px solid ${OVERRIDE_INK}`,
-                background: OVERRIDE_INK,
-                color: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              Save edit
-            </button>
-          </div>
-        </div>
-      )}
-
       {/*
         The bullets use the FULL card width, and the toggle is a **full-width bottom cap**
         (Olcay, 2026-08-11). Both come from the same observation: a bullet trapped in the identity
@@ -701,7 +505,7 @@ export function ChangeReviewRow({
         which are exactly the padding above (`10px 12px 10px 14px`) — so it meets both edges and
         rounds into the card's bottom corners.
       */}
-      {change.details?.length ? (
+      {change.details?.length || mine.capped.length ? (
         <div style={{ width: "100%" }}>
           {expanded && (
             <div
@@ -712,7 +516,7 @@ export function ChangeReviewRow({
                 paddingBottom: 8,
               }}
             >
-              {change.details.map((d) => (
+              {(change.details ?? []).map((d) => (
                 <div
                   key={d}
                   style={{
@@ -722,6 +526,21 @@ export function ChangeReviewRow({
                   }}
                 >
                   • {d}
+                </div>
+              ))}
+              {/* Yours, in your ink, so the overflow still reads as yours and not as MapScale's. */}
+              {mine.capped.map((d) => (
+                <div
+                  key={d}
+                  style={{
+                    fontSize: 12,
+                    color: OVERRIDE_INK,
+                    lineHeight: 1.45,
+                    borderLeft: `3px solid ${OVERRIDE_INK}`,
+                    paddingLeft: 8,
+                  }}
+                >
+                  {d}
                 </div>
               ))}
             </div>
@@ -752,7 +571,11 @@ export function ChangeReviewRow({
               color: "var(--primitives-colors-theme-700)",
             }}
           >
-            {expanded ? "Hide details" : "Details"}
+            {expanded
+              ? "Hide details"
+              : mine.capped.length
+                ? `Details · ${mine.capped.length} more of yours`
+                : "Details"}
             <span style={{ fontSize: 8, lineHeight: 1 }}>
               {expanded ? "▲" : "▼"}
             </span>

@@ -243,7 +243,7 @@ writeFileSync(
       `  wfBuildEdges, wfEnsureEdges, WF_NODES, wfPaint,\n` +
       `  wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, wfNodeAt, personaOk,\n` +
       `  featureAt, editableAt, hoverableAt,\n` +
-      `  outcomeOf, outcomeInk, previewFate, DECISION_INK, OVERRIDE_INK,\n` +
+      `  outcomeOf, outcomeInk, previewFate, setEditingChange, DECISION_INK, OVERRIDE_INK,\n` +
       `  fpMode, FP_PREFIX,\n` +
       `  LEVEL_FEATS, LEVEL_FEATS_LVL, __setMap, __env, TARGET, prefs, POSTED };\n` +
       `export function __setLevelFeats(f, lvl) { LEVEL_FEATS = f; LEVEL_FEATS_LVL = lvl; }\n` +
@@ -287,7 +287,7 @@ const {
   wfBuildEdges, wfEnsureEdges, wfPaint,
   wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, personaOk,
   editableAt, hoverableAt,
-  outcomeOf, outcomeInk, previewFate, DECISION_INK, OVERRIDE_INK,
+  outcomeOf, outcomeInk, previewFate, setEditingChange, DECISION_INK, OVERRIDE_INK,
   fpMode, FP_PREFIX,
   __setMap, __setLevelFeats, __setHidden, __setReach, __setNodes, __sel, __edges,
   __env, TARGET, prefs, POSTED,
@@ -2655,31 +2655,82 @@ const node = (fid, at, nb, tr) => ({
    whole point is that the list and the map agree. */
 console.log("\npersona");
 
+/**
+ * ⚠️ **The rule is written TWICE and this block is the only thing holding the two together** — the
+ * shell's `personaOk()` (it cannot import from `src/`) and the app's `isVisibleToPersona()`.
+ *
+ * That sentence used to be in the shell and was **false**: this block asked only `personaOk`, and
+ * `visibleToPersona` was never named here once. It had drifted — it tested `Array.isArray` and so
+ * returned "visible" for the string shape a vector tile produces, meaning the app's persona filter
+ * silently did nothing on tile-shaped data while the shell's worked. Fixed 2026-08-28.
+ *
+ * So every case below runs through **both**, and a divergence fails on its own line. Adding a case
+ * to the table is the whole cost of keeping them honest.
+ */
+const personaSrc = readFileSync(join(here, "..", "src", "mock", "personaVisibility.ts"), "utf8");
+const personaJs = join(here, `.personaVisibility.${process.pid}.mjs`);
+writeFileSync(
+  personaJs,
+  ts.transpileModule(personaSrc, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText,
+);
+let personaMod;
+try {
+  personaMod = await import(pathToFileURL(personaJs).href);
+} finally {
+  unlinkSync(personaJs);
+}
+const { isVisibleToPersona } = personaMod;
+
 {
-  check("a feature meant for this persona is visible",
-        personaOk({ mapPersonas: ["staff", "facilityManager"] }));
-  check("…and one that is not, is not", !personaOk({ mapPersonas: ["customer", "visitor"] }));
+  const PERSONA = "facilityManager";
 
   /**
-   * ⚠️ **No `mapPersonas` at all means VISIBLE** — the platform's own rule, and the safer
-   * direction: unmarked is unclassified, not private. Reading it the other way would quietly empty
-   * a floor whose content predates personas.
+   * One table, both implementations. `props` is what the shell is handed (a property bag);
+   * `isVisibleToPersona` takes the field itself, which is the only difference in their signatures.
    */
-  check("unmarked is unclassified, not private", personaOk({ name: "Costa" }));
-  check("…and so is an empty list", personaOk({ mapPersonas: [] }));
-  check("no properties at all does not throw", personaOk(null) && personaOk(undefined));
+  const table = [
+    ["a feature meant for this persona is visible", { mapPersonas: ["staff", "facilityManager"] }, true],
+    ["…and one that is not, is not", { mapPersonas: ["customer", "visitor"] }, false],
+
+    /* ⚠️ No `mapPersonas` at all means VISIBLE — unmarked is unclassified, not private. Reading it
+       the other way would quietly empty a floor whose content predates personas. */
+    ["unmarked is unclassified, not private", { name: "Costa" }, true],
+    ["…and so is an empty list", { mapPersonas: [] }, true],
+    ["…and so is an empty string", { mapPersonas: "" }, true],
+
+    /* ⚠️ A vector tile flattens an array property to a string. The same feature arrives as a real
+       array from our own GeoJSON and as "customer,facilityManager" from the tiles — so the rule has
+       to read both, or the persona applies on one render path and not the other. THIS is the pair
+       the app's copy failed. */
+    ["a tile's flattened list is read too", { mapPersonas: "staff,facilityManager" }, true],
+    ["…including the bracketed form", { mapPersonas: '["vip","facilityManager"]' }, true],
+    ["…and the bracketed form still excludes", { mapPersonas: '["customer","visitor"]' }, false],
+    ["…and the flattened form still excludes", { mapPersonas: "customer,visitor" }, false],
+    ["whitespace in a flattened list is ignored", { mapPersonas: "customer, facilityManager" }, true],
+
+    // ⚠️ Not a substring match: "facilityManagerAssistant" is a different persona.
+    ["it matches whole keys, not substrings", { mapPersonas: "facilityManagerAssistant" }, false],
+  ];
+
+  for (const [name, props, expected] of table) {
+    check(`${name} · shell`, personaOk(props) === expected);
+    check(`${name} · app`, isVisibleToPersona(props.mapPersonas, PERSONA) === expected);
+  }
+
+  check("no properties at all does not throw · shell", personaOk(null) && personaOk(undefined));
+  check("no properties at all does not throw · app",
+        isVisibleToPersona(null, PERSONA) && isVisibleToPersona(undefined, PERSONA));
 
   /**
-   * ⚠️ **A vector tile flattens an array property to a string.** The same feature arrives as a real
-   * array from our own GeoJSON and as `"customer,facilityManager"` from the tiles — so the rule has
-   * to read both, or the persona would apply on one render path and not the other, which is the
-   * very inconsistency this exists to remove.
+   * ⚠️ **No persona means no filtering.** Without this guard an empty persona matches nothing and
+   * every marked feature on the floor disappears — a blank building presented as a working one.
+   * The shell has always guarded it; the app's copy did not until 2026-08-28. `MAP_PERSONA` uses
+   * `??`, which does NOT catch an env var set to the empty string, so this is reachable.
    */
-  check("a tile's flattened list is read too", personaOk({ mapPersonas: "staff,facilityManager" }));
-  check("…including the bracketed form", personaOk({ mapPersonas: '["vip","facilityManager"]' }));
-  check("…and it still excludes", !personaOk({ mapPersonas: "customer,visitor" }));
-  // ⚠️ Not a substring match: "facilityManagerAssistant" is a different persona.
-  check("it matches whole keys, not substrings", !personaOk({ mapPersonas: "facilityManagerAssistant" }));
+  check("an empty persona filters nothing, it does not hide everything",
+        isVisibleToPersona(["staff", "customer"], "") === true);
 }
 
 /* ══ REACH — what a section lets you touch ══════════════════════════════════
@@ -2822,6 +2873,153 @@ console.log("\nfloor-plan source");
   check("the tiles prefix is a prefix of the other two — teardown must key on the MODE, not a "
         + "string match",
         FP_PREFIX.gj.startsWith(FP_PREFIX.tiles) && FP_PREFIX.draft.startsWith(FP_PREFIX.tiles));
+}
+
+/* P6. An OPEN edit session previews its own outcome — the rule that makes a removal editable. */
+{
+  const ghosted = { id: "pharmacy", type: "deleted", decision: "confirm" };
+  const rejectedNew = { id: "costa", type: "new", decision: "reject" };
+
+  check("a confirmed removal is a ghost while nothing is open",
+        previewFate(ghosted) === "ghost");
+  check("a rejected addition is a ghost too", previewFate(rejectedNew) === "ghost");
+
+  setEditingChange("pharmacy");
+  // ⚠️ This is the whole reason the rule exists: a ghost is a dashed outline with NO FILL, and you
+  // cannot edit a shape you cannot see.
+  check("opening its editor makes the removal draw as YOURS",
+        previewFate(ghosted) === "mine");
+  check("and it generalises — the rejected addition is untouched while a DIFFERENT change is open",
+        previewFate(rejectedNew) === "ghost");
+
+  setEditingChange("costa");
+  check("the rule is not special-cased to removals",
+        previewFate(rejectedNew) === "mine");
+  check("and the removal goes back to being a ghost", previewFate(ghosted) === "ghost");
+
+  setEditingChange(null);
+  check("cancelling puts everything back", previewFate(ghosted) === "ghost");
+  check("...both of them", previewFate(rejectedNew) === "ghost");
+
+  // An open session must not invent an outcome for a row that has none.
+  setEditingChange("nothing-open");
+  check("an id that matches no change changes nothing",
+        previewFate({ id: "costa", type: "new" }) === "diff");
+  setEditingChange(null);
+}
+
+/* ── Q. the override's vocabulary — what an edit PRINTS ────────────────────── */
+
+console.log("\noverride lines");
+
+/**
+ * ⚠️ `src/mock/overrideLines.ts` imports NOTHING, which is the only reason this can reach it: the
+ * module is transpiled type-stripped and imported directly. Everything else under `src/` pulls a
+ * graph the harness cannot resolve, which is exactly why the override's two TABLES — the sentence
+ * and the order — were put in a module of their own rather than left in `diff.ts`.
+ */
+const ovSrc = readFileSync(join(here, "..", "src", "mock", "overrideLines.ts"), "utf8");
+const ovJs = join(here, `.overrideLines.${process.pid}.mjs`);
+writeFileSync(
+  ovJs,
+  ts.transpileModule(ovSrc, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText,
+);
+let ov;
+try {
+  ov = await import(pathToFileURL(ovJs).href);
+} finally {
+  unlinkSync(ovJs);
+}
+const { overrideLine, overrideDetails, splitOverrideLines, REMOVAL_OVERRIDDEN, SHOWN_LINES, FITS } = ov;
+
+/* Q1. The sentence table, cell by cell. Written out rather than generated: the point is that
+      somebody reading it can see the rule — print the change when it fits, name it when it does
+      not — and agree with it. */
+{
+  const L = (a, b) => overrideLine("Name", a, b);
+
+  check("nothing to nothing says nothing", L(undefined, undefined) === null);
+  check("nothing to an empty string says nothing", L(undefined, "") === null);
+  check("whitespace is nothing", L(undefined, "   ") === null);
+  check("unchanged says nothing", L("Costa", "Costa") === null);
+
+  check("a value arriving prints it", L(undefined, "Costa") === 'Name: “Costa”');
+  check("a value leaving is NAMED, never printed", L("Costa", undefined) === "Name removed");
+  check("a change that fits is printed",
+        L("Costa", "Costa Coffee") === 'Name: “Costa” → “Costa Coffee”');
+
+  const long = "x".repeat(FITS + 1);
+  check("too long on the RIGHT is named", L("Costa", long) === "Name changed");
+  check("too long on the LEFT is named", L(long, "Costa") === "Name changed");
+  check("too long arriving is named", L(undefined, long) === "Name added");
+  check(`exactly ${FITS} still fits`,
+        L("a", "x".repeat(FITS)) === `Name: “a” → “${"x".repeat(FITS)}”`);
+}
+
+/* Q2. Quoting is for STRINGS only. `Cuisines: “3 values”` reads as though the value were that
+      literal text — the cell most likely to be wrong, and invisible in a screenshot. */
+{
+  check("a boolean is bare, not quoted",
+        overrideLine("Has Wifi", false, true) === "Has Wifi: no → yes");
+  check("false is a VALUE, not an absence",
+        overrideLine("Has Wifi", undefined, false) === "Has Wifi: no");
+  check("a number is bare", overrideLine("Seats", 4, 12) === "Seats: 4 → 12");
+  check("a list reports its COUNT, bare",
+        overrideLine("Cuisines", ["a", "b"], ["a", "b", "c"]) === "Cuisines: 2 values → 3 values");
+  check("one item is singular", overrideLine("Cuisines", undefined, ["a"]) === "Cuisines: 1 value");
+  check("an empty list is nothing", overrideLine("Cuisines", undefined, []) === null);
+  check("a same-length list still reports change only when the count moves",
+        overrideLine("Cuisines", ["a", "b"], ["c", "d"]) === null);
+}
+
+/* Q3. The ORDER, which is what makes the three-line cap safe: the identity set comes first, so the
+      common edit never truncates. */
+{
+  const label = { type: (s) => s.toUpperCase(), prop: (s) => "P:" + s };
+  const change = { type: "deleted", name: "DDF Pharmacy", kind: "retail" };
+  const lines = overrideDetails(
+    change,
+    {
+      name: "DDF Pharmacy — Gate B22",
+      kind: "pharmacy",
+      details: ["Boundary redrawn by hand"],
+      props: { openingHours: "24h" },
+      removedProps: ["phone"],
+    },
+    { openingHours: "06:00–22:00", phone: "+971" },
+    label,
+  );
+  check("a removal that is overridden says so FIRST", lines[0] === REMOVAL_OVERRIDDEN);
+  check("then Name", lines[1].startsWith("Name: "));
+  check("then Type", lines[2].startsWith("Type: "));
+  check("then the boundary", lines[3] === "Boundary redrawn by hand");
+  check("then the properties", lines[4] === "P:openingHours: “06:00–22:00” → “24h”");
+  check("then what was binned", lines[5] === "P:phone removed");
+  check("and nothing else", lines.length === 6);
+
+  // ⚠️ The removal line must not appear on an override that settled nothing — that is the no-op
+  // guard's own case, and a purple row claiming an override nobody made is what it exists to stop.
+  check("an EMPTY override on a removal says nothing at all",
+        overrideDetails(change, {}, undefined, label).length === 0);
+  check("a non-removal never gets the removal line",
+        !overrideDetails({ type: "new", name: "Costa" }, { name: "Costa Coffee" }, undefined, label)
+          .includes(REMOVAL_OVERRIDDEN));
+  check("binning a field that was never set says nothing",
+        overrideDetails({ type: "new", name: "C" }, { removedProps: ["phone"] }, {}, label)
+          .length === 0);
+}
+
+/* Q4. The cap. Three shown, the rest behind the Details cap — NOT dropped. */
+{
+  const many = ["a", "b", "c", "d", "e"];
+  const { shown, capped } = splitOverrideLines(many);
+  check(`${SHOWN_LINES} lines are shown`, shown.length === SHOWN_LINES);
+  check("the remainder is CAPPED, not lost", capped.join() === "d,e");
+  check("nothing is dropped", shown.length + capped.length === many.length);
+  const few = splitOverrideLines(["a", "b"]);
+  check("a short override caps nothing", few.capped.length === 0 && few.shown.length === 2);
 }
 
 /* ── verdict ──────────────────────────────────────────────────────────────── */

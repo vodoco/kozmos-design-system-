@@ -15,6 +15,8 @@
  * (the app is built locally and uploaded prebuilt, so Vercel's own env injection never runs —
  * see handoff §7a).
  */
+
+import { isVisibleToPersona } from "./personaVisibility";
 export interface PointrConfig {
   baseUrl: string;
   client: string;
@@ -69,13 +71,20 @@ export const MAP_PERSONA = env.VITE_POINTR_PERSONA ?? "facilityManager";
  * ⚠️ **No `mapPersonas` at all means visible**, not hidden — the platform's own rule, and the safer
  * direction: an unmarked feature is unclassified, not private, and dropping it would quietly empty
  * a floor whose content predates personas.
+ *
+ * ⚠️ **The rule itself lives in `personaVisibility.ts`, and this is only the binding to
+ * `MAP_PERSONA`.** It was moved there on 2026-08-28 for two reasons. This module reads
+ * `import.meta.env` at module scope, so nothing in it can be reached by `scratch/geometry.test.mjs`
+ * — the rule sat here untested while the shell's copy had eleven assertions. And it was *wrong*:
+ * it tested `Array.isArray` and returned "visible" for the string shape a vector tile produces, so
+ * on tile-shaped data this filter silently did nothing. Both implementations are now asserted
+ * against one shared table.
  */
 export function visibleToPersona(
   mapPersonas: unknown,
   persona: string = MAP_PERSONA,
 ): boolean {
-  if (!Array.isArray(mapPersonas) || !mapPersonas.length) return true;
-  return mapPersonas.some((p) => String(p) === persona);
+  return isVisibleToPersona(mapPersonas, persona);
 }
 
 export const POINTR: PointrConfig = {

@@ -591,7 +591,14 @@ const PointrMap = forwardRef<
     if (latest.current.target)
       win.postMessage({ type: "target", ...latest.current.target }, "*");
     if (latest.current.active)
-      win.postMessage({ type: "active", id: latest.current.active }, "*");
+      win.postMessage(
+        {
+          type: "active",
+          id: latest.current.active,
+          padRight: latest.current.focusPadRight ?? 0,
+        },
+        "*",
+      );
   };
 
   // The map page announces itself when the level is up; anything posted before that is lost.
@@ -748,7 +755,12 @@ const PointrMap = forwardRef<
    */
   useEffect(() => {
     ref.current?.contentWindow?.postMessage(
-      { type: "active", id: active ?? null },
+      /**
+       * ⚠️ **The reservation rides with the SELECTION, not only with `focus`.** Clicking a row
+       * focuses through `focusChange`, which is a different function from `focusFeature` and had
+       * no padding parameter at all — so a feature the camera centred landed behind an open panel.
+       */
+      { type: "active", id: active ?? null, padRight: focusPadRight ?? 0 },
       "*",
     );
   }, [active]);

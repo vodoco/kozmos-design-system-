@@ -19,6 +19,9 @@ import { FeaturePanel, mergeForEditing } from "../src/ui/FeaturePanel";
  * the size `TypeIcon` produces, and once with none, because the title is a flex row with a `gap`
  * and an absent icon still gets gapped away from the block's left edge.
  */
+/** The bench does not act on commands; it exists to be looked at. */
+const noop = () => {};
+
 const DEMO_PROPS = {
   fid: "a80b5862-1ae5-439c-b408-b0b49c8a3372",
   bid: "51dd37d1-c2bc-4d9e-8e22-2ea1a15a626c",
@@ -347,7 +350,11 @@ function Bench() {
               overflow: "hidden",
             }}
           >
-            <GeometryToolbar state={c.state} notice={c.notice} />
+            <GeometryToolbar
+              state={c.state}
+              notice={c.notice}
+              onCommand={noop}
+            />
           </div>
         </div>
       ))}
@@ -391,7 +398,12 @@ function Bench() {
             overflow: "hidden",
           }}
         >
-          <GeometryToolbar state={BASE} padRight={384} />
+          <GeometryToolbar
+            state={BASE}
+            padLeft={72}
+            padRight={384}
+            onCommand={noop}
+          />
           {/* Stand-in for FeaturePanel: same width, same inset, same z-order. */}
           <div
             style={{
@@ -446,6 +458,7 @@ function Bench() {
           >
             <GeometryToolbar
               state={{ ...BASE, canUndo: true, canRedo: false }}
+              onCommand={noop}
             />
           </div>
         </div>

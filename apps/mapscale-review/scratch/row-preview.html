@@ -1,0 +1,23 @@
+<!doctype html>
+<!--
+  A bench for the changelog row's decision tray — MAP-566, 2026-08-27.
+
+  The review screen needs real Pointr Cloud credentials to reach, which made the row's CONTROL the
+  one thing in this app that could only be checked by reading the code. It is a control that was
+  ruled on twice; shipping it unseen is exactly the mistake this project keeps recording.
+
+      npm run dev   →   http://localhost:5173/scratch/row-preview.html
+
+  Not part of the app: nothing imports it and `vite build` only emits `index.html`.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Changelog row — bench</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./row-preview.tsx"></script>
+  </body>
+</html>

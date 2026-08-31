@@ -231,8 +231,14 @@ const EDIT_INK = "#0b369c";   // Colors/theme/800
  * map, which was the original objection to the `COLOURED_DECISIONS` experiment this replaces.
  *
  * ⚠️ Change these here **and** in `diff.ts`, or the list and the map will disagree.
+ *
+ * ⚠️ **`#5d626f`, not `#737373` — ruled 2026-08-27.** Figma's tray drew `background-600` while the
+ * app drew `--review-muted`, and the two greys had been a hair apart since the marks were built.
+ * Olcay chose Figma's. It is also the better one: **6.10:1** on white against 4.74:1, which matters
+ * for an 18px glyph and for the ghost's dashed hairline, and it sits closer to the ✎'s 7.10 so the
+ * tray reads as one family rather than as two weights.
  */
-const DECISION_INK = "#737373";
+const DECISION_INK = "#5d626f";   // Colors/background/600
 /** An edit is your override about to be carried through — the same purple `preserved` wears. */
 const OVERRIDE_INK = "#6D28D9";
 /* INK-END */
@@ -909,6 +915,16 @@ function featureRings(fid) {
  */
 function outcomeOf(c) { return c.override ? "edited" : (c.decision || null); }
 
+/**
+ * **The change whose editor is open right now**, or `null`. Set by `beginchange`, cleared by `end`.
+ *
+ * ⚠️ It lives INSIDE this engine block because `previewFate` reads it, and the block is extracted
+ * and evaluated on its own by the harness — a variable declared outside would make the generated
+ * module throw rather than fail a check.
+ */
+let EDITING_CHANGE = null;
+function setEditingChange(id) { EDITING_CHANGE = id || null; }
+
 /** The ink a mark draws in — muted for a decision, the override purple for an edit. */
 function outcomeInk(o) { return o === "edited" ? OVERRIDE_INK : DECISION_INK; }
 
@@ -927,8 +943,33 @@ function outcomeInk(o) { return o === "edited" ? OVERRIDE_INK : DECISION_INK; }
  *
  * An **edited** row is neither of the last two: it stays, and it is yours, so it keeps a shape and
  * paints `OVERRIDE_INK`. That is `"mine"`.
+ *
+ * ⚠️ **An OPEN edit session previews its own outcome** (Olcay, 2026-08-26, ruling that a removal may
+ * be edited). While you are editing a change, the map draws it as `"mine"` — because that is what
+ * saving will make true — and Cancel puts it back.
+ *
+ * It is not a courtesy. A confirmed removal is a **ghost**: filtered out of the layers that draw it,
+ * left as a dashed outline with no fill. **You cannot edit a shape you cannot see**, and the same is
+ * true of a rejected addition. Rather than special-case those two, the session simply shows its own
+ * result — which is also what this screen already promises out loud: *the map shows the floor as it
+ * will be*, and that should not have to wait for a Save.
+ *
+ * ⚠️ **An UNDECIDED removal keeps its diff colour — it is NOT taken off the floor yet.** Decided by
+ * Olcay, 2026-08-27, against the reading that would remove it: *"keep the diff until decided."*
+ *
+ * It is worth stating because the opposite is arguable and someone will argue it. The standing rule
+ * for the map is *"remove it first, then bring it back if the user rejected the removal"* (Olcay,
+ * 2026-08-27), and an undecided change **applies as detected** — the Complete-review overlay says so
+ * out loud. So strictly, the preview of the upcoming floor would already be missing it.
+ *
+ * It stays because this screen is two things at once, and `diff` is the half that is not the
+ * preview: it is the one fate that means **"this still needs you"**. Taking an undecided removal off
+ * the floor would show you the answer to a question you have not been asked, and the row would be
+ * the only place left that the feature was ever there. `plain` and `ghost` are both decided states;
+ * `diff` is the queue.
  */
 function previewFate(c) {
+  if (EDITING_CHANGE && c.id === EDITING_CHANGE) return "mine";
   const o = outcomeOf(c);
   if (o === "edited") return "mine";
   if (!o) return "diff";
@@ -2295,10 +2336,21 @@ function personaOk(p) {
     : String(m).replace(/[[\]"\s]/g, "").split(",").filter(Boolean);
   /**
    * ⚠️ **An empty list is "carrying no personas", which is VISIBLE** — the same as the field being
-   * absent. This is the one place the rule is written twice (the app has `visibleToPersona`, and
-   * this file cannot import from it), and the two disagreed here until a test asked them the same
-   * question. When a rule has to live in two places, the tests are the only thing holding them
-   * together.
+   * absent.
+   *
+   * ⚠️ **This is the one place the rule is written twice** — the app's is
+   * `src/mock/personaVisibility.ts`, and this file cannot import from it.
+   *
+   * ⚠️ **This comment used to claim the tests held the two together. It was not true**, and that is
+   * why the drift survived: the suite asked THIS function eleven questions and never named the
+   * app's copy once. The app's tested `Array.isArray` and so answered "visible" to the very string
+   * shape the block below exists to normalise — so on tile-shaped data its filter did nothing,
+   * silently, while this one worked. Fixed 2026-08-28.
+   *
+   * Both are now run against **one shared table** in the `persona` block of
+   * `scratch/geometry.test.mjs` — every case, both implementations, a divergence failing on its own
+   * line. When a rule has to live in two places that table is the only thing holding them together,
+   * and unlike the sentence it replaces, it is checked.
    */
   if (!list.length) return true;
   return list.indexOf(CONN.persona) >= 0;
@@ -3691,6 +3743,14 @@ function focusPan(box, view) {
 }
 /* FOCUS-ENGINE-END */
 
+/**
+ * How much of the map's right edge a panel is covering, as the app last reported it with `active`.
+ *
+ * ⚠️ **`focusChange` is NOT `focusFeature`.** The latter has taken a `padRight` since the properties
+ * panel existed; this one is the review's path — click a row, fly to the change — and it framed
+ * against the whole pane, so with a 360px panel open the feature it centred landed behind it.
+ */
+let ACTIVE_PAD_RIGHT = 0;
 function focusChange(change) {
   if (!map) return;
   const hit = RESOLVED.find(r => r.change === change);
@@ -3703,7 +3763,10 @@ function focusChange(change) {
     map.fitBounds([[minx,miny],[maxx,maxy]], {
       // room for the card, which sits above the shape and would otherwise cover the neighbours
       // that tell you where you are
-      padding: { top: 190, bottom: 90, left: 90, right: 90 },
+      // ⚠️ `top: 190` is room for the pinned card above the shape. While an editor is open there is
+      // no card (see `beginchange`), but the reservation is harmless and one number is easier to
+      // reason about than two.
+      padding: { top: 190, bottom: 90, left: 90, right: 90 + ACTIVE_PAD_RIGHT },
       maxZoom: FOCUS_MAX_ZOOM,
       duration: 650,
       essential: true,                    // survives prefers-reduced-motion being set
@@ -4530,7 +4593,10 @@ let GEOM = null;
 const SNAP_PX = 10;
 const HANDLE_R = 5;
 
-function geomBegin(fid) {
+/**
+ * @param fallbackRings rings to open on when the tiles cannot answer — see the `!f` branch.
+ */
+function geomBegin(fid, fallbackRings) {
   /**
    * ⚠️ **Opening the feature that is already open does nothing at all.**
    *
@@ -4554,7 +4620,21 @@ function geomBegin(fid) {
    * network; the node you clicked is merely where in it you are.
    */
   const net = wfNetOf(fid);
-  const f = net >= 0 ? { kind: "network", net, nodes: wfNetworkNodes(net) } : geomFind(fid);
+  /**
+   * ⚠️ **The fallback is not belt-and-braces, it is the removal case.**
+   *
+   * `geomFind` prefers `LEVEL_GEOM` — the **draft** — and a feature MapScale removed is by
+   * definition not in the draft, so it falls through to the tiles. That should answer, because
+   * `featuresWithFid` queries **source** data and a layer filter does not reach it. But a confirmed
+   * removal is also *ghosted*, and `resolveChanges` warns in its own comment that a filtered feature
+   * "stops being findable" — a warning that was earned. `beginchange` already holds the rings from
+   * the resolve pass, so it hands them over rather than leaving this to an argument about
+   * MapLibre's query semantics.
+   */
+  let f = net >= 0 ? { kind: "network", net, nodes: wfNetworkNodes(net) } : geomFind(fid);
+  if (!f && fallbackRings && fallbackRings.length)
+    f = { kind: "area", rings: fallbackRings.map(r => r.map(c => c.slice())),
+          tiles: 1, src: "resolved" };
   if (!f) {
     /**
      * ⚠️ Clear the editor rather than just refusing. This used to `return` with `GEOM` untouched,
@@ -7797,6 +7877,7 @@ window.addEventListener("message", (ev) => {
     focusFeature(d.fid, 0, d.padRight);
     sendFeatureProps(d.fid);
   } else if (d.type === "active") {
+    ACTIVE_PAD_RIGHT = Number(d.padRight) || 0;
     // A changelog row was clicked — mirror it here. Deferred until geometry exists, because a
     // row can be clicked before `resolveChanges()` has caught up and there'd be nothing to fly to.
     PENDING_ACTIVE = d.id ?? null;
@@ -7855,10 +7936,36 @@ window.addEventListener("message", (ev) => {
      */
     else if (d.cmd === "beginchange") {
       const r = RESOLVED.find(x => x.change && x.change.id === d.id);
-      if (r && r.fid) geomBegin(r.fid);
+      if (r && r.fid) {
+        /**
+         * ⚠️ **The session previews its own outcome, and it must be set BEFORE the redraw.**
+         * Otherwise a confirmed removal is still ghosted at the moment its handles go down — and a
+         * dashed outline with no fill is not a thing you can edit. See `previewFate`.
+         */
+        setEditingChange(d.id);
+        /**
+         * **The pinned card goes.** It carries a duplicate ✓ ✎ ✗ for the very change now open in a
+         * 360px panel, and it would sit under it or argue with it. One surface at a time.
+         */
+        SELECTED = null; renderTip(); tip.classList.remove("pinned");
+        applyPreviewHidden(); redraw();
+        geomBegin(r.fid, r.rings);
+        /**
+         * **The panel needs the feature's own property bag, and the app has never held these fids** —
+         * which is the whole reason `beginchange` exists. This side has the fid, and `featureprops`
+         * is the message Map Content already listens to, so the review gets the panel filled by
+         * reusing what is there rather than by growing a second protocol.
+         */
+        sendFeatureProps(r.fid);
+      }
       else post("geomerror", { fid: "", message: "That change has no feature on this floor yet." });
     }
-    else if (d.cmd === "end") geomEnd(!!d.commit);
+    else if (d.cmd === "end") {
+      geomEnd(!!d.commit);
+      // The session is over: whatever the row decided is what the map should show again.
+      setEditingChange(null);
+      applyPreviewHidden(); redraw();
+    }
     else if (d.cmd === "commit") geomCommit();
     else if (d.cmd === "mode") geomSetMode(d.mode);
     else if (d.cmd === "snap") geomToggleSnap();

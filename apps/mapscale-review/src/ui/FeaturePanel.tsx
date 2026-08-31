@@ -705,6 +705,8 @@ export function FeaturePanel({
   onSaved,
   onCancelEdit,
   saveSignal,
+  reviewNote,
+  reviewFootnote,
   onClose,
 }: {
   /** The tile's own property bag plus any local edits, exactly as the app holds it. */
@@ -790,6 +792,21 @@ export function FeaturePanel({
    * can only ask.
    */
   saveSignal?: number;
+  /**
+   * **What saving means on THIS screen**, when it is not the plain answer.
+   *
+   * Map Content's Update writes the feature. Review & Finalise's writes an **override on a change**,
+   * and for a removal it does something the default sentence cannot say at all — it stops the
+   * deletion. So the subtitle is passed in rather than assumed, and it is the only string in this
+   * panel that varies by where it is mounted.
+   */
+  reviewNote?: string;
+  /**
+   * ⚠️ The body's closing line is **misleading in a review** if left alone: *"nothing is written
+   * back to Pointr Cloud"* is true, and it is not the whole truth once the override goes live when
+   * the review completes. Both halves are said where this is passed.
+   */
+  reviewFootnote?: string;
   onClose: () => void;
 }) {
   const mainType = String(p.mainType ?? "");
@@ -1077,7 +1094,7 @@ export function FeaturePanel({
             multi
               ? "Editing all of them — a change here is a change to every one."
               : editing
-                ? "You are editing this feature’s properties."
+                ? (reviewNote ?? "You are editing this feature’s properties.")
                 : [
                     CLASS_LABEL[cls],
                     category ? categoryLabel(category) : null,
@@ -1578,8 +1595,8 @@ export function FeaturePanel({
                 marginTop: 10,
               }}
             >
-              Edits are local to this prototype — nothing is written back to
-              Pointr Cloud.
+              {reviewFootnote ??
+                "Edits are local to this prototype — nothing is written back to Pointr Cloud."}
             </Text>
           </>
         )}
