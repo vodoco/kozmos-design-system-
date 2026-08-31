@@ -20,7 +20,8 @@
   "scripts": {
     "build": "rm -rf dist && vite build && vue-tsc -p tsconfig.declarations.json",
     "dev": "vite build --watch",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "vue-tsc -p tsconfig.declarations.json --noEmit"
   },
   "peerDependencies": {
     "vue": "^3.0.0",
