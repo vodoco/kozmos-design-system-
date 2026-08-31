@@ -1025,11 +1025,11 @@ function drawBadge(cx, cy, kind){
   g.appendChild(p); return g;
 }
 
-// Zoomed in far enough, you are standing *inside* a feature and its fill is all the pane shows —
-// a wash between you and the floor plan (Olcay hit it at max zoom). So past the whole-floor
-// framing (~z16.7) the fill fades toward a floor and the outline, the dash and the badge carry
-// the identity instead. Strokes stay constant: colour never disappears, it just stops painting
-// over the map you zoomed in to read.
+// ⚠️ **There used to be a zoom fade here, and it is gone with the fills** (2026-08-28). `fillFactor()`
+// thinned fill opacity past ~z16.7, because zoomed in far enough you stood *inside* a feature and its
+// wash was all the pane showed. Nothing is filled any more, so there is nothing to fade: the outline,
+// the dash and the badge carry the identity at every zoom. Recorded rather than deleted silently,
+// because the problem it solved is real and will come back the day anything is filled again.
 function redraw() {
   if (!map) return;
   while (svg.firstChild) svg.removeChild(svg.firstChild);
