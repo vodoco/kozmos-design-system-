@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useId } from "react";
 import {
   Combine,
   Move,
@@ -258,9 +258,30 @@ function WhyTip({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const tipId = useId();
   if (!text) return <>{children}</>;
   return (
+    /**
+     * ⚠️ **`tabIndex` is what makes the keyboard half real, and it was missing.**
+     *
+     * The handlers below were always here, and always dead in the one case this component exists
+     * for. A bare `<span>` cannot receive focus, and the control inside is **disabled** — which is
+     * the whole reason there is a tooltip — so it cannot emit focus either. `focusin` never fires,
+     * `onFocus` is never called, and because *hover* works the whole thing looks correct.
+     *
+     * So the wrapper claims the tab stop the disabled control gave up. Safe to do unconditionally
+     * here: `text` is `state.combinable ? null : state.combineWhy`, and a null `text` returns the
+     * children bare — this wrapper only exists while the button is disabled, so it can never add a
+     * second tab stop beside a focusable control.
+     *
+     * `aria-describedby` is the other half. Focus alone would show the bubble to a sighted keyboard
+     * user and announce nothing to a screen reader — a focusable span with no name and no
+     * description. The doc's own rule is that *a reason a keyboard user cannot reach is not a
+     * reason*; reaching it silently is the same failure one step later.
+     */
     <span
+      tabIndex={0}
+      aria-describedby={open ? tipId : undefined}
       style={{ position: "relative", display: "inline-flex" }}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
@@ -270,6 +291,7 @@ function WhyTip({
       {children}
       {open && (
         <span
+          id={tipId}
           role="tooltip"
           style={{
             position: "absolute",
