@@ -5,8 +5,8 @@ rulings from Olcay, the traps behind them, and a set of facts about `public/map/
 cheap to read here and expensive to rediscover.
 
 ⚠️ **Scope, so nothing is a surprise.** Two items here were **built**, because Olcay asked for them
-directly: **§7**, the persona rule (`e63b630`, **deployed**), and **§5's `ensureTiles` defect**
-(`fbd478b`, on `main`, **not deployed**). **Everything else is a request** — including the **§8
+directly: **§7**, the persona rule (`e63b630`), and **§5's `ensureTiles` defect** (`fbd478b`) —
+**both deployed**. **Everything else is a request** — including the **§8
 colour ruling**, which is decided but unbuilt.
 
 Fuller version: `Pointr Cloud/Building - Auto Level Updates/FOR_THE_APP_REPO.md` §8.
@@ -92,11 +92,16 @@ the navigation commits and again after** (the realm is replaced on commit), and 
 
 ### ✅ FIXED — `ensureTiles` accepted the WRONG tiles, and boot then hung for ever
 
-> Fixed in **`fbd478b`** (on `main`, **not deployed**). The gate now applies two independent tests:
+> Fixed in **`fbd478b`**, **deployed**. The gate now applies two independent tests:
 > `url !== firstTileUrl` — the SDK has replaced whatever the style shipped, which is the real signal
 > and needs no host list — plus a `BASEMAP_TILES` pattern as the backstop for a placeholder the SDK
 > never replaces. A/B proven: with the old guard the url stayed on `api.maptiler.com`; with the new
-> one it swapped to the Pointr indoor tiles unaided. Diagnosis kept below.
+> one it swapped to the Pointr indoor tiles unaided.
+>
+> ✅ **Confirmed end-to-end on the deployed shell**, real same-origin: the run hit the bug condition
+> again (`firstTileUrl` = the `api.maptiler.com` placeholder) and carried straight through on its
+> own — `started: true`, **3,123 walls**, `srcLoaded: true`, `levelIsRendering: true` in ~31 s, with
+> **no manual `updateMapTiles` and no manual `applyLevel`**. Diagnosis kept below.
 
 Symptom: the outdoor basemap instead of the floor, the console full of
 `Source layer "wall" does not exist on source "source_ptr"`, `started` stuck `false`, so
