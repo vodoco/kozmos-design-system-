@@ -164,7 +164,41 @@ them. But the nesting fix is the **child**, in every one of these pairs. With
 the card at 16 and 13px of inset, the slot wants roughly 3 — which is to say
 square, or `marker` at 4 if a hint of rounding is wanted.
 
+**Should a control be squared because a card contains it?** The rule flags four
+buttons — RouteSummary's two, RoutingInputGroup's Swap, FeedbackCard's Submit —
+sitting at `control` (16) inside a 16 card with 13-17px of inset. Concentrically
+they want about 3. Nobody squares a button. A control carries its role radius
+wherever it is placed; the rule governs _containers nested in containers_, and a
+button inside a card is a control placed in one. The checker still reports them,
+because a name-based exclusion would be fragile and the pairing is worth seeing.
+
 Both are design calls. The checker reports; it does not decide.
+
+## What squaring actually costs
+
+The slots were moved from `control` (16) to `marker` (4) on 2026-08-31, taking
+the findings from 50 to 37.
+
+The instruction that produced it was "square the slots", and simulating first is
+what stopped that being done literally. Measured across the whole page, with the
+cards already at 16:
+
+| Slot radius      | Flagged pairs |
+| ---------------- | ------------- |
+| 16 (before)      | 50            |
+| **0 — square**   | **53**        |
+| **4 — `marker`** | **37**        |
+| 8                | 54            |
+
+Squaring makes it worse, and the reason is the rule read backwards: a square
+child at 13px of inset wants a parent of **13**, not 16. Zero overshoots as
+surely as 16 undershoots. The derived ideal is `16 - 13 = 3`, and `marker` at 4
+is the nearest role — within the 1px tolerance at 13px of inset, and exact at
+16px where the ideal is 0.
+
+The general lesson is that "less round" is not a direction you can follow
+blindly. The concentric ideal is a specific number, and both sides of it are
+wrong.
 
 ## Running it
 

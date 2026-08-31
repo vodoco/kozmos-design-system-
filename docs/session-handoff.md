@@ -1077,7 +1077,11 @@ These need a human call; none are blocked on code.
   resolves **none** of the 50 nesting findings (50 before, 50 after, simulated
   before the change). A 16 card holding a 16 slot across 13px of padding wants 29. The move was still right — those sets now read from the semantic scale
   rather than a literal — but the nesting fix is the **slot**, which wants
-  roughly 3 at that padding. Whether to square them is the open call.
+  roughly 3 at that padding. The slots moved to `marker` (4) on the same day,
+  taking the findings from 50 to 37 — and note that squaring them outright
+  would have taken it to **53**, since a square child at 13px of inset wants a
+  parent of 13 rather than 16. "Less round" is not a direction; the concentric
+  ideal is a number with a wrong side either way.
 - **MapOverlay `position` in Figma.** The set carries `Width` only. Crossing 6
   positions with 5 widths would be 30 variants for what is renderer placement.
   Recorded in the set description; revisit if designers ask.

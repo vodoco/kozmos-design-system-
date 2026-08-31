@@ -43646,7 +43646,14 @@ async function productSdkSlot({
     width,
     height,
   });
-  slot.cornerRadius = KOZMOS_RADIUS.control;
+  // A slot is a region inside a card, not a control, so it takes the radius the
+  // card leaves it rather than the control role. With cards on `container` (16)
+  // and 12-16px of inset, the concentric ideal is 0-4, and `marker` covers both
+  // ends within a pixel. `control` here made every slot at least as round as
+  // the card around it. Measured across the page: 50 nesting findings before,
+  // 37 after — where squaring outright would have taken it to 53, because a
+  // square slot at 13px inset wants a parent of 13, not 16.
+  slot.cornerRadius = KOZMOS_RADIUS.marker;
   slot.fills = [
     paintFromVariable(
       muted ? "Surface/100" : "Colors/background/100",
