@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-17T12:13:37.667Z",
+  "generatedAt": "2026-08-31T15:04:24.091Z",
   "target": {
     "fileKey": "Yj4O8p6Y9h2Sa9zJVoAiVY",
     "fileName": "Kozmos DS - Core Library",
@@ -36,24 +36,24 @@
     "Archive / Legacy Reference"
   ],
   "summary": {
-    "totalTokens": 601,
-    "variableTokens": 563,
-    "styleOnlyTokens": 38,
+    "totalTokens": 615,
+    "variableTokens": 574,
+    "styleOnlyTokens": 41,
     "bySourceType": {
       "borderRadius": 8,
-      "dimension": 12,
+      "dimension": 18,
       "borderWidth": 4,
       "opacity": 7,
-      "number": 58,
+      "number": 59,
       "spacing": 4,
-      "color": 403,
+      "color": 407,
       "fontSizes": 30,
       "letterSpacing": 5,
       "lineHeights": 14,
       "paragraphSpacing": 18,
       "other": 21,
       "cubicBezier": 5,
-      "fontFamilies": 4,
+      "fontFamilies": 7,
       "fontWeights": 5,
       "shadow": 3
     },
@@ -6325,6 +6325,30 @@
       }
     },
     {
+      "canonicalName": "Primitives/Layout/radius/full",
+      "figmaName": "Layout/radius/full",
+      "collection": "Kozmos Primitives",
+      "sourceType": "number",
+      "figmaType": "FLOAT",
+      "cssVariable": "--primitives-layout-radius-full",
+      "syntax": {
+        "web": "var(--primitives-layout-radius-full)",
+        "ios": "primitivesLayoutRadiusFull",
+        "android": "primitivesLayoutRadiusFull"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "number",
+          "value": 9999
+        },
+        "dark": {
+          "kind": "number",
+          "value": 9999
+        }
+      }
+    },
+    {
       "canonicalName": "Semantics/Surface/0",
       "figmaName": "Surface/0",
       "collection": "Kozmos Semantics",
@@ -6417,6 +6441,246 @@
         "dark": {
           "kind": "raw",
           "value": "#464A53"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Radius/None",
+      "figmaName": "Radius/None",
+      "collection": "Kozmos Semantics",
+      "sourceType": "dimension",
+      "figmaType": "FLOAT",
+      "cssVariable": "--semantics-radius-none",
+      "syntax": {
+        "web": "var(--semantics-radius-none)",
+        "ios": "semanticsRadiusNone",
+        "android": "semanticsRadiusNone"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/0"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/0"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Radius/Marker",
+      "figmaName": "Radius/Marker",
+      "collection": "Kozmos Semantics",
+      "sourceType": "dimension",
+      "figmaType": "FLOAT",
+      "cssVariable": "--semantics-radius-marker",
+      "syntax": {
+        "web": "var(--semantics-radius-marker)",
+        "ios": "semanticsRadiusMarker",
+        "android": "semanticsRadiusMarker"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/50"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/50"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Radius/Control",
+      "figmaName": "Radius/Control",
+      "collection": "Kozmos Semantics",
+      "sourceType": "dimension",
+      "figmaType": "FLOAT",
+      "cssVariable": "--semantics-radius-control",
+      "syntax": {
+        "web": "var(--semantics-radius-control)",
+        "ios": "semanticsRadiusControl",
+        "android": "semanticsRadiusControl"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/200"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/200"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Radius/Container",
+      "figmaName": "Radius/Container",
+      "collection": "Kozmos Semantics",
+      "sourceType": "dimension",
+      "figmaType": "FLOAT",
+      "cssVariable": "--semantics-radius-container",
+      "syntax": {
+        "web": "var(--semantics-radius-container)",
+        "ios": "semanticsRadiusContainer",
+        "android": "semanticsRadiusContainer"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/200"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/200"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Radius/Panel",
+      "figmaName": "Radius/Panel",
+      "collection": "Kozmos Semantics",
+      "sourceType": "dimension",
+      "figmaType": "FLOAT",
+      "cssVariable": "--semantics-radius-panel",
+      "syntax": {
+        "web": "var(--semantics-radius-panel)",
+        "ios": "semanticsRadiusPanel",
+        "android": "semanticsRadiusPanel"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/300"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/300"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Radius/Pill",
+      "figmaName": "Radius/Pill",
+      "collection": "Kozmos Semantics",
+      "sourceType": "dimension",
+      "figmaType": "FLOAT",
+      "cssVariable": "--semantics-radius-pill",
+      "syntax": {
+        "web": "var(--semantics-radius-pill)",
+        "ios": "semanticsRadiusPill",
+        "android": "semanticsRadiusPill"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/full"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Layout/radius/full"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Diff/New",
+      "figmaName": "Diff/New",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-diff-new",
+      "syntax": {
+        "web": "var(--semantics-diff-new)",
+        "ios": "semanticsDiffNew",
+        "android": "semanticsDiffNew"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#2FBF71"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#4FD98D"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Diff/Updated",
+      "figmaName": "Diff/Updated",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-diff-updated",
+      "syntax": {
+        "web": "var(--semantics-diff-updated)",
+        "ios": "semanticsDiffUpdated",
+        "android": "semanticsDiffUpdated"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#3B82F6"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#6BA5FF"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Diff/Deleted",
+      "figmaName": "Diff/Deleted",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-diff-deleted",
+      "syntax": {
+        "web": "var(--semantics-diff-deleted)",
+        "ios": "semanticsDiffDeleted",
+        "android": "semanticsDiffDeleted"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#EF4444"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#FF6B6B"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Diff/Override",
+      "figmaName": "Diff/Override",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-diff-override",
+      "syntax": {
+        "web": "var(--semantics-diff-override)",
+        "ios": "semanticsDiffOverride",
+        "android": "semanticsDiffOverride"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#9C6EFF"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#B48CFF"
         }
       }
     },
@@ -14315,6 +14579,78 @@
         "dark": {
           "kind": "raw",
           "value": "Light"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Typography/Family/System",
+      "figmaName": "Typography/Family/System",
+      "collection": "Kozmos Semantics",
+      "sourceType": "fontFamilies",
+      "figmaType": null,
+      "cssVariable": "--semantics-typography-family-system",
+      "syntax": {
+        "web": "var(--semantics-typography-family-system)",
+        "ios": "semanticsTypographyFamilySystem",
+        "android": "semanticsTypographyFamilySystem"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\""
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\""
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Typography/Family/Brand",
+      "figmaName": "Typography/Family/Brand",
+      "collection": "Kozmos Semantics",
+      "sourceType": "fontFamilies",
+      "figmaType": null,
+      "cssVariable": "--semantics-typography-family-brand",
+      "syntax": {
+        "web": "var(--semantics-typography-family-brand)",
+        "ios": "semanticsTypographyFamilyBrand",
+        "android": "semanticsTypographyFamilyBrand"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Typography/font/family/primary"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Typography/font/family/primary"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Typography/Family/Mono",
+      "figmaName": "Typography/Family/Mono",
+      "collection": "Kozmos Semantics",
+      "sourceType": "fontFamilies",
+      "figmaType": null,
+      "cssVariable": "--semantics-typography-family-mono",
+      "syntax": {
+        "web": "var(--semantics-typography-family-mono)",
+        "ios": "semanticsTypographyFamilyMono",
+        "android": "semanticsTypographyFamilyMono"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace"
         }
       }
     },
