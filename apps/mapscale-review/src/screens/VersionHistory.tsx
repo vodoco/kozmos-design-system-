@@ -258,11 +258,17 @@ export function VersionHistory({
    * basemap + floor-plan overlay apply to every pane; the FOCUS toggles — greyscale, hide POI
    * labels — apply to the panes that actually draw the pending diff (the timeline map on the
    * pending checkpoint, Compare's right pane), because focus exists to get noise out from
-   * between you and the diff (§3) and a published pane has no diff to focus on. Greyscale
-   * defaults on, as in Manual Review.
+   * between you and the diff (§3) and a published pane has no diff to focus on.
+   *
+   * ⚠️ **Greyscale defaults OFF here now, and it had to.** It used to default on "as in Manual
+   * Review", which stopped being true on 2026-08-28. More than a stale cross-reference: greyscale
+   * filters the *canvas*, and the diff overlay is a sibling SVG **above** that filter — so a
+   * coloured, filled overlay stayed vivid over a desaturated floor, which is exactly what made the
+   * pairing work. The overlay is now a muted 1–2px grey outline, so the same pairing would have put
+   * grey lines on a grey floor. The toggle still works for anyone who wants it.
    */
   const [userPrefs, setUserPrefs] = useState<MapPrefsState>({
-    greyscale: true,
+    greyscale: false,
     hidePoiLabels: false,
     floorplan: false,
     basemap: "vector",

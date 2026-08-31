@@ -4,9 +4,10 @@ Left here **2026-08-28** by the design-record session (`vodoco/map566-design-rec
 rulings from Olcay, the traps behind them, and a set of facts about `public/map/index.html` that are
 cheap to read here and expensive to rediscover.
 
-⚠️ **Scope, so nothing is a surprise.** Everything here is a _request_ except **§7**, which Olcay
-asked for directly and which was **built and deployed** — `e63b630`, application code, on `main`.
-§5's `ensureTiles` defect and the §8 colour ruling are still unbuilt.
+⚠️ **Scope, so nothing is a surprise.** Two items here were **built**, because Olcay asked for them
+directly: **§7**, the persona rule (`e63b630`), and **§5's `ensureTiles` defect** (`fbd478b`) —
+**both deployed**. **Everything else is a request** — including the **§8
+colour ruling**, which is decided but unbuilt.
 
 Fuller version: `Pointr Cloud/Building - Auto Level Updates/FOR_THE_APP_REPO.md` §8.
 
@@ -89,7 +90,18 @@ Figma popover on `2642:20896` and its five clones, and the v9 Map Settings compo
 client-side SDK key and `pointrConfig.ts` says so. Load it in a same-origin iframe, shim it **before
 the navigation commits and again after** (the realm is replaced on commit), and it boots.
 
-### 🔴 DEFECT — `ensureTiles` accepts the WRONG tiles, and boot then hangs for ever
+### ✅ FIXED — `ensureTiles` accepted the WRONG tiles, and boot then hung for ever
+
+> Fixed in **`fbd478b`**, **deployed**. The gate now applies two independent tests:
+> `url !== firstTileUrl` — the SDK has replaced whatever the style shipped, which is the real signal
+> and needs no host list — plus a `BASEMAP_TILES` pattern as the backstop for a placeholder the SDK
+> never replaces. A/B proven: with the old guard the url stayed on `api.maptiler.com`; with the new
+> one it swapped to the Pointr indoor tiles unaided.
+>
+> ✅ **Confirmed end-to-end on the deployed shell**, real same-origin: the run hit the bug condition
+> again (`firstTileUrl` = the `api.maptiler.com` placeholder) and carried straight through on its
+> own — `started: true`, **3,123 walls**, `srcLoaded: true`, `levelIsRendering: true` in ~31 s, with
+> **no manual `updateMapTiles` and no manual `applyLevel`**. Diagnosis kept below.
 
 Symptom: the outdoor basemap instead of the floor, the console full of
 `Source layer "wall" does not exist on source "source_ptr"`, `started` stuck `false`, so
@@ -111,8 +123,14 @@ not. **Intermittent — both states appeared in one session**, so one green boot
 Proven by calling the skipped line by hand: url swapped in **200 ms**, then `applyLevel()` gave
 **4,792** wall features in ~2 s, then `start()` set `started === true`.
 
-**Fix:** test for the tiles you want, not for a truthy string —
-`if (src && src.url && !/api\.maptiler\.com|openmaptiles/.test(src.url)) return cb();`
+**The fix as shipped** — the host list turned out to be the weaker of the two tests, so it is the
+backstop rather than the rule:
+
+```js
+if (firstTileUrl === null) firstTileUrl = url;              // what the STYLE shipped
+if (tries % 6 === 0) { …updateMapTiles(TARGET.site); }      // ask, every pass
+if (url && url !== firstTileUrl && !BASEMAP_TILES.test(url)) return cb();
+```
 
 ### ⚠️ `setTimeout(cb, 16)` is NOT a working rAF shim here — corrected 2026-08-28
 

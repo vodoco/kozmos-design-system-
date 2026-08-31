@@ -248,6 +248,22 @@ export function ChangeReviewRow({
    * an edit that no longer has anything to supersede.
    */
   const onTray = (v: string) => {
+    /**
+     * ⚠️ **A deselect arrives here as `""`, and it used to be written as a decision.**
+     * The DS `SegmentedControl` is a Radix `ToggleGroup` with `type="single"`, which *deselects*
+     * when you press the segment that already holds the pill — reporting `onValueChange("")`. The
+     * DS guards only its own analytics call (`if (val) trackEvent(...)`) and passes the empty
+     * string straight through.
+     *
+     * It then fell to `onDecide(v as Decision)`, and **the cast laundered it past TypeScript**:
+     * `Decision` is `"confirm" | "reject"`, so `""` is a value the type says cannot exist. It
+     * survived only because `""` is falsy and every reader treats it as "no decision" — working by
+     * luck rather than by design.
+     *
+     * A deselect means the user is taking their decision back, and `undefined` is what the prop
+     * already accepts for that. Same behaviour, a value that is actually legal.
+     */
+    if (!v) return onDecide(undefined);
     // A blocked ✎ is drawn faded and says why in its tooltip; pressing it does nothing rather than
     // opening a panel onto a feature the map could not find.
     if (v === "edit") return editBlocked ? undefined : onOpenEditor?.();
@@ -399,14 +415,25 @@ export function ChangeReviewRow({
              * now yours, and the bar's own law already says **hide what cannot apply**. The way back
              * is **Revert**, which restores the detected value and puts the pair back.
              *
-             * ⚠️ **The `EDITED` pill went with them.** A selected purple ✎ says it, beside a row
-             * whose left accent is already purple and whose override line is printed underneath —
-             * the pill was the third voice. It also made the edited row the only one with a
-             * different silhouette, which is what D17 forbids.
+             * ⚠️ **The `EDITED` pill went with them.** Beside a row whose left accent is already
+             * purple and whose override line is printed underneath, the pill was the third voice.
+             * It also made the edited row the only one with a different silhouette, which is what
+             * D17 forbids.
+             *
+             * ⚠️ **`value` was hard-coded to `"edit"` until 2026-08-28, and that made ✎ unpressable**
+             * (Olcay: *"I should be able to edit the edited again if I want to"*). A segment that
+             * already holds the pill cannot be *selected* — pressing it **deselects**, so the one
+             * act this row exists to offer was the one act it refused. Worse, the deselect reported
+             * `""` and was written as a decision; see `onTray`.
+             *
+             * So the pill now tracks the **session**, exactly as the `preserved` row beneath does —
+             * ✎ lights while the editor is open and is pressable at rest. That the row *is* edited
+             * is already said three other ways: the purple accent, the override line, and the map
+             * card's *"Edited by you"*.
              */
             <SegmentedControl
               items={tray(["edit", "revert"])}
-              value="edit"
+              value={editing ? "edit" : undefined}
               onValueChange={onTray}
             />
           ) : preserved ? (
