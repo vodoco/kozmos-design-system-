@@ -41113,6 +41113,15 @@ function configureMultiSelectProperties(componentSet, stats) {
     stats,
   );
   configurePlaceholderTextProperty(componentSet, "Select options", stats);
+  // Only the empty state carries Placeholder Text now; the filled states hint
+  // at filtering instead, in the 81px they actually have.
+  configureNamedTextProperty(
+    componentSet,
+    "Filter Text",
+    "Filter Text",
+    "Filter",
+    stats,
+  );
   configureNamedTextProperty(
     componentSet,
     "Option 1 Text",
@@ -61793,6 +61802,7 @@ async function syncMultiSelectVariantChildren({
   const preservedText = collectDescendantTextCharactersByName(component, [
     "Label Text",
     "Placeholder Text",
+    "Filter Text",
     "Chip 1 Text",
     "Chip 2 Text",
     "Option 1 Text",
@@ -61893,8 +61903,17 @@ async function syncMultiSelectVariantChildren({
     }
   }
 
+  // Two names, because the two states have wildly different room for this text.
+  // Empty gives it the whole 278px row; once two chips, a clear button and a
+  // chevron are in there it has 81px. One node name meant one property, and
+  // `configurePlaceholderTextProperty` paints that property's single default
+  // over every node carrying the name — so the `hasSelections` branch that used
+  // to sit here was dead, and "Select options" (~89px) rendered clipped in the
+  // filled states. Naming them apart is the same fix RoutingInputGroup's three
+  // fields needed, and FileUpload's File Meta Text before that.
+  const filtering = hasSelections;
   const placeholder = figma.createText();
-  placeholder.name = "Placeholder Text";
+  placeholder.name = filtering ? "Filter Text" : "Placeholder Text";
   await applyFieldTextTypography(
     placeholder,
     fonts,
@@ -61902,9 +61921,9 @@ async function syncMultiSelectVariantChildren({
     variableByName,
     stats,
   );
-  placeholder.characters =
-    preservedText["Placeholder Text"] ||
-    (hasSelections ? "Type to filter" : "Select options");
+  placeholder.characters = filtering
+    ? preservedText["Filter Text"] || "Filter"
+    : preservedText["Placeholder Text"] || "Select options";
   setHorizontalFillTextSizing(placeholder);
   setTextAutoResize(placeholder, "TRUNCATE");
   placeholder.fills = [

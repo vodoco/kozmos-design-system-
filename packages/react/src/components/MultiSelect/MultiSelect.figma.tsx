@@ -32,7 +32,10 @@ figma.connect(
       defaultSearchValue: figma.enum("Content", {
         Empty: "",
         Selected: "",
-        Open: figma.string("Placeholder Text"),
+        // The filled states carry "Filter Text", not "Placeholder Text": one
+        // property could not serve both a 278px empty row and an 81px row
+        // holding two chips, a clear button and a chevron.
+        Open: figma.string("Filter Text"),
       }),
       label: figma.string("Label Text"),
       placeholder: figma.string("Placeholder Text"),
