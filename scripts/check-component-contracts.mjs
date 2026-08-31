@@ -7869,12 +7869,12 @@ for (const [filePath, content, label] of [
     "Value Text",
     `${label} Code Connect maps color value text`,
   );
-  assertContains(
-    filePath,
-    content,
-    "Palette Text",
-    `${label} Code Connect maps palette text`,
-  );
+  // No "Palette Text" assertion. ColorPicker's palette name is rendered by a
+  // nested Select instance, and a component property cannot drive text inside
+  // one — so the Figma property was removed, and Code Connect's own validation
+  // against the live file now *fails* if a mapping for it is present. This
+  // assertion required exactly what that validation rejects; it is the third
+  // check in this repo to have asserted something the file had moved past.
   assertContains(
     filePath,
     content,

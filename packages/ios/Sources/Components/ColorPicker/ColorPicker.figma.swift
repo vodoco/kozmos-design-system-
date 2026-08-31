@@ -17,9 +17,6 @@ struct KozmosColorPickerConnect: FigmaConnect {
     @FigmaBoolean("Show Helper Text")
     var showHelperText: Bool = false
 
-    @FigmaString("Palette Text")
-    var paletteLabel: String = "Kozmos Design System 2.0"
-
     @FigmaEnum(
         "State",
         mapping: [
@@ -67,7 +64,10 @@ struct KozmosColorPickerConnect: FigmaConnect {
             alpha: .constant(100),
             label: self.label,
             helperText: self.showHelperText ? self.helperText : nil,
-            paletteLabel: self.paletteLabel,
+            // Figma no longer carries this. The palette name is rendered by
+            // the nested Select instance's own hint text, and a component
+            // property cannot drive text inside a nested instance.
+            paletteLabel: "Kozmos Design System 2.0",
             format: self.format,
             defaultOpen: self.defaultOpen,
             disabled: self.state == "disabled",

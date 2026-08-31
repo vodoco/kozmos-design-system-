@@ -41,12 +41,15 @@ figma.connect(
       }),
       label: figma.string("Label Text"),
       defaultValue: figma.string("Value Text"),
-      paletteLabel: figma.string("Palette Text"),
       helperText: figma.boolean("Show Helper Text", {
         true: figma.string("Helper Text"),
         false: undefined,
       }),
     },
+    // paletteLabel is a literal rather than a Figma prop. The palette name is
+    // rendered by the nested Select instance's own hint text, and a component
+    // property cannot drive text inside a nested instance — so ColorPicker has
+    // no Figma property to map it to. It is still a real prop, hence the value.
     example: ({
       autoFocus,
       defaultFormat,
@@ -55,7 +58,6 @@ figma.connect(
       disabled,
       helperText,
       label,
-      paletteLabel,
       readOnly,
       status,
     }) => (
@@ -67,7 +69,7 @@ figma.connect(
         disabled={disabled}
         helperText={helperText}
         label={label}
-        paletteLabel={paletteLabel}
+        paletteLabel="Kozmos Design System 2.0"
         readOnly={readOnly}
         status={status}
       />
