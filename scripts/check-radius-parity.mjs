@@ -59,6 +59,27 @@ function semanticRadii() {
   return out;
 }
 
+/**
+ * The names the semantic radius variables actually carry in Figma.
+ *
+ * `figma.variables.createVariable` is called with the payload's `figmaName`,
+ * and the collection is a separate argument — so `Semantics/Radius/Control` in
+ * the payload becomes a variable simply called `Radius/Control`. The plugin
+ * looks aliases up in a flat map keyed by `variable.name`, so an alias written
+ * in the canonical form matches nothing, warns, and falls back to its literal.
+ * That is benign enough to hide: the literal is the right number, so the file
+ * renders correctly while the aliasing never happens.
+ */
+function semanticRadiusAliases() {
+  const tokens = JSON.parse(fs.readFileSync(TOKENS, "utf8"));
+  const block = tokens.Semantics && tokens.Semantics.Radius;
+  const out = new Map();
+  for (const [role, token] of Object.entries(block)) {
+    out.set(`Radius/${role}`, Number.parseFloat(resolve(tokens, token.$value)));
+  }
+  return out;
+}
+
 function pluginRadii() {
   const source = fs.readFileSync(PLUGIN, "utf8");
   const block = source.match(/const KOZMOS_RADIUS = \{([\s\S]*?)\};/);
@@ -130,21 +151,61 @@ const pluginSource = fs.readFileSync(PLUGIN, "utf8");
 const variablePattern =
   /\{\s*name: "([^"]+\/radius[^"]*)",\s*value: ([0-9]+),(?:\s*alias: "([^"]+)",)?\s*scopes: \["CORNER_RADIUS"\]/g;
 const roleValues = new Set(Object.values(tokenRadii));
+const semanticAliases = semanticRadiusAliases();
 const strayVariables = [];
 for (const m of pluginSource.matchAll(variablePattern)) {
   const [, name, rawValue, alias] = m;
   const value = Number.parseInt(rawValue, 10);
-  if (alias && alias.startsWith("Semantics/Radius/")) {
-    const role = alias.slice("Semantics/Radius/".length).toLowerCase();
-    if (tokenRadii[role] !== value) {
+  if (alias && alias.startsWith("Semantics/")) {
+    problems.push(
+      `plugin: variable ${name} aliases "${alias}", but Figma holds that ` +
+        `variable as "${alias.replace(/^Semantics\//, "")}" — the collection ` +
+        `is not part of the name, so this resolves to nothing and silently ` +
+        `falls back to ${value}`,
+    );
+    continue;
+  }
+  if (semanticAliases.has(alias)) {
+    const expected = semanticAliases.get(alias);
+    if (expected !== value) {
       problems.push(
         `plugin: variable ${name} falls back to ${value} but aliases ` +
-          `${alias} (${tokenRadii[role]})`,
+          `${alias} (${expected})`,
       );
     }
     continue;
   }
   if (!roleValues.has(value)) strayVariables.push(`${name}=${value}`);
+}
+
+// An alias can only bind to a variable the import actually creates, and the
+// import creates exactly what the payload lists. Checking the two against each
+// other is what would have caught the canonical-name mistake above on the day
+// it was written rather than three weeks later.
+const payloadPath = path.join(ROOT, "docs/figma-foundations-payload.json");
+if (fs.existsSync(payloadPath)) {
+  const payload = JSON.parse(fs.readFileSync(payloadPath, "utf8"));
+  const figmaNames = new Set(payload.variables.map((v) => v.figmaName));
+  // Every Radius/* alias, not just the semantic roles — a typo names nothing
+  // and behaves exactly like the canonical-form mistake: a silent fallback to
+  // the literal. Component-token aliases (Button/radius and friends) are
+  // deliberately not checked here: the plugin creates those itself rather than
+  // importing them, so they are absent from the payload by design.
+  const radiusAliases = new Set(
+    Array.from(pluginSource.matchAll(/alias: "(Radius\/[^"]+)"/g), (m) => m[1]),
+  );
+  for (const aliasName of radiusAliases) {
+    if (figmaNames.has(aliasName)) continue;
+    problems.push(
+      `plugin: alias "${aliasName}" names no variable in ` +
+        `docs/figma-foundations-payload.json, so the import cannot create it`,
+    );
+  }
+} else {
+  notes.push(
+    "docs/figma-foundations-payload.json is absent, so alias targets were not " +
+      "checked against what the import would create",
+  );
 }
 if (strayVariables.length) {
   notes.push(

@@ -8295,7 +8295,10 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  tokenAliasPattern("Combobox/listbox/radius", "Semantics/Radius/Control"),
+  // "Radius/Control", not "Semantics/Radius/Control": the collection is a
+  // separate argument to createVariable, so the canonical path is not part of
+  // the variable's name and an alias written that way binds to nothing.
+  tokenAliasPattern("Combobox/listbox/radius", "Radius/Control"),
   "Figma Combobox dropdown radius aliases to the Control radius role",
 );
 assertContains(

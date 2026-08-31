@@ -3771,7 +3771,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Button/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4423,7 +4423,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "List/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4469,7 +4469,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "DirectionStep/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4518,7 +4518,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "FloorSelector/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4557,7 +4557,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "MapView/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4658,7 +4658,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Tree/item/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4709,7 +4709,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "NavigationItem/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4760,7 +4760,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Table/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -4887,7 +4887,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Sidebar/item/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5483,7 +5483,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Tooltip/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5641,7 +5641,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Drawer/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5777,7 +5777,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Popover/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5826,7 +5826,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Menu/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5914,7 +5914,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Toast/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -5933,7 +5933,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Toast/action/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   { name: "Toast/close/size", value: 24, scopes: ["WIDTH_HEIGHT"] },
@@ -6212,7 +6212,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Combobox/listbox/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -6592,7 +6592,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "DatePicker/calendar/day/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7107,7 +7107,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "ColorPicker/color-area/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7469,7 +7469,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Skeleton/radius/default",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7489,7 +7489,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Box/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7531,7 +7531,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Stack/item/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   { name: "Grid/width/default", value: 360, scopes: ["WIDTH_HEIGHT"] },
@@ -7588,7 +7588,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Container/content-radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7706,7 +7706,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Pagination/item/radius",
     value: 16,
-    alias: "Semantics/Radius/Control",
+    alias: "Radius/Control",
     scopes: ["CORNER_RADIUS"],
   },
   {
