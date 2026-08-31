@@ -616,9 +616,15 @@ Two things are deliberately **not** done:
   different, and it is the whole point of `size-adjust`. It cannot be built
   honestly without measuring the real font; a hardcoded ratio is exactly the
   guess that puts text subtly wrong on every screen at once.
-- **Figma still renders Readex Pro.** Switching it restyles all 94 sets at once,
-  which is a design call. It is one field in the plugin's Typography box. Until
-  then the parity check reports the divergence on every run.
+- **Figma rendered Readex Pro until 2026-08-31; it is `Inter` now.** Figma takes
+  one real family and the System role is a stack — `ui-sans-serif, system-ui,
+-apple-system, ... Roboto ...` resolves to SF Pro on Apple platforms, Roboto
+  on Android and Segoe UI on Windows, and no single Figma font is all three.
+  Inter is the closest honest stand-in: system-like metrics, present in every
+  Figma file without anyone installing anything, and already what Storybook
+  loads. `tokens:typography:check` now reports "matching the system-first
+  decision" instead of the divergence. The restyle lands on the next plugin run,
+  and it touches all 94 sets, so expect the whole file to shift.
 
 And a finding that belongs to nobody yet: **`Primitives.Typography.font.size`
 (the 0-1500 scale) is used by zero platforms.** Not iOS, which uses Dynamic Type
@@ -1009,10 +1015,12 @@ whether a run landed: it reads the file, not the plugin's own report.
 4. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
    (0-1500) is read by no platform. Same shape as the radius and family layers.
 
-5. **Decide the brand font's fate.** Readex Pro covers Latin and Arabic and has
-   no CJK, so Chinese always fell back to a system font whatever the tokens
-   said. Drop it, or scope it to Latin with `unicode-range` — and note that one
-   `size-adjust` ratio cannot work across scripts.
+5. **Decide the brand font's fate.** Figma no longer renders it — the plugin
+   switched to Inter on 2026-08-31 — so `Brand` is now an opt-in role that no
+   surface uses. What remains is whether to keep it at all: Readex Pro covers
+   Latin and Arabic and has no CJK, so Chinese always fell back to a system font
+   whatever the tokens said. Drop it, or scope it to Latin with `unicode-range`
+   — and note that one `size-adjust` ratio cannot work across scripts.
 
 6. **`Link` and `Spinner` are each missing a variant axis on iOS and Android.**
    Found once the analyzer stopped being blind to single quotes. Closing them

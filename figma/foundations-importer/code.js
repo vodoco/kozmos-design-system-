@@ -7,8 +7,19 @@ figma.showUI(__html__, {
 
 const RUN_NAMESPACE = "kozmos_ds_importer";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
+// Inter, because Figma takes one real family and the System role is a stack.
+// `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
+// on Apple platforms, Roboto on Android and Segoe UI on Windows, and no single
+// Figma font is all three. Inter is the closest honest stand-in: a neutral UI
+// face with system-like metrics, present in every Figma file without anyone
+// installing anything, and already what Storybook loads.
+//
+// What it replaces is worse than a compromise. Readex Pro is the brand font,
+// and nothing in this repo has ever loaded it — no @font-face, no webfont link,
+// no font file — so the plugin was the only surface rendering it and the
+// mockups described type that no platform shipped.
 const DEFAULT_FONT_CONFIG = Object.freeze({
-  family: "Readex Pro",
+  family: "Inter",
   regularStyle: "Regular",
   mediumStyle: "Medium",
   boldStyle: "Bold",
