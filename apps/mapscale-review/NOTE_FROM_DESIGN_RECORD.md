@@ -4,9 +4,10 @@ Left here **2026-08-28** by the design-record session (`vodoco/map566-design-rec
 rulings from Olcay, the traps behind them, and a set of facts about `public/map/index.html` that are
 cheap to read here and expensive to rediscover.
 
-⚠️ **Scope, so nothing is a surprise.** Everything here is a _request_ except **§7**, which Olcay
-asked for directly and were **built**: **§7** (`e63b630`, deployed) and **§5's `ensureTiles`
-defect** (`fbd478b`, on `main`, **not deployed**). The **§8 colour ruling is still unbuilt.**
+⚠️ **Scope, so nothing is a surprise.** Two items here were **built**, because Olcay asked for them
+directly: **§7**, the persona rule (`e63b630`, **deployed**), and **§5's `ensureTiles` defect**
+(`fbd478b`, on `main`, **not deployed**). **Everything else is a request** — including the **§8
+colour ruling**, which is decided but unbuilt.
 
 Fuller version: `Pointr Cloud/Building - Auto Level Updates/FOR_THE_APP_REPO.md` §8.
 
