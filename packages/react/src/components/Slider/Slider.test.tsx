@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { Slider } from "./Slider";
 import "@testing-library/jest-dom/vitest";
@@ -45,5 +45,55 @@ describe("Slider", () => {
     render(<Slider error={true} defaultValue={[50]} max={100} />);
     const slider = screen.getByRole("slider");
     expect(slider.closest('[aria-invalid="true"]')).toBeInTheDocument();
+  });
+
+  it("shows the value bubble on the thumb, not the track", () => {
+    render(
+      <Slider defaultValue={[40]} label="Transparency" showValueTooltip />,
+    );
+
+    const thumb = screen.getByRole("slider");
+    expect(screen.queryByRole("tooltip")).toBeNull();
+
+    fireEvent.pointerEnter(thumb);
+    const bubble = screen.getByRole("tooltip");
+    expect(bubble).toHaveTextContent("40");
+    // Inside the thumb is what makes it track the knob. Anchored to the track
+    // it would sit still while the knob moved under it.
+    expect(thumb).toContainElement(bubble);
+  });
+
+  it("keeps the bubble up through a drag, after the pointer leaves the thumb", () => {
+    render(
+      <Slider defaultValue={[40]} label="Transparency" showValueTooltip />,
+    );
+    const thumb = screen.getByRole("slider");
+
+    fireEvent.pointerEnter(thumb);
+    fireEvent.pointerDown(thumb);
+    // The pointer outruns the knob on any real drag.
+    fireEvent.pointerLeave(thumb);
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+
+    // Released outside the slider — still has to put itself away.
+    fireEvent.pointerUp(document);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  it("formats the value when asked, and stays silent unless opted in", () => {
+    const { rerender } = render(
+      <Slider
+        defaultValue={[40]}
+        formatValue={(v) => `${v}%`}
+        label="Transparency"
+        showValueTooltip
+      />,
+    );
+    fireEvent.pointerEnter(screen.getByRole("slider"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("40%");
+
+    rerender(<Slider defaultValue={[40]} label="Transparency" />);
+    fireEvent.pointerEnter(screen.getByRole("slider"));
+    expect(screen.queryByRole("tooltip")).toBeNull();
   });
 });

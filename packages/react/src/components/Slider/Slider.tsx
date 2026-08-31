@@ -12,6 +12,17 @@ export interface SliderProps extends React.ComponentPropsWithoutRef<
   thumbCount?: number;
   thumbLabels?: string[];
   wrapperClassName?: string;
+  /**
+   * Show the current value in a bubble on the thumb.
+   *
+   * The bubble is rendered *inside* `SliderPrimitive.Thumb`, which is what makes
+   * it track the knob. Composing a `Tooltip` around the slider anchors to the
+   * track instead, so the bubble sits still while the knob moves under it —
+   * close enough to look intentional and wrong enough to be useless.
+   */
+  showValueTooltip?: boolean;
+  /** Render the value — e.g. `(v) => `${v}%``. Defaults to the number. */
+  formatValue?: (value: number) => React.ReactNode;
 }
 
 const Slider = React.forwardRef<
@@ -26,6 +37,8 @@ const Slider = React.forwardRef<
       thumbCount,
       thumbLabels,
       wrapperClassName,
+      showValueTooltip = false,
+      formatValue,
       ...props
     },
     ref,
@@ -46,6 +59,7 @@ const Slider = React.forwardRef<
         1,
     );
     const thumbs = Array.from({ length: inferredThumbCount });
+
     const min = typeof props.min === "number" ? props.min : 0;
     const max = typeof props.max === "number" ? props.max : 100;
     const fallbackDefaultValue =
@@ -58,6 +72,41 @@ const Slider = React.forwardRef<
               : min + ((max - min) * index) / (inferredThumbCount - 1),
           )
         : undefined;
+
+    // Which thumb should show its bubble, and why. Hover and focus are the easy
+    // half; the drag is the half that matters, because the pointer leaves the
+    // thumb the moment you move faster than it does. Dragging is tracked to the
+    // document so the bubble survives that, and so releasing outside the slider
+    // still puts it away.
+    const [hoveredThumb, setHoveredThumb] = React.useState<number | null>(null);
+    const [draggingThumb, setDraggingThumb] = React.useState<number | null>(
+      null,
+    );
+
+    React.useEffect(() => {
+      if (draggingThumb === null) return;
+      const end = () => setDraggingThumb(null);
+      document.addEventListener("pointerup", end);
+      document.addEventListener("pointercancel", end);
+      return () => {
+        document.removeEventListener("pointerup", end);
+        document.removeEventListener("pointercancel", end);
+      };
+    }, [draggingThumb]);
+
+    // Radix reports the value on change but never hands it back, so an
+    // uncontrolled slider has to keep its own copy for the bubble to read.
+    const asArray = (value: unknown): number[] | undefined =>
+      Array.isArray(value)
+        ? (value as number[])
+        : typeof value === "number"
+          ? [value]
+          : undefined;
+    const [uncontrolledValue, setUncontrolledValue] = React.useState<number[]>(
+      () =>
+        asArray(props.defaultValue) ?? asArray(fallbackDefaultValue) ?? [min],
+    );
+    const liveValue = asArray(props.value) ?? uncontrolledValue;
 
     return (
       <FieldWrapper
@@ -79,6 +128,10 @@ const Slider = React.forwardRef<
           )}
           {...props}
           defaultValue={props.defaultValue ?? fallbackDefaultValue}
+          onValueChange={(value) => {
+            setUncontrolledValue(value);
+            props.onValueChange?.(value);
+          }}
           onValueCommit={(value) => {
             trackEvent("Slider", "slider_value_changed", { value });
             props.onValueCommit?.(value);
@@ -106,10 +159,30 @@ const Slider = React.forwardRef<
                   : label)
               }
               className={cn(
-                "block h-5 w-5 rounded-pill border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                "relative block h-5 w-5 rounded-pill border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
                 hasError && "border-destructive",
               )}
-            />
+              onBlur={() => setHoveredThumb(null)}
+              onFocus={() => setHoveredThumb(index)}
+              onPointerDown={() => setDraggingThumb(index)}
+              onPointerEnter={() => setHoveredThumb(index)}
+              onPointerLeave={() => setHoveredThumb(null)}
+            >
+              {showValueTooltip &&
+              (hoveredThumb === index || draggingThumb === index) ? (
+                <span
+                  // pointer-events-none matters: the bubble sits directly above
+                  // the knob, and a bubble that eats the pointer ends the drag
+                  // the moment it appears.
+                  className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-control border bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md"
+                  role="tooltip"
+                >
+                  {formatValue
+                    ? formatValue(liveValue[index] ?? min)
+                    : (liveValue[index] ?? min)}
+                </span>
+              ) : null}
+            </SliderPrimitive.Thumb>
           ))}
         </SliderPrimitive.Root>
       </FieldWrapper>
