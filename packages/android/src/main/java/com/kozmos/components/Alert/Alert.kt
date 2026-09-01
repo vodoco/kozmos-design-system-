@@ -26,27 +26,22 @@ import androidx.compose.ui.unit.dp
 import com.kozmos.tokens.KozmosColors
 
 enum class AlertStatus {
-    Info, Success, Warning, Error
+    Default, Info, Success, Warning, Error
 }
 
 @Composable
 fun KozmosAlert(
     modifier: Modifier = Modifier,
-    status: AlertStatus = AlertStatus.Info,
+    status: AlertStatus = AlertStatus.Default,
     content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
 ) {
-    val color = when (status) {
-        AlertStatus.Info -> KozmosColors.primitivesColorsEmotionalInfo600
-        AlertStatus.Success -> KozmosColors.primitivesColorsEmotionalSuccess600
-        AlertStatus.Warning -> KozmosColors.primitivesColorsEmotionalAlert600
-        AlertStatus.Error -> KozmosColors.primitivesColorsEmotionalDanger600
-    }
-    
+    val borderColor = alertBorderColor(status)
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(color.copy(alpha = 0.1f), RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
-            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .background(KozmosColors.semanticsSurface0, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, borderColor, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(KozmosDimensions.primitivesLayoutSpacing200),
         verticalAlignment = Alignment.Top
     ) {
@@ -56,20 +51,21 @@ fun KozmosAlert(
 
 @Composable
 fun KozmosAlertIcon(
-    status: AlertStatus = AlertStatus.Info,
+    status: AlertStatus = AlertStatus.Default,
     modifier: Modifier = Modifier,
     customIcon: ImageVector? = null
 ) {
-    val (color, icon) = when (status) {
-        AlertStatus.Info -> KozmosColors.primitivesColorsEmotionalInfo600 to Icons.Default.Info
-        AlertStatus.Success -> KozmosColors.primitivesColorsEmotionalSuccess600 to Icons.Default.CheckCircle
-        AlertStatus.Warning -> KozmosColors.primitivesColorsEmotionalAlert600 to Icons.Default.Warning
-        AlertStatus.Error -> KozmosColors.primitivesColorsEmotionalDanger600 to Icons.Default.Info
+    val icon = when (status) {
+        AlertStatus.Default -> Icons.Default.Info
+        AlertStatus.Info -> Icons.Default.Info
+        AlertStatus.Success -> Icons.Default.CheckCircle
+        AlertStatus.Warning -> Icons.Default.Warning
+        AlertStatus.Error -> Icons.Default.Warning
     }
     Icon(
         imageVector = customIcon ?: icon,
         contentDescription = null,
-        tint = color,
+        tint = alertForegroundColor(status),
         modifier = modifier.padding(end = KozmosDimensions.primitivesLayoutSpacing150)
     )
 }
@@ -87,13 +83,14 @@ fun KozmosAlertContent(
 @Composable
 fun KozmosAlertTitle(
     title: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    color: Color = KozmosColors.primitivesColorsForeground100
 ) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = KozmosColors.primitivesColorsForeground100,
+        color = color,
         modifier = modifier
     )
 }
@@ -101,12 +98,26 @@ fun KozmosAlertTitle(
 @Composable
 fun KozmosAlertDescription(
     description: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    color: Color = KozmosColors.primitivesColorsForeground500
 ) {
     Text(
         text = description,
         style = MaterialTheme.typography.bodyMedium,
-        color = KozmosColors.primitivesColorsForeground500,
+        color = color,
         modifier = modifier
     )
+}
+
+internal fun alertForegroundColor(status: AlertStatus): Color = when (status) {
+    AlertStatus.Default -> KozmosColors.primitivesColorsForeground0
+    AlertStatus.Info -> KozmosColors.primitivesColorsTheme600
+    AlertStatus.Success -> KozmosColors.primitivesColorsEmotionalSuccess900
+    AlertStatus.Warning -> KozmosColors.primitivesColorsEmotionalAlert900
+    AlertStatus.Error -> KozmosColors.primitivesColorsEmotionalDanger600
+}
+
+private fun alertBorderColor(status: AlertStatus): Color = when (status) {
+    AlertStatus.Default -> KozmosColors.primitivesColorsForeground500
+    else -> alertForegroundColor(status)
 }

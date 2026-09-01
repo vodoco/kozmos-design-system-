@@ -16,6 +16,101 @@ const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, "../../");
 const STATUS_PATH = path.join(ROOT_DIR, "STATUS.md");
 const args = new Set(process.argv.slice(2));
+const INTERNAL_COMPONENT_NAMES = new Set(["GlassSettingsPanel"]);
+const PRODUCT_SDK_COMPONENT_NAMES = new Set([
+  "AdaptiveMapShell",
+  "BrowseCategoriesPanel",
+  "CategoryTile",
+  "DirectionStep",
+  "FloorSelector",
+  "LocationPin",
+  "MapControlsGroup",
+  "MapControlButton",
+  "MapOverlay",
+  "MapView",
+  "POICard",
+  "POIDetailPanel",
+  "POIMediaGallery",
+  "POIResultCard",
+  "POIResultList",
+  "RouteSummary",
+  "RouteOptionCard",
+  "RoutePreviewPanel",
+  "RoutingInputGroup",
+  "SaveLocationCard",
+  "UserLocationMarker",
+  "WayfindingCard",
+]);
+const CODE_ONLY_UTILITY_COMPONENT_NAMES = new Set([
+  "Heading",
+  "Label",
+  "NavigationAnnouncer",
+  "Text",
+  "ThemeProvider",
+]);
+const PLATFORM_FORM_FACTOR_COMPONENT_NAMES = new Set([
+  "DynamicIsland",
+  "FeedbackCard",
+]);
+const CODE_CONNECT_NOT_APPLICABLE_REASONS: Record<string, string> = {
+  Heading:
+    "Typography primitive maintained through text styles/tokens rather than a Figma component set.",
+  Label:
+    "Typography/form-label primitive maintained through text styles/tokens and FieldWrapper anatomy.",
+  NavigationAnnouncer:
+    "Nonvisual accessibility utility with no visible Figma component anatomy.",
+  Text: "Typography primitive maintained through text styles/tokens rather than a Figma component set.",
+  ThemeProvider:
+    "Runtime provider infrastructure; it does not have a visible Figma component set.",
+};
+const CODE_CONNECT_FILE_OVERRIDES: Record<
+  "web" | "ios" | "android",
+  Record<string, string>
+> = {
+  web: {
+    FieldWrapper:
+      "packages/react/src/components/FieldWrapper/FormField.figma.tsx",
+  },
+  ios: {},
+  android: {},
+};
+
+type ComponentLaneId =
+  | "core"
+  | "code-only"
+  | "product-sdk"
+  | "platform-form-factor";
+
+const COMPONENT_LANES: Array<{
+  id: ComponentLaneId;
+  title: string;
+  description: string;
+}> = [
+  {
+    id: "core",
+    title: "Core",
+    description:
+      "Domain-neutral design-system components expected to reach Figma, Code Connect, and platform parity.",
+  },
+  {
+    id: "code-only",
+    title: "Code-Only / Utility",
+    description:
+      "Runtime, typography, or nonvisual primitives that are intentionally not Figma component sets.",
+  },
+  {
+    id: "product-sdk",
+    title: "Product / SDK",
+    description:
+      "Map, wayfinding, CMS, dashboard, or product-specific compositions that should consume Core primitives.",
+  },
+  {
+    id: "platform-form-factor",
+    title: "Platform / Form-Factor",
+    description:
+      "Dynamic Island, watch, kiosk, spatial, landscape, and other device-specific surfaces that need separate platform validation before Core promotion.",
+  },
+];
 
 const PATHS = {
   web: {
@@ -27,6 +122,7 @@ const PATHS = {
     test: (name: string) =>
       `packages/react/src/components/${name}/${name}.test.tsx`,
     figma: (name: string) =>
+      CODE_CONNECT_FILE_OVERRIDES.web[name] ??
       `packages/react/src/components/${name}/${name}.figma.tsx`,
     barrel: (name: string) => `packages/react/src/components/${name}/index.ts`,
   },
@@ -35,6 +131,7 @@ const PATHS = {
     component: (name: string) =>
       `packages/ios/Sources/Components/${name}/${name}.swift`,
     figma: (name: string) =>
+      CODE_CONNECT_FILE_OVERRIDES.ios[name] ??
       `packages/ios/Sources/Components/${name}/${name}.figma.swift`,
   },
   android: {
@@ -42,12 +139,16 @@ const PATHS = {
     component: (name: string) =>
       `packages/android/src/main/java/com/kozmos/components/${name}/${name}.kt`,
     figma: (name: string) =>
+      CODE_CONNECT_FILE_OVERRIDES.android[name] ??
       `packages/android/src/main/java/com/kozmos/components/${name}/${name}.figma.kt`,
   },
 };
 
 interface ComponentStatus {
   name: string;
+  lane: ComponentLaneId;
+  codeConnectApplicable: boolean;
+  codeConnectReason?: string;
   web: {
     component: boolean;
     story: boolean;
@@ -110,6 +211,7 @@ function readComponentDirectories(repoPath: string): string[] {
   return fs
     .readdirSync(absPath)
     .filter((name) => fs.statSync(path.join(absPath, name)).isDirectory())
+    .filter((name) => !INTERNAL_COMPONENT_NAMES.has(name))
     .sort((a, b) => a.localeCompare(b));
 }
 
@@ -121,6 +223,18 @@ function discoverComponents(): string[] {
   ]);
 
   return [...names].sort((a, b) => a.localeCompare(b));
+}
+
+function codeConnectReason(name: string): string | undefined {
+  return CODE_CONNECT_NOT_APPLICABLE_REASONS[name];
+}
+
+function componentLane(name: string): ComponentLaneId {
+  if (CODE_ONLY_UTILITY_COMPONENT_NAMES.has(name)) return "code-only";
+  if (PRODUCT_SDK_COMPONENT_NAMES.has(name)) return "product-sdk";
+  if (PLATFORM_FORM_FACTOR_COMPONENT_NAMES.has(name))
+    return "platform-form-factor";
+  return "core";
 }
 
 async function checkExports(componentNames: string[]): Promise<Set<string>> {
@@ -151,27 +265,36 @@ async function runCheck() {
     const webFigmaPath = PATHS.web.figma(component);
     const iosFigmaPath = PATHS.ios.figma(component);
     const androidFigmaPath = PATHS.android.figma(component);
+    const notApplicableReason = codeConnectReason(component);
+    const codeConnectApplicable = !notApplicableReason;
 
     statuses.push({
       name: component,
+      lane: componentLane(component),
+      codeConnectApplicable,
+      codeConnectReason: notApplicableReason,
       web: {
         component: exists(PATHS.web.component(component)),
         story: exists(PATHS.web.story(component)),
         test: exists(PATHS.web.test(component)),
-        figmaFile: hasCodeConnectFile(webFigmaPath),
-        codeConnect: hasRealCodeConnectMapping(webFigmaPath),
+        figmaFile: codeConnectApplicable && hasCodeConnectFile(webFigmaPath),
+        codeConnect:
+          codeConnectApplicable && hasRealCodeConnectMapping(webFigmaPath),
         barrel: exists(PATHS.web.barrel(component)),
         exported: exportedComponents.has(component),
       },
       ios: {
         component: exists(PATHS.ios.component(component)),
-        figmaFile: hasCodeConnectFile(iosFigmaPath),
-        codeConnect: hasRealCodeConnectMapping(iosFigmaPath),
+        figmaFile: codeConnectApplicable && hasCodeConnectFile(iosFigmaPath),
+        codeConnect:
+          codeConnectApplicable && hasRealCodeConnectMapping(iosFigmaPath),
       },
       android: {
         component: exists(PATHS.android.component(component)),
-        figmaFile: hasCodeConnectFile(androidFigmaPath),
-        codeConnect: hasRealCodeConnectMapping(androidFigmaPath),
+        figmaFile:
+          codeConnectApplicable && hasCodeConnectFile(androidFigmaPath),
+        codeConnect:
+          codeConnectApplicable && hasRealCodeConnectMapping(androidFigmaPath),
       },
     });
   }
@@ -202,6 +325,7 @@ async function runCheck() {
 function printTable(statuses: ComponentStatus[]) {
   const headers = [
     "Component",
+    "Lane",
     "Web (C)",
     "Web (S)",
     "Web (T)",
@@ -218,28 +342,31 @@ function printTable(statuses: ComponentStatus[]) {
   ];
 
   const pad = (str: string, len: number) => str.padEnd(len);
-  const colWidths = [22, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8];
+  const colWidths = [22, 24, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8];
   const rowLine = colWidths.map((w) => "-".repeat(w)).join(" | ");
 
   console.log(headers.map((h, i) => pad(h, colWidths[i])).join(" | "));
   console.log(rowLine);
 
   statuses.forEach((s) => {
+    const codeConnectIcon = (value: boolean) =>
+      s.codeConnectApplicable ? icon(value) : "—";
     const row = [
       s.name,
+      laneTitle(s.lane),
       icon(s.web.component),
       icon(s.web.story),
       icon(s.web.test),
-      icon(s.web.figmaFile),
-      icon(s.web.codeConnect),
+      codeConnectIcon(s.web.figmaFile),
+      codeConnectIcon(s.web.codeConnect),
       icon(s.web.barrel),
       icon(s.web.exported),
       icon(s.ios.component),
-      icon(s.ios.figmaFile),
-      icon(s.ios.codeConnect),
+      codeConnectIcon(s.ios.figmaFile),
+      codeConnectIcon(s.ios.codeConnect),
       icon(s.android.component),
-      icon(s.android.figmaFile),
-      icon(s.android.codeConnect),
+      codeConnectIcon(s.android.figmaFile),
+      codeConnectIcon(s.android.codeConnect),
     ];
     console.log(row.map((c, i) => pad(c, colWidths[i])).join(" | "));
   });
@@ -267,30 +394,65 @@ function generateMarkdown(statuses: ComponentStatus[]): string {
   md +=
     "Generated from the component directories by `scripts/skills/check-completion.ts`.\n\n";
   md +=
-    "`Code Connect File` means a scaffold or mapping file exists. `Code Connect Linked` means the mapping uses a real Figma node ID and has no placeholder markers such as `node-id=TBD`.\n\n";
+    "`Code Connect File` means a scaffold or mapping file exists. `Code Connect Linked` means the mapping uses a real Figma node ID and has no placeholder markers such as `node-id=TBD`.\n\n" +
+    "Variant and API parity are **not** covered here. Run `pnpm components:variant:check` and see `docs/component-variant-gap-analysis.md` for which variant axes and values each platform can actually express.\n\n";
+  md +=
+    "`—` means Code Connect is not expected because the component is a code-only, nonvisual, provider, or typography-token primitive.\n\n";
+  md +=
+    "Internal-only component directories are excluded from the table. Current exclusions: " +
+    [...INTERNAL_COMPONENT_NAMES]
+      .sort((a, b) => a.localeCompare(b))
+      .join(", ") +
+    ".\n\n";
 
-  md += `| ${headers.join(" | ")} |\n`;
-  md += `| ${headers.map(() => "---").join(" | ")} |\n`;
+  md += "## Scope Of This Report\n\n";
+  md +=
+    "A checkmark confirms repository structure only: the expected implementation, story, test, export, or Code Connect mapping file was found. It does not grade the depth or correctness of that file.\n\n";
+  md +=
+    "This report does **not** prove visual fidelity, accessibility conformance, behavioral completeness, responsive coverage, API parity between React, Vue, SwiftUI, and Compose, meaningful test assertions, or production readiness. Those require separate contract, interaction, accessibility, visual-regression, and cross-platform review gates. Vue is not included in this table.\n\n";
 
-  statuses.forEach((s) => {
-    const row = [
-      s.name,
-      icon(s.web.component),
-      icon(s.web.story),
-      icon(s.web.test),
-      icon(s.web.figmaFile),
-      icon(s.web.codeConnect),
-      icon(s.web.barrel),
-      icon(s.web.exported),
-      icon(s.ios.component),
-      icon(s.ios.figmaFile),
-      icon(s.ios.codeConnect),
-      icon(s.android.component),
-      icon(s.android.figmaFile),
-      icon(s.android.codeConnect),
-    ];
-    md += `| ${row.join(" | ")} |\n`;
-  });
+  md += "## Lane Summary\n\n";
+  md += generateLaneSummary(statuses);
+
+  for (const lane of COMPONENT_LANES) {
+    const laneStatuses = statuses.filter((s) => s.lane === lane.id);
+    if (laneStatuses.length === 0) continue;
+
+    md += `\n## ${lane.title}\n\n`;
+    md += `${lane.description}\n\n`;
+    md += `| ${headers.join(" | ")} |\n`;
+    md += `| ${headers.map(() => "---").join(" | ")} |\n`;
+
+    laneStatuses.forEach((s) => {
+      const codeConnectIcon = (value: boolean) =>
+        s.codeConnectApplicable ? icon(value) : "—";
+      const row = [
+        s.name,
+        icon(s.web.component),
+        icon(s.web.story),
+        icon(s.web.test),
+        codeConnectIcon(s.web.figmaFile),
+        codeConnectIcon(s.web.codeConnect),
+        icon(s.web.barrel),
+        icon(s.web.exported),
+        icon(s.ios.component),
+        codeConnectIcon(s.ios.figmaFile),
+        codeConnectIcon(s.ios.codeConnect),
+        icon(s.android.component),
+        codeConnectIcon(s.android.figmaFile),
+        codeConnectIcon(s.android.codeConnect),
+      ];
+      md += `| ${row.join(" | ")} |\n`;
+    });
+  }
+
+  const notApplicable = statuses.filter((s) => !s.codeConnectApplicable);
+  if (notApplicable.length > 0) {
+    md += "\n## Code Connect Not Applicable\n\n";
+    notApplicable.forEach((s) => {
+      md += `- ${s.name}: ${s.codeConnectReason}\n`;
+    });
+  }
 
   md += "\n## Summary\n";
   md += summaryLines(statuses)
@@ -315,27 +477,94 @@ function printSummary(statuses: ComponentStatus[]) {
   summaryLines(statuses).forEach((line) => console.log(line));
 }
 
+function generateLaneSummary(statuses: ComponentStatus[]): string {
+  const headers = [
+    "Lane",
+    "Components",
+    "Web",
+    "Web Tests",
+    "Web CCL",
+    "iOS",
+    "iOS CCL",
+    "Android",
+    "Android CCL",
+  ];
+
+  let md = `| ${headers.join(" | ")} |\n`;
+  md += `| ${headers.map(() => "---").join(" | ")} |\n`;
+
+  for (const lane of COMPONENT_LANES) {
+    const laneStatuses = statuses.filter((s) => s.lane === lane.id);
+    if (laneStatuses.length === 0) continue;
+
+    md += `| ${[
+      lane.title,
+      laneStatuses.length.toString(),
+      ratio(laneStatuses, (s) => s.web.component),
+      ratio(laneStatuses, (s) => s.web.test),
+      codeConnectRatio(laneStatuses, (s) => s.web.codeConnect),
+      ratio(laneStatuses, (s) => s.ios.component),
+      codeConnectRatio(laneStatuses, (s) => s.ios.codeConnect),
+      ratio(laneStatuses, (s) => s.android.component),
+      codeConnectRatio(laneStatuses, (s) => s.android.codeConnect),
+    ].join(" | ")} |\n`;
+  }
+
+  return `${md}\n`;
+}
+
 function summaryLines(statuses: ComponentStatus[]): string[] {
   const total = statuses.length;
+  const codeConnectApplicableStatuses = statuses.filter(
+    (status) => status.codeConnectApplicable,
+  );
+  const codeConnectTotal = codeConnectApplicableStatuses.length;
   const count = (selector: (status: ComponentStatus) => boolean) =>
     statuses.filter(selector).length;
+  const codeConnectCount = (selector: (status: ComponentStatus) => boolean) =>
+    codeConnectApplicableStatuses.filter(selector).length;
 
   return [
     `Web components: ${count((s) => s.web.component)}/${total}`,
     `Web stories: ${count((s) => s.web.story)}/${total}`,
     `Web tests: ${count((s) => s.web.test)}/${total}`,
-    `Web Code Connect files: ${count((s) => s.web.figmaFile)}/${total}`,
-    `Web Code Connect scaffolds: ${count((s) => s.web.figmaFile && !s.web.codeConnect)}/${total}`,
-    `Web Code Connect linked: ${count((s) => s.web.codeConnect)}/${total}`,
+    `Web Code Connect files: ${codeConnectCount((s) => s.web.figmaFile)}/${codeConnectTotal}`,
+    `Web Code Connect scaffolds: ${codeConnectCount((s) => s.web.figmaFile && !s.web.codeConnect)}/${codeConnectTotal}`,
+    `Web Code Connect linked: ${codeConnectCount((s) => s.web.codeConnect)}/${codeConnectTotal}`,
     `iOS components: ${count((s) => s.ios.component)}/${total}`,
-    `iOS Code Connect files: ${count((s) => s.ios.figmaFile)}/${total}`,
-    `iOS Code Connect scaffolds: ${count((s) => s.ios.figmaFile && !s.ios.codeConnect)}/${total}`,
-    `iOS Code Connect linked: ${count((s) => s.ios.codeConnect)}/${total}`,
+    `iOS Code Connect files: ${codeConnectCount((s) => s.ios.figmaFile)}/${codeConnectTotal}`,
+    `iOS Code Connect scaffolds: ${codeConnectCount((s) => s.ios.figmaFile && !s.ios.codeConnect)}/${codeConnectTotal}`,
+    `iOS Code Connect linked: ${codeConnectCount((s) => s.ios.codeConnect)}/${codeConnectTotal}`,
     `Android components: ${count((s) => s.android.component)}/${total}`,
-    `Android Code Connect files: ${count((s) => s.android.figmaFile)}/${total}`,
-    `Android Code Connect scaffolds: ${count((s) => s.android.figmaFile && !s.android.codeConnect)}/${total}`,
-    `Android Code Connect linked: ${count((s) => s.android.codeConnect)}/${total}`,
+    `Android Code Connect files: ${codeConnectCount((s) => s.android.figmaFile)}/${codeConnectTotal}`,
+    `Android Code Connect scaffolds: ${codeConnectCount((s) => s.android.figmaFile && !s.android.codeConnect)}/${codeConnectTotal}`,
+    `Android Code Connect linked: ${codeConnectCount((s) => s.android.codeConnect)}/${codeConnectTotal}`,
+    `Code Connect not applicable: ${count((s) => !s.codeConnectApplicable)}/${total}`,
   ];
+}
+
+function laneTitle(lane: ComponentLaneId): string {
+  return (
+    COMPONENT_LANES.find((definition) => definition.id === lane)?.title ?? lane
+  );
+}
+
+function ratio(
+  statuses: ComponentStatus[],
+  selector: (status: ComponentStatus) => boolean,
+): string {
+  return `${statuses.filter(selector).length}/${statuses.length}`;
+}
+
+function codeConnectRatio(
+  statuses: ComponentStatus[],
+  selector: (status: ComponentStatus) => boolean,
+): string {
+  const applicableStatuses = statuses.filter(
+    (status) => status.codeConnectApplicable,
+  );
+  if (applicableStatuses.length === 0) return "—";
+  return `${applicableStatuses.filter(selector).length}/${applicableStatuses.length}`;
 }
 
 function icon(bool: boolean): string {

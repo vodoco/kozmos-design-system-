@@ -36,12 +36,11 @@ import { KozmosLink } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosLink: View {
-    var body: some View {
-        Text("Link Content placeholder")
-    }
-}
-    `}
+KozmosLink(
+"Open dashboard",
+destination: URL(string: "https://example.com")!
+)
+`}
     kotlin={`
 package com.kozmos.components.link
 
@@ -55,17 +54,18 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosLink(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+text: String,
+onClick: () -> Unit,
+modifier: Modifier = Modifier
 ) {
-    Text(
-        text = text,
-        color = KozmosColors.primitivesColorsTheme500,
-        textDecoration = TextDecoration.Underline,
-        modifier = modifier.clickable { onClick() }
-    )
+Text(
+text = text,
+color = KozmosColors.primitivesColorsTheme500,
+textDecoration = TextDecoration.Underline,
+modifier = modifier.clickable { onClick() }
+)
 }
 
     `}
+
 />

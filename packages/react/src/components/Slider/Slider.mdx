@@ -36,12 +36,8 @@ import { KozmosSlider } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosSlider: View {
-    var body: some View {
-        Text("Slider Content placeholder")
-    }
-}
-    `}
+KozmosSlider(value: .constant(0.6))
+`}
     kotlin={`
 package com.kozmos.components.slider
 
@@ -54,29 +50,30 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosSlider(
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
-    enabled: Boolean = true
+value: Float,
+onValueChange: (Float) -> Unit,
+modifier: Modifier = Modifier,
+valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+enabled: Boolean = true
 ) {
-    val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
-    Slider(
-        value = value,
-        onValueChange = onValueChange,
-        onValueChangeFinished = {
-            trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Slider", eventName = "slider_value_changed", properties = mapOf("value" to value.toString())))
-        },
-        modifier = modifier,
-        valueRange = valueRange,
-        enabled = enabled,
-        colors = SliderDefaults.colors(
-            thumbColor = KozmosColors.primitivesColorsTheme500,
-            activeTrackColor = KozmosColors.primitivesColorsTheme500,
-            inactiveTrackColor = KozmosColors.primitivesColorsBackground300,
-        )
-    )
+val trackEvent = com.kozmos.providers.LocalKozmosAnalytics.current
+Slider(
+value = value,
+onValueChange = onValueChange,
+onValueChangeFinished = {
+trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Slider", eventName = "slider_value_changed", properties = mapOf("value" to value.toString())))
+},
+modifier = modifier,
+valueRange = valueRange,
+enabled = enabled,
+colors = SliderDefaults.colors(
+thumbColor = KozmosColors.primitivesColorsTheme500,
+activeTrackColor = KozmosColors.primitivesColorsTheme500,
+inactiveTrackColor = KozmosColors.primitivesColorsBackground300,
+)
+)
 }
 
     `}
+
 />

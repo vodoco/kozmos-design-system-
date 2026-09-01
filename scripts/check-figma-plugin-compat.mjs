@@ -14,6 +14,77 @@ if (syntaxCheck.status !== 0) {
 }
 
 const code = fs.readFileSync(PLUGIN_MAIN, "utf8");
+
+function maskStringsAndComments(source) {
+  let result = "";
+  let index = 0;
+  let state = "code";
+
+  while (index < source.length) {
+    const char = source[index];
+    const next = source[index + 1];
+
+    if (state === "code") {
+      if (char === "/" && next === "/") {
+        result += "  ";
+        index += 2;
+        state = "line-comment";
+        continue;
+      }
+      if (char === "/" && next === "*") {
+        result += "  ";
+        index += 2;
+        state = "block-comment";
+        continue;
+      }
+      if (char === '"' || char === "'" || char === "`") {
+        result += " ";
+        index += 1;
+        state = char;
+        continue;
+      }
+      result += char;
+      index += 1;
+      continue;
+    }
+
+    if (state === "line-comment") {
+      result += char === "\n" ? "\n" : " ";
+      index += 1;
+      if (char === "\n") state = "code";
+      continue;
+    }
+
+    if (state === "block-comment") {
+      result += char === "\n" ? "\n" : " ";
+      if (char === "*" && next === "/") {
+        result += " ";
+        index += 2;
+        state = "code";
+      } else {
+        index += 1;
+      }
+      continue;
+    }
+
+    result += char === "\n" ? "\n" : " ";
+    if (char === "\\") {
+      if (next) {
+        result += next === "\n" ? "\n" : " ";
+        index += 2;
+      } else {
+        index += 1;
+      }
+      continue;
+    }
+    if (char === state) state = "code";
+    index += 1;
+  }
+
+  return result;
+}
+
+const syntaxOnlyCode = maskStringsAndComments(code);
 const unsupportedPatterns = [
   {
     label: "object/rest spread",
@@ -36,7 +107,7 @@ const unsupportedPatterns = [
 ];
 
 const failures = unsupportedPatterns.filter(({ pattern }) =>
-  pattern.test(code),
+  pattern.test(syntaxOnlyCode),
 );
 
 if (failures.length > 0) {

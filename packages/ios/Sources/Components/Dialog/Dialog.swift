@@ -74,14 +74,14 @@ public struct KozmosDialog<Content: View>: View {
                 VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                     if let title {
                         Text(title)
-                            .font(.title3)
+                            .font(KozmosTypography.title3)
                             .fontWeight(.semibold)
                             .foregroundColor(KozmosColors.primitivesColorsForeground100)
                     }
 
                     if let description {
                         Text(description)
-                            .font(.subheadline)
+                            .font(KozmosTypography.subheadline)
                             .foregroundColor(KozmosColors.primitivesColorsForeground500)
                     }
                 }
@@ -129,9 +129,9 @@ public struct KozmosDialog<Content: View>: View {
         .padding(KozmosDimensions.primitivesLayoutSpacing300)
         .frame(maxWidth: 512)
         .background(KozmosColors.semanticsSurface0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius200)
+        .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius200)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer)
                 .stroke(KozmosColors.primitivesColorsForeground400, lineWidth: 1)
         )
         .shadow(color: KozmosColors.primitivesColorsForeground0.opacity(0.16), radius: 20, x: 0, y: 10)
@@ -141,7 +141,7 @@ public struct KozmosDialog<Content: View>: View {
     private var dialogContent: some View {
         if let bodyText {
             Text(bodyText)
-                .font(.body)
+                .font(KozmosTypography.body)
                 .foregroundColor(KozmosColors.primitivesColorsForeground100)
         } else {
             content()

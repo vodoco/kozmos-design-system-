@@ -135,11 +135,11 @@ private struct KozmosTooltipBubble: View {
             .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
             .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing75)
             .background(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .fill(KozmosColors.primitivesColorsBackground0)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(KozmosColors.primitivesColorsBackground200, lineWidth: 1)
             )
             .shadow(color: KozmosColors.primitivesColorsForeground0.opacity(0.1), radius: 6, x: 0, y: 4)

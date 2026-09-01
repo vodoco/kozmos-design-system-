@@ -57,7 +57,7 @@ export const WithHeroImage: Story = {
 
 export const InsideMapOverlay: Story = {
   render: (args) => (
-    <div className="relative w-full min-w-[320px] md:min-w-[800px] h-[500px] bg-slate-100 rounded-xl overflow-hidden border">
+    <div className="relative w-full min-w-[320px] md:min-w-[800px] h-[500px] bg-slate-100 rounded-panel overflow-hidden border">
       <span className="absolute inset-0 flex items-center justify-center text-muted-foreground font-mono">
         Simulated Map Environment
       </span>

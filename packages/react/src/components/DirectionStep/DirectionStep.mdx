@@ -36,12 +36,13 @@ import { KozmosDirectionStep } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosDirectionStep: View {
-    var body: some View {
-        Text("DirectionStep Content placeholder")
-    }
-}
-    `}
+KozmosDirectionStep(
+type: .right,
+instruction: "Turn right at the atrium",
+distance: "40 m",
+duration: "1 min"
+)
+`}
     kotlin={`
 package com.kozmos.components.directionstep
 
@@ -76,23 +77,23 @@ import androidx.compose.ui.unit.dp
 import com.kozmos.tokens.KozmosColors
 
 enum class DirectionType {
-    Straight, Left, Right, Destination
+Straight, Left, Right, Destination
 }
 
 @Composable
 fun KozmosDirectionStep(
-    type: DirectionType,
-    instruction: String,
-    modifier: Modifier = Modifier,
-    distance: String? = null,
-    duration: String? = null
+type: DirectionType,
+instruction: String,
+modifier: Modifier = Modifier,
+distance: String? = null,
+duration: String? = null
 ) {
-    val icon = when (type) {
-        DirectionType.Straight -> Icons.Default.ArrowUpward
-        DirectionType.Left -> Icons.Default.ArrowBack // Approximated
-        DirectionType.Right -> Icons.Default.ArrowForward
-        DirectionType.Destination -> Icons.Default.LocationOn
-    }
+val icon = when (type) {
+DirectionType.Straight -> Icons.Default.ArrowUpward
+DirectionType.Left -> Icons.Default.ArrowBack // Approximated
+DirectionType.Right -> Icons.Default.ArrowForward
+DirectionType.Destination -> Icons.Default.LocationOn
+}
 
     Row(
         modifier = modifier
@@ -117,9 +118,9 @@ fun KozmosDirectionStep(
                 modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300)
             )
         }
-        
+
         Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing150))
-        
+
         Column {
             Text(
                 text = instruction,
@@ -135,7 +136,9 @@ fun KozmosDirectionStep(
             }
         }
     }
+
 }
 
     `}
+
 />

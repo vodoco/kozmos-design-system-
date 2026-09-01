@@ -1,0 +1,15 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./POIDetailPanel.stories";
+
+<Meta of={Stories} />
+
+# POIDetailPanel
+
+Typed Product/SDK detail anatomy for partial and complete POI data. Actions are
+controlled and receive explicit loading, disabled, pressed, status, and error
+states. The same content contract supports inline, sheet, and desktop panel
+presentations.
+
+<Canvas of={Stories.Inline} />
+<Canvas of={Stories.PartialData} />
+<Controls />

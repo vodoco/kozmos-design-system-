@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": 1,
+  "description": "AA contrast pairs for public semantic tokens and Core runtime component aliases. Pairs are checked in both light and dark modes from generated CSS token output.",
+  "runtimeAliases": [
+    {
+      "name": "Tailwind success fill",
+      "file": "packages/react/tailwind.config.js",
+      "path": ["theme", "extend", "colors", "success", "DEFAULT"],
+      "value": "var(--primitives-colors-emotional-success-800)"
+    },
+    {
+      "name": "Tailwind success foreground",
+      "file": "packages/react/tailwind.config.js",
+      "path": ["theme", "extend", "colors", "success", "foreground"],
+      "value": "var(--primitives-colors-foreground-1000)"
+    },
+    {
+      "name": "Tailwind warning fill",
+      "file": "packages/react/tailwind.config.js",
+      "path": ["theme", "extend", "colors", "warning", "DEFAULT"],
+      "value": "var(--primitives-colors-emotional-alert-800)"
+    },
+    {
+      "name": "Tailwind warning foreground",
+      "file": "packages/react/tailwind.config.js",
+      "path": ["theme", "extend", "colors", "warning", "foreground"],
+      "value": "var(--primitives-colors-foreground-1000)"
+    },
+    {
+      "name": "Tailwind info fill",
+      "file": "packages/react/tailwind.config.js",
+      "path": ["theme", "extend", "colors", "info", "DEFAULT"],
+      "value": "var(--primitives-colors-emotional-info-700)"
+    },
+    {
+      "name": "Tailwind info foreground",
+      "file": "packages/react/tailwind.config.js",
+      "path": ["theme", "extend", "colors", "info", "foreground"],
+      "value": "var(--primitives-colors-foreground-1000)"
+    }
+  ],
+  "pairs": [
+    {
+      "name": "app background / foreground",
+      "background": "primitives-colors-background-0",
+      "foreground": "primitives-colors-foreground-0",
+      "minimum": 4.5
+    },
+    {
+      "name": "card / foreground",
+      "background": "primitives-colors-background-0",
+      "foreground": "primitives-colors-foreground-0",
+      "minimum": 4.5
+    },
+    {
+      "name": "secondary surface / foreground",
+      "background": "primitives-colors-background-200",
+      "foreground": "primitives-colors-foreground-0",
+      "minimum": 4.5
+    },
+    {
+      "name": "muted foreground on app background",
+      "background": "primitives-colors-background-0",
+      "foreground": "primitives-colors-foreground-400",
+      "minimum": 4.5
+    },
+    {
+      "name": "muted foreground on muted surface",
+      "background": "primitives-colors-background-100",
+      "foreground": "primitives-colors-foreground-400",
+      "minimum": 4.5
+    },
+    {
+      "name": "selected navigation item",
+      "background": "primitives-colors-background-100",
+      "foreground": "primitives-colors-theme-600",
+      "minimum": 4.5
+    },
+    {
+      "name": "brand tint surface / primary text",
+      "background": "primitives-colors-theme-0",
+      "foreground": "primitives-colors-theme-600",
+      "minimum": 4.5
+    },
+    {
+      "name": "primary action",
+      "background": "primitives-colors-theme-600",
+      "foreground": "primitives-colors-foreground-1000",
+      "minimum": 4.5
+    },
+    {
+      "name": "destructive action",
+      "background": "primitives-colors-emotional-danger-600",
+      "foreground": "primitives-colors-foreground-1000",
+      "minimum": 4.5
+    },
+    {
+      "name": "success action",
+      "background": "primitives-colors-emotional-success-800",
+      "foreground": "primitives-colors-foreground-1000",
+      "minimum": 4.5
+    },
+    {
+      "name": "warning action",
+      "background": "primitives-colors-emotional-alert-800",
+      "foreground": "primitives-colors-foreground-1000",
+      "minimum": 4.5
+    },
+    {
+      "name": "info action",
+      "background": "primitives-colors-emotional-info-700",
+      "foreground": "primitives-colors-foreground-1000",
+      "minimum": 4.5
+    },
+    {
+      "name": "button default idle",
+      "background": "components-primary-buttons-themed-button-background-idle",
+      "foreground": "components-primary-buttons-themed-button-foreground-content-idle",
+      "minimum": 4.5
+    },
+    {
+      "name": "button default hover",
+      "background": "components-primary-buttons-themed-button-background-hover",
+      "foreground": "components-primary-buttons-themed-button-foreground-content-hover",
+      "minimum": 4.5
+    },
+    {
+      "name": "button destructive idle",
+      "background": "components-primary-buttons-danger-button-background-idle",
+      "foreground": "components-primary-buttons-danger-button-foreground-content-idle",
+      "minimum": 4.5
+    },
+    {
+      "name": "button destructive hover",
+      "background": "components-primary-buttons-danger-button-background-hover",
+      "foreground": "components-primary-buttons-danger-button-foreground-content-hover",
+      "minimum": 4.5
+    },
+    {
+      "name": "button secondary idle",
+      "background": "primitives-colors-background-200",
+      "foreground": "primitives-colors-foreground-0",
+      "minimum": 4.5
+    },
+    {
+      "name": "button outline text idle",
+      "background": "primitives-colors-background-0",
+      "foreground": "components-secondary-buttons-themed-button-foreground-content-idle",
+      "minimum": 4.5
+    },
+    {
+      "name": "button outline border idle",
+      "background": "primitives-colors-background-0",
+      "foreground": "components-secondary-buttons-themed-button-foreground-content-idle",
+      "minimum": 3
+    },
+    {
+      "name": "button outline text hover",
+      "background": "primitives-colors-background-0",
+      "foreground": "components-secondary-buttons-themed-button-foreground-content-hover",
+      "minimum": 4.5
+    },
+    {
+      "name": "button ghost/link text idle",
+      "background": "primitives-colors-background-0",
+      "foreground": "components-secondary-buttons-themed-button-foreground-content-idle",
+      "minimum": 4.5
+    },
+    {
+      "name": "button ghost/link text hover",
+      "background": "primitives-colors-background-0",
+      "foreground": "components-secondary-buttons-themed-button-foreground-content-hover",
+      "minimum": 4.5
+    }
+  ]
+}

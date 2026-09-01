@@ -1,0 +1,134 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as DateRangePickerStories from './DateRangePicker.stories';
+
+<Meta of={DateRangePickerStories} />
+
+# DateRangePicker
+
+A paired start and end date field for selecting a period.
+
+## Usage
+
+Use it wherever a span matters rather than a single day:
+
+- Report and analytics ranges
+- Booking and availability windows
+- Filtering history by period
+
+For one date use `DatePicker`. `DateRangePicker` is exported from the same
+module and shares its validation and formatting behaviour.
+
+On the web, values are ISO `YYYY-MM-DD` strings rather than `Date` objects, so
+they survive serialization and carry no timezone of their own. Native uses each
+platform's own date type — `Date` on SwiftUI, `LocalDate` on Compose — so
+convert at the edges of your app rather than in the field.
+
+`onRangeChange` fires when either end changes, including while the range is
+incomplete — expect a value with one end still empty and do not treat that as
+invalid input mid-edit.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { DateRangePicker } from '@kozmos/react';
+
+<DateRangePicker
+  label="Reporting period"
+  startLabel="From"
+  endLabel="To"
+  min="2020-01-01"
+  max="2030-12-31"
+  onRangeChange={(range) => setPeriod(range)}
+/>
+
+// Controlled
+<DateRangePicker
+  label="Stay"
+  value={{ start: "2026-08-01", end: "2026-08-14" }}
+  onValueChange={setStay}
+  helperText="Check-in and check-out"
+/>
+  `}
+  vue={`
+<script setup>
+import { KozmosDateRangePicker } from "@kozmos/vue"
+import { ref } from "vue"
+
+const period = ref({ start: "", end: "" })
+</script>
+
+<template>
+  <KozmosDateRangePicker
+    label="Reporting period"
+    startLabel="From"
+    endLabel="To"
+    :value="period"
+    @rangeChange="(range) => (period = range)"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct ReportFilters: View {
+    @State private var start = Date()
+    @State private var end = Date()
+
+    var body: some View {
+        KozmosDateRangePicker(
+            startDate: $start,
+            endDate: $end,
+            label: "Reporting period",
+            startLabel: "From",
+            endLabel: "To",
+            showsCalendarPreview: true
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.*
+import com.kozmos.components.daterangepicker.KozmosDateRangePicker
+import com.kozmos.components.daterangepicker.KozmosDateRangeValue
+
+@Composable
+fun ReportFilters() {
+    var range by remember { mutableStateOf(KozmosDateRangeValue()) }
+
+    KozmosDateRangePicker(
+        value = range,
+        onValueChange = { range = it },
+        label = "Reporting period",
+        startLabel = "From",
+        endLabel = "To"
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- Start and end are separate labelled fields, so each is announced on its own
+  rather than as one ambiguous control.
+- `min` and `max` bound both ends; an end before its start is reported through
+  `error`, as a message rather than by colour.
+- The range reads correctly in RTL because the two fields follow flow order.
+
+## Stories
+
+### Default
+<Canvas of={DateRangePickerStories.Default} />
+
+### Responsive Stack
+<Canvas of={DateRangePickerStories.ResponsiveStack} />
+
+### Validation States
+<Canvas of={DateRangePickerStories.ValidationStates} />

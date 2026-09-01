@@ -56,7 +56,7 @@ public struct KozmosRadioGroupItem: View {
                 
                 if let label = label {
                     Text(label)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .foregroundColor(labelColor)
                 }
             }

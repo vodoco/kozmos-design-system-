@@ -3,10 +3,21 @@ import path from "path";
 import { execSync } from "child_process";
 import { gzipSync } from "zlib";
 
-const MAX_RAW_SIZE_KB = 250;
+// Raw is the coarse guard; gzip is what consumers actually download, so it is
+// the tighter of the two on purpose. The raw ceiling was set when the library
+// had 79 components — the Product / SDK wave took it to 97, including several
+// expensive ones (ColorPicker, DatePicker, DateRangePicker, Combobox,
+// MultiSelect), and the ESM bundle went from 128.80 KB to 254.07 KB. Gzip moved
+// 26.15 KB -> 51.06 KB, still well inside its own budget, so the ceiling is
+// raised rather than the delivery guarantee weakened.
+//
+// If this is hit again, prefer subpath exports over another bump: a single
+// entry point means every consumer pays for ColorPicker whether or not they
+// import it.
+const MAX_RAW_SIZE_KB = 300;
 const MAX_GZIP_SIZE_KB = 70;
 const REACT_PKG_DIR = path.resolve(__dirname, "../../packages/react");
-const DIST_FILE = path.resolve(REACT_PKG_DIR, "dist/kozmos-react.es.js");
+const DIST_FILE = path.resolve(REACT_PKG_DIR, "dist/kozmos-react.mjs");
 
 console.log(
   "🔄 Building @kozmos/react and its dependencies for performance analysis...",

@@ -1,16 +1,29 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { TimePicker } from './TimePicker';
+import type { Meta, StoryObj } from "@storybook/react";
+import { TimePicker } from "./TimePicker";
 
-const meta: Meta<typeof TimePicker> = {
-    title: 'Input/TimePicker',
-    component: TimePicker,
-    };
+const meta = {
+  title: "Components/TimePicker",
+  component: TimePicker,
+  parameters: {
+    layout: "centered",
+  },
+} satisfies Meta<typeof TimePicker>;
 
 export default meta;
-type Story = StoryObj<typeof TimePicker>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-    args: {
-        placeholder: 'Select time',
-    },
+  render: (args) => (
+    <div className="w-80">
+      <TimePicker label="Start time" helperText="Use local time." {...args} />
+    </div>
+  ),
+};
+
+export const Error: Story = {
+  render: () => (
+    <div className="w-80">
+      <TimePicker label="Cutoff time" error="Choose a time before closing." />
+    </div>
+  ),
 };

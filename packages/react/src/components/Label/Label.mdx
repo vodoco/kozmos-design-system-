@@ -36,19 +36,16 @@ import { KozmosLabel } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosLabel: View {
-    var body: some View {
-        Text("Label Content placeholder")
-    }
-}
-    `}
+KozmosLabel("Email", required: true)
+`}
     kotlin={`
-import androidx.compose.material3.Text
+package com.kozmos.components.label
+
 import androidx.compose.runtime.Composable
 
 @Composable
-fun KozmosLabel() {
-    Text("Label Content placeholder")
+fun KozmosLabelExample() {
+KozmosLabel(text = "Email", required = true)
 }
-    `}
+`}
 />

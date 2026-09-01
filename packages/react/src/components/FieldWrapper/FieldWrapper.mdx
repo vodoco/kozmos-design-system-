@@ -1,0 +1,122 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as FieldWrapperStories from './FieldWrapper.stories';
+
+<Meta of={FieldWrapperStories} />
+
+# FieldWrapper
+
+The label, description, helper text, and error message that surround a form
+control — without the control itself.
+
+## Usage
+
+Use it when you build a field the library does not already provide:
+
+- A custom control that needs the same label and error treatment as `Input`
+- A third-party widget you want to sit correctly inside a Kozmos form
+- A composed field grouping several controls under one label
+
+You rarely need it directly. `Input`, `Select`, `Combobox` and the rest already
+wrap themselves in it, and wrapping them again produces two labels.
+
+The id props (`inputId`, `descriptionId`, `helperId`, `errorId`) exist so the
+wrapper can wire `aria-describedby` to your control. Pass the same `inputId` you
+give the control, or the association silently does not happen — the layout will
+look right while screen readers announce an unlabelled field.
+
+`error` accepts `true` for the error styling alone, or a string to also render
+the message.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { FieldWrapper } from '@kozmos/react';
+
+<FieldWrapper
+  label="Venue"
+  inputId="venue"
+  helperText="Search by name or category"
+  required
+>
+  <MyCustomControl id="venue" />
+</FieldWrapper>
+
+// Error state
+<FieldWrapper label="Email" inputId="email" error="Enter a valid address">
+  <input id="email" type="email" />
+</FieldWrapper>
+  `}
+  vue={`
+<script setup>
+import { KozmosFieldWrapper } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosFieldWrapper
+    label="Venue"
+    inputId="venue"
+    helperText="Search by name or category"
+    :required="true"
+  >
+    <input id="venue" />
+  </KozmosFieldWrapper>
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct CustomField: View {
+    var body: some View {
+        KozmosFieldWrapper(
+            label: "Venue",
+            helperText: "Search by name or category",
+            required: true
+        ) {
+            MyCustomControl()
+        }
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.Composable
+import com.kozmos.components.fieldwrapper.KozmosFieldWrapper
+
+@Composable
+fun CustomField() {
+    KozmosFieldWrapper(
+        label = "Venue",
+        helperText = "Search by name or category",
+        required = true
+    ) {
+        MyCustomControl()
+    }
+}
+  `}
+/>
+
+## Accessibility
+
+- This component is the reason the rest of the form controls are accessible;
+  its whole job is the label and description wiring.
+- Pass a matching `inputId` or the `aria-describedby` association is silently
+  lost — the visual layout gives no hint that it failed.
+- `hideLabel` hides the label visually but keeps it for assistive technology.
+  Use it rather than dropping the label.
+- `required` marks the field for assistive technology as well as visually;
+  `optionalText` is the inverse convention if you mark optional fields instead.
+
+## Stories
+
+### Default
+<Canvas of={FieldWrapperStories.Default} />
+
+### Validation States
+<Canvas of={FieldWrapperStories.ValidationStates} />

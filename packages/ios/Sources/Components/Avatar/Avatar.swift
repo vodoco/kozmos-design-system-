@@ -16,14 +16,14 @@ public struct KozmosAvatar: View {
                     image.resizable()
                 } placeholder: {
                     Text(fallbackText)
-                        .font(.headline)
+                        .font(KozmosTypography.headline)
                         .foregroundColor(KozmosColors.primitivesColorsBackground0)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(KozmosColors.primitivesColorsBackground500)
                 }
             } else {
                 Text(fallbackText)
-                    .font(.headline)
+                    .font(KozmosTypography.headline)
                     .foregroundColor(KozmosColors.primitivesColorsBackground0)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(KozmosColors.primitivesColorsBackground500)

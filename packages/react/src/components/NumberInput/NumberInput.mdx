@@ -1,0 +1,130 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as NumberInputStories from './NumberInput.stories';
+
+<Meta of={NumberInputStories} />
+
+# NumberInput
+
+A numeric field with optional stepper buttons and `min` / `max` / `step`
+clamping.
+
+## Usage
+
+Use it for bounded quantities the user reads as a number:
+
+- Quantities, counts, and durations
+- Percentages and thresholds in settings
+- Any value where nudging by a fixed step is natural
+
+Do not use it for identifiers that merely look numeric — phone numbers, postal
+codes, card numbers. Those are strings; stepping them is meaningless and
+clamping them corrupts the value. Use `Input` instead.
+
+`onValueChange` reports `number | null`, not a string. `null` is an empty field,
+which is distinct from `0` — check for it explicitly rather than relying on a
+falsy test.
+
+Set `showSteppers={false}` where the range is wide enough that clicking is
+pointless, such as a year.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { NumberInput } from '@kozmos/react';
+
+<NumberInput label="Quantity" min={1} max={99} step={1} defaultValue={1} />
+
+// null means empty, which is not the same as 0
+<NumberInput
+  label="Threshold"
+  onValueChange={(value) => setThreshold(value ?? undefined)}
+/>
+
+// Free-typed range, no steppers
+<NumberInput label="Year" min={1900} max={2100} showSteppers={false} />
+  `}
+  vue={`
+<script setup>
+import { KozmosNumberInput } from "@kozmos/vue"
+import { ref } from "vue"
+
+const quantity = ref(1)
+</script>
+
+<template>
+  <KozmosNumberInput
+    label="Quantity"
+    :min="1"
+    :max="99"
+    :step="1"
+    :value="quantity"
+    @valueChange="(value) => (quantity = value ?? 0)"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct OrderView: View {
+    @State private var quantity: Double? = 1
+
+    var body: some View {
+        KozmosNumberInput(
+            value: $quantity,
+            label: "Quantity",
+            step: 1,
+            min: 1,
+            max: 99,
+            showSteppers: true
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.*
+import com.kozmos.components.numberinput.KozmosNumberInput
+
+@Composable
+fun OrderScreen() {
+    var quantity by remember { mutableStateOf<Double?>(1.0) }
+
+    KozmosNumberInput(
+        value = quantity,
+        onValueChange = { quantity = it },
+        label = "Quantity",
+        step = 1.0,
+        min = 1.0,
+        max = 99.0
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- Steppers are real buttons with accessible names, reachable by keyboard.
+- Arrow keys step the value; the field stays usable without the buttons.
+- Clamping happens on commit, not per keystroke, so typing "12" into a field
+  with `min={10}` is not rewritten to "10" after the first character.
+
+## Stories
+
+### Default
+<Canvas of={NumberInputStories.Default} />
+
+### With Helper Text
+<Canvas of={NumberInputStories.WithHelperText} />
+
+### Validation States
+<Canvas of={NumberInputStories.ValidationStates} />
+
+### Without Steppers
+<Canvas of={NumberInputStories.WithoutSteppers} />

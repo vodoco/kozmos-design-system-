@@ -1,23 +1,48 @@
 import figma from "@figma/code-connect";
-import { Drawer, DrawerContent } from "./Drawer";
-figma.connect(
+import { Button } from "../Button/Button";
+import {
+  Drawer,
   DrawerContent,
-  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=TBD",
-  {
-    props: {
-      side: figma.enum("Side", {
-        Top: "top",
-        Bottom: "bottom",
-        Left: "left",
-        Right: "right",
-      }),
-    },
-    example: (props) => (
-      <Drawer>
-        <DrawerContent {...props}>
-          <div>Drawer Content</div>
-        </DrawerContent>
-      </Drawer>
-    ),
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "./Drawer";
+
+const drawerUrl =
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=232-2042";
+
+figma.connect(DrawerContent, drawerUrl, {
+  props: {
+    side: figma.enum("Side", {
+      Top: "top",
+      Right: "right",
+      Bottom: "bottom",
+      Left: "left",
+    }),
+    title: figma.string("Title Text"),
+    description: figma.string("Description Text"),
+    body: figma.string("Body Text"),
+    content: figma.slot("Content Slot") ?? figma.children(["Content Slot"]),
+    actions: figma.children(["Secondary Action", "Primary Action"]),
   },
-);
+  example: ({ actions, body, content, description, side, title }) => (
+    <Drawer>
+      <DrawerTrigger asChild>
+        <Button variant="outline">Open drawer</Button>
+      </DrawerTrigger>
+      <DrawerContent side={side}>
+        <DrawerHeader>
+          <DrawerTitle>{title}</DrawerTitle>
+          <DrawerDescription>{description}</DrawerDescription>
+        </DrawerHeader>
+        <div className="flex flex-1 flex-col gap-3">
+          <p>{body}</p>
+          {content}
+        </div>
+        <DrawerFooter>{actions}</DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  ),
+});

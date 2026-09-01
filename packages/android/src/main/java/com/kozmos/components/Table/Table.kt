@@ -29,8 +29,8 @@ fun KozmosTable(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
-            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
     ) {
         if (header != null) {
             header()

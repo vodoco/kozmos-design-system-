@@ -15,6 +15,6 @@ public struct KozmosDatePicker: View {
             .labelsHidden() // Often used inline
             .padding(KozmosDimensions.primitivesLayoutSpacing100)
             .background(KozmosColors.primitivesColorsBackground100)
-            .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+            .cornerRadius(KozmosDimensions.semanticsRadiusControl)
     }
 }

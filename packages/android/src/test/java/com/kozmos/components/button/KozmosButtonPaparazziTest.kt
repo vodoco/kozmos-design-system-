@@ -12,7 +12,24 @@ import org.junit.Test
 
 class KozmosButtonPaparazziTest {
     @get:Rule
-    val paparazzi = Paparazzi()
+    val paparazzi = Paparazzi(
+        // Paparazzi defaults to maxPercentDifference = 0.1. Taking a button's
+        // corner radius from 8dp to 16dp moves 0.1069% of the pixels — measured
+        // by diffing the two goldens — so a change nobody could miss by eye sat
+        // a hair inside the default and the gate stayed green. Rendering is
+        // deterministic on one machine (re-recording gives a byte-identical
+        // file), so on a fixed platform any tolerance only buys silence.
+        //
+        // One caveat, and it predates this setting: goldens are recorded
+        // locally on macOS and CI verifies on ubuntu-latest. That mismatch has
+        // been hidden until now by the loose default. If the Android job goes
+        // red on an unchanged render, cross-platform rasterisation is the
+        // reason — re-record on the CI platform rather than widening this back
+        // out. Note that the signal here (0.1069%) is uncomfortably close to
+        // the old threshold either way, which says the frame is mostly empty
+        // background: more components, rendered tighter, is the real fix.
+        maxPercentDifference = 0.0,
+    )
 
     @Test
     fun defaultButtonSnapshot() {

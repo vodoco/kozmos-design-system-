@@ -1,0 +1,14 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./MapControlButton.stories";
+
+<Meta of={Stories} />
+
+# MapControlButton
+
+Product/SDK map action with icon-only and labelled presentations. The localized
+`label` is always the accessible action name; `stateLabel` communicates a
+controlled state such as “Off” without relying on colour.
+
+<Canvas of={Stories.IconOnly} />
+<Canvas of={Stories.LabelledState} />
+<Controls />

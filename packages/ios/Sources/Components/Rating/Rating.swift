@@ -16,7 +16,7 @@ public struct KozmosRating: View {
             ForEach(1...max, id: \.self) { index in
                 Image(systemName: index <= value ? "star.fill" : "star")
                     .foregroundColor(index <= value ? KozmosColors.semanticsDataYellow : KozmosColors.primitivesColorsForeground400)
-                    .font(.title2)
+                    .font(KozmosTypography.title2)
                     .onTapGesture {
                         if !readOnly {
                             withAnimation {

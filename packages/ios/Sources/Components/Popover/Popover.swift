@@ -65,13 +65,13 @@ public struct KozmosPopover<PopoverContent: View>: ViewModifier {
         if let title {
             VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(KozmosColors.primitivesColorsForeground100)
 
                 if let description {
                     Text(description)
-                        .font(.footnote)
+                        .font(KozmosTypography.footnote)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
             }

@@ -26,15 +26,15 @@ public struct KozmosCheckbox: View {
         }) {
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius50)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusMarker)
                         .stroke(borderColor, lineWidth: 1)
                         .background(checked ? fillColor : Color.clear)
                         .frame(width: 20, height: 20)
-                        .cornerRadius(KozmosDimensions.primitivesLayoutRadius50)
+                        .cornerRadius(KozmosDimensions.semanticsRadiusMarker)
                     
                     if checked {
                         Image(systemName: "checkmark")
-                            .font(.caption)
+                            .font(KozmosTypography.caption)
                             .bold()
                             .foregroundColor(markColor)
                     }
@@ -42,7 +42,7 @@ public struct KozmosCheckbox: View {
                 
                 if let label = label {
                     Text(label)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .foregroundColor(labelColor)
                 }
             }

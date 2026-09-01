@@ -36,12 +36,8 @@ import { KozmosText } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosText: View {
-    var body: some View {
-        Text("Text Content placeholder")
-    }
-}
-    `}
+KozmosText("Body copy")
+`}
     kotlin={`
 package com.kozmos.components.text
 
@@ -51,11 +47,12 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun KozmosText(
-    text: String,
-    modifier: Modifier = Modifier
+text: String,
+modifier: Modifier = Modifier
 ) {
-    Text(text = text, modifier = modifier)
+Text(text = text, modifier = modifier)
 }
 
     `}
+
 />

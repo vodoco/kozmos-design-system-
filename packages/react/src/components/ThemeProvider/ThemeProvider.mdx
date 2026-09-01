@@ -36,12 +36,10 @@ import { KozmosThemeProvider } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosThemeProvider: View {
-    var body: some View {
-        Text("ThemeProvider Content placeholder")
-    }
+KozmosThemeProvider {
+Text("Themed content")
 }
-    `}
+`}
     kotlin={`
 package com.kozmos.components.themeprovider
 
@@ -58,27 +56,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
 enum class KozmosThemeMode {
-    LIGHT, DARK, SYSTEM
+LIGHT, DARK, SYSTEM
 }
 
 class KozmosThemeManager(initialMode: KozmosThemeMode = KozmosThemeMode.SYSTEM) {
-    var mode by mutableStateOf(initialMode)
+var mode by mutableStateOf(initialMode)
 
     fun setThemeMode(newMode: KozmosThemeMode) {
         mode = newMode
     }
+
 }
 
 val LocalThemeManager = compositionLocalOf<KozmosThemeManager> {
-    error("No KozmosThemeManager provided")
+error("No KozmosThemeManager provided")
 }
 
 @Composable
 fun KozmosThemeProvider(
-    content: @Composable () -> Unit
+content: @Composable () -> Unit
 ) {
-    val themeManager = remember { KozmosThemeManager() }
-    val isSystemDark = isSystemInDarkTheme()
+val themeManager = remember { KozmosThemeManager() }
+val isSystemDark = isSystemInDarkTheme()
 
     val useDarkTheme = when (themeManager.mode) {
         KozmosThemeMode.SYSTEM -> isSystemDark
@@ -98,7 +97,9 @@ fun KozmosThemeProvider(
             content = content
         )
     }
+
 }
 
     `}
+
 />

@@ -1,58 +1,84 @@
-import React from 'react';
+import React from "react";
+import type { MapCollisionInsets } from "@kozmos/product-contracts";
+import { cn } from "../../utils";
 
 export interface MapOverlayProps extends React.HTMLAttributes<HTMLDivElement> {
-    /**
-     * The structural GIS positioning matrix over the parent container.
-     * @default 'top-left'
-     */
-    position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center';
+  position?:
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right"
+    | "top-center"
+    | "bottom-center";
+  width?: "auto" | "sm" | "md" | "lg" | "full";
+  /** Extra renderer/attribution clearance supplied by the map adapter. */
+  collisionInsets?: Partial<MapCollisionInsets>;
 }
 
-export const MapOverlay = React.forwardRef<HTMLDivElement, MapOverlayProps>(
-    ({ className, position = 'top-left', children, ...props }, ref) => {
-        let positionClasses = "";
-        
-        switch (position) {
-            case 'top-left':
-                positionClasses = "top-4 left-4 right-4 md:right-auto md:w-96";
-                break;
-            case 'top-right':
-                positionClasses = "top-4 left-4 right-4 md:left-auto md:w-96";
-                break;
-            case 'bottom-left':
-                // pb-8 clears the native MapLibre logo
-                positionClasses = "bottom-8 left-4 right-4 md:right-auto md:w-96 pb-8";
-                break;
-            case 'bottom-right':
-                // pb-8 clears the native MapLibre attribution telemetry block
-                positionClasses = "bottom-8 left-4 right-4 md:left-auto md:w-96 pb-8";
-                break;
-            case 'top-center':
-                positionClasses = "top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-96";
-                break;
-            case 'bottom-center':
-                positionClasses = "bottom-8 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-96 pb-8";
-                break;
-        }
+const positionClasses: Record<
+  NonNullable<MapOverlayProps["position"]>,
+  string
+> = {
+  "top-left": "left-[var(--map-overlay-left)] top-[var(--map-overlay-top)]",
+  "top-right": "right-[var(--map-overlay-right)] top-[var(--map-overlay-top)]",
+  "bottom-left":
+    "bottom-[var(--map-overlay-bottom)] left-[var(--map-overlay-left)]",
+  "bottom-right":
+    "bottom-[var(--map-overlay-bottom)] right-[var(--map-overlay-right)]",
+  "top-center": "left-1/2 top-[var(--map-overlay-top)] -translate-x-1/2",
+  "bottom-center":
+    "bottom-[var(--map-overlay-bottom)] left-1/2 -translate-x-1/2",
+};
 
-        const containerClasses = [
-            "absolute z-50 pointer-events-none flex flex-col gap-4",
-            positionClasses,
-            className
-        ].filter(Boolean).join(" ");
+const widthClasses: Record<NonNullable<MapOverlayProps["width"]>, string> = {
+  auto: "w-auto max-w-[calc(100%_-_var(--map-overlay-left)_-_var(--map-overlay-right))]",
+  sm: "w-[min(20rem,calc(100%_-_var(--map-overlay-left)_-_var(--map-overlay-right)))]",
+  md: "w-[min(24rem,calc(100%_-_var(--map-overlay-left)_-_var(--map-overlay-right)))]",
+  lg: "w-[min(32rem,calc(100%_-_var(--map-overlay-left)_-_var(--map-overlay-right)))]",
+  full: "w-[calc(100%_-_var(--map-overlay-left)_-_var(--map-overlay-right))]",
+};
 
-        return (
-            <div ref={ref} className={containerClasses} {...props}>
-                {/* 
-                    Map Pan/Zoom pointer-events pass cleanly through the outer container. 
-                    The internal `pointer-events-auto` restores interactivity strictly over the DOM overlay nodes. 
-                */}
-                <div className="pointer-events-auto w-full max-h-[85vh] overflow-y-auto flex flex-col gap-4">
-                    {children}
-                </div>
-            </div>
-        );
-    }
+const MapOverlay = React.forwardRef<HTMLDivElement, MapOverlayProps>(
+  (
+    {
+      className,
+      position = "top-left",
+      width = "auto",
+      collisionInsets,
+      children,
+      style,
+      ...props
+    },
+    ref,
+  ) => {
+    const insetStyle = {
+      "--map-overlay-top": `calc(env(safe-area-inset-top) + 1rem + ${collisionInsets?.top ?? 0}px)`,
+      "--map-overlay-right": `calc(env(safe-area-inset-right) + 1rem + ${collisionInsets?.right ?? 0}px)`,
+      "--map-overlay-bottom": `calc(env(safe-area-inset-bottom) + 1rem + ${collisionInsets?.bottom ?? 0}px)`,
+      "--map-overlay-left": `calc(env(safe-area-inset-left) + 1rem + ${collisionInsets?.left ?? 0}px)`,
+      ...style,
+    } as React.CSSProperties;
+
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "pointer-events-none absolute z-50 flex flex-col gap-4",
+          positionClasses[position],
+          widthClasses[width],
+          className,
+        )}
+        style={insetStyle}
+        {...props}
+      >
+        <div className="pointer-events-auto flex max-h-[calc(100dvh-var(--map-overlay-top)-var(--map-overlay-bottom))] w-full flex-col gap-4 overflow-y-auto overscroll-contain">
+          {children}
+        </div>
+      </div>
+    );
+  },
 );
 
-MapOverlay.displayName = 'MapOverlay';
+MapOverlay.displayName = "MapOverlay";
+
+export { MapOverlay };

@@ -1,0 +1,104 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as NavigationAnnouncerStories from './NavigationAnnouncer.stories';
+
+<Meta of={NavigationAnnouncerStories} />
+
+# NavigationAnnouncer
+
+An invisible live region that speaks turn-by-turn guidance to assistive
+technology.
+
+## Usage
+
+This component renders nothing. Its entire purpose is to make map guidance
+usable without sight, by announcing each instruction as it becomes current:
+
+- Turn-by-turn navigation while a route is active
+- Arrival, rerouting, and off-route notices
+- Any timed guidance the user cannot be expected to watch for
+
+Mount one per active route, not one per step. It announces when `message`
+changes, so feeding it a new instruction is the whole API.
+
+Set `isActive` to `false` when guidance pauses. Leaving it mounted and active
+with a stale message risks a screen reader repeating a turn the user has already
+taken.
+
+Keep messages short and already localized. They are spoken, not read, so
+"In 40 metres, turn left" works and a paragraph does not.
+
+Because it is nonvisual, it has no Figma component set and no Code Connect
+mapping — `STATUS.md` records it under "Code Connect not applicable".
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { NavigationAnnouncer } from '@kozmos/react';
+
+// Announces whenever the instruction changes
+<NavigationAnnouncer message={currentStep.instruction} isActive={isNavigating} />
+  `}
+  vue={`
+<script setup>
+import { KozmosNavigationAnnouncer } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosNavigationAnnouncer
+    :message="currentStep.instruction"
+    :isActive="isNavigating"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct RouteView: View {
+    let instruction: String
+    let isNavigating: Bool
+
+    var body: some View {
+        KozmosNavigationAnnouncer(
+            message: instruction,
+            isActive: isNavigating
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.Composable
+import com.kozmos.components.navigationannouncer.KozmosNavigationAnnouncer
+
+@Composable
+fun RouteScreen(instruction: String, isNavigating: Boolean) {
+    KozmosNavigationAnnouncer(
+        message = instruction,
+        isActive = isNavigating
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- The whole component is an accessibility feature; there is nothing to see.
+- Announcements are polite, so they queue behind whatever the user is currently
+  reading rather than interrupting it.
+- Repeating the same `message` does not re-announce. Change the string to
+  announce again.
+- Native uses the platform's own announcement channel — UIAccessibility on iOS,
+  the accessibility live region on Android — rather than emulating a DOM live
+  region.
+
+## Stories
+
+### Default
+<Canvas of={NavigationAnnouncerStories.Default} />

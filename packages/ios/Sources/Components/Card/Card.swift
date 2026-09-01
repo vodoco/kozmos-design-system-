@@ -12,10 +12,10 @@ public struct KozmosCard<Content: View>: View {
             content
         }
         .background(KozmosColors.primitivesColorsBackground0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius200)
+        .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
         .shadow(color: KozmosColors.primitivesColorsBackground900.opacity(0.1), radius: 4, x: 0, y: 2)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius200)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer)
                 .stroke(KozmosColors.primitivesColorsBackground200, lineWidth: 1)
         )
     }
@@ -45,7 +45,7 @@ public struct KozmosCardTitle: View {
     
     public var body: some View {
         Text(title)
-            .font(.title3)
+            .font(KozmosTypography.title3)
             .fontWeight(.semibold)
             .foregroundColor(KozmosColors.primitivesColorsForeground100)
     }
@@ -60,7 +60,7 @@ public struct KozmosCardDescription: View {
     
     public var body: some View {
         Text(description)
-            .font(.subheadline)
+            .font(KozmosTypography.subheadline)
             .foregroundColor(KozmosColors.primitivesColorsForeground400)
     }
 }

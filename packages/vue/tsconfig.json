@@ -7,6 +7,11 @@
     "target": "ESNext",
     "module": "ESNext",
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@kozmos/react": ["../react/src/index.ts"],
+      "@kozmos/react/*": ["../react/src/*"]
+    },
     "declaration": true,
     "emitDeclarationOnly": true,
     "noEmit": false,

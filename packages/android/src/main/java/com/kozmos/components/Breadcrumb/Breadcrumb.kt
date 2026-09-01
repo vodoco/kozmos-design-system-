@@ -1,5 +1,6 @@
 package com.kozmos.components.breadcrumb
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import com.kozmos.tokens.KozmosDimensions
 
@@ -43,7 +44,7 @@ fun KozmosBreadcrumb(
             
             if (!isLast) {
                 Icon(
-                    imageVector = Icons.Filled.KeyboardArrowRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = KozmosColors.primitivesColorsForeground500,
                     modifier = Modifier.padding(horizontal = KozmosDimensions.primitivesLayoutSpacing0)

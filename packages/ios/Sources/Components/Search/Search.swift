@@ -18,9 +18,9 @@ public struct KozmosSearch: View {
         }
         .padding(EdgeInsets(top: KozmosDimensions.primitivesLayoutSpacing100, leading: KozmosDimensions.primitivesLayoutSpacing150, bottom: KozmosDimensions.primitivesLayoutSpacing100, trailing: KozmosDimensions.primitivesLayoutSpacing150))
         .background(KozmosColors.primitivesColorsBackground0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+        .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
         )
     }

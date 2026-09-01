@@ -39,8 +39,16 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      # The design system gates on its own lint. apps/mapscale-review is a
+      # consumer of the library — a place to use the components for real — and
+      # its in-flight work should not block a packages/ change. It is still
+      # linted, just in a step that reports without failing the job.
       - name: Lint
-        run: pnpm lint
+        run: pnpm lint --filter=!mapscale-review
+
+      - name: Lint Example App (non-blocking)
+        continue-on-error: true
+        run: pnpm lint --filter=mapscale-review
 
       - name: Build Web
         run: pnpm build
@@ -53,6 +61,18 @@ jobs:
 
       - name: Verify Component Contracts
         run: pnpm components:contract:check
+
+      - name: Verify Token Contrast Contracts
+        run: pnpm tokens:contrast:check
+
+      - name: Verify Radius Parity
+        run: pnpm tokens:radius:check
+
+      - name: Verify Typography Parity
+        run: pnpm tokens:typography:check
+
+      - name: Verify Documentation Snippets
+        run: pnpm docs:snippets:check
 
       - name: Parse React Code Connect
         run: pnpm figma:parse:linked

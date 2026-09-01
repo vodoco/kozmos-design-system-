@@ -1,44 +1,68 @@
 # Figma Component Build Report
 
-Last checked: 2026-05-19
+Last checked: 2026-06-21
 
 ## Executive Summary
 
 The new `Kozmos DS - Core Library` is now the active Figma target.
 
-- Core v1 is at a green audit checkpoint: the latest user-pasted library audit reported `warningCount: 0`, `componentSetCount: 22`, `componentCount: 335`, `iconSourceCount: 38`, and `variableCount: 806`.
-- Current linked component set node IDs include Button `77:1055`, IconButton `77:1203`, Badge `78:246`, Card `87:2536`, Tabs `90:3387`, Tooltip `91:4672`, Dialog `101:8101`, Popover `101:8118`, Menu `101:8170`, Toast `101:8189`, and the field/selection/feedback primitives listed in the latest audit.
+- Current repo source of truth is `STATUS.md` plus
+  `docs/figma-library-manifest.json`. As of 2026-06-21, Core reports 68/68
+  Web components, Web tests, Web linked Code Connect mappings, iOS components,
+  iOS linked mappings, Android components, and Android linked mappings.
+- React, SwiftUI, and Compose linked Code Connect parse checks pass. Current
+  `.figma.*` mapping files contain no `node-id=TBD` placeholders.
+- Navbar and Sidebar are slot-based shells. Product-specific content belongs in
+  named slots, and shared `NavigationItem` instances should be composed into
+  the navigation slots rather than hardcoded into the shell components.
+- A repo-level token contrast contract now checks public semantic token pairs
+  and Core runtime button aliases in both Light and Dark modes. The React
+  Tailwind aliases for success, warning, and info actions intentionally use
+  darker semantic fills so their existing mode-aware foreground contract remains
+  WCAG AA safe.
+- Remaining work is now visual/governance oriented: Figma page-by-page visual
+  QA, docs freshness, public/private library boundary, and Product / SDK example
+  quality. Older status notes below are retained for history when they describe
+  how a component was built.
+
+- Core is at a green audit checkpoint: the latest full library audit reported `warningCount: 0`, `componentSetCount: 36`, `componentCount: 435`, `iconSourceCount: 38`, and `variableCount: 1007`; SegmentedControl was linked afterward and should be included in the next `Audit Library` capture.
+- Current linked component set node IDs include Link `170:1385`, Separator `170:1393`, Skeleton `170:1062`, Box `170:1002`, Stack `170:1027`, Container `170:1034`, Breadcrumb `170:1048`, Accordion `170:977`, Button `77:1055`, IconButton `77:1203`, Counter `149:13430`, Badge `78:246`, Chip `227:1329`, SegmentedControl `309:5165`, Card `87:2536`, List `237:2482`, Table `237:2547`, Tabs `90:3387`, Pagination `280:1157`, Tooltip `91:4672`, Dialog `143:13060`, Drawer `232:2042`, Popover `101:8118`, Menu `101:8170`, Checkbox `77:1410`, Radio `77:1436`, Switch `77:1465`, Input `77:1558`, Textarea `80:328`, Search `80:391`, Select `80:432`, Slider `80:473`, Progress `83:252`, Spinner `83:261`, Alert `83:308`, Toast `101:8189`, and Avatar `83:272`.
+- Text, Heading, and Label are no longer canonical Figma component sets. They are maintained as text styles/tokens instead. Link and Separator remain component sets because they represent reusable interactive/structural UI, not pure typography.
 - Tooltip side indicators now use four generated triangle `Tip` layers, one per `Side` variant, and the React, iOS, Android, Figma, and Code Connect contracts all expose side-aware behavior.
 - The remaining audit output is advisory only: transparent/surface-dependent variants should be reviewed on `Surface/0` in Light/Dark and on product map surfaces before final sign-off.
 - The plugin now has **Build Surface QA** to generate the `QA / Transparent Surfaces` page for that final review without disturbing source component-set node IDs.
 - Surface QA visual review caught a dark-mode glass mismatch: Figma `Glass` Button/IconButton foreground was using `Colors/foreground/1000`, which resolves to black in Dark mode. The plugin now matches React's `text-foreground` behavior by binding Glass foreground to `Colors/foreground/0`, and `Audit Library` reports live QA contrast failures as `surface-contrast` issues.
-- Overlay/menu tranche is built and linked: **Dialog / v1**, **Popover / v1**, **Menu / v1**, and **Toast / v1** now have stable Figma component set IDs, builders, update/rebuild actions, component tokens, docs metadata, and React Code Connect mappings.
-- Composition debt is now audited: Card/Dialog updates should compose live `Button / v1` and `Input / v1` instances instead of local frame clones for actions and form fields. `Audit Library` reports cloned subcomponent frames as warnings.
+- Core component sets no longer use the `/ v1` suffix. The importer keeps legacy lookup compatibility so older files can be updated safely, but new canonical names are unsuffixed.
+- Rebuild no longer creates Archive / Legacy Reference content for rebuilt component sets. The safe path is still Update, because it preserves node IDs; Rebuild intentionally creates a new node ID.
+- Composition debt is audited: Card/Dialog updates should compose live Button and Input instances instead of local frame clones for actions and form fields. `Audit Library` reports cloned subcomponent frames as warnings.
 - Upcoming code components that are not yet canonical Figma component sets are tracked in [`docs/figma-upcoming-components.md`](figma-upcoming-components.md).
-- Core React Code Connect is published to Figma for the 22 linked Core component files, including `DialogContent` at `node-id=101-8101`, `PopoverContent` at `node-id=101-8118`, `MenuContent` at `node-id=101-8170`, and `Toast` at `node-id=101-8189`.
-- Native overlay/menu parity is now linked and published: iOS SwiftUI and Android Compose expose structured Toast, Dialog, Popover, and Menu APIs aligned to the Figma/Web anatomy while preserving existing generic/message/string-list entry points.
+- Core React Code Connect validates for all 40 current linked component-set mappings through `pnpm figma:parse:linked`; publish uses the same linked config when credentials are available.
+- Native Code Connect validates for all 40 current linked component-set mappings through `pnpm figma:publish:native:linked:dry` across SwiftUI and Compose.
+- NumberInput now has React, SwiftUI, and Compose Code Connect scaffolds plus local Figma importer build/update/rebuild actions. PasswordInput now has the React primitive, Code Connect scaffold, and local Figma importer build/update/rebuild actions. Both are intentionally unlinked until their Figma component sets are built and `node-id=TBD` is replaced.
 - Native linked Code Connect has package-specific validation/publish lanes: `pnpm figma:parse:native:linked`, `pnpm figma:publish:native:linked:dry`, and `pnpm figma:publish:native:linked`.
 - CI now dry-runs the linked Code Connect lanes where each parser can execute: React in the web job, SwiftUI in the macOS/iOS job, and Compose in the Android job. These steps skip with a notice when `FIGMA_ACCESS_TOKEN` is unavailable, such as on forks or before repository secret setup.
 - CI also runs token-free linked Code Connect parse checks before those dry-runs, so parser drift is caught even when repository secrets are unavailable.
-- Native linked configs include implementation files as well as `.figma` files. This gives Compose import/line metadata and gives Swift source links for non-generic Menu/Toast mappings; Swift Dialog/Popover still publish as `KozmosDialog<EmptyView>` / `KozmosPopover<EmptyView>` because the current Swift parser does not match generic specializations back to their unspecialized source structs.
+- Native linked configs include implementation files as well as `.figma` files. This gives Compose import/line metadata and gives Swift source links for non-generic mappings; Swift generic wrappers publish with their specialization names, such as `KozmosDialog<EmptyView>`, `KozmosCard<AnyView>`, and `Stack<AnyView>`.
 - Foundations were imported through the local Figma plugin.
-- `Button / v1` was built in Figma from the React Button API.
+- `Button` was built in Figma from the React Button API.
 - Button, IconButton, and Badge are linked through React Code Connect.
-- Latest audited Button component set: `77:1055` (`node-id=77-1055`). The previous corrupt set `19:406` is archived on `Archive / Legacy Reference`.
+- Latest audited Button component set: `77:1055` (`node-id=77-1055`).
 - Button icon-size variants expose a single `Icon` instance-swap slot backed by `Icon / Slot Default`.
 - `Icon / Slot Default` is the only local fallback slot component; real artwork should come from the Pointr Icon Library.
 - The plugin can now build a curated local `Icons` page with 38 `Icon / ...` source components from the `@kozmos/icons` registry.
-- `IconButton / v1` was built in Figma from the React IconButton API.
+- `IconButton` was built in Figma from the React IconButton API.
 - Latest audited IconButton component set: `77:1203` (`node-id=77-1203`).
-- `Badge / v1` was built in Figma from the React Badge API.
-- Latest audited Badge component set: `78:246` (`node-id=78-246`). The archived predecessor `77:1378` remains on `Archive / Legacy Reference`.
+- `Badge` was built in Figma from the React Badge API.
+- Latest audited Badge component set: `78:246` (`node-id=78-246`).
 - Button, IconButton, and Badge now get component-level non-color variables for geometry and control internals that the foundations payload did not previously expose as exact tokens. These component tokens alias to existing primitive/layout variables where possible.
 - Button and Badge label typography prefers the primary typography token family (`Readex Pro`) and falls back to Inter only if the Figma font is unavailable. Font size and line height are bound to component variables. Font family and weight remain token-aligned direct typography values because Figma does not expose them as normal variable bindings.
 - The plugin UI now uses a component picker plus `Build` / `Update` actions instead of adding two new buttons for every component. The status row above the log reports the currently running selected action and the generated node ID when it finishes.
 - The audit now reports unexpected top-level nodes on the `Components` page. Badge build/update also removes the exact empty top-level `Label Text` artifact that can be left behind by an interrupted first Badge build.
-- Current Core Code Connect status: React Core linked mappings pass `pnpm figma:parse:linked` and `pnpm figma:publish:linked:dry`; native overlay/menu mappings pass `pnpm figma:parse:native:linked` and `pnpm figma:publish:native:linked:dry`. Root `pnpm figma:publish:dry` remains blocked by older non-Core scaffolds such as Drawer, Grid, Stack, SplitButton, ToggleButton, and FloatingActionButton.
+- Current Core Code Connect status: React, SwiftUI, and Compose linked mappings pass their linked dry-run publish lanes. Root `pnpm figma:publish:dry` remains blocked by non-Core scaffolds such as Grid, SplitButton, ToggleButton, and FloatingActionButton.
 - The plugin is currently a code-to-Figma builder/importer/updater, not an uncontrolled two-way sync tool.
 - The plugin now includes `Audit Library` to export reviewable Figma metadata from the open file.
+
+> Historical note: sections below this point include build-phase details from the earlier component-library reconstruction. Prefer the executive summary above, `STATUS.md`, and `docs/figma-library-manifest.json` for current status.
 
 ## How Build Button Works
 
@@ -48,7 +72,7 @@ It does five things:
 
 1. Finds or creates the `Components` page.
 2. Reads local Figma variables created by the foundations import.
-3. Creates a `Button / v1` component set from the React Button API.
+3. Creates a `Button` component set from the React Button API.
 4. Creates variants for `Variant`, `Size`, and `State`.
 5. Returns the component set node ID for Code Connect.
 
@@ -108,7 +132,7 @@ Rebuild or update is needed when:
 - A design review accepts a visual update that should become canonical.
 - The component structure is wrong and cannot be safely patched in place.
 
-The plugin now has `Update Button` for the safe path. It patches the existing `Button / v1` node in place so the current `node-id=77-1055` stays stable. Use `Rebuild` only when the component set has internal Figma property errors or cannot be safely patched in place.
+The plugin now has `Update Button` for the safe path. It patches the existing `Button` node in place so the current `node-id=77-1055` stays stable. Use `Rebuild` only when the component set has internal Figma property errors or cannot be safely patched in place.
 
 `Update Button` currently refreshes:
 
@@ -121,7 +145,7 @@ The plugin now has `Update Button` for the safe path. It patches the existing `B
 
 It does not create missing Button variants yet. Missing variants are reported so we can choose whether to repair them manually or add a controlled repair action.
 
-`Build IconButton` and `Update IconButton` follow the same pattern. `Build IconButton` creates `IconButton / v1`; `Update IconButton` should be used after that to preserve `node-id=77-1203`.
+`Build IconButton` and `Update IconButton` follow the same pattern. `Build IconButton` creates `IconButton`; `Update IconButton` should be used after that to preserve `node-id=77-1203`.
 
 `Build Icons` and `Update Icons` create or refresh the curated local icon source set. They import Pointr components by component key, preserve existing local `Icon / ...` node IDs, and apply those icons as preferred values on Button, IconButton, and Badge `Icon` instance-swap properties. Each nested `Pointr Source` is stretched to the local 24px icon bounds so resized consuming slots scale the source artwork instead of clipping a fixed 24px child. The slots are direct icon instances; consuming components apply foreground tokens through normal Figma fill/stroke overrides.
 
@@ -233,10 +257,11 @@ System:
 - `pnpm lint` passes.
 - `pnpm --filter @kozmos/react test -- Button` passes.
 - Completion report now detects Button as linked.
-- `figma:publish:dry` correctly blocks on the remaining 24 placeholder mappings.
+- `figma:publish:dry` correctly blocks on the remaining four React placeholder mappings; Core publish uses `figma:publish:linked:dry`.
 
 ## Recommended Next Work
 
-1. Extend native linked Code Connect beyond overlays: Button/IconButton, Checkbox/Radio/Switch, Input/Textarea/Search/Select, Tabs, Tooltip, Progress, Spinner, Avatar, Alert, Badge, and Card should be checked against the same Figma/Web prop contracts.
-2. Decide whether to expose root publish as a Core-only default or keep it intentionally blocked until older non-Core scaffolds either receive real Figma node IDs or are removed from the broad publish lane.
-3. Re-run Figma `Audit Library` after the native publish and preserve the audit JSON so published React/SwiftUI/Compose Code Connect coverage can be reviewed alongside component contrast and surface QA.
+1. Publish the linked Core lanes after internal approval: `pnpm figma:publish:linked` and `pnpm figma:publish:native:linked`.
+2. Keep SegmentedControl linked to canonical component set `309:5165` and preserve that node ID in future updates.
+3. Build PasswordInput and NumberInput in Figma, run `Audit Library`, then replace the `node-id=TBD` placeholders and add/publish the linked Code Connect configs.
+4. Keep root `figma:publish:dry` intentionally blocked until non-Core placeholders either receive real Figma node IDs or move out of the broad publish lane.

@@ -7,7 +7,7 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 # Badge
 
-Displays a badge or a component that looks like a badge.
+Displays compact metadata, status, or categorization. Opt-in counts are rendered with the shared Counter primitive.
 
 <Canvas>
   <Story of={BadgeStories.Default} />
@@ -29,10 +29,11 @@ Displays a badge or a component that looks like a badge.
 
 <PlatformSnippets
     react={`
-import { Badge } from "@kozmos/react"
+import { Badge, Counter } from "@kozmos/react"
 
 <Badge variant="outline">Badge</Badge>
 <Badge variant="secondary" counter={2} showCounter>New</Badge>
+<Counter>2</Counter>
     `}
     vue={`
 <script setup>

@@ -10,6 +10,8 @@ const blockD = {
   Grid: "  props: { cols: figma.enum('Columns'), gap: figma.enum('Gap') }",
   IconButton:
     "  props: { variant: figma.enum('Variant'), disabled: figma.boolean('Disabled') }",
+  Counter:
+    "  props: { tone: figma.enum('Tone'), size: figma.enum('Size'), children: figma.string('Counter Text') }",
   SplitButton: "  props: { disabled: figma.boolean('Disabled') }",
   ToggleButton:
     "  props: { variant: figma.enum('Variant'), pressed: figma.boolean('Pressed'), disabled: figma.boolean('Disabled') }",
@@ -28,7 +30,7 @@ const blockE = {
   Switch:
     "  props: { checked: figma.boolean('Checked'), disabled: figma.boolean('Disabled') }",
   Badge:
-    "  props: { variant: figma.enum('Variant'), size: figma.enum('Size'), children: figma.string('Label Text'), icon: figma.instance('Icon'), showCounter: figma.boolean('Show Counter'), counter: figma.boolean('Show Counter', { true: figma.string('Counter Text'), false: undefined }) }",
+    "  props: { variant: figma.enum('Variant'), size: figma.enum('Size'), children: figma.string('Label Text'), icon: figma.instance('Icon'), showCounter: figma.boolean('Show Counter'), counterProps: figma.boolean('Show Counter', { true: figma.nestedProps('Counter', { counter: figma.string('Counter Text') }), false: { counter: undefined } }) }",
   Avatar:
     "  props: { src: figma.string('Image') } /* Connect to AvatarImage */",
   Card: "  props: { children: figma.children('*') }",

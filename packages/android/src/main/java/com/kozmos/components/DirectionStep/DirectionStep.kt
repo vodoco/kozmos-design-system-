@@ -15,10 +15,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.TurnLeft
+import androidx.compose.material.icons.filled.TurnRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,19 +42,22 @@ fun KozmosDirectionStep(
     distance: String? = null,
     duration: String? = null
 ) {
+    // Turn icons must NOT auto-mirror: "turn left" stays a physical left turn
+    // in RTL locales. Only reading-order affordances (back, forward, chevrons)
+    // belong to Icons.AutoMirrored.
     val icon = when (type) {
         DirectionType.Straight -> Icons.Default.ArrowUpward
-        DirectionType.Left -> Icons.Default.ArrowBack // Approximated
-        DirectionType.Right -> Icons.Default.ArrowForward
+        DirectionType.Left -> Icons.Default.TurnLeft
+        DirectionType.Right -> Icons.Default.TurnRight
         DirectionType.Destination -> Icons.Default.LocationOn
     }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .background(KozmosColors.primitivesColorsBackground0)
-            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100))
+            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(KozmosDimensions.primitivesLayoutSpacing150),
         verticalAlignment = Alignment.CenterVertically
     ) {

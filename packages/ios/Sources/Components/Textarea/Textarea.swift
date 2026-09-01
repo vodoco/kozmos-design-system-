@@ -22,7 +22,7 @@ public struct KozmosTextarea: View {
                 .frame(minHeight: 100)
                 .padding(KozmosDimensions.primitivesLayoutSpacing50)
                 .overlay(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                         .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
                 )
         }

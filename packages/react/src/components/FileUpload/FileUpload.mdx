@@ -35,13 +35,13 @@ import { KozmosFileUpload } from "@kozmos/vue"
     `}
     swift={`
 import SwiftUI
+import UniformTypeIdentifiers
 
-struct KozmosFileUpload: View {
-    var body: some View {
-        Text("FileUpload Content placeholder")
-    }
-}
-    `}
+KozmosFileUpload(
+allowedContentTypes: [.content],
+onFileSelected: { \_ in }
+)
+`}
     kotlin={`
 package com.kozmos.components.fileupload
 
@@ -86,12 +86,12 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosFileUpload(
-    modifier: Modifier = Modifier,
-    onFileSelected: (Uri) -> Unit
+modifier: Modifier = Modifier,
+onFileSelected: (Uri) -> Unit
 ) {
-    var fileName by remember { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
-    
+var fileName by remember { mutableStateOf<String?>(null) }
+val context = LocalContext.current
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -140,8 +140,8 @@ fun KozmosFileUpload(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                Icons.Default.UploadFile, 
-                contentDescription = null, 
+                Icons.Default.UploadFile,
+                contentDescription = null,
                 modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing400),
                 tint = KozmosColors.primitivesColorsForeground500
             )
@@ -153,7 +153,9 @@ fun KozmosFileUpload(
             )
         }
     }
+
 }
 
     `}
+
 />

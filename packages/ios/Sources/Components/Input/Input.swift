@@ -53,17 +53,17 @@ public struct KozmosInput: View {
                 .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
                 .frame(height: 44, alignment: .center)
                 .background(fieldBackgroundColor)
-                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100))
+                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                 .overlay(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                         .stroke(fieldBorderColor, lineWidth: 1)
                 )
-                .font(.subheadline)
+                .font(KozmosTypography.subheadline)
                 .foregroundColor(textColor)
 
             if let supportingText = supportingText, !supportingText.isEmpty {
                 Text(supportingText)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .foregroundColor(supportingTextColor)
             }
         }

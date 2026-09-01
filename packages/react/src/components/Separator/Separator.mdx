@@ -36,12 +36,8 @@ import { KozmosSeparator } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosSeparator: View {
-    var body: some View {
-        Text("Separator Content placeholder")
-    }
-}
-    `}
+KozmosSeparator(orientation: .horizontal)
+`}
     kotlin={`
 package com.kozmos.components.separator
 
@@ -54,26 +50,27 @@ import androidx.compose.ui.unit.dp
 import com.kozmos.tokens.KozmosColors
 
 enum class SeparatorOrientation {
-    Horizontal,
-    Vertical
+Horizontal,
+Vertical
 }
 
 @Composable
 fun KozmosSeparator(
-    modifier: Modifier = Modifier,
-    orientation: SeparatorOrientation = SeparatorOrientation.Horizontal
+modifier: Modifier = Modifier,
+orientation: SeparatorOrientation = SeparatorOrientation.Horizontal
 ) {
-    if (orientation == SeparatorOrientation.Horizontal) {
-        Divider(modifier = modifier, color = KozmosColors.primitivesColorsBackground300)
-    } else {
-        Divider(
-            modifier = modifier
-                .fillMaxHeight()
-                .width(1.dp),
-            color = KozmosColors.primitivesColorsBackground300
-        )
-    }
+if (orientation == SeparatorOrientation.Horizontal) {
+Divider(modifier = modifier, color = KozmosColors.primitivesColorsBackground300)
+} else {
+Divider(
+modifier = modifier
+.fillMaxHeight()
+.width(1.dp),
+color = KozmosColors.primitivesColorsBackground300
+)
+}
 }
 
     `}
+
 />

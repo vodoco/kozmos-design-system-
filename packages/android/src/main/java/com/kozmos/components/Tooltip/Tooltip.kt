@@ -93,7 +93,7 @@ private fun TooltipBubble(
 
 @Composable
 private fun TooltipSurface(text: String) {
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
     Text(
         text = text,
         color = KozmosThemeTokens.primitivesColorsForeground0,

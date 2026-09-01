@@ -27,9 +27,9 @@ fun KozmosCard(
         modifier = modifier.border(
             1.dp,
             KozmosColors.primitivesColorsBackground200,
-            RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200)
+            RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer)
         ),
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
         colors = CardDefaults.cardColors(
             containerColor = KozmosColors.primitivesColorsBackground0,
         ),

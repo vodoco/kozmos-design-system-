@@ -38,12 +38,12 @@ public struct KozmosDirectionStep: View {
             
             VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing25) {
                 Text(instruction)
-                    .font(.body)
+                    .font(KozmosTypography.body)
                     .fontWeight(.medium)
                 
                 if let dist = distance {
                     Text(dist + (duration != nil ? " • \(duration!)" : ""))
-                        .font(.caption)
+                        .font(KozmosTypography.caption)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
             }

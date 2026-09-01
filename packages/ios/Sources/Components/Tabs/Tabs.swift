@@ -49,7 +49,7 @@ public struct KozmosTabsTrigger: View {
             selection = value
         }) {
             Text(title)
-                .font(.subheadline)
+                .font(KozmosTypography.subheadline)
                 .fontWeight(selection == value ? .semibold : .regular)
                 .foregroundColor(selection == value ? KozmosColors.primitivesColorsForeground100 : KozmosColors.primitivesColorsForeground500)
                 .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing100)

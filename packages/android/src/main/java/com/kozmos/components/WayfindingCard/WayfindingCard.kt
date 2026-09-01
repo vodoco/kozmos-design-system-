@@ -75,7 +75,7 @@ fun KozmosWayfindingInputRow(
             onValueChange = onOriginChange,
             placeholder = { Text(originPlaceholder) },
             modifier = Modifier.fillMaxWidth().padding(bottom = KozmosDimensions.primitivesLayoutSpacing100),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
             singleLine = true,
             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = KozmosColors.primitivesColorsTheme500,
@@ -104,7 +104,7 @@ fun KozmosWayfindingInputRow(
             onValueChange = onDestinationChange,
             placeholder = { Text(destinationPlaceholder) },
             modifier = Modifier.fillMaxWidth().padding(top = KozmosDimensions.primitivesLayoutSpacing100),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
             singleLine = true,
             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = KozmosColors.primitivesColorsTheme500,

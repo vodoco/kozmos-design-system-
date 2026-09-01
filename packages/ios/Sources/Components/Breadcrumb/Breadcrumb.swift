@@ -17,14 +17,14 @@ public struct KozmosBreadcrumb: View {
                         onSelect(index)
                     }) {
                         Text(items[index])
-                            .font(.subheadline)
+                            .font(KozmosTypography.subheadline)
                             .foregroundColor(index == items.count - 1 ? KozmosColors.primitivesColorsForeground100 : KozmosColors.primitivesColorsForeground500)
                     }
                     .disabled(index == items.count - 1)
                     
                     if index < items.count - 1 {
                         Image(systemName: "chevron.right")
-                            .font(.caption)
+                            .font(KozmosTypography.caption)
                             .foregroundColor(KozmosColors.primitivesColorsForeground500)
                     }
                 }

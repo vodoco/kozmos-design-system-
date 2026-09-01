@@ -1,0 +1,101 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as MapOverlayStories from './MapOverlay.stories';
+
+<Meta of={MapOverlayStories} />
+
+# MapOverlay
+
+A positioned surface that floats product chrome above the map canvas.
+
+## Usage
+
+Use it for anything that sits over the map rather than beside it:
+
+- A search bar anchored to the top of the canvas
+- A route summary along the bottom edge
+- Floating controls and status chips
+
+Do not render map content inside it. The canvas is renderer output; an overlay
+is the app's own UI layered on top.
+
+Pass `collisionInsets` from the map adapter. Overlays that ignore them end up
+covering the renderer's attribution, which is usually a licensing requirement,
+not a cosmetic preference.
+
+`width` is a t-shirt scale on web. On native the host lays the overlay out with
+frame and modifier sizing instead, which is recorded as intentional in the
+variant analyzer rather than counted as a parity gap.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { MapOverlay } from '@kozmos/react';
+
+<MapOverlay position="top-left" width="md" collisionInsets={insets}>
+  <SearchBar />
+</MapOverlay>
+
+<MapOverlay position="bottom-center" width="full">
+  <RouteSummary etaText="6 min" distanceText="320 m" onEndRoute={end} />
+</MapOverlay>
+  `}
+  vue={`
+<script setup>
+import { KozmosMapOverlay } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosMapOverlay position="top-left" width="md">
+    <SearchBar />
+  </KozmosMapOverlay>
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct MapScreen: View {
+    var body: some View {
+        KozmosMapOverlay(position: .topLeft) {
+            SearchBar()
+        }
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.Composable
+import com.kozmos.components.mapoverlay.KozmosMapOverlay
+import com.kozmos.components.mapoverlay.OverlayPosition
+
+@Composable
+fun MapScreen() {
+    KozmosMapOverlay(position = OverlayPosition.TOP_LEFT) {
+        SearchBar()
+    }
+}
+  `}
+/>
+
+## Accessibility
+
+- The overlay adds no landmark of its own; its content keeps its own reading
+  order and roles.
+- Contrast comes from the surface token, not from the basemap underneath, so
+  legibility does not depend on what the map happens to be showing.
+- Respect `collisionInsets` so overlays never cover attribution or the
+  renderer's own controls.
+
+## Stories
+
+### Default
+<Canvas of={MapOverlayStories.Default} />
+
+### Bottom Center
+<Canvas of={MapOverlayStories.BottomCenter} />

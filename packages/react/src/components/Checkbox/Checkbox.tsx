@@ -31,7 +31,7 @@ const Checkbox = React.forwardRef<
           id={inputId}
           ref={ref}
           className={cn(
-            "peer h-5 w-5 shrink-0 rounded-sm border border-input ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
+            "peer h-5 w-5 shrink-0 rounded-marker border border-input ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
             hasError && "border-destructive focus-visible:ring-destructive",
             className,
           )}

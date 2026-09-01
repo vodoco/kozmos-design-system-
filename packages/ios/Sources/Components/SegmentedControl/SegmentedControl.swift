@@ -1,20 +1,116 @@
 import SwiftUI
 
+public enum KozmosSegmentedControlSize {
+    case sm
+    case `default`
+    case lg
+}
+
 public struct KozmosSegmentedControl: View {
-    @Binding var selection: Int
-    let items: [String]
-    
-    public init(selection: Binding<Int>, items: [String]) {
+    @Binding private var selection: Int
+    private let disabled: Bool
+    private let fullWidth: Bool
+    private let items: [String]
+    private let size: KozmosSegmentedControlSize
+
+    public init(
+        selection: Binding<Int>,
+        items: [String],
+        size: KozmosSegmentedControlSize = .default,
+        disabled: Bool = false,
+        fullWidth: Bool = false
+    ) {
         self._selection = selection
         self.items = items
+        self.size = size
+        self.disabled = disabled
+        self.fullWidth = fullWidth
     }
-    
+
     public var body: some View {
-        Picker("", selection: $selection) {
-            ForEach(items.indices, id: \.self) { index in
-                Text(items[index]).tag(index)
+        HStack(spacing: 0) {
+            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                Button {
+                    guard !disabled else { return }
+                    selection = index
+                } label: {
+                    Text(item)
+                        .font(.system(size: metrics.fontSize, weight: .medium))
+                        .lineLimit(1)
+                        .foregroundColor(index == selection ? selectedForeground : idleForeground)
+                        .padding(.horizontal, metrics.horizontalPadding)
+                        .frame(maxWidth: fullWidth ? .infinity : nil)
+                        .frame(
+                            minWidth: fullWidth ? nil : metrics.itemMinWidth,
+                            minHeight: metrics.itemHeight
+                        )
+                        .background(index == selection ? selectedBackground : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(disabled)
+                .accessibilityAddTraits(index == selection ? .isSelected : [])
             }
         }
-        .pickerStyle(.segmented) // Native iOS segmented control
+        .padding(4)
+        .frame(maxWidth: fullWidth ? .infinity : nil)
+        .frame(minHeight: metrics.containerHeight)
+        .background(KozmosColors.primitivesColorsBackground100)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(KozmosColors.primitivesColorsBackground200, lineWidth: 1)
+        )
+        .opacity(disabled ? 0.5 : 1)
+        .accessibilityElement(children: .contain)
+    }
+
+    private var metrics: Metrics {
+        switch size {
+        case .sm:
+            return Metrics(
+                containerHeight: 52,
+                itemMinWidth: 97,
+                itemHeight: 44,
+                horizontalPadding: 12,
+                fontSize: 12
+            )
+        case .default:
+            return Metrics(
+                containerHeight: 52,
+                itemMinWidth: 117,
+                itemHeight: 44,
+                horizontalPadding: 16,
+                fontSize: 14
+            )
+        case .lg:
+            return Metrics(
+                containerHeight: 56,
+                itemMinWidth: 137,
+                itemHeight: 48,
+                horizontalPadding: 20,
+                fontSize: 14
+            )
+        }
+    }
+
+    private var selectedBackground: Color {
+        KozmosColors.primitivesColorsBackground0
+    }
+
+    private var selectedForeground: Color {
+        KozmosColors.primitivesColorsForeground0
+    }
+
+    private var idleForeground: Color {
+        KozmosColors.primitivesColorsForeground500
+    }
+
+    private struct Metrics {
+        let containerHeight: CGFloat
+        let itemMinWidth: CGFloat
+        let itemHeight: CGFloat
+        let horizontalPadding: CGFloat
+        let fontSize: CGFloat
     }
 }

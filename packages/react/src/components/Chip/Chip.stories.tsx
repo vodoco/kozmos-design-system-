@@ -1,30 +1,84 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { Chip, ChipGroup } from './Chip';
-import { Utensils, Coffee, ShoppingBag, MapPin } from 'lucide-react';
-import { useState } from 'react';
+import type { Meta, StoryObj } from "@storybook/react";
+import { Chip, ChipGroup } from "./Chip";
+import { Coffee, MapPin, ShoppingBag, Utensils } from "lucide-react";
+import { useState } from "react";
 
 const meta = {
-  title: 'Components/Chip',
+  title: "Data Display/Chip",
   component: Chip,
-  parameters: { layout: 'padded' },
+  parameters: { layout: "padded" },
 } satisfies Meta<typeof Chip>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 const FilterDemo = () => {
-  const [active, setActive] = useState<string>('all');
-  
+  const [active, setActive] = useState<string>("all");
+  const [visible, setVisible] = useState(true);
+
   return (
-    <ChipGroup className="max-w-[400px]">
-      <Chip active={active === 'all'} onClick={() => setActive('all')}>All Categories</Chip>
-      <Chip active={active === 'food'} onClick={() => setActive('food')} icon={<Utensils />}>Food & Drink</Chip>
-      <Chip active={active === 'coffee'} onClick={() => setActive('coffee')} icon={<Coffee />}>Coffee</Chip>
-      <Chip active={active === 'shopping'} onClick={() => setActive('shopping')} icon={<ShoppingBag />}>Retail</Chip>
-      <Chip active={active === 'places'} onClick={() => setActive('places')} icon={<MapPin />}>Points of Interest</Chip>
+    <ChipGroup className="max-w-[460px]">
+      <Chip selected={active === "all"} onClick={() => setActive("all")}>
+        All
+      </Chip>
+      <Chip
+        icon={<Utensils />}
+        selected={active === "food"}
+        onClick={() => setActive("food")}
+      >
+        Food & Drink
+      </Chip>
+      <Chip
+        icon={<Coffee />}
+        selected={active === "coffee"}
+        onClick={() => setActive("coffee")}
+      >
+        Coffee
+      </Chip>
+      <Chip
+        icon={<ShoppingBag />}
+        selected={active === "shopping"}
+        onClick={() => setActive("shopping")}
+      >
+        Retail
+      </Chip>
+      <Chip
+        icon={<MapPin />}
+        selected={active === "places"}
+        onClick={() => setActive("places")}
+      >
+        Places
+      </Chip>
+      {visible ? (
+        <Chip onRemove={() => setVisible(false)} variant="brand">
+          Open now
+        </Chip>
+      ) : null}
     </ChipGroup>
   );
 };
 
 export const Default: Story = {
-  render: () => <FilterDemo />
+  render: () => <FilterDemo />,
+};
+
+export const Sizes: Story = {
+  render: () => (
+    <ChipGroup>
+      <Chip size="sm">Small</Chip>
+      <Chip>Default</Chip>
+      <Chip size="lg">Large</Chip>
+    </ChipGroup>
+  ),
+};
+
+export const Variants: Story = {
+  render: () => (
+    <ChipGroup>
+      <Chip variant="neutral">Neutral</Chip>
+      <Chip variant="brand">Brand</Chip>
+      <Chip variant="destructive">Destructive</Chip>
+      <Chip selected>Selected</Chip>
+      <Chip disabled>Disabled</Chip>
+    </ChipGroup>
+  ),
 };

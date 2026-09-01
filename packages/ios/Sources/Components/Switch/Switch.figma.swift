@@ -1,4 +1,38 @@
 import SwiftUI
 import Figma
 
-// Placeholder
+struct KozmosSwitchConnect: FigmaConnect {
+    let component = KozmosSwitch.self
+    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=77-1465"
+
+    @FigmaEnum(
+        "Checked",
+        mapping: [
+            "Unchecked": false,
+            "Checked": true
+        ]
+    )
+    var checked: Bool = false
+
+    @FigmaString("Label Text")
+    var label: String = "Enable notifications"
+
+    @FigmaEnum(
+        "State",
+        mapping: [
+            "Default": "default",
+            "Disabled": "disabled",
+            "Error": "error"
+        ]
+    )
+    var state: String = "default"
+
+    var body: some View {
+        KozmosSwitch(
+            checked: .constant(self.checked),
+            label: self.label,
+            disabled: self.state == "disabled",
+            error: self.state == "error"
+        )
+    }
+}

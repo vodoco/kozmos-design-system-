@@ -50,7 +50,7 @@ public struct KozmosButton: View {
                         .tint(foregroundColor)
                 }
                 Text(label)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .fontWeight(.medium)
             }
             .padding(padding)
@@ -60,9 +60,9 @@ public struct KozmosButton: View {
                 minHeight: 44
             )
             .background(backgroundColor)
-            .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+            .cornerRadius(KozmosDimensions.semanticsRadiusControl)
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
             )
         }

@@ -35,14 +35,14 @@ public struct KozmosTag: View {
     public var body: some View {
         HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
             Text(text)
-                .font(.caption)
+                .font(KozmosTypography.caption)
                 .bold()
                 .foregroundColor(variant.foregroundColor)
             
             if let onRemove = onRemove {
                 Button(action: onRemove) {
                     Image(systemName: "xmark")
-                        .font(.caption2)
+                        .font(KozmosTypography.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(variant.foregroundColor)
                 }

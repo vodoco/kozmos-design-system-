@@ -36,12 +36,12 @@ import { KozmosBottomSheet } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosBottomSheet: View {
-    var body: some View {
-        Text("BottomSheet Content placeholder")
-    }
+Button("Open sheet") {}
+.kozmosBottomSheet(isPresented: .constant(true)) {
+Text("Sheet content")
+.padding()
 }
-    `}
+`}
     kotlin={`
 package com.kozmos.components.bottomsheet
 
@@ -56,11 +56,11 @@ import androidx.compose.ui.Modifier
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KozmosBottomSheet(
-    onDismissRequest: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit
+onDismissRequest: () -> Unit,
+modifier: Modifier = Modifier,
+content: @Composable ColumnScope.() -> Unit
 ) {
-    val modalBottomSheetState = rememberModalBottomSheetState()
+val modalBottomSheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -69,7 +69,9 @@ fun KozmosBottomSheet(
         modifier = modifier,
         content = content
     )
+
 }
 
     `}
+
 />

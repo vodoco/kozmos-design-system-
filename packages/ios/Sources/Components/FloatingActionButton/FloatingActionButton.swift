@@ -12,7 +12,7 @@ public struct KozmosFloatingActionButton: View {
     public var body: some View {
         Button(action: action) {
             Image(systemName: iconName)
-                .font(.title2)
+                .font(KozmosTypography.title2)
                 .foregroundColor(KozmosColors.primitivesColorsBackground0)
                 .frame(width: KozmosDimensions.primitivesLayoutSizing700, height: KozmosDimensions.primitivesLayoutSizing700)
                 .background(KozmosColors.primitivesColorsTheme500)

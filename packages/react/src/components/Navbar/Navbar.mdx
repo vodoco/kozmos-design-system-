@@ -6,7 +6,7 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 # Navbar
 
-Displays the Navbar interface topology natively.
+Horizontal app navigation shell. Compose route items with `NavigationItem` inside the `navigation` slot, and pass product context through named slots such as `logo`, `context`, `primaryAction`, `actions`, `utilities`, and `account`.
 
 <Canvas>
   <Story of={NavbarStories.Default} />
@@ -21,8 +21,22 @@ Displays the Navbar interface topology natively.
 <PlatformSnippets
     react={`
 import { Navbar } from "@kozmos/react"
+import { NavigationItem } from "@kozmos/react"
 
-<Navbar />
+<Navbar
+  logo={<strong>Kozmos</strong>}
+  navigation={
+    <div className="flex items-center gap-2">
+      <NavigationItem href="/overview" placement="top" selected>
+        Overview
+      </NavigationItem>
+      <NavigationItem href="/explore" placement="top">
+        Explore
+      </NavigationItem>
+    </div>
+  }
+  account={<button type="button">Account</button>}
+/>
     `}
     vue={`
 <script setup>
@@ -36,45 +50,78 @@ import { KozmosNavbar } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosNavbar: View {
-    var body: some View {
-        Text("Navbar Content placeholder")
-    }
+KozmosNavbar(
+logo: {
+Text("Kozmos")
+},
+context: {
+Text("Active site")
+},
+navigation: {
+HStack(spacing: 8) {
+KozmosNavigationItem(label: "Overview", placement: .top, selected: true)
+KozmosNavigationItem(label: "Explore", placement: .top)
+KozmosNavigationItem(label: "Settings", placement: .top)
 }
-    `}
+},
+primaryAction: {
+KozmosButton("Publish", action: {})
+},
+actions: {
+Text("Actions")
+},
+utilities: {
+Text("Notifications")
+},
+account: {
+Text("Account")
+}
+)
+`}
     kotlin={`
 package com.kozmos.components.navbar
 
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.components.button.KozmosButton
+import com.kozmos.components.navigationitem.KozmosNavigationItem
+import com.kozmos.components.navigationitem.KozmosNavigationItemPlacement
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KozmosNavbar(
-    title: String,
-    modifier: Modifier = Modifier,
-    navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {}
-) {
-    TopAppBar(
-        title = { Text(title) },
-        modifier = modifier,
-        navigationIcon = navigationIcon,
-        actions = actions,
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = KozmosColors.primitivesColorsBackground0,
-            titleContentColor = KozmosColors.primitivesColorsForeground100,
-            actionIconContentColor = KozmosColors.primitivesColorsForeground100
-        )
-    )
+fun NavbarExample() {
+KozmosNavbar(
+logo = {
+Text("Kozmos")
+},
+context = {
+Text("Active site")
+},
+navigation = {
+KozmosNavigationItem(
+label = "Overview",
+placement = KozmosNavigationItemPlacement.Top,
+selected = true
+)
+KozmosNavigationItem(label = "Explore", placement = KozmosNavigationItemPlacement.Top)
+KozmosNavigationItem(label = "Settings", placement = KozmosNavigationItemPlacement.Top)
+},
+primaryAction = {
+KozmosButton(onClick = {}) {
+Text("Publish")
+}
+},
+actions = {
+Text("Actions")
+},
+utilities = {
+Text("Notifications")
+},
+account = {
+Text("Account")
+}
+)
 }
 
     `}
+
 />

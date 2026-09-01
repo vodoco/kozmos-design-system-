@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from "vitest";
+import { KozmosPOICard } from "../../index";
 
-describe('POICard Vue Component', () => {
-  it('should mount properly', () => {
-    // Placeholder test to unblock vitest pipeline
-    expect(true).toBe(true);
+describe("KozmosPOICard", () => {
+  it("exports a Vue adapter component for the React POICard", () => {
+    expect(KozmosPOICard).toMatchObject({
+      name: "POICard",
+      setup: expect.any(Function),
+    });
   });
 });

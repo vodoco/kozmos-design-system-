@@ -1,18 +1,33 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { FloorSelector } from './FloorSelector';
+import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
+import { FloorSelector } from "./FloorSelector";
+
+const floors = [
+  { id: "g", label: "Ground floor", shortLabel: "GF" },
+  { id: "1", label: "First floor", shortLabel: "1F" },
+  { id: "2", label: "Second floor", shortLabel: "2F" },
+];
 
 const meta: Meta<typeof FloorSelector> = {
-    title: 'Map/FloorSelector',
-    component: FloorSelector,
-    };
+  title: "Product SDK/FloorSelector",
+  component: FloorSelector,
+  args: {
+    floors,
+    selectedFloor: "1",
+    onFloorSelect: fn(),
+  },
+  parameters: { layout: "centered" },
+};
 
 export default meta;
 type Story = StoryObj<typeof FloorSelector>;
 
-export const Default: Story = {
-    args: {
-        floors: ['L3', 'L2', 'L1', 'G', 'B1'],
-        selectedFloor: 'L1',
-        onFloorSelect: (floor) => console.log('Selected:', floor),
-    },
+export const VerticalList: Story = {};
+
+export const HorizontalList: Story = {
+  args: { variant: "horizontal-list" },
+};
+
+export const CompactStepper: Story = {
+  args: { variant: "compact-stepper" },
 };

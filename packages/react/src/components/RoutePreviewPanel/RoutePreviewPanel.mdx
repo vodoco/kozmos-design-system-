@@ -1,0 +1,14 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./RoutePreviewPanel.stories";
+
+<Meta of={Stories} />
+
+# RoutePreviewPanel
+
+Route calculation and alternative-selection composition. The horizontal list
+uses snap points and a localized count cue; continuation is disabled until a
+selected route is ready and available.
+
+<Canvas of={Stories.Ready} />
+<Canvas of={Stories.Calculating} />
+<Controls />

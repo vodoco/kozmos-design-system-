@@ -52,13 +52,13 @@ public struct KozmosToast: View {
         HStack(alignment: .center, spacing: KozmosDimensions.primitivesLayoutSpacing200) {
             VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing50) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(KozmosTypography.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(KozmosColors.primitivesColorsForeground100)
 
                 if let description {
                     Text(description)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
             }
@@ -67,7 +67,7 @@ public struct KozmosToast: View {
             if let actionTitle, let onAction {
                 Button(action: onAction) {
                     Text(actionTitle)
-                        .font(.subheadline)
+                        .font(KozmosTypography.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(KozmosColors.primitivesColorsTheme500)
                         .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
@@ -94,9 +94,9 @@ public struct KozmosToast: View {
         .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing200)
         .frame(maxWidth: 420)
         .background(KozmosColors.primitivesColorsBackground0)
-        .cornerRadius(KozmosDimensions.primitivesLayoutRadius100)
+        .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutRadius100)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground400, lineWidth: 1)
         )
         .shadow(color: KozmosColors.primitivesColorsForeground0.opacity(0.12), radius: 16, x: 0, y: 8)

@@ -1,0 +1,132 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as MultiSelectStories from './MultiSelect.stories';
+
+<Meta of={MultiSelectStories} />
+
+# MultiSelect
+
+A filterable field for choosing several options, each shown as a removable chip.
+
+## Usage
+
+Use it when the user picks more than one value from a long list:
+
+- Filtering results by several categories at once
+- Assigning multiple owners, tags, or amenities
+- Any set-valued field where the choices are known up front
+
+For one value use `Combobox`. For a handful of options with no filtering, a
+group of `Checkbox` controls is clearer than a dropdown.
+
+`maxSelected` caps the selection; the remaining options become unselectable
+rather than disappearing, so the user can see what they are trading away.
+
+`onValueChange` receives both the values and the matching options, so the label
+for each chip does not need a second lookup.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { MultiSelect } from '@kozmos/react';
+
+<MultiSelect
+  label="Categories"
+  options={categories}
+  placeholder="Add a category"
+  emptyText="No categories match"
+  onValueChange={(values, options) => setFilters(options)}
+  clearable
+/>
+
+// Capped selection
+<MultiSelect label="Amenities" options={amenities} maxSelected={3} />
+  `}
+  vue={`
+<script setup>
+import { KozmosMultiSelect } from "@kozmos/vue"
+import { ref } from "vue"
+
+const selected = ref([])
+const categories = [
+  { value: "food", label: "Food" },
+  { value: "retail", label: "Retail" },
+]
+</script>
+
+<template>
+  <KozmosMultiSelect
+    label="Categories"
+    :options="categories"
+    :value="selected"
+    placeholder="Add a category"
+    @valueChange="(values) => (selected = values)"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct FilterView: View {
+    @State private var selected: [String] = []
+    @State private var query = ""
+
+    var body: some View {
+        KozmosMultiSelect(
+            selectedValues: $selected,
+            searchValue: $query,
+            options: categories,
+            label: "Categories",
+            placeholder: "Add a category",
+            emptyText: "No categories match",
+            clearable: true
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.*
+import com.kozmos.components.multiselect.KozmosMultiSelect
+import com.kozmos.components.listbox.KozmosListboxOption
+
+@Composable
+fun FilterScreen(options: List<KozmosListboxOption>) {
+    var selected by remember { mutableStateOf(listOf<String>()) }
+    var query by remember { mutableStateOf("") }
+
+    KozmosMultiSelect(
+        selectedValues = selected,
+        onValueChange = { selected = it },
+        searchValue = query,
+        onSearchValueChange = { query = it },
+        options = options,
+        label = "Categories",
+        placeholder = "Add a category"
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- Each chip carries its own remove button with an accessible name naming the
+  value, so "Remove Food" is announced rather than "Remove".
+- Backspace in an empty input removes the last chip, matching the behaviour
+  keyboard users expect from token fields.
+- Reaching `maxSelected` disables the remaining options rather than hiding them,
+  and the limit is announced.
+
+## Stories
+
+### Default
+<Canvas of={MultiSelectStories.Default} />
+
+### With Selected Values
+<Canvas of={MultiSelectStories.WithSelectedValues} />

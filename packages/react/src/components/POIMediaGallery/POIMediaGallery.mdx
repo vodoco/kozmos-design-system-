@@ -1,0 +1,13 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./POIMediaGallery.stories";
+
+<Meta of={Stories} />
+
+# POIMediaGallery
+
+Accessible POI media sequence with explicit position, 44px controls, semantic
+alternative text, and no placeholder fallback. If real media is unavailable the
+component renders nothing.
+
+<Canvas of={Stories.Default} />
+<Controls />

@@ -67,7 +67,7 @@ fun KozmosButton(
     }
 
     // Dimension token graph synced from build.mjs
-    val shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100)
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
 
     when (variant) {
         KozmosButtonVariant.Outline -> {

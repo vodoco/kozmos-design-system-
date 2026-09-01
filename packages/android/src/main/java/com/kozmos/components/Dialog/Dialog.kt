@@ -44,7 +44,7 @@ fun KozmosDialog(
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
-            shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+            shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
             color = KozmosThemeTokens.semanticsSurface0,
             border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsForeground400),
             shadowElevation = 20.dp,
@@ -100,7 +100,7 @@ fun KozmosDialog(
     ) {
         Surface(
             modifier = modifier.widthIn(min = 280.dp, max = 512.dp),
-            shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+            shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
             color = KozmosThemeTokens.semanticsSurface0,
             border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsForeground400),
             shadowElevation = 20.dp

@@ -37,7 +37,7 @@ fun KozmosSplitButton(
     Row(modifier = modifier) {
         Button(
             onClick = onMainClick,
-            shape = RoundedCornerShape(topStart = KozmosDimensions.primitivesLayoutRadius300, bottomStart = KozmosDimensions.primitivesLayoutRadius300, topEnd = KozmosDimensions.primitivesLayoutRadius0, bottomEnd = KozmosDimensions.primitivesLayoutRadius0),
+            shape = RoundedCornerShape(topStart = KozmosDimensions.semanticsRadiusPanel, bottomStart = KozmosDimensions.semanticsRadiusPanel, topEnd = KozmosDimensions.semanticsRadiusNone, bottomEnd = KozmosDimensions.semanticsRadiusNone),
             colors = ButtonDefaults.buttonColors(containerColor = KozmosColors.primitivesColorsTheme500, contentColor = KozmosColors.primitivesColorsBackground0)
         ) {
             Text(label)
@@ -45,7 +45,7 @@ fun KozmosSplitButton(
         Spacer(modifier = Modifier.width(1.dp))
         Button(
             onClick = { expanded = true },
-            shape = RoundedCornerShape(topStart = KozmosDimensions.primitivesLayoutRadius0, bottomStart = KozmosDimensions.primitivesLayoutRadius0, topEnd = KozmosDimensions.primitivesLayoutRadius300, bottomEnd = KozmosDimensions.primitivesLayoutRadius300),
+            shape = RoundedCornerShape(topStart = KozmosDimensions.semanticsRadiusNone, bottomStart = KozmosDimensions.semanticsRadiusNone, topEnd = KozmosDimensions.semanticsRadiusPanel, bottomEnd = KozmosDimensions.semanticsRadiusPanel),
             colors = ButtonDefaults.buttonColors(containerColor = KozmosColors.primitivesColorsTheme500, contentColor = KozmosColors.primitivesColorsBackground0)
         ) {
             Icon(Icons.Default.ArrowDropDown, contentDescription = "More actions")

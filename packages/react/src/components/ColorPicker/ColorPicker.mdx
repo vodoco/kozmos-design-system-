@@ -1,0 +1,144 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as ColorPickerStories from './ColorPicker.stories';
+
+<Meta of={ColorPickerStories} />
+
+# ColorPicker
+
+A colour field with a swatch trigger, a palette of presets, an alpha slider, and
+a switchable text format.
+
+## Usage
+
+Use it where a user authors a colour:
+
+- Theming and branding settings
+- Map and layer styling
+- Any editor where an arbitrary colour is a valid input
+
+Supply `presets` wherever the palette is really constrained. A brand editor with
+eight approved colours should offer those eight rather than the full spectrum —
+presets make the sanctioned choice the easy one.
+
+`format` switches how the value is written (hex, rgb, hsl) without changing the
+colour. Treat it as a display preference, not as data; persist the value, not
+the format the user happened to be viewing.
+
+Alpha is separate from the colour value via `alpha` / `onAlphaChange`, so a
+surface that does not support transparency can simply ignore it.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { ColorPicker } from '@kozmos/react';
+
+<ColorPicker
+  label="Brand colour"
+  defaultValue="#135BEC"
+  presets={["#135BEC", "#0B357F", "#1E7F4F", "#9A6700"]}
+  paletteLabel="Brand palette"
+  onValueChange={setBrandColor}
+/>
+
+// Controlled, with alpha and an explicit format
+<ColorPicker
+  label="Overlay"
+  value={color}
+  onValueChange={setColor}
+  alpha={alpha}
+  onAlphaChange={setAlpha}
+  format="rgb"
+/>
+  `}
+  vue={`
+<script setup>
+import { KozmosColorPicker } from "@kozmos/vue"
+import { ref } from "vue"
+
+const brand = ref("#135BEC")
+</script>
+
+<template>
+  <KozmosColorPicker
+    label="Brand colour"
+    :value="brand"
+    :presets="['#135BEC', '#0B357F', '#1E7F4F']"
+    paletteLabel="Brand palette"
+    @valueChange="(value) => (brand = value)"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct ThemeSettings: View {
+    @State private var brand = "#135BEC"
+    @State private var alpha = 1.0
+
+    var body: some View {
+        KozmosColorPicker(
+            value: $brand,
+            alpha: $alpha,
+            label: "Brand colour",
+            paletteLabel: "Brand palette",
+            presets: ["#135BEC", "#0B357F", "#1E7F4F"],
+            format: .hex
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.*
+import com.kozmos.components.colorpicker.KozmosColorPicker
+
+@Composable
+fun ThemeSettings() {
+    var brand by remember { mutableStateOf("#135BEC") }
+    var alpha by remember { mutableStateOf(1f) }
+
+    KozmosColorPicker(
+        value = brand,
+        onValueChange = { brand = it },
+        alpha = alpha,
+        onAlphaChange = { alpha = it },
+        label = "Brand colour",
+        presets = listOf("#135BEC", "#0B357F", "#1E7F4F")
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- The value is always editable as text, so the picker never depends on
+  hitting a target in a gradient — the one path a colour control must not
+  require.
+- Presets are buttons with accessible names, not bare swatches.
+- `paletteLabel` names the preset group so it is not announced as a row of
+  unlabelled buttons.
+- Colour alone never conveys state here; `error` is a message.
+
+## Stories
+
+### Default
+<Canvas of={ColorPickerStories.Default} />
+
+### Compact
+<Canvas of={ColorPickerStories.Compact} />
+
+### Open
+<Canvas of={ColorPickerStories.Open} />
+
+### Narrow, Open
+<Canvas of={ColorPickerStories.NarrowOpen} />
+
+### Error
+<Canvas of={ColorPickerStories.Error} />

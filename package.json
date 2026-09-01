@@ -39,12 +39,21 @@
     "figma:publish:native:linked": "pnpm figma:publish:ios:linked && pnpm figma:publish:android:linked",
     "figma:publish:native:linked:dry": "pnpm figma:publish:ios:linked:dry && pnpm figma:publish:android:linked:dry",
     "components:contract:check": "node scripts/check-component-contracts.mjs",
+    "docs:snippets:check": "node scripts/check-doc-snippets.mjs",
+    "figma:verify": "node scripts/verify-figma-library.mjs",
+    "components:variant:check": "node scripts/skills/check-variant-parity.mjs",
+    "tokens:contrast:check": "node scripts/check-token-contrast.mjs",
+    "tokens:radius:check": "node scripts/check-radius-parity.mjs",
+    "tokens:radius:nesting": "node scripts/check-nested-radius.mjs",
+    "tokens:typography:check": "node scripts/check-typography-parity.mjs",
+    "ios:snapshot:verify": "cd packages/ios && xcodebuild test -scheme Kozmos -destination \"platform=iOS Simulator,name=iPhone 16,OS=18.4\" -only-testing:KozmosTests/KozmosButtonImageSnapshotTests",
+    "ios:snapshot:record": "TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all pnpm ios:snapshot:verify; pnpm ios:snapshot:verify",
     "update-tokens": "tsx scripts/update-tokens.ts",
     "new-component": "tsx scripts/skills/generate-component.ts",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build && changeset publish",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.1",

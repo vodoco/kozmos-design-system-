@@ -43,7 +43,7 @@ fun KozmosPopover(
             properties = PopupProperties(focusable = true)
         ) {
             Surface(
-                shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+                shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
                 shadowElevation = 4.dp,
                 color = KozmosThemeTokens.semanticsSurface0,
                 border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsForeground400),

@@ -36,12 +36,11 @@ import { KozmosDatePicker } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosDatePicker: View {
-    var body: some View {
-        Text("DatePicker Content placeholder")
-    }
-}
-    `}
+KozmosDatePicker(
+selection: .constant(Date()),
+label: "Date"
+)
+`}
     kotlin={`
 package com.kozmos.components.datepicker
 
@@ -66,14 +65,14 @@ import java.util.Calendar
 
 @Composable
 fun KozmosDatePicker(
-    date: LocalDate?,
-    onDateSelected: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier,
-    label: String = "Select Date"
+date: LocalDate?,
+onDateSelected: (LocalDate) -> Unit,
+modifier: Modifier = Modifier,
+label: String = "Select Date"
 ) {
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-    
+val context = LocalContext.current
+val calendar = Calendar.getInstance()
+
     if (date != null) {
         calendar.set(date.year, date.monthValue - 1, date.dayOfMonth)
     }
@@ -101,7 +100,7 @@ fun KozmosDatePicker(
             interactionSource = remember { MutableInteractionSource() }
                 .also { interactionSource ->
                      // Handle click via a transparent overlay or similar if readOnly blocks click
-                     // But strictly, readOnly TextField still accepts focus. 
+                     // But strictly, readOnly TextField still accepts focus.
                      // Common pattern is clickable modifier on the Box or TextField.
                 }
         )
@@ -112,7 +111,9 @@ fun KozmosDatePicker(
                 .clickable { datePickerDialog.show() }
         )
     }
+
 }
 
     `}
+
 />

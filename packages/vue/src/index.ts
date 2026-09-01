@@ -9,6 +9,7 @@ import {
   Container,
   Icon,
   Button as ReactButton,
+  Counter as ReactCounter,
   Badge as ReactBadge,
   Label,
   Input as ReactInput,
@@ -86,6 +87,24 @@ import {
   SaveLocationCard,
   ScrollArea,
   UserLocationMarker,
+  AdaptiveMapShell,
+  BrowseCategoriesPanel,
+  CategoryTile,
+  ColorPicker,
+  Combobox,
+  DateRangePicker,
+  Listbox,
+  MapControlButton,
+  MultiSelect,
+  NavigationItem,
+  NumberInput,
+  POIDetailPanel,
+  POIMediaGallery,
+  POIResultCard,
+  POIResultList,
+  PasswordInput,
+  RouteOptionCard,
+  RoutePreviewPanel,
 } from "@kozmos/react";
 
 // Core Translation Engine
@@ -191,6 +210,7 @@ export const KozmosHeading = createVueWrapper(Heading);
 export const KozmosContainer = createVueWrapper(Container);
 export const KozmosIcon = createVueWrapper(Icon);
 export const KozmosButton = createVueWrapper(ReactButton);
+export const KozmosCounter = createVueWrapper(ReactCounter);
 export const KozmosBadge = createVueWrapper(ReactBadge);
 export const KozmosLabel = createVueWrapper(Label);
 export const KozmosCard = createVueWrapper(Card);
@@ -288,5 +308,39 @@ export const KozmosCheckbox = createVueWrapper(CheckboxAdapter, [
 export const KozmosInput = createVueWrapper(ReactInput, ["update:modelValue"]);
 export const KozmosTextarea = createVueWrapper(Textarea, ["update:modelValue"]);
 export const KozmosSwitch = createVueWrapper(SwitchAdapter, [
+  "update:modelValue",
+]);
+
+// ----------------------------------------------------------------------
+// Components added after the original adapter list was written.
+// ----------------------------------------------------------------------
+export const KozmosAdaptiveMapShell = createVueWrapper(AdaptiveMapShell);
+export const KozmosBrowseCategoriesPanel = createVueWrapper(
+  BrowseCategoriesPanel,
+);
+export const KozmosCategoryTile = createVueWrapper(CategoryTile);
+export const KozmosMapControlButton = createVueWrapper(MapControlButton);
+export const KozmosNavigationItem = createVueWrapper(NavigationItem);
+export const KozmosPOIDetailPanel = createVueWrapper(POIDetailPanel);
+export const KozmosPOIMediaGallery = createVueWrapper(POIMediaGallery);
+export const KozmosPOIResultCard = createVueWrapper(POIResultCard);
+export const KozmosPOIResultList = createVueWrapper(POIResultList);
+export const KozmosRouteOptionCard = createVueWrapper(RouteOptionCard);
+export const KozmosRoutePreviewPanel = createVueWrapper(RoutePreviewPanel);
+export const KozmosColorPicker = createVueWrapper(ColorPicker, [
+  "update:modelValue",
+]);
+export const KozmosCombobox = createVueWrapper(Combobox, ["update:modelValue"]);
+export const KozmosDateRangePicker = createVueWrapper(DateRangePicker, [
+  "update:modelValue",
+]);
+export const KozmosListbox = createVueWrapper(Listbox, ["update:modelValue"]);
+export const KozmosMultiSelect = createVueWrapper(MultiSelect, [
+  "update:modelValue",
+]);
+export const KozmosNumberInput = createVueWrapper(NumberInput, [
+  "update:modelValue",
+]);
+export const KozmosPasswordInput = createVueWrapper(PasswordInput, [
   "update:modelValue",
 ]);

@@ -35,7 +35,7 @@ fun KozmosSearchBar(
     Surface(
         modifier = modifier.fillMaxWidth().padding(horizontal = KozmosDimensions.primitivesLayoutSpacing200, vertical = KozmosDimensions.primitivesLayoutSpacing100),
         shadowElevation = 8.dp,
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
         color = KozmosColors.primitivesColorsBackground0
     ) {
         OutlinedTextField(
@@ -64,7 +64,7 @@ fun KozmosSearchBar(
                 }
             ),
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius200),
+            shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
             singleLine = true,
             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,

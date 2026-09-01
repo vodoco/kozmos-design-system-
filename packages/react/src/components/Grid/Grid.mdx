@@ -36,12 +36,13 @@ import { KozmosGrid } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosGrid: View {
-    var body: some View {
-        Text("Grid Content placeholder")
-    }
+Grid(cols: 2, spacing: 16) {
+Text("One")
+Text("Two")
+Text("Three")
+Text("Four")
 }
-    `}
+`}
     kotlin={`
 package com.kozmos.components.grid
 
@@ -61,19 +62,20 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun KozmosGrid(
-    modifier: Modifier = Modifier,
-    cols: Int = 2,
-    spacing: Dp = KozmosDimensions.primitivesLayoutSpacing200,
-    content: LazyGridScope.() -> Unit
+modifier: Modifier = Modifier,
+cols: Int = 2,
+spacing: Dp = KozmosDimensions.primitivesLayoutSpacing200,
+content: LazyGridScope.() -> Unit
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(cols),
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(spacing),
-        horizontalArrangement = Arrangement.spacedBy(spacing),
-        content = content
-    )
+LazyVerticalGrid(
+columns = GridCells.Fixed(cols),
+modifier = modifier,
+verticalArrangement = Arrangement.spacedBy(spacing),
+horizontalArrangement = Arrangement.spacedBy(spacing),
+content = content
+)
 }
 
     `}
+
 />

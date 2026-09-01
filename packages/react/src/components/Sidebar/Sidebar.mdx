@@ -6,7 +6,7 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 # Sidebar
 
-Displays the Sidebar interface topology natively.
+Vertical navigation shell. Compose persistent destinations with `NavigationItem` inside the `navigation` slot, and place workspace, tools, or account surfaces through the named `header`, `tools`, and `footer` slots.
 
 <Canvas>
   <Story of={SidebarStories.Default} />
@@ -21,8 +21,18 @@ Displays the Sidebar interface topology natively.
 <PlatformSnippets
     react={`
 import { Sidebar } from "@kozmos/react"
+import { NavigationItem } from "@kozmos/react"
 
-<Sidebar />
+<Sidebar
+  header={<strong>Workspace</strong>}
+  navigation={
+    <div className="flex flex-col gap-1">
+      <NavigationItem selected>Overview</NavigationItem>
+      <NavigationItem>Explore</NavigationItem>
+    </div>
+  }
+  footer={<NavigationItem>Account</NavigationItem>}
+/>
     `}
     vue={`
 <script setup>
@@ -36,52 +46,54 @@ import { KozmosSidebar } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosSidebar: View {
-    var body: some View {
-        Text("Sidebar Content placeholder")
-    }
+KozmosSidebar(
+variant: .expanded,
+header: {
+Text("Workspace")
+},
+navigation: {
+VStack(alignment: .leading, spacing: 8) {
+KozmosNavigationItem(label: "Overview", selected: true)
+KozmosNavigationItem(label: "Explore")
+KozmosNavigationItem(label: "Settings")
 }
-    `}
+},
+tools: {
+KozmosNavigationItem(label: "Settings")
+},
+footer: {
+KozmosNavigationItem(label: "Account")
+}
+)
+`}
     kotlin={`
 package com.kozmos.components.sidebar
 
-import com.kozmos.tokens.KozmosDimensions
-
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.DrawerDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.components.navigationitem.KozmosNavigationItem
 
 @Composable
-fun KozmosSidebar(
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    PermanentDrawerSheet(
-        modifier = modifier.width(280.dp),
-        drawerContainerColor = KozmosColors.primitivesColorsBackground0,
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(KozmosDimensions.primitivesLayoutSpacing200)
-                .fillMaxHeight()
-        ) {
-            content()
-        }
-    }
+fun SidebarExample() {
+KozmosSidebar(
+variant = KozmosSidebarVariant.Expanded,
+header = {
+Text("Workspace")
+},
+navigation = {
+KozmosNavigationItem(label = "Overview", selected = true)
+KozmosNavigationItem(label = "Explore")
+KozmosNavigationItem(label = "Settings")
+},
+tools = {
+KozmosNavigationItem(label = "Settings")
+},
+footer = {
+KozmosNavigationItem(label = "Account")
+}
+)
 }
 
     `}
+
 />

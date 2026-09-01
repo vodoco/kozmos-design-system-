@@ -36,12 +36,17 @@ import { KozmosPOICard } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosPOICard: View {
-    var body: some View {
-        Text("POICard Content placeholder")
-    }
+KozmosPOICard(
+title: "Dubai Mall",
+category: "Shopping"
+) {
+Color.gray.opacity(0.2)
+} descriptionContent: {
+Text("Open now")
+} actionsContent: {
+Button("Directions") {}
 }
-    `}
+`}
     kotlin={`
 package com.kozmos.components.poicard
 
@@ -84,26 +89,26 @@ import com.kozmos.providers.LocalKozmosAnalytics
 
 @Composable
 fun KozmosPOICard(
-    title: String,
-    modifier: Modifier = Modifier,
-    category: String? = null,
-    description: (@Composable () -> Unit)? = null,
-    imageContent: (@Composable () -> Unit)? = null,
-    actions: (@Composable androidx.compose.foundation.layout.RowScope.() -> Unit)? = null,
-    onClose: (() -> Unit)? = null
+title: String,
+modifier: Modifier = Modifier,
+category: String? = null,
+description: (@Composable () -> Unit)? = null,
+imageContent: (@Composable () -> Unit)? = null,
+actions: (@Composable androidx.compose.foundation.layout.RowScope.() -> Unit)? = null,
+onClose: (() -> Unit)? = null
 ) {
-    Card(
-        modifier = modifier.width(300.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = KozmosColors.primitivesColorsBackground0)
-    ) {
-        Column {
-            if (imageContent != null) {
-                Box(modifier = Modifier.fillMaxWidth().height(140.dp)) {
-                    imageContent()
-                }
-            }
-            
+Card(
+modifier = modifier.width(300.dp),
+elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+colors = CardDefaults.cardColors(containerColor = KozmosColors.primitivesColorsBackground0)
+) {
+Column {
+if (imageContent != null) {
+Box(modifier = Modifier.fillMaxWidth().height(140.dp)) {
+imageContent()
+}
+}
+
             Column(modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)) {
                 Row(verticalAlignment = Alignment.Top) {
                     Column(modifier = Modifier.weight(1f)) {
@@ -125,12 +130,12 @@ fun KozmosPOICard(
                         }
                     }
                 }
-                
+
                 if (description != null) {
                     Spacer(modifier = Modifier.height(KozmosDimensions.primitivesLayoutSpacing100))
                     description()
                 }
-                
+
                 if (actions != null) {
                     Spacer(modifier = Modifier.height(KozmosDimensions.primitivesLayoutSpacing200))
                     Row(
@@ -143,7 +148,9 @@ fun KozmosPOICard(
             }
         }
     }
+
 }
 
     `}
+
 />

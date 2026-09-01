@@ -15,6 +15,18 @@
           "Segoe UI",
           sans-serif;
         font-size: 12px;
+        --radius: 8px;
+        --surface-gap: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        overflow-x: hidden;
       }
 
       body {
@@ -23,22 +35,158 @@
         color: var(--figma-color-text);
       }
 
+      .boot-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: var(--figma-color-bg);
+        color: var(--figma-color-text);
+        transition:
+          opacity 160ms ease,
+          visibility 160ms ease;
+      }
+
+      .boot-screen.dismissed {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+      }
+
+      .boot-card {
+        width: min(360px, 100%);
+        border: 1px solid var(--figma-color-border);
+        border-radius: 12px;
+        padding: 16px;
+        background: var(--figma-color-bg-secondary);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+      }
+
+      .boot-card,
+      .boot-copy,
+      .boot-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .boot-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .boot-copy {
+        gap: 4px;
+      }
+
+      .boot-copy strong {
+        font-size: 13px;
+        line-height: 20px;
+      }
+
+      .boot-copy p {
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .boot-spinner {
+        display: block;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        border: 2px solid var(--figma-color-bg-brand, #0d99ff);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 720ms linear infinite;
+      }
+
+      .boot-progress {
+        position: relative;
+        overflow: hidden;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--figma-color-bg-tertiary, rgba(128, 128, 128, 0.25));
+      }
+
+      .boot-progress span {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -42%;
+        width: 42%;
+        border-radius: inherit;
+        background: var(--figma-color-bg-brand, #0d99ff);
+        animation: progressSweep 1.1s ease-in-out infinite;
+      }
+
+      .boot-steps {
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .boot-step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--figma-color-text-secondary);
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .boot-step::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        flex: 0 0 auto;
+        border: 1px solid var(--figma-color-border);
+        border-radius: 50%;
+        background: var(--figma-color-bg);
+      }
+
+      .boot-step.active {
+        color: var(--figma-color-text);
+        font-weight: 600;
+      }
+
+      .boot-step.active::before {
+        border-color: var(--figma-color-bg-brand, #0d99ff);
+        background: var(--figma-color-bg-brand, #0d99ff);
+      }
+
+      .boot-step.done {
+        color: var(--figma-color-text-secondary);
+      }
+
+      .boot-step.done::before {
+        border-color: var(--figma-color-text-success, #14ae5c);
+        background: var(--figma-color-text-success, #14ae5c);
+      }
+
       main {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: var(--surface-gap);
+        max-width: 100%;
         padding: 16px;
       }
 
       h1,
       h2,
+      h3,
       p {
         margin: 0;
       }
 
       h1 {
-        font-size: 16px;
-        line-height: 22px;
+        font-size: 14px;
+        line-height: 20px;
       }
 
       h2 {
@@ -46,15 +194,60 @@
         line-height: 18px;
       }
 
+      h3 {
+        font-size: 11px;
+        line-height: 16px;
+      }
+
       p {
         color: var(--figma-color-text-secondary);
         line-height: 18px;
       }
 
+      .app-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        margin: -16px -16px 0;
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--figma-color-border);
+        background: var(--figma-color-bg);
+      }
+
+      .brand-row,
+      .section-heading,
+      .metric,
+      .component-card,
+      .log-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .brand-row {
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 7px;
+        background: var(--figma-color-bg-inverse, #111111);
+        color: var(--figma-color-text-oninverse, #ffffff);
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
       .panel {
         border: 1px solid var(--figma-color-border);
-        border-radius: 8px;
+        border-radius: var(--radius);
         padding: 12px;
+        background: var(--figma-color-bg);
       }
 
       .stack {
@@ -63,16 +256,159 @@
         gap: 10px;
       }
 
+      .stage-grid,
+      .metric-grid,
+      .maintenance-grid,
+      .manual-grid,
+      .example-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .stage-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .stage-card,
+      .metric-card,
+      .upload-box,
+      .component-card,
+      .status {
+        border-radius: var(--radius);
+        background: var(--figma-color-bg-secondary);
+      }
+
+      .stage-card,
+      .metric-card {
+        min-width: 0;
+        padding: 9px 10px;
+      }
+
+      .stage-card {
+        cursor: pointer;
+        outline: 1px solid transparent;
+        outline-offset: -1px;
+      }
+
+      .stage-card.active {
+        outline-color: var(
+          --figma-color-border-selected,
+          var(--figma-color-border)
+        );
+        background: var(
+          --figma-color-bg-selected-secondary,
+          var(--figma-color-bg-secondary)
+        );
+      }
+
+      .stage-card:focus-visible {
+        outline-color: var(
+          --figma-color-border-selected-strong,
+          var(--figma-color-border-selected, var(--figma-color-border))
+        );
+      }
+
+      .stage-card span,
+      .metric-card span,
+      .field-label,
+      .microcopy {
+        color: var(--figma-color-text-secondary);
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .stage-card strong,
+      .metric-card strong {
+        display: block;
+        overflow: hidden;
+        margin-top: 2px;
+        color: var(--figma-color-text);
+        font-size: 13px;
+        line-height: 18px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .section-heading {
+        align-items: flex-start;
+      }
+
+      .log-header {
+        flex-wrap: wrap;
+      }
+
+      .log-header .actions {
+        min-width: 0;
+        flex: 0 1 auto;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .log-header .actions button {
+        flex: 0 0 auto;
+      }
+
+      .section-heading > div,
+      .component-card > div,
+      .log-header > div {
+        min-width: 0;
+      }
+
+      #activitySummary {
+        overflow-wrap: anywhere;
+      }
+
+      .upload-box {
+        padding: 10px;
+      }
+
+      .config-box {
+        padding: 10px;
+        border-radius: var(--radius);
+        background: var(--figma-color-bg-secondary);
+      }
+
+      .config-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .config-heading strong {
+        color: var(--figma-color-text);
+        font-size: 12px;
+        line-height: 16px;
+      }
+
+      .config-heading p {
+        margin-top: 2px;
+      }
+
+      .font-config-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 8px;
+      }
+
       label {
         display: flex;
         align-items: center;
         gap: 8px;
       }
 
+      .field {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 6px;
+      }
+
       input[type="file"] {
         max-width: 100%;
       }
 
+      input[type="text"],
       select {
         box-sizing: border-box;
         width: 100%;
@@ -83,6 +419,24 @@
         background: var(--figma-color-bg);
         color: var(--figma-color-text);
         font: inherit;
+      }
+
+      details {
+        border: 1px solid var(--figma-color-border);
+        border-radius: var(--radius);
+        background: var(--figma-color-bg);
+      }
+
+      summary {
+        cursor: default;
+        padding: 9px 10px;
+        color: var(--figma-color-text);
+        font-weight: 600;
+        line-height: 16px;
+      }
+
+      details > .details-body {
+        padding: 0 10px 10px;
       }
 
       textarea {
@@ -101,6 +455,7 @@
       }
 
       button {
+        box-sizing: border-box;
         height: 32px;
         border: 1px solid var(--figma-color-border);
         border-radius: 6px;
@@ -108,12 +463,21 @@
         background: var(--figma-color-bg-secondary);
         color: var(--figma-color-text);
         font: inherit;
+        white-space: nowrap;
       }
 
       button.primary {
         border-color: var(--figma-color-bg-brand);
         background: var(--figma-color-bg-brand);
         color: var(--figma-color-text-onbrand);
+      }
+
+      button.danger {
+        border-color: var(
+          --figma-color-border-danger,
+          var(--figma-color-border)
+        );
+        color: var(--figma-color-text-danger);
       }
 
       button:disabled {
@@ -125,17 +489,264 @@
         gap: 8px;
       }
 
-      .component-row {
+      .actions.wrap {
+        flex-wrap: wrap;
+      }
+
+      .actions.right {
+        justify-content: flex-end;
+      }
+
+      .component-controls {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto auto auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 8px;
         align-items: center;
       }
 
-      .status {
-        border-radius: 6px;
-        padding: 8px;
+      .component-gaps {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border: 1px solid var(--figma-color-border);
+        border-radius: var(--radius);
+        padding: 10px;
         background: var(--figma-color-bg-secondary);
+      }
+
+      .component-gaps[hidden] {
+        display: none;
+      }
+
+      .component-gaps-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .component-gaps-heading strong {
+        line-height: 18px;
+      }
+
+      .component-gap-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .component-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .component-chip-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .component-chip-group + .component-chip-group {
+        padding-top: 2px;
+      }
+
+      .component-chip-group-title {
+        color: var(--figma-color-text-secondary);
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .component-chip {
+        height: 26px;
+        border-radius: 999px;
+        padding: 0 9px;
+        background: var(--figma-color-bg);
+        font-size: 11px;
+      }
+
+      .component-chip.planned {
+        color: var(--figma-color-text-secondary);
+      }
+
+      .component-chip.more {
+        color: var(--figma-color-text-secondary);
+        pointer-events: none;
+      }
+
+      .metric-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .maintenance-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .example-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .maintenance-grid button,
+      .example-grid button,
+      .manual-grid button,
+      #smartComponentAction {
+        width: 100%;
+      }
+
+      .manual-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .component-card {
+        align-items: center;
+        padding: 10px;
+      }
+
+      .component-card strong {
+        display: block;
+        margin-bottom: 2px;
+        line-height: 18px;
+      }
+
+      .audit-progress {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border: 1px solid var(--figma-color-bg-brand, #0d99ff);
+        border-radius: var(--radius);
+        padding: 10px;
+        background: var(--figma-color-bg-brand, #0d99ff);
+        color: var(--figma-color-text-onbrand, #ffffff);
+      }
+
+      .audit-progress-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .audit-progress strong {
+        display: block;
+        color: var(--figma-color-text-onbrand, #ffffff);
+        line-height: 18px;
+      }
+
+      .audit-progress p {
+        color: var(--figma-color-text-onbrand, #ffffff);
+        font-size: 11px;
+        line-height: 16px;
+        opacity: 0.9;
+      }
+
+      .spinner {
+        display: block;
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        border: 2px solid var(--figma-color-text-onbrand, #ffffff);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 720ms linear infinite;
+      }
+
+      .progress-track {
+        position: relative;
+        overflow: hidden;
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.35);
+      }
+
+      .progress-track span {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -35%;
+        width: 35%;
+        border-radius: inherit;
+        background: var(--figma-color-text-onbrand, #ffffff);
+        animation: progressSweep 1.1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes progressSweep {
+        0% {
+          left: -35%;
+        }
+
+        100% {
+          left: 100%;
+        }
+      }
+
+      .status {
+        padding: 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        border: 1px solid var(--figma-color-border);
+        border-radius: 999px;
+        padding: 0 8px;
+        background: var(--figma-color-bg-secondary);
+        color: var(--figma-color-text-secondary);
+        font-size: 11px;
+        line-height: 16px;
+        white-space: nowrap;
+      }
+
+      .pill.ok,
+      .stage-card.ok strong,
+      .metric-card.ok strong {
+        color: var(--figma-color-text-success);
+      }
+
+      .pill.warn,
+      .stage-card.warn strong,
+      .metric-card.warn strong {
+        color: var(--figma-color-text-warning);
+      }
+
+      .pill.danger,
+      .stage-card.danger strong,
+      .metric-card.danger strong {
+        color: var(--figma-color-text-danger);
+      }
+
+      .has-tooltip {
+        position: relative;
+        cursor: help;
+      }
+
+      .has-tooltip[data-tooltip]:not([data-tooltip=""]):hover::after,
+      .has-tooltip[data-tooltip]:not([data-tooltip=""]):focus-visible::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 10;
+        box-sizing: border-box;
+        width: min(320px, calc(100vw - 32px));
+        max-width: calc(100vw - 32px);
+        border: 1px solid var(--figma-color-border);
+        border-radius: var(--radius);
+        padding: 9px 10px;
+        background: var(--figma-color-bg-inverse, #111111);
+        color: var(--figma-color-text-oninverse, #ffffff);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 16px;
+        overflow-wrap: anywhere;
+        text-align: left;
+        white-space: pre-line;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
       }
 
       pre {
@@ -154,8 +765,16 @@
         line-height: 16px;
       }
 
+      [hidden] {
+        display: none !important;
+      }
+
       .ok {
         color: var(--figma-color-text-success);
+      }
+
+      .warn {
+        color: var(--figma-color-text-warning);
       }
 
       .error {
@@ -164,330 +783,1441 @@
     </style>
   </head>
   <body>
-    <main>
-      <section class="stack">
-        <h1>Kozmos DS Foundations Importer</h1>
-        <p>
-          Import pages and local variables from the generated foundations
-          payload.
-        </p>
-      </section>
-
-      <section class="panel stack">
-        <h2>Payload</h2>
-        <input id="file" type="file" accept="application/json,.json" />
-        <textarea
-          id="payload"
-          spellcheck="false"
-          placeholder="Or paste docs/figma-foundations-payload.json here"
-        ></textarea>
-        <p id="payloadStatus">No payload loaded.</p>
-      </section>
-
-      <section class="panel stack">
-        <h2>Options</h2>
-        <label
-          ><input id="createPages" type="checkbox" checked /> Create
-          pages</label
-        >
-        <label
-          ><input id="createVariables" type="checkbox" checked /> Create
-          variables and modes</label
-        >
-        <label
-          ><input id="createDocs" type="checkbox" checked /> Create foundations
-          overview frame</label
-        >
-      </section>
-
-      <section class="actions">
-        <button id="inspect">Inspect File</button>
-        <button id="audit">Audit Library</button>
-        <button id="import" class="primary" disabled>Import Foundations</button>
-      </section>
-
-      <section class="panel stack">
-        <h2>Components</h2>
-        <p>
-          Build code-aligned component sets after the foundations import has
-          completed, or update existing sets in place to preserve Code Connect
-          node IDs.
-        </p>
-        <div class="component-row">
-          <select id="componentSelect" aria-label="Component">
-            <optgroup label="Actions">
-              <option value="button">Button / v1</option>
-              <option value="iconButton">IconButton / v1</option>
-            </optgroup>
-            <optgroup label="Status">
-              <option value="badge">Badge / v1</option>
-            </optgroup>
-            <optgroup label="Layout">
-              <option value="card">Card / v1</option>
-            </optgroup>
-            <optgroup label="Navigation">
-              <option value="tabs">Tabs / v1</option>
-            </optgroup>
-            <optgroup label="Overlay">
-              <option value="tooltip">Tooltip / v1</option>
-              <option value="dialog">Dialog / v1</option>
-              <option value="popover">Popover / v1</option>
-              <option value="menu">Menu / v1</option>
-            </optgroup>
-            <optgroup label="Selection">
-              <option value="checkbox">Checkbox / v1</option>
-              <option value="radio">Radio / v1</option>
-              <option value="switch">Switch / v1</option>
-            </optgroup>
-            <optgroup label="Inputs">
-              <option value="input">Input / v1</option>
-              <option value="textarea">Textarea / v1</option>
-              <option value="search">Search / v1</option>
-              <option value="select">Select / v1</option>
-              <option value="slider">Slider / v1</option>
-            </optgroup>
-            <optgroup label="Feedback">
-              <option value="progress">Progress / v1</option>
-              <option value="spinner">Spinner / v1</option>
-              <option value="alert">Alert / v1</option>
-              <option value="toast">Toast / v1</option>
-            </optgroup>
-            <optgroup label="Media">
-              <option value="avatar">Avatar / v1</option>
-            </optgroup>
-            <optgroup label="Utilities">
-              <option value="icons">Curated Icons</option>
-            </optgroup>
-          </select>
-          <button id="buildComponent">Build</button>
-          <button id="updateComponent">Update</button>
-          <button id="rebuildComponent">Rebuild</button>
+    <div
+      id="bootScreen"
+      class="boot-screen"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div class="boot-card">
+        <div class="boot-title-row">
+          <div class="brand-row">
+            <span class="brand-mark">DS</span>
+            <div class="boot-copy">
+              <strong id="bootTitle">Starting up...</strong>
+              <p id="bootDetail">
+                Loading the control panel before the first file scan.
+              </p>
+            </div>
+          </div>
+          <span class="boot-spinner" aria-hidden="true"></span>
         </div>
-        <div class="component-row">
-          <button id="documentComponents" class="primary">
-            Document Components
+        <div class="boot-progress" aria-hidden="true"><span></span></div>
+        <ol class="boot-steps" aria-label="Startup progress">
+          <li class="boot-step active" data-boot-step="startup">
+            Starting plugin UI
+          </li>
+          <li class="boot-step" data-boot-step="scan">
+            Scanning file structure
+          </li>
+          <li class="boot-step" data-boot-step="audit">Auditing components</li>
+          <li class="boot-step" data-boot-step="ready">
+            Preparing control panel
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <main>
+      <header class="app-header">
+        <div class="brand-row">
+          <span class="brand-mark">DS</span>
+          <div>
+            <h1>Kozmos DS Control Panel</h1>
+            <p>
+              Import foundations, audit readiness, and maintain generated
+              components.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <section class="stage-grid" aria-label="Workflow status">
+        <div
+          id="stageSetupCard"
+          class="stage-card"
+          role="button"
+          tabindex="0"
+          data-stage-target="setup"
+        >
+          <span>1. Setup</span>
+          <strong id="stageSetup">Waiting</strong>
+        </div>
+        <div
+          id="stageStatusCard"
+          class="stage-card"
+          role="button"
+          tabindex="0"
+          data-stage-target="status"
+        >
+          <span>2. Status</span>
+          <strong id="stageStatus">Not checked</strong>
+        </div>
+        <div
+          id="stageComponentsCard"
+          class="stage-card"
+          role="button"
+          tabindex="0"
+          data-stage-target="components"
+        >
+          <span>3. Components</span>
+          <strong id="stageComponents">Unknown</strong>
+        </div>
+        <div
+          id="stageExamplesCard"
+          class="stage-card"
+          role="button"
+          tabindex="0"
+          data-stage-target="examples"
+        >
+          <span>4. Examples</span>
+          <strong id="stageExamples">Waiting</strong>
+        </div>
+      </section>
+
+      <section id="setupPanel" class="panel stack" data-stage-panel="setup">
+        <div class="section-heading">
+          <div>
+            <h2>1. Setup Foundations</h2>
+            <p>Load the generated payload, then import pages and variables.</p>
+          </div>
+          <span id="payloadBadge" class="pill">Missing</span>
+        </div>
+        <div class="upload-box stack">
+          <span class="field-label">Payload file</span>
+          <input id="file" type="file" accept="application/json,.json" />
+        </div>
+        <details>
+          <summary>Paste JSON payload instead</summary>
+          <div class="details-body stack">
+            <textarea
+              id="payload"
+              spellcheck="false"
+              placeholder="Paste docs/figma-foundations-payload.json here"
+            ></textarea>
+          </div>
+        </details>
+        <p id="payloadStatus" class="status">No payload loaded.</p>
+        <div class="config-box stack" aria-labelledby="fontConfigTitle">
+          <div class="config-heading">
+            <div>
+              <strong id="fontConfigTitle">Typography</strong>
+              <p class="microcopy">
+                Applied to generated components, examples, docs, and text
+                styles.
+              </p>
+            </div>
+          </div>
+          <div class="font-config-grid">
+            <label class="field">
+              <span class="field-label">Font family</span>
+              <input
+                id="fontFamily"
+                type="text"
+                value="Inter"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+            <label class="field">
+              <span class="field-label">Regular</span>
+              <input
+                id="fontRegularStyle"
+                type="text"
+                value="Regular"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+            <label class="field">
+              <span class="field-label">Medium</span>
+              <input
+                id="fontMediumStyle"
+                type="text"
+                value="Medium"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+            <label class="field">
+              <span class="field-label">Bold</span>
+              <input
+                id="fontBoldStyle"
+                type="text"
+                value="Bold"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+          </div>
+          <p id="fontStatus" class="microcopy"></p>
+        </div>
+        <details>
+          <summary>Import options</summary>
+          <div class="details-body stack">
+            <label
+              ><input id="createPages" type="checkbox" checked /> Create
+              pages</label
+            >
+            <label
+              ><input id="createVariables" type="checkbox" checked /> Create
+              variables and modes</label
+            >
+            <label
+              ><input id="createDocs" type="checkbox" checked /> Create
+              foundations overview frame</label
+            >
+          </div>
+        </details>
+        <div class="actions right">
+          <button id="import" class="primary" disabled>
+            Import Foundations
           </button>
         </div>
-        <div class="component-row">
-          <button id="surfaceQa" class="primary">Build Surface QA</button>
+      </section>
+
+      <section id="statusPanel" class="panel stack" data-stage-panel="status">
+        <div class="section-heading">
+          <div>
+            <h2>2. Library Status</h2>
+            <p>Inspect the file quickly, or run the full audit for guidance.</p>
+          </div>
+          <span id="auditBadge" class="pill">Not checked</span>
         </div>
-        <p id="componentHint" class="status"></p>
+        <div
+          id="auditProgress"
+          class="audit-progress"
+          role="status"
+          aria-live="polite"
+          hidden
+        >
+          <div class="audit-progress-row">
+            <span class="spinner" aria-hidden="true"></span>
+            <div>
+              <strong id="auditProgressTitle">Analysing design system</strong>
+              <p id="auditProgressDetail">
+                Checking foundations, icons, components, and QA surfaces.
+              </p>
+            </div>
+          </div>
+          <div class="progress-track" aria-hidden="true"><span></span></div>
+        </div>
+        <div class="metric-grid">
+          <div id="metricVariablesCard" class="metric-card">
+            <span>Variables</span>
+            <strong id="metricVariables">--</strong>
+          </div>
+          <div id="metricIconsCard" class="metric-card">
+            <span>Icons</span>
+            <strong id="metricIcons">--</strong>
+          </div>
+          <div id="metricComponentsCard" class="metric-card">
+            <span>Components</span>
+            <strong id="metricComponents">--</strong>
+          </div>
+          <div id="metricWarningsCard" class="metric-card">
+            <span>Warnings</span>
+            <strong id="metricWarnings">--</strong>
+          </div>
+        </div>
+        <p id="nextAction" class="status">
+          Run Audit Library to get the next recommended action.
+        </p>
+        <div class="actions wrap">
+          <button id="inspect">Inspect File</button>
+          <button id="audit" class="primary">Audit Library</button>
+        </div>
       </section>
 
-      <section class="actions">
-        <button id="copyLog">Copy Log</button>
+      <section
+        id="componentsPanel"
+        class="panel stack"
+        data-stage-panel="components"
+      >
+        <div class="section-heading">
+          <div>
+            <h2>3. Components</h2>
+            <p>
+              Use the recommended action first. Manual actions are available
+              when you need them.
+            </p>
+          </div>
+          <span id="componentStatusPill" class="pill">Unknown</span>
+        </div>
+        <div class="component-controls">
+          <div class="field">
+            <span class="field-label">Component</span>
+            <select id="componentSelect" aria-label="Component">
+              <optgroup label="Typography">
+                <option value="link">Link</option>
+                <option value="separator">Separator</option>
+              </optgroup>
+              <optgroup label="Actions">
+                <option value="button">Button</option>
+                <option value="iconButton">IconButton</option>
+                <option value="toggleButton">ToggleButton</option>
+                <option value="splitButton">SplitButton</option>
+                <option value="floatingActionButton">
+                  FloatingActionButton
+                </option>
+              </optgroup>
+              <optgroup label="Status">
+                <option value="badge">Badge</option>
+                <option value="counter">Counter</option>
+                <option value="tag">Tag</option>
+              </optgroup>
+              <optgroup label="Selection">
+                <option value="chip">Chip</option>
+                <option value="segmentedControl">SegmentedControl</option>
+              </optgroup>
+              <optgroup label="Layout">
+                <option value="box">Box</option>
+                <option value="card">Card</option>
+                <option value="container">Container</option>
+                <option value="grid">Grid</option>
+                <option value="scrollArea">ScrollArea</option>
+                <option value="stack">Stack</option>
+              </optgroup>
+              <optgroup label="Data display">
+                <option value="list">List</option>
+                <option value="table">Table</option>
+                <option value="timeline">Timeline</option>
+                <option value="tree">Tree</option>
+                <option value="treeParentItem">TreeParentItem</option>
+                <option value="treeChildItem">TreeChildItem</option>
+                <option value="treeItem">TreeItem</option>
+              </optgroup>
+              <optgroup label="Navigation">
+                <option value="bottomNavigation">BottomNavigation</option>
+                <option value="breadcrumb">Breadcrumb</option>
+                <option value="navigationItem">NavigationItem</option>
+                <option value="navbar">Navbar</option>
+                <option value="pagination">Pagination</option>
+                <option value="sidebar">Sidebar</option>
+                <option value="tabs">Tabs</option>
+                <option value="stepper">Stepper</option>
+              </optgroup>
+              <optgroup label="Disclosure">
+                <option value="accordion">Accordion</option>
+              </optgroup>
+              <optgroup label="Overlay">
+                <option value="backdrop">Backdrop</option>
+                <option value="bottomSheet">BottomSheet</option>
+                <option value="dialog">Dialog</option>
+                <option value="drawer">Drawer</option>
+                <option value="menu">Menu</option>
+                <option value="popover">Popover</option>
+                <option value="tooltip">Tooltip</option>
+              </optgroup>
+              <optgroup label="Controls">
+                <option value="checkbox">Checkbox</option>
+                <option value="radio">Radio</option>
+                <option value="switch">Switch</option>
+              </optgroup>
+              <optgroup label="Inputs">
+                <option value="formField">FormField</option>
+                <option value="combobox">Combobox</option>
+                <option value="multiSelect">MultiSelect</option>
+                <option value="listbox">Listbox</option>
+                <option value="input">Input</option>
+                <option value="passwordInput">PasswordInput</option>
+                <option value="numberInput">NumberInput</option>
+                <option value="otpInput">OTPInput</option>
+                <option value="datePicker">DatePicker</option>
+                <option value="dateRangePicker">DateRangePicker</option>
+                <option value="timePicker">TimePicker</option>
+                <option value="fileUpload">FileUpload</option>
+                <option value="colorPicker">ColorPicker</option>
+                <option value="searchBar">SearchBar</option>
+                <option value="search">Search</option>
+                <option value="select">Select</option>
+                <option value="slider">Slider</option>
+                <option value="rating">Rating</option>
+                <option value="textarea">Textarea</option>
+              </optgroup>
+              <optgroup label="Feedback">
+                <option value="alert">Alert</option>
+                <option value="emptyState">EmptyState</option>
+                <option value="progress">Progress</option>
+                <option value="skeleton">Skeleton</option>
+                <option value="spinner">Spinner</option>
+                <option value="toast">Toast</option>
+              </optgroup>
+              <optgroup label="Media">
+                <option value="avatar">Avatar</option>
+              </optgroup>
+              <optgroup label="Product / SDK">
+                <option value="adaptiveMapShell">AdaptiveMapShell</option>
+                <option value="browseCategoriesPanel">
+                  BrowseCategoriesPanel
+                </option>
+                <option value="categoryTile">CategoryTile</option>
+                <option value="directionStep">DirectionStep</option>
+                <option value="floorSelector">FloorSelector</option>
+                <option value="locationPin">LocationPin</option>
+                <option value="mapControlButton">MapControlButton</option>
+                <option value="mapControlsGroup">MapControlsGroup</option>
+                <option value="mapOverlay">MapOverlay</option>
+                <option value="mapView">MapView</option>
+                <option value="poiCard">POICard</option>
+                <option value="poiDetailPanel">POIDetailPanel</option>
+                <option value="poiMediaGallery">POIMediaGallery</option>
+                <option value="poiResultCard">POIResultCard</option>
+                <option value="poiResultList">POIResultList</option>
+                <option value="routeOptionCard">RouteOptionCard</option>
+                <option value="routePreviewPanel">RoutePreviewPanel</option>
+                <option value="routeSummary">RouteSummary</option>
+                <option value="routingInputGroup">RoutingInputGroup</option>
+                <option value="saveLocationCard">SaveLocationCard</option>
+                <option value="userLocationMarker">UserLocationMarker</option>
+                <option value="wayfindingCard">WayfindingCard</option>
+              </optgroup>
+              <optgroup label="Platform / Form-Factor">
+                <option value="dynamicIsland">DynamicIsland</option>
+                <option value="feedbackCard">FeedbackCard</option>
+              </optgroup>
+              <optgroup label="Utilities">
+                <option value="icons">Curated Icons</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+        <div id="neverBuiltPanel" class="component-gaps" hidden>
+          <div class="component-gaps-heading">
+            <strong id="neverBuiltTitle">Not built yet</strong>
+            <span id="neverBuiltCount" class="pill warn">0</span>
+          </div>
+          <div id="neverBuiltList" class="component-gap-list"></div>
+        </div>
+        <div class="component-card">
+          <div>
+            <strong id="selectedComponentTitle">Button</strong>
+            <p id="componentHint">
+              Run Audit Library to see whether this component exists and if it
+              needs attention.
+            </p>
+          </div>
+          <button id="smartComponentAction" class="primary">
+            Build Button
+          </button>
+        </div>
+        <details>
+          <summary>Manual component actions</summary>
+          <div class="details-body stack">
+            <div class="manual-grid">
+              <button id="buildComponent">Build</button>
+              <button id="updateComponent">Update</button>
+              <button id="rebuildComponent" class="danger">Rebuild</button>
+            </div>
+            <p class="microcopy">
+              Rebuild removes the existing component set and creates a fresh
+              node ID. Prefer Update when preserving Code Connect anchors.
+            </p>
+          </div>
+        </details>
+        <div class="maintenance-grid">
+          <button id="documentComponents">Document Components</button>
+          <button id="fixAuditIssues">Fix Audit Issues</button>
+          <button id="applyTextStyles">Apply Text Styles</button>
+          <button id="updateAllProductSdk">Update All Product / SDK</button>
+          <button id="surfaceQa">Build Surface QA</button>
+          <button id="reorganizeComponents">Reorganize Components</button>
+        </div>
       </section>
 
-      <pre id="log">Ready.</pre>
+      <section
+        id="examplesPanel"
+        class="panel stack"
+        data-stage-panel="examples"
+      >
+        <div class="section-heading">
+          <div>
+            <h2>4. Examples</h2>
+            <p>
+              Generate starter page templates composed from Core components.
+            </p>
+          </div>
+          <span id="examplesStatusPill" class="pill">Waiting</span>
+        </div>
+        <div class="example-grid">
+          <button id="exampleDashboard">Dashboard Table Page</button>
+          <button id="exampleSettings">Settings Form Page</button>
+          <button id="exampleDrawer">Mobile Drawer Flow</button>
+          <button id="exampleOperations">Operations Console</button>
+          <button id="exampleSdkRoute">SDK Route Flow</button>
+          <button id="exampleKiosk">Kiosk Handoff Flow</button>
+          <button id="exampleAll" class="primary">Build All Examples</button>
+        </div>
+        <p id="examplesHint" class="status">
+          Run after the Core component sets exist so templates can use live
+          component instances.
+        </p>
+      </section>
+
+      <section class="panel stack">
+        <div class="log-header">
+          <div>
+            <h2>Activity</h2>
+            <p id="activitySummary">Ready.</p>
+          </div>
+          <div class="actions">
+            <button id="toggleLog">Show Details</button>
+            <button id="copyLog">Copy Log</button>
+          </div>
+        </div>
+        <pre id="log" hidden>Ready.</pre>
+      </section>
     </main>
 
     <script>
       const fileInput = document.getElementById("file");
       const payloadInput = document.getElementById("payload");
       const payloadStatus = document.getElementById("payloadStatus");
+      const payloadBadge = document.getElementById("payloadBadge");
+      const fontFamilyInput = document.getElementById("fontFamily");
+      const fontRegularStyleInput = document.getElementById("fontRegularStyle");
+      const fontMediumStyleInput = document.getElementById("fontMediumStyle");
+      const fontBoldStyleInput = document.getElementById("fontBoldStyle");
+      const fontStatus = document.getElementById("fontStatus");
       const importButton = document.getElementById("import");
       const inspectButton = document.getElementById("inspect");
       const auditButton = document.getElementById("audit");
+      const auditBadge = document.getElementById("auditBadge");
+      const stageSetupCard = document.getElementById("stageSetupCard");
+      const stageStatusCard = document.getElementById("stageStatusCard");
+      const stageComponentsCard = document.getElementById(
+        "stageComponentsCard",
+      );
+      const stageExamplesCard = document.getElementById("stageExamplesCard");
+      const workflowPanels = {
+        setup: document.getElementById("setupPanel"),
+        status: document.getElementById("statusPanel"),
+        components: document.getElementById("componentsPanel"),
+        examples: document.getElementById("examplesPanel"),
+      };
+      const workflowCards = {
+        setup: stageSetupCard,
+        status: stageStatusCard,
+        components: stageComponentsCard,
+        examples: stageExamplesCard,
+      };
+      const stageSetup = document.getElementById("stageSetup");
+      const stageStatus = document.getElementById("stageStatus");
+      const stageComponents = document.getElementById("stageComponents");
+      const stageExamples = document.getElementById("stageExamples");
+      const metricVariablesCard = document.getElementById(
+        "metricVariablesCard",
+      );
+      const metricIconsCard = document.getElementById("metricIconsCard");
+      const metricComponentsCard = document.getElementById(
+        "metricComponentsCard",
+      );
+      const metricWarningsCard = document.getElementById("metricWarningsCard");
+      const metricVariables = document.getElementById("metricVariables");
+      const metricIcons = document.getElementById("metricIcons");
+      const metricComponents = document.getElementById("metricComponents");
+      const metricWarnings = document.getElementById("metricWarnings");
+      const auditProgress = document.getElementById("auditProgress");
+      const auditProgressTitle = document.getElementById("auditProgressTitle");
+      const auditProgressDetail = document.getElementById(
+        "auditProgressDetail",
+      );
+      const nextAction = document.getElementById("nextAction");
       const componentSelect = document.getElementById("componentSelect");
+      const componentStatusPill = document.getElementById(
+        "componentStatusPill",
+      );
+      const selectedComponentTitle = document.getElementById(
+        "selectedComponentTitle",
+      );
+      const smartComponentAction = document.getElementById(
+        "smartComponentAction",
+      );
       const buildComponent = document.getElementById("buildComponent");
       const updateComponent = document.getElementById("updateComponent");
       const rebuildComponent = document.getElementById("rebuildComponent");
       const documentComponentsButton =
         document.getElementById("documentComponents");
+      const fixAuditIssuesButton = document.getElementById("fixAuditIssues");
       const surfaceQaButton = document.getElementById("surfaceQa");
+      const applyTextStylesButton = document.getElementById("applyTextStyles");
+      const updateAllProductSdkButton = document.getElementById(
+        "updateAllProductSdk",
+      );
+      const reorganizeComponentsButton = document.getElementById(
+        "reorganizeComponents",
+      );
+      const exampleDashboardButton =
+        document.getElementById("exampleDashboard");
+      const exampleSettingsButton = document.getElementById("exampleSettings");
+      const exampleDrawerButton = document.getElementById("exampleDrawer");
+      const exampleOperationsButton =
+        document.getElementById("exampleOperations");
+      const exampleSdkRouteButton = document.getElementById("exampleSdkRoute");
+      const exampleKioskButton = document.getElementById("exampleKiosk");
+      const exampleAllButton = document.getElementById("exampleAll");
+      const examplesStatusPill = document.getElementById("examplesStatusPill");
+      const examplesHint = document.getElementById("examplesHint");
       const componentHint = document.getElementById("componentHint");
+      const neverBuiltPanel = document.getElementById("neverBuiltPanel");
+      const neverBuiltTitle = document.getElementById("neverBuiltTitle");
+      const neverBuiltCount = document.getElementById("neverBuiltCount");
+      const neverBuiltList = document.getElementById("neverBuiltList");
+      const activitySummary = document.getElementById("activitySummary");
+      const toggleLogButton = document.getElementById("toggleLog");
       const copyLogButton = document.getElementById("copyLog");
       const log = document.getElementById("log");
+      const bootScreen = document.getElementById("bootScreen");
+      const bootTitle = document.getElementById("bootTitle");
+      const bootDetail = document.getElementById("bootDetail");
+      const bootStepNodes = Array.from(
+        document.querySelectorAll("[data-boot-step]"),
+      );
+      const bootSteps = [
+        {
+          key: "startup",
+          title: "Starting up...",
+          detail: "Loading the control panel before the first file scan.",
+        },
+        {
+          key: "scan",
+          title: "Scanning for components...",
+          detail:
+            "Checking pages, variables, icons, and generated component sets.",
+        },
+        {
+          key: "audit",
+          title: "Auditing design system...",
+          detail:
+            "Reviewing component readiness, contrast, slots, and QA surfaces.",
+        },
+        {
+          key: "ready",
+          title: "Preparing control panel...",
+          detail: "Rendering recommendations and maintenance actions.",
+        },
+      ];
+
+      function compactConfigValue(value, fallback) {
+        if (typeof value !== "string") return fallback;
+        const trimmed = value.trim();
+        return trimmed || fallback;
+      }
+
+      function currentFontConfig() {
+        return {
+          family: compactConfigValue(
+            fontFamilyInput.value,
+            defaultFontConfig.family,
+          ),
+          regularStyle: compactConfigValue(
+            fontRegularStyleInput.value,
+            defaultFontConfig.regularStyle,
+          ),
+          mediumStyle: compactConfigValue(
+            fontMediumStyleInput.value,
+            defaultFontConfig.mediumStyle,
+          ),
+          boldStyle: compactConfigValue(
+            fontBoldStyleInput.value,
+            defaultFontConfig.boldStyle,
+          ),
+        };
+      }
+
+      function readSavedFontConfig() {
+        try {
+          const raw = window.localStorage.getItem(fontConfigStorageKey);
+          return raw ? JSON.parse(raw) : {};
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function applyFontConfigToInputs(config) {
+        fontFamilyInput.value = compactConfigValue(
+          config.family,
+          defaultFontConfig.family,
+        );
+        fontRegularStyleInput.value = compactConfigValue(
+          config.regularStyle,
+          defaultFontConfig.regularStyle,
+        );
+        fontMediumStyleInput.value = compactConfigValue(
+          config.mediumStyle,
+          defaultFontConfig.mediumStyle,
+        );
+        fontBoldStyleInput.value = compactConfigValue(
+          config.boldStyle,
+          defaultFontConfig.boldStyle,
+        );
+      }
+
+      function saveFontConfig() {
+        try {
+          window.localStorage.setItem(
+            fontConfigStorageKey,
+            JSON.stringify(currentFontConfig()),
+          );
+        } catch (error) {
+          // Figma plugin storage can be unavailable in previews; generation still works.
+        }
+      }
+
+      function renderFontStatus() {
+        const config = currentFontConfig();
+        fontStatus.textContent = `${config.family}: ${config.regularStyle}, ${config.mediumStyle}, ${config.boldStyle}`;
+      }
+
+      function initializeFontConfig() {
+        applyFontConfigToInputs(readSavedFontConfig());
+        renderFontStatus();
+      }
+
+      function withFontConfig(message) {
+        return Object.assign({}, message, { fontConfig: currentFontConfig() });
+      }
+
+      function postPluginMessage(message) {
+        parent.postMessage({ pluginMessage: withFontConfig(message) }, "*");
+      }
 
       let parsedPayload = null;
+      let payloadError = null;
       let activeComponentAction = null;
+      let busy = false;
+      let busyMode = null;
+      let logExpanded = false;
+      let initialAuditRequested = false;
+      let bootHidden = false;
+      let auditProgressState = null;
+      let activeStage = "setup";
+      let activeStageTouched = false;
+      const fontConfigStorageKey = "kozmos.ds.importer.fontConfig";
+      const defaultFontConfig = Object.freeze({
+        family: "Inter",
+        regularStyle: "Regular",
+        mediumStyle: "Medium",
+        boldStyle: "Bold",
+      });
+      const libraryState = {
+        imported: false,
+        inspected: false,
+        audited: false,
+        auditStale: false,
+        variableCount: null,
+        pageCount: null,
+        iconFoundCount: null,
+        iconExpectedCount: null,
+        iconIssueCount: null,
+        componentSetCount: null,
+        warningCount: null,
+        advisoryCount: null,
+        warnings: [],
+        components: {},
+        examplesCreated: false,
+        exampleCount: 0,
+        lastAuditPerformance: null,
+      };
 
       const componentActions = {
+        directionStep: {
+          label: "DirectionStep",
+          build: "build-direction-step",
+          update: "update-direction-step",
+          rebuild: "rebuild-direction-step",
+          hint: "Build creates DirectionStep with Straight, Left, Right, and Destination turn types plus editable instruction, distance, and duration text. Turn glyphs never auto-mirror in RTL. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        browseCategoriesPanel: {
+          label: "BrowseCategoriesPanel",
+          build: "build-browse-categories-panel",
+          update: "update-browse-categories-panel",
+          rebuild: "rebuild-browse-categories-panel",
+          hint: "Build creates BrowseCategoriesPanel with Basic, Search, and Empty content variants; Empty replaces the tile grid rather than sitting beside it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        categoryTile: {
+          label: "CategoryTile",
+          build: "build-category-tile",
+          update: "update-category-tile",
+          rebuild: "rebuild-category-tile",
+          hint: "Build creates CategoryTile with Default, Selected, and Disabled states. Selection thickens the border as well as recolouring it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        poiMediaGallery: {
+          label: "POIMediaGallery",
+          build: "build-poi-media-gallery",
+          update: "update-poi-media-gallery",
+          rebuild: "rebuild-poi-media-gallery",
+          hint: "Build creates POIMediaGallery with Single, Multiple, and Empty content variants; Single drops the paging controls entirely. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        poiResultCard: {
+          label: "POIResultCard",
+          build: "build-poi-result-card",
+          update: "update-poi-result-card",
+          rebuild: "rebuild-poi-result-card",
+          hint: "Build creates POIResultCard with Default, Selected, Featured, and Unavailable states. Featured uses a labelled badge rather than a colour swap. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        poiResultList: {
+          label: "POIResultList",
+          build: "build-poi-result-list",
+          update: "update-poi-result-list",
+          rebuild: "rebuild-poi-result-list",
+          hint: "Build creates POIResultList with Basic, Selected, and Empty content variants plus an editable result count. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        routeOptionCard: {
+          label: "RouteOptionCard",
+          build: "build-route-option-card",
+          update: "update-route-option-card",
+          rebuild: "rebuild-route-option-card",
+          hint: "Build creates RouteOptionCard with Default, Selected, Warning, and Unavailable states; the warning is its own text node. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        routePreviewPanel: {
+          label: "RoutePreviewPanel",
+          build: "build-route-preview-panel",
+          update: "update-route-preview-panel",
+          rebuild: "rebuild-route-preview-panel",
+          hint: "Build creates RoutePreviewPanel across the five RouteReadiness statuses; only Ready lists route options. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        routeSummary: {
+          label: "RouteSummary",
+          build: "build-route-summary",
+          update: "update-route-summary",
+          rebuild: "rebuild-route-summary",
+          hint: "Build creates RouteSummary with Preview and Active states; Preview offers Start Navigation and Active offers End Route. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        routingInputGroup: {
+          label: "RoutingInputGroup",
+          build: "build-routing-input-group",
+          update: "update-routing-input-group",
+          rebuild: "rebuild-routing-input-group",
+          hint: "Build creates RoutingInputGroup with two-point and three-point content variants plus the swap control. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        saveLocationCard: {
+          label: "SaveLocationCard",
+          build: "build-save-location-card",
+          update: "update-save-location-card",
+          rebuild: "rebuild-save-location-card",
+          hint: "Build creates SaveLocationCard with Default and Saved states; Saved changes the glyph and the label, not just the tint. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        userLocationMarker: {
+          label: "UserLocationMarker",
+          build: "build-user-location-marker",
+          update: "update-user-location-marker",
+          rebuild: "rebuild-user-location-marker",
+          hint: "Build creates UserLocationMarker with Hidden and Visible heading variants as pure geometry. Bearing rotates the cone rather than adding variants. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        dynamicIsland: {
+          label: "DynamicIsland",
+          build: "build-dynamic-island",
+          update: "update-dynamic-island",
+          rebuild: "rebuild-dynamic-island",
+          hint: "Build creates DynamicIsland with Compact, Expanded, and Minimal states as bezel-mounted pills with host content slots. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        feedbackCard: {
+          label: "FeedbackCard",
+          build: "build-feedback-card",
+          update: "update-feedback-card",
+          rebuild: "rebuild-feedback-card",
+          hint: "Build creates FeedbackCard with Default, Submitting, and Success states; Success replaces the form rather than disabling it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        adaptiveMapShell: {
+          label: "AdaptiveMapShell",
+          build: "build-adaptive-map-shell",
+          update: "update-adaptive-map-shell",
+          rebuild: "rebuild-adaptive-map-shell",
+          hint: "Build creates the map screen frame with Start and End panel placements plus top bar, controls, and panel slots. Placement is flow order, so it mirrors in RTL. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        mapControlButton: {
+          label: "MapControlButton",
+          build: "build-map-control-button",
+          update: "update-map-control-button",
+          rebuild: "rebuild-map-control-button",
+          hint: "Build creates MapControlButton with IconOnly and Labelled presentations, both at a 44px touch target. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        mapControlsGroup: {
+          label: "MapControlsGroup",
+          build: "build-map-controls-group",
+          update: "update-map-controls-group",
+          rebuild: "rebuild-map-controls-group",
+          hint: "Build creates the stacked zoom, compass, and locate controls with IconOnly and Labelled location presentations. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        mapOverlay: {
+          label: "MapOverlay",
+          build: "build-map-overlay",
+          update: "update-map-overlay",
+          rebuild: "rebuild-map-overlay",
+          hint: "Build creates MapOverlay at Auto, Small, Medium, Large, and Full widths with an editable title and a content slot. Position stays renderer placement. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        poiDetailPanel: {
+          label: "POIDetailPanel",
+          build: "build-poi-detail-panel",
+          update: "update-poi-detail-panel",
+          rebuild: "rebuild-poi-detail-panel",
+          hint: "Build creates POIDetailPanel with Inline, Sheet, and Panel presentations; Sheet rounds only its top corners and shows a grabber. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        floorSelector: {
+          label: "FloorSelector",
+          build: "build-floor-selector",
+          update: "update-floor-selector",
+          rebuild: "rebuild-floor-selector",
+          hint: "Build creates FloorSelector with VerticalList, HorizontalList, and CompactStepper variants at 44px targets. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        locationPin: {
+          label: "LocationPin",
+          build: "build-location-pin",
+          update: "update-location-pin",
+          rebuild: "rebuild-location-pin",
+          hint: "Build creates LocationPin with Default, Selected, Featured, OffFloor, and Disabled states. Off-floor pins use an outline so state is not color-only. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        mapView: {
+          label: "MapView",
+          build: "build-map-view",
+          update: "update-map-view",
+          rebuild: "rebuild-map-view",
+          hint: "Build creates the MapView surface with Empty and Overlay content variants plus editable attribution text. The map canvas itself is renderer output. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        poiCard: {
+          label: "POICard",
+          build: "build-poi-card",
+          update: "update-poi-card",
+          rebuild: "rebuild-poi-card",
+          hint: "Build creates POICard with Basic, Media, and Full content variants; Full composes a live Button instance for actions. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        wayfindingCard: {
+          label: "WayfindingCard",
+          build: "build-wayfinding-card",
+          update: "update-wayfinding-card",
+          rebuild: "rebuild-wayfinding-card",
+          hint: "Build creates WayfindingCard with Basic and Titled content variants; Titled composes a live IconButton instance for onClose. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        link: {
+          label: "Link",
+          build: "build-link",
+          update: "update-link",
+          rebuild: "rebuild-link",
+          hint: "Build creates Link with Default/Subtle variants, Default/Focus states, and editable Link Text. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        separator: {
+          label: "Separator",
+          build: "build-separator",
+          update: "update-separator",
+          rebuild: "rebuild-separator",
+          hint: "Build creates Separator with Horizontal and Vertical orientation variants. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        skeleton: {
+          label: "Skeleton",
+          build: "build-skeleton",
+          update: "update-skeleton",
+          rebuild: "rebuild-skeleton",
+          hint: "Build creates Skeleton with Line, Block, and Circle placeholder shapes. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        box: {
+          label: "Box",
+          build: "build-box",
+          update: "update-box",
+          rebuild: "rebuild-box",
+          hint: "Build creates Box with Transparent, Surface, and Outlined examples plus an editable Content Slot. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        stack: {
+          label: "Stack",
+          build: "build-stack",
+          update: "update-stack",
+          rebuild: "rebuild-stack",
+          hint: "Build creates Stack with Row/Column direction and Gap 2/4/6 examples. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        grid: {
+          label: "Grid",
+          build: "build-grid",
+          update: "update-grid",
+          rebuild: "rebuild-grid",
+          hint: "Build creates Grid with Columns and Gap axes plus a content slot. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        scrollArea: {
+          label: "ScrollArea",
+          build: "build-scroll-area",
+          update: "update-scroll-area",
+          rebuild: "rebuild-scroll-area",
+          hint: "Build creates ScrollArea with Orientation and Scrollbar axes plus a fill-width Content Slot. Runtime owns real scrolling; Figma captures the viewport and scrollbar contract.",
+        },
+        container: {
+          label: "Container",
+          build: "build-container",
+          update: "update-container",
+          rebuild: "rebuild-container",
+          hint: "Build creates Container with centered and fluid examples plus an editable Content Slot. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        breadcrumb: {
+          label: "Breadcrumb",
+          build: "build-breadcrumb",
+          update: "update-breadcrumb",
+          rebuild: "rebuild-breadcrumb",
+          hint: "Build creates Breadcrumb with Basic and Ellipsis trails plus editable item text. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        pagination: {
+          label: "Pagination",
+          build: "build-pagination",
+          update: "update-pagination",
+          rebuild: "rebuild-pagination",
+          hint: "Build creates Pagination with Basic, Ellipsis, and Compact content variants plus Small/Default sizes and editable page labels. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        accordion: {
+          label: "Accordion",
+          build: "build-accordion",
+          update: "update-accordion",
+          rebuild: "rebuild-accordion",
+          hint: "Build creates Accordion with Closed and Open disclosure examples plus editable trigger/content text. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
         button: {
-          label: "Button / v1",
+          label: "Button",
           build: "build-button",
           update: "update-button",
           rebuild: "rebuild-button",
-          hint:
-            "Build creates Button / v1 once. Update patches it in place to preserve the current Code Connect node ID. Rebuild archives the current set and creates a fresh node ID.",
+          hint: "Build creates Button once. Update patches it in place to preserve the current Code Connect node ID. Rebuild removes the current set and creates a fresh node ID.",
         },
         iconButton: {
-          label: "IconButton / v1",
+          label: "IconButton",
           build: "build-icon-button",
           update: "update-icon-button",
           rebuild: "rebuild-icon-button",
-          hint:
-            "Build creates IconButton / v1 once. Update preserves node-id=19-757 and refreshes icon slots. Rebuild archives the current set and creates a fresh node ID.",
+          hint: "Build creates IconButton once. Update preserves node-id=19-757 and refreshes icon slots. Rebuild removes the current set and creates a fresh node ID.",
+        },
+        toggleButton: {
+          label: "ToggleButton",
+          build: "build-toggle-button",
+          update: "update-toggle-button",
+          rebuild: "rebuild-toggle-button",
+          hint: "Build creates ToggleButton with Variant, Size, and State axes plus editable Label Text. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        splitButton: {
+          label: "SplitButton",
+          build: "build-split-button",
+          update: "update-split-button",
+          rebuild: "rebuild-split-button",
+          hint: "Build creates SplitButton with Variant, Size, and State axes plus editable Label Text and a fixed chevron menu trigger. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        floatingActionButton: {
+          label: "FloatingActionButton",
+          build: "build-floating-action-button",
+          update: "update-floating-action-button",
+          rebuild: "rebuild-floating-action-button",
+          hint: "Build creates FloatingActionButton with Variant, Size, and State axes plus an Icon instance-swap slot. Placement belongs to consuming layouts. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        counter: {
+          label: "Counter",
+          build: "build-counter",
+          update: "update-counter",
+          rebuild: "rebuild-counter",
+          hint: "Build creates standalone Counter for compact counts. Badge composes it as a hidden nested instance; Update preserves the Counter node ID.",
+        },
+        tag: {
+          label: "Tag",
+          build: "build-tag",
+          update: "update-tag",
+          rebuild: "rebuild-tag",
+          hint: "Build creates Tag with Variant and Removable axes plus editable Label Text. Use Tag for compact metadata labels; use Chip when the value is selectable or filterable.",
         },
         badge: {
-          label: "Badge / v1",
+          label: "Badge",
           build: "build-badge",
           update: "update-badge",
           rebuild: "rebuild-badge",
-          hint:
-            "Build creates Badge / v1 with label, icon-size slot, and hidden counter properties. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Badge with label, icon-size slot, and a hidden nested Counter instance. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        chip: {
+          label: "Chip",
+          build: "build-chip",
+          update: "update-chip",
+          rebuild: "rebuild-chip",
+          hint: "Build creates Chip with Variant, Size, State, and Removable axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        segmentedControl: {
+          label: "SegmentedControl",
+          build: "build-segmented-control",
+          update: "update-segmented-control",
+          rebuild: "rebuild-segmented-control",
+          hint: "Build creates SegmentedControl with Size, Active, and State axes plus editable item text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         card: {
-          label: "Card / v1",
+          label: "Card",
           build: "build-card",
           update: "update-card",
           rebuild: "rebuild-card",
-          hint:
-            "Build creates Card / v1 with Basic, Header, and Full content variants plus editable text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Card with Basic, Header, and Full content variants plus editable text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        list: {
+          label: "List",
+          build: "build-list",
+          update: "update-list",
+          rebuild: "rebuild-list",
+          hint: "Build creates List with Default and Compact density variants plus editable item text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        table: {
+          label: "Table",
+          build: "build-table",
+          update: "update-table",
+          rebuild: "rebuild-table",
+          hint: "Build creates Table with Default and Compact density variants plus editable header and cell text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        timeline: {
+          label: "Timeline",
+          build: "build-timeline",
+          update: "update-timeline",
+          rebuild: "rebuild-timeline",
+          hint: "Build creates Timeline with Basic/Detailed content variants, Default/Compact density, marker and connector anatomy, plus editable time, title, and description text.",
+        },
+        tree: {
+          label: "Tree",
+          build: "build-tree",
+          update: "update-tree",
+          rebuild: "rebuild-tree",
+          hint: "Build creates a slot-based Tree shell with Default/Compact density. Compose TreeParentItem and TreeChildItem rows inside the Content Slot for product-specific hierarchy, actions, and state examples.",
+        },
+        treeParentItem: {
+          label: "TreeParentItem",
+          build: "build-tree-parent-item",
+          update: "update-tree-parent-item",
+          rebuild: "rebuild-tree-parent-item",
+          hint: "Build creates reusable collapsible TreeParentItem rows with Content, Expanded, Depth, Density, and State axes plus optional count and secondary actions.",
+        },
+        treeChildItem: {
+          label: "TreeChildItem",
+          build: "build-tree-child-item",
+          update: "update-tree-child-item",
+          rebuild: "rebuild-tree-child-item",
+          hint: "Build creates reusable terminal TreeChildItem rows with Content, Depth, Density, and State axes plus optional count and secondary actions.",
+        },
+        treeItem: {
+          label: "TreeItem",
+          build: "build-tree-item",
+          update: "update-tree-item",
+          rebuild: "rebuild-tree-item",
+          hint: "Build creates the compatibility TreeItem row with Type, Content, Expanded, Depth, Density, and State axes. Prefer TreeParentItem and TreeChildItem for new hand-composed trees.",
+        },
+        bottomNavigation: {
+          label: "BottomNavigation",
+          build: "build-bottom-navigation",
+          update: "update-bottom-navigation",
+          rebuild: "rebuild-bottom-navigation",
+          hint: "Build creates BottomNavigation with Count and Active axes plus editable item labels. Use it for mobile primary destinations; platform safe-area behavior remains runtime-owned.",
+        },
+        navigationItem: {
+          label: "NavigationItem",
+          build: "build-navigation-item",
+          update: "update-navigation-item",
+          rebuild: "rebuild-navigation-item",
+          hint: "Build creates reusable top, side, and rail navigation items with Content, Density, and State axes. Compose these inside Navbar and Sidebar slots.",
         },
         tabs: {
-          label: "Tabs / v1",
+          label: "Tabs",
           build: "build-tabs",
           update: "update-tabs",
           rebuild: "rebuild-tabs",
-          hint:
-            "Build creates Tabs / v1 with Count, Active, and State axes plus editable tab labels. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Tabs with Count, Active, and State axes plus editable tab labels. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        navbar: {
+          label: "Navbar",
+          build: "build-navbar",
+          update: "update-navbar",
+          rebuild: "rebuild-navbar",
+          hint: "Build creates slot-based Navbar shells with Basic, Actions, and Contextual variants. Compose NavigationItem instances inside the Navigation Slot.",
+        },
+        sidebar: {
+          label: "Sidebar",
+          build: "build-sidebar",
+          update: "update-sidebar",
+          rebuild: "rebuild-sidebar",
+          hint: "Build creates slot-based Sidebar shells with Basic, Sections, Tools, and Rail variants. Compose NavigationItem instances inside the Navigation Slot.",
         },
         tooltip: {
-          label: "Tooltip / v1",
+          label: "Tooltip",
           build: "build-tooltip",
           update: "update-tooltip",
           rebuild: "rebuild-tooltip",
-          hint:
-            "Build creates Tooltip / v1 with Side variants plus editable content text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Tooltip with Side variants plus editable content text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         dialog: {
-          label: "Dialog / v1",
+          label: "Dialog",
           build: "build-dialog",
           update: "update-dialog",
           rebuild: "rebuild-dialog",
-          hint:
-            "Build creates Dialog / v1 with Basic, Form, and Footer content variants plus editable title, description, body, and action text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Dialog with Basic, Form, and Footer content variants plus editable title, description, body, and action text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        backdrop: {
+          label: "Backdrop",
+          build: "build-backdrop",
+          update: "update-backdrop",
+          rebuild: "rebuild-backdrop",
+          hint: "Build creates Backdrop with Visibility Visible/Hidden variants. Hidden is empty to match the runtime component, which renders nothing when hidden.",
+        },
+        bottomSheet: {
+          label: "BottomSheet",
+          build: "build-bottom-sheet",
+          update: "update-bottom-sheet",
+          rebuild: "rebuild-bottom-sheet",
+          hint: "Build creates BottomSheet with Basic, Form, and Footer content variants plus a drag handle, editable text, a shared Content Slot, and live Button footer actions. Runtime snap points, gestures, safe-area padding, and portal behavior remain code concerns.",
+        },
+        drawer: {
+          label: "Drawer",
+          build: "build-drawer",
+          update: "update-drawer",
+          rebuild: "rebuild-drawer",
+          hint: "Build creates Drawer with Left, Right, Top, and Bottom side variants, editable title/description/body text, a fill-height Content Slot, and live Button instances for footer actions. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         popover: {
-          label: "Popover / v1",
+          label: "Popover",
           build: "build-popover",
           update: "update-popover",
           rebuild: "rebuild-popover",
-          hint:
-            "Build creates Popover / v1 with Side variants plus editable title and description text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Popover with Side variants plus editable title and description text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         menu: {
-          label: "Menu / v1",
+          label: "Menu",
           build: "build-menu",
           update: "update-menu",
           rebuild: "rebuild-menu",
-          hint:
-            "Build creates Menu / v1 with Basic, Checkbox, Radio, and Submenu content variants plus editable labels/items. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Menu with Basic, Checkbox, Radio, and Submenu content variants plus editable labels/items. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         checkbox: {
-          label: "Checkbox / v1",
+          label: "Checkbox",
           build: "build-checkbox",
           update: "update-checkbox",
           rebuild: "rebuild-checkbox",
-          hint:
-            "Build creates Checkbox / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Checkbox with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         radio: {
-          label: "Radio / v1",
+          label: "Radio",
           build: "build-radio",
           update: "update-radio",
           rebuild: "rebuild-radio",
-          hint:
-            "Build creates Radio / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Radio with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         switch: {
-          label: "Switch / v1",
+          label: "Switch",
           build: "build-switch",
           update: "update-switch",
           rebuild: "rebuild-switch",
-          hint:
-            "Build creates Switch / v1 with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Switch with Checked and State axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         input: {
-          label: "Input / v1",
+          label: "Input",
           build: "build-input",
           update: "update-input",
           rebuild: "rebuild-input",
-          hint:
-            "Build creates Input / v1 with a State axis plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Input with a State axis plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        passwordInput: {
+          label: "PasswordInput",
+          build: "build-password-input",
+          update: "update-password-input",
+          rebuild: "rebuild-password-input",
+          hint: "Build creates PasswordInput with State, Status, and Visibility axes plus editable label, placeholder, helper text, and a 44px visibility toggle. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        formField: {
+          label: "FormField",
+          build: "build-form-field",
+          update: "update-form-field",
+          rebuild: "rebuild-form-field",
+          hint: "Build creates FormField with Content, Status, and Required axes plus a shared Content Slot for any nested control. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        combobox: {
+          label: "Combobox",
+          build: "build-combobox",
+          update: "update-combobox",
+          rebuild: "rebuild-combobox",
+          hint: "Build creates Combobox with State, Status, and Content axes plus editable label, placeholder, option, and helper text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        multiSelect: {
+          label: "MultiSelect",
+          build: "build-multi-select",
+          update: "update-multi-select",
+          rebuild: "rebuild-multi-select",
+          hint: "Build creates MultiSelect with State, Status, and Content axes, live nested Chip instances for selected values, and editable label, placeholder, option, and helper text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        listbox: {
+          label: "Listbox",
+          build: "build-listbox",
+          update: "update-listbox",
+          rebuild: "rebuild-listbox",
+          hint: "Build creates Listbox with Selection and State axes plus editable option labels and descriptions. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        numberInput: {
+          label: "NumberInput",
+          build: "build-number-input",
+          update: "update-number-input",
+          rebuild: "rebuild-number-input",
+          hint: "Build creates NumberInput with State, Status, and Steppers axes plus editable label, value, placeholder, and helper text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        otpInput: {
+          label: "OTPInput",
+          build: "build-otp-input",
+          update: "update-otp-input",
+          rebuild: "rebuild-otp-input",
+          hint: "Build creates OTPInput with Length, State, and Status axes plus editable label, digit, and helper text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        datePicker: {
+          label: "DatePicker",
+          build: "build-date-picker",
+          update: "update-date-picker",
+          rebuild: "rebuild-date-picker",
+          hint: "Build creates DatePicker with State, Status, and Content axes plus editable label, value, month, and helper text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        dateRangePicker: {
+          label: "DateRangePicker",
+          build: "build-date-range-picker",
+          update: "update-date-range-picker",
+          rebuild: "rebuild-date-range-picker",
+          hint: "Build creates DateRangePicker with State, Status, and Content axes plus editable shared label, start/end fields, month headings, and helper text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        timePicker: {
+          label: "TimePicker",
+          build: "build-time-picker",
+          update: "update-time-picker",
+          rebuild: "rebuild-time-picker",
+          hint: "Build creates TimePicker with State, Status, and Content axes plus editable label, value, time options, and helper text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        fileUpload: {
+          label: "FileUpload",
+          build: "build-file-upload",
+          update: "update-file-upload",
+          rebuild: "rebuild-file-upload",
+          hint: "Build creates FileUpload with State, Status, and Content axes. DropZone is represented by Content=Dropzone because React exports it as a FileUpload alias. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        colorPicker: {
+          label: "ColorPicker",
+          build: "build-color-picker",
+          update: "update-color-picker",
+          rebuild: "rebuild-color-picker",
+          hint: "Build creates ColorPicker with State, Status, and Content axes plus editable label, hex value, picker controls, presets, and helper text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         textarea: {
-          label: "Textarea / v1",
+          label: "Textarea",
           build: "build-textarea",
           update: "update-textarea",
           rebuild: "rebuild-textarea",
-          hint:
-            "Build creates Textarea / v1 with State and Status axes plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Textarea with State and Status axes plus editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         search: {
-          label: "Search / v1",
+          label: "Search",
           build: "build-search",
           update: "update-search",
           rebuild: "rebuild-search",
-          hint:
-            "Build creates Search / v1 with State and Status axes, search icon, and editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Search with State and Status axes, search icon, and editable Label Text and Placeholder Text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        searchBar: {
+          label: "SearchBar",
+          build: "build-search-bar",
+          update: "update-search-bar",
+          rebuild: "rebuild-search-bar",
+          hint: "Build creates SearchBar with Inline/Floating variants and Default/Focus/Filled/Disabled states. Use this for product search surfaces; keep Search for field-level input forms.",
         },
         select: {
-          label: "Select / v1",
+          label: "Select",
           build: "build-select",
           update: "update-select",
           rebuild: "rebuild-select",
-          hint:
-            "Build creates Select / v1 for SelectTrigger with State and Status axes plus editable Placeholder Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Select for SelectTrigger with State and Status axes plus editable Placeholder Text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         slider: {
-          label: "Slider / v1",
+          label: "Slider",
           build: "build-slider",
           update: "update-slider",
           rebuild: "rebuild-slider",
-          hint:
-            "Build creates Slider / v1 with State and Status axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Slider with State and Status axes plus editable Label Text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        rating: {
+          label: "Rating",
+          build: "build-rating",
+          update: "update-rating",
+          rebuild: "rebuild-rating",
+          hint: "Build creates Rating with Value and State axes. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        stepper: {
+          label: "Stepper",
+          build: "build-stepper",
+          update: "update-stepper",
+          rebuild: "rebuild-stepper",
+          hint: "Build creates Stepper with Count and Current axes plus editable step labels. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         progress: {
-          label: "Progress / v1",
+          label: "Progress",
           build: "build-progress",
           update: "update-progress",
           rebuild: "rebuild-progress",
-          hint:
-            "Build creates Progress / v1 with a Value axis. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Progress with a Value axis. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         spinner: {
-          label: "Spinner / v1",
+          label: "Spinner",
           build: "build-spinner",
           update: "update-spinner",
           rebuild: "rebuild-spinner",
-          hint:
-            "Build creates Spinner / v1 with a Size axis. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Spinner with a Size axis. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         avatar: {
-          label: "Avatar / v1",
+          label: "Avatar",
           build: "build-avatar",
           update: "update-avatar",
           rebuild: "rebuild-avatar",
-          hint:
-            "Build creates Avatar / v1 with Content variants plus editable Image URL, Alt Text, and Fallback. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Avatar with Content variants plus editable Image URL, Alt Text, and Fallback. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         alert: {
-          label: "Alert / v1",
+          label: "Alert",
           build: "build-alert",
           update: "update-alert",
           rebuild: "rebuild-alert",
-          hint:
-            "Build creates Alert / v1 with Variant axis plus editable Title and Description text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Alert with Variant axis plus editable Title and Description text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        emptyState: {
+          label: "EmptyState",
+          build: "build-empty-state",
+          update: "update-empty-state",
+          rebuild: "rebuild-empty-state",
+          hint: "Build creates EmptyState with Basic, Icon, and Action content variants plus editable title and description text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         toast: {
-          label: "Toast / v1",
+          label: "Toast",
           build: "build-toast",
           update: "update-toast",
           rebuild: "rebuild-toast",
-          hint:
-            "Build creates Toast / v1 with Basic and Action content variants plus editable title, description, and action text. Update preserves its Code Connect node ID; Rebuild archives and creates a fresh node ID.",
+          hint: "Build creates Toast with Basic and Action content variants plus editable title, description, and action text. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         icons: {
           label: "Curated Icons",
           build: "build-icons",
           update: "update-icons",
           rebuild: "update-icons",
-          hint:
-            "Build or update the 38 local Icon / ... sources and preferred icon swap values.",
+          hint: "Build or update the 38 local Icon / ... sources and preferred icon swap values.",
         },
       };
+
+      const componentKeyByName = Object.fromEntries(
+        Object.entries(componentActions).map(([key, config]) => [
+          config.label,
+          key,
+        ]),
+      );
+
+      for (const [stage, card] of Object.entries(workflowCards)) {
+        card.addEventListener("click", () => activateStage(stage, true));
+        card.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          activateStage(stage, true);
+        });
+      }
+
+      initializeFontConfig();
+
+      [
+        fontFamilyInput,
+        fontRegularStyleInput,
+        fontMediumStyleInput,
+        fontBoldStyleInput,
+      ].forEach((input) => {
+        input.addEventListener("input", () => {
+          saveFontConfig();
+          renderFontStatus();
+        });
+      });
 
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files && fileInput.files[0];
@@ -501,40 +2231,62 @@
       payloadInput.addEventListener("input", parsePayload);
 
       inspectButton.addEventListener("click", () => {
-        log.textContent = "Inspecting file...";
-        parent.postMessage({ pluginMessage: { type: "inspect" } }, "*");
+        activateStage("status", false);
+        setActivity("Inspecting the current file...");
+        setLogContent("Inspecting file...");
+        setBusy(true, "inspect");
+        postPluginMessage({ type: "inspect" });
       });
 
       auditButton.addEventListener("click", () => {
-        log.textContent = "Auditing library...";
-        auditButton.disabled = true;
-        parent.postMessage({ pluginMessage: { type: "audit-library" } }, "*");
+        runAudit("manual");
       });
 
       importButton.addEventListener("click", () => {
         parsePayload();
         if (!parsedPayload) return;
 
-        log.textContent = "Importing foundations...";
-        importButton.disabled = true;
-        parent.postMessage(
-          {
-            pluginMessage: {
-              type: "import-foundations",
-              payload: parsedPayload,
-              options: {
-                createPages: document.getElementById("createPages").checked,
-                createVariables:
-                  document.getElementById("createVariables").checked,
-                createDocs: document.getElementById("createDocs").checked,
-              },
-            },
+        setActivity("Importing foundations...");
+        setLogContent("Importing foundations...");
+        setBusy(true, "import");
+        postPluginMessage({
+          type: "import-foundations",
+          payload: parsedPayload,
+          options: {
+            createPages: document.getElementById("createPages").checked,
+            createVariables: document.getElementById("createVariables").checked,
+            createDocs: document.getElementById("createDocs").checked,
           },
-          "*",
-        );
+        });
       });
 
-      componentSelect.addEventListener("change", updateComponentHint);
+      componentSelect.addEventListener("change", renderAll);
+
+      neverBuiltList.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-component-key]");
+        if (!button || !button.dataset.componentKey) return;
+
+        componentSelect.value = button.dataset.componentKey;
+        renderAll();
+      });
+
+      smartComponentAction.addEventListener("click", () => {
+        const recommendation = selectedRecommendation();
+        if (!recommendation || !recommendation.messageType) return;
+        if (recommendation.action === "audit") {
+          runAudit("component");
+          return;
+        }
+        if (recommendation.targetKey) {
+          componentSelect.value = recommendation.targetKey;
+        }
+        runComponentMessage({
+          action: recommendation.action,
+          label: recommendation.label,
+          key: recommendation.targetKey || componentSelect.value,
+          messageType: recommendation.messageType,
+        });
+      });
 
       buildComponent.addEventListener("click", () => {
         runSelectedComponentAction("build");
@@ -549,37 +2301,115 @@
       });
 
       documentComponentsButton.addEventListener("click", () => {
-        activeComponentAction = {
+        runComponentMessage({
           action: "document",
           label: "Component documentation",
-        };
-        log.className = "";
-        log.textContent = "Documenting component library...";
-        componentHint.textContent =
-          "Creating docs pages and refreshing component descriptions.";
-        componentHint.className = "status";
-        setComponentControlsDisabled(true);
-        parent.postMessage(
-          { pluginMessage: { type: "document-components" } },
-          "*",
-        );
+          messageType: "document-components",
+          progress:
+            "Creating docs pages and refreshing component descriptions.",
+        });
+      });
+
+      fixAuditIssuesButton.addEventListener("click", () => {
+        runComponentMessage({
+          action: "fix",
+          label: "Known audit issues",
+          messageType: "fix-current-audit-issues",
+          progress:
+            "Refreshing Navbar contrast and composite form input sizing.",
+        });
       });
 
       surfaceQaButton.addEventListener("click", () => {
-        activeComponentAction = {
+        runComponentMessage({
           action: "surface QA",
           label: "Transparent surface QA",
-        };
-        log.className = "";
-        log.textContent = "Building transparent surface QA...";
-        componentHint.textContent =
-          "Creating Light/Dark Surface/0 and product-map QA panels.";
-        componentHint.className = "status";
-        setComponentControlsDisabled(true);
-        parent.postMessage(
-          { pluginMessage: { type: "build-surface-qa" } },
-          "*",
-        );
+          messageType: "build-surface-qa",
+          progress: "Creating Light/Dark Surface/0 and product-map QA panels.",
+        });
+      });
+
+      updateAllProductSdkButton.addEventListener("click", () => {
+        runComponentMessage({
+          action: "update all Product / SDK",
+          label: "Product / SDK sets",
+          messageType: "update-all-product-sdk",
+          progress:
+            "Updating all 24 Product / SDK and platform sets in place, then reorganizing once. Node IDs are preserved.",
+        });
+      });
+
+      applyTextStylesButton.addEventListener("click", () => {
+        runComponentMessage({
+          action: "apply text styles",
+          label: "Component typography",
+          messageType: "apply-text-styles",
+          progress:
+            "Creating local text styles and applying them to component text layers.",
+        });
+      });
+
+      reorganizeComponentsButton.addEventListener("click", () => {
+        runComponentMessage({
+          action: "reorganize",
+          label: "Components page",
+          messageType: "reorganize-components",
+          progress:
+            "Moving existing component sets into a non-overlapping layout.",
+        });
+      });
+
+      exampleDashboardButton.addEventListener("click", () => {
+        runExampleMessage({
+          label: "Dashboard Table Page",
+          messageType: "build-example-dashboard",
+        });
+      });
+
+      exampleSettingsButton.addEventListener("click", () => {
+        runExampleMessage({
+          label: "Settings Form Page",
+          messageType: "build-example-settings",
+        });
+      });
+
+      exampleDrawerButton.addEventListener("click", () => {
+        runExampleMessage({
+          label: "Mobile Drawer Flow",
+          messageType: "build-example-mobile-drawer",
+        });
+      });
+
+      exampleOperationsButton.addEventListener("click", () => {
+        runExampleMessage({
+          label: "Operations Console",
+          messageType: "build-example-operations-console",
+        });
+      });
+
+      exampleSdkRouteButton.addEventListener("click", () => {
+        runExampleMessage({
+          label: "SDK Route Flow",
+          messageType: "build-example-sdk-route-flow",
+        });
+      });
+
+      exampleKioskButton.addEventListener("click", () => {
+        runExampleMessage({
+          label: "Kiosk Handoff Flow",
+          messageType: "build-example-kiosk-handoff",
+        });
+      });
+
+      exampleAllButton.addEventListener("click", () => {
+        runExampleMessage({
+          label: "All examples",
+          messageType: "build-all-examples",
+        });
+      });
+
+      toggleLogButton.addEventListener("click", () => {
+        setLogExpanded(!logExpanded);
       });
 
       copyLogButton.addEventListener("click", async () => {
@@ -609,64 +2439,209 @@
         const message = event.data.pluginMessage;
         if (!message) return;
 
+        if (message.type === "audit-progress") {
+          syncAuditProgress(message);
+          return;
+        }
+
         if (message.type === "inspect-result") {
-          log.textContent = JSON.stringify(message.result, null, 2);
+          setBusy(false);
+          syncInspectResult(message.result);
+          setActivity("File inspection complete.", "ok");
+          setLogContent(message.result);
+          renderAll();
+          hideBootScreen();
           return;
         }
 
         if (message.type === "import-result") {
-          importButton.disabled = !parsedPayload;
-          log.textContent = JSON.stringify(message.result, null, 2);
+          setBusy(false);
+          syncImportResult(message.result);
+          setActivity("Foundations import complete.", "ok");
+          setLogContent(message.result);
+          renderAll();
+          hideBootScreen();
           return;
         }
 
         if (message.type === "audit-result") {
-          auditButton.disabled = false;
-          log.textContent = JSON.stringify(message.result, null, 2);
+          setBusy(false);
+          auditProgressState = null;
+          syncAuditResult(message.result);
+          setActivity(auditCompletionMessage(message.result), "ok");
+          setLogContent(message.result);
+          renderAll();
+          hideBootScreen();
           return;
         }
 
         if (message.type === "component-result") {
-          setComponentControlsDisabled(false);
+          setBusy(false);
+          syncComponentResult(message.result);
+          renderAll();
+          hideBootScreen();
           showComponentDone(message.result);
-          log.textContent = JSON.stringify(message.result, null, 2);
+          setLogContent(message.result);
+          return;
+        }
+
+        if (message.type === "example-result") {
+          setBusy(false);
+          syncExampleResult(message.result);
+          renderAll();
+          hideBootScreen();
+          showExampleDone(message.result);
+          setLogContent(message.result);
           return;
         }
 
         if (message.type === "error") {
-          importButton.disabled = !parsedPayload;
-          auditButton.disabled = false;
-          setComponentControlsDisabled(false);
-          componentHint.textContent = "Action failed. See log below.";
-          componentHint.className = "status error";
-          log.textContent = message.message;
-          log.className = "error";
+          setBusy(false);
+          auditProgressState = null;
+          setActivity("Action failed. See details below.", "error");
+          componentHint.textContent = "Action failed. Review the activity log.";
+          setLogContent(
+            [message.message, message.stack].filter(Boolean).join("\n\n"),
+            "error",
+            true,
+          );
+          renderAll();
+          hideBootScreen();
         }
       };
 
-      function selectedComponentAction() {
-        return componentActions[componentSelect.value] || componentActions.button;
+      function startBootSequence() {
+        if (!bootScreen || bootHidden) return;
+
+        setBootStep("startup");
       }
 
-      function updateComponentHint() {
-        const selected = selectedComponentAction();
-        componentHint.textContent = selected.hint;
-        componentHint.className = "status";
+      function setBootStep(key, detailOverride, titleOverride) {
+        if (!bootScreen || bootHidden) return;
+
+        const activeIndex = Math.max(
+          0,
+          bootSteps.findIndex((step) => step.key === key),
+        );
+        const activeStep = bootSteps[activeIndex];
+        bootTitle.textContent = titleOverride || activeStep.title;
+        bootDetail.textContent = detailOverride || activeStep.detail;
+
+        for (const node of bootStepNodes) {
+          const nodeIndex = bootSteps.findIndex(
+            (step) => step.key === node.dataset.bootStep,
+          );
+          node.classList.toggle(
+            "done",
+            nodeIndex >= 0 && nodeIndex < activeIndex,
+          );
+          node.classList.toggle("active", nodeIndex === activeIndex);
+        }
+      }
+
+      function hideBootScreen() {
+        if (!bootScreen || bootHidden) return;
+
+        setBootStep("ready");
+        bootHidden = true;
+        bootScreen.setAttribute("aria-busy", "false");
+        bootScreen.classList.add("dismissed");
+        window.setTimeout(() => {
+          bootScreen.hidden = true;
+        }, 180);
+      }
+
+      function deferAfterPaint(callback) {
+        const frame =
+          window.requestAnimationFrame ||
+          ((frameCallback) => window.setTimeout(frameCallback, 16));
+        frame(() => frame(callback));
+      }
+
+      function selectedComponentAction() {
+        return (
+          componentActions[componentSelect.value] || componentActions.button
+        );
       }
 
       function runSelectedComponentAction(action) {
+        if (!libraryState.audited) {
+          runAudit("component");
+          return;
+        }
+
         const selected = selectedComponentAction();
         const messageType = selected[action];
-        activeComponentAction = {
+        if (!messageType) {
+          componentHint.textContent = selected.hint;
+          setActivity(
+            `${selected.label} is listed as planned; its Figma builder is not wired yet.`,
+            "warn",
+          );
+          return;
+        }
+        runComponentMessage({
           action,
           label: selected.label,
+          key: componentSelect.value,
+          messageType,
+        });
+      }
+
+      function runComponentMessage(options) {
+        activateStage("components", false);
+        activeComponentAction = {
+          action: options.action,
+          label: options.label,
+          key: options.key || null,
         };
-        log.className = "";
-        log.textContent = `${progressVerb(action)} ${selected.label}...`;
-        componentHint.textContent = `${progressVerb(action)} ${selected.label}. Waiting for Figma to finish...`;
-        componentHint.className = "status";
-        setComponentControlsDisabled(true);
-        parent.postMessage({ pluginMessage: { type: messageType } }, "*");
+        const progress =
+          options.progress ||
+          `${progressVerb(options.action)} ${options.label}. Waiting for Figma to finish...`;
+        setActivity(progress);
+        setLogContent(`${progressVerb(options.action)} ${options.label}...`);
+        componentHint.textContent = progress;
+        setBusy(true, "component");
+        postPluginMessage({ type: options.messageType });
+      }
+
+      function runExampleMessage(options) {
+        activateStage("examples", false);
+        const progress = `Building ${options.label}. Waiting for Figma to finish...`;
+        setActivity(progress);
+        setLogContent(`Building ${options.label}...`);
+        examplesHint.textContent = progress;
+        setBusy(true, "example");
+        postPluginMessage({ type: options.messageType });
+      }
+
+      function runAudit(source) {
+        activateStage("status", false);
+        const startup = source === "startup";
+        const message = startup
+          ? "Running initial audit so component recommendations use real file state..."
+          : "Auditing variables, icons, components, and QA pages...";
+        if (startup) {
+          setBootStep(
+            "scan",
+            "Sending the initial audit request to Figma.",
+            "Starting initial audit...",
+          );
+        }
+        auditProgressState = {
+          step: "scan",
+          title: startup ? "Starting initial audit" : "Starting audit",
+          detail: startup
+            ? "Waiting for Figma to begin scanning this file."
+            : "Waiting for Figma to begin the audit.",
+        };
+
+        setActivity(message);
+        setLogContent(
+          startup ? "Running initial library audit..." : "Auditing library...",
+        );
+        setBusy(true, "audit");
+        postPluginMessage({ type: "audit-library" });
       }
 
       function showComponentDone(result) {
@@ -678,27 +2653,50 @@
             : result && result.page
               ? result.page
               : "Selected component";
-        const verb = action && action.action ? capitalize(action.action) : "Action";
+        const verb =
+          action && action.action ? capitalize(action.action) : "Action";
 
         if (result && result.message) {
           componentHint.textContent = `${label}: ${result.message}`;
-          componentHint.className = "status";
+          setActivity(
+            result.message,
+            result.warnings && result.warnings.length ? "warn" : "ok",
+          );
           return;
         }
 
         const nodeId =
           result && result.urlNodeId ? ` node-id=${result.urlNodeId}` : "";
         componentHint.textContent = `${pastVerb(verb)} finished for ${label}.${nodeId}`;
-        componentHint.className = "status ok";
+        setActivity(`${pastVerb(verb)} finished for ${label}.${nodeId}`, "ok");
       }
 
-      function setComponentControlsDisabled(disabled) {
-        componentSelect.disabled = disabled;
-        buildComponent.disabled = disabled;
-        updateComponent.disabled = disabled;
-        rebuildComponent.disabled = disabled;
-        documentComponentsButton.disabled = disabled;
-        surfaceQaButton.disabled = disabled;
+      function showExampleDone(result) {
+        const templateCount =
+          result && typeof result.templateCount === "number"
+            ? result.templateCount
+            : result && Array.isArray(result.templates)
+              ? result.templates.length
+              : 1;
+        const label =
+          result && result.templateName
+            ? result.templateName
+            : `${templateCount} example template${templateCount === 1 ? "" : "s"}`;
+        const warningCount =
+          result && Array.isArray(result.warnings) ? result.warnings.length : 0;
+        const message =
+          result && result.message
+            ? result.message
+            : `Created ${label} on the Examples page.`;
+
+        examplesHint.textContent = message;
+        setActivity(message, warningCount ? "warn" : "ok");
+      }
+
+      function setBusy(value, mode) {
+        busy = value;
+        busyMode = value ? mode || null : null;
+        renderControls();
       }
 
       function capitalize(value) {
@@ -721,27 +2719,1108 @@
         try {
           const text = payloadInput.value.trim();
           parsedPayload = text ? JSON.parse(text) : null;
-          importButton.disabled = !parsedPayload;
-          log.className = "";
+          payloadError = null;
 
           if (!parsedPayload) {
-            payloadStatus.textContent = "No payload loaded.";
-            payloadStatus.className = "";
+            renderAll();
             return;
           }
 
           const summary = parsedPayload.summary || {};
-          payloadStatus.textContent = `Loaded ${summary.totalTokens || parsedPayload.variables.length} tokens for ${parsedPayload.target && parsedPayload.target.fileName ? parsedPayload.target.fileName : "current file"}.`;
-          payloadStatus.className = "ok";
+          const tokenCount =
+            summary.totalTokens ||
+            summary.variableTokens ||
+            (Array.isArray(parsedPayload.variables)
+              ? parsedPayload.variables.length
+              : 0);
+          const targetName =
+            parsedPayload.target && parsedPayload.target.fileName
+              ? parsedPayload.target.fileName
+              : "current file";
+          payloadStatus.textContent = `Loaded ${tokenCount} token candidate(s) for ${targetName}.`;
+          payloadStatus.className = "status ok";
         } catch (error) {
           parsedPayload = null;
-          importButton.disabled = true;
-          payloadStatus.textContent = error.message;
-          payloadStatus.className = "error";
+          payloadError = error.message;
+        }
+
+        renderAll();
+      }
+
+      function syncInspectResult(result) {
+        libraryState.inspected = true;
+        libraryState.pageCount = Array.isArray(result.pages)
+          ? result.pages.length
+          : libraryState.pageCount;
+        libraryState.variableCount =
+          typeof result.variables === "number"
+            ? result.variables
+            : libraryState.variableCount;
+      }
+
+      function syncImportResult(result) {
+        libraryState.imported = true;
+        libraryState.auditStale = false;
+        if (result && result.file) syncInspectResult(result.file);
+      }
+
+      function syncAuditResult(result) {
+        const summary = (result && result.summary) || {};
+        libraryState.audited = true;
+        libraryState.auditStale = false;
+        libraryState.pageCount =
+          typeof summary.pageCount === "number"
+            ? summary.pageCount
+            : libraryState.pageCount;
+        libraryState.variableCount =
+          typeof summary.variableCount === "number"
+            ? summary.variableCount
+            : libraryState.variableCount;
+        libraryState.componentSetCount =
+          typeof summary.componentSetCount === "number"
+            ? summary.componentSetCount
+            : libraryState.componentSetCount;
+        libraryState.warningCount =
+          typeof summary.warningCount === "number" ? summary.warningCount : 0;
+        libraryState.advisoryCount =
+          typeof summary.advisoryCount === "number" ? summary.advisoryCount : 0;
+        libraryState.warnings = Array.isArray(result.warnings)
+          ? result.warnings
+          : [];
+        libraryState.lastAuditPerformance =
+          result && result.performance ? result.performance : null;
+
+        const icons = result.icons || {};
+        libraryState.iconFoundCount =
+          typeof icons.foundCount === "number"
+            ? icons.foundCount
+            : libraryState.iconFoundCount;
+        libraryState.iconExpectedCount =
+          typeof icons.expectedCount === "number"
+            ? icons.expectedCount
+            : libraryState.iconExpectedCount;
+        libraryState.iconIssueCount =
+          typeof icons.issueCount === "number" ? icons.issueCount : 0;
+
+        libraryState.components = {};
+        for (const record of result.componentSets || []) {
+          const key = componentKeyByName[record.name];
+          if (!key) continue;
+          libraryState.components[key] = componentStatusFromAudit(record);
         }
       }
 
-      updateComponentHint();
+      function auditCompletionMessage(result) {
+        const performance =
+          result && result.performance
+            ? result.performance
+            : result && result.summary
+              ? { totalMs: result.summary.auditDurationMs }
+              : null;
+        if (!performance || typeof performance.totalMs !== "number") {
+          return "Library audit complete.";
+        }
+
+        const parts = [
+          `Library audit complete in ${formatDuration(performance.totalMs)}.`,
+        ];
+        if (
+          performance.slowestPhase &&
+          typeof performance.slowestPhase.durationMs === "number"
+        ) {
+          const slowestDetails =
+            performance.slowestPhase.count > 1 &&
+            typeof performance.slowestPhase.maxDurationMs === "number"
+              ? `${formatDuration(performance.slowestPhase.durationMs)} total, max ${formatDuration(performance.slowestPhase.maxDurationMs)}`
+              : formatDuration(performance.slowestPhase.durationMs);
+          parts.push(
+            `Slowest phase: ${performance.slowestPhase.name} (${slowestDetails}).`,
+          );
+        }
+        return parts.join(" ");
+      }
+
+      function formatDuration(durationMs) {
+        if (durationMs < 1000) return `${Math.round(durationMs)}ms`;
+        if (durationMs < 10000) return `${(durationMs / 1000).toFixed(1)}s`;
+        return `${Math.round(durationMs / 1000)}s`;
+      }
+
+      function syncComponentResult(result) {
+        const action = activeComponentAction;
+        if (!action || !result) return;
+
+        if (!action.key) {
+          libraryState.auditStale = libraryState.audited;
+          return;
+        }
+
+        const existingStatus = libraryState.components[action.key] || {};
+        if (
+          result.componentSetId ||
+          result.urlNodeId ||
+          result.created ||
+          result.updated
+        ) {
+          libraryState.components[action.key] = {
+            ...existingStatus,
+            exists: true,
+            known: true,
+            urlNodeId: result.urlNodeId || existingStatus.urlNodeId || null,
+            warnings: Array.isArray(result.warnings) ? result.warnings : [],
+            issueCount: 0,
+            variantCount:
+              result.variants ||
+              result.variantsUpdated ||
+              existingStatus.variantCount ||
+              null,
+          };
+          libraryState.auditStale = libraryState.audited;
+        }
+      }
+
+      function syncExampleResult(result) {
+        if (!result) return;
+        libraryState.examplesCreated = true;
+        libraryState.exampleCount =
+          typeof result.templateCount === "number"
+            ? result.templateCount
+            : result.templates && Array.isArray(result.templates)
+              ? result.templates.length
+              : 1;
+      }
+
+      function componentStatusFromAudit(record) {
+        const issueCount =
+          issueCountFor(record.compositionIntegrity) +
+          issueCountFor(record.badgeContentIntegrity) +
+          issueCountFor(record.focusVisibleProperty);
+        const warnings = Array.isArray(record.warnings) ? record.warnings : [];
+        return {
+          exists: true,
+          known: true,
+          urlNodeId: record.urlNodeId || null,
+          variantCount: record.variantCount || null,
+          warnings,
+          issueCount,
+        };
+      }
+
+      function issueCountFor(value) {
+        return value && typeof value.issueCount === "number"
+          ? value.issueCount
+          : 0;
+      }
+
+      function selectedStatus() {
+        return componentStatusForKey(componentSelect.value);
+      }
+
+      function componentStatusForKey(key) {
+        if (key === "icons") {
+          if (!libraryState.audited && libraryState.iconFoundCount === null) {
+            return { known: false, exists: false, warnings: [], issueCount: 0 };
+          }
+          const missing =
+            typeof libraryState.iconExpectedCount === "number" &&
+            typeof libraryState.iconFoundCount === "number" &&
+            libraryState.iconFoundCount < libraryState.iconExpectedCount;
+          return {
+            known: true,
+            exists: !missing,
+            warnings: missing ? ["Some curated icons are missing."] : [],
+            issueCount: libraryState.iconIssueCount || 0,
+          };
+        }
+
+        const status = libraryState.components[key];
+        if (status && libraryState.auditStale && status.exists) {
+          return {
+            ...status,
+            stale: true,
+            warnings: [],
+            issueCount: 0,
+          };
+        }
+        if (status) return status;
+        return {
+          known: libraryState.audited,
+          exists: false,
+          warnings: [],
+          issueCount: 0,
+        };
+      }
+
+      function selectedRecommendation() {
+        const key = componentSelect.value;
+        const selected = selectedComponentAction();
+        const status = selectedStatus();
+
+        if (!libraryState.audited) {
+          return {
+            action: "audit",
+            label: "Library audit",
+            messageType: "audit-library",
+            buttonLabel: "Audit first",
+            reason:
+              "Run one audit first so component actions use real file state and preserve existing node IDs.",
+          };
+        }
+
+        if (selected.planned || !selected.build) {
+          return {
+            action: "planned",
+            label: selected.label,
+            messageType: null,
+            buttonLabel: "Planned",
+            reason: selected.hint,
+          };
+        }
+
+        if (
+          key === "badge" &&
+          libraryState.audited &&
+          !libraryState.components.counter
+        ) {
+          return {
+            action: "build",
+            label: "Counter",
+            targetKey: "counter",
+            messageType: componentActions.counter.build,
+            buttonLabel: "Build Counter first",
+            reason:
+              "Badge now composes Counter. Build Counter before updating Badge.",
+          };
+        }
+
+        if (key === "icons") {
+          return {
+            action: status.exists ? "update" : "build",
+            label: selected.label,
+            messageType: status.exists ? selected.update : selected.build,
+            buttonLabel: status.exists ? "Update" : "Build",
+            reason: selected.hint,
+          };
+        }
+
+        if (!status.known || !status.exists) {
+          return {
+            action: "build",
+            label: selected.label,
+            messageType: selected.build,
+            buttonLabel: "Build",
+            reason: selected.hint,
+          };
+        }
+
+        return {
+          action: "update",
+          label: selected.label,
+          messageType: selected.update,
+          buttonLabel:
+            status.issueCount > 0 || status.warnings.length > 0
+              ? "Fix"
+              : "Update",
+          reason: selected.hint,
+        };
+      }
+
+      function renderAll() {
+        renderSetupState();
+        renderWorkflow();
+        renderWorkflowVisibility();
+        renderStatusDashboard();
+        renderComponentOptions();
+        renderNeverBuiltComponents();
+        renderSelectedComponent();
+        renderExamples();
+        renderControls();
+      }
+
+      function activateStage(stage, touched) {
+        if (!workflowPanels[stage]) return;
+        activeStage = stage;
+        if (touched) activeStageTouched = true;
+        renderWorkflowVisibility();
+      }
+
+      function recommendedActiveStage() {
+        if (!foundationsInFile()) return "setup";
+        if (libraryState.audited && libraryState.componentSetCount > 0) {
+          return "components";
+        }
+        if (libraryState.inspected || libraryState.audited) return "status";
+        return "setup";
+      }
+
+      function renderWorkflowVisibility() {
+        if (!activeStageTouched) {
+          activeStage = recommendedActiveStage();
+        }
+
+        for (const [stage, panel] of Object.entries(workflowPanels)) {
+          panel.hidden = stage !== activeStage;
+        }
+
+        for (const [stage, card] of Object.entries(workflowCards)) {
+          const isActive = stage === activeStage;
+          card.classList.toggle("active", isActive);
+          card.setAttribute("aria-pressed", isActive ? "true" : "false");
+        }
+      }
+
+      function renderWorkflow() {
+        const setup = setupFoundationState();
+        const notBuiltComponents = neverBuiltComponents();
+        setStage(stageSetupCard, stageSetup, setup.stageText, setup.stageTone);
+        setStage(
+          stageStatusCard,
+          stageStatus,
+          libraryState.audited
+            ? libraryState.auditStale
+              ? "Changed"
+              : "Audited"
+            : libraryState.inspected
+              ? "Inspected"
+              : "Not checked",
+          libraryState.audited
+            ? libraryState.auditStale
+              ? "warn"
+              : "ok"
+            : libraryState.inspected
+              ? "warn"
+              : "",
+        );
+        setStage(
+          stageComponentsCard,
+          stageComponents,
+          componentsStageText(notBuiltComponents),
+          libraryState.warningCount > 0 || notBuiltComponents.length > 0
+            ? "warn"
+            : libraryState.audited
+              ? "ok"
+              : "",
+        );
+        setStage(
+          stageExamplesCard,
+          stageExamples,
+          libraryState.examplesCreated
+            ? `${libraryState.exampleCount || 1} built`
+            : libraryState.audited && libraryState.componentSetCount > 0
+              ? "Ready"
+              : "Waiting",
+          libraryState.examplesCreated
+            ? "ok"
+            : libraryState.audited && libraryState.componentSetCount > 0
+              ? "ok"
+              : "",
+        );
+      }
+
+      function componentsStageText(notBuiltComponents) {
+        if (libraryState.audited && notBuiltComponents.length > 0) {
+          const split = splitNotBuiltComponents(notBuiltComponents);
+          if (split.buildable.length > 0 && split.planned.length > 0) {
+            return `${split.buildable.length} not built, ${split.planned.length} planned`;
+          }
+          if (split.buildable.length > 0) {
+            return `${split.buildable.length} not built`;
+          }
+          return `${split.planned.length} planned`;
+        }
+        if (libraryState.componentSetCount === null) return "Unknown";
+
+        const setCount = `${libraryState.componentSetCount} sets`;
+        if (libraryState.audited && libraryState.warningCount > 0) {
+          return `${setCount}, ${libraryState.warningCount} warn`;
+        }
+        return setCount;
+      }
+
+      function renderSetupState() {
+        const setup = setupFoundationState();
+        payloadBadge.textContent = setup.badge;
+        payloadBadge.className = setup.badgeClass;
+        payloadStatus.textContent = setup.status;
+        payloadStatus.className = setup.statusClass;
+      }
+
+      function setupFoundationState() {
+        if (payloadError) {
+          return {
+            badge: "Invalid",
+            badgeClass: "pill danger",
+            status: payloadError,
+            statusClass: "status error",
+            stageText: "Invalid",
+            stageTone: "warn",
+          };
+        }
+
+        if (parsedPayload) {
+          return {
+            badge: "Payload ready",
+            badgeClass: "pill ok",
+            status:
+              payloadStatus.textContent ||
+              "Payload loaded and ready to import.",
+            statusClass: "status ok",
+            stageText: "Ready",
+            stageTone: "ok",
+          };
+        }
+
+        if (libraryState.imported) {
+          return {
+            badge: "Imported",
+            badgeClass: "pill ok",
+            status:
+              "Foundations were imported in this plugin session. Audit again if you need fresh component recommendations.",
+            statusClass: "status ok",
+            stageText: "Imported",
+            stageTone: "ok",
+          };
+        }
+
+        if (foundationsInFile()) {
+          return {
+            badge: "In file",
+            badgeClass: "pill ok",
+            status: `Current file already has ${libraryState.variableCount} variables across ${libraryState.pageCount} pages. Import is only needed for a new payload.`,
+            statusClass: "status ok",
+            stageText: "Found",
+            stageTone: "ok",
+          };
+        }
+
+        if (libraryState.audited || libraryState.inspected) {
+          return {
+            badge: "Missing",
+            badgeClass: "pill warn",
+            status:
+              "No foundations payload is loaded, and the current file does not yet show imported foundations.",
+            statusClass: "status warn",
+            stageText: "Missing",
+            stageTone: "warn",
+          };
+        }
+
+        return {
+          badge: "Audit first",
+          badgeClass: "pill",
+          status:
+            "Initial audit will check whether foundations already exist before you import anything.",
+          statusClass: "status",
+          stageText: "Unknown",
+          stageTone: "",
+        };
+      }
+
+      function foundationsInFile() {
+        return (
+          typeof libraryState.variableCount === "number" &&
+          libraryState.variableCount > 0 &&
+          typeof libraryState.pageCount === "number" &&
+          libraryState.pageCount > 0
+        );
+      }
+
+      function setStage(card, valueNode, text, tone) {
+        valueNode.textContent = text;
+        card.className = tone ? `stage-card ${tone}` : "stage-card";
+      }
+
+      function renderStatusDashboard() {
+        metricVariables.textContent =
+          libraryState.variableCount === null
+            ? "--"
+            : String(libraryState.variableCount);
+        metricComponents.textContent =
+          libraryState.componentSetCount === null
+            ? "--"
+            : String(libraryState.componentSetCount);
+        metricWarnings.textContent =
+          libraryState.warningCount === null
+            ? "--"
+            : String(libraryState.warningCount);
+        metricIcons.textContent =
+          libraryState.iconFoundCount === null
+            ? "--"
+            : `${libraryState.iconFoundCount}/${libraryState.iconExpectedCount || libraryState.iconFoundCount}`;
+
+        metricVariablesCard.className = metricCardClass(
+          libraryState.variableCount > 0,
+        );
+        metricIconsCard.className = metricCardClass(
+          libraryState.iconIssueCount === 0 &&
+            libraryState.iconFoundCount !== null,
+          libraryState.iconIssueCount > 0,
+        );
+        metricComponentsCard.className = metricCardClass(
+          libraryState.componentSetCount > 0,
+        );
+        metricWarningsCard.className = metricCardClass(
+          libraryState.warningCount === 0 && libraryState.audited,
+          libraryState.warningCount > 0,
+        );
+
+        auditBadge.textContent = libraryState.audited
+          ? libraryState.auditStale
+            ? "Refresh needed"
+            : libraryState.warningCount > 0
+              ? "Needs attention"
+              : "Clean"
+          : libraryState.inspected
+            ? "Inspected"
+            : "Not checked";
+        auditBadge.className = libraryState.audited
+          ? libraryState.auditStale || libraryState.warningCount > 0
+            ? "pill warn"
+            : "pill ok"
+          : libraryState.inspected
+            ? "pill warn"
+            : "pill";
+
+        const attentionTooltip = attentionTooltipText();
+        setTooltip(auditBadge, attentionTooltip);
+        setTooltip(metricWarningsCard, attentionTooltip);
+
+        nextAction.textContent = recommendedNextActionText();
+      }
+
+      function metricCardClass(ok, warn) {
+        if (warn) return "metric-card warn";
+        if (ok) return "metric-card ok";
+        return "metric-card";
+      }
+
+      function recommendedNextActionText() {
+        if (!libraryState.audited) {
+          if (parsedPayload && !libraryState.imported) {
+            return "Next: import the validated payload, then audit the generated library.";
+          }
+          return "Next: run Audit Library so component recommendations can use real file state.";
+        }
+        if (libraryState.auditStale) {
+          return "Next: run Audit Again to refresh the status after the last component change.";
+        }
+        if (
+          libraryState.warnings.some((warning) =>
+            warning.includes("missing Figma text styles"),
+          )
+        ) {
+          return "Next: run Apply Text Styles, then audit again to confirm component typography is attached.";
+        }
+        if (
+          libraryState.warnings.some((warning) =>
+            warning.includes("unexpected top-level node(s)"),
+          )
+        ) {
+          return "Next: run Reorganize Components to remove stray generated instances, then audit again.";
+        }
+        if (
+          libraryState.warnings.some(
+            (warning) =>
+              warning.includes("Badge") &&
+              (warning.includes("composition") || warning.includes("Counter")),
+          )
+        ) {
+          return "Next: select Badge and run the recommended update to clear the counter composition warning.";
+        }
+        if (
+          libraryState.warnings.some(
+            (warning) =>
+              warning.includes("TreeItem") &&
+              (warning.includes("component property definitions") ||
+                warning.includes("stale or unexpected variant property") ||
+                warning.includes("Focus Visible")),
+          )
+        ) {
+          return "Next: select TreeItem and run Fix to rebuild the row primitive with a clean property panel.";
+        }
+        if (
+          libraryState.warnings.some(
+            (warning) =>
+              warning.includes("Navbar") && warning.includes("text contrast"),
+          )
+        ) {
+          return "Next: run Fix Audit Issues, then audit again to confirm Navbar contrast.";
+        }
+        if (
+          libraryState.warnings.some(
+            (warning) =>
+              warning.includes("Dialog") &&
+              warning.includes("composite component integrity"),
+          )
+        ) {
+          return "Next: run Fix Audit Issues, then audit again to confirm Dialog nested instance sizing.";
+        }
+        if (
+          libraryState.warnings.some(
+            (warning) =>
+              warning.includes("BottomSheet") &&
+              warning.includes("composite component integrity"),
+          )
+        ) {
+          return "Next: run Fix Audit Issues, then audit again to confirm BottomSheet nested instance sizing.";
+        }
+        if (libraryState.warningCount > 0) {
+          return "Next: review the warning list in the activity details and update the affected component set.";
+        }
+        const notBuiltComponents = neverBuiltComponents();
+        const split = splitNotBuiltComponents(notBuiltComponents);
+        if (split.buildable.length > 0) {
+          const first = split.buildable[0][1].label;
+          const remaining = split.buildable.length - 1;
+          const remainingText =
+            remaining > 0
+              ? ` ${remaining} more buildable component set${remaining === 1 ? "" : "s"} ${remaining === 1 ? "is" : "are"} not built yet.`
+              : "";
+          const plannedText =
+            split.planned.length > 0
+              ? ` ${split.planned.length} planned component set${split.planned.length === 1 ? "" : "s"} still need${split.planned.length === 1 ? "s" : ""} a Figma builder decision.`
+              : "";
+          return `Next: build ${first}.${remainingText}${plannedText}`;
+        }
+        if (split.planned.length > 0) {
+          return `${split.planned.length} planned component set${split.planned.length === 1 ? "" : "s"} ${split.planned.length === 1 ? "is" : "are"} listed but do not have wired Figma builders yet.`;
+        }
+        return "Library audit is clean. Maintenance actions are available when you need docs, QA, or layout refreshes.";
+      }
+
+      function renderSelectedComponent() {
+        const selected = selectedComponentAction();
+        const status = selectedStatus();
+        const recommendation = selectedRecommendation();
+        selectedComponentTitle.textContent = selected.label;
+        smartComponentAction.textContent = recommendation.buttonLabel;
+        componentHint.textContent = recommendation.reason;
+
+        const hasIssues = status.issueCount > 0 || status.warnings.length > 0;
+        if (!status.known) {
+          componentStatusPill.textContent = "Unknown";
+          componentStatusPill.className = "pill";
+          setTooltip(componentStatusPill, "");
+        } else if (!status.exists) {
+          componentStatusPill.textContent = "Missing";
+          componentStatusPill.className = "pill warn";
+          setTooltip(
+            componentStatusPill,
+            `${selected.label} was not found in the last audit.`,
+          );
+        } else if (status.stale) {
+          componentStatusPill.textContent = "Refresh needed";
+          componentStatusPill.className = "pill warn";
+          setTooltip(
+            componentStatusPill,
+            "Run Audit Again before acting on component-specific recommendations.",
+          );
+        } else if (hasIssues) {
+          componentStatusPill.textContent = "Needs update";
+          componentStatusPill.className = "pill warn";
+          setTooltip(
+            componentStatusPill,
+            componentAttentionTooltip(selected.label, status),
+          );
+        } else {
+          componentStatusPill.textContent = "Ready";
+          componentStatusPill.className = "pill ok";
+          setTooltip(componentStatusPill, "");
+        }
+      }
+
+      function renderComponentOptions() {
+        for (const option of componentSelect.options) {
+          const config = componentActions[option.value];
+          if (!config) continue;
+
+          const status = componentStatusForKey(option.value);
+          const notBuilt =
+            status.known && !status.exists && option.value !== "icons";
+          const needsAttention =
+            status.known &&
+            status.exists &&
+            (status.issueCount > 0 || status.warnings.length > 0);
+          option.textContent = needsAttention
+            ? `⚠ ${config.label}`
+            : notBuilt
+              ? config.planned
+                ? `${config.label} (planned)`
+                : `${config.label} (not built)`
+              : config.label;
+          option.title = needsAttention
+            ? componentAttentionTooltip(config.label, status)
+            : notBuilt
+              ? config.planned
+                ? `${config.label} is code-ready/planned; its Figma builder is not wired yet.`
+                : `${config.label} is not built in this file yet.`
+              : "";
+        }
+      }
+
+      function renderNeverBuiltComponents() {
+        const notBuiltComponents = neverBuiltComponents();
+
+        if (!libraryState.audited || notBuiltComponents.length === 0) {
+          neverBuiltPanel.hidden = true;
+          neverBuiltList.replaceChildren();
+          return;
+        }
+
+        const split = splitNotBuiltComponents(notBuiltComponents);
+        const hasBuildable = split.buildable.length > 0;
+        const hasPlanned = split.planned.length > 0;
+
+        neverBuiltPanel.hidden = false;
+        neverBuiltTitle.textContent =
+          hasBuildable && hasPlanned
+            ? "Not built / planned"
+            : hasPlanned
+              ? "Planned"
+              : "Not built yet";
+        neverBuiltCount.textContent =
+          hasBuildable && hasPlanned
+            ? `${split.buildable.length} + ${split.planned.length}`
+            : String(notBuiltComponents.length);
+        neverBuiltCount.title =
+          hasBuildable && hasPlanned
+            ? "Buildable missing components + planned components without wired Figma builders"
+            : "";
+        neverBuiltCount.className = "pill warn";
+
+        const createChip = ([key, config]) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = config.planned
+            ? "component-chip planned"
+            : "component-chip";
+          chip.dataset.componentKey = key;
+          chip.textContent = config.label;
+          chip.title = config.planned
+            ? `${config.label} is planned for a Figma builder.`
+            : `Select ${config.label}`;
+          return chip;
+        };
+
+        const createOverflowChip = (overflow) => {
+          const more = document.createElement("button");
+          more.type = "button";
+          more.className = "component-chip more";
+          more.textContent = `+${overflow} more`;
+          more.tabIndex = -1;
+          return more;
+        };
+
+        const createChipGroup = (title, entries) => {
+          const group = document.createElement("div");
+          group.className = "component-chip-group";
+
+          const label = document.createElement("span");
+          label.className = "component-chip-group-title";
+          label.textContent = title;
+
+          const list = document.createElement("div");
+          list.className = "component-chip-list";
+
+          const visibleComponents = entries.slice(0, 8);
+          const chips = visibleComponents.map(createChip);
+          const overflow = entries.length - visibleComponents.length;
+          if (overflow > 0) chips.push(createOverflowChip(overflow));
+          list.replaceChildren(...chips);
+
+          group.replaceChildren(label, list);
+          return group;
+        };
+
+        const groups = [];
+        if (hasBuildable) {
+          groups.push(createChipGroup("Buildable", split.buildable));
+        }
+        if (hasPlanned) {
+          groups.push(createChipGroup("Planned", split.planned));
+        }
+
+        neverBuiltList.replaceChildren(...groups);
+      }
+
+      function neverBuiltComponents() {
+        if (!libraryState.audited) return [];
+
+        return Object.entries(componentActions).filter(([key]) => {
+          if (key === "icons") return false;
+
+          const status = componentStatusForKey(key);
+          return status.known && !status.exists;
+        });
+      }
+
+      function splitNotBuiltComponents(notBuiltComponents) {
+        return {
+          buildable: notBuiltComponents.filter(([, config]) => !config.planned),
+          planned: notBuiltComponents.filter(([, config]) => config.planned),
+        };
+      }
+
+      function renderExamples() {
+        const ready =
+          libraryState.audited && (libraryState.componentSetCount || 0) > 0;
+        examplesStatusPill.textContent = libraryState.examplesCreated
+          ? "Created"
+          : ready
+            ? "Ready"
+            : "Waiting";
+        examplesStatusPill.className = libraryState.examplesCreated
+          ? "pill ok"
+          : ready
+            ? "pill ok"
+            : "pill";
+
+        if (libraryState.examplesCreated) {
+          examplesHint.textContent = `Examples page has ${libraryState.exampleCount || 1} generated template${libraryState.exampleCount === 1 ? "" : "s"}. Re-run any button to refresh that template in place.`;
+          return;
+        }
+
+        examplesHint.textContent = ready
+          ? "Generate starter templates on an Examples page. Missing component sets are shown as placeholders so the page still builds."
+          : "Run Audit Library after Core components exist so examples can use live component instances.";
+      }
+
+      function attentionTooltipText() {
+        if (!libraryState.audited || libraryState.warningCount === 0) {
+          return "";
+        }
+        if (libraryState.auditStale) {
+          return [
+            "Refresh needed:",
+            "- Run Audit Again before acting on component-specific findings.",
+          ].join("\n");
+        }
+
+        const items = [];
+        for (const warning of libraryState.warnings) {
+          if (typeof warning === "string" && warning.trim()) {
+            items.push(cleanTooltipLine(warning));
+          }
+        }
+
+        for (const key of Object.keys(libraryState.components)) {
+          const status = libraryState.components[key];
+          if (!status) continue;
+          const label =
+            componentActions[key] && componentActions[key].label
+              ? componentActions[key].label
+              : key;
+          const alreadyCovered = items.some((item) => item.includes(label));
+          if (!alreadyCovered && status.issueCount > 0) {
+            items.push(`${label}: ${status.issueCount} audit issue(s).`);
+          }
+          if (!alreadyCovered && status.warnings && status.warnings.length) {
+            items.push(`${label}: ${cleanTooltipLine(status.warnings[0])}`);
+          }
+        }
+
+        if (items.length === 0) {
+          items.push(`${libraryState.warningCount} warning(s) need review.`);
+        }
+
+        const visibleItems = items.slice(0, 6);
+        const overflow = items.length - visibleItems.length;
+        return [
+          "Needs attention:",
+          ...visibleItems.map((item) => `- ${item}`),
+          overflow > 0 ? `- ${overflow} more item(s)` : "",
+        ]
+          .filter(Boolean)
+          .join("\n");
+      }
+
+      function componentAttentionTooltip(label, status) {
+        const items = [];
+        if (status.issueCount > 0) {
+          items.push(`${status.issueCount} audit issue(s).`);
+        }
+        for (const warning of status.warnings || []) {
+          if (typeof warning === "string" && warning.trim()) {
+            items.push(cleanTooltipLine(warning));
+          }
+        }
+        if (items.length === 0) return "";
+
+        return [
+          `${label} needs attention:`,
+          ...items.slice(0, 5).map((item) => `- ${item}`),
+        ].join("\n");
+      }
+
+      function cleanTooltipLine(value) {
+        return value.replace(/\s+/g, " ").trim();
+      }
+
+      function setTooltip(node, text) {
+        if (!node) return;
+
+        if (text) {
+          node.classList.add("has-tooltip");
+          node.setAttribute("data-tooltip", text);
+          node.removeAttribute("title");
+          node.tabIndex = 0;
+          return;
+        }
+
+        node.classList.remove("has-tooltip");
+        node.removeAttribute("data-tooltip");
+        node.removeAttribute("title");
+        node.removeAttribute("tabindex");
+      }
+
+      function renderControls() {
+        renderAuditProgress();
+
+        importButton.disabled = busy || !parsedPayload;
+        inspectButton.disabled = busy;
+        auditButton.disabled = busy;
+        auditButton.textContent = busy
+          ? busyMode === "audit"
+            ? "Analysing..."
+            : "Working..."
+          : libraryState.audited
+            ? "Audit Again"
+            : "Audit Library";
+        componentSelect.disabled = busy;
+
+        const status = selectedStatus();
+        const selected = selectedComponentAction();
+        const recommendation = selectedRecommendation();
+        smartComponentAction.disabled = busy || !recommendation.messageType;
+        buildComponent.disabled =
+          busy ||
+          !selected.build ||
+          !libraryState.audited ||
+          (status.known && status.exists && componentSelect.value !== "icons");
+        updateComponent.disabled =
+          busy ||
+          !selected.update ||
+          !libraryState.audited ||
+          (status.known && !status.exists && componentSelect.value !== "icons");
+        rebuildComponent.disabled =
+          busy ||
+          !selected.rebuild ||
+          !libraryState.audited ||
+          componentSelect.value === "icons";
+
+        const knownNoComponents =
+          libraryState.audited && libraryState.componentSetCount === 0;
+        documentComponentsButton.disabled =
+          busy || !libraryState.audited || knownNoComponents;
+        fixAuditIssuesButton.disabled =
+          busy || !libraryState.audited || knownNoComponents;
+        surfaceQaButton.disabled =
+          busy || !libraryState.audited || knownNoComponents;
+        applyTextStylesButton.disabled =
+          busy || !libraryState.audited || knownNoComponents;
+        reorganizeComponentsButton.disabled =
+          busy || !libraryState.audited || knownNoComponents;
+        const examplesDisabled =
+          busy || !libraryState.audited || knownNoComponents;
+        exampleDashboardButton.disabled = examplesDisabled;
+        exampleSettingsButton.disabled = examplesDisabled;
+        exampleDrawerButton.disabled = examplesDisabled;
+        exampleOperationsButton.disabled = examplesDisabled;
+        exampleSdkRouteButton.disabled = examplesDisabled;
+        exampleKioskButton.disabled = examplesDisabled;
+        exampleAllButton.disabled = examplesDisabled;
+
+        if (componentSelect.value === "icons") {
+          buildComponent.textContent = "Build";
+          updateComponent.textContent = "Update";
+        } else {
+          buildComponent.textContent = "Build";
+          updateComponent.textContent = "Update";
+        }
+        rebuildComponent.title = selected.planned
+          ? "Figma builder is planned but not wired yet."
+          : selected.rebuild === selected.update
+            ? "This component uses update for rebuild."
+            : "Removes the current component set and creates a fresh node ID.";
+        buildComponent.title = selected.build
+          ? ""
+          : "Figma builder is planned but not wired yet.";
+        updateComponent.title = selected.update
+          ? ""
+          : "Figma builder is planned but not wired yet.";
+      }
+
+      function renderAuditProgress() {
+        const analysing = busy && busyMode === "audit";
+        auditProgress.hidden = !analysing;
+        if (!analysing) return;
+
+        auditProgressTitle.textContent =
+          (auditProgressState && auditProgressState.title) ||
+          "Analysing design system";
+        auditProgressDetail.textContent =
+          (auditProgressState && auditProgressState.detail) ||
+          (libraryState.audited
+            ? "Refreshing foundations, icons, components, and QA surfaces."
+            : "Checking foundations, icons, components, and QA surfaces.");
+      }
+
+      function syncAuditProgress(message) {
+        auditProgressState = {
+          step: message.step || "audit",
+          title: message.title || "Auditing design system",
+          detail:
+            message.detail ||
+            "Checking foundations, icons, components, and QA surfaces.",
+        };
+        setBootStep(
+          auditProgressState.step,
+          auditProgressState.detail,
+          auditProgressState.title,
+        );
+
+        if (busy && busyMode === "audit") {
+          setActivity(auditProgressState.detail);
+          renderAuditProgress();
+        }
+      }
+
+      function setActivity(message, tone) {
+        activitySummary.textContent = message;
+        activitySummary.className = tone || "";
+      }
+
+      function setLogContent(content, tone, expand) {
+        log.textContent =
+          typeof content === "string"
+            ? content
+            : JSON.stringify(content, null, 2);
+        log.className = tone || "";
+        if (expand) setLogExpanded(true);
+      }
+
+      function setLogExpanded(expanded) {
+        logExpanded = expanded;
+        log.hidden = !expanded;
+        toggleLogButton.textContent = expanded
+          ? "Hide Details"
+          : "Show Details";
+      }
+
+      function requestInitialAudit() {
+        if (initialAuditRequested) return;
+        initialAuditRequested = true;
+        setBootStep(
+          "scan",
+          "Preparing the first audit after the startup screen is visible.",
+          "Starting initial audit...",
+        );
+        deferAfterPaint(() => runAudit("startup"));
+      }
+
+      startBootSequence();
+      renderAll();
+      requestInitialAudit();
 
       function copyTextFallback(text) {
         const textarea = document.createElement("textarea");

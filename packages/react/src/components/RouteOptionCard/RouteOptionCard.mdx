@@ -1,0 +1,13 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./RouteOptionCard.stories";
+
+<Meta of={Stories} />
+
+# RouteOptionCard
+
+Controlled route alternative with localized duration and distance labels,
+selection semantics, availability, and warning support.
+
+<Canvas of={Stories.Selected} />
+<Canvas of={Stories.Unavailable} />
+<Controls />

@@ -27,7 +27,7 @@ fun KozmosSearch(
         placeholder = { Text(placeholder) },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
         singleLine = true,
         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
             focusedBorderColor = com.kozmos.tokens.KozmosColors.primitivesColorsTheme500,

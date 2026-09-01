@@ -11,7 +11,16 @@
   "figma": {
     "knownFileKeys": ["Yj4O8p6Y9h2Sa9zJVoAiVY"],
     "publishCommand": "pnpm figma:publish:dry",
-    "publishStatus": "blocked until real component node IDs replace node-id=TBD"
+    "publishStatus": "ready",
+    "linkedPublishCommand": "pnpm figma:publish:linked:dry",
+    "linkedPublishConfig": "figma.linked.config.json",
+    "linkedPublishStatus": "ready for the current 66 Core React component-set mappings",
+    "nativeLinkedPublishCommand": "pnpm figma:publish:native:linked:dry",
+    "nativeLinkedPublishConfigs": [
+      "packages/ios/figma.linked.config.json",
+      "packages/android/figma.linked.config.json"
+    ],
+    "nativeLinkedPublishStatus": "ready for the current 67 Core SwiftUI and 67 Core Compose component-set mappings"
   },
   "tokens": {
     "summary": {
@@ -6603,7 +6612,7 @@
       {
         "name": "Primitives/Colors/theme/0",
         "type": "color",
-        "value": "#0e0a01",
+        "value": "#051C4F",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6615,7 +6624,7 @@
       {
         "name": "Primitives/Colors/theme/100",
         "type": "color",
-        "value": "#352603",
+        "value": "#082975",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6627,7 +6636,7 @@
       {
         "name": "Primitives/Colors/theme/200",
         "type": "color",
-        "value": "#5b4106",
+        "value": "#0B369C",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6639,7 +6648,7 @@
       {
         "name": "Primitives/Colors/theme/300",
         "type": "color",
-        "value": "#815d09",
+        "value": "#0D44C2",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6651,7 +6660,7 @@
       {
         "name": "Primitives/Colors/theme/400",
         "type": "color",
-        "value": "#a7780c",
+        "value": "#1051E8",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6663,7 +6672,7 @@
       {
         "name": "Primitives/Colors/theme/500",
         "type": "color",
-        "value": "#eca413",
+        "value": "#135BEC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6675,7 +6684,7 @@
       {
         "name": "Primitives/Colors/theme/600",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6687,7 +6696,7 @@
       {
         "name": "Primitives/Colors/theme/700",
         "type": "color",
-        "value": "#f2bb3d",
+        "value": "#7EA2F6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6699,7 +6708,7 @@
       {
         "name": "Primitives/Colors/theme/800",
         "type": "color",
-        "value": "#f4c963",
+        "value": "#A4BEF9",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6711,7 +6720,7 @@
       {
         "name": "Primitives/Colors/theme/900",
         "type": "color",
-        "value": "#f7d68a",
+        "value": "#CAD9FC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6723,7 +6732,7 @@
       {
         "name": "Primitives/Colors/theme/1000",
         "type": "color",
-        "value": "#fae3b0",
+        "value": "#F1F5FE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6735,7 +6744,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/0",
         "type": "color",
-        "value": "#0e0e01",
+        "value": "#0A054F",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6747,7 +6756,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/100",
         "type": "color",
-        "value": "#313503",
+        "value": "#0F0875",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6759,7 +6768,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/200",
         "type": "color",
-        "value": "#555b06",
+        "value": "#140B9C",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6771,7 +6780,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/300",
         "type": "color",
-        "value": "#798109",
+        "value": "#190DC2",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6783,7 +6792,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/400",
         "type": "color",
-        "value": "#9da70c",
+        "value": "#1E10E8",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6795,7 +6804,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/500",
         "type": "color",
-        "value": "#becb0e",
+        "value": "#4134F1",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6807,7 +6816,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/600",
         "type": "color",
-        "value": "#e1ef17",
+        "value": "#6258F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6819,7 +6828,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/700",
         "type": "color",
-        "value": "#e6f23d",
+        "value": "#867EF6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6831,7 +6840,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/800",
         "type": "color",
-        "value": "#ebf463",
+        "value": "#AAA4F9",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6843,7 +6852,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/900",
         "type": "color",
-        "value": "#f0f78a",
+        "value": "#CECAFC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6855,7 +6864,7 @@
       {
         "name": "Primitives/Colors/theme/variant/1/1000",
         "type": "color",
-        "value": "#f5fab0",
+        "value": "#F1F1FE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6867,7 +6876,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/0",
         "type": "color",
-        "value": "#090e01",
+        "value": "#23054F",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6879,7 +6888,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/100",
         "type": "color",
-        "value": "#213503",
+        "value": "#340875",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6891,7 +6900,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/200",
         "type": "color",
-        "value": "#395b06",
+        "value": "#450B9C",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6903,7 +6912,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/300",
         "type": "color",
-        "value": "#518109",
+        "value": "#550DC2",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6915,7 +6924,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/400",
         "type": "color",
-        "value": "#69a70c",
+        "value": "#6610E8",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6927,7 +6936,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/500",
         "type": "color",
-        "value": "#7fcb0e",
+        "value": "#8034F1",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6939,7 +6948,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/600",
         "type": "color",
-        "value": "#99ef17",
+        "value": "#9658F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6951,7 +6960,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/700",
         "type": "color",
-        "value": "#aaf23d",
+        "value": "#AE7EF6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6963,7 +6972,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/800",
         "type": "color",
-        "value": "#baf463",
+        "value": "#C6A4F9",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6975,7 +6984,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/900",
         "type": "color",
-        "value": "#cbf78a",
+        "value": "#DECAFC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6987,7 +6996,7 @@
       {
         "name": "Primitives/Colors/theme/variant/2/1000",
         "type": "color",
-        "value": "#dcfab0",
+        "value": "#F6F1FE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -6999,7 +7008,7 @@
       {
         "name": "Primitives/Colors/emotional/success/0",
         "type": "color",
-        "value": "#090206",
+        "value": "#0F4C2D",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7011,7 +7020,7 @@
       {
         "name": "Primitives/Colors/emotional/success/100",
         "type": "color",
-        "value": "#340a1f",
+        "value": "#14653D",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7023,7 +7032,7 @@
       {
         "name": "Primitives/Colors/emotional/success/200",
         "type": "color",
-        "value": "#5f1339",
+        "value": "#197F4C",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7035,7 +7044,7 @@
       {
         "name": "Primitives/Colors/emotional/success/300",
         "type": "color",
-        "value": "#891b52",
+        "value": "#1E995B",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7047,7 +7056,7 @@
       {
         "name": "Primitives/Colors/emotional/success/400",
         "type": "color",
-        "value": "#b4236c",
+        "value": "#23B26B",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7059,7 +7068,7 @@
       {
         "name": "Primitives/Colors/emotional/success/500",
         "type": "color",
-        "value": "#d73385",
+        "value": "#28CC7A",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7071,7 +7080,7 @@
       {
         "name": "Primitives/Colors/emotional/success/600",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7083,7 +7092,7 @@
       {
         "name": "Primitives/Colors/emotional/success/700",
         "type": "color",
-        "value": "#e166a4",
+        "value": "#76E4AD",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7095,7 +7104,7 @@
       {
         "name": "Primitives/Colors/emotional/success/800",
         "type": "color",
-        "value": "#e680b3",
+        "value": "#A0ECC6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7107,7 +7116,7 @@
       {
         "name": "Primitives/Colors/emotional/success/900",
         "type": "color",
-        "value": "#eb9ac2",
+        "value": "#CBF5E0",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7119,7 +7128,7 @@
       {
         "name": "Primitives/Colors/emotional/success/1000",
         "type": "color",
-        "value": "#f0b3d2",
+        "value": "#F6FDF9",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7131,7 +7140,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/0",
         "type": "color",
-        "value": "#031511",
+        "value": "#430915",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7143,7 +7152,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/100",
         "type": "color",
-        "value": "#07392f",
+        "value": "#670E20",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7155,7 +7164,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/200",
         "type": "color",
-        "value": "#0c5d4c",
+        "value": "#8C132B",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7167,7 +7176,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/300",
         "type": "color",
-        "value": "#11816a",
+        "value": "#B01736",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7179,7 +7188,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/400",
         "type": "color",
-        "value": "#16a588",
+        "value": "#D41C42",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7191,7 +7200,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/500",
         "type": "color",
-        "value": "#1bcba7",
+        "value": "#E43458",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7203,7 +7212,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/600",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7215,7 +7224,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/700",
         "type": "color",
-        "value": "#4fe8c9",
+        "value": "#EE7E95",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7227,7 +7236,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/800",
         "type": "color",
-        "value": "#73ecd4",
+        "value": "#F3A2B3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7239,7 +7248,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/900",
         "type": "color",
-        "value": "#98f1df",
+        "value": "#F8C6D0",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7251,7 +7260,7 @@
       {
         "name": "Primitives/Colors/emotional/danger/1000",
         "type": "color",
-        "value": "#bcf6ea",
+        "value": "#FCEAEE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7263,7 +7272,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/0",
         "type": "color",
-        "value": "#000307",
+        "value": "#472F02",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7275,7 +7284,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/100",
         "type": "color",
-        "value": "#01112f",
+        "value": "#744D03",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7287,7 +7296,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/200",
         "type": "color",
-        "value": "#021f57",
+        "value": "#A06B04",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7299,7 +7308,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/300",
         "type": "color",
-        "value": "#032d7e",
+        "value": "#CD8905",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7311,7 +7320,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/400",
         "type": "color",
-        "value": "#043ba6",
+        "value": "#F9A707",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7323,7 +7332,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/500",
         "type": "color",
-        "value": "#0548ca",
+        "value": "#FAB735",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7335,7 +7344,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/600",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7347,7 +7356,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/700",
         "type": "color",
-        "value": "#3276fa",
+        "value": "#FCD281",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7359,7 +7368,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/800",
         "type": "color",
-        "value": "#5f94fb",
+        "value": "#FDE0A8",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7371,7 +7380,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/900",
         "type": "color",
-        "value": "#8bb2fc",
+        "value": "#FEEED0",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7383,7 +7392,7 @@
       {
         "name": "Primitives/Colors/emotional/alert/1000",
         "type": "color",
-        "value": "#b8d0fd",
+        "value": "#FFFCF8",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7395,7 +7404,7 @@
       {
         "name": "Primitives/Colors/emotional/info/0",
         "type": "color",
-        "value": "#130904",
+        "value": "#0E2E3F",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7407,7 +7416,7 @@
       {
         "name": "Primitives/Colors/emotional/info/100",
         "type": "color",
-        "value": "#35190c",
+        "value": "#154761",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7419,7 +7428,7 @@
       {
         "name": "Primitives/Colors/emotional/info/200",
         "type": "color",
-        "value": "#562913",
+        "value": "#1C6082",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7431,7 +7440,7 @@
       {
         "name": "Primitives/Colors/emotional/info/300",
         "type": "color",
-        "value": "#78391a",
+        "value": "#2379A4",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7443,7 +7452,7 @@
       {
         "name": "Primitives/Colors/emotional/info/400",
         "type": "color",
-        "value": "#9a4921",
+        "value": "#2A92C6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7455,7 +7464,7 @@
       {
         "name": "Primitives/Colors/emotional/info/500",
         "type": "color",
-        "value": "#bd5a28",
+        "value": "#42A5D7",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7467,7 +7476,7 @@
       {
         "name": "Primitives/Colors/emotional/info/600",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7479,7 +7488,7 @@
       {
         "name": "Primitives/Colors/emotional/info/700",
         "type": "color",
-        "value": "#dc865b",
+        "value": "#87C6E5",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7491,7 +7500,7 @@
       {
         "name": "Primitives/Colors/emotional/info/800",
         "type": "color",
-        "value": "#e39f7d",
+        "value": "#A9D6EC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7503,7 +7512,7 @@
       {
         "name": "Primitives/Colors/emotional/info/900",
         "type": "color",
-        "value": "#eab89e",
+        "value": "#CAE6F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7515,7 +7524,7 @@
       {
         "name": "Primitives/Colors/emotional/info/1000",
         "type": "color",
-        "value": "#f1d1c0",
+        "value": "#ECF6FB",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -8943,7 +8952,7 @@
       {
         "name": "Semantics/Data/Blue",
         "type": "color",
-        "value": "#da9c14",
+        "value": "#60A5FA",
         "scopes": ["ALL_SCOPES"],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -8955,7 +8964,7 @@
       {
         "name": "Semantics/Data/Purple",
         "type": "color",
-        "value": "#6ccc15",
+        "value": "#C084FC",
         "scopes": ["ALL_SCOPES"],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -8967,7 +8976,7 @@
       {
         "name": "Semantics/Data/Teal",
         "type": "color",
-        "value": "#f26b77",
+        "value": "#2DD4BF",
         "scopes": ["ALL_SCOPES"],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -8979,7 +8988,7 @@
       {
         "name": "Semantics/Data/Orange",
         "type": "color",
-        "value": "#15a7f3",
+        "value": "#FB923C",
         "scopes": ["ALL_SCOPES"],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -8991,7 +9000,7 @@
       {
         "name": "Semantics/Data/Red",
         "type": "color",
-        "value": "#23d9d9",
+        "value": "#F87171",
         "scopes": ["ALL_SCOPES"],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9003,7 +9012,7 @@
       {
         "name": "Semantics/Data/Yellow",
         "type": "color",
-        "value": "#2688f9",
+        "value": "#FBBF24",
         "scopes": ["ALL_SCOPES"],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9176,7 +9185,7 @@
       {
         "name": "Components/Primary Buttons/themed/button/background/idle",
         "type": "color",
-        "value": "#f2bb3d",
+        "value": "#7EA2F6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9200,7 +9209,7 @@
       {
         "name": "Components/Primary Buttons/themed/button/background/hover",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9212,7 +9221,7 @@
       {
         "name": "Components/Primary Buttons/themed/button/background/pressed",
         "type": "color",
-        "value": "#f4c963",
+        "value": "#A4BEF9",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9224,7 +9233,7 @@
       {
         "name": "Components/Primary Buttons/themed/button/background/focus",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9236,7 +9245,7 @@
       {
         "name": "Components/Primary Buttons/themed/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#352603",
+        "value": "#082975",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9260,7 +9269,7 @@
       {
         "name": "Components/Primary Buttons/themed/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#352603",
+        "value": "#082975",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9272,7 +9281,7 @@
       {
         "name": "Components/Primary Buttons/themed/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#352603",
+        "value": "#082975",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9284,7 +9293,7 @@
       {
         "name": "Components/Primary Buttons/themed/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#352603",
+        "value": "#082975",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9296,7 +9305,7 @@
       {
         "name": "Components/Primary Buttons/success/button/background/idle",
         "type": "color",
-        "value": "#e166a4",
+        "value": "#76E4AD",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9320,7 +9329,7 @@
       {
         "name": "Components/Primary Buttons/success/button/background/hover",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9332,7 +9341,7 @@
       {
         "name": "Components/Primary Buttons/success/button/background/pressed",
         "type": "color",
-        "value": "#e680b3",
+        "value": "#A0ECC6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9344,7 +9353,7 @@
       {
         "name": "Components/Primary Buttons/success/button/background/focus",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9416,7 +9425,7 @@
       {
         "name": "Components/Primary Buttons/success/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#340a1f",
+        "value": "#14653D",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9440,7 +9449,7 @@
       {
         "name": "Components/Primary Buttons/success/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#340a1f",
+        "value": "#14653D",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9452,7 +9461,7 @@
       {
         "name": "Components/Primary Buttons/success/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#340a1f",
+        "value": "#14653D",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9464,7 +9473,7 @@
       {
         "name": "Components/Primary Buttons/success/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#340a1f",
+        "value": "#14653D",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9476,7 +9485,7 @@
       {
         "name": "Components/Primary Buttons/alert/button/background/idle",
         "type": "color",
-        "value": "#3276fa",
+        "value": "#FCD281",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9500,7 +9509,7 @@
       {
         "name": "Components/Primary Buttons/alert/button/background/hover",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9512,7 +9521,7 @@
       {
         "name": "Components/Primary Buttons/alert/button/background/pressed",
         "type": "color",
-        "value": "#5f94fb",
+        "value": "#FDE0A8",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9524,7 +9533,7 @@
       {
         "name": "Components/Primary Buttons/alert/button/background/focus",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9596,7 +9605,7 @@
       {
         "name": "Components/Primary Buttons/alert/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#01112f",
+        "value": "#744D03",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9620,7 +9629,7 @@
       {
         "name": "Components/Primary Buttons/alert/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#01112f",
+        "value": "#744D03",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9632,7 +9641,7 @@
       {
         "name": "Components/Primary Buttons/alert/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#01112f",
+        "value": "#744D03",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9644,7 +9653,7 @@
       {
         "name": "Components/Primary Buttons/alert/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#01112f",
+        "value": "#744D03",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9656,7 +9665,7 @@
       {
         "name": "Components/Primary Buttons/danger/button/background/idle",
         "type": "color",
-        "value": "#4fe8c9",
+        "value": "#EE7E95",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9680,7 +9689,7 @@
       {
         "name": "Components/Primary Buttons/danger/button/background/hover",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9692,7 +9701,7 @@
       {
         "name": "Components/Primary Buttons/danger/button/background/pressed",
         "type": "color",
-        "value": "#73ecd4",
+        "value": "#F3A2B3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9704,7 +9713,7 @@
       {
         "name": "Components/Primary Buttons/danger/button/background/focus",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9776,7 +9785,7 @@
       {
         "name": "Components/Primary Buttons/danger/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#031511",
+        "value": "#430915",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9800,7 +9809,7 @@
       {
         "name": "Components/Primary Buttons/danger/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#031511",
+        "value": "#430915",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9812,7 +9821,7 @@
       {
         "name": "Components/Primary Buttons/danger/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#031511",
+        "value": "#430915",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9824,7 +9833,7 @@
       {
         "name": "Components/Primary Buttons/danger/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#031511",
+        "value": "#430915",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9836,7 +9845,7 @@
       {
         "name": "Components/Primary Buttons/informative/button/background/idle",
         "type": "color",
-        "value": "#dc865b",
+        "value": "#87C6E5",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9860,7 +9869,7 @@
       {
         "name": "Components/Primary Buttons/informative/button/background/hover",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9872,7 +9881,7 @@
       {
         "name": "Components/Primary Buttons/informative/button/background/pressed",
         "type": "color",
-        "value": "#e39f7d",
+        "value": "#A9D6EC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9884,7 +9893,7 @@
       {
         "name": "Components/Primary Buttons/informative/button/background/focus",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9956,7 +9965,7 @@
       {
         "name": "Components/Primary Buttons/informative/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#35190c",
+        "value": "#154761",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9980,7 +9989,7 @@
       {
         "name": "Components/Primary Buttons/informative/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#35190c",
+        "value": "#154761",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9992,7 +10001,7 @@
       {
         "name": "Components/Primary Buttons/informative/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#35190c",
+        "value": "#154761",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10004,7 +10013,7 @@
       {
         "name": "Components/Primary Buttons/informative/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#35190c",
+        "value": "#154761",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10196,7 +10205,7 @@
       {
         "name": "Components/Secondary Buttons/themed/button/background/idle",
         "type": "color",
-        "value": "#f2bb3d",
+        "value": "#7EA2F6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10220,7 +10229,7 @@
       {
         "name": "Components/Secondary Buttons/themed/button/background/hover",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10232,7 +10241,7 @@
       {
         "name": "Components/Secondary Buttons/themed/button/background/pressed",
         "type": "color",
-        "value": "#f4c963",
+        "value": "#A4BEF9",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10244,7 +10253,7 @@
       {
         "name": "Components/Secondary Buttons/themed/button/background/focus",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10256,7 +10265,7 @@
       {
         "name": "Components/Secondary Buttons/themed/button/foreground/content/idle",
         "type": "color",
-        "value": "#f2bb3d",
+        "value": "#7EA2F6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10280,7 +10289,7 @@
       {
         "name": "Components/Secondary Buttons/themed/button/foreground/content/hover",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10292,7 +10301,7 @@
       {
         "name": "Components/Secondary Buttons/themed/button/foreground/content/pressed",
         "type": "color",
-        "value": "#f4c963",
+        "value": "#A4BEF9",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10304,7 +10313,7 @@
       {
         "name": "Components/Secondary Buttons/themed/button/foreground/content/focus",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10316,7 +10325,7 @@
       {
         "name": "Components/Secondary Buttons/themed/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10340,7 +10349,7 @@
       {
         "name": "Components/Secondary Buttons/themed/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#eca413",
+        "value": "#135BEC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10352,7 +10361,7 @@
       {
         "name": "Components/Secondary Buttons/themed/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#f2bb3d",
+        "value": "#7EA2F6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10364,7 +10373,7 @@
       {
         "name": "Components/Secondary Buttons/themed/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#eca413",
+        "value": "#135BEC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10376,7 +10385,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/background/idle",
         "type": "color",
-        "value": "#e166a4",
+        "value": "#76E4AD",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10400,7 +10409,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/background/hover",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10412,7 +10421,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/background/pressed",
         "type": "color",
-        "value": "#e680b3",
+        "value": "#A0ECC6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10424,7 +10433,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/background/focus",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10436,7 +10445,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/foreground/content/idle",
         "type": "color",
-        "value": "#e166a4",
+        "value": "#76E4AD",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10460,7 +10469,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/foreground/content/hover",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10472,7 +10481,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/foreground/content/pressed",
         "type": "color",
-        "value": "#e680b3",
+        "value": "#A0ECC6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10484,7 +10493,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/foreground/content/focus",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10496,7 +10505,7 @@
       {
         "name": "Components/Secondary Buttons/success/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10520,7 +10529,7 @@
       {
         "name": "Components/Secondary Buttons/success/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#d73385",
+        "value": "#28CC7A",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10532,7 +10541,7 @@
       {
         "name": "Components/Secondary Buttons/success/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#e166a4",
+        "value": "#76E4AD",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10544,7 +10553,7 @@
       {
         "name": "Components/Secondary Buttons/success/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#d73385",
+        "value": "#28CC7A",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10556,7 +10565,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/background/idle",
         "type": "color",
-        "value": "#4fe8c9",
+        "value": "#EE7E95",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10580,7 +10589,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/background/hover",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10592,7 +10601,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/background/pressed",
         "type": "color",
-        "value": "#73ecd4",
+        "value": "#F3A2B3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10604,7 +10613,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/background/focus",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10616,7 +10625,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/foreground/content/idle",
         "type": "color",
-        "value": "#4fe8c9",
+        "value": "#EE7E95",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10640,7 +10649,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/foreground/content/hover",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10652,7 +10661,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/foreground/content/pressed",
         "type": "color",
-        "value": "#73ecd4",
+        "value": "#F3A2B3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10664,7 +10673,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/foreground/content/focus",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10676,7 +10685,7 @@
       {
         "name": "Components/Secondary Buttons/danger/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10700,7 +10709,7 @@
       {
         "name": "Components/Secondary Buttons/danger/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#1bcba7",
+        "value": "#E43458",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10712,7 +10721,7 @@
       {
         "name": "Components/Secondary Buttons/danger/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#4fe8c9",
+        "value": "#EE7E95",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10724,7 +10733,7 @@
       {
         "name": "Components/Secondary Buttons/danger/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#1bcba7",
+        "value": "#E43458",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10736,7 +10745,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/background/idle",
         "type": "color",
-        "value": "#3276fa",
+        "value": "#FCD281",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10760,7 +10769,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/background/hover",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10772,7 +10781,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/background/pressed",
         "type": "color",
-        "value": "#5f94fb",
+        "value": "#FDE0A8",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10784,7 +10793,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/background/focus",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10796,7 +10805,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/foreground/content/idle",
         "type": "color",
-        "value": "#3276fa",
+        "value": "#FCD281",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10820,7 +10829,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/foreground/content/hover",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10832,7 +10841,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/foreground/content/pressed",
         "type": "color",
-        "value": "#5f94fb",
+        "value": "#FDE0A8",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10844,7 +10853,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/foreground/content/focus",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10856,7 +10865,7 @@
       {
         "name": "Components/Secondary Buttons/alert/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10880,7 +10889,7 @@
       {
         "name": "Components/Secondary Buttons/alert/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#0548ca",
+        "value": "#FAB735",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10892,7 +10901,7 @@
       {
         "name": "Components/Secondary Buttons/alert/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#3276fa",
+        "value": "#FCD281",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10904,7 +10913,7 @@
       {
         "name": "Components/Secondary Buttons/alert/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#0548ca",
+        "value": "#FAB735",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10916,7 +10925,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/background/idle",
         "type": "color",
-        "value": "#dc865b",
+        "value": "#87C6E5",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10940,7 +10949,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/background/hover",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10952,7 +10961,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/background/pressed",
         "type": "color",
-        "value": "#e39f7d",
+        "value": "#A9D6EC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10964,7 +10973,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/background/focus",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -10976,7 +10985,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/foreground/content/idle",
         "type": "color",
-        "value": "#dc865b",
+        "value": "#87C6E5",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11000,7 +11009,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/foreground/content/hover",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11012,7 +11021,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/foreground/content/pressed",
         "type": "color",
-        "value": "#e39f7d",
+        "value": "#A9D6EC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11024,7 +11033,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/foreground/content/focus",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11036,7 +11045,7 @@
       {
         "name": "Components/Secondary Buttons/informative/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11060,7 +11069,7 @@
       {
         "name": "Components/Secondary Buttons/informative/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#bd5a28",
+        "value": "#42A5D7",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11072,7 +11081,7 @@
       {
         "name": "Components/Secondary Buttons/informative/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#dc865b",
+        "value": "#87C6E5",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11084,7 +11093,7 @@
       {
         "name": "Components/Secondary Buttons/informative/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#bd5a28",
+        "value": "#42A5D7",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11276,7 +11285,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/button/background/idle",
         "type": "color",
-        "value": "#f2bb3d",
+        "value": "#7EA2F6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11300,7 +11309,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/button/background/hover",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11312,7 +11321,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/button/background/pressed",
         "type": "color",
-        "value": "#f4c963",
+        "value": "#A4BEF9",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11324,7 +11333,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/button/background/focus",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11336,7 +11345,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/button/foreground/content/idle",
         "type": "color",
-        "value": "#f2bb3d",
+        "value": "#7EA2F6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11360,7 +11369,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/button/foreground/content/hover",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11372,7 +11381,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/button/foreground/content/pressed",
         "type": "color",
-        "value": "#f4c963",
+        "value": "#A4BEF9",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11384,7 +11393,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/button/foreground/content/focus",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11396,7 +11405,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#efae17",
+        "value": "#5887F3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11420,7 +11429,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#eca413",
+        "value": "#135BEC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11432,7 +11441,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#f2bb3d",
+        "value": "#7EA2F6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11444,7 +11453,7 @@
       {
         "name": "Components/Tertiary Buttons/themed/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#eca413",
+        "value": "#135BEC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11456,7 +11465,7 @@
       {
         "name": "Components/Tertiary Buttons/success/button/background/idle",
         "type": "color",
-        "value": "#e166a4",
+        "value": "#76E4AD",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11480,7 +11489,7 @@
       {
         "name": "Components/Tertiary Buttons/success/button/background/hover",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11492,7 +11501,7 @@
       {
         "name": "Components/Tertiary Buttons/success/button/background/pressed",
         "type": "color",
-        "value": "#e680b3",
+        "value": "#A0ECC6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11504,7 +11513,7 @@
       {
         "name": "Components/Tertiary Buttons/success/button/background/focus",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11516,7 +11525,7 @@
       {
         "name": "Components/Tertiary Buttons/success/button/foreground/content/idle",
         "type": "color",
-        "value": "#e166a4",
+        "value": "#76E4AD",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11540,7 +11549,7 @@
       {
         "name": "Components/Tertiary Buttons/success/button/foreground/content/hover",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11552,7 +11561,7 @@
       {
         "name": "Components/Tertiary Buttons/success/button/foreground/content/pressed",
         "type": "color",
-        "value": "#e680b3",
+        "value": "#A0ECC6",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11564,7 +11573,7 @@
       {
         "name": "Components/Tertiary Buttons/success/button/foreground/content/focus",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11576,7 +11585,7 @@
       {
         "name": "Components/Tertiary Buttons/success/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#dc4d94",
+        "value": "#4BDC93",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11600,7 +11609,7 @@
       {
         "name": "Components/Tertiary Buttons/success/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#d73385",
+        "value": "#28CC7A",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11612,7 +11621,7 @@
       {
         "name": "Components/Tertiary Buttons/success/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#e166a4",
+        "value": "#76E4AD",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11624,7 +11633,7 @@
       {
         "name": "Components/Tertiary Buttons/success/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#d73385",
+        "value": "#28CC7A",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11636,7 +11645,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/button/background/idle",
         "type": "color",
-        "value": "#4fe8c9",
+        "value": "#EE7E95",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11660,7 +11669,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/button/background/hover",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11672,7 +11681,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/button/background/pressed",
         "type": "color",
-        "value": "#73ecd4",
+        "value": "#F3A2B3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11684,7 +11693,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/button/background/focus",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11696,7 +11705,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/button/foreground/content/idle",
         "type": "color",
-        "value": "#4fe8c9",
+        "value": "#EE7E95",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11720,7 +11729,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/button/foreground/content/hover",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11732,7 +11741,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/button/foreground/content/pressed",
         "type": "color",
-        "value": "#73ecd4",
+        "value": "#F3A2B3",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11744,7 +11753,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/button/foreground/content/focus",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11756,7 +11765,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#2be3bd",
+        "value": "#E95A77",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11780,7 +11789,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#1bcba7",
+        "value": "#E43458",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11792,7 +11801,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#4fe8c9",
+        "value": "#EE7E95",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11804,7 +11813,7 @@
       {
         "name": "Components/Tertiary Buttons/danger/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#1bcba7",
+        "value": "#E43458",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11816,7 +11825,7 @@
       {
         "name": "Components/Tertiary Buttons/alert/button/background/idle",
         "type": "color",
-        "value": "#3276fa",
+        "value": "#FCD281",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11840,7 +11849,7 @@
       {
         "name": "Components/Tertiary Buttons/alert/button/background/hover",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11852,7 +11861,7 @@
       {
         "name": "Components/Tertiary Buttons/alert/button/background/pressed",
         "type": "color",
-        "value": "#5f94fb",
+        "value": "#FDE0A8",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11864,7 +11873,7 @@
       {
         "name": "Components/Tertiary Buttons/alert/button/background/focus",
         "type": "color",
-        "value": "#0658f8",
+        "value": "#FBC459",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11936,7 +11945,7 @@
       {
         "name": "Components/Tertiary Buttons/alert/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#01112f",
+        "value": "#744D03",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11960,7 +11969,7 @@
       {
         "name": "Components/Tertiary Buttons/alert/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#01112f",
+        "value": "#744D03",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11972,7 +11981,7 @@
       {
         "name": "Components/Tertiary Buttons/alert/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#01112f",
+        "value": "#744D03",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11984,7 +11993,7 @@
       {
         "name": "Components/Tertiary Buttons/alert/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#01112f",
+        "value": "#744D03",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -11996,7 +12005,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/button/background/idle",
         "type": "color",
-        "value": "#dc865b",
+        "value": "#87C6E5",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12020,7 +12029,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/button/background/hover",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12032,7 +12041,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/button/background/pressed",
         "type": "color",
-        "value": "#e39f7d",
+        "value": "#A9D6EC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12044,7 +12053,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/button/background/focus",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12056,7 +12065,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/button/foreground/content/idle",
         "type": "color",
-        "value": "#dc865b",
+        "value": "#87C6E5",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12080,7 +12089,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/button/foreground/content/hover",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12092,7 +12101,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/button/foreground/content/pressed",
         "type": "color",
-        "value": "#e39f7d",
+        "value": "#A9D6EC",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12104,7 +12113,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/button/foreground/content/focus",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12116,7 +12125,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/foreground/dimmed/content/idle",
         "type": "color",
-        "value": "#d56d39",
+        "value": "#65B6DE",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12140,7 +12149,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/foreground/dimmed/content/hover",
         "type": "color",
-        "value": "#bd5a28",
+        "value": "#42A5D7",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12152,7 +12161,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/foreground/dimmed/content/pressed",
         "type": "color",
-        "value": "#dc865b",
+        "value": "#87C6E5",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12164,7 +12173,7 @@
       {
         "name": "Components/Tertiary Buttons/informative/foreground/dimmed/content/focus",
         "type": "color",
-        "value": "#bd5a28",
+        "value": "#42A5D7",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12469,44 +12478,83 @@
   },
   "components": {
     "summary": {
-      "total": 78,
-      "stories": 69,
-      "tests": 64,
-      "exported": 78,
-      "codeConnectFiles": 29,
-      "codeConnectScaffolds": 6,
-      "codeConnectLinked": 23
+      "total": 87,
+      "stories": 87,
+      "tests": 87,
+      "exported": 87,
+      "codeConnectFiles": 68,
+      "codeConnectScaffolds": 0,
+      "codeConnectLinked": 68
     },
     "firstBatch": [
+      "Accordion",
       "Alert",
       "Avatar",
+      "Backdrop",
       "Badge",
+      "BottomNavigation",
+      "BottomSheet",
+      "Box",
+      "Breadcrumb",
       "Button",
       "Card",
       "Checkbox",
+      "Chip",
+      "ColorPicker",
+      "Combobox",
+      "Container",
+      "Counter",
+      "DatePicker",
+      "DateRangePicker",
       "Dialog",
       "Drawer",
+      "EmptyState",
+      "FieldWrapper",
+      "FileUpload",
       "FloatingActionButton",
       "Grid",
       "Icon",
       "IconButton",
       "Input",
+      "Link",
+      "List",
+      "Listbox",
       "Menu",
+      "MultiSelect",
+      "Navbar",
+      "NavigationItem",
+      "NumberInput",
+      "OTPInput",
+      "Pagination",
+      "PasswordInput",
       "Popover",
       "Progress",
       "Radio",
+      "Rating",
+      "ScrollArea",
       "Search",
+      "SearchBar",
+      "SegmentedControl",
       "Select",
+      "Separator",
+      "Sidebar",
+      "Skeleton",
       "Slider",
       "Spinner",
       "SplitButton",
       "Stack",
+      "Stepper",
       "Switch",
+      "Table",
       "Tabs",
+      "Tag",
       "Textarea",
+      "Timeline",
+      "TimePicker",
       "Toast",
       "ToggleButton",
-      "Tooltip"
+      "Tooltip",
+      "Tree"
     ],
     "items": [
       {
@@ -12516,16 +12564,31 @@
         "test": "packages/react/src/components/Accordion/Accordion.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Accordion/Accordion.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-977",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Accordion"],
+          "mappedProps": ["collapsible", "defaultValue", "type"],
           "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "collapsible",
+          "defaultValue",
+          "disabled",
+          "id",
+          "role",
+          "tabIndex",
+          "title",
+          "type",
+          "value"
+        ],
         "variants": {}
       },
       {
@@ -12541,10 +12604,21 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["description", "title", "variant"],
-          "unmappedProps": ["description", "title"]
+          "connectedComponents": ["Alert"],
+          "mappedProps": ["variant"],
+          "unmappedProps": []
         },
-        "props": ["children", "variant"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title",
+          "variant"
+        ],
         "variants": {
           "variant": ["default", "destructive", "info", "success", "warning"]
         }
@@ -12562,10 +12636,20 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["alt", "fallback", "src"],
-          "unmappedProps": ["alt", "fallback", "src"]
+          "connectedComponents": ["Avatar"],
+          "mappedProps": [],
+          "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -12575,16 +12659,27 @@
         "test": "packages/react/src/components/Backdrop/Backdrop.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Backdrop/Backdrop.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=606-4596",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Backdrop"],
+          "mappedProps": ["visible"],
           "unmappedProps": []
         },
-        "props": ["children", "visible"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title",
+          "visible"
+        ],
         "variants": {}
       },
       {
@@ -12600,10 +12695,27 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["children", "size", "variant"],
+          "connectedComponents": ["Badge"],
+          "mappedProps": ["counter", "icon", "showCounter", "size", "variant"],
           "unmappedProps": []
         },
-        "props": ["asChild", "children", "size", "variant"],
+        "props": [
+          "_asChild",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "asChild",
+          "children",
+          "counter",
+          "icon",
+          "id",
+          "role",
+          "showCounter",
+          "size",
+          "tabIndex",
+          "title",
+          "variant"
+        ],
         "variants": {
           "size": ["default", "icon", "lg", "sm"],
           "variant": [
@@ -12623,16 +12735,29 @@
         "test": "packages/react/src/components/BottomNavigation/BottomNavigation.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/BottomNavigation/BottomNavigation.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=728-6447",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["BottomNavigation"],
+          "mappedProps": ["items"],
           "unmappedProps": []
         },
-        "props": ["children", "items"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "ariaLabel",
+          "children",
+          "density",
+          "id",
+          "items",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -12642,16 +12767,27 @@
         "test": "packages/react/src/components/BottomSheet/BottomSheet.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/BottomSheet/BottomSheet.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=624-4362",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
+          "connectedComponents": ["BottomSheet", "BottomSheetContent"],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "showClose",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -12661,16 +12797,27 @@
         "test": "packages/react/src/components/Box/Box.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Box/Box.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-1002",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
+          "connectedComponents": ["Box"],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["asChild", "children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "asChild",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -12680,16 +12827,27 @@
         "test": "packages/react/src/components/Breadcrumb/Breadcrumb.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Breadcrumb/Breadcrumb.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-1048",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
+          "connectedComponents": ["Breadcrumb"],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "separator"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "separator",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -12705,21 +12863,25 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": [
-            "children",
-            "disabled",
-            "isLoading",
-            "size",
-            "variant"
-          ],
+          "connectedComponents": ["Button"],
+          "mappedProps": ["disabled", "isLoading", "size", "variant"],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "asChild",
+          "autoFocus",
           "children",
           "disabled",
+          "id",
           "isLoading",
+          "role",
           "size",
+          "tabIndex",
+          "title",
+          "type",
           "variant"
         ],
         "variants": {
@@ -12748,10 +12910,20 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["actions", "body", "description", "title"],
-          "unmappedProps": ["actions", "body", "description", "title"]
+          "connectedComponents": ["Card"],
+          "mappedProps": [],
+          "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -12767,10 +12939,14 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
+          "connectedComponents": ["Checkbox"],
           "mappedProps": ["checked", "disabled", "error", "label"],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "checked",
           "children",
           "defaultChecked",
@@ -12779,6 +12955,9 @@
           "id",
           "label",
           "required",
+          "role",
+          "tabIndex",
+          "title",
           "value",
           "wrapperClassName"
         ],
@@ -12788,19 +12967,161 @@
         "name": "Chip",
         "source": "packages/react/src/components/Chip/Chip.tsx",
         "story": "packages/react/src/components/Chip/Chip.stories.tsx",
-        "test": null,
+        "test": "packages/react/src/components/Chip/Chip.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Chip/Chip.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=227-1329",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Chip"],
+          "mappedProps": ["disabled", "selected", "size", "variant"],
           "unmappedProps": []
         },
-        "props": ["active", "children", "disabled", "icon"],
+        "props": [
+          "active",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "disabled",
+          "icon",
+          "id",
+          "removeLabel",
+          "role",
+          "selected",
+          "size",
+          "tabIndex",
+          "title",
+          "variant"
+        ],
+        "variants": {
+          "size": ["default", "lg", "sm"],
+          "variant": ["brand", "destructive", "neutral"]
+        }
+      },
+      {
+        "name": "ColorPicker",
+        "source": "packages/react/src/components/ColorPicker/ColorPicker.tsx",
+        "story": "packages/react/src/components/ColorPicker/ColorPicker.stories.tsx",
+        "test": "packages/react/src/components/ColorPicker/ColorPicker.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/ColorPicker/ColorPicker.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=451-13566",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["ColorPicker"],
+          "mappedProps": [
+            "autoFocus",
+            "defaultFormat",
+            "defaultOpen",
+            "defaultValue",
+            "disabled",
+            "helperText",
+            "label",
+            "paletteLabel",
+            "readOnly",
+            "status"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "alpha",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
+          "children",
+          "defaultAlpha",
+          "defaultFormat",
+          "defaultOpen",
+          "defaultValue",
+          "description",
+          "disabled",
+          "error",
+          "format",
+          "helperText",
+          "id",
+          "label",
+          "name",
+          "open",
+          "paletteLabel",
+          "placeholder",
+          "presets",
+          "readOnly",
+          "required",
+          "role",
+          "showPickerPanel",
+          "showPresets",
+          "status",
+          "tabIndex",
+          "title",
+          "value",
+          "wrapperClassName"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "Combobox",
+        "source": "packages/react/src/components/Combobox/Combobox.tsx",
+        "story": "packages/react/src/components/Combobox/Combobox.stories.tsx",
+        "test": "packages/react/src/components/Combobox/Combobox.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/Combobox/Combobox.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=398-8298",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["Combobox"],
+          "mappedProps": [
+            "autoFocus",
+            "defaultInputValue",
+            "disabled",
+            "helperText",
+            "label",
+            "options",
+            "placeholder",
+            "readOnly",
+            "status"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
+          "children",
+          "clearable",
+          "defaultInputValue",
+          "defaultValue",
+          "disabled",
+          "emptyText",
+          "error",
+          "filterOption",
+          "helperText",
+          "id",
+          "inputValue",
+          "label",
+          "name",
+          "options",
+          "placeholder",
+          "readOnly",
+          "required",
+          "role",
+          "status",
+          "tabIndex",
+          "title",
+          "value",
+          "wrapperClassName"
+        ],
         "variants": {}
       },
       {
@@ -12810,17 +13131,52 @@
         "test": "packages/react/src/components/Container/Container.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Container/Container.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-1034",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Container"],
+          "mappedProps": ["centered"],
           "unmappedProps": []
         },
-        "props": ["centered"],
+        "props": ["asChild", "centered", "children", "id"],
         "variants": {}
+      },
+      {
+        "name": "Counter",
+        "source": "packages/react/src/components/Counter/Counter.tsx",
+        "story": "packages/react/src/components/Counter/Counter.stories.tsx",
+        "test": "packages/react/src/components/Counter/Counter.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/Counter/Counter.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=149-13430",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["Counter"],
+          "mappedProps": ["size", "tone"],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "size",
+          "tabIndex",
+          "title",
+          "tone"
+        ],
+        "variants": {
+          "size": ["default", "sm"],
+          "tone": ["brand", "destructive", "inverse", "neutral"]
+        }
       },
       {
         "name": "DatePicker",
@@ -12829,24 +13185,108 @@
         "test": "packages/react/src/components/DatePicker/DatePicker.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/DatePicker/DatePicker.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=438-4292",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["DatePicker"],
+          "mappedProps": [
+            "autoFocus",
+            "defaultValue",
+            "disabled",
+            "helperText",
+            "label",
+            "readOnly",
+            "status"
+          ],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
           "children",
+          "defaultValue",
+          "description",
           "disabled",
           "error",
+          "helperText",
           "id",
           "label",
+          "name",
           "placeholder",
           "readOnly",
           "required",
+          "role",
+          "status",
+          "tabIndex",
+          "title",
+          "value",
+          "wrapperClassName"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "DateRangePicker",
+        "source": "packages/react/src/components/DateRangePicker/DateRangePicker.tsx",
+        "story": "packages/react/src/components/DateRangePicker/DateRangePicker.stories.tsx",
+        "test": "packages/react/src/components/DateRangePicker/DateRangePicker.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/DateRangePicker/DateRangePicker.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=443-10939",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["DateRangePicker"],
+          "mappedProps": [
+            "autoFocus",
+            "defaultValue",
+            "disabled",
+            "endLabel",
+            "helperText",
+            "label",
+            "readOnly",
+            "startLabel",
+            "status"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
+          "children",
+          "defaultValue",
+          "description",
+          "disabled",
+          "endLabel",
+          "endName",
+          "endPlaceholder",
+          "endValue",
+          "error",
+          "helperText",
+          "id",
+          "label",
+          "max",
+          "min",
+          "name",
+          "placeholder",
+          "readOnly",
+          "required",
+          "role",
+          "startLabel",
+          "startName",
+          "startPlaceholder",
+          "startValue",
+          "status",
+          "tabIndex",
+          "title",
           "value",
           "wrapperClassName"
         ],
@@ -12861,14 +13301,29 @@
         "codeConnect": {
           "file": "packages/react/src/components/Dialog/Dialog.figma.tsx",
           "linked": true,
-          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=101-8101",
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=143-13060",
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["actions", "body", "description", "fields", "title"],
-          "unmappedProps": ["actions", "body", "description", "fields", "title"]
+          "connectedComponents": ["Dialog", "DialogContent"],
+          "mappedProps": [],
+          "unmappedProps": []
         },
-        "props": ["children", "defaultOpen", "modal", "open"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "defaultOpen",
+          "forceMount",
+          "id",
+          "modal",
+          "open",
+          "role",
+          "side",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -12884,10 +13339,24 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "distance", "duration", "instruction", "type"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "distance",
+          "duration",
+          "id",
+          "instruction",
+          "role",
+          "tabIndex",
+          "title",
+          "type"
+        ],
         "variants": {}
       },
       {
@@ -12898,22 +13367,38 @@
         "exported": true,
         "codeConnect": {
           "file": "packages/react/src/components/Drawer/Drawer.figma.tsx",
-          "linked": false,
-          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=TBD",
-          "needsNodeId": true,
-          "status": "scaffold",
-          "issues": ["node-id=TBD"],
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=232-2042",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["Drawer", "DrawerContent"],
           "mappedProps": ["side"],
-          "unmappedProps": ["side"]
+          "unmappedProps": []
         },
-        "props": ["children", "defaultOpen", "modal", "open"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "defaultOpen",
+          "forceMount",
+          "id",
+          "modal",
+          "open",
+          "role",
+          "showClose",
+          "side",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
         "name": "DynamicIsland",
         "source": "packages/react/src/components/DynamicIsland/DynamicIsland.tsx",
-        "story": null,
-        "test": null,
+        "story": "packages/react/src/components/DynamicIsland/DynamicIsland.stories.tsx",
+        "test": "packages/react/src/components/DynamicIsland/DynamicIsland.test.tsx",
         "exported": true,
         "codeConnect": {
           "file": null,
@@ -12922,16 +13407,24 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "children",
           "compactLeading",
           "compactTrailing",
           "expandedContent",
+          "id",
           "islandState",
-          "minimalContent"
+          "minimalContent",
+          "role",
+          "tabIndex",
+          "title"
         ],
         "variants": {}
       },
@@ -12939,26 +13432,39 @@
         "name": "EmptyState",
         "source": "packages/react/src/components/EmptyState/EmptyState.tsx",
         "story": "packages/react/src/components/EmptyState/EmptyState.stories.tsx",
-        "test": null,
+        "test": "packages/react/src/components/EmptyState/EmptyState.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/EmptyState/EmptyState.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=347-5316",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["EmptyState"],
+          "mappedProps": ["action", "description", "icon", "title"],
           "unmappedProps": []
         },
-        "props": ["action", "children", "description", "icon", "title"],
+        "props": [
+          "action",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "description",
+          "icon",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
         "name": "FeedbackCard",
         "source": "packages/react/src/components/FeedbackCard/FeedbackCard.tsx",
-        "story": null,
-        "test": null,
+        "story": "packages/react/src/components/FeedbackCard/FeedbackCard.stories.tsx",
+        "test": "packages/react/src/components/FeedbackCard/FeedbackCard.test.tsx",
         "exported": true,
         "codeConnect": {
           "file": null,
@@ -12967,14 +13473,21 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "children",
           "description",
+          "id",
           "isSubmitting",
+          "role",
           "successMessage",
+          "tabIndex",
           "title"
         ],
         "variants": {}
@@ -12982,28 +13495,49 @@
       {
         "name": "FieldWrapper",
         "source": "packages/react/src/components/FieldWrapper/FieldWrapper.tsx",
-        "story": null,
-        "test": null,
+        "story": "packages/react/src/components/FieldWrapper/FieldWrapper.stories.tsx",
+        "test": "packages/react/src/components/FieldWrapper/FieldWrapper.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/FieldWrapper/FormField.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=431-5810",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["FieldWrapper", "FormField"],
+          "mappedProps": [
+            "description",
+            "helperText",
+            "label",
+            "optionalText",
+            "required",
+            "status"
+          ],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "children",
+          "description",
+          "descriptionId",
           "error",
           "errorId",
           "helperId",
           "helperText",
+          "hideLabel",
+          "id",
           "inputId",
           "label",
-          "status"
+          "labelAction",
+          "optionalText",
+          "required",
+          "role",
+          "status",
+          "tabIndex",
+          "title"
         ],
         "variants": {}
       },
@@ -13014,23 +13548,52 @@
         "test": "packages/react/src/components/FileUpload/FileUpload.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/FileUpload/FileUpload.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=444-12724",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["FileUpload"],
+          "mappedProps": [
+            "accept",
+            "browseLabel",
+            "disabled",
+            "dropLabel",
+            "emptyDescription",
+            "helperText",
+            "label",
+            "maxSize",
+            "multiple",
+            "status"
+          ],
           "unmappedProps": []
         },
         "props": [
           "accept",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "browseLabel",
           "children",
+          "defaultFiles",
+          "description",
+          "disabled",
+          "dropLabel",
+          "emptyDescription",
           "error",
-          "externalError",
+          "helperText",
           "id",
           "label",
+          "maxFiles",
           "maxSize",
+          "multiple",
+          "removeLabel",
+          "role",
+          "status",
+          "tabIndex",
+          "title",
+          "value",
           "wrapperClassName"
         ],
         "variants": {}
@@ -13043,19 +13606,23 @@
         "exported": true,
         "codeConnect": {
           "file": "packages/react/src/components/FloatingActionButton/FloatingActionButton.figma.tsx",
-          "linked": false,
-          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=TBD",
-          "needsNodeId": true,
-          "status": "scaffold",
-          "issues": ["node-id=TBD"],
-          "mappedProps": ["disabled"],
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=383-2459",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["FloatingActionButton"],
+          "mappedProps": ["aria-label", "disabled", "size", "variant"],
           "unmappedProps": []
         },
         "props": [
+          "aria-label",
           "asChild",
+          "autoFocus",
           "children",
           "disabled",
           "isLoading",
+          "placement",
           "size",
           "variant"
         ],
@@ -13085,10 +13652,22 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "floors", "selectedFloor"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "floors",
+          "id",
+          "role",
+          "selectedFloor",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13099,19 +13678,23 @@
         "exported": true,
         "codeConnect": {
           "file": "packages/react/src/components/Grid/Grid.figma.tsx",
-          "linked": false,
-          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=TBD",
-          "needsNodeId": true,
-          "status": "scaffold",
-          "issues": ["node-id=TBD"],
-          "mappedProps": ["cols", "gap"],
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=359-1574",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["Grid"],
+          "mappedProps": [],
           "unmappedProps": []
         },
         "props": [
           "align",
+          "asChild",
+          "children",
           "cols",
           "flow",
           "gap",
+          "id",
           "justify",
           "rows",
           "xGap",
@@ -13141,6 +13724,7 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
@@ -13162,7 +13746,8 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Icon"],
+          "mappedProps": ["name"],
           "unmappedProps": []
         },
         "props": ["color", "icon", "name", "size"],
@@ -13184,11 +13769,20 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["disabled", "icon", "isLoading", "size", "variant"],
-          "unmappedProps": ["icon"]
+          "connectedComponents": ["IconButton"],
+          "mappedProps": [
+            "aria-label",
+            "disabled",
+            "isLoading",
+            "size",
+            "variant"
+          ],
+          "unmappedProps": []
         },
         "props": [
+          "aria-label",
           "asChild",
+          "autoFocus",
           "children",
           "disabled",
           "isLoading",
@@ -13221,6 +13815,7 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
+          "connectedComponents": ["Input"],
           "mappedProps": [
             "autoFocus",
             "disabled",
@@ -13228,22 +13823,30 @@
             "label",
             "placeholder",
             "readOnly",
-            "status",
-            "true"
+            "status"
           ],
-          "unmappedProps": ["autoFocus", "true"]
+          "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
           "children",
+          "defaultValue",
           "disabled",
           "error",
           "helperText",
           "id",
           "label",
+          "name",
           "placeholder",
           "readOnly",
           "required",
+          "role",
           "status",
+          "tabIndex",
+          "title",
           "type",
           "value",
           "wrapperClassName"
@@ -13263,10 +13866,20 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13276,16 +13889,28 @@
         "test": "packages/react/src/components/Link/Link.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Link/Link.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-1385",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Link"],
+          "mappedProps": ["href", "variant"],
           "unmappedProps": []
         },
-        "props": ["children", "href", "variant"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "href",
+          "id",
+          "role",
+          "tabIndex",
+          "title",
+          "variant"
+        ],
         "variants": {}
       },
       {
@@ -13295,16 +13920,61 @@
         "test": "packages/react/src/components/List/List.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/List/List.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=237-2482",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["List"],
+          "mappedProps": ["density"],
           "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "density",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "Listbox",
+        "source": "packages/react/src/components/Listbox/Listbox.tsx",
+        "story": "packages/react/src/components/Listbox/Listbox.stories.tsx",
+        "test": "packages/react/src/components/Listbox/Listbox.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/Listbox/Listbox.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=401-9475",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["Listbox"],
+          "mappedProps": ["defaultValue", "disabled", "multiple", "options"],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "defaultValue",
+          "disabled",
+          "id",
+          "multiple",
+          "options",
+          "role",
+          "tabIndex",
+          "title",
+          "value"
+        ],
         "variants": {}
       },
       {
@@ -13320,17 +13990,29 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "size", "variant"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "size",
+          "tabIndex",
+          "title",
+          "variant"
+        ],
         "variants": {}
       },
       {
         "name": "MapControlsGroup",
         "source": "packages/react/src/components/MapControlsGroup/MapControlsGroup.tsx",
-        "story": null,
-        "test": null,
+        "story": "packages/react/src/components/MapControlsGroup/MapControlsGroup.stories.tsx",
+        "test": "packages/react/src/components/MapControlsGroup/MapControlsGroup.test.tsx",
         "exported": true,
         "codeConnect": {
           "file": null,
@@ -13339,17 +14021,28 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "compassBearing"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "compassBearing",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
         "name": "MapOverlay",
         "source": "packages/react/src/components/MapOverlay/MapOverlay.tsx",
-        "story": null,
-        "test": null,
+        "story": "packages/react/src/components/MapOverlay/MapOverlay.stories.tsx",
+        "test": "packages/react/src/components/MapOverlay/MapOverlay.test.tsx",
         "exported": true,
         "codeConnect": {
           "file": null,
@@ -13358,10 +14051,21 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "position"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "position",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13377,10 +14081,20 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13396,10 +14110,78 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["item1", "item2", "item3", "label", "shortcut"],
-          "unmappedProps": ["item1", "item2", "item3", "label", "shortcut"]
+          "connectedComponents": ["Menu", "MenuContent"],
+          "mappedProps": [],
+          "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "sideOffset",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "MultiSelect",
+        "source": "packages/react/src/components/MultiSelect/MultiSelect.tsx",
+        "story": "packages/react/src/components/MultiSelect/MultiSelect.stories.tsx",
+        "test": "packages/react/src/components/MultiSelect/MultiSelect.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/MultiSelect/MultiSelect.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=401-9365",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["MultiSelect"],
+          "mappedProps": [
+            "defaultSearchValue",
+            "defaultValue",
+            "disabled",
+            "helperText",
+            "label",
+            "options",
+            "placeholder",
+            "readOnly",
+            "status"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "clearable",
+          "defaultSearchValue",
+          "defaultValue",
+          "disabled",
+          "emptyText",
+          "error",
+          "filterOption",
+          "helperText",
+          "id",
+          "label",
+          "maxSelected",
+          "options",
+          "placeholder",
+          "readOnly",
+          "required",
+          "role",
+          "searchValue",
+          "status",
+          "tabIndex",
+          "title",
+          "value",
+          "wrapperClassName"
+        ],
         "variants": {}
       },
       {
@@ -13409,23 +14191,49 @@
         "test": "packages/react/src/components/Navbar/Navbar.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Navbar/Navbar.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=752-6765",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Navbar"],
+          "mappedProps": [
+            "account",
+            "actions",
+            "context",
+            "logo",
+            "navigation",
+            "primaryAction",
+            "utilities"
+          ],
           "unmappedProps": []
         },
-        "props": ["actions", "children", "logo"],
+        "props": [
+          "account",
+          "actions",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "context",
+          "id",
+          "logo",
+          "navigation",
+          "primaryAction",
+          "role",
+          "site",
+          "tabIndex",
+          "title",
+          "utilities"
+        ],
         "variants": {}
       },
       {
         "name": "NavigationAnnouncer",
         "source": "packages/react/src/components/NavigationAnnouncer/NavigationAnnouncer.tsx",
-        "story": null,
-        "test": null,
+        "story": "packages/react/src/components/NavigationAnnouncer/NavigationAnnouncer.stories.tsx",
+        "test": "packages/react/src/components/NavigationAnnouncer/NavigationAnnouncer.test.tsx",
         "exported": true,
         "codeConnect": {
           "file": null,
@@ -13434,10 +14242,119 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
         "props": ["isActive", "message"],
+        "variants": {}
+      },
+      {
+        "name": "NavigationItem",
+        "source": "packages/react/src/components/NavigationItem/NavigationItem.tsx",
+        "story": "packages/react/src/components/NavigationItem/NavigationItem.stories.tsx",
+        "test": "packages/react/src/components/NavigationItem/NavigationItem.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/NavigationItem/NavigationItem.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=861-7297",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["NavigationItem"],
+          "mappedProps": [
+            "badge",
+            "content",
+            "density",
+            "disabled",
+            "focusVisible",
+            "icon",
+            "placement",
+            "selected",
+            "state",
+            "trailing"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "ariaCurrent",
+          "asChild",
+          "badge",
+          "children",
+          "content",
+          "contentProp",
+          "density",
+          "disabled",
+          "focusVisible",
+          "href",
+          "icon",
+          "id",
+          "label",
+          "placement",
+          "role",
+          "selected",
+          "state",
+          "tabIndex",
+          "title",
+          "trailing"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "NumberInput",
+        "source": "packages/react/src/components/NumberInput/NumberInput.tsx",
+        "story": "packages/react/src/components/NumberInput/NumberInput.stories.tsx",
+        "test": "packages/react/src/components/NumberInput/NumberInput.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/NumberInput/NumberInput.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=338-1796",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["NumberInput"],
+          "mappedProps": [
+            "autoFocus",
+            "defaultValue",
+            "disabled",
+            "helperText",
+            "label",
+            "placeholder",
+            "readOnly",
+            "showSteppers",
+            "status"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
+          "children",
+          "defaultValue",
+          "disabled",
+          "error",
+          "helperText",
+          "id",
+          "label",
+          "name",
+          "placeholder",
+          "readOnly",
+          "required",
+          "role",
+          "showSteppers",
+          "status",
+          "tabIndex",
+          "title",
+          "value",
+          "wrapperClassName"
+        ],
         "variants": {}
       },
       {
@@ -13447,16 +14364,45 @@
         "test": "packages/react/src/components/OTPInput/OTPInput.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/OTPInput/OTPInput.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=475-38745",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["OTPInput"],
+          "mappedProps": [
+            "autoFocus",
+            "disabled",
+            "helperText",
+            "label",
+            "length",
+            "readOnly",
+            "status",
+            "value"
+          ],
           "unmappedProps": []
         },
-        "props": ["children", "disabled", "error", "length", "value"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
+          "children",
+          "disabled",
+          "error",
+          "helperText",
+          "id",
+          "label",
+          "length",
+          "readOnly",
+          "role",
+          "status",
+          "tabIndex",
+          "title",
+          "value",
+          "wrapperClassName"
+        ],
         "variants": {}
       },
       {
@@ -13466,16 +14412,82 @@
         "test": "packages/react/src/components/Pagination/Pagination.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Pagination/Pagination.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=280-1157",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
+          "connectedComponents": ["Pagination"],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "PasswordInput",
+        "source": "packages/react/src/components/PasswordInput/PasswordInput.tsx",
+        "story": "packages/react/src/components/PasswordInput/PasswordInput.stories.tsx",
+        "test": "packages/react/src/components/PasswordInput/PasswordInput.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/PasswordInput/PasswordInput.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=412-2642",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["PasswordInput"],
+          "mappedProps": [
+            "autoFocus",
+            "defaultVisible",
+            "disabled",
+            "helperText",
+            "label",
+            "placeholder",
+            "readOnly",
+            "status"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
+          "children",
+          "defaultValue",
+          "defaultVisible",
+          "disabled",
+          "error",
+          "helperText",
+          "hidePasswordLabel",
+          "id",
+          "label",
+          "name",
+          "placeholder",
+          "readOnly",
+          "required",
+          "role",
+          "showPasswordLabel",
+          "showToggle",
+          "status",
+          "tabIndex",
+          "title",
+          "value",
+          "visible",
+          "wrapperClassName"
+        ],
         "variants": {}
       },
       {
@@ -13491,16 +14503,23 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
         "props": [
           "actions",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "badges",
           "children",
           "description",
+          "id",
           "imageUrl",
+          "role",
           "subtitle",
+          "tabIndex",
           "title"
         ],
         "variants": {}
@@ -13518,10 +14537,24 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["description", "side", "title"],
-          "unmappedProps": ["description", "side", "title"]
+          "connectedComponents": ["Popover", "PopoverContent"],
+          "mappedProps": ["side"],
+          "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "align",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "collisionPadding",
+          "id",
+          "role",
+          "side",
+          "sideOffset",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13537,10 +14570,22 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
+          "connectedComponents": ["Progress"],
           "mappedProps": ["value"],
           "unmappedProps": []
         },
-        "props": ["children", "max", "value"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "max",
+          "role",
+          "tabIndex",
+          "title",
+          "value"
+        ],
         "variants": {}
       },
       {
@@ -13556,10 +14601,26 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["defaultValue", "disabled", "error", "label"],
-          "unmappedProps": ["defaultValue", "disabled", "error", "label"]
+          "connectedComponents": ["Radio", "RadioGroupItem"],
+          "mappedProps": ["disabled", "error", "label", "value"],
+          "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "checked",
+          "children",
+          "disabled",
+          "error",
+          "id",
+          "label",
+          "required",
+          "role",
+          "tabIndex",
+          "title",
+          "value"
+        ],
         "variants": {}
       },
       {
@@ -13569,23 +14630,36 @@
         "test": "packages/react/src/components/Rating/Rating.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Rating/Rating.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=512-39747",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Rating"],
+          "mappedProps": ["max", "readOnly", "value"],
           "unmappedProps": []
         },
-        "props": ["children", "max", "readOnly", "value"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "max",
+          "readOnly",
+          "role",
+          "tabIndex",
+          "title",
+          "value"
+        ],
         "variants": {}
       },
       {
         "name": "RouteSummary",
         "source": "packages/react/src/components/RouteSummary/RouteSummary.tsx",
-        "story": null,
-        "test": null,
+        "story": "packages/react/src/components/RouteSummary/RouteSummary.stories.tsx",
+        "test": "packages/react/src/components/RouteSummary/RouteSummary.test.tsx",
         "exported": true,
         "codeConnect": {
           "file": null,
@@ -13594,14 +14668,22 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "children",
           "distanceText",
           "etaText",
+          "id",
+          "role",
           "state",
+          "tabIndex",
+          "title",
           "transportModeIcon"
         ],
         "variants": {}
@@ -13609,8 +14691,8 @@
       {
         "name": "RoutingInputGroup",
         "source": "packages/react/src/components/RoutingInputGroup/RoutingInputGroup.tsx",
-        "story": null,
-        "test": null,
+        "story": "packages/react/src/components/RoutingInputGroup/RoutingInputGroup.stories.tsx",
+        "test": "packages/react/src/components/RoutingInputGroup/RoutingInputGroup.test.tsx",
         "exported": true,
         "codeConnect": {
           "file": null,
@@ -13619,17 +14701,28 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "points"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "points",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
         "name": "SaveLocationCard",
         "source": "packages/react/src/components/SaveLocationCard/SaveLocationCard.tsx",
-        "story": null,
-        "test": null,
+        "story": "packages/react/src/components/SaveLocationCard/SaveLocationCard.stories.tsx",
+        "test": "packages/react/src/components/SaveLocationCard/SaveLocationCard.test.tsx",
         "exported": true,
         "codeConnect": {
           "file": null,
@@ -13638,29 +14731,54 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "description", "isSaved", "title"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "description",
+          "id",
+          "isSaved",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
         "name": "ScrollArea",
         "source": "packages/react/src/components/ScrollArea/ScrollArea.tsx",
         "story": "packages/react/src/components/ScrollArea/ScrollArea.stories.tsx",
-        "test": null,
+        "test": "packages/react/src/components/ScrollArea/ScrollArea.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/ScrollArea/ScrollArea.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=655-4973",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["ScrollArea"],
+          "mappedProps": ["hideScrollbar", "orientation"],
           "unmappedProps": []
         },
-        "props": ["children", "hideScrollbar", "orientation", "snap"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "hideScrollbar",
+          "id",
+          "orientation",
+          "role",
+          "snap",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13676,6 +14794,7 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
+          "connectedComponents": ["Search"],
           "mappedProps": [
             "autoFocus",
             "disabled",
@@ -13684,17 +14803,26 @@
             "placeholder",
             "readOnly"
           ],
-          "unmappedProps": ["autoFocus"]
+          "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
           "children",
+          "defaultValue",
           "disabled",
           "error",
           "id",
           "label",
+          "name",
           "placeholder",
           "readOnly",
           "required",
+          "role",
+          "tabIndex",
+          "title",
           "value",
           "wrapperClassName"
         ],
@@ -13704,25 +14832,36 @@
         "name": "SearchBar",
         "source": "packages/react/src/components/SearchBar/SearchBar.tsx",
         "story": "packages/react/src/components/SearchBar/SearchBar.stories.tsx",
-        "test": null,
+        "test": "packages/react/src/components/SearchBar/SearchBar.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/SearchBar/SearchBar.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=682-15111",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["SearchBar"],
+          "mappedProps": ["disabled", "placeholder", "value", "variant"],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
           "children",
           "containerClassName",
+          "defaultValue",
           "disabled",
+          "id",
+          "name",
           "placeholder",
           "readOnly",
           "required",
+          "role",
+          "tabIndex",
+          "title",
           "value",
           "variant"
         ],
@@ -13735,26 +14874,40 @@
         "test": "packages/react/src/components/SegmentedControl/SegmentedControl.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/SegmentedControl/SegmentedControl.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=309-5165",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["SegmentedControl"],
+          "mappedProps": ["defaultValue", "disabled", "error", "items", "size"],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "ariaLabel",
           "children",
           "defaultValue",
+          "disabled",
           "error",
+          "fullWidth",
           "id",
           "items",
           "label",
+          "role",
+          "size",
+          "tabIndex",
+          "title",
           "value",
           "wrapperClassName"
         ],
-        "variants": {}
+        "variants": {
+          "fullWidth": ["false", "true"],
+          "size": ["default", "lg", "sm"]
+        }
       },
       {
         "name": "Select",
@@ -13769,18 +14922,29 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["autoFocus", "disabled", "error", "placeholder"],
-          "unmappedProps": ["autoFocus", "error", "placeholder"]
+          "connectedComponents": ["Select", "SelectTrigger"],
+          "mappedProps": ["autoFocus", "disabled", "error"],
+          "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
           "children",
           "defaultOpen",
           "defaultValue",
           "disabled",
+          "error",
+          "id",
           "name",
           "open",
           "required",
-          "value"
+          "role",
+          "tabIndex",
+          "title",
+          "value",
+          "wrapperClassName"
         ],
         "variants": {}
       },
@@ -13791,16 +14955,28 @@
         "test": "packages/react/src/components/Separator/Separator.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Separator/Separator.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-1393",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
+          "connectedComponents": ["Separator"],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "decorative", "orientation"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "decorative",
+          "id",
+          "orientation",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13810,16 +14986,34 @@
         "test": "packages/react/src/components/Sidebar/Sidebar.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Sidebar/Sidebar.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=752-6807",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Sidebar"],
+          "mappedProps": ["footer", "header", "navigation", "tools", "variant"],
           "unmappedProps": []
         },
-        "props": ["children", "collapsible"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "collapsed",
+          "collapsible",
+          "content",
+          "footer",
+          "header",
+          "id",
+          "navigation",
+          "role",
+          "tabIndex",
+          "title",
+          "tools",
+          "variant"
+        ],
         "variants": {}
       },
       {
@@ -13829,16 +15023,26 @@
         "test": "packages/react/src/components/Skeleton/Skeleton.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Skeleton/Skeleton.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-1062",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
+          "connectedComponents": ["Skeleton"],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13854,10 +15058,20 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["disabled", "error", "label"],
+          "connectedComponents": ["Slider"],
+          "mappedProps": [
+            "defaultValue",
+            "disabled",
+            "error",
+            "label",
+            "thumbCount"
+          ],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "children",
           "defaultValue",
           "disabled",
@@ -13869,7 +15083,12 @@
           "min",
           "name",
           "orientation",
+          "role",
           "step",
+          "tabIndex",
+          "thumbCount",
+          "thumbLabels",
+          "title",
           "value",
           "wrapperClassName"
         ],
@@ -13888,10 +15107,21 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["size"],
+          "connectedComponents": ["Spinner"],
+          "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "size"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "size",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13902,15 +15132,29 @@
         "exported": true,
         "codeConnect": {
           "file": "packages/react/src/components/SplitButton/SplitButton.figma.tsx",
-          "linked": false,
-          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=TBD",
-          "needsNodeId": true,
-          "status": "scaffold",
-          "issues": ["node-id=TBD"],
-          "mappedProps": ["disabled", "size"],
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=383-2332",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["SplitButton"],
+          "mappedProps": ["disabled", "menuItems", "size", "variant"],
           "unmappedProps": []
         },
-        "props": ["children", "disabled", "menuItems", "size", "variant"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "disabled",
+          "id",
+          "menuItems",
+          "role",
+          "size",
+          "tabIndex",
+          "title",
+          "variant"
+        ],
         "variants": {}
       },
       {
@@ -13921,15 +15165,25 @@
         "exported": true,
         "codeConnect": {
           "file": "packages/react/src/components/Stack/Stack.figma.tsx",
-          "linked": false,
-          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=TBD",
-          "needsNodeId": true,
-          "status": "scaffold",
-          "issues": ["node-id=TBD"],
-          "mappedProps": ["children", "direction"],
-          "unmappedProps": ["children"]
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-1027",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["Stack"],
+          "mappedProps": [],
+          "unmappedProps": []
         },
-        "props": ["align", "direction", "gap", "justify", "wrap"],
+        "props": [
+          "align",
+          "asChild",
+          "children",
+          "direction",
+          "gap",
+          "id",
+          "justify",
+          "wrap"
+        ],
         "variants": {
           "align": ["baseline", "center", "end", "start", "stretch"],
           "direction": ["column", "column-reverse", "row", "row-reverse"],
@@ -13945,16 +15199,28 @@
         "test": "packages/react/src/components/Stepper/Stepper.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Stepper/Stepper.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=512-39614",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Stepper"],
+          "mappedProps": ["currentStep", "steps"],
           "unmappedProps": []
         },
-        "props": ["children", "currentStep", "steps"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "currentStep",
+          "id",
+          "role",
+          "steps",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -13970,10 +15236,14 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
+          "connectedComponents": ["Switch"],
           "mappedProps": ["checked", "disabled", "error", "label"],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "checked",
           "children",
           "defaultChecked",
@@ -13982,6 +15252,9 @@
           "id",
           "label",
           "required",
+          "role",
+          "tabIndex",
+          "title",
           "value",
           "wrapperClassName"
         ],
@@ -13994,16 +15267,26 @@
         "test": "packages/react/src/components/Table/Table.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Table/Table.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=237-2547",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
+          "connectedComponents": ["Table"],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -14019,26 +15302,25 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": [
-            "autoFocus",
-            "defaultValue",
-            "disabled",
-            "tab1Text",
-            "tab2Text",
-            "tab3Text",
-            "tab4Text"
-          ],
-          "unmappedProps": [
-            "autoFocus",
-            "defaultValue",
-            "disabled",
-            "tab1Text",
-            "tab2Text",
-            "tab3Text",
-            "tab4Text"
-          ]
+          "connectedComponents": ["Tabs"],
+          "mappedProps": ["defaultValue"],
+          "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "activationMode",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "defaultValue",
+          "dir",
+          "id",
+          "orientation",
+          "role",
+          "tabIndex",
+          "title",
+          "value"
+        ],
         "variants": {}
       },
       {
@@ -14048,16 +15330,27 @@
         "test": "packages/react/src/components/Tag/Tag.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Tag/Tag.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=728-6184",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Tag"],
+          "mappedProps": ["variant"],
           "unmappedProps": []
         },
-        "props": ["children", "variant"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title",
+          "variant"
+        ],
         "variants": {
           "variant": ["default", "destructive", "outline", "secondary"]
         }
@@ -14075,6 +15368,7 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
@@ -14109,6 +15403,7 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
+          "connectedComponents": ["Textarea"],
           "mappedProps": [
             "autoFocus",
             "disabled",
@@ -14117,17 +15412,26 @@
             "placeholder",
             "readOnly"
           ],
-          "unmappedProps": ["autoFocus"]
+          "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
           "children",
+          "defaultValue",
           "disabled",
           "error",
           "id",
           "label",
+          "name",
           "placeholder",
           "readOnly",
           "required",
+          "role",
+          "tabIndex",
+          "title",
           "value",
           "wrapperClassName"
         ],
@@ -14146,6 +15450,7 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
@@ -14159,16 +15464,27 @@
         "test": "packages/react/src/components/Timeline/Timeline.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Timeline/Timeline.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=660-4393",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Timeline"],
+          "mappedProps": ["density"],
           "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "density",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -14178,24 +15494,45 @@
         "test": "packages/react/src/components/TimePicker/TimePicker.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/TimePicker/TimePicker.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=444-12011",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["TimePicker"],
+          "mappedProps": [
+            "autoFocus",
+            "defaultValue",
+            "disabled",
+            "helperText",
+            "label",
+            "readOnly",
+            "status"
+          ],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
           "children",
+          "defaultValue",
+          "description",
           "disabled",
           "error",
+          "helperText",
           "id",
           "label",
+          "name",
           "placeholder",
           "readOnly",
           "required",
+          "role",
+          "status",
+          "tabIndex",
+          "title",
           "value",
           "wrapperClassName"
         ],
@@ -14214,10 +15551,25 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["action", "description", "title"],
-          "unmappedProps": ["action", "description", "title"]
+          "connectedComponents": ["Toast"],
+          "mappedProps": ["open"],
+          "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "defaultOpen",
+          "duration",
+          "forceMount",
+          "id",
+          "open",
+          "role",
+          "tabIndex",
+          "title",
+          "type"
+        ],
         "variants": {}
       },
       {
@@ -14228,20 +15580,28 @@
         "exported": true,
         "codeConnect": {
           "file": "packages/react/src/components/ToggleButton/ToggleButton.figma.tsx",
-          "linked": false,
-          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=TBD",
-          "needsNodeId": true,
-          "status": "scaffold",
-          "issues": ["node-id=TBD"],
-          "mappedProps": ["disabled", "pressed", "variant"],
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=383-2019",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["ToggleButton"],
+          "mappedProps": ["disabled", "pressed", "size", "variant"],
           "unmappedProps": []
         },
         "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
           "children",
           "defaultPressed",
           "disabled",
+          "id",
           "pressed",
+          "role",
           "size",
+          "tabIndex",
+          "title",
           "variant"
         ],
         "variants": {}
@@ -14259,10 +15619,24 @@
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
-          "mappedProps": ["children", "side"],
-          "unmappedProps": ["side"]
+          "connectedComponents": ["Tooltip", "TooltipContent"],
+          "mappedProps": ["side"],
+          "unmappedProps": []
         },
-        "props": ["children"],
+        "props": [
+          "align",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "collisionPadding",
+          "id",
+          "role",
+          "side",
+          "sideOffset",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -14272,23 +15646,45 @@
         "test": "packages/react/src/components/Tree/Tree.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/Tree/Tree.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=662-5094",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "mappedProps": [],
+          "connectedComponents": ["Tree"],
+          "mappedProps": ["ariaLabel", "density"],
           "unmappedProps": []
         },
-        "props": ["children", "data"],
+        "props": [
+          "activationMode",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "ariaLabel",
+          "children",
+          "data",
+          "defaultExpandedIds",
+          "defaultSelectedId",
+          "density",
+          "expandedIds",
+          "id",
+          "indent",
+          "renderActions",
+          "renderIcon",
+          "renderMeta",
+          "role",
+          "selectedId",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
         "name": "UserLocationMarker",
         "source": "packages/react/src/components/UserLocationMarker/UserLocationMarker.tsx",
         "story": "packages/react/src/components/UserLocationMarker/UserLocationMarker.stories.tsx",
-        "test": null,
+        "test": "packages/react/src/components/UserLocationMarker/UserLocationMarker.test.tsx",
         "exported": true,
         "codeConnect": {
           "file": null,
@@ -14297,10 +15693,22 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "heading", "showHeading"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "heading",
+          "id",
+          "role",
+          "showHeading",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       },
       {
@@ -14316,10 +15724,20 @@
           "needsNodeId": false,
           "status": "missing",
           "issues": [],
+          "connectedComponents": [],
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "title"],
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
         "variants": {}
       }
     ]

@@ -1,58 +1,122 @@
 package com.kozmos.components.chip
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosDimensions
+
+enum class ChipVariant {
+    Neutral, Brand, Destructive
+}
+
+enum class ChipSize {
+    Sm, Default, Lg
+}
 
 @Composable
 fun KozmosChip(
     text: String,
-    active: Boolean = false,
-    icon: (@Composable () -> Unit)? = null,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    variant: ChipVariant = ChipVariant.Neutral,
+    size: ChipSize = ChipSize.Default,
+    selected: Boolean = false,
+    active: Boolean? = null,
+    enabled: Boolean = true,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    onRemove: (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null
 ) {
-    val backgroundColor = if (active) KozmosColors.primitivesColorsTheme500 else Color.Transparent
-    val contentColor = if (active) Color.White else KozmosColors.primitivesColorsForeground100
-    val borderColor = if (active) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsBackground200
+    val isSelected = active ?: selected
+    val colors = chipColors(variant = variant, selected = isSelected)
+    val metrics = chipMetrics(size)
 
     Surface(
-        onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(50),
-        color = backgroundColor,
-        border = BorderStroke(1.dp, borderColor)
+        shape = RoundedCornerShape(percent = 50),
+        color = colors.container,
+        contentColor = colors.content,
+        border = BorderStroke(1.dp, colors.border)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            modifier = Modifier
+                .heightIn(min = metrics.minHeight)
+                .then(
+                    if (onClick != null) {
+                        Modifier.clickable(enabled = enabled) { onClick() }
+                    } else {
+                        Modifier
+                    }
+                )
+                .padding(
+                    start = metrics.horizontalPadding,
+                    end = if (onRemove != null) KozmosDimensions.primitivesLayoutSpacing50 else metrics.horizontalPadding,
+                    top = metrics.verticalPadding,
+                    bottom = metrics.verticalPadding
+                )
         ) {
-            if (icon != null) {
-                icon()
-                Spacer(modifier = Modifier.width(8.dp))
+            if (leadingIcon != null) {
+                Box(
+                    modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing200),
+                    contentAlignment = Alignment.Center
+                ) {
+                    leadingIcon()
+                }
+                Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing50))
             }
+
             Text(
                 text = text,
-                color = contentColor,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
+                color = colors.content,
+                fontSize = metrics.fontSize,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1
             )
+
+            if (onRemove != null) {
+                Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing50))
+                Box(
+                    modifier = Modifier
+                        .size(KozmosDimensions.primitivesLayoutSizing300)
+                        .clip(CircleShape)
+                        .clickable(enabled = enabled) { onRemove() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Remove $text",
+                        modifier = Modifier.size(12.dp),
+                        tint = colors.content
+                    )
+                }
+            }
         }
     }
 }
@@ -61,13 +125,85 @@ fun KozmosChip(
 @Composable
 fun KozmosChipGroup(
     modifier: Modifier = Modifier,
+    horizontalSpacing: Dp = KozmosDimensions.primitivesLayoutSpacing100,
+    verticalSpacing: Dp = KozmosDimensions.primitivesLayoutSpacing100,
     content: @Composable () -> Unit
 ) {
     FlowRow(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
+        verticalArrangement = Arrangement.spacedBy(verticalSpacing)
     ) {
         content()
     }
+}
+
+private data class ChipColors(
+    val container: Color,
+    val content: Color,
+    val border: Color
+)
+
+private data class ChipMetrics(
+    val horizontalPadding: Dp,
+    val verticalPadding: Dp,
+    val minHeight: Dp,
+    val fontSize: androidx.compose.ui.unit.TextUnit
+)
+
+private fun chipColors(variant: ChipVariant, selected: Boolean): ChipColors {
+    if (selected) {
+        return when (variant) {
+            ChipVariant.Destructive -> ChipColors(
+                container = KozmosColors.componentsPrimaryButtonsDangerButtonBackgroundIdle,
+                content = KozmosColors.componentsPrimaryButtonsDangerButtonForegroundContentIdle,
+                border = KozmosColors.componentsPrimaryButtonsDangerButtonBackgroundIdle
+            )
+            ChipVariant.Neutral,
+            ChipVariant.Brand -> ChipColors(
+                container = KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle,
+                content = KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle,
+                border = KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle
+            )
+        }
+    }
+
+    return when (variant) {
+        ChipVariant.Neutral -> ChipColors(
+            container = KozmosColors.primitivesColorsBackground0,
+            content = KozmosColors.primitivesColorsForeground100,
+            border = KozmosColors.primitivesColorsBackground200
+        )
+        ChipVariant.Brand -> ChipColors(
+            container = KozmosColors.primitivesColorsTheme0,
+            content = KozmosColors.componentsSecondaryButtonsThemedButtonForegroundContentIdle,
+            border = KozmosColors.primitivesColorsTheme200
+        )
+        ChipVariant.Destructive -> ChipColors(
+            container = KozmosColors.primitivesColorsEmotionalDanger0,
+            content = KozmosColors.componentsSecondaryButtonsDangerButtonForegroundContentIdle,
+            border = KozmosColors.primitivesColorsEmotionalDanger200
+        )
+    }
+}
+
+private fun chipMetrics(size: ChipSize): ChipMetrics = when (size) {
+    ChipSize.Sm -> ChipMetrics(
+        horizontalPadding = KozmosDimensions.primitivesLayoutSpacing100,
+        verticalPadding = 0.dp,
+        minHeight = 28.dp,
+        fontSize = 12.sp
+    )
+    ChipSize.Default -> ChipMetrics(
+        horizontalPadding = KozmosDimensions.primitivesLayoutSpacing150,
+        verticalPadding = 0.dp,
+        minHeight = 32.dp,
+        fontSize = 14.sp
+    )
+    ChipSize.Lg -> ChipMetrics(
+        horizontalPadding = KozmosDimensions.primitivesLayoutSpacing200,
+        verticalPadding = 0.dp,
+        minHeight = 36.dp,
+        fontSize = 14.sp
+    )
 }

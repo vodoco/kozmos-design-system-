@@ -36,12 +36,13 @@ import { KozmosPopover } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosPopover: View {
-    var body: some View {
-        Text("Popover Content placeholder")
-    }
-}
-    `}
+Button("Show details") {}
+.kozmosPopover(
+isPresented: .constant(true),
+title: "Details",
+description: "Supporting context."
+)
+`}
     kotlin={`
 package com.kozmos.components.popover
 
@@ -63,29 +64,30 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosPopover(
-    isExpanded: Boolean,
-    onDismissRequest: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+isExpanded: Boolean,
+onDismissRequest: () -> Unit,
+modifier: Modifier = Modifier,
+content: @Composable () -> Unit
 ) {
-    if (isExpanded) {
-        Popup(
-            onDismissRequest = onDismissRequest,
-            properties = PopupProperties(focusable = true)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
-                shadowElevation = 4.dp,
-                color = KozmosColors.primitivesColorsBackground0,
-                modifier = modifier
-            ) {
-                Box(modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)) {
-                    content()
-                }
-            }
-        }
-    }
+if (isExpanded) {
+Popup(
+onDismissRequest = onDismissRequest,
+properties = PopupProperties(focusable = true)
+) {
+Surface(
+shape = RoundedCornerShape(KozmosDimensions.primitivesLayoutRadius100),
+shadowElevation = 4.dp,
+color = KozmosColors.primitivesColorsBackground0,
+modifier = modifier
+) {
+Box(modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)) {
+content()
+}
+}
+}
+}
 }
 
     `}
+
 />

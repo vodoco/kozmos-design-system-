@@ -1,0 +1,14 @@
+import { Meta, Canvas, Controls } from "@storybook/blocks";
+import * as Stories from "./POIResultList.stories";
+
+<Meta of={Stories} />
+
+# POIResultList
+
+Controlled list composition that keeps result selection synchronized by POI ID.
+`resultCountLabel` is localized by the consumer and announced when results
+change. The empty state should tell the person how to recover.
+
+<Canvas of={Stories.Default} />
+<Canvas of={Stories.Empty} />
+<Controls />

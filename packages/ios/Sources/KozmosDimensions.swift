@@ -2,9 +2,9 @@ import Foundation
 import CoreGraphics
 
 public struct KozmosDimensions {
-    public static let primitivesRadiusCard: CGFloat = 1
-    public static let primitivesRadiusInput: CGFloat = 1
-    public static let primitivesRadiusButton: CGFloat = 1
+    public static let primitivesRadiusCard: CGFloat = 16
+    public static let primitivesRadiusInput: CGFloat = 16
+    public static let primitivesRadiusButton: CGFloat = 16
     public static let primitivesScreenMobile: CGFloat = 375
     public static let primitivesScreenTablet: CGFloat = 768
     public static let primitivesScreenLaptop: CGFloat = 1024
@@ -72,6 +72,13 @@ public struct KozmosDimensions {
     public static let primitivesLayoutRadius800: CGFloat = 72
     public static let primitivesLayoutRadius900: CGFloat = 96
     public static let primitivesLayoutRadius1000: CGFloat = 128
+    public static let primitivesLayoutRadiusFull: CGFloat = 9999
+    public static let semanticsRadiusNone: CGFloat = 0
+    public static let semanticsRadiusMarker: CGFloat = 4
+    public static let semanticsRadiusControl: CGFloat = 16
+    public static let semanticsRadiusContainer: CGFloat = 16
+    public static let semanticsRadiusPanel: CGFloat = 24
+    public static let semanticsRadiusPill: CGFloat = 9999
     public static let componentsHtmlElementsHeadingsH1LetterSpacing: CGFloat = -0.4000000059604645
     public static let componentsHtmlElementsHeadingsH1ParagraphSpacing: CGFloat = 28
     public static let componentsHtmlElementsHeadingsH2LetterSpacing: CGFloat = -0.4000000059604645

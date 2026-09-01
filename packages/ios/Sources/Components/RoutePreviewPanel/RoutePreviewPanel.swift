@@ -1,0 +1,233 @@
+import SwiftUI
+
+/// A route preview with selectable options and a continue action.
+///
+/// Mirrors the React `RoutePreviewPanel`. The panel never changes its own
+/// selected route, and continuation is disabled while the route status is
+/// `calculating`, `noRoute`, `error`, or `idle`.
+public struct KozmosRoutePreviewPanel<StatusContent: View, AlertContent: View>: View {
+    private let destinationName: String
+    private let destinationLabel: String
+    private let options: [KozmosRouteOptionPresentation]
+    private let status: KozmosRouteReadiness
+    private let backLabel: String
+    private let continueLabel: String
+    private let optionsLabel: String
+    private let optionsCountLabel: String?
+    private let selectedRouteAnnouncement: String?
+    private let onOptionSelect: (String) -> Void
+    private let onBack: () -> Void
+    private let onContinue: (String) -> Void
+    private let statusContent: StatusContent
+    private let alert: AlertContent
+    private let hasStatusContent: Bool
+    private let hasAlert: Bool
+
+    public init(
+        destinationName: String,
+        options: [KozmosRouteOptionPresentation],
+        status: KozmosRouteReadiness,
+        backLabel: String,
+        continueLabel: String,
+        destinationLabel: String = "To",
+        optionsLabel: String = "Route options",
+        optionsCountLabel: String? = nil,
+        selectedRouteAnnouncement: String? = nil,
+        onOptionSelect: @escaping (String) -> Void,
+        onBack: @escaping () -> Void,
+        onContinue: @escaping (String) -> Void,
+        @ViewBuilder statusContent: () -> StatusContent,
+        @ViewBuilder alert: () -> AlertContent
+    ) {
+        self.destinationName = destinationName
+        self.options = options
+        self.status = status
+        self.backLabel = backLabel
+        self.continueLabel = continueLabel
+        self.destinationLabel = destinationLabel
+        self.optionsLabel = optionsLabel
+        self.optionsCountLabel = optionsCountLabel
+        self.selectedRouteAnnouncement = selectedRouteAnnouncement
+        self.onOptionSelect = onOptionSelect
+        self.onBack = onBack
+        self.onContinue = onContinue
+        self.statusContent = statusContent()
+        self.alert = alert()
+        self.hasStatusContent = StatusContent.self != EmptyView.self
+        self.hasAlert = AlertContent.self != EmptyView.self
+    }
+
+    private var selectedOption: KozmosRouteOptionPresentation? {
+        options.first { $0.selected && $0.available }
+    }
+
+    private var ready: Bool { status == .ready }
+
+    public var body: some View {
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing50) {
+                Text(destinationLabel.uppercased())
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(KozmosColors.primitivesColorsForeground500)
+
+                Text(destinationName)
+                    .font(.title3.weight(.semibold))
+                    .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(KozmosDimensions.primitivesLayoutSpacing200)
+
+            Divider().overlay(KozmosColors.primitivesColorsForeground300)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                    if let selectedRouteAnnouncement {
+                        Color.clear
+                            .frame(width: 0, height: 0)
+                            .accessibilityElement()
+                            .accessibilityLabel(selectedRouteAnnouncement)
+                            .accessibilityAddTraits(.updatesFrequently)
+                    }
+
+                    if status != .ready, hasStatusContent {
+                        statusContent
+                            .frame(maxWidth: .infinity)
+                            .padding(KozmosDimensions.primitivesLayoutSpacing300)
+                            .background(KozmosColors.primitivesColorsBackground100.opacity(0.4))
+                            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
+                                    .strokeBorder(
+                                        KozmosColors.primitivesColorsForeground300,
+                                        style: StrokeStyle(lineWidth: 1, dash: [4, 4])
+                                    )
+                            )
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(alignment: .top, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                                ForEach(options) { option in
+                                    KozmosRouteOptionCard(option: option, onSelect: onOptionSelect)
+                                        .frame(width: 208)
+                                }
+                            }
+                        }
+                        .accessibilityElement(children: .contain)
+                        .accessibilityLabel(optionsLabel)
+
+                        if options.count > 1, let optionsCountLabel {
+                            Text(optionsCountLabel)
+                                .font(KozmosTypography.caption)
+                                .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                        }
+                    }
+
+                    if hasAlert {
+                        alert
+                            .font(KozmosTypography.subheadline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(KozmosDimensions.primitivesLayoutSpacing150)
+                            .background(KozmosColors.primitivesColorsEmotionalAlert500.opacity(0.15))
+                            .clipShape(
+                                RoundedRectangle(
+                                    cornerRadius: KozmosDimensions.semanticsRadiusControl,
+                                    style: .continuous
+                                )
+                            )
+                    }
+                }
+                .padding(KozmosDimensions.primitivesLayoutSpacing200)
+            }
+
+            Divider().overlay(KozmosColors.primitivesColorsForeground300)
+
+            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                KozmosIconButton(iconName: "arrow.left", variant: .outline, action: onBack)
+                    .accessibilityLabel(backLabel)
+
+                KozmosButton(
+                    continueLabel,
+                    isDisabled: !ready || selectedOption == nil,
+                    isLoading: status == .calculating
+                ) {
+                    if let selectedOption { onContinue(selectedOption.id) }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(KozmosDimensions.primitivesLayoutSpacing200)
+        }
+        .frame(maxWidth: .infinity)
+        .background(KozmosColors.primitivesColorsBackground0)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Route preview")
+    }
+}
+
+public extension KozmosRoutePreviewPanel where AlertContent == EmptyView {
+    init(
+        destinationName: String,
+        options: [KozmosRouteOptionPresentation],
+        status: KozmosRouteReadiness,
+        backLabel: String,
+        continueLabel: String,
+        destinationLabel: String = "To",
+        optionsLabel: String = "Route options",
+        optionsCountLabel: String? = nil,
+        selectedRouteAnnouncement: String? = nil,
+        onOptionSelect: @escaping (String) -> Void,
+        onBack: @escaping () -> Void,
+        onContinue: @escaping (String) -> Void,
+        @ViewBuilder statusContent: () -> StatusContent
+    ) {
+        self.init(
+            destinationName: destinationName,
+            options: options,
+            status: status,
+            backLabel: backLabel,
+            continueLabel: continueLabel,
+            destinationLabel: destinationLabel,
+            optionsLabel: optionsLabel,
+            optionsCountLabel: optionsCountLabel,
+            selectedRouteAnnouncement: selectedRouteAnnouncement,
+            onOptionSelect: onOptionSelect,
+            onBack: onBack,
+            onContinue: onContinue,
+            statusContent: statusContent,
+            alert: { EmptyView() }
+        )
+    }
+}
+
+public extension KozmosRoutePreviewPanel where StatusContent == EmptyView, AlertContent == EmptyView {
+    init(
+        destinationName: String,
+        options: [KozmosRouteOptionPresentation],
+        status: KozmosRouteReadiness,
+        backLabel: String,
+        continueLabel: String,
+        destinationLabel: String = "To",
+        optionsLabel: String = "Route options",
+        optionsCountLabel: String? = nil,
+        selectedRouteAnnouncement: String? = nil,
+        onOptionSelect: @escaping (String) -> Void,
+        onBack: @escaping () -> Void,
+        onContinue: @escaping (String) -> Void
+    ) {
+        self.init(
+            destinationName: destinationName,
+            options: options,
+            status: status,
+            backLabel: backLabel,
+            continueLabel: continueLabel,
+            destinationLabel: destinationLabel,
+            optionsLabel: optionsLabel,
+            optionsCountLabel: optionsCountLabel,
+            selectedRouteAnnouncement: selectedRouteAnnouncement,
+            onOptionSelect: onOptionSelect,
+            onBack: onBack,
+            onContinue: onContinue,
+            statusContent: { EmptyView() },
+            alert: { EmptyView() }
+        )
+    }
+}

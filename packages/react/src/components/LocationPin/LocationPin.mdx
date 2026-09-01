@@ -36,12 +36,8 @@ import { KozmosLocationPin } from "@kozmos/vue"
     swift={`
 import SwiftUI
 
-struct KozmosLocationPin: View {
-    var body: some View {
-        Text("LocationPin Content placeholder")
-    }
-}
-    `}
+KozmosLocationPin()
+`}
     kotlin={`
 package com.kozmos.components.locationpin
 
@@ -60,16 +56,17 @@ import com.kozmos.tokens.KozmosColors
 
 @Composable
 fun KozmosLocationPin(
-    modifier: Modifier = Modifier,
-    tint: Color = KozmosColors.primitivesColorsTheme500
+modifier: Modifier = Modifier,
+tint: Color = KozmosColors.primitivesColorsTheme500
 ) {
-    Icon(
-        imageVector = Icons.Default.LocationOn,
-        contentDescription = "Location Pin",
-        modifier = modifier.size(KozmosDimensions.primitivesLayoutSizing400),
-        tint = tint
-    )
+Icon(
+imageVector = Icons.Default.LocationOn,
+contentDescription = "Location Pin",
+modifier = modifier.size(KozmosDimensions.primitivesLayoutSizing400),
+tint = tint
+)
 }
 
     `}
+
 />

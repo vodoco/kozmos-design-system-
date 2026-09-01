@@ -1,0 +1,113 @@
+import { Meta, Story, Canvas, Source } from '@storybook/blocks';
+import * as FeedbackCardStories from './FeedbackCard.stories';
+
+<Meta of={FeedbackCardStories} />
+
+# FeedbackCard
+
+A rating and comment prompt for collecting feedback on the wayfinding
+experience.
+
+## Usage
+
+Use it at a natural pause, not mid-task:
+
+- After arrival, when a route has completed
+- At the end of a session
+- Following a support interaction
+
+Do not interrupt active navigation with it. A feedback prompt over live guidance
+is the wrong trade.
+
+`isSubmitting` and `successMessage` drive the three states. Success replaces the
+form rather than disabling it — leaving a greyed-out rating behind a
+confirmation suggests the rating is still editable.
+
+`onSubmitFeedback` receives the rating and the comment together, so there is no
+partial-submit state to reconcile.
+
+## Implementation
+
+import { PlatformSnippets } from '../PlatformSnippets';
+
+<div className="subheading">Platform Code</div>
+
+<PlatformSnippets
+  react={`
+import { FeedbackCard } from '@kozmos/react';
+
+<FeedbackCard
+  title="How was your visit?"
+  description="Rate your wayfinding experience and add a comment."
+  isSubmitting={isSubmitting}
+  successMessage={submitted ? "Thanks for your feedback." : undefined}
+  onSubmitFeedback={(rating, comment) => submit(rating, comment)}
+/>
+  `}
+  vue={`
+<script setup>
+import { KozmosFeedbackCard } from "@kozmos/vue"
+</script>
+
+<template>
+  <KozmosFeedbackCard
+    title="How was your visit?"
+    :isSubmitting="isSubmitting"
+    @submitFeedback="(rating, comment) => submit(rating, comment)"
+  />
+</template>
+  `}
+  swift={`
+import SwiftUI
+import Kozmos
+
+struct FeedbackView: View {
+    @State private var isSubmitting = false
+
+    var body: some View {
+        KozmosFeedbackCard(
+            title: "How was your visit?",
+            description: "Rate your wayfinding experience and add a comment.",
+            isSubmitting: isSubmitting,
+            onSubmitFeedback: { rating, comment in
+                submit(rating, comment)
+            }
+        )
+    }
+}
+  `}
+  kotlin={`
+package com.kozmos.example
+
+import androidx.compose.runtime.*
+import com.kozmos.components.feedbackcard.KozmosFeedbackCard
+
+@Composable
+fun FeedbackScreen() {
+    var isSubmitting by remember { mutableStateOf(false) }
+
+    KozmosFeedbackCard(
+        title = "How was your visit?",
+        isSubmitting = isSubmitting,
+        onSubmitFeedback = { rating, comment -> submit(rating, comment) }
+    )
+}
+  `}
+/>
+
+## Accessibility
+
+- Success replaces the form, so nothing reads as still editable after
+  submitting.
+- The in-flight state must be announced; a dimmed button alone is not sufficient
+  for a screen reader user.
+- The rating control owns its own accessible value, so the current rating is
+  readable without inspecting the stars.
+
+## Stories
+
+### Default
+<Canvas of={FeedbackCardStories.Default} />
+
+### Submitting
+<Canvas of={FeedbackCardStories.Submitting} />
