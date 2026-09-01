@@ -402,10 +402,17 @@ const KOZMOS_RADIUS = {
   none: 0,
   marker: 4,
   control: 16,
-  container: 16,
+  container: 20,
   panel: 24,
   pill: 9999,
 };
+
+/**
+ * How far a Product / SDK slot sits inside its card: 12px of padding plus the
+ * card's 1px stroke. The stroke counts — the gap the eye measures is to the
+ * inside of the border, not to the frame edge.
+ */
+const PRODUCT_SDK_CARD_INSET = 13;
 
 const SIDEBAR_CONTENT = ["Basic", "Sections", "Tools", "Rail"];
 // Drawer's slot API. Header and Footer join the Content Slot that was already
@@ -4605,7 +4612,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "POICard/radius",
-    value: 16,
+    value: 20,
     alias: "Radius/Container",
     scopes: ["CORNER_RADIUS"],
   },
@@ -4638,7 +4645,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "WayfindingCard/radius",
-    value: 16,
+    value: 20,
     alias: "Radius/Container",
     scopes: ["CORNER_RADIUS"],
   },
@@ -43657,14 +43664,19 @@ async function productSdkSlot({
     width,
     height,
   });
-  // A slot is a region inside a card, not a control, so it takes the radius the
-  // card leaves it rather than the control role. With cards on `container` (16)
-  // and 12-16px of inset, the concentric ideal is 0-4, and `marker` covers both
-  // ends within a pixel. `control` here made every slot at least as round as
-  // the card around it. Measured across the page: 50 nesting findings before,
-  // 37 after — where squaring outright would have taken it to 53, because a
-  // square slot at 13px inset wants a parent of 13, not 16.
-  slot.cornerRadius = KOZMOS_RADIUS.marker;
+  // A slot is a region inside a card, so its radius is not a role at all — it
+  // is whatever the card leaves it. R_inner = R_outer - inset, where the inset
+  // is the card's padding plus its 1px stroke.
+  //
+  // Derived rather than pinned to a role because the right answer moves with
+  // `container`. It was `marker` (4) while container was 16; container went to
+  // 20 and 4 became wrong — simulated across the page, cards at 20 with slots
+  // at 4 give 52 nesting findings against 37 at the derived 7. A role would
+  // have quietly gone stale the moment the card changed.
+  slot.cornerRadius = Math.max(
+    0,
+    KOZMOS_RADIUS.container - PRODUCT_SDK_CARD_INSET,
+  );
   slot.fills = [
     paintFromVariable(
       muted ? "Surface/100" : "Colors/background/100",

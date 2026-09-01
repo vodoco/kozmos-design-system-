@@ -160,9 +160,23 @@ narrows the gap and never closes it.
 
 The move was still right, for a different reason: it put 15 sets on the semantic
 scale instead of an off-scale literal, so `Control` and `Container` now reach
-them. But the nesting fix is the **child**, in every one of these pairs. With
-the card at 16 and 13px of inset, the slot wants roughly 3 — which is to say
-square, or `marker` at 4 if a hint of rounding is wanted.
+them. But the nesting fix is the **child**, in every one of these pairs.
+
+`Container` then went to **20** on 2026-09-01, because it and `Control` were both
+16 — two roles, one number, so a 44px field and a 400px card drew the same
+corner and the role distinction was cosmetic. That is the other half of the
+"uneven roundness" complaint, and it moved the slots again: at container 16 the
+best slot value was 4, and at container 20 the same 4 gives **52** findings
+against **37** at 7.
+
+Which is why the slot radius is now **derived rather than roled**:
+
+```
+R_slot = R_container - inset      // inset = 12px padding + the card's 1px stroke
+```
+
+A role would have gone quietly stale the moment the card changed — and did,
+within a day of being set.
 
 **Should a control be squared because a card contains it?** The rule flags four
 buttons — RouteSummary's two, RoutingInputGroup's Swap, FeedbackCard's Submit —
