@@ -67077,7 +67077,16 @@ function syncFocusRing(
   );
   ring.x = -offset;
   ring.y = -offset;
-  ring.cornerRadius = radius >= 9999 ? 9999 : radius + offset;
+  // A pill ring gets the radius its own box can actually carry, not the
+  // sentinel. Writing 9999 onto a 62x36 rectangle stores a number that is false
+  // about the shape: Figma clamps it on screen, so it looks right and the file
+  // lies. It also makes the ring unarithmetical — `9999 + 4` is the answer to
+  // nothing, which is how a nested-radius audit ends up asking for a 10003px
+  // corner.
+  const ringCap =
+    Math.min(measuredWidth + offset * 2, measuredHeight + offset * 2) / 2;
+  ring.cornerRadius =
+    radius >= 9999 ? ringCap : Math.min(radius + offset, ringCap);
   ring.fills = [];
   ring.strokes = [
     paintFromVariable(variableName, fallback, variableByName, stats),

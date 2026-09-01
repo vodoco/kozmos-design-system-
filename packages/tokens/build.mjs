@@ -240,6 +240,29 @@ function firstDefinedTokenValue(token) {
   return undefined;
 }
 
+/**
+ * A pill is a shape, not a length.
+ *
+ * `Semantics.Radius.Pill` is the sentinel 9999 — CSS idiom for "as round as this
+ * box allows", and meaningless as a native dimension. Emitted as a number it is
+ * a loaded gun: `semanticsRadiusPill: CGFloat = 9999` reads like a value and
+ * gives 9999pt to anyone who applies it. Worse, it cannot be reasoned about —
+ * a ring 4px outside a pill wants `9999 + 4`, which is the answer to nothing.
+ *
+ * Every component already does the right thing without it: SwiftUI `Capsule()`,
+ * Compose `RoundedCornerShape(percent = 50)`. So the constant is skipped rather
+ * than exported, and the generated file says so where it would have been.
+ */
+const PILL_SENTINEL = 9999;
+// Keyed on the path as well as the value. Keying on the number alone also ate
+// the screen breakpoints, which arrive here at 16x their real size — 768 comes
+// out as 12288 — so they clear 9999 without being sentinels at all. That
+// inflation is a separate, older bug and is deliberately left visible rather
+// than hidden behind this filter.
+const isPillSentinel = (token, value) =>
+  Number(value) >= PILL_SENTINEL &&
+  token.path.some((part) => String(part).toLowerCase().includes("radius"));
+
 StyleDictionary.registerFormat({
   name: "android-compose/dimensions",
   format: ({ dictionary, options }) => {
@@ -269,6 +292,12 @@ ${dictionary.allTokens
 
     let val = toNumericPx(lightVal);
     if (isNaN(val)) return "";
+    if (isPillSentinel(token, val)) {
+      return (
+        "  // " + varName + " is not emitted: a pill is a shape, not a length." +
+        " Use RoundedCornerShape(percent = 50)."
+      );
+    }
 
     return "  val " + varName + " = " + val + ".dp";
   })
@@ -305,6 +334,12 @@ ${dictionary.allTokens
 
     let val = toNumericPx(lightVal);
     if (isNaN(val)) return "";
+    if (isPillSentinel(token, val)) {
+      return (
+        "    // " + varName + " is not emitted: a pill is a shape, not a" +
+        " length. Use Capsule()."
+      );
+    }
 
     return "    public static let " + varName + ": CGFloat = " + val;
   })
