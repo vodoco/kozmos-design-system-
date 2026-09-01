@@ -64,6 +64,7 @@ public struct KozmosDimensions {
     public static let primitivesLayoutRadius50: CGFloat = 4
     public static let primitivesLayoutRadius100: CGFloat = 8
     public static let primitivesLayoutRadius200: CGFloat = 16
+    public static let primitivesLayoutRadius250: CGFloat = 20
     public static let primitivesLayoutRadius300: CGFloat = 24
     public static let primitivesLayoutRadius400: CGFloat = 32
     public static let primitivesLayoutRadius500: CGFloat = 40
@@ -72,13 +73,13 @@ public struct KozmosDimensions {
     public static let primitivesLayoutRadius800: CGFloat = 72
     public static let primitivesLayoutRadius900: CGFloat = 96
     public static let primitivesLayoutRadius1000: CGFloat = 128
-    public static let primitivesLayoutRadiusFull: CGFloat = 9999
+    // primitivesLayoutRadiusFull is not emitted: a pill is a shape, not a length. Use Capsule().
     public static let semanticsRadiusNone: CGFloat = 0
     public static let semanticsRadiusMarker: CGFloat = 4
     public static let semanticsRadiusControl: CGFloat = 16
-    public static let semanticsRadiusContainer: CGFloat = 16
+    public static let semanticsRadiusContainer: CGFloat = 20
     public static let semanticsRadiusPanel: CGFloat = 24
-    public static let semanticsRadiusPill: CGFloat = 9999
+    // semanticsRadiusPill is not emitted: a pill is a shape, not a length. Use Capsule().
     public static let componentsHtmlElementsHeadingsH1LetterSpacing: CGFloat = -0.4000000059604645
     public static let componentsHtmlElementsHeadingsH1ParagraphSpacing: CGFloat = 28
     public static let componentsHtmlElementsHeadingsH2LetterSpacing: CGFloat = -0.4000000059604645

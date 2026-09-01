@@ -2300,6 +2300,10 @@
             "com.figma.isOverride": true
           }
         },
+        "250": {
+          "$type": "number",
+          "$value": 20
+        },
         "300": {
           "$type": "number",
           "$value": 24,
@@ -2420,9 +2424,9 @@
         "$description": "Interactive controls: buttons, inputs, selects, list rows, toasts, tooltips. The workhorse role - repoint this one alias to change how round the product feels. Moved from radius.100 (8) to radius.200 (16) on 2026-08-28; web was already 16, so that change converged iOS, Android and Figma onto it."
       },
       "Container": {
-        "$value": "{Primitives.Layout.radius.200}",
+        "$value": "{Primitives.Layout.radius.250}",
         "$type": "dimension",
-        "$description": "Cards and dialogs: a surface that holds controls."
+        "$description": "Cards and dialogs: a surface that holds controls. Deliberately rounder than Control \u2014 the two were both 16, so a 44px field and a 400px card drew the same corner and the role distinction was cosmetic."
       },
       "Panel": {
         "$value": "{Primitives.Layout.radius.300}",

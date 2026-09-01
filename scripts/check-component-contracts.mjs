@@ -4860,8 +4860,12 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  "ring.cornerRadius = radius >= 9999 ? 9999 : radius + offset",
-  "SegmentedControl focus ring radius is selected radius plus offset",
+  // Was `radius >= 9999 ? 9999 : radius + offset`. The pill branch wrote the
+  // sentinel onto the ring, which stores a number false about the shape and
+  // makes the ring unarithmetical — a nested-radius audit asked for a 10003px
+  // corner off the back of it. Both branches are capped now.
+  "radius >= 9999 ? ringCap : Math.min(radius + offset, ringCap)",
+  "SegmentedControl focus ring radius is the selected radius plus offset, capped",
 );
 assertContains(
   files.figma,
