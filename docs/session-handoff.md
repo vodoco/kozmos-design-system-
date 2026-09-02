@@ -9,16 +9,16 @@ Branch: `codex/wave-2-figma-components`.
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing                   | State                                                   |
-| ----------------------- | ------------------------------------------------------- |
-| `pnpm figma:verify`     | **clean on all six checks**                             |
-| Figma publish           | **unblocked** — 0 unbound properties, 94 sets           |
-| `main`                  | Wave 2 merged (PR #1), radius fixes merged (PR #2)      |
-| Branch vs `main`        | **7 commits ahead, no PR open** — see §4 item 1         |
-| `tokens:radius:nesting` | **22** findings, all in six Core sets awaiting a run    |
-| Chromatic               | **snapshot limit reached** — visual gate is not running |
-| Working tree            | clean; everything committed and pushed                  |
-| Local gates             | all green — see §7 for the list                         |
+| Thing                   | State                                                                |
+| ----------------------- | -------------------------------------------------------------------- |
+| `pnpm figma:verify`     | **clean on all six checks**                                          |
+| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                        |
+| `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged |
+| Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                             |
+| `tokens:radius:nesting` | **22** findings, all in six Core sets awaiting a run                 |
+| Chromatic               | **snapshot limit reached** — visual gate is not running              |
+| Working tree            | clean; everything committed and pushed                               |
+| Local gates             | all green — see §7 for the list                                      |
 
 **The library publishes.** Eleven unbound properties across five sets, two of
 them Core, had held it out of Figma; on 2026-08-31 all five were fixed, run
@@ -143,6 +143,16 @@ Two things a PR needs before CI will even schedule:
   anything is waiting on you. On 2026-08-31 a push landed 33 commits and
   produced zero runs for that reason; the tell is that the PR says
   `CONFLICTING` while the run list still shows an older SHA.
+- **`Release Kozmos System` goes green without releasing.** It is
+  `workflow_run`-gated on CI passing on `main`, and it passed on 2026-09-02
+  while doing nothing: the job emits `::notice::Skipping npm release because
+NPM_TOKEN is not configured` and exits 0. There were also 0 pending
+  changesets in `.changeset/`, so even with a token there was nothing to
+  version — no tag was created on `fe4f4fa` and none exists on the repo. Same
+  species as the Code Connect step that passes on an empty secret. Read the
+  run's _annotations_, not its log: the log echoes every branch of the script
+  inside `##[group]Run` blocks, so `can_publish=true` appears there whether or
+  not it ran.
 - **The account's Actions billing must be current.** A failed payment or a
   reached spending limit fails every job in 2-3 seconds with no step recorded
   and the annotation "The job was not started because recent account payments
@@ -1003,13 +1013,7 @@ a development plugin's files when the plugin _launches_, so quit Figma entirely
 `pnpm figma:verify` is the cheap way to tell whether a run landed: it reads the
 file, not the plugin's own report.
 
-1. **Open a PR for the 7 commits ahead of `main`.** `2288361..036bf56`: the
-   popover inset, the badge pill, FloorSelector's tray, the last three slot
-   derivations, the control stamp, and `background/25`/`50` with the
-   active/selected split. All gates green. PR #1 and #2 are merged; there is
-   no PR open for these.
-
-2. **Update six Core sets by hand**, from the plugin's dropdown, one at a time:
+1. **Update six Core sets by hand**, from the plugin's dropdown, one at a time:
    `Listbox`, `NavigationItem`, `MultiSelect`, `ColorPicker`, `Combobox`,
    `TimePicker`. There is no "Update All Core" — `Update All Product / SDK` is
    the only bulk action, and it has already been run. These six hold all 22
@@ -1018,12 +1022,12 @@ file, not the plugin's own report.
    and reports `6 skipped as a control`. If it lands anywhere else, one of the
    commits above is wrong.
 
-3. **Then switch `tokens:radius:nesting --strict` on in CI.** It exits 0 today
+2. **Then switch `tokens:radius:nesting --strict` on in CI.** It exits 0 today
    while the backlog is open, by design — a gate that is red on purpose is a
    gate somebody switches off. Once item 2 lands it can fail the build, and it
    stops being a report.
 
-4. **Clear Chromatic's billed snapshot limit.** Builds 128, 129 and 130 were
+3. **Clear Chromatic's billed snapshot limit.** Builds 128, 129 and 130 were
    all limited — no comparison ran, and `UI Tests` sat at PENDING not because a
    human was reviewing but because there was nothing to review. PR #1 (128
    commits, the type restyle across every story) merged without visual
@@ -1032,21 +1036,21 @@ file, not the plugin's own report.
    snapshots nearly nothing. **Do this before the colour-scale work**, which
    touches every story.
 
-5. **Consider an `Update All Core` action in the plugin.** ~20 Core sets still
+4. **Consider an `Update All Core` action in the plugin.** ~20 Core sets still
    carry the stale 12 focus ring (the old `8 + 4`) and Chip, Radio, Switch and
    Slider still store 9999 on their rings. None of it is a nesting finding —
    it is the "impossible radius" count — and fixing it by hand is twenty
    dropdown-and-Update rounds. One bulk action would pay for itself the next
    time any shared helper changes.
 
-6. **Generated colour scales** — scoped in `docs/generated-color-scales.md`.
+5. **Generated colour scales** — scoped in `docs/generated-color-scales.md`.
    Every ramp is hand-typed hex; "make the background pink" is thirteen edits.
    Measured in OKLab, the ramps are mostly even and defective exactly where a
    human pinned a value: both greys jump ΔL 21 at the black end against ~9
    elsewhere, and `theme` 500→600 is ΔL 2.2, two adjacent steps doing the job
    of one. Two sessions. Depends on item 4.
 
-7. **The 11 pill radii applied by bound Figma variables.** A clamp cannot
+6. **The 11 pill radii applied by bound Figma variables.** A clamp cannot
    reach them — the variable wins — so they still store 9999 on the node.
    `markPillRadius` / `resolvePillRadii` is the mechanism (it fixed
    NavigationItem's badge); applying it means dropping the variable binding
@@ -1054,40 +1058,40 @@ file, not the plugin's own report.
    no value to propagate, but it removes a token link on 11 components and is
    therefore a decision.
 
-8. **Screen breakpoints are emitted 16x inflated.** `primitivesScreenTablet =
+7. **Screen breakpoints are emitted 16x inflated.** `primitivesScreenTablet =
 12288.dp`, should be 768. Pre-existing rem-conversion bug in `build.mjs`,
    surfaced by the pill filter and deliberately left visible rather than
    hidden. Nothing consumes the constants today.
 
-9. **`SegmentedControl` un-decide is not tracked.** Deselect now reports
+8. **`SegmentedControl` un-decide is not tracked.** Deselect now reports
    `undefined` (Olcay's ruling) but analytics fires only on a real selection,
    because sending `segmented_control_toggled` with no value would change what
    that event means for anything counting it. Worth its own event if the
    review funnel is measured.
 
-10. **Decide how the iOS snapshots run in CI**, then widen coverage past
-    Button. The harness works; it needs a pinned runner image plus simulator.
+9. **Decide how the iOS snapshots run in CI**, then widen coverage past
+   Button. The harness works; it needs a pinned runner image plus simulator.
 
-11. **Script-aware typography.** Nine components apply `tracking-tight`, which
+10. **Script-aware typography.** Nine components apply `tracking-tight`, which
     collides CJK glyphs and disrupts Arabic joining, and the product ships
     both. The `letterSpacing` and `line.height` scales are unused by every
     platform, so there is nowhere yet to say "tighter for Latin, normal for
     CJK".
 
-12. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
+11. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
     is read by no platform. Same shape as the radius and family layers.
 
-13. **Decide the brand font's fate.** Figma renders Inter now; `Brand` is an
+12. **Decide the brand font's fate.** Figma renders Inter now; `Brand` is an
     opt-in role no surface uses. Readex Pro has no CJK. Drop it, or scope it to
     Latin with `unicode-range`.
 
-14. **`Link` and `Spinner` each miss a variant axis on iOS and Android.** New
+13. **`Link` and `Spinner` each miss a variant axis on iOS and Android.** New
     public enums on both native packages; belongs with the naming decision in
     §5.
 
-15. **`RoutePreviewPanel`'s five states look like two** — see §5.
+14. **`RoutePreviewPanel`'s five states look like two** — see §5.
 
-16. **The Pointr Cloud dashboard work** in `docs/figma-upcoming-components.md`.
+15. **The Pointr Cloud dashboard work** in `docs/figma-upcoming-components.md`.
     Drawer's slots, TreeChildItem's row actions, and the four DS components
     the prototype's backlog asked for (`PopoverArrow`, disabled-trigger
     `Tooltip`, `Slider` value bubble, `SegmentedControl` deselect) are done.
