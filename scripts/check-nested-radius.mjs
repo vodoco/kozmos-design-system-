@@ -73,6 +73,25 @@ const paints = (list) =>
   Array.isArray(list) && list.some((p) => p && p.visible !== false);
 const isDrawn = (node) => paints(node.fills) || paints(node.strokes);
 
+/**
+ * Is this a control rather than a panel nested in one?
+ *
+ * A control keeps its role radius wherever it is placed — nobody squares a
+ * button because a card contains it. The rule governs containers nested in
+ * containers, and six buttons sitting inside cards were the whole of what this
+ * check could never clear.
+ *
+ * Read from the stamp the importer writes, not from the layer name. It follows
+ * that a set built before the stamp existed still reports its buttons, which is
+ * honest: the file has not been rebuilt, and the checker should say so rather
+ * than guess.
+ */
+const RUN_NAMESPACE = "kozmos_ds_importer";
+const isControlSurface = (node) =>
+  !!node.sharedPluginData &&
+  !!node.sharedPluginData[RUN_NAMESPACE] &&
+  node.sharedPluginData[RUN_NAMESPACE].surface === "control";
+
 /** The radius a shape can actually render, after its own cap. */
 function effectiveRadius(node) {
   const r = node.cornerRadius;
@@ -93,8 +112,12 @@ async function main() {
 
   // Full depth, no cap. A depth limit here silently drops the deepest nesting,
   // which is exactly the nesting this checks.
+  // plugin_data=shared brings back what the importer stamped on each node,
+  // which is how a control is told apart from a nested panel. Without it the
+  // only signal is the layer name, and "Button" in a name is a convention
+  // rather than a fact about what the node is.
   const res = await fetch(
-    `https://api.figma.com/v1/files/${FILE_KEY}/nodes?ids=${encodeURIComponent(PAGE_NODE)}`,
+    `https://api.figma.com/v1/files/${FILE_KEY}/nodes?ids=${encodeURIComponent(PAGE_NODE)}&plugin_data=shared`,
     { headers: { "X-Figma-Token": t } },
   );
   if (res.status !== 200) {
@@ -109,6 +132,7 @@ async function main() {
   const setsWithFindings = new Set();
   let pairsChecked = 0;
   let pillChildren = 0;
+  let controlChildren = 0;
   const pillInBox = new Map();
 
   (function walk(node, parent, setName) {
@@ -148,6 +172,8 @@ async function main() {
         const childCap = Math.min(cb.width, cb.height) / 2;
         const childIsPill = cr >= childCap - 0.01;
 
+        if (insideParent && nearCorner && isControlSurface(node)) controlChildren += 1;
+
         if (insideParent && nearCorner && childIsPill) {
           pillChildren += 1;
           // A pill inside a merely rounded box. The rule declines to judge it —
@@ -166,7 +192,7 @@ async function main() {
           }
         }
 
-        if (insideParent && nearCorner && !childIsPill) {
+        if (insideParent && nearCorner && !childIsPill && !isControlSurface(node)) {
           pairsChecked += 1;
           // Non-uniform padding has no exactly concentric answer, so take the
           // tighter axis: that is where the two curves come closest and where a
@@ -208,7 +234,8 @@ async function main() {
 
   console.log(
     `Nested corner radius — ${pairsChecked} corner-adjacent pair(s) on the Components page` +
-      ` (${pillChildren} more skipped: the child is a pill or circle)\n`,
+      ` (${pillChildren} skipped as a pill or circle,` +
+      ` ${controlChildren} as a control)\n`,
   );
 
   if (rows.length === 0) {

@@ -9,32 +9,32 @@ Branch: `codex/wave-2-figma-components`.
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing               | State                                         |
-| ------------------- | --------------------------------------------- |
-| `pnpm figma:verify` | **clean on all six checks**                   |
-| Figma publish       | **unblocked** — 0 unbound properties, 94 sets |
-| Plugin audit        | **0 warnings**, 94 sets                       |
-| Working tree        | clean; everything committed                   |
-| Local gates         | all green — see §7 for the list               |
+| Thing                   | State                                                   |
+| ----------------------- | ------------------------------------------------------- |
+| `pnpm figma:verify`     | **clean on all six checks**                             |
+| Figma publish           | **unblocked** — 0 unbound properties, 94 sets           |
+| `main`                  | Wave 2 merged (PR #1), radius fixes merged (PR #2)      |
+| Branch vs `main`        | **7 commits ahead, no PR open** — see §4 item 1         |
+| `tokens:radius:nesting` | **22** findings, all in six Core sets awaiting a run    |
+| Chromatic               | **snapshot limit reached** — visual gate is not running |
+| Working tree            | clean; everything committed and pushed                  |
+| Local gates             | all green — see §7 for the list                         |
 
 **The library publishes.** Eleven unbound properties across five sets, two of
 them Core, had held it out of Figma; on 2026-08-31 all five were fixed, run
-through the plugin, and confirmed at zero over the REST API. That was the last
-blocker on this branch.
+through the plugin, and confirmed at zero over the REST API.
 
-It took five different fixes, because the single symptom — Figma's
-"Invalid assets ... Unused properties" — had five unrelated causes:
+**The roundness work is done in code and half-landed in the file.** Olcay's
+complaint — "uneven roundness", a 9999 sentinel, and two roles sharing one
+number — became a rule (`docs/nested-radius.md`), a checker
+(`tokens:radius:nesting`), and eleven commits. Measured, not modelled: the
+first plugin run took the file from **50 to 37** findings, which was the number
+predicted for it. The remaining 22 sit in six Core sets that have not been
+re-run yet; every fix for them is committed. See §4 item 2.
 
-| Set              | Cause                                                    |
-| ---------------- | -------------------------------------------------------- |
-| `TreeChildItem`  | a declared capability that was never rendered            |
-| `Drawer`         | `createSlot()` churn leaving orphaned properties         |
-| `NavigationItem` | frames named like slots; a frame cannot carry a binding  |
-| `MultiSelect`    | text inside a nested instance, which no parent can drive |
-| `ColorPicker`    | one property superseded by a variant axis, one nested    |
-
-Two rules came out of it that are worth knowing before touching any component
-set, because both fail silently and both cost a round trip here:
+Two rules came out of the publishing work that are worth knowing before
+touching any component set, because both fail silently and both cost a round
+trip here:
 
 - **Only a `SLOT` node can carry a slot binding.** A frame named "... Slot"
   reads as one everywhere except where it counts.
@@ -42,7 +42,17 @@ set, because both fail silently and both cost a round trip here:
   slot, or inside a nested instance.** Bound defaults sit _beside_ a slot —
   Drawer's `Title Text` beside `Header Slot` is the pattern.
 
-§3 has both in full, with the measurements behind them.
+And one from the radius work that generalises past radius:
+
+- **A value that depends on another value must be derived, not written.**
+  Three fixed radii went stale in one day — `control`, then `marker`, then
+  `container` — each within hours of being set, because the thing it depended
+  on moved. Every dependent radius in the plugin is now computed
+  (`nestedRadius`, `PRODUCT_SDK_CARD_INSET`, `POPOVER_ROW_INSET`). The colour
+  ramps have the same shape and have not been asked to move yet — see
+  `docs/generated-color-scales.md`.
+
+§3 has all of it in full, with the measurements behind each.
 
 ## 1. Verified State
 
@@ -982,60 +992,108 @@ properties, which the publish dialog does not.
 
 ## 4. Immediate Next Actions, In Order
 
-Publishing is done; the list below is what comes after it. Nothing here is
-blocked on a decision any more.
+Everything below is either one plugin run, one PR, one account setting, or a
+scoped piece of work with its own document. Nothing is blocked on a decision
+that has not been asked.
 
 **Before any plugin run, make Figma load the current `code.js`.** Not a step of
 its own, but the thing that has wasted the most time on this branch. Figma reads
 a development plugin's files when the plugin _launches_, so quit Figma entirely
 (⌘Q) and relaunch after every code change — reopening the panel is not enough.
-If a run's result is surprising, check this before believing it, and confirm
-`Plugins > Development > Manage plugins in development` points at
-`/Volumes/4TB Depo/development/K/kozmos-design-system-dev/figma/foundations-importer/manifest.json`
-rather than another checkout. `pnpm figma:verify` is the cheap way to tell
-whether a run landed: it reads the file, not the plugin's own report.
+`pnpm figma:verify` is the cheap way to tell whether a run landed: it reads the
+file, not the plugin's own report.
 
-1. **Run the foundations/variables import, then `Update All Product / SDK` and
-   the Core sets.** The radius and typography layers are code-only so far.
-   The import creates `Semantics/Radius/Control` so the plugin's aliases resolve
-   by name; without it they warn and fall back to the same numbers, so this is
-   tidiness rather than correctness. Expect controls to move 8px to 16px across
-   the file.
+1. **Open a PR for the 7 commits ahead of `main`.** `2288361..036bf56`: the
+   popover inset, the badge pill, FloorSelector's tray, the last three slot
+   derivations, the control stamp, and `background/25`/`50` with the
+   active/selected split. All gates green. PR #1 and #2 are merged; there is
+   no PR open for these.
 
-2. **Decide how the iOS snapshots run in CI**, then widen coverage past Button.
-   The harness works; it needs a pinned runner image plus simulator. See §3.
+2. **Update six Core sets by hand**, from the plugin's dropdown, one at a time:
+   `Listbox`, `NavigationItem`, `MultiSelect`, `ColorPicker`, `Combobox`,
+   `TimePicker`. There is no "Update All Core" — `Update All Product / SDK` is
+   the only bulk action, and it has already been run. These six hold all 22
+   remaining nesting findings and the active/selected colour split.
+   **Prediction on record:** `tokens:radius:nesting` reads **0** afterwards
+   and reports `6 skipped as a control`. If it lands anywhere else, one of the
+   commits above is wrong.
 
-3. **Script-aware typography.** Nine components apply `tracking-tight`
-   (Tailwind's default `-0.025em`, since the config overrides no
-   `letterSpacing`). Negative tracking collides CJK glyphs and disrupts Arabic
-   cursive joining, and the product ships both. Line heights are Latin-tuned
-   too. The `letterSpacing` and `line.height` token scales are unused by every
-   platform, so there is nowhere to say "tighter for Latin, normal for CJK".
+3. **Then switch `tokens:radius:nesting --strict` on in CI.** It exits 0 today
+   while the backlog is open, by design — a gate that is red on purpose is a
+   gate somebody switches off. Once item 2 lands it can fail the build, and it
+   stops being a report.
 
-4. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
-   (0-1500) is read by no platform. Same shape as the radius and family layers.
+4. **Clear Chromatic's billed snapshot limit.** Builds 128, 129 and 130 were
+   all limited — no comparison ran, and `UI Tests` sat at PENDING not because a
+   human was reviewing but because there was nothing to review. PR #1 (128
+   commits, the type restyle across every story) merged without visual
+   verification for that reason. 218 stories per build is the cost; raise the
+   plan, wait for the period, or enable TurboSnap so a token-only PR
+   snapshots nearly nothing. **Do this before the colour-scale work**, which
+   touches every story.
 
-5. **Decide the brand font's fate.** Figma no longer renders it — the plugin
-   switched to Inter on 2026-08-31 — so `Brand` is now an opt-in role that no
-   surface uses. What remains is whether to keep it at all: Readex Pro covers
-   Latin and Arabic and has no CJK, so Chinese always fell back to a system font
-   whatever the tokens said. Drop it, or scope it to Latin with `unicode-range`
-   — and note that one `size-adjust` ratio cannot work across scripts.
+5. **Consider an `Update All Core` action in the plugin.** ~20 Core sets still
+   carry the stale 12 focus ring (the old `8 + 4`) and Chip, Radio, Switch and
+   Slider still store 9999 on their rings. None of it is a nesting finding —
+   it is the "impossible radius" count — and fixing it by hand is twenty
+   dropdown-and-Update rounds. One bulk action would pay for itself the next
+   time any shared helper changes.
 
-6. **`Link` and `Spinner` are each missing a variant axis on iOS and Android.**
-   Found once the analyzer stopped being blind to single quotes. Closing them
-   means new public enums on both native packages, so it belongs with the naming
-   decision in §5.
+6. **Generated colour scales** — scoped in `docs/generated-color-scales.md`.
+   Every ramp is hand-typed hex; "make the background pink" is thirteen edits.
+   Measured in OKLab, the ramps are mostly even and defective exactly where a
+   human pinned a value: both greys jump ΔL 21 at the black end against ~9
+   elsewhere, and `theme` 500→600 is ΔL 2.2, two adjacent steps doing the job
+   of one. Two sessions. Depends on item 4.
 
-7. **`RoutePreviewPanel`'s five states look like two** — see §5.
+7. **The 11 pill radii applied by bound Figma variables.** A clamp cannot
+   reach them — the variable wins — so they still store 9999 on the node.
+   `markPillRadius` / `resolvePillRadii` is the mechanism (it fixed
+   NavigationItem's badge); applying it means dropping the variable binding
+   for pills and resolving the cap after layout. Defensible, since a pill has
+   no value to propagate, but it removes a token link on 11 components and is
+   therefore a decision.
 
-8. **The Pointr Cloud dashboard work**, planned in
-   `docs/figma-upcoming-components.md`. Drawer's slots and TreeChildItem's five
-   row actions are done and rendered. MultiSelect's chip labels are not
-   "forwarded" and never will be — that is set on the nested Chip, which is
-   exposed for the purpose. What remains is the `Example / Dashboard Review
-Panel` composition, three icons the set lacks (eye, flag, overflow), and the
-   decisions that file lists.
+8. **Screen breakpoints are emitted 16x inflated.** `primitivesScreenTablet =
+12288.dp`, should be 768. Pre-existing rem-conversion bug in `build.mjs`,
+   surfaced by the pill filter and deliberately left visible rather than
+   hidden. Nothing consumes the constants today.
+
+9. **`SegmentedControl` un-decide is not tracked.** Deselect now reports
+   `undefined` (Olcay's ruling) but analytics fires only on a real selection,
+   because sending `segmented_control_toggled` with no value would change what
+   that event means for anything counting it. Worth its own event if the
+   review funnel is measured.
+
+10. **Decide how the iOS snapshots run in CI**, then widen coverage past
+    Button. The harness works; it needs a pinned runner image plus simulator.
+
+11. **Script-aware typography.** Nine components apply `tracking-tight`, which
+    collides CJK glyphs and disrupts Arabic joining, and the product ships
+    both. The `letterSpacing` and `line.height` scales are unused by every
+    platform, so there is nowhere yet to say "tighter for Latin, normal for
+    CJK".
+
+12. **Font sizes are untokenised everywhere.** `Primitives.Typography.font.size`
+    is read by no platform. Same shape as the radius and family layers.
+
+13. **Decide the brand font's fate.** Figma renders Inter now; `Brand` is an
+    opt-in role no surface uses. Readex Pro has no CJK. Drop it, or scope it to
+    Latin with `unicode-range`.
+
+14. **`Link` and `Spinner` each miss a variant axis on iOS and Android.** New
+    public enums on both native packages; belongs with the naming decision in
+    §5.
+
+15. **`RoutePreviewPanel`'s five states look like two** — see §5.
+
+16. **The Pointr Cloud dashboard work** in `docs/figma-upcoming-components.md`.
+    Drawer's slots, TreeChildItem's row actions, and the four DS components
+    the prototype's backlog asked for (`PopoverArrow`, disabled-trigger
+    `Tooltip`, `Slider` value bubble, `SegmentedControl` deselect) are done.
+    The app side is theirs: merge → rebuild `packages/react` → swap. Anyone
+    pulling `main` must rebuild, since the export names changed and a stale
+    dist stops resolving.
 
 ### Not blocking, and not this branch's to fix
 
@@ -1254,7 +1312,7 @@ pnpm components:contract:check    # React/native/Figma contract parity
 pnpm components:variant:check     # variant axes across all four platforms
 pnpm tokens:contrast:check        # token pair contrast, light + dark
 pnpm tokens:radius:check          # all four surfaces agree on corner radius
-pnpm tokens:radius:nesting        # does each rounded shape hug the one inside it?
+pnpm tokens:radius:nesting        # does each rounded shape hug the one inside it? (--all, --strict)
 pnpm tokens:typography:check      # all surfaces read the same font family role
 pnpm ios:snapshot:verify          # iOS renders match their baselines (needs a simulator)
 node scripts/measure-font-metrics.mjs <brand> <fallback>   # real size-adjust numbers

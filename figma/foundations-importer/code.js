@@ -414,6 +414,88 @@ const KOZMOS_RADIUS = {
  */
 const PRODUCT_SDK_CARD_INSET = 13;
 
+/**
+ * How far an option row sits inside its popover.
+ *
+ * Written as the difference between the two radii, because that is what makes
+ * them concentric: a `marker` row inset by this much inside a `control` popover
+ * puts both curves the same distance apart the whole way round. It was 4, which
+ * left a 4-radius row deep inside a 16-radius corner — so the gap along the
+ * edges was 4 and the gap at the corner was several times that, which is what
+ * "uneven roundness" looks like when you cannot name it.
+ *
+ * Derived rather than written as 12 so it follows if either role moves. Fixing
+ * the padding rather than a radius is the point: both roles were already right,
+ * and the spacing between them was not.
+ */
+const POPOVER_ROW_INSET = KOZMOS_RADIUS.control - KOZMOS_RADIUS.marker;
+
+/**
+ * FloorSelector's tray, derived from the item it wraps.
+ *
+ * Both numbers here are off the semantic scale on purpose and the tray was the
+ * only one that was also wrong. Its items are 44x44 — the enforced touch-target
+ * minimum — with a 6px radius, in a tray with 4px of padding and a 1px stroke.
+ * That leaves 5px between the two curves, so the tray is concentric at 11. It
+ * was 8, which is not on the scale and not concentric either.
+ *
+ * The popover treatment does not transfer: making the inset 12 would force the
+ * tray from 54px wide to 70 to keep a 44px item, and a map control growing 30%
+ * is a product decision rather than a cleanup. So the geometry stays and the
+ * radius follows it.
+ */
+/**
+ * The radius a child can carry inside a given parent, at a given inset.
+ *
+ * The concentric rule read inward. Several places now compute it, and every one
+ * of them used to be a fixed number that went stale the moment its parent
+ * changed.
+ */
+function nestedRadius(parentRadius, inset) {
+  return Math.max(0, parentRadius - inset);
+}
+
+/**
+ * Mark a node as a control rather than a nested panel.
+ *
+ * A control carries its role radius wherever it is placed — nobody squares a
+ * button because a card contains it — so the concentric rule does not govern
+ * it. `tokens:radius:nesting` reads this stamp over the REST API
+ * (`plugin_data=shared`) and skips what it marks, which is what lets that check
+ * reach zero and become a gate rather than a permanent report of six buttons.
+ *
+ * Stamped rather than matched on a name, because "Button" in a layer name is a
+ * convention and this is a fact about what the node is.
+ */
+/**
+ * The Core sets whose instances are controls rather than nested panels.
+ *
+ * Deliberately a list rather than a heuristic: "does this component set behave
+ * as a control" is a fact about the design system, not something to infer from
+ * a node at runtime.
+ */
+const CONTROL_COMPONENT_SETS = new Set([
+  "Button",
+  "SplitButton",
+  "IconButton",
+  "ToggleButton",
+  "FloatingActionButton",
+  "Link",
+  "Chip",
+  "SegmentedControl",
+]);
+
+function markControlSurface(node) {
+  if (node && node.setSharedPluginData) {
+    node.setSharedPluginData(RUN_NAMESPACE, "surface", "control");
+  }
+}
+
+const FLOOR_SELECTOR_ITEM_RADIUS = 6;
+const FLOOR_SELECTOR_ITEM_INSET = 5;
+const FLOOR_SELECTOR_TRAY_RADIUS =
+  FLOOR_SELECTOR_ITEM_RADIUS + FLOOR_SELECTOR_ITEM_INSET;
+
 const SIDEBAR_CONTENT = ["Basic", "Sections", "Tools", "Rail"];
 // Drawer's slot API. Header and Footer join the Content Slot that was already
 // there, so a product can supply its own title row and its own action row
@@ -7080,7 +7162,14 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "ColorPicker/swatch/radius",
     value: 6,
-    alias: "Radius/sm",
+    // No alias. It used to point at Radius/sm, which is 4 — and a bound
+    // variable beats the literal, so the swatch rendered 4 while every check
+    // reported the 6 that never reached the screen. 6 is also the right number
+    // rather than an arbitrary one: the swatch is 24x24 inside a 44-tall field
+    // with 10px of padding, and 6 + 10 = 16 is exactly the field's radius. The
+    // concentric rule derives it independently, which is how the mismatch was
+    // found. There is no primitive at 6 and adding one for a single component
+    // would be scale inflation, so this stays a deliberate off-scale literal.
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7153,7 +7242,14 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "ColorPicker/preset/radius",
     value: 6,
-    alias: "Radius/sm",
+    // No alias. It used to point at Radius/sm, which is 4 — and a bound
+    // variable beats the literal, so the swatch rendered 4 while every check
+    // reported the 6 that never reached the screen. 6 is also the right number
+    // rather than an arbitrary one: the swatch is 24x24 inside a 44-tall field
+    // with 10px of padding, and 6 + 10 = 16 is exactly the field's radius. The
+    // concentric rule derives it independently, which is how the mismatch was
+    // found. There is no primitive at 6 and adding one for a single component
+    // would be scale inflation, so this stays a deliberate off-scale literal.
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -11482,6 +11578,12 @@ async function createExampleInstance({
   }
 
   const { componentSet, instance } = created;
+  // An instance of a Core control is a control, whatever it is placed inside.
+  // Start Navigation Button and End Route Button reach the nesting check this
+  // way rather than through productSdkControlButton.
+  if (CONTROL_COMPONENT_SETS.has(componentSetName)) {
+    markControlSurface(instance);
+  }
   if (textProperties) {
     for (const [baseName, value] of Object.entries(textProperties)) {
       setInstanceTextProperty(instance, componentSet, baseName, value, stats);
@@ -37907,6 +38009,10 @@ async function updateNavigationItemVariant(
     setHugChildSizing(trailingSlot);
   }
 
+  // After every child is in place, so auto-layout has settled the boxes the
+  // pill radii are measured from.
+  resolvePillRadii(component, stats);
+
   syncFocusRing(component, {
     enabled: !disabled,
     width: metrics.width,
@@ -38117,7 +38223,12 @@ async function createNavigationItemBadgeSlot({
   slot.counterAxisAlignItems = "CENTER";
   slot.paddingLeft = 6;
   slot.paddingRight = 6;
-  slot.cornerRadius = 10;
+  // A counter is a pill, which is what Counter/radius and Badge/counter/radius
+  // already say. This carried a hardcoded 10, which is not a pill at either
+  // size the badge actually renders: 24x22 caps at 11 and 22x18 caps at 9, so
+  // it was too square in a Side row and storing an undrawable radius in a Rail
+  // one. Resolved after layout, when the box is known.
+  markPillRadius(slot);
   slot.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
@@ -42446,7 +42557,12 @@ async function updateFloorSelectorVariant(
   component.paddingTop = 4;
   component.paddingBottom = 4;
   component.clipsContent = false;
-  productSdkSurface(component, 8, variableByName, stats);
+  productSdkSurface(
+    component,
+    FLOOR_SELECTOR_TRAY_RADIUS,
+    variableByName,
+    stats,
+  );
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "FloorSelector");
 
@@ -42476,7 +42592,7 @@ async function updateFloorSelectorVariant(
     item.primaryAxisAlignItems = "CENTER";
     item.counterAxisAlignItems = "CENTER";
     item.resizeWithoutConstraints(44, 44);
-    item.cornerRadius = 6;
+    item.cornerRadius = FLOOR_SELECTOR_ITEM_RADIUS;
     item.strokes = [];
     // theme/700 rather than theme/500: the label on this chip is
     // foreground/1000, which flips per theme, while theme/500 is #135BEC in
@@ -43654,6 +43770,8 @@ async function productSdkSlot({
   variableByName,
   stats,
   muted,
+  parentRadius = KOZMOS_RADIUS.container,
+  inset = PRODUCT_SDK_CARD_INSET,
 }) {
   const slot = productSdkFrame(name, {
     primarySizing: "FIXED",
@@ -43664,19 +43782,21 @@ async function productSdkSlot({
     width,
     height,
   });
-  // A slot is a region inside a card, so its radius is not a role at all — it
-  // is whatever the card leaves it. R_inner = R_outer - inset, where the inset
-  // is the card's padding plus its 1px stroke.
+  // A slot is a region inside something, so its radius is not a role at all —
+  // it is whatever the parent leaves it. R_inner = R_outer - inset.
   //
   // Derived rather than pinned to a role because the right answer moves with
-  // `container`. It was `marker` (4) while container was 16; container went to
-  // 20 and 4 became wrong — simulated across the page, cards at 20 with slots
-  // at 4 give 52 nesting findings against 37 at the derived 7. A role would
-  // have quietly gone stale the moment the card changed.
-  slot.cornerRadius = Math.max(
-    0,
-    KOZMOS_RADIUS.container - PRODUCT_SDK_CARD_INSET,
-  );
+  // the parent. It was `marker` (4) while container was 16; container went to
+  // 20 and 4 became wrong — cards at 20 with slots at 4 give 52 nesting
+  // findings against 37 at the derived value. A role goes stale the moment the
+  // card changes, and did, within a day of being set.
+  //
+  // The parent is a `container` card with 12px of padding for almost every
+  // caller, which is why those are the defaults. DynamicIsland is the exception
+  // that proved the defaults were an assumption rather than a rule: its shell
+  // is a 24 pill when compact and 32 when expanded, so a slot derived from
+  // `container` came out at 7 where the shape wanted 13 and 16.
+  slot.cornerRadius = nestedRadius(parentRadius, inset);
   slot.fills = [
     paintFromVariable(
       muted ? "Surface/100" : "Colors/background/100",
@@ -43799,6 +43919,7 @@ async function productSdkControlButton({
     width: 44,
     height: 44,
   });
+  markControlSurface(button);
   button.cornerRadius = KOZMOS_RADIUS.control;
   button.fills = [
     paintFromVariable(
@@ -43998,6 +44119,9 @@ async function updateAdaptiveMapShellVariant(
   mapSurface.strokeWeight = 1;
 
   const controls = await productSdkSlot({
+    // Inside mapSurface, a `control`-radius panel with a 1px stroke — not the
+    // shell card, which is what the default assumes.
+    parentRadius: KOZMOS_RADIUS.control,
     name: "Controls Slot",
     label: "Controls",
     width: 60,
@@ -44805,6 +44929,9 @@ async function updateBrowseCategoriesPanelVariant(
     // The empty state replaces the grid rather than sitting beside it, so a
     // designer cannot accidentally show both.
     const empty = await productSdkSlot({
+      // This panel pads by 16 rather than the 12 a Product / SDK card uses, so
+      // its slot is squarer than the default would make it.
+      inset: 16 + 1,
       name: "Empty State Slot",
       label: "EmptyState slot",
       width: contentWidth,
@@ -46629,6 +46756,9 @@ async function updateDynamicIslandVariant(
   { value, variableByName, fonts, stats },
 ) {
   const geometry = DYNAMIC_ISLAND_GEOMETRY[value];
+  // The island draws no stroke, so the inset is its padding alone — unlike a
+  // Product / SDK card, where the 1px border counts too.
+  const islandInset = value === "Expanded" ? 16 : 12;
   productSdkVariantRoot(component, "DynamicIsland", "State=" + value, {
     direction: value === "Expanded" ? "vertical" : "horizontal",
     primarySizing: "FIXED",
@@ -46657,6 +46787,8 @@ async function updateDynamicIslandVariant(
   if (value === "Minimal") {
     const minimal = await productSdkSlot({
       name: "Minimal Content Slot",
+      parentRadius: geometry.radius,
+      inset: islandInset,
       label: "•",
       width: 32,
       height: 24,
@@ -46671,6 +46803,8 @@ async function updateDynamicIslandVariant(
   if (value === "Compact") {
     const leading = await productSdkSlot({
       name: "Compact Leading Slot",
+      parentRadius: geometry.radius,
+      inset: islandInset,
       label: "Leading",
       width: 56,
       height: 24,
@@ -46682,6 +46816,8 @@ async function updateDynamicIslandVariant(
 
     const trailing = await productSdkSlot({
       name: "Compact Trailing Slot",
+      parentRadius: geometry.radius,
+      inset: islandInset,
       label: "Trailing",
       width: 56,
       height: 24,
@@ -46695,6 +46831,8 @@ async function updateDynamicIslandVariant(
 
   const expanded = await productSdkSlot({
     name: "Expanded Content Slot",
+    parentRadius: geometry.radius,
+    inset: islandInset,
     label: "Expanded content",
     width: geometry.width - 32,
     height: geometry.height - 32,
@@ -52628,10 +52766,10 @@ async function updateMenuVariant(
   component.primaryAxisAlignItems = "MIN";
   component.counterAxisAlignItems = "MIN";
   component.itemSpacing = 0;
-  component.paddingLeft = 4;
-  component.paddingRight = 4;
-  component.paddingTop = 4;
-  component.paddingBottom = 4;
+  component.paddingLeft = POPOVER_ROW_INSET;
+  component.paddingRight = POPOVER_ROW_INSET;
+  component.paddingTop = POPOVER_ROW_INSET;
+  component.paddingBottom = POPOVER_ROW_INSET;
   component.resizeWithoutConstraints(192, 100);
   component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
@@ -53671,10 +53809,10 @@ async function updateListboxVariant(
   component.primaryAxisAlignItems = "MIN";
   component.counterAxisAlignItems = "MIN";
   component.itemSpacing = 2;
-  component.paddingLeft = 4;
-  component.paddingRight = 4;
-  component.paddingTop = 4;
-  component.paddingBottom = 4;
+  component.paddingLeft = POPOVER_ROW_INSET;
+  component.paddingRight = POPOVER_ROW_INSET;
+  component.paddingTop = POPOVER_ROW_INSET;
+  component.paddingBottom = POPOVER_ROW_INSET;
   component.resizeWithoutConstraints(320, 176);
   component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
@@ -58422,6 +58560,51 @@ function bindSlotPropertyToNodesNamed(
  * did not make them bindable; it only hid the failure behind a counter that
  * said "attempted".
  */
+/**
+ * Mark a node as wanting a pill, to be resolved once its box is final.
+ *
+ * A pill's radius is `min(w, h) / 2`, which cannot be written at creation time
+ * because auto-layout has not sized the node yet. NavigationItem's badge is the
+ * case in point: declared 24x20, it renders 24x22 in a Side row and 22x18 in a
+ * Rail one, so the hardcoded 10 it carried was under the cap in one and over it
+ * in the other — too square to be a pill, and storing a radius the box cannot
+ * draw.
+ *
+ * Recording the intent and resolving it after layout is the honest version of
+ * what the 9999 sentinel was reaching for, without writing a number that is
+ * false about the shape.
+ */
+function markPillRadius(node) {
+  if (node && node.setSharedPluginData) {
+    node.setSharedPluginData(RUN_NAMESPACE, "radius-intent", "pill");
+  }
+}
+
+/** Give every pill-intent node the radius its own box can actually carry. */
+function resolvePillRadii(root, stats) {
+  let resolved = 0;
+  (function walk(node) {
+    if (
+      node.getSharedPluginData &&
+      node.getSharedPluginData(RUN_NAMESPACE, "radius-intent") === "pill" &&
+      typeof node.width === "number" &&
+      typeof node.height === "number"
+    ) {
+      try {
+        node.cornerRadius = Math.min(node.width, node.height) / 2;
+        resolved += 1;
+      } catch (_error) {
+        // Some node types do not take a corner radius; the mark is harmless.
+      }
+    }
+    if (node.children) for (const child of node.children) walk(child);
+  })(root);
+  if (resolved && stats) {
+    stats.pillRadiiResolved = (stats.pillRadiiResolved || 0) + resolved;
+  }
+  return resolved;
+}
+
 function isSlotReferenceCandidate(node) {
   return node && node.type === "SLOT";
 }
@@ -61657,10 +61840,10 @@ async function syncComboboxVariantChildren({
     listbox.counterAxisAlignItems = "MIN";
     setLayoutSizingHorizontal(listbox, "FILL");
     listbox.itemSpacing = 2;
-    listbox.paddingLeft = 4;
-    listbox.paddingRight = 4;
-    listbox.paddingTop = 4;
-    listbox.paddingBottom = 4;
+    listbox.paddingLeft = POPOVER_ROW_INSET;
+    listbox.paddingRight = POPOVER_ROW_INSET;
+    listbox.paddingTop = POPOVER_ROW_INSET;
+    listbox.paddingBottom = POPOVER_ROW_INSET;
     listbox.resizeWithoutConstraints(320, 144);
     listbox.cornerRadius = KOZMOS_RADIUS.control;
     listbox.clipsContent = false;
@@ -62018,10 +62201,10 @@ async function syncMultiSelectVariantChildren({
     listbox.counterAxisAlignItems = "MIN";
     setLayoutSizingHorizontal(listbox, "FILL");
     listbox.itemSpacing = 2;
-    listbox.paddingLeft = 4;
-    listbox.paddingRight = 4;
-    listbox.paddingTop = 4;
-    listbox.paddingBottom = 4;
+    listbox.paddingLeft = POPOVER_ROW_INSET;
+    listbox.paddingRight = POPOVER_ROW_INSET;
+    listbox.paddingTop = POPOVER_ROW_INSET;
+    listbox.paddingBottom = POPOVER_ROW_INSET;
     listbox.resizeWithoutConstraints(320, 144);
     listbox.cornerRadius = KOZMOS_RADIUS.control;
     listbox.clipsContent = false;
@@ -62242,12 +62425,28 @@ async function createMultiSelectOption({
   option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "multiselect-option");
+  // Selected and active are different states and now look different. They
+  // shared background/100, so a MultiSelect showing two chosen options and one
+  // keyboard-focused one painted all three identically — every row read as
+  // chosen and the checkmark became the only signal. Combobox never showed it
+  // because only one row is ever selected there.
+  //
+  // Active takes the lighter step: it is a pointer or keyboard position rather
+  // than a choice the reader has made. That distinction had nowhere to live
+  // until background/25 and /50 existed — the ramp went straight from #FFFFFF
+  // to #E3E4E8, which is why #F1F2F4 was already hardcoded elsewhere in this
+  // file as a hover fallback against a token that was not it.
+  const optionSurface = disabled
+    ? { token: "Colors/background/200", fallback: "#C7CAD1" }
+    : selected
+      ? { token: "Colors/background/100", fallback: "#E3E4E8" }
+      : { token: "Colors/background/50", fallback: "#F1F2F4" };
   option.fills =
-    selected || active
+    selected || active || disabled
       ? [
           paintFromVariable(
-            disabled ? "Colors/background/200" : "Colors/background/100",
-            disabled ? "#C7CAD1" : "#E3E4E8",
+            optionSurface.token,
+            optionSurface.fallback,
             variableByName,
             stats,
           ),
@@ -62400,12 +62599,28 @@ async function createListboxOption({
   option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "listbox-option");
+  // Selected and active are different states and now look different. They
+  // shared background/100, so a MultiSelect showing two chosen options and one
+  // keyboard-focused one painted all three identically — every row read as
+  // chosen and the checkmark became the only signal. Combobox never showed it
+  // because only one row is ever selected there.
+  //
+  // Active takes the lighter step: it is a pointer or keyboard position rather
+  // than a choice the reader has made. That distinction had nowhere to live
+  // until background/25 and /50 existed — the ramp went straight from #FFFFFF
+  // to #E3E4E8, which is why #F1F2F4 was already hardcoded elsewhere in this
+  // file as a hover fallback against a token that was not it.
+  const optionSurface = disabled
+    ? { token: "Colors/background/200", fallback: "#C7CAD1" }
+    : selected
+      ? { token: "Colors/background/100", fallback: "#E3E4E8" }
+      : { token: "Colors/background/50", fallback: "#F1F2F4" };
   option.fills =
-    selected || active
+    selected || active || disabled
       ? [
           paintFromVariable(
-            disabled ? "Colors/background/200" : "Colors/background/100",
-            disabled ? "#C7CAD1" : "#E3E4E8",
+            optionSurface.token,
+            optionSurface.fallback,
             variableByName,
             stats,
           ),
@@ -63935,10 +64150,10 @@ async function syncTimePickerVariantChildren({
     listbox.counterAxisAlignItems = "MIN";
     setLayoutSizingHorizontal(listbox, "FILL");
     listbox.itemSpacing = 2;
-    listbox.paddingLeft = 4;
-    listbox.paddingRight = 4;
-    listbox.paddingTop = 4;
-    listbox.paddingBottom = 4;
+    listbox.paddingLeft = POPOVER_ROW_INSET;
+    listbox.paddingRight = POPOVER_ROW_INSET;
+    listbox.paddingTop = POPOVER_ROW_INSET;
+    listbox.paddingBottom = POPOVER_ROW_INSET;
     listbox.resizeWithoutConstraints(320, 188);
     listbox.cornerRadius = KOZMOS_RADIUS.control;
     listbox.clipsContent = false;
@@ -64050,12 +64265,28 @@ async function createTimePickerOption({
   option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "timepicker-option");
+  // Selected and active are different states and now look different. They
+  // shared background/100, so a MultiSelect showing two chosen options and one
+  // keyboard-focused one painted all three identically — every row read as
+  // chosen and the checkmark became the only signal. Combobox never showed it
+  // because only one row is ever selected there.
+  //
+  // Active takes the lighter step: it is a pointer or keyboard position rather
+  // than a choice the reader has made. That distinction had nowhere to live
+  // until background/25 and /50 existed — the ramp went straight from #FFFFFF
+  // to #E3E4E8, which is why #F1F2F4 was already hardcoded elsewhere in this
+  // file as a hover fallback against a token that was not it.
+  const optionSurface = disabled
+    ? { token: "Colors/background/200", fallback: "#C7CAD1" }
+    : selected
+      ? { token: "Colors/background/100", fallback: "#E3E4E8" }
+      : { token: "Colors/background/50", fallback: "#F1F2F4" };
   option.fills =
-    selected || active
+    selected || active || disabled
       ? [
           paintFromVariable(
-            disabled ? "Colors/background/200" : "Colors/background/100",
-            disabled ? "#C7CAD1" : "#E3E4E8",
+            optionSurface.token,
+            optionSurface.fallback,
             variableByName,
             stats,
           ),
@@ -65429,7 +65660,12 @@ function createColorPickerColorArea({
   area.layoutMode = "NONE";
   setLayoutSizingHorizontal(area, "FILL");
   area.resizeWithoutConstraints(296, 160);
-  area.cornerRadius = KOZMOS_RADIUS.control;
+  // Inside the popover at a card's inset, so it takes what the popover leaves
+  // it. At `control` it was exactly as round as the surface holding it.
+  area.cornerRadius = nestedRadius(
+    KOZMOS_RADIUS.control,
+    PRODUCT_SDK_CARD_INSET,
+  );
   area.clipsContent = false;
   area.setSharedPluginData(RUN_NAMESPACE, "kind", "colorpicker-color-area");
   area.fills = disabled
