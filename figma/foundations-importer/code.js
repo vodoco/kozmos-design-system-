@@ -7080,7 +7080,14 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "ColorPicker/swatch/radius",
     value: 6,
-    alias: "Radius/sm",
+    // No alias. It used to point at Radius/sm, which is 4 — and a bound
+    // variable beats the literal, so the swatch rendered 4 while every check
+    // reported the 6 that never reached the screen. 6 is also the right number
+    // rather than an arbitrary one: the swatch is 24x24 inside a 44-tall field
+    // with 10px of padding, and 6 + 10 = 16 is exactly the field's radius. The
+    // concentric rule derives it independently, which is how the mismatch was
+    // found. There is no primitive at 6 and adding one for a single component
+    // would be scale inflation, so this stays a deliberate off-scale literal.
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7153,7 +7160,14 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "ColorPicker/preset/radius",
     value: 6,
-    alias: "Radius/sm",
+    // No alias. It used to point at Radius/sm, which is 4 — and a bound
+    // variable beats the literal, so the swatch rendered 4 while every check
+    // reported the 6 that never reached the screen. 6 is also the right number
+    // rather than an arbitrary one: the swatch is 24x24 inside a 44-tall field
+    // with 10px of padding, and 6 + 10 = 16 is exactly the field's radius. The
+    // concentric rule derives it independently, which is how the mismatch was
+    // found. There is no primitive at 6 and adding one for a single component
+    // would be scale inflation, so this stays a deliberate off-scale literal.
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -43654,6 +43668,8 @@ async function productSdkSlot({
   variableByName,
   stats,
   muted,
+  parentRadius = KOZMOS_RADIUS.container,
+  inset = PRODUCT_SDK_CARD_INSET,
 }) {
   const slot = productSdkFrame(name, {
     primarySizing: "FIXED",
@@ -43664,19 +43680,21 @@ async function productSdkSlot({
     width,
     height,
   });
-  // A slot is a region inside a card, so its radius is not a role at all — it
-  // is whatever the card leaves it. R_inner = R_outer - inset, where the inset
-  // is the card's padding plus its 1px stroke.
+  // A slot is a region inside something, so its radius is not a role at all —
+  // it is whatever the parent leaves it. R_inner = R_outer - inset.
   //
   // Derived rather than pinned to a role because the right answer moves with
-  // `container`. It was `marker` (4) while container was 16; container went to
-  // 20 and 4 became wrong — simulated across the page, cards at 20 with slots
-  // at 4 give 52 nesting findings against 37 at the derived 7. A role would
-  // have quietly gone stale the moment the card changed.
-  slot.cornerRadius = Math.max(
-    0,
-    KOZMOS_RADIUS.container - PRODUCT_SDK_CARD_INSET,
-  );
+  // the parent. It was `marker` (4) while container was 16; container went to
+  // 20 and 4 became wrong — cards at 20 with slots at 4 give 52 nesting
+  // findings against 37 at the derived value. A role goes stale the moment the
+  // card changes, and did, within a day of being set.
+  //
+  // The parent is a `container` card with 12px of padding for almost every
+  // caller, which is why those are the defaults. DynamicIsland is the exception
+  // that proved the defaults were an assumption rather than a rule: its shell
+  // is a 24 pill when compact and 32 when expanded, so a slot derived from
+  // `container` came out at 7 where the shape wanted 13 and 16.
+  slot.cornerRadius = Math.max(0, parentRadius - inset);
   slot.fills = [
     paintFromVariable(
       muted ? "Surface/100" : "Colors/background/100",
@@ -46629,6 +46647,9 @@ async function updateDynamicIslandVariant(
   { value, variableByName, fonts, stats },
 ) {
   const geometry = DYNAMIC_ISLAND_GEOMETRY[value];
+  // The island draws no stroke, so the inset is its padding alone — unlike a
+  // Product / SDK card, where the 1px border counts too.
+  const islandInset = value === "Expanded" ? 16 : 12;
   productSdkVariantRoot(component, "DynamicIsland", "State=" + value, {
     direction: value === "Expanded" ? "vertical" : "horizontal",
     primarySizing: "FIXED",
@@ -46657,6 +46678,8 @@ async function updateDynamicIslandVariant(
   if (value === "Minimal") {
     const minimal = await productSdkSlot({
       name: "Minimal Content Slot",
+      parentRadius: geometry.radius,
+      inset: islandInset,
       label: "•",
       width: 32,
       height: 24,
@@ -46671,6 +46694,8 @@ async function updateDynamicIslandVariant(
   if (value === "Compact") {
     const leading = await productSdkSlot({
       name: "Compact Leading Slot",
+      parentRadius: geometry.radius,
+      inset: islandInset,
       label: "Leading",
       width: 56,
       height: 24,
@@ -46682,6 +46707,8 @@ async function updateDynamicIslandVariant(
 
     const trailing = await productSdkSlot({
       name: "Compact Trailing Slot",
+      parentRadius: geometry.radius,
+      inset: islandInset,
       label: "Trailing",
       width: 56,
       height: 24,
@@ -46695,6 +46722,8 @@ async function updateDynamicIslandVariant(
 
   const expanded = await productSdkSlot({
     name: "Expanded Content Slot",
+    parentRadius: geometry.radius,
+    inset: islandInset,
     label: "Expanded content",
     width: geometry.width - 32,
     height: geometry.height - 32,
