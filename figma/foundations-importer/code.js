@@ -430,6 +430,25 @@ const PRODUCT_SDK_CARD_INSET = 13;
  */
 const POPOVER_ROW_INSET = KOZMOS_RADIUS.control - KOZMOS_RADIUS.marker;
 
+/**
+ * FloorSelector's tray, derived from the item it wraps.
+ *
+ * Both numbers here are off the semantic scale on purpose and the tray was the
+ * only one that was also wrong. Its items are 44x44 — the enforced touch-target
+ * minimum — with a 6px radius, in a tray with 4px of padding and a 1px stroke.
+ * That leaves 5px between the two curves, so the tray is concentric at 11. It
+ * was 8, which is not on the scale and not concentric either.
+ *
+ * The popover treatment does not transfer: making the inset 12 would force the
+ * tray from 54px wide to 70 to keep a 44px item, and a map control growing 30%
+ * is a product decision rather than a cleanup. So the geometry stays and the
+ * radius follows it.
+ */
+const FLOOR_SELECTOR_ITEM_RADIUS = 6;
+const FLOOR_SELECTOR_ITEM_INSET = 5;
+const FLOOR_SELECTOR_TRAY_RADIUS =
+  FLOOR_SELECTOR_ITEM_RADIUS + FLOOR_SELECTOR_ITEM_INSET;
+
 const SIDEBAR_CONTENT = ["Basic", "Sections", "Tools", "Rail"];
 // Drawer's slot API. Header and Footer join the Content Slot that was already
 // there, so a product can supply its own title row and its own action row
@@ -42485,7 +42504,12 @@ async function updateFloorSelectorVariant(
   component.paddingTop = 4;
   component.paddingBottom = 4;
   component.clipsContent = false;
-  productSdkSurface(component, 8, variableByName, stats);
+  productSdkSurface(
+    component,
+    FLOOR_SELECTOR_TRAY_RADIUS,
+    variableByName,
+    stats,
+  );
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "FloorSelector");
 
@@ -42515,7 +42539,7 @@ async function updateFloorSelectorVariant(
     item.primaryAxisAlignItems = "CENTER";
     item.counterAxisAlignItems = "CENTER";
     item.resizeWithoutConstraints(44, 44);
-    item.cornerRadius = 6;
+    item.cornerRadius = FLOOR_SELECTOR_ITEM_RADIUS;
     item.strokes = [];
     // theme/700 rather than theme/500: the label on this chip is
     // foreground/1000, which flips per theme, while theme/500 is #135BEC in
