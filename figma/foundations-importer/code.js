@@ -37937,6 +37937,10 @@ async function updateNavigationItemVariant(
     setHugChildSizing(trailingSlot);
   }
 
+  // After every child is in place, so auto-layout has settled the boxes the
+  // pill radii are measured from.
+  resolvePillRadii(component, stats);
+
   syncFocusRing(component, {
     enabled: !disabled,
     width: metrics.width,
@@ -38147,7 +38151,12 @@ async function createNavigationItemBadgeSlot({
   slot.counterAxisAlignItems = "CENTER";
   slot.paddingLeft = 6;
   slot.paddingRight = 6;
-  slot.cornerRadius = 10;
+  // A counter is a pill, which is what Counter/radius and Badge/counter/radius
+  // already say. This carried a hardcoded 10, which is not a pill at either
+  // size the badge actually renders: 24x22 caps at 11 and 22x18 caps at 9, so
+  // it was too square in a Side row and storing an undrawable radius in a Rail
+  // one. Resolved after layout, when the box is known.
+  markPillRadius(slot);
   slot.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
@@ -58467,6 +58476,51 @@ function bindSlotPropertyToNodesNamed(
  * did not make them bindable; it only hid the failure behind a counter that
  * said "attempted".
  */
+/**
+ * Mark a node as wanting a pill, to be resolved once its box is final.
+ *
+ * A pill's radius is `min(w, h) / 2`, which cannot be written at creation time
+ * because auto-layout has not sized the node yet. NavigationItem's badge is the
+ * case in point: declared 24x20, it renders 24x22 in a Side row and 22x18 in a
+ * Rail one, so the hardcoded 10 it carried was under the cap in one and over it
+ * in the other — too square to be a pill, and storing a radius the box cannot
+ * draw.
+ *
+ * Recording the intent and resolving it after layout is the honest version of
+ * what the 9999 sentinel was reaching for, without writing a number that is
+ * false about the shape.
+ */
+function markPillRadius(node) {
+  if (node && node.setSharedPluginData) {
+    node.setSharedPluginData(RUN_NAMESPACE, "radius-intent", "pill");
+  }
+}
+
+/** Give every pill-intent node the radius its own box can actually carry. */
+function resolvePillRadii(root, stats) {
+  let resolved = 0;
+  (function walk(node) {
+    if (
+      node.getSharedPluginData &&
+      node.getSharedPluginData(RUN_NAMESPACE, "radius-intent") === "pill" &&
+      typeof node.width === "number" &&
+      typeof node.height === "number"
+    ) {
+      try {
+        node.cornerRadius = Math.min(node.width, node.height) / 2;
+        resolved += 1;
+      } catch (_error) {
+        // Some node types do not take a corner radius; the mark is harmless.
+      }
+    }
+    if (node.children) for (const child of node.children) walk(child);
+  })(root);
+  if (resolved && stats) {
+    stats.pillRadiiResolved = (stats.pillRadiiResolved || 0) + resolved;
+  }
+  return resolved;
+}
+
 function isSlotReferenceCandidate(node) {
   return node && node.type === "SLOT";
 }
