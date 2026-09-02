@@ -455,6 +455,42 @@ function nestedRadius(parentRadius, inset) {
   return Math.max(0, parentRadius - inset);
 }
 
+/**
+ * Mark a node as a control rather than a nested panel.
+ *
+ * A control carries its role radius wherever it is placed — nobody squares a
+ * button because a card contains it — so the concentric rule does not govern
+ * it. `tokens:radius:nesting` reads this stamp over the REST API
+ * (`plugin_data=shared`) and skips what it marks, which is what lets that check
+ * reach zero and become a gate rather than a permanent report of six buttons.
+ *
+ * Stamped rather than matched on a name, because "Button" in a layer name is a
+ * convention and this is a fact about what the node is.
+ */
+/**
+ * The Core sets whose instances are controls rather than nested panels.
+ *
+ * Deliberately a list rather than a heuristic: "does this component set behave
+ * as a control" is a fact about the design system, not something to infer from
+ * a node at runtime.
+ */
+const CONTROL_COMPONENT_SETS = new Set([
+  "Button",
+  "SplitButton",
+  "IconButton",
+  "ToggleButton",
+  "FloatingActionButton",
+  "Link",
+  "Chip",
+  "SegmentedControl",
+]);
+
+function markControlSurface(node) {
+  if (node && node.setSharedPluginData) {
+    node.setSharedPluginData(RUN_NAMESPACE, "surface", "control");
+  }
+}
+
 const FLOOR_SELECTOR_ITEM_RADIUS = 6;
 const FLOOR_SELECTOR_ITEM_INSET = 5;
 const FLOOR_SELECTOR_TRAY_RADIUS =
@@ -11542,6 +11578,12 @@ async function createExampleInstance({
   }
 
   const { componentSet, instance } = created;
+  // An instance of a Core control is a control, whatever it is placed inside.
+  // Start Navigation Button and End Route Button reach the nesting check this
+  // way rather than through productSdkControlButton.
+  if (CONTROL_COMPONENT_SETS.has(componentSetName)) {
+    markControlSurface(instance);
+  }
   if (textProperties) {
     for (const [baseName, value] of Object.entries(textProperties)) {
       setInstanceTextProperty(instance, componentSet, baseName, value, stats);
@@ -43877,6 +43919,7 @@ async function productSdkControlButton({
     width: 44,
     height: 44,
   });
+  markControlSurface(button);
   button.cornerRadius = KOZMOS_RADIUS.control;
   button.fills = [
     paintFromVariable(
