@@ -143,6 +143,16 @@ Two things a PR needs before CI will even schedule:
   anything is waiting on you. On 2026-08-31 a push landed 33 commits and
   produced zero runs for that reason; the tell is that the PR says
   `CONFLICTING` while the run list still shows an older SHA.
+- **`Release Kozmos System` goes green without releasing.** It is
+  `workflow_run`-gated on CI passing on `main`, and it passed on 2026-09-02
+  while doing nothing: the job emits `::notice::Skipping npm release because
+NPM_TOKEN is not configured` and exits 0. There were also 0 pending
+  changesets in `.changeset/`, so even with a token there was nothing to
+  version — no tag was created on `fe4f4fa` and none exists on the repo. Same
+  species as the Code Connect step that passes on an empty secret. Read the
+  run's _annotations_, not its log: the log echoes every branch of the script
+  inside `##[group]Run` blocks, so `can_publish=true` appears there whether or
+  not it ran.
 - **The account's Actions billing must be current.** A failed payment or a
   reached spending limit fails every job in 2-3 seconds with no step recorded
   and the annotation "The job was not started because recent account payments
