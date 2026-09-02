@@ -1182,6 +1182,16 @@
             "com.figma.isOverride": true
           }
         },
+        "25": {
+          "$type": "color",
+          "$value": "#F7F8FA",
+          "$description": "Already in use before it was a token: code.js hardcoded #F7F8FA and #F1F2F4 as fallbacks against background/100, because the ramp jumped straight from #FFFFFF to #E3E4E8 and left nothing for a resting hover."
+        },
+        "50": {
+          "$type": "color",
+          "$value": "#F1F2F4",
+          "$description": "Already in use before it was a token: code.js hardcoded #F7F8FA and #F1F2F4 as fallbacks against background/100, because the ramp jumped straight from #FFFFFF to #E3E4E8 and left nothing for a resting hover."
+        },
         "100": {
           "$type": "color",
           "$value": "#E3E4E8",

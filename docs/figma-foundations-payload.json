@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-31T15:04:24.091Z",
+  "generatedAt": "2026-09-02T13:14:05.307Z",
   "target": {
     "fileKey": "Yj4O8p6Y9h2Sa9zJVoAiVY",
     "fileName": "Kozmos DS - Core Library",
@@ -36,17 +36,17 @@
     "Archive / Legacy Reference"
   ],
   "summary": {
-    "totalTokens": 615,
-    "variableTokens": 574,
+    "totalTokens": 618,
+    "variableTokens": 577,
     "styleOnlyTokens": 41,
     "bySourceType": {
       "borderRadius": 8,
       "dimension": 18,
       "borderWidth": 4,
       "opacity": 7,
-      "number": 59,
+      "number": 60,
       "spacing": 4,
-      "color": 407,
+      "color": 409,
       "fontSizes": 30,
       "letterSpacing": 5,
       "lineHeights": 14,
@@ -3421,6 +3421,54 @@
       }
     },
     {
+      "canonicalName": "Primitives/Colors/background/25",
+      "figmaName": "Colors/background/25",
+      "collection": "Kozmos Primitives",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--primitives-colors-background-25",
+      "syntax": {
+        "web": "var(--primitives-colors-background-25)",
+        "ios": "primitivesColorsBackground25",
+        "android": "primitivesColorsBackground25"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#F7F8FA"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#070708"
+        }
+      }
+    },
+    {
+      "canonicalName": "Primitives/Colors/background/50",
+      "figmaName": "Colors/background/50",
+      "collection": "Kozmos Primitives",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--primitives-colors-background-50",
+      "syntax": {
+        "web": "var(--primitives-colors-background-50)",
+        "ios": "primitivesColorsBackground50",
+        "android": "primitivesColorsBackground50"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#F1F2F4"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#0C0D0E"
+        }
+      }
+    },
+    {
       "canonicalName": "Primitives/Colors/background/100",
       "figmaName": "Colors/background/100",
       "collection": "Kozmos Primitives",
@@ -6133,6 +6181,30 @@
       }
     },
     {
+      "canonicalName": "Primitives/Layout/radius/250",
+      "figmaName": "Layout/radius/250",
+      "collection": "Kozmos Primitives",
+      "sourceType": "number",
+      "figmaType": "FLOAT",
+      "cssVariable": "--primitives-layout-radius-250",
+      "syntax": {
+        "web": "var(--primitives-layout-radius-250)",
+        "ios": "primitivesLayoutRadius250",
+        "android": "primitivesLayoutRadius250"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "number",
+          "value": 20
+        },
+        "dark": {
+          "kind": "number",
+          "value": 20
+        }
+      }
+    },
+    {
       "canonicalName": "Primitives/Layout/radius/300",
       "figmaName": "Layout/radius/300",
       "collection": "Kozmos Primitives",
@@ -6532,11 +6604,11 @@
       "values": {
         "light": {
           "kind": "alias",
-          "path": "Primitives/Layout/radius/200"
+          "path": "Primitives/Layout/radius/250"
         },
         "dark": {
           "kind": "alias",
-          "path": "Primitives/Layout/radius/200"
+          "path": "Primitives/Layout/radius/250"
         }
       }
     },

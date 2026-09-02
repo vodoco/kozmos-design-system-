@@ -62425,12 +62425,28 @@ async function createMultiSelectOption({
   option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "multiselect-option");
+  // Selected and active are different states and now look different. They
+  // shared background/100, so a MultiSelect showing two chosen options and one
+  // keyboard-focused one painted all three identically — every row read as
+  // chosen and the checkmark became the only signal. Combobox never showed it
+  // because only one row is ever selected there.
+  //
+  // Active takes the lighter step: it is a pointer or keyboard position rather
+  // than a choice the reader has made. That distinction had nowhere to live
+  // until background/25 and /50 existed — the ramp went straight from #FFFFFF
+  // to #E3E4E8, which is why #F1F2F4 was already hardcoded elsewhere in this
+  // file as a hover fallback against a token that was not it.
+  const optionSurface = disabled
+    ? { token: "Colors/background/200", fallback: "#C7CAD1" }
+    : selected
+      ? { token: "Colors/background/100", fallback: "#E3E4E8" }
+      : { token: "Colors/background/50", fallback: "#F1F2F4" };
   option.fills =
-    selected || active
+    selected || active || disabled
       ? [
           paintFromVariable(
-            disabled ? "Colors/background/200" : "Colors/background/100",
-            disabled ? "#C7CAD1" : "#E3E4E8",
+            optionSurface.token,
+            optionSurface.fallback,
             variableByName,
             stats,
           ),
@@ -62583,12 +62599,28 @@ async function createListboxOption({
   option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "listbox-option");
+  // Selected and active are different states and now look different. They
+  // shared background/100, so a MultiSelect showing two chosen options and one
+  // keyboard-focused one painted all three identically — every row read as
+  // chosen and the checkmark became the only signal. Combobox never showed it
+  // because only one row is ever selected there.
+  //
+  // Active takes the lighter step: it is a pointer or keyboard position rather
+  // than a choice the reader has made. That distinction had nowhere to live
+  // until background/25 and /50 existed — the ramp went straight from #FFFFFF
+  // to #E3E4E8, which is why #F1F2F4 was already hardcoded elsewhere in this
+  // file as a hover fallback against a token that was not it.
+  const optionSurface = disabled
+    ? { token: "Colors/background/200", fallback: "#C7CAD1" }
+    : selected
+      ? { token: "Colors/background/100", fallback: "#E3E4E8" }
+      : { token: "Colors/background/50", fallback: "#F1F2F4" };
   option.fills =
-    selected || active
+    selected || active || disabled
       ? [
           paintFromVariable(
-            disabled ? "Colors/background/200" : "Colors/background/100",
-            disabled ? "#C7CAD1" : "#E3E4E8",
+            optionSurface.token,
+            optionSurface.fallback,
             variableByName,
             stats,
           ),
@@ -64233,12 +64265,28 @@ async function createTimePickerOption({
   option.cornerRadius = KOZMOS_RADIUS.marker;
   option.clipsContent = false;
   option.setSharedPluginData(RUN_NAMESPACE, "kind", "timepicker-option");
+  // Selected and active are different states and now look different. They
+  // shared background/100, so a MultiSelect showing two chosen options and one
+  // keyboard-focused one painted all three identically — every row read as
+  // chosen and the checkmark became the only signal. Combobox never showed it
+  // because only one row is ever selected there.
+  //
+  // Active takes the lighter step: it is a pointer or keyboard position rather
+  // than a choice the reader has made. That distinction had nowhere to live
+  // until background/25 and /50 existed — the ramp went straight from #FFFFFF
+  // to #E3E4E8, which is why #F1F2F4 was already hardcoded elsewhere in this
+  // file as a hover fallback against a token that was not it.
+  const optionSurface = disabled
+    ? { token: "Colors/background/200", fallback: "#C7CAD1" }
+    : selected
+      ? { token: "Colors/background/100", fallback: "#E3E4E8" }
+      : { token: "Colors/background/50", fallback: "#F1F2F4" };
   option.fills =
-    selected || active
+    selected || active || disabled
       ? [
           paintFromVariable(
-            disabled ? "Colors/background/200" : "Colors/background/100",
-            disabled ? "#C7CAD1" : "#E3E4E8",
+            optionSurface.token,
+            optionSurface.fallback,
             variableByName,
             stats,
           ),

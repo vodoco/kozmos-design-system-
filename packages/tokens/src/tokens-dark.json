@@ -1181,6 +1181,16 @@
             "com.figma.scopes": ["ALL_SCOPES"]
           }
         },
+        "25": {
+          "$type": "color",
+          "$value": "#070708",
+          "$description": "The dark ramp inverts \u2014 0 is the page and higher steps lift off it \u2014 so these sit the same proportion along 0 -> 100 as their light counterparts."
+        },
+        "50": {
+          "$type": "color",
+          "$value": "#0C0D0E",
+          "$description": "The dark ramp inverts \u2014 0 is the page and higher steps lift off it \u2014 so these sit the same proportion along 0 -> 100 as their light counterparts."
+        },
         "100": {
           "$value": "#17191C",
           "$type": "color",
