@@ -444,6 +444,17 @@ const POPOVER_ROW_INSET = KOZMOS_RADIUS.control - KOZMOS_RADIUS.marker;
  * is a product decision rather than a cleanup. So the geometry stays and the
  * radius follows it.
  */
+/**
+ * The radius a child can carry inside a given parent, at a given inset.
+ *
+ * The concentric rule read inward. Several places now compute it, and every one
+ * of them used to be a fixed number that went stale the moment its parent
+ * changed.
+ */
+function nestedRadius(parentRadius, inset) {
+  return Math.max(0, parentRadius - inset);
+}
+
 const FLOOR_SELECTOR_ITEM_RADIUS = 6;
 const FLOOR_SELECTOR_ITEM_INSET = 5;
 const FLOOR_SELECTOR_TRAY_RADIUS =
@@ -43743,7 +43754,7 @@ async function productSdkSlot({
   // that proved the defaults were an assumption rather than a rule: its shell
   // is a 24 pill when compact and 32 when expanded, so a slot derived from
   // `container` came out at 7 where the shape wanted 13 and 16.
-  slot.cornerRadius = Math.max(0, parentRadius - inset);
+  slot.cornerRadius = nestedRadius(parentRadius, inset);
   slot.fills = [
     paintFromVariable(
       muted ? "Surface/100" : "Colors/background/100",
@@ -44065,6 +44076,9 @@ async function updateAdaptiveMapShellVariant(
   mapSurface.strokeWeight = 1;
 
   const controls = await productSdkSlot({
+    // Inside mapSurface, a `control`-radius panel with a 1px stroke — not the
+    // shell card, which is what the default assumes.
+    parentRadius: KOZMOS_RADIUS.control,
     name: "Controls Slot",
     label: "Controls",
     width: 60,
@@ -44872,6 +44886,9 @@ async function updateBrowseCategoriesPanelVariant(
     // The empty state replaces the grid rather than sitting beside it, so a
     // designer cannot accidentally show both.
     const empty = await productSdkSlot({
+      // This panel pads by 16 rather than the 12 a Product / SDK card uses, so
+      // its slot is squarer than the default would make it.
+      inset: 16 + 1,
       name: "Empty State Slot",
       label: "EmptyState slot",
       width: contentWidth,
@@ -65552,7 +65569,12 @@ function createColorPickerColorArea({
   area.layoutMode = "NONE";
   setLayoutSizingHorizontal(area, "FILL");
   area.resizeWithoutConstraints(296, 160);
-  area.cornerRadius = KOZMOS_RADIUS.control;
+  // Inside the popover at a card's inset, so it takes what the popover leaves
+  // it. At `control` it was exactly as round as the surface holding it.
+  area.cornerRadius = nestedRadius(
+    KOZMOS_RADIUS.control,
+    PRODUCT_SDK_CARD_INSET,
+  );
   area.clipsContent = false;
   area.setSharedPluginData(RUN_NAMESPACE, "kind", "colorpicker-color-area");
   area.fills = disabled
