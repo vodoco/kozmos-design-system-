@@ -414,6 +414,22 @@ const KOZMOS_RADIUS = {
  */
 const PRODUCT_SDK_CARD_INSET = 13;
 
+/**
+ * How far an option row sits inside its popover.
+ *
+ * Written as the difference between the two radii, because that is what makes
+ * them concentric: a `marker` row inset by this much inside a `control` popover
+ * puts both curves the same distance apart the whole way round. It was 4, which
+ * left a 4-radius row deep inside a 16-radius corner — so the gap along the
+ * edges was 4 and the gap at the corner was several times that, which is what
+ * "uneven roundness" looks like when you cannot name it.
+ *
+ * Derived rather than written as 12 so it follows if either role moves. Fixing
+ * the padding rather than a radius is the point: both roles were already right,
+ * and the spacing between them was not.
+ */
+const POPOVER_ROW_INSET = KOZMOS_RADIUS.control - KOZMOS_RADIUS.marker;
+
 const SIDEBAR_CONTENT = ["Basic", "Sections", "Tools", "Rail"];
 // Drawer's slot API. Header and Footer join the Content Slot that was already
 // there, so a product can supply its own title row and its own action row
@@ -52657,10 +52673,10 @@ async function updateMenuVariant(
   component.primaryAxisAlignItems = "MIN";
   component.counterAxisAlignItems = "MIN";
   component.itemSpacing = 0;
-  component.paddingLeft = 4;
-  component.paddingRight = 4;
-  component.paddingTop = 4;
-  component.paddingBottom = 4;
+  component.paddingLeft = POPOVER_ROW_INSET;
+  component.paddingRight = POPOVER_ROW_INSET;
+  component.paddingTop = POPOVER_ROW_INSET;
+  component.paddingBottom = POPOVER_ROW_INSET;
   component.resizeWithoutConstraints(192, 100);
   component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
@@ -53700,10 +53716,10 @@ async function updateListboxVariant(
   component.primaryAxisAlignItems = "MIN";
   component.counterAxisAlignItems = "MIN";
   component.itemSpacing = 2;
-  component.paddingLeft = 4;
-  component.paddingRight = 4;
-  component.paddingTop = 4;
-  component.paddingBottom = 4;
+  component.paddingLeft = POPOVER_ROW_INSET;
+  component.paddingRight = POPOVER_ROW_INSET;
+  component.paddingTop = POPOVER_ROW_INSET;
+  component.paddingBottom = POPOVER_ROW_INSET;
   component.resizeWithoutConstraints(320, 176);
   component.cornerRadius = KOZMOS_RADIUS.control;
   component.clipsContent = false;
@@ -61686,10 +61702,10 @@ async function syncComboboxVariantChildren({
     listbox.counterAxisAlignItems = "MIN";
     setLayoutSizingHorizontal(listbox, "FILL");
     listbox.itemSpacing = 2;
-    listbox.paddingLeft = 4;
-    listbox.paddingRight = 4;
-    listbox.paddingTop = 4;
-    listbox.paddingBottom = 4;
+    listbox.paddingLeft = POPOVER_ROW_INSET;
+    listbox.paddingRight = POPOVER_ROW_INSET;
+    listbox.paddingTop = POPOVER_ROW_INSET;
+    listbox.paddingBottom = POPOVER_ROW_INSET;
     listbox.resizeWithoutConstraints(320, 144);
     listbox.cornerRadius = KOZMOS_RADIUS.control;
     listbox.clipsContent = false;
@@ -62047,10 +62063,10 @@ async function syncMultiSelectVariantChildren({
     listbox.counterAxisAlignItems = "MIN";
     setLayoutSizingHorizontal(listbox, "FILL");
     listbox.itemSpacing = 2;
-    listbox.paddingLeft = 4;
-    listbox.paddingRight = 4;
-    listbox.paddingTop = 4;
-    listbox.paddingBottom = 4;
+    listbox.paddingLeft = POPOVER_ROW_INSET;
+    listbox.paddingRight = POPOVER_ROW_INSET;
+    listbox.paddingTop = POPOVER_ROW_INSET;
+    listbox.paddingBottom = POPOVER_ROW_INSET;
     listbox.resizeWithoutConstraints(320, 144);
     listbox.cornerRadius = KOZMOS_RADIUS.control;
     listbox.clipsContent = false;
@@ -63964,10 +63980,10 @@ async function syncTimePickerVariantChildren({
     listbox.counterAxisAlignItems = "MIN";
     setLayoutSizingHorizontal(listbox, "FILL");
     listbox.itemSpacing = 2;
-    listbox.paddingLeft = 4;
-    listbox.paddingRight = 4;
-    listbox.paddingTop = 4;
-    listbox.paddingBottom = 4;
+    listbox.paddingLeft = POPOVER_ROW_INSET;
+    listbox.paddingRight = POPOVER_ROW_INSET;
+    listbox.paddingTop = POPOVER_ROW_INSET;
+    listbox.paddingBottom = POPOVER_ROW_INSET;
     listbox.resizeWithoutConstraints(320, 188);
     listbox.cornerRadius = KOZMOS_RADIUS.control;
     listbox.clipsContent = false;
