@@ -7260,8 +7260,11 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "ColorPicker/color-area/radius",
-    value: 16,
-    alias: "Radius/Control",
+    // The area's corners are bound to this variable, so this is the number
+    // that renders — the painter's nestedRadius() write is overridden by it.
+    // Derived the same way, from the popover's radius across its inset; no
+    // role equals 3, so it carries no alias. See docs/nested-radius.md.
+    value: nestedRadius(KOZMOS_RADIUS.control, PRODUCT_SDK_CARD_INSET),
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -22673,6 +22676,12 @@ function inferTextStyleKeyForComponentText(text, componentSet) {
     setName === "TreeParentItem" ||
     setName === "TreeChildItem"
   ) {
+    // A row's count is drawn with the Counter's small typography — see
+    // createTreeCount — so the audit must expect that, not the row text.
+    // Expecting treeItem here flagged every parent count as stale, 96 of
+    // them, and an Update could never clear it because the painter and the
+    // expectation disagreed with each other.
+    if (/Count Text$/.test(textName)) return "counterSmall";
     return "treeItem";
   }
   if (setName === "Table") {

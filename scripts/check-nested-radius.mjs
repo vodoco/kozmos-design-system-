@@ -109,10 +109,21 @@ const boundKeys = (node, re) => {
   const byId = new Map();
   for (const [k, v] of Object.entries(node.boundVariables || {})) {
     if (!re.test(k)) continue;
-    const id = v && v.id ? v.id : "?";
-    if (!byId.has(id)) byId.set(id, []);
-    const side = /^padding(Left|Top|Right|Bottom)$/.exec(k);
-    byId.get(id).push(side ? side[1].toLowerCase() : k);
+    // Corners bound one at a time arrive as one object holding four aliases,
+    // which is how a bound radius hid from this check for a day.
+    const entries =
+      k === "rectangleCornerRadii"
+        ? Object.values(v || {}).map((corner) => [
+            "cornerRadius",
+            corner && corner.id ? corner.id : "?",
+          ])
+        : [[k, v && v.id ? v.id : "?"]];
+    for (const [key, id] of entries) {
+      if (!byId.has(id)) byId.set(id, []);
+      const side = /^padding(Left|Top|Right|Bottom)$/.exec(key);
+      const label = side ? side[1].toLowerCase() : key;
+      if (byId.get(id).indexOf(label) === -1) byId.get(id).push(label);
+    }
   }
   return [...byId.entries()].map(([id, keys]) => {
     const sides = keys.filter((k) => /^(left|top|right|bottom)$/.test(k));
@@ -259,9 +270,12 @@ async function main() {
                 childIdeal: Math.max(0, pr - pad),
                 parentBound: boundKeys(
                   parent,
-                  /^padding|^itemSpacing$|^cornerRadius$/,
+                  /^padding|^itemSpacing$|^cornerRadius$|^rectangleCornerRadii$/,
                 ),
-                childBound: boundKeys(node, /^cornerRadius$/),
+                childBound: boundKeys(
+                  node,
+                  /^cornerRadius$|^rectangleCornerRadii$/,
+                ),
                 parentBox: `${Math.round(pb.width)}x${Math.round(pb.height)}`,
               });
             }

@@ -252,10 +252,17 @@ The checker now names the binding on every finding, so the next reader sees
 `bound: parent paddingLeft→VariableID:…` and goes to the variable, not the
 painter.
 
-The fifteenth pair, ColorPicker's colour area at 16, is not bound. The plugin
-derives it to 3 on every Update — the area is recreated each run — so a 16 in
-the file means that Update has not run. It is measured again after the next
-one.
+The fifteenth pair, ColorPicker's colour area at 16, turned out to be bound
+as well — per corner, through `rectangleCornerRadii`, to
+`ColorPicker/color-area/radius`, which still said 16 and aliased
+`Radius/Control`. An earlier draft of this section called it "not bound"
+because the check read `cornerRadius` alone; Figma binds corners one at a
+time and reports them as one object, and both the checker and the reader
+missed it for a day. The variable now derives the same way the painter does,
+and the checker names per-corner bindings.
+
+The area is recreated on every Update, so the file reads 3 as soon as the set
+is run again with the derived variable in place.
 
 ## Running it
 

@@ -9,16 +9,16 @@ Branch: `codex/wave-2-figma-components`.
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing                   | State                                                                      |
-| ----------------------- | -------------------------------------------------------------------------- |
-| `pnpm figma:verify`     | **7 unbound properties on TreeParentItem** — fix committed, Update pending |
-| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                              |
-| `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged       |
-| Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                                   |
-| `tokens:radius:nesting` | **15** — one stale variable explains 14; fix committed, run pending        |
-| Chromatic               | **snapshot limit reached** — visual gate is not running                    |
-| Working tree            | clean; everything committed and pushed                                     |
-| Local gates             | all green — see §7 for the list                                            |
+| Thing                   | State                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| `pnpm figma:verify`     | **7 unbound properties on TreeParentItem** — fix committed, Update pending                            |
+| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                                                         |
+| `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged                                  |
+| Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                                                              |
+| `tokens:radius:nesting` | **1** after the 2026-09-03 run; the colour area's corners bind a second stale variable, fix committed |
+| Chromatic               | **snapshot limit reached** — visual gate is not running                                               |
+| Working tree            | clean; everything committed and pushed                                                                |
+| Local gates             | all green — see §7 for the list                                                                       |
 
 **The library publishes.** Eleven unbound properties across five sets, two of
 them Core, had held it out of Figma; on 2026-08-31 all five were fixed, run
@@ -1019,6 +1019,13 @@ file, not the plugin's own report.
 1. **Quit Figma (⌘Q), then Update six sets by hand**, one at a time from the
    plugin's dropdown: `Listbox`, `MultiSelect`, `ColorPicker`, `Combobox`,
    `TimePicker`, `Menu`, and `TreeParentItem`. `NavigationItem` is already done.
+   Load the payload from **this checkout**, `docs/figma-foundations-payload.json`
+   with 618 token candidates; a second checkout under `P/Pointr Cloud/` holds
+   one from before `background/25` and `/50` existed, with 615, and an import
+   from it creates nothing new — which is why the active rows were still a
+   solid fallback after an import on 2026-09-03. TreeParentItem also needs an
+   Update for its count text: the audit expected the row style where the
+   painter applies Counter Small, and the rule now says so.
    TreeParentItem is on the list because a run on 2026-09-03 declared the
    five leaf-row actions on it while its rows render two, which left seven
    properties bound to no layer and publishing blocked; the property pass
@@ -1330,6 +1337,15 @@ Navigation Slot)`, and the earlier diagnosis here — that the builder emits
   layer, and one such property is enough for "Invalid assets". It is now
   `treeSetActions()` per set, with the stale ones deleted on Update.
   `pnpm figma:verify` catches this class; run it after any set Update.
+- **Corners bind one at a time.** A radius bound through the variables panel
+  arrives in REST as `rectangleCornerRadii`, four aliases in one object, and
+  `boundVariables.cornerRadius` stays empty. Reading only the latter is how
+  `ColorPicker/color-area/radius` passed for "not bound" for a day.
+- **Two checkouts, two payloads.** `P/Pointr Cloud/kozmos-design-system-` is a
+  second clone with an older `docs/figma-foundations-payload.json`. The plugin
+  takes whichever file is picked; Figma is registered to run the plugin from
+  this checkout (`K/kozmos-design-system-dev`), and the payload must come from
+  the same place.
 
 ## 7. How To Check Anything Here
 
