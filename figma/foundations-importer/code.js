@@ -98,11 +98,32 @@ const TREE_PARENT_ACTIONS = [
   { name: "Lock Action", iconName: "lock-01", visible: true },
 ];
 
-/** The actions a tree set's rows can render, which is all it may declare. */
+/**
+ * The positional actions a tree set's rows render, which is all it may declare
+ * as icon swaps: two on a parent row, five on an item row.
+ */
 function treeSetActions(componentSet) {
   return componentSet && componentSet.name === "TreeParentItem"
     ? TREE_PARENT_ACTIONS
     : TREE_ITEM_ACTIONS;
+}
+
+/**
+ * The actions a tree set can show or hide. TreeItem and Tree draw both row
+ * kinds — a parent row with Hide and Lock above item rows with the five — so
+ * they declare both lists' toggles; TreeParentItem declares the parent's and
+ * TreeChildItem the item's. Declaring by set, not by the global list, is what
+ * keeps a `Show Edit Action` off a set that never draws an Edit button.
+ */
+function treeSetVisibilityActions(componentSet) {
+  const name = componentSet ? componentSet.name : "";
+  if (name === "TreeParentItem") return TREE_PARENT_ACTIONS;
+  if (name === "TreeChildItem") return TREE_ITEM_ACTIONS;
+  const both = TREE_PARENT_ACTIONS.slice();
+  for (const action of TREE_ITEM_ACTIONS) {
+    if (!both.some((known) => known.name === action.name)) both.push(action);
+  }
+  return both;
 }
 const TREE_ITEM_DEPTHS = ["0", "1", "2"];
 const TIMELINE_CONTENT = ["Basic", "Detailed"];
@@ -6574,7 +6595,7 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "Listbox/gap",
     value: 4,
-    alias: "Badge/gap",
+    alias: spacingAliasFor(4),
     scopes: ["GAP"],
   },
   {
@@ -40265,7 +40286,7 @@ async function configureTreeItemProperties(
  */
 function configureTreeActionVisibilityProperties(componentSet, stats) {
   let boundCount = 0;
-  const actions = treeSetActions(componentSet);
+  const actions = treeSetVisibilityActions(componentSet);
 
   // Declared on an earlier run from the five-action list, and referenced by
   // nothing on a set whose rows never draw them. Removed before the rest is
