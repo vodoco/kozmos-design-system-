@@ -219,6 +219,8 @@ const files = {
   reactMultiSelectFigma:
     "packages/react/src/components/MultiSelect/MultiSelect.figma.tsx",
   reactListbox: "packages/react/src/components/Listbox/Listbox.tsx",
+  reactMenu: "packages/react/src/components/Menu/Menu.tsx",
+  reactFileUpload: "packages/react/src/components/FileUpload/FileUpload.tsx",
   reactListboxFigma: "packages/react/src/components/Listbox/Listbox.figma.tsx",
   reactPasswordInput:
     "packages/react/src/components/PasswordInput/PasswordInput.tsx",
@@ -10089,6 +10091,63 @@ assertContains(
   source.androidColorsDark,
   "val componentsPrimaryButtonsDangerButtonBackgroundIdle = Color(0xffee7e95)",
   "Android dark destructive primary button background stays red",
+);
+
+// A popover row is inset far enough to be concentric with it: a marker-radius
+// row inside a control-radius popover needs 12, because R_outer = R_inner +
+// padding. The plugin derives that as POPOVER_ROW_INSET; the web has to spell
+// it as a padding class, and for a day it said 4 while Figma said 12. These
+// assertions are the only thing that ties the two spellings together.
+for (const [key, needle, label] of [
+  ["reactListbox", "bg-popover p-3", "Listbox"],
+  ["reactCombobox", "bg-popover p-3", "Combobox"],
+  ["reactMultiSelect", "bg-popover p-3", "MultiSelect"],
+  ["reactMenu", "bg-popover p-3", "Menu"],
+  ["reactSelect", '"p-3",', "Select viewport"],
+]) {
+  assertContains(
+    files[key],
+    source[key],
+    needle,
+    `${label} pads its popover to the concentric inset (12)`,
+  );
+}
+for (const token of [
+  "Menu/padding",
+  "Combobox/listbox/padding",
+  "MultiSelect/listbox/padding",
+  "Listbox/padding",
+  "TimePicker/listbox/padding",
+]) {
+  assertContains(
+    files.figma,
+    source.figma,
+    new RegExp(
+      `name: "${escapeRegExp(token)}",\\s*value: POPOVER_ROW_INSET\\b`,
+    ),
+    `${token} derives from POPOVER_ROW_INSET rather than a literal`,
+  );
+}
+
+// A file row is a small card. Both surfaces draw it at the container radius,
+// and the list sits 12 under the dropzone on both.
+assertContains(
+  files.reactFileUpload,
+  source.reactFileUpload,
+  "rounded-container",
+  "FileUpload row uses the container radius on the web",
+);
+assertContains(
+  files.reactFileUpload,
+  source.reactFileUpload,
+  "mt-3 grid gap-2",
+  "FileUpload list sits 12 under the dropzone on the web",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenAliasPattern("FileUpload/file-row/radius", "Radius/Container"),
+  "Figma FileUpload row radius aliases the Container role",
 );
 
 // Every Core set the plugin can update must appear in CORE_UPDATE_SEQUENCE.

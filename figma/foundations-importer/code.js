@@ -496,6 +496,25 @@ function spacingAliasFor(px) {
   return `Layout/spacing/${step}`;
 }
 
+/** The pixel value of a spacing step, the same arithmetic read backwards. */
+function spacingPx(step) {
+  if (!SPACING_STEPS.has(step)) {
+    throw new Error(`Layout/spacing/${step} is not on the scale`);
+  }
+  return step / 12.5;
+}
+
+/**
+ * The file list sits 12px under the dropzone, which is what the web's `mt-3`
+ * draws. The variant's stack already contributes `FileUpload/gap`, so the list
+ * carries only the remainder as its own top padding. Written as the difference
+ * so it follows if either number moves, rather than as the 6 it happens to be
+ * today.
+ */
+const FILE_UPLOAD_LIST_GAP = spacingPx(150);
+const FILE_UPLOAD_ROW_GAP = spacingPx(100);
+const FILE_UPLOAD_LIST_OFFSET = FILE_UPLOAD_LIST_GAP - spacingPx(75);
+
 /**
  * FloorSelector's tray, derived from the item it wraps.
  *
@@ -7071,6 +7090,18 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   { name: "FileUpload/gap", value: 6, alias: "Input/gap", scopes: ["GAP"] },
   {
+    name: "FileUpload/list/gap",
+    value: FILE_UPLOAD_ROW_GAP,
+    alias: spacingAliasFor(FILE_UPLOAD_ROW_GAP),
+    scopes: ["GAP"],
+  },
+  {
+    name: "FileUpload/list/offset",
+    value: FILE_UPLOAD_LIST_OFFSET,
+    alias: spacingAliasFor(FILE_UPLOAD_LIST_OFFSET),
+    scopes: ["GAP"],
+  },
+  {
     name: "FileUpload/dropzone/min-height",
     value: 144,
     scopes: ["WIDTH_HEIGHT"],
@@ -7122,8 +7153,10 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "FileUpload/file-row/radius",
-    value: 16,
-    alias: "Combobox/listbox/radius",
+    // A file row is a small card, not a control: the web draws it
+    // `rounded-container` and Figma drew it at the popover's radius.
+    value: KOZMOS_RADIUS.container,
+    alias: "Radius/Container",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -27838,6 +27871,7 @@ function bindTimePickerGeometryVariables(
 function bindFileUploadGeometryVariables(
   component,
   dropzone,
+  fileList,
   fileRows,
   icons,
   variableByName,
@@ -27857,6 +27891,23 @@ function bindFileUploadGeometryVariables(
     variableByName,
     stats,
   );
+
+  if (fileList) {
+    bindFloatVariable(
+      fileList,
+      "itemSpacing",
+      "FileUpload/list/gap",
+      variableByName,
+      stats,
+    );
+    bindFloatVariable(
+      fileList,
+      "paddingTop",
+      "FileUpload/list/offset",
+      variableByName,
+      stats,
+    );
+  }
 
   if (dropzone) {
     bindFloatVariable(
@@ -64568,10 +64619,10 @@ async function syncFileUploadVariantChildren({
     fileList.primaryAxisAlignItems = "MIN";
     fileList.counterAxisAlignItems = "MIN";
     setLayoutSizingHorizontal(fileList, "FILL");
-    fileList.itemSpacing = 8;
+    fileList.itemSpacing = FILE_UPLOAD_ROW_GAP;
     fileList.paddingLeft = 0;
     fileList.paddingRight = 0;
-    fileList.paddingTop = 0;
+    fileList.paddingTop = FILE_UPLOAD_LIST_OFFSET;
     fileList.paddingBottom = 0;
     fileList.fills = [];
     fileList.strokes = [];
@@ -64634,6 +64685,7 @@ async function syncFileUploadVariantChildren({
   bindFileUploadGeometryVariables(
     component,
     dropzone,
+    fileList,
     fileRows,
     icons,
     variableByName,
@@ -64670,7 +64722,7 @@ async function createFileUploadFileRow({
   row.paddingTop = 8;
   row.paddingBottom = 8;
   row.resizeWithoutConstraints(384, 44);
-  row.cornerRadius = KOZMOS_RADIUS.control;
+  row.cornerRadius = KOZMOS_RADIUS.container;
   row.clipsContent = false;
   row.setSharedPluginData(RUN_NAMESPACE, "kind", "file-upload-file-row");
   row.fills = [
