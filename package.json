@@ -44,6 +44,7 @@
     "components:variant:check": "node scripts/skills/check-variant-parity.mjs",
     "tokens:contrast:check": "node scripts/check-token-contrast.mjs",
     "tokens:radius:check": "node scripts/check-radius-parity.mjs",
+    "tokens:border:check": "node scripts/check-border-parity.mjs",
     "tokens:radius:nesting": "node scripts/check-nested-radius.mjs",
     "tokens:typography:check": "node scripts/check-typography-parity.mjs",
     "ios:snapshot:verify": "cd packages/ios && xcodebuild test -scheme Kozmos -destination \"platform=iOS Simulator,name=iPhone 16,OS=18.4\" -only-testing:KozmosTests/KozmosButtonImageSnapshotTests",

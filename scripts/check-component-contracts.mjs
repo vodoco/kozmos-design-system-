@@ -3721,14 +3721,14 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'trackStroke: "Colors/foreground/500"',
-  "Slider inactive track accessible boundary token",
+  'trackStroke: "Border/Input"',
+  "Slider inactive track reads the Border/Input role, whose 3:1 is held by tokens:border:check",
 );
 assertContains(
   files.figma,
   source.figma,
-  'trackStroke: "Colors/foreground/500"',
-  "Progress inactive track accessible boundary token",
+  'trackStroke: "Border/Input"',
+  "Progress inactive track reads the Border/Input role, whose 3:1 is held by tokens:border:check",
 );
 assertContains(
   files.figma,

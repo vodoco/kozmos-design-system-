@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T13:14:05.307Z",
+  "generatedAt": "2026-09-03T20:55:41.795Z",
   "target": {
     "fileKey": "Yj4O8p6Y9h2Sa9zJVoAiVY",
     "fileName": "Kozmos DS - Core Library",
@@ -36,8 +36,8 @@
     "Archive / Legacy Reference"
   ],
   "summary": {
-    "totalTokens": 618,
-    "variableTokens": 577,
+    "totalTokens": 620,
+    "variableTokens": 579,
     "styleOnlyTokens": 41,
     "bySourceType": {
       "borderRadius": 8,
@@ -46,7 +46,7 @@
       "opacity": 7,
       "number": 60,
       "spacing": 4,
-      "color": 409,
+      "color": 411,
       "fontSizes": 30,
       "letterSpacing": 5,
       "lineHeights": 14,
@@ -6657,6 +6657,54 @@
         "dark": {
           "kind": "alias",
           "path": "Primitives/Layout/radius/full"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Border/Subtle",
+      "figmaName": "Border/Subtle",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-border-subtle",
+      "syntax": {
+        "web": "var(--semantics-border-subtle)",
+        "ios": "semanticsBorderSubtle",
+        "android": "semanticsBorderSubtle"
+      },
+      "suggestedScopes": ["STROKE_COLOR"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/background/200"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/background/200"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Border/Input",
+      "figmaName": "Border/Input",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-border-input",
+      "syntax": {
+        "web": "var(--semantics-border-input)",
+        "ios": "semanticsBorderInput",
+        "android": "semanticsBorderInput"
+      },
+      "suggestedScopes": ["STROKE_COLOR"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/foreground/500"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/foreground/500"
         }
       }
     },

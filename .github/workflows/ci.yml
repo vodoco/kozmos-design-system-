@@ -68,6 +68,9 @@ jobs:
       - name: Verify Radius Parity
         run: pnpm tokens:radius:check
 
+      - name: Verify Border Parity
+        run: pnpm tokens:border:check
+
       # Reads the live Figma file, so it needs the token and is skipped without
       # it. Switched to --strict on 2026-09-03, the day the backlog reached
       # zero — a gate that is red on purpose is a gate somebody switches off.

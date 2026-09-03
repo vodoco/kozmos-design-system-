@@ -30,22 +30,42 @@ function optionalPointrPlatform(destination) {
   };
 }
 
+function resolveDarkAlias(root, value, depth = 0) {
+  const match = /^\{(.+)\}$/.exec(String(value).trim());
+  if (!match || depth > 10) return value;
+  const target = match[1]
+    .split(".")
+    .reduce(
+      (node, key) => (node && node[key] !== undefined ? node[key] : undefined),
+      root,
+    );
+  if (!target) return value;
+  return resolveDarkAlias(root, target.value || target.$value, depth + 1);
+}
+
 // Helper to merge Dark tokens into Light tokens as 'darkValue'
-function mergeDarkTokens(light, dark) {
+function mergeDarkTokens(light, dark, darkRoot = dark) {
   for (const key in light) {
     if (dark && dark[key]) {
       if (
         light[key].hasOwnProperty("value") ||
         light[key].hasOwnProperty("$value")
       ) {
-        const darkVal = dark[key].value || dark[key].$value;
+        // A dark value written as an alias ("{Primitives.Colors.background.200}")
+        // must be resolved against the dark tree, or the alias string itself
+        // reaches the generated Swift as a hex — which is what happened to the
+        // first semantic colour alias, Semantics.Border, on 2026-09-03.
+        const darkVal = resolveDarkAlias(
+          darkRoot,
+          dark[key].value || dark[key].$value,
+        );
         if (darkVal) {
           if (!light[key].attributes) light[key].attributes = {};
           light[key].attributes.darkValue = darkVal;
         }
       } else if (typeof light[key] === "object") {
         // It's a group, recurse
-        mergeDarkTokens(light[key], dark[key]);
+        mergeDarkTokens(light[key], dark[key], darkRoot);
       }
     }
   }
@@ -294,7 +314,9 @@ ${dictionary.allTokens
     if (isNaN(val)) return "";
     if (isPillSentinel(token, val)) {
       return (
-        "  // " + varName + " is not emitted: a pill is a shape, not a length." +
+        "  // " +
+        varName +
+        " is not emitted: a pill is a shape, not a length." +
         " Use RoundedCornerShape(percent = 50)."
       );
     }
@@ -336,7 +358,9 @@ ${dictionary.allTokens
     if (isNaN(val)) return "";
     if (isPillSentinel(token, val)) {
       return (
-        "    // " + varName + " is not emitted: a pill is a shape, not a" +
+        "    // " +
+        varName +
+        " is not emitted: a pill is a shape, not a" +
         " length. Use Capsule()."
       );
     }

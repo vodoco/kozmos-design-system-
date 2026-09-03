@@ -11394,12 +11394,7 @@ function createExampleSurface({
   surface.primaryAxisSizingMode = "AUTO";
   surface.cornerRadius = 12;
   surface.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   surface.strokeWeight = 1;
   return surface;
@@ -11693,12 +11688,7 @@ function createExamplePlaceholder({
     paintFromVariable("Surface/200", "#ECEEF2", variableByName, stats),
   ];
   placeholder.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   placeholder.strokeWeight = 1;
   placeholder.appendChild(
@@ -37747,12 +37737,7 @@ async function updateScrollAreaVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -37878,12 +37863,7 @@ async function updateBottomNavigationVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = [
@@ -38290,12 +38270,7 @@ async function createNavigationItemBadgeSlot({
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   slot.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   slot.strokeWeight = 1;
   if (shell.reusedContent) return slot;
@@ -38389,12 +38364,7 @@ async function updateNavbarVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -39156,12 +39126,7 @@ async function updateSidebarVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -39671,12 +39636,7 @@ async function updateBottomSheetVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -40742,7 +40702,7 @@ function tagConfig(variant) {
     return {
       background: "Surface/0",
       foreground: "Colors/foreground/0",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#FFFFFF",
       foregroundFallback: "#000000",
       strokeFallback: "#C7CAD1",
@@ -41069,7 +41029,7 @@ function createTimelineRail({
   ];
   marker.strokes = [
     paintFromVariable(
-      active ? "Colors/theme/500" : "Colors/background/200",
+      active ? "Colors/theme/500" : "Border/Subtle",
       active ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -41161,7 +41121,7 @@ function searchBarConfig(variant, state) {
     height: floating ? 56 : 52,
     radius: floating ? 18 : 16,
     background: disabled ? "Colors/background/100" : "Colors/background/0",
-    stroke: focused ? "Colors/theme/500" : "Colors/foreground/500",
+    stroke: focused ? "Colors/theme/500" : "Border/Input",
     icon: disabled ? "Colors/foreground/500" : "Colors/foreground/400",
     placeholder: disabled ? "Colors/foreground/500" : "Colors/foreground/400",
     value: disabled ? "Colors/foreground/500" : "Colors/foreground/0",
@@ -42321,12 +42281,7 @@ function productSdkSurface(component, radiusToken, variableByName, stats) {
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.cornerRadius = radiusToken;
@@ -43133,12 +43088,7 @@ async function updateMapViewVariant(
     ),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -43165,12 +43115,7 @@ async function updateMapViewVariant(
       paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
     ];
     slot.strokes = [
-      paintFromVariable(
-        "Colors/background/200",
-        "#C7CAD1",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     slot.strokeWeight = 1;
     const slotLabel = await productSdkText({
@@ -43894,12 +43839,7 @@ async function productSdkSlot({
     ),
   ];
   slot.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   slot.strokeWeight = 1;
 
@@ -44019,7 +43959,7 @@ async function productSdkControlButton({
   ];
   button.strokes = [
     paintFromVariable(
-      pressed ? "Colors/theme/500" : "Colors/background/200",
+      pressed ? "Colors/theme/500" : "Border/Subtle",
       pressed ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -44197,12 +44137,7 @@ async function updateAdaptiveMapShellVariant(
     ),
   ];
   mapSurface.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   mapSurface.strokeWeight = 1;
 
@@ -44349,12 +44284,7 @@ async function updateMapControlButtonVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
 
@@ -45167,7 +45097,7 @@ async function updateCategoryTileVariant(
   ];
   component.strokes = [
     paintFromVariable(
-      selected ? "Colors/theme/500" : "Colors/background/200",
+      selected ? "Colors/theme/500" : "Border/Subtle",
       selected ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -45477,7 +45407,7 @@ async function updatePOIResultCardVariant(
   ];
   component.strokes = [
     paintFromVariable(
-      selected ? "Colors/theme/500" : "Colors/background/200",
+      selected ? "Colors/theme/500" : "Border/Subtle",
       selected ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -45847,7 +45777,7 @@ async function updateRouteOptionCardVariant(
   ];
   component.strokes = [
     paintFromVariable(
-      selected ? "Colors/theme/500" : "Colors/background/200",
+      selected ? "Colors/theme/500" : "Border/Subtle",
       selected ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -50754,12 +50684,7 @@ async function updateContainerVariant(
     ),
   ];
   content.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   content.strokeWeight = 1;
   content.clipsContent = false;
@@ -51470,12 +51395,7 @@ async function updateAccordionVariant(
   component.resizeWithoutConstraints(360, isOpen ? 128 : 53);
   component.fills = [];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.strokeTopWeight = 0;
@@ -52185,12 +52105,7 @@ async function updateCardVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = [
@@ -52286,12 +52201,7 @@ async function updateListVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#E3E4E8",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -52378,12 +52288,7 @@ async function updateTableVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#E3E4E8",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -52548,12 +52453,7 @@ async function updateTooltipVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#E3E4E8",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -52624,12 +52524,7 @@ async function updateDialogVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -52711,12 +52606,7 @@ async function updateDrawerVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -52789,12 +52679,7 @@ async function updatePopoverVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -52865,12 +52750,7 @@ async function updateMenuVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -53908,12 +53788,7 @@ async function updateListboxVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -55499,12 +55374,7 @@ async function updateToastVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -56406,14 +56276,7 @@ async function syncListVariantChildren({
     item.fills = [];
     item.strokes =
       index < defaults.length - 1
-        ? [
-            paintFromVariable(
-              "Colors/background/200",
-              "#E3E4E8",
-              variableByName,
-              stats,
-            ),
-          ]
+        ? [paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats)]
         : [];
     item.strokeWeight = index < defaults.length - 1 ? 1 : 0;
     item.strokeTopWeight = 0;
@@ -56542,14 +56405,7 @@ async function syncTableRow({
     : [];
   row.strokes =
     rowIndex < metrics.rowCount - 1
-      ? [
-          paintFromVariable(
-            "Colors/background/200",
-            "#E3E4E8",
-            variableByName,
-            stats,
-          ),
-        ]
+      ? [paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats)]
       : [];
   row.strokeWeight = rowIndex < metrics.rowCount - 1 ? 1 : 0;
   row.strokeTopWeight = 0;
@@ -59627,12 +59483,7 @@ async function syncToastVariantChildren({
     action.cornerRadius = KOZMOS_RADIUS.control;
     action.fills = [];
     action.strokes = [
-      paintFromVariable(
-        "Colors/foreground/500",
-        "#747B8B",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Input", "#747B8B", variableByName, stats),
     ];
     action.strokeWeight = 1;
     action.clipsContent = false;
@@ -61940,12 +61791,7 @@ async function syncComboboxVariantChildren({
       paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
     ];
     listbox.strokes = [
-      paintFromVariable(
-        "Colors/foreground/500",
-        "#747B8B",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     listbox.strokeWeight = 1;
     listbox.effects = tooltipShadowEffects();
@@ -62301,12 +62147,7 @@ async function syncMultiSelectVariantChildren({
       paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
     ];
     listbox.strokes = [
-      paintFromVariable(
-        "Colors/foreground/500",
-        "#747B8B",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     listbox.strokeWeight = 1;
     listbox.effects = tooltipShadowEffects();
@@ -63096,12 +62937,7 @@ async function createDatePickerCalendar({
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   calendar.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   calendar.strokeWeight = 1;
   calendar.effects = tooltipShadowEffects();
@@ -63767,12 +63603,7 @@ async function createDateRangePickerCalendar({
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   calendar.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   calendar.strokeWeight = 1;
   calendar.effects = tooltipShadowEffects();
@@ -64250,12 +64081,7 @@ async function syncTimePickerVariantChildren({
       paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
     ];
     listbox.strokes = [
-      paintFromVariable(
-        "Colors/foreground/500",
-        "#747B8B",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     listbox.strokeWeight = 1;
     listbox.effects = tooltipShadowEffects();
@@ -64745,12 +64571,7 @@ async function createFileUploadFileRow({
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   row.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   row.strokeWeight = 1;
 
@@ -65109,7 +64930,7 @@ function createColorPickerSwatch({
   swatch.fills = [paintFromHex(colorPickerSafeHex(value))];
   swatch.strokes = [
     paintFromVariable(
-      selected ? "Colors/theme/500" : "Colors/foreground/500",
+      selected ? "Colors/theme/500" : "Border/Input",
       selected ? "#135BEC" : "#747B8B",
       variableByName,
       stats,
@@ -65195,12 +65016,7 @@ async function createColorPickerPopover({
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   popover.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   popover.strokeWeight = 1;
   popover.effects = tooltipShadowEffects();
@@ -65492,12 +65308,7 @@ async function createColorPickerMiniField({
     ),
   ];
   field.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Input", "#747B8B", variableByName, stats),
   ];
   field.strokeWeight = 1;
 
@@ -65598,12 +65409,7 @@ async function createColorPickerPaletteSelect({
     ),
   ];
   select.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Input", "#747B8B", variableByName, stats),
   ];
   select.strokeWeight = 1;
 
@@ -65777,12 +65583,7 @@ function createColorPickerColorArea({
         ]),
       ];
   area.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   area.strokeWeight = 1;
 
@@ -65929,12 +65730,7 @@ async function createColorPickerSlider({
       ]
     : [paintFromHex(fill)];
   track.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Input", "#747B8B", variableByName, stats),
   ];
   track.strokeWeight = 1;
   track.setSharedPluginData(RUN_NAMESPACE, "kind", "colorpicker-slider-track");
@@ -65955,7 +65751,7 @@ async function createColorPickerSlider({
   ];
   thumb.strokes = [
     paintFromVariable(
-      disabled ? "Colors/foreground/500" : "Colors/theme/500",
+      disabled ? "Border/Input" : "Colors/theme/500",
       disabled ? "#747B8B" : "#135BEC",
       variableByName,
       stats,
@@ -70066,7 +69862,7 @@ function boxSurfaceConfig(surface) {
   if (surface === "Outlined") {
     return {
       background: "Surface/0",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#FFFFFF",
       strokeFallback: "#C7CAD1",
     };
@@ -70177,7 +69973,7 @@ function toggleButtonConfig(variant, state) {
     return {
       background: "Colors/background/100",
       foreground: "Colors/foreground/500",
-      stroke: variant === "Outline" ? "Colors/background/200" : null,
+      stroke: variant === "Outline" ? "Border/Subtle" : null,
       backgroundFallback: "#E4E6EA",
       foregroundFallback: "#747B8B",
       strokeFallback: "#C7CAD1",
@@ -70199,7 +69995,7 @@ function toggleButtonConfig(variant, state) {
     return {
       background: "Surface/0",
       foreground: "Colors/foreground/0",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#FFFFFF",
       foregroundFallback: "#000000",
       strokeFallback: "#C7CAD1",
@@ -70245,7 +70041,7 @@ function badgeConfig(variant) {
     Outline: {
       background: "Surface/0",
       foreground: "Colors/foreground/0",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#FFFFFF",
       foregroundFallback: "#000000",
       strokeFallback: "#C7CAD1",
@@ -70268,7 +70064,7 @@ function chipConfig(variant, state) {
     return {
       background: "Colors/background/100",
       foreground: "Colors/foreground/500",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#E4E6EA",
       foregroundFallback: "#747B8B",
       strokeFallback: "#C7CAD1",
@@ -70322,7 +70118,7 @@ function chipConfig(variant, state) {
   return {
     background: "Surface/0",
     foreground: "Colors/foreground/0",
-    stroke: "Colors/background/200",
+    stroke: "Border/Subtle",
     backgroundFallback: "#FFFFFF",
     foregroundFallback: "#000000",
     strokeFallback: "#C7CAD1",
@@ -70401,7 +70197,7 @@ function segmentedControlConfig(state) {
   if (state === "Disabled") {
     return {
       background: "Colors/background/100",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#E4E6EA",
       strokeFallback: "#C7CAD1",
     };
@@ -70418,7 +70214,7 @@ function segmentedControlConfig(state) {
 
   return {
     background: "Colors/background/100",
-    stroke: "Colors/background/200",
+    stroke: "Border/Subtle",
     backgroundFallback: "#E4E6EA",
     strokeFallback: "#C7CAD1",
   };
@@ -70491,7 +70287,7 @@ function checkboxConfig(checked, state) {
   if (isDisabled) {
     return {
       controlFill: isChecked ? "Colors/background/200" : null,
-      controlStroke: "Colors/foreground/500",
+      controlStroke: "Border/Input",
       mark: "Colors/foreground/500",
       label: "Colors/foreground/500",
       controlFillFallback: "#C7CAD1",
@@ -70507,7 +70303,7 @@ function checkboxConfig(checked, state) {
       ? "Colors/emotional/danger/600"
       : isChecked
         ? "Colors/theme/500"
-        : "Colors/foreground/500",
+        : "Border/Input",
     mark: "Colors/foreground/1000",
     label: isError ? "Colors/emotional/danger/600" : "Colors/foreground/0",
     controlFillFallback: "#135BEC",
@@ -70528,7 +70324,7 @@ function radioConfig(checked, state) {
 
   if (isDisabled) {
     return {
-      controlStroke: "Colors/foreground/500",
+      controlStroke: "Border/Input",
       dot: "Colors/foreground/500",
       label: "Colors/foreground/500",
       controlStrokeFallback: "#747B8B",
@@ -70542,7 +70338,7 @@ function radioConfig(checked, state) {
       ? "Colors/emotional/danger/600"
       : isChecked
         ? "Colors/theme/500"
-        : "Colors/foreground/500",
+        : "Border/Input",
     dot: isError ? "Colors/emotional/danger/600" : "Colors/theme/500",
     label: isError ? "Colors/emotional/danger/600" : "Colors/foreground/0",
     controlStrokeFallback: isError
@@ -70563,7 +70359,7 @@ function switchConfig(checked, state) {
   if (isDisabled) {
     return {
       trackFill: "Colors/foreground/500",
-      trackStroke: "Colors/foreground/500",
+      trackStroke: "Border/Input",
       thumbFill: "Colors/background/0",
       label: "Colors/foreground/500",
       trackFillFallback: "#747B8B",
@@ -70590,7 +70386,7 @@ function switchConfig(checked, state) {
 
   return {
     trackFill: isChecked ? "Colors/theme/500" : "Colors/foreground/500",
-    trackStroke: isChecked ? "Colors/theme/500" : "Colors/foreground/500",
+    trackStroke: isChecked ? "Colors/theme/500" : "Border/Input",
     thumbFill: "Colors/background/0",
     label: "Colors/foreground/0",
     trackFillFallback: isChecked ? "#135BEC" : "#747B8B",
@@ -70611,7 +70407,7 @@ function inputConfig(state, status) {
   if (isDisabled) {
     return {
       fieldFill: "Colors/background/100",
-      fieldStroke: "Colors/foreground/500",
+      fieldStroke: "Border/Input",
       label: "Colors/foreground/500",
       placeholder: "Colors/foreground/500",
       helper: "Colors/foreground/500",
@@ -70655,7 +70451,7 @@ function inputConfig(state, status) {
 
   return {
     fieldFill: isReadonly ? "Colors/background/100" : "Colors/background/0",
-    fieldStroke: isFocus ? "Colors/theme/500" : "Colors/foreground/500",
+    fieldStroke: isFocus ? "Colors/theme/500" : "Border/Input",
     label: "Colors/foreground/0",
     placeholder: "Colors/foreground/400",
     helper: "Colors/foreground/400",
@@ -70674,10 +70470,10 @@ function sliderConfig(state, status) {
   if (isDisabled) {
     return {
       trackFill: "Colors/background/200",
-      trackStroke: "Colors/foreground/500",
+      trackStroke: "Border/Input",
       rangeFill: "Colors/foreground/500",
       thumbFill: "Colors/background/0",
-      thumbStroke: "Colors/foreground/500",
+      thumbStroke: "Border/Input",
       label: "Colors/foreground/500",
       trackFillFallback: "#C7CAD1",
       trackStrokeFallback: "#747B8B",
@@ -70691,7 +70487,7 @@ function sliderConfig(state, status) {
   if (isError) {
     return {
       trackFill: "Colors/background/200",
-      trackStroke: "Colors/foreground/500",
+      trackStroke: "Border/Input",
       rangeFill: "Colors/emotional/danger/600",
       thumbFill: "Colors/background/0",
       thumbStroke: "Colors/emotional/danger/600",
@@ -70707,7 +70503,7 @@ function sliderConfig(state, status) {
 
   return {
     trackFill: "Colors/background/200",
-    trackStroke: "Colors/foreground/500",
+    trackStroke: "Border/Input",
     rangeFill: "Colors/theme/600",
     thumbFill: "Colors/background/0",
     thumbStroke: "Colors/theme/600",
@@ -70724,7 +70520,7 @@ function sliderConfig(state, status) {
 function progressConfig(_value) {
   return {
     trackFill: "Colors/background/200",
-    trackStroke: "Colors/foreground/500",
+    trackStroke: "Border/Input",
     rangeFill: "Colors/theme/600",
     trackFillFallback: "#C7CAD1",
     trackStrokeFallback: "#747B8B",
@@ -70783,10 +70579,10 @@ function alertConfig(variant) {
     Default: {
       icon: "info-circle",
       background: "Surface/0",
-      stroke: "Colors/foreground/500",
+      stroke: "Border/Subtle",
       foreground: "Colors/foreground/0",
       backgroundFallback: "#FFFFFF",
-      strokeFallback: "#747B8B",
+      strokeFallback: "#C7CAD1",
       foregroundFallback: "#000000",
     },
     Destructive: {
@@ -70875,6 +70671,19 @@ function createSpinnerGlyph(
   return glyph;
 }
 
+/**
+ * Border colours come from two roles, never from a primitive:
+ *
+ *   "Border/Subtle"  #C7CAD1  container edges — cards, popovers, menus, dialogs,
+ *                             drawers, toasts, list rows, dividers, the dropzone
+ *   "Border/Input"   #747B8B  control boundaries — fields, checkboxes, radios,
+ *                             switch and slider tracks, swatches, a toast action
+ *
+ * Both are Semantics.Border in packages/tokens; scripts/check-border-parity.mjs
+ * fails the build if a stroke here reaches for foreground/500 or background/200
+ * again. Two marks keep the text colour on purpose because they are not
+ * borders: a rating star's outline and a stepper's step ring.
+ */
 function paintFromVariable(name, fallback, variableByName, stats) {
   const color = parseColor(fallback);
   const paint = {
