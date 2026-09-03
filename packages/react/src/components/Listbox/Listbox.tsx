@@ -106,7 +106,7 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
         aria-multiselectable={multiple || undefined}
         tabIndex={disabled ? -1 : 0}
         className={cn(
-          "grid max-h-64 min-w-48 gap-1 overflow-auto rounded-control border bg-popover p-1 text-popover-foreground shadow-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "grid max-h-64 min-w-48 gap-1 overflow-auto rounded-control border bg-popover p-3 text-popover-foreground shadow-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           disabled && "cursor-not-allowed opacity-60",
           className,
         )}

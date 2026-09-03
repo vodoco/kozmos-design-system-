@@ -286,7 +286,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
             <div
               id={listboxId}
               role="listbox"
-              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-1 text-popover-foreground shadow-md"
+              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-3 text-popover-foreground shadow-md"
             >
               {filteredOptions.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-muted-foreground">

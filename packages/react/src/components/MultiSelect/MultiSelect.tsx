@@ -244,7 +244,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
           <div
             ref={setRefs}
             className={cn(
-              "flex min-h-11 w-full items-center gap-2 rounded-control border border-[color:var(--primitives-colors-foreground-500)] bg-background px-2 py-1 ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+              "flex min-h-11 w-full items-center gap-2 rounded-control border border-input bg-background px-2 py-1 ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
               resolvedStatus === "error" &&
                 "border-destructive focus-within:ring-destructive",
               resolvedStatus === "warning" &&
@@ -358,7 +358,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
               id={listboxId}
               role="listbox"
               aria-multiselectable="true"
-              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-1 text-popover-foreground shadow-md"
+              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-3 text-popover-foreground shadow-md"
             >
               {filteredOptions.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-muted-foreground">
