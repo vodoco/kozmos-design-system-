@@ -214,6 +214,49 @@ The general lesson is that "less round" is not a direction you can follow
 blindly. The concentric ideal is a specific number, and both sides of it are
 wrong.
 
+## A bound property ignores the painter
+
+Measured 2026-09-03, after the six Core sets were updated by hand.
+
+|                                |                       |
+| ------------------------------ | --------------------- |
+| off the concentric ideal       | **15**, across 5 sets |
+| of which one variable explains | **14**                |
+| skipped as a control           | 6                     |
+
+NavigationItem's eight cleared, which proved the build that ran was current.
+Listbox kept all ten, at exactly the numbers it had before: popover 16, rows 4,
+padding 4. The painter writes 12 — `updateListboxVariant` sets
+`paddingLeft = POPOVER_ROW_INSET` — and the file never took it.
+
+It never took it because the variant's padding is **bound to a variable**, and
+a bound property renders the variable and ignores the raw write. The chain is
+`Listbox/padding → Combobox/listbox/padding → Layout/spacing/50`, which is 4.
+MultiSelect and TimePicker alias the same variable; Menu has its own, also at
+`spacing/50`. The painter was right, the token table was stale, and the table
+wins.
+
+So the fix is the definition, not the painter. `Combobox/listbox/padding` and
+`Menu/padding` now carry `value: POPOVER_ROW_INSET`, and their alias is
+**derived from that value** by `spacingAliasFor()` — `spacing/150` today —
+rather than typed. A typed alias beside a derived value is the same trap moved
+one step over: the alias wins, and it pins the old number the moment the value
+moves.
+
+Menu is included although the checker has never flagged it. Its rows are
+markers at the same 4px of padding; in the variants measured they carry no
+fill, so the drawn-shapes rule keeps them out of the count. The geometry is
+identical.
+
+The checker now names the binding on every finding, so the next reader sees
+`bound: parent paddingLeft→VariableID:…` and goes to the variable, not the
+painter.
+
+The fifteenth pair, ColorPicker's colour area at 16, is not bound. The plugin
+derives it to 3 on every Update — the area is recreated each run — so a 16 in
+the file means that Update has not run. It is measured again after the next
+one.
+
 ## Running it
 
 ```bash

@@ -15,7 +15,7 @@ picking the work up cold, this is the whole picture in one screen.
 | Figma publish           | **unblocked** — 0 unbound properties, 94 sets                        |
 | `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged |
 | Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                             |
-| `tokens:radius:nesting` | **22** findings, all in six Core sets awaiting a run                 |
+| `tokens:radius:nesting` | **15** — one stale variable explains 14; fix committed, run pending  |
 | Chromatic               | **snapshot limit reached** — visual gate is not running              |
 | Working tree            | clean; everything committed and pushed                               |
 | Local gates             | all green — see §7 for the list                                      |
@@ -29,8 +29,11 @@ complaint — "uneven roundness", a 9999 sentinel, and two roles sharing one
 number — became a rule (`docs/nested-radius.md`), a checker
 (`tokens:radius:nesting`), and eleven commits. Measured, not modelled: the
 first plugin run took the file from **50 to 37** findings, which was the number
-predicted for it. The remaining 22 sit in six Core sets that have not been
-re-run yet; every fix for them is committed. See §4 item 2.
+predicted for it. The six Core sets were re-run by hand on 2026-09-03 and
+**15** remained: NavigationItem cleared, the other five did not move at all.
+Their popover padding is bound to a component variable that still said 4, so
+the painter's 12 never rendered — the variable now derives, and the run is
+pending. See §4 item 1 and §6.
 
 Two rules came out of the publishing work that are worth knowing before
 touching any component set, because both fail silently and both cost a round
@@ -1013,14 +1016,17 @@ a development plugin's files when the plugin _launches_, so quit Figma entirely
 `pnpm figma:verify` is the cheap way to tell whether a run landed: it reads the
 file, not the plugin's own report.
 
-1. **Update six Core sets by hand**, from the plugin's dropdown, one at a time:
-   `Listbox`, `NavigationItem`, `MultiSelect`, `ColorPicker`, `Combobox`,
-   `TimePicker`. There is no "Update All Core" — `Update All Product / SDK` is
-   the only bulk action, and it has already been run. These six hold all 22
-   remaining nesting findings and the active/selected colour split.
-   **Prediction on record:** `tokens:radius:nesting` reads **0** afterwards
-   and reports `6 skipped as a control`. If it lands anywhere else, one of the
-   commits above is wrong.
+1. **Quit Figma (⌘Q), then Update six sets by hand**, one at a time from the
+   plugin's dropdown: `Listbox`, `MultiSelect`, `ColorPicker`, `Combobox`,
+   `TimePicker`, and `Menu`. `NavigationItem` is already done. The quit
+   matters: `code.js` changed on 2026-09-03 and the plugin runs cached code
+   until Figma restarts. There is still no "Update All Core". `Menu` was never
+   flagged — its rows carry no fill in the variants measured, so the checker
+   cannot see them — but it binds the same padding family and moves with the
+   same fix. **Prediction on record:** `tokens:radius:nesting` reads **0**
+   afterwards and reports `6 skipped as a control`. If ColorPicker's colour
+   area still reads 16, that one Update did not run: the area is recreated at
+   3 on every run.
 
 2. **Then switch `tokens:radius:nesting --strict` on in CI.** It exits 0 today
    while the backlog is open, by design — a gate that is red on purpose is a
@@ -1303,6 +1309,14 @@ Navigation Slot)`, and the earlier diagnosis here — that the builder emits
 - **Some commits on this branch bundle pre-existing uncommitted work.** Review
   before pushing.
 - **~588 files remain uncommitted** and are untouched pre-existing work.
+- **A bound property ignores the painter.** Most layout properties on
+  generated nodes are bound to component variables, and a bound property
+  renders the variable — a raw `paddingLeft = 12` in a painter changes
+  nothing. When the file disagrees with the code, read `boundVariables` on
+  the node first (`tokens:radius:nesting` prints them on every finding) and
+  fix the entry in the component-token table; `ensureComponentRuntimeVariables`
+  re-applies it on every Update. An alias typed beside a derived value is the
+  same trap one step over, which is what `spacingAliasFor()` is for.
 
 ## 7. How To Check Anything Here
 

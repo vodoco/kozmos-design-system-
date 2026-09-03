@@ -431,6 +431,31 @@ const PRODUCT_SDK_CARD_INSET = 13;
 const POPOVER_ROW_INSET = KOZMOS_RADIUS.control - KOZMOS_RADIUS.marker;
 
 /**
+ * The spacing step that equals a pixel value, or null when none does.
+ *
+ * A component variable that aliases a spacing step renders the step, not its
+ * own value — the alias wins, silently, and so does any node property bound to
+ * the variable. So an alias sitting next to a derived value must be derived
+ * from that value too, or it pins the old number the moment the value moves.
+ * That is how the popover inset stayed at 4 in the file for a day after the
+ * painters started writing 12: the write lands on a property bound to
+ * `Combobox/listbox/padding`, whose alias still said `Layout/spacing/50`.
+ *
+ * The scale's names are its arithmetic: `spacing/N` is N × 0.08px, so 50 is
+ * 4, 150 is 12 and 200 is 16. Only steps the scale actually has are offered;
+ * for any other value the alias is null and the value stands on its own,
+ * which the runtime reports rather than hides.
+ */
+const SPACING_STEPS = new Set([
+  0, 25, 50, 75, 100, 150, 200, 300, 400, 500, 600,
+]);
+function spacingAliasFor(px) {
+  const step = px * 12.5;
+  if (!Number.isInteger(step) || !SPACING_STEPS.has(step)) return null;
+  return `Layout/spacing/${step}`;
+}
+
+/**
  * FloorSelector's tray, derived from the item it wraps.
  *
  * Both numbers here are off the semantic scale on purpose and the tray was the
@@ -5921,8 +5946,8 @@ const COMPONENT_FLOAT_TOKENS = [
   { name: "Menu/width/default", value: 192, scopes: ["WIDTH_HEIGHT"] },
   {
     name: "Menu/padding",
-    value: 4,
-    alias: "Layout/spacing/50",
+    value: POPOVER_ROW_INSET,
+    alias: spacingAliasFor(POPOVER_ROW_INSET),
     scopes: ["GAP"],
   },
   {
@@ -6302,8 +6327,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Combobox/listbox/padding",
-    value: 4,
-    alias: "Layout/spacing/50",
+    value: POPOVER_ROW_INSET,
+    alias: spacingAliasFor(POPOVER_ROW_INSET),
     scopes: ["GAP"],
   },
   {
@@ -6450,7 +6475,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "MultiSelect/listbox/padding",
-    value: 4,
+    value: POPOVER_ROW_INSET,
     alias: "Combobox/listbox/padding",
     scopes: ["GAP"],
   },
@@ -6522,7 +6547,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Listbox/padding",
-    value: 4,
+    value: POPOVER_ROW_INSET,
     alias: "Combobox/listbox/padding",
     scopes: ["GAP"],
   },
@@ -6934,7 +6959,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "TimePicker/listbox/padding",
-    value: 4,
+    value: POPOVER_ROW_INSET,
     alias: "Combobox/listbox/padding",
     scopes: ["GAP"],
   },

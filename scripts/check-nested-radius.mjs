@@ -21,6 +21,11 @@
  * the relationship is geometric: it needs the rendered box of both shapes and
  * the space between them, and none of that exists in the builder's arguments.
  *
+ * When a flagged property is bound to a variable the report says so, because a
+ * bound property renders the variable's value and ignores whatever the painter
+ * wrote. The fix is then in the variable's definition, and reading the painter
+ * will only say the number is already right.
+ *
  * Reported, not enforced. Some pairs below are deliberate, and deciding which
  * is a design call — see docs/nested-radius.md. Pass --strict to fail on
  * violations once the backlog is closed.
@@ -91,6 +96,35 @@ const isControlSurface = (node) =>
   !!node.sharedPluginData &&
   !!node.sharedPluginData[RUN_NAMESPACE] &&
   node.sharedPluginData[RUN_NAMESPACE].surface === "control";
+
+/**
+ * Which of a node's layout properties are driven by a variable.
+ *
+ * Padding, gap and radius can each be bound, and a bound property renders the
+ * variable and silently ignores a raw write. Naming the binding on a finding
+ * sends the reader to the variable's definition instead of to a painter that
+ * already writes the right number.
+ */
+const boundKeys = (node, re) => {
+  const byId = new Map();
+  for (const [k, v] of Object.entries(node.boundVariables || {})) {
+    if (!re.test(k)) continue;
+    const id = v && v.id ? v.id : "?";
+    if (!byId.has(id)) byId.set(id, []);
+    const side = /^padding(Left|Top|Right|Bottom)$/.exec(k);
+    byId.get(id).push(side ? side[1].toLowerCase() : k);
+  }
+  return [...byId.entries()].map(([id, keys]) => {
+    const sides = keys.filter((k) => /^(left|top|right|bottom)$/.test(k));
+    const label =
+      sides.length === keys.length
+        ? sides.length === 4
+          ? "padding"
+          : `padding ${sides.join("/")}`
+        : keys.join("/");
+    return `${label}→${id}`;
+  });
+};
 
 /** The radius a shape can actually render, after its own cap. */
 function effectiveRadius(node) {
@@ -172,7 +206,8 @@ async function main() {
         const childCap = Math.min(cb.width, cb.height) / 2;
         const childIsPill = cr >= childCap - 0.01;
 
-        if (insideParent && nearCorner && isControlSurface(node)) controlChildren += 1;
+        if (insideParent && nearCorner && isControlSurface(node))
+          controlChildren += 1;
 
         if (insideParent && nearCorner && childIsPill) {
           pillChildren += 1;
@@ -192,7 +227,12 @@ async function main() {
           }
         }
 
-        if (insideParent && nearCorner && !childIsPill && !isControlSurface(node)) {
+        if (
+          insideParent &&
+          nearCorner &&
+          !childIsPill &&
+          !isControlSurface(node)
+        ) {
           pairsChecked += 1;
           // Non-uniform padding has no exactly concentric answer, so take the
           // tighter axis: that is where the two curves come closest and where a
@@ -217,6 +257,11 @@ async function main() {
                 cap,
                 delta,
                 childIdeal: Math.max(0, pr - pad),
+                parentBound: boundKeys(
+                  parent,
+                  /^padding|^itemSpacing$|^cornerRadius$/,
+                ),
+                childBound: boundKeys(node, /^cornerRadius$/),
                 parentBox: `${Math.round(pb.width)}x${Math.round(pb.height)}`,
               });
             }
@@ -259,6 +304,15 @@ async function main() {
         `  (off by ${r.delta > 0 ? "+" : ""}${r.delta})\n` +
         `      either parent -> ${r.ideal}${cappedNote}, or child -> ${r.childIdeal}`,
     );
+    const bound = [
+      ...r.parentBound.map((b) => `parent ${b}`),
+      ...r.childBound.map((b) => `child ${b}`),
+    ];
+    if (bound.length)
+      console.log(
+        `      bound: ${bound.join(", ")}\n` +
+          `      a bound property renders the variable, not the painter's literal — fix the definition`,
+      );
   }
   if (rows.length > limit)
     console.log(`  (+${rows.length - limit} more — pass --all to list them)`);
