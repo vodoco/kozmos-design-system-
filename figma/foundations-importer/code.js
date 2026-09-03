@@ -9243,6 +9243,88 @@ function postAuditProgress(step, title, detail) {
   });
 }
 
+// Every Core set, in the dropdown's own order, which is the order the
+// dispatcher declares them in. Kept complete by a contract assertion: a new
+// component with an update handler and no entry here fails
+// `pnpm components:contract:check`, because the whole value of a bulk action
+// is that it leaves nothing behind. `Icons` is deliberately absent — it syncs
+// an icon library rather than a component set.
+const CORE_UPDATE_SEQUENCE = [
+  ["Text", updateTextComponent],
+  ["Heading", updateHeadingComponent],
+  ["Link", updateLinkComponent],
+  ["Label", updateLabelComponent],
+  ["Separator", updateSeparatorComponent],
+  ["Skeleton", updateSkeletonComponent],
+  ["Box", updateBoxComponent],
+  ["Stack", updateStackComponent],
+  ["Grid", updateGridComponent],
+  ["Container", updateContainerComponent],
+  ["Breadcrumb", updateBreadcrumbComponent],
+  ["Pagination", updatePaginationComponent],
+  ["Accordion", updateAccordionComponent],
+  ["Button", updateButtonComponent],
+  ["IconButton", updateIconButtonComponent],
+  ["ToggleButton", updateToggleButtonComponent],
+  ["SplitButton", updateSplitButtonComponent],
+  ["FloatingActionButton", updateFloatingActionButtonComponent],
+  ["Counter", updateCounterComponent],
+  ["Badge", updateBadgeComponent],
+  ["Chip", updateChipComponent],
+  ["SegmentedControl", updateSegmentedControlComponent],
+  ["Card", updateCardComponent],
+  ["List", updateListComponent],
+  ["Table", updateTableComponent],
+  ["Tabs", updateTabsComponent],
+  ["Tooltip", updateTooltipComponent],
+  ["Dialog", updateDialogComponent],
+  ["Drawer", updateDrawerComponent],
+  ["Popover", updatePopoverComponent],
+  ["Menu", updateMenuComponent],
+  ["Checkbox", updateCheckboxComponent],
+  ["Radio", updateRadioComponent],
+  ["Switch", updateSwitchComponent],
+  ["Input", updateInputComponent],
+  ["PasswordInput", updatePasswordInputComponent],
+  ["FormField", updateFormFieldComponent],
+  ["NumberInput", updateNumberInputComponent],
+  ["OTPInput", updateOTPInputComponent],
+  ["Combobox", updateComboboxComponent],
+  ["MultiSelect", updateMultiSelectComponent],
+  ["Listbox", updateListboxComponent],
+  ["DatePicker", updateDatePickerComponent],
+  ["DateRangePicker", updateDateRangePickerComponent],
+  ["TimePicker", updateTimePickerComponent],
+  ["FileUpload", updateFileUploadComponent],
+  ["ColorPicker", updateColorPickerComponent],
+  ["Textarea", updateTextareaComponent],
+  ["Search", updateSearchComponent],
+  ["Select", updateSelectComponent],
+  ["Slider", updateSliderComponent],
+  ["Rating", updateRatingComponent],
+  ["Stepper", updateStepperComponent],
+  ["Progress", updateProgressComponent],
+  ["Spinner", updateSpinnerComponent],
+  ["Avatar", updateAvatarComponent],
+  ["Alert", updateAlertComponent],
+  ["EmptyState", updateEmptyStateComponent],
+  ["Toast", updateToastComponent],
+  ["Tag", updateTagComponent],
+  ["ScrollArea", updateScrollAreaComponent],
+  ["BottomNavigation", updateBottomNavigationComponent],
+  ["NavigationItem", updateNavigationItemComponent],
+  ["Navbar", updateNavbarComponent],
+  ["Sidebar", updateSidebarComponent],
+  ["Backdrop", updateBackdropComponent],
+  ["BottomSheet", updateBottomSheetComponent],
+  ["SearchBar", updateSearchBarComponent],
+  ["TreeItem", updateTreeItemComponent],
+  ["TreeChildItem", updateTreeChildItemComponent],
+  ["TreeParentItem", updateTreeParentItemComponent],
+  ["Tree", updateTreeComponent],
+  ["Timeline", updateTimelineComponent],
+];
+
 // Every Product / SDK and platform set, in picker order. These share the
 // productSdkSlot / productSdkControlButton / productSdkText helpers, so a change
 // to any of them makes all of these stale at once — which is exactly the
@@ -9274,7 +9356,16 @@ const PRODUCT_SDK_UPDATE_SEQUENCE = [
   ["FeedbackCard", updateFeedbackCardComponent],
 ];
 
-async function updateAllProductSdkComponents() {
+/**
+ * Run one update sequence, in place, reorganizing once at the end.
+ *
+ * Shared by both bulk actions. A change to a shared painter — a radius role,
+ * a border role, the way a slot derives its corner — makes every set stale at
+ * once, and updating them one at a time from the dropdown is the tedium this
+ * exists to remove. Node IDs are preserved throughout, because each entry
+ * calls the set's own Update, never Rebuild.
+ */
+async function runUpdateSequence(sequence, kindLabel) {
   const stats = {
     updatedComponents: 0,
     skipped: [],
@@ -9286,17 +9377,13 @@ async function updateAllProductSdkComponents() {
   suppressAutoReorganize = true;
 
   try {
-    for (
-      let index = 0;
-      index < PRODUCT_SDK_UPDATE_SEQUENCE.length;
-      index += 1
-    ) {
-      const entry = PRODUCT_SDK_UPDATE_SEQUENCE[index];
+    for (let index = 0; index < sequence.length; index += 1) {
+      const entry = sequence[index];
       const name = entry[0];
       postAuditProgress(
         index + 1,
         `Updating ${name}`,
-        `${index + 1} of ${PRODUCT_SDK_UPDATE_SEQUENCE.length}`,
+        `${index + 1} of ${sequence.length}`,
       );
 
       try {
@@ -9312,7 +9399,7 @@ async function updateAllProductSdkComponents() {
         }
         stats.perComponent.push(record);
       } catch (error) {
-        // One failing set must not strand the other twenty-three.
+        // One failing set must not strand the rest of the sequence.
         const message = error instanceof Error ? error.message : String(error);
         stats.failures.push(`${name}: ${message}`);
         stats.perComponent.push({ name, failed: message });
@@ -9324,12 +9411,20 @@ async function updateAllProductSdkComponents() {
 
   stats.layout = await reorganizeComponentsPage();
   stats.message =
-    `Updated ${stats.updatedComponents} of ${PRODUCT_SDK_UPDATE_SEQUENCE.length} Product / SDK set(s) in place, then reorganized once.` +
+    `Updated ${stats.updatedComponents} of ${sequence.length} ${kindLabel} in place, then reorganized once.` +
     (stats.failures.length > 0 ? ` ${stats.failures.length} failed.` : "") +
     (stats.skipped.length > 0
       ? ` ${stats.skipped.length} not present and skipped.`
       : "");
   return stats;
+}
+
+async function updateAllProductSdkComponents() {
+  return runUpdateSequence(PRODUCT_SDK_UPDATE_SEQUENCE, "Product / SDK set(s)");
+}
+
+async function updateAllCoreComponents() {
+  return runUpdateSequence(CORE_UPDATE_SEQUENCE, "Core set(s)");
 }
 
 function additionalComponentActionHandlers() {
@@ -9417,6 +9512,7 @@ function additionalComponentActionHandlers() {
     "update-feedback-card": updateFeedbackCardComponent,
     "rebuild-feedback-card": rebuildFeedbackCardComponent,
     "update-all-product-sdk": updateAllProductSdkComponents,
+    "update-all-core": updateAllCoreComponents,
     "build-adaptive-map-shell": buildAdaptiveMapShellComponent,
     "update-adaptive-map-shell": updateAdaptiveMapShellComponent,
     "rebuild-adaptive-map-shell": rebuildAdaptiveMapShellComponent,

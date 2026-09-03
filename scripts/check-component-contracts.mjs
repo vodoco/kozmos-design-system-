@@ -10091,4 +10091,53 @@ assertContains(
   "Android dark destructive primary button background stays red",
 );
 
+// Every Core set the plugin can update must appear in CORE_UPDATE_SEQUENCE.
+// A bulk action that quietly skips a component is worse than no bulk action:
+// the sets it misses look updated because the run reported success.
+{
+  const plugin = source.figma;
+  const sequenceBody = plugin.slice(
+    plugin.indexOf("const CORE_UPDATE_SEQUENCE = ["),
+    plugin.indexOf("];", plugin.indexOf("const CORE_UPDATE_SEQUENCE = [")),
+  );
+  const productBody = plugin.slice(
+    plugin.indexOf("const PRODUCT_SDK_UPDATE_SEQUENCE = ["),
+    plugin.indexOf(
+      "];",
+      plugin.indexOf("const PRODUCT_SDK_UPDATE_SEQUENCE = ["),
+    ),
+  );
+  const handlers = new Set();
+  for (const m of plugin.matchAll(/message\.type === "(update-[a-z-]+)"/g)) {
+    const after = plugin.slice(
+      plugin.indexOf(m[0]),
+      plugin.indexOf(m[0]) + 240,
+    );
+    const fn = /await ([A-Za-z0-9_]+)\(/.exec(after);
+    if (fn) handlers.add(fn[1]);
+  }
+  for (const m of plugin.matchAll(
+    /^    "update-[a-z-]+": ([A-Za-z0-9_]+),$/gm,
+  )) {
+    handlers.add(m[1]);
+  }
+  const exempt = new Set([
+    // The icon sync is not a component set: it mirrors an icon library.
+    "syncIconSourceLibrary",
+    "updateAllProductSdkComponents",
+    "updateAllCoreComponents",
+  ]);
+  const missing = [];
+  for (const fn of handlers) {
+    if (exempt.has(fn)) continue;
+    if (productBody.includes(fn) || sequenceBody.includes(fn)) continue;
+    missing.push(fn);
+  }
+  if (missing.length > 0) {
+    fail(
+      `figma/foundations-importer/code.js: ${missing.length} update handler(s) in neither bulk sequence — ${missing.sort().join(", ")}`,
+    );
+  }
+}
+
 console.log("Component contract parity ok");

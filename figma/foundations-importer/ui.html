@@ -1221,6 +1221,7 @@
           <button id="fixAuditIssues">Fix Audit Issues</button>
           <button id="applyTextStyles">Apply Text Styles</button>
           <button id="updateAllProductSdk">Update All Product / SDK</button>
+          <button id="updateAllCore">Update All Core</button>
           <button id="surfaceQa">Build Surface QA</button>
           <button id="reorganizeComponents">Reorganize Components</button>
         </div>
@@ -1345,6 +1346,7 @@
       const updateAllProductSdkButton = document.getElementById(
         "updateAllProductSdk",
       );
+      const updateAllCoreButton = document.getElementById("updateAllCore");
       const reorganizeComponentsButton = document.getElementById(
         "reorganizeComponents",
       );
@@ -2336,6 +2338,16 @@
           messageType: "update-all-product-sdk",
           progress:
             "Updating all 24 Product / SDK and platform sets in place, then reorganizing once. Node IDs are preserved.",
+        });
+      });
+
+      updateAllCoreButton.addEventListener("click", () => {
+        runComponentMessage({
+          action: "update all Core",
+          label: "Core sets",
+          messageType: "update-all-core",
+          progress:
+            "Updating all 73 Core sets in place, then reorganizing once. This takes several minutes; node IDs are preserved.",
         });
       });
 
