@@ -180,6 +180,72 @@ else
   for (const [k, n] of [...offenders.entries()].sort())
     fail(`plugin: ${k}${n > 1 ? ` (×${n})` : ""}`);
 
+// 3b. dividers: a border drawn as a fill is still a border
+const DIVIDER = /separator|divider|rule$|rail|connector/i;
+const dividerOffenders = new Map();
+{
+  let fn = "(top)";
+  const nameOf = new Map();
+  let target = null;
+  for (let i = 0; i < lines.length; i += 1) {
+    const m = /^(?:async )?function ([A-Za-z0-9_]+)/.exec(lines[i]);
+    if (m) {
+      fn = m[1];
+      target = null;
+      nameOf.clear();
+    }
+    const named = /(\w+)\.name = "([^"]*)"/.exec(lines[i]);
+    if (named) nameOf.set(named[1], named[2]);
+    const fills = /(\w+)\.fills\s*=/.exec(lines[i]);
+    if (fills) {
+      const varName = fills[1];
+      const nodeName = nameOf.get(varName) || "";
+      target =
+        DIVIDER.test(nodeName) || DIVIDER.test(varName) || DIVIDER.test(fn)
+          ? `${fn} / ${nodeName || varName}`
+          : null;
+      if (/;\s*$/.test(lines[i]) && !/\[\s*$/.test(lines[i])) target = null;
+    }
+    if (target) {
+      for (const prim of OLD) {
+        if (lines[i].includes(`"${prim}"`))
+          dividerOffenders.set(`${target} fills with ${prim}`, true);
+      }
+      if (/\];/.test(lines[i])) target = null;
+    }
+  }
+}
+if (dividerOffenders.size === 0)
+  ok("plugin: every divider fill reads a border role");
+else for (const k of [...dividerOffenders.keys()].sort()) fail(`plugin: ${k}`);
+
+// 3c. the web draws its dividers with the same role
+for (const [file, needle, label] of [
+  [
+    "packages/react/src/components/Separator/Separator.tsx",
+    "bg-border",
+    "Separator",
+  ],
+  [
+    "packages/react/src/components/Menu/Menu.tsx",
+    "h-px bg-border",
+    "Menu separator",
+  ],
+  [
+    "packages/react/src/components/Timeline/Timeline.tsx",
+    "border-l border-border",
+    "Timeline rail",
+  ],
+  [
+    "packages/react/src/components/Stepper/Stepper.tsx",
+    '"bg-border"',
+    "Stepper connector",
+  ],
+]) {
+  if (read(file).includes(needle)) ok(`web: ${label} reads the border role`);
+  else fail(`web: ${label} does not use \`${needle}\``);
+}
+
 // 4. the native outputs
 for (const file of [
   "packages/ios/Sources/KozmosColors.swift",

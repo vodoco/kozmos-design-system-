@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T20:55:41.795Z",
+  "generatedAt": "2026-09-03T21:18:02.928Z",
   "target": {
     "fileKey": "Yj4O8p6Y9h2Sa9zJVoAiVY",
     "fileName": "Kozmos DS - Core Library",
@@ -3984,7 +3984,7 @@
         "ios": "primitivesBorderBevelTop",
         "android": "primitivesBorderBevelTop"
       },
-      "suggestedScopes": ["STROKE_COLOR"],
+      "suggestedScopes": ["STROKE_COLOR", "SHAPE_FILL", "FRAME_FILL"],
       "values": {
         "light": {
           "kind": "raw",
@@ -4008,7 +4008,7 @@
         "ios": "primitivesBorderBevelBottom",
         "android": "primitivesBorderBevelBottom"
       },
-      "suggestedScopes": ["STROKE_COLOR"],
+      "suggestedScopes": ["STROKE_COLOR", "SHAPE_FILL", "FRAME_FILL"],
       "values": {
         "light": {
           "kind": "raw",
@@ -6672,7 +6672,7 @@
         "ios": "semanticsBorderSubtle",
         "android": "semanticsBorderSubtle"
       },
-      "suggestedScopes": ["STROKE_COLOR"],
+      "suggestedScopes": ["STROKE_COLOR", "SHAPE_FILL", "FRAME_FILL"],
       "values": {
         "light": {
           "kind": "alias",
@@ -6696,7 +6696,7 @@
         "ios": "semanticsBorderInput",
         "android": "semanticsBorderInput"
       },
-      "suggestedScopes": ["STROKE_COLOR"],
+      "suggestedScopes": ["STROKE_COLOR", "SHAPE_FILL", "FRAME_FILL"],
       "values": {
         "light": {
           "kind": "alias",

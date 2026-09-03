@@ -41025,7 +41025,7 @@ function createTimelineRail({
     connector.cornerRadius = KOZMOS_RADIUS.pill;
     connector.fills = [
       paintFromVariable(
-        active ? "Colors/theme/500" : "Colors/background/200",
+        active ? "Colors/theme/500" : "Border/Subtle",
         active ? "#135BEC" : "#C7CAD1",
         variableByName,
         stats,
@@ -50093,13 +50093,11 @@ async function updateSeparatorVariant(
   component.name = `Orientation=${value}`;
   component.layoutMode = "NONE";
   component.resizeWithoutConstraints(horizontal ? 320 : 1, horizontal ? 1 : 44);
+  // A divider is a border drawn as a 1px rectangle, so it reads the border
+  // role like every other edge. It was foreground/500, a text colour at
+  // 4.2:1, while the web drew the same rule at 1.6:1.
   component.fills = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokes = [];
   component.strokeWeight = 0;
@@ -52222,7 +52220,7 @@ async function updateListVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -52309,7 +52307,7 @@ async function updateTableVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -52474,7 +52472,7 @@ async function updateTooltipVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -55096,8 +55094,8 @@ function createStepperConnector({ index, active, variableByName, stats }) {
   connector.cornerRadius = KOZMOS_RADIUS.pill;
   connector.fills = [
     paintFromVariable(
-      active ? "Colors/theme/500" : "Colors/foreground/500",
-      active ? "#135BEC" : "#747B8B",
+      active ? "Colors/theme/500" : "Border/Subtle",
+      active ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
     ),
@@ -56297,7 +56295,7 @@ async function syncListVariantChildren({
     item.fills = [];
     item.strokes =
       index < defaults.length - 1
-        ? [paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats)]
+        ? [paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats)]
         : [];
     item.strokeWeight = index < defaults.length - 1 ? 1 : 0;
     item.strokeTopWeight = 0;
@@ -56426,7 +56424,7 @@ async function syncTableRow({
     : [];
   row.strokes =
     rowIndex < metrics.rowCount - 1
-      ? [paintFromVariable("Border/Subtle", "#E3E4E8", variableByName, stats)]
+      ? [paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats)]
       : [];
   row.strokeWeight = rowIndex < metrics.rowCount - 1 ? 1 : 0;
   row.strokeTopWeight = 0;
@@ -56524,12 +56522,7 @@ function syncRowSeparator({ parent, name, width, y, variableByName, stats }) {
   separator.x = 0;
   separator.y = y;
   separator.fills = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#E3E4E8",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   separator.strokes = [];
   separator.strokeWeight = 0;
@@ -59368,15 +59361,11 @@ async function syncMenuItemRow({
 
 function syncMenuSeparator({ component, variableByName, stats }) {
   const separator = figma.createRectangle();
+  // The same rule as Separator: a divider is a border, whatever paints it.
   separator.name = "Menu Separator";
   separator.resizeWithoutConstraints(184, 1);
   separator.fills = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   separator.strokes = [];
   separator.setSharedPluginData(RUN_NAMESPACE, "kind", "menu-separator");
