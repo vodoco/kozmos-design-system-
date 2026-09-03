@@ -50,7 +50,7 @@ const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
                 <div
                   className={cn(
                     "mx-4 h-[1px] flex-1",
-                    index < currentStep ? "bg-primary" : "bg-muted",
+                    index < currentStep ? "bg-primary" : "bg-border",
                   )}
                 />
               )}

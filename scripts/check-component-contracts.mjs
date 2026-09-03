@@ -219,6 +219,8 @@ const files = {
   reactMultiSelectFigma:
     "packages/react/src/components/MultiSelect/MultiSelect.figma.tsx",
   reactListbox: "packages/react/src/components/Listbox/Listbox.tsx",
+  reactMenu: "packages/react/src/components/Menu/Menu.tsx",
+  reactFileUpload: "packages/react/src/components/FileUpload/FileUpload.tsx",
   reactListboxFigma: "packages/react/src/components/Listbox/Listbox.figma.tsx",
   reactPasswordInput:
     "packages/react/src/components/PasswordInput/PasswordInput.tsx",
@@ -3721,14 +3723,14 @@ assertContains(
 assertContains(
   files.figma,
   source.figma,
-  'trackStroke: "Colors/foreground/500"',
-  "Slider inactive track accessible boundary token",
+  'trackStroke: "Border/Input"',
+  "Slider inactive track reads the Border/Input role, whose 3:1 is held by tokens:border:check",
 );
 assertContains(
   files.figma,
   source.figma,
-  'trackStroke: "Colors/foreground/500"',
-  "Progress inactive track accessible boundary token",
+  'trackStroke: "Border/Input"',
+  "Progress inactive track reads the Border/Input role, whose 3:1 is held by tokens:border:check",
 );
 assertContains(
   files.figma,
@@ -10090,5 +10092,111 @@ assertContains(
   "val componentsPrimaryButtonsDangerButtonBackgroundIdle = Color(0xffee7e95)",
   "Android dark destructive primary button background stays red",
 );
+
+// A popover row is inset far enough to be concentric with it: a marker-radius
+// row inside a control-radius popover needs 12, because R_outer = R_inner +
+// padding. The plugin derives that as POPOVER_ROW_INSET; the web has to spell
+// it as a padding class, and for a day it said 4 while Figma said 12. These
+// assertions are the only thing that ties the two spellings together.
+for (const [key, needle, label] of [
+  ["reactListbox", "bg-popover p-3", "Listbox"],
+  ["reactCombobox", "bg-popover p-3", "Combobox"],
+  ["reactMultiSelect", "bg-popover p-3", "MultiSelect"],
+  ["reactMenu", "bg-popover p-3", "Menu"],
+  ["reactSelect", '"p-3",', "Select viewport"],
+]) {
+  assertContains(
+    files[key],
+    source[key],
+    needle,
+    `${label} pads its popover to the concentric inset (12)`,
+  );
+}
+for (const token of [
+  "Menu/padding",
+  "Combobox/listbox/padding",
+  "MultiSelect/listbox/padding",
+  "Listbox/padding",
+  "TimePicker/listbox/padding",
+]) {
+  assertContains(
+    files.figma,
+    source.figma,
+    new RegExp(
+      `name: "${escapeRegExp(token)}",\\s*value: POPOVER_ROW_INSET\\b`,
+    ),
+    `${token} derives from POPOVER_ROW_INSET rather than a literal`,
+  );
+}
+
+// A file row is a small card. Both surfaces draw it at the container radius,
+// and the list sits 12 under the dropzone on both.
+assertContains(
+  files.reactFileUpload,
+  source.reactFileUpload,
+  "rounded-container",
+  "FileUpload row uses the container radius on the web",
+);
+assertContains(
+  files.reactFileUpload,
+  source.reactFileUpload,
+  "mt-3 grid gap-2",
+  "FileUpload list sits 12 under the dropzone on the web",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  tokenAliasPattern("FileUpload/file-row/radius", "Radius/Container"),
+  "Figma FileUpload row radius aliases the Container role",
+);
+
+// Every Core set the plugin can update must appear in CORE_UPDATE_SEQUENCE.
+// A bulk action that quietly skips a component is worse than no bulk action:
+// the sets it misses look updated because the run reported success.
+{
+  const plugin = source.figma;
+  const sequenceBody = plugin.slice(
+    plugin.indexOf("const CORE_UPDATE_SEQUENCE = ["),
+    plugin.indexOf("];", plugin.indexOf("const CORE_UPDATE_SEQUENCE = [")),
+  );
+  const productBody = plugin.slice(
+    plugin.indexOf("const PRODUCT_SDK_UPDATE_SEQUENCE = ["),
+    plugin.indexOf(
+      "];",
+      plugin.indexOf("const PRODUCT_SDK_UPDATE_SEQUENCE = ["),
+    ),
+  );
+  const handlers = new Set();
+  for (const m of plugin.matchAll(/message\.type === "(update-[a-z-]+)"/g)) {
+    const after = plugin.slice(
+      plugin.indexOf(m[0]),
+      plugin.indexOf(m[0]) + 240,
+    );
+    const fn = /await ([A-Za-z0-9_]+)\(/.exec(after);
+    if (fn) handlers.add(fn[1]);
+  }
+  for (const m of plugin.matchAll(
+    /^    "update-[a-z-]+": ([A-Za-z0-9_]+),$/gm,
+  )) {
+    handlers.add(m[1]);
+  }
+  const exempt = new Set([
+    // The icon sync is not a component set: it mirrors an icon library.
+    "syncIconSourceLibrary",
+    "updateAllProductSdkComponents",
+    "updateAllCoreComponents",
+  ]);
+  const missing = [];
+  for (const fn of handlers) {
+    if (exempt.has(fn)) continue;
+    if (productBody.includes(fn) || sequenceBody.includes(fn)) continue;
+    missing.push(fn);
+  }
+  if (missing.length > 0) {
+    fail(
+      `figma/foundations-importer/code.js: ${missing.length} update handler(s) in neither bulk sequence — ${missing.sort().join(", ")}`,
+    );
+  }
+}
 
 console.log("Component contract parity ok");

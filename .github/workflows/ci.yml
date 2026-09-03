@@ -68,6 +68,22 @@ jobs:
       - name: Verify Radius Parity
         run: pnpm tokens:radius:check
 
+      - name: Verify Border Parity
+        run: pnpm tokens:border:check
+
+      # Reads the live Figma file, so it needs the token and is skipped without
+      # it. Switched to --strict on 2026-09-03, the day the backlog reached
+      # zero — a gate that is red on purpose is a gate somebody switches off.
+      - name: Verify Nested Radius
+        env:
+          FIGMA_ACCESS_TOKEN: ${{ secrets.FIGMA_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$FIGMA_ACCESS_TOKEN" ]; then
+            echo "::notice::Skipping nested radius check because FIGMA_ACCESS_TOKEN is not configured."
+            exit 0
+          fi
+          pnpm tokens:radius:nesting --strict
+
       - name: Verify Typography Parity
         run: pnpm tokens:typography:check
 

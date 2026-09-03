@@ -214,6 +214,75 @@ The general lesson is that "less round" is not a direction you can follow
 blindly. The concentric ideal is a specific number, and both sides of it are
 wrong.
 
+## A bound property ignores the painter
+
+Measured 2026-09-03, after the six Core sets were updated by hand.
+
+|                                |                       |
+| ------------------------------ | --------------------- |
+| off the concentric ideal       | **15**, across 5 sets |
+| of which one variable explains | **14**                |
+| skipped as a control           | 6                     |
+
+NavigationItem's eight cleared, which proved the build that ran was current.
+Listbox kept all ten, at exactly the numbers it had before: popover 16, rows 4,
+padding 4. The painter writes 12 — `updateListboxVariant` sets
+`paddingLeft = POPOVER_ROW_INSET` — and the file never took it.
+
+It never took it because the variant's padding is **bound to a variable**, and
+a bound property renders the variable and ignores the raw write. The chain is
+`Listbox/padding → Combobox/listbox/padding → Layout/spacing/50`, which is 4.
+MultiSelect and TimePicker alias the same variable; Menu has its own, also at
+`spacing/50`. The painter was right, the token table was stale, and the table
+wins.
+
+So the fix is the definition, not the painter. `Combobox/listbox/padding` and
+`Menu/padding` now carry `value: POPOVER_ROW_INSET`, and their alias is
+**derived from that value** by `spacingAliasFor()` — `spacing/150` today —
+rather than typed. A typed alias beside a derived value is the same trap moved
+one step over: the alias wins, and it pins the old number the moment the value
+moves.
+
+Menu is included although the checker has never flagged it. Its rows are
+markers at the same 4px of padding; in the variants measured they carry no
+fill, so the drawn-shapes rule keeps them out of the count. The geometry is
+identical.
+
+The checker now names the binding on every finding, so the next reader sees
+`bound: parent paddingLeft→VariableID:…` and goes to the variable, not the
+painter.
+
+The fifteenth pair, ColorPicker's colour area at 16, turned out to be bound
+as well — per corner, through `rectangleCornerRadii`, to
+`ColorPicker/color-area/radius`, which still said 16 and aliased
+`Radius/Control`. An earlier draft of this section called it "not bound"
+because the check read `cornerRadius` alone; Figma binds corners one at a
+time and reports them as one object, and both the checker and the reader
+missed it for a day. The variable now derives the same way the painter does,
+and the checker names per-corner bindings.
+
+The area is recreated on every Update, so the file reads 3 as soon as the set
+is run again with the derived variable in place.
+
+## The web derives it too
+
+Figma computes a nested radius in the painter; the web has to spell it in a
+class. ColorPicker's colour area is the one place both do it, and they agree:
+
+```
+rounded-[calc(var(--semantics-radius-control)*1px_-_13px)]
+```
+
+The popover is `rounded-control`, its padding is 12 and its border 1, so the
+area is the popover's radius minus 13. Written as the subtraction rather than
+as the 3 it currently equals, so repointing `Control` moves both surfaces
+together. Tailwind compiles it to
+`border-radius: calc(var(--semantics-radius-control) * 1px - 13px)`, verified
+by building the stylesheet rather than by reading the class.
+
+The radius variables are unitless numbers on purpose — the same scale iOS and
+Android read — which is why the `* 1px` is there.
+
 ## Running it
 
 ```bash
@@ -227,8 +296,10 @@ and the space between them, and none of that exists in the builder's arguments.
 So it reports what is drawn, which is also its limit — it cannot see a fix that
 has been committed but not yet run through the plugin.
 
-It exits 0 while the backlog is open. `--strict` makes it fail, and it should be
-wired into CI on the day the 50 reach zero — not before, or it is a gate
+It exits 0 while a backlog is open and `--strict` makes it fail. The backlog
+reached zero on 2026-09-03 and `--strict` went into CI the same day, in the
+`Verify Nested Radius` step, skipped only when the Figma token is absent. It
+was not wired earlier on purpose: a gate that is red on purpose is a gate
 somebody switches off.
 
 Related: `pnpm tokens:radius:check` covers the other half of the question —

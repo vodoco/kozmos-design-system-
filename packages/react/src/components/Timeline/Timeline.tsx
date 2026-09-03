@@ -14,7 +14,7 @@ const Timeline = React.forwardRef<HTMLOListElement, TimelineProps>(
       data-density={density}
       data-timeline
       className={cn(
-        "relative ml-3 border-l border-muted",
+        "relative ml-3 border-l border-border",
         density === "compact" &&
           "[&_[data-timeline-description]]:mb-2 [&_[data-timeline-description]]:text-sm [&_[data-timeline-item]]:mb-6 [&_[data-timeline-time]]:mb-1 [&_[data-timeline-title]]:text-base",
         className,

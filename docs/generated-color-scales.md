@@ -95,6 +95,26 @@ luminance half.
    fixed set of names or a density, and whether `emotional` (four steps today)
    joins the same system.
 
+## Two more things the generator has to reconcile
+
+Found on 2026-09-03, while adding the border roles.
+
+**`Semantics.Surface` is not on the ramp.** Its four steps are hand-typed
+hexes — `#FFFFFF`, `#F8F9FA`, `#E9ECEF`, `#DEE2E6` — and none of them is a
+`background` step. `Surface.100` is `#F8F9FA` where `background/25` is
+`#F7F8FA`: close enough to look like a mistake and far enough to be one. They
+predate the ramp and nothing reconciles them, so a generated ramp would leave
+Surface behind unless it is folded in at the same time. It is used by the
+native outputs as well as the plugin, so this is not a cosmetic tidy.
+
+**The dark ramp is a different hue from the light one.** Light greys are cool
+and blue-tinted (`#747B8B`); the dark steps of the same rows are warm
+(`#8B8474`, `#A29D90`, `#B9B5AC`). The two ramps are near mirror images in
+lightness and opposites in temperature, which is visible when toggling modes
+and is invisible in any per-mode review. A generated pair would hold hue
+constant across modes by construction — that is most of the argument for
+generating them.
+
 ## What it costs
 
 Two sessions, in order:

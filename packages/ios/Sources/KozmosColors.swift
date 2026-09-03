@@ -1681,6 +1681,32 @@ public class KozmosColors {
         return Color.clear
         #endif
     }
+    public static var semanticsBorderSubtle: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2E3138") : UIColor(hex: "#C7CAD1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2E3138") : NSColor(hex: "#C7CAD1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsBorderInput: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#8B8474") : UIColor(hex: "#747B8B")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#8B8474") : NSColor(hex: "#747B8B")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
     public static var semanticsDataBlue: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in

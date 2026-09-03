@@ -84,6 +84,47 @@ const TREE_ITEM_ACTIONS = [
   { name: "Export Action", iconName: "download-01", visible: false },
   { name: "More Action", iconName: "settings-01", visible: false },
 ];
+/**
+ * The two actions a parent row carries, in the order they render.
+ *
+ * A parent row hides or locks the group it heads; the five actions above
+ * belong to the item itself. The property pass declares exactly what a set's
+ * rows can render, because a `Show Edit Action` declared on a set that never
+ * draws an Edit button is a property bound to no layer, and one of those is
+ * enough to block publishing the whole library. TreeParentItem had seven.
+ */
+const TREE_PARENT_ACTIONS = [
+  { name: "Hide Action", iconName: "x-close", visible: true },
+  { name: "Lock Action", iconName: "lock-01", visible: true },
+];
+
+/**
+ * The positional actions a tree set's rows render, which is all it may declare
+ * as icon swaps: two on a parent row, five on an item row.
+ */
+function treeSetActions(componentSet) {
+  return componentSet && componentSet.name === "TreeParentItem"
+    ? TREE_PARENT_ACTIONS
+    : TREE_ITEM_ACTIONS;
+}
+
+/**
+ * The actions a tree set can show or hide. TreeItem and Tree draw both row
+ * kinds — a parent row with Hide and Lock above item rows with the five — so
+ * they declare both lists' toggles; TreeParentItem declares the parent's and
+ * TreeChildItem the item's. Declaring by set, not by the global list, is what
+ * keeps a `Show Edit Action` off a set that never draws an Edit button.
+ */
+function treeSetVisibilityActions(componentSet) {
+  const name = componentSet ? componentSet.name : "";
+  if (name === "TreeParentItem") return TREE_PARENT_ACTIONS;
+  if (name === "TreeChildItem") return TREE_ITEM_ACTIONS;
+  const both = TREE_PARENT_ACTIONS.slice();
+  for (const action of TREE_ITEM_ACTIONS) {
+    if (!both.some((known) => known.name === action.name)) both.push(action);
+  }
+  return both;
+}
 const TREE_ITEM_DEPTHS = ["0", "1", "2"];
 const TIMELINE_CONTENT = ["Basic", "Detailed"];
 const TIMELINE_DENSITIES = ["Default", "Compact"];
@@ -429,6 +470,50 @@ const PRODUCT_SDK_CARD_INSET = 13;
  * and the spacing between them was not.
  */
 const POPOVER_ROW_INSET = KOZMOS_RADIUS.control - KOZMOS_RADIUS.marker;
+
+/**
+ * The spacing step that equals a pixel value, or null when none does.
+ *
+ * A component variable that aliases a spacing step renders the step, not its
+ * own value — the alias wins, silently, and so does any node property bound to
+ * the variable. So an alias sitting next to a derived value must be derived
+ * from that value too, or it pins the old number the moment the value moves.
+ * That is how the popover inset stayed at 4 in the file for a day after the
+ * painters started writing 12: the write lands on a property bound to
+ * `Combobox/listbox/padding`, whose alias still said `Layout/spacing/50`.
+ *
+ * The scale's names are its arithmetic: `spacing/N` is N × 0.08px, so 50 is
+ * 4, 150 is 12 and 200 is 16. Only steps the scale actually has are offered;
+ * for any other value the alias is null and the value stands on its own,
+ * which the runtime reports rather than hides.
+ */
+const SPACING_STEPS = new Set([
+  0, 25, 50, 75, 100, 150, 200, 300, 400, 500, 600,
+]);
+function spacingAliasFor(px) {
+  const step = px * 12.5;
+  if (!Number.isInteger(step) || !SPACING_STEPS.has(step)) return null;
+  return `Layout/spacing/${step}`;
+}
+
+/** The pixel value of a spacing step, the same arithmetic read backwards. */
+function spacingPx(step) {
+  if (!SPACING_STEPS.has(step)) {
+    throw new Error(`Layout/spacing/${step} is not on the scale`);
+  }
+  return step / 12.5;
+}
+
+/**
+ * The file list sits 12px under the dropzone, which is what the web's `mt-3`
+ * draws. The variant's stack already contributes `FileUpload/gap`, so the list
+ * carries only the remainder as its own top padding. Written as the difference
+ * so it follows if either number moves, rather than as the 6 it happens to be
+ * today.
+ */
+const FILE_UPLOAD_LIST_GAP = spacingPx(150);
+const FILE_UPLOAD_ROW_GAP = spacingPx(100);
+const FILE_UPLOAD_LIST_OFFSET = FILE_UPLOAD_LIST_GAP - spacingPx(75);
 
 /**
  * FloorSelector's tray, derived from the item it wraps.
@@ -5921,8 +6006,8 @@ const COMPONENT_FLOAT_TOKENS = [
   { name: "Menu/width/default", value: 192, scopes: ["WIDTH_HEIGHT"] },
   {
     name: "Menu/padding",
-    value: 4,
-    alias: "Layout/spacing/50",
+    value: POPOVER_ROW_INSET,
+    alias: spacingAliasFor(POPOVER_ROW_INSET),
     scopes: ["GAP"],
   },
   {
@@ -6302,8 +6387,8 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Combobox/listbox/padding",
-    value: 4,
-    alias: "Layout/spacing/50",
+    value: POPOVER_ROW_INSET,
+    alias: spacingAliasFor(POPOVER_ROW_INSET),
     scopes: ["GAP"],
   },
   {
@@ -6450,7 +6535,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "MultiSelect/listbox/padding",
-    value: 4,
+    value: POPOVER_ROW_INSET,
     alias: "Combobox/listbox/padding",
     scopes: ["GAP"],
   },
@@ -6522,14 +6607,14 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "Listbox/padding",
-    value: 4,
+    value: POPOVER_ROW_INSET,
     alias: "Combobox/listbox/padding",
     scopes: ["GAP"],
   },
   {
     name: "Listbox/gap",
     value: 4,
-    alias: "Badge/gap",
+    alias: spacingAliasFor(4),
     scopes: ["GAP"],
   },
   {
@@ -6934,7 +7019,7 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "TimePicker/listbox/padding",
-    value: 4,
+    value: POPOVER_ROW_INSET,
     alias: "Combobox/listbox/padding",
     scopes: ["GAP"],
   },
@@ -7005,6 +7090,18 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   { name: "FileUpload/gap", value: 6, alias: "Input/gap", scopes: ["GAP"] },
   {
+    name: "FileUpload/list/gap",
+    value: FILE_UPLOAD_ROW_GAP,
+    alias: spacingAliasFor(FILE_UPLOAD_ROW_GAP),
+    scopes: ["GAP"],
+  },
+  {
+    name: "FileUpload/list/offset",
+    value: FILE_UPLOAD_LIST_OFFSET,
+    alias: spacingAliasFor(FILE_UPLOAD_LIST_OFFSET),
+    scopes: ["GAP"],
+  },
+  {
     name: "FileUpload/dropzone/min-height",
     value: 144,
     scopes: ["WIDTH_HEIGHT"],
@@ -7056,8 +7153,10 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "FileUpload/file-row/radius",
-    value: 16,
-    alias: "Combobox/listbox/radius",
+    // A file row is a small card, not a control: the web draws it
+    // `rounded-container` and Figma drew it at the popover's radius.
+    value: KOZMOS_RADIUS.container,
+    alias: "Radius/Container",
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -7215,8 +7314,11 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   {
     name: "ColorPicker/color-area/radius",
-    value: 16,
-    alias: "Radius/Control",
+    // The area's corners are bound to this variable, so this is the number
+    // that renders — the painter's nestedRadius() write is overridden by it.
+    // Derived the same way, from the popover's radius across its inset; no
+    // role equals 3, so it carries no alias. See docs/nested-radius.md.
+    value: nestedRadius(KOZMOS_RADIUS.control, PRODUCT_SDK_CARD_INSET),
     scopes: ["CORNER_RADIUS"],
   },
   {
@@ -9174,6 +9276,88 @@ function postAuditProgress(step, title, detail) {
   });
 }
 
+// Every Core set, in the dropdown's own order, which is the order the
+// dispatcher declares them in. Kept complete by a contract assertion: a new
+// component with an update handler and no entry here fails
+// `pnpm components:contract:check`, because the whole value of a bulk action
+// is that it leaves nothing behind. `Icons` is deliberately absent — it syncs
+// an icon library rather than a component set.
+const CORE_UPDATE_SEQUENCE = [
+  ["Text", updateTextComponent],
+  ["Heading", updateHeadingComponent],
+  ["Link", updateLinkComponent],
+  ["Label", updateLabelComponent],
+  ["Separator", updateSeparatorComponent],
+  ["Skeleton", updateSkeletonComponent],
+  ["Box", updateBoxComponent],
+  ["Stack", updateStackComponent],
+  ["Grid", updateGridComponent],
+  ["Container", updateContainerComponent],
+  ["Breadcrumb", updateBreadcrumbComponent],
+  ["Pagination", updatePaginationComponent],
+  ["Accordion", updateAccordionComponent],
+  ["Button", updateButtonComponent],
+  ["IconButton", updateIconButtonComponent],
+  ["ToggleButton", updateToggleButtonComponent],
+  ["SplitButton", updateSplitButtonComponent],
+  ["FloatingActionButton", updateFloatingActionButtonComponent],
+  ["Counter", updateCounterComponent],
+  ["Badge", updateBadgeComponent],
+  ["Chip", updateChipComponent],
+  ["SegmentedControl", updateSegmentedControlComponent],
+  ["Card", updateCardComponent],
+  ["List", updateListComponent],
+  ["Table", updateTableComponent],
+  ["Tabs", updateTabsComponent],
+  ["Tooltip", updateTooltipComponent],
+  ["Dialog", updateDialogComponent],
+  ["Drawer", updateDrawerComponent],
+  ["Popover", updatePopoverComponent],
+  ["Menu", updateMenuComponent],
+  ["Checkbox", updateCheckboxComponent],
+  ["Radio", updateRadioComponent],
+  ["Switch", updateSwitchComponent],
+  ["Input", updateInputComponent],
+  ["PasswordInput", updatePasswordInputComponent],
+  ["FormField", updateFormFieldComponent],
+  ["NumberInput", updateNumberInputComponent],
+  ["OTPInput", updateOTPInputComponent],
+  ["Combobox", updateComboboxComponent],
+  ["MultiSelect", updateMultiSelectComponent],
+  ["Listbox", updateListboxComponent],
+  ["DatePicker", updateDatePickerComponent],
+  ["DateRangePicker", updateDateRangePickerComponent],
+  ["TimePicker", updateTimePickerComponent],
+  ["FileUpload", updateFileUploadComponent],
+  ["ColorPicker", updateColorPickerComponent],
+  ["Textarea", updateTextareaComponent],
+  ["Search", updateSearchComponent],
+  ["Select", updateSelectComponent],
+  ["Slider", updateSliderComponent],
+  ["Rating", updateRatingComponent],
+  ["Stepper", updateStepperComponent],
+  ["Progress", updateProgressComponent],
+  ["Spinner", updateSpinnerComponent],
+  ["Avatar", updateAvatarComponent],
+  ["Alert", updateAlertComponent],
+  ["EmptyState", updateEmptyStateComponent],
+  ["Toast", updateToastComponent],
+  ["Tag", updateTagComponent],
+  ["ScrollArea", updateScrollAreaComponent],
+  ["BottomNavigation", updateBottomNavigationComponent],
+  ["NavigationItem", updateNavigationItemComponent],
+  ["Navbar", updateNavbarComponent],
+  ["Sidebar", updateSidebarComponent],
+  ["Backdrop", updateBackdropComponent],
+  ["BottomSheet", updateBottomSheetComponent],
+  ["SearchBar", updateSearchBarComponent],
+  ["TreeItem", updateTreeItemComponent],
+  ["TreeChildItem", updateTreeChildItemComponent],
+  ["TreeParentItem", updateTreeParentItemComponent],
+  ["Tree", updateTreeComponent],
+  ["Timeline", updateTimelineComponent],
+];
+
 // Every Product / SDK and platform set, in picker order. These share the
 // productSdkSlot / productSdkControlButton / productSdkText helpers, so a change
 // to any of them makes all of these stale at once — which is exactly the
@@ -9205,7 +9389,16 @@ const PRODUCT_SDK_UPDATE_SEQUENCE = [
   ["FeedbackCard", updateFeedbackCardComponent],
 ];
 
-async function updateAllProductSdkComponents() {
+/**
+ * Run one update sequence, in place, reorganizing once at the end.
+ *
+ * Shared by both bulk actions. A change to a shared painter — a radius role,
+ * a border role, the way a slot derives its corner — makes every set stale at
+ * once, and updating them one at a time from the dropdown is the tedium this
+ * exists to remove. Node IDs are preserved throughout, because each entry
+ * calls the set's own Update, never Rebuild.
+ */
+async function runUpdateSequence(sequence, kindLabel) {
   const stats = {
     updatedComponents: 0,
     skipped: [],
@@ -9217,17 +9410,13 @@ async function updateAllProductSdkComponents() {
   suppressAutoReorganize = true;
 
   try {
-    for (
-      let index = 0;
-      index < PRODUCT_SDK_UPDATE_SEQUENCE.length;
-      index += 1
-    ) {
-      const entry = PRODUCT_SDK_UPDATE_SEQUENCE[index];
+    for (let index = 0; index < sequence.length; index += 1) {
+      const entry = sequence[index];
       const name = entry[0];
       postAuditProgress(
         index + 1,
         `Updating ${name}`,
-        `${index + 1} of ${PRODUCT_SDK_UPDATE_SEQUENCE.length}`,
+        `${index + 1} of ${sequence.length}`,
       );
 
       try {
@@ -9243,7 +9432,7 @@ async function updateAllProductSdkComponents() {
         }
         stats.perComponent.push(record);
       } catch (error) {
-        // One failing set must not strand the other twenty-three.
+        // One failing set must not strand the rest of the sequence.
         const message = error instanceof Error ? error.message : String(error);
         stats.failures.push(`${name}: ${message}`);
         stats.perComponent.push({ name, failed: message });
@@ -9255,12 +9444,20 @@ async function updateAllProductSdkComponents() {
 
   stats.layout = await reorganizeComponentsPage();
   stats.message =
-    `Updated ${stats.updatedComponents} of ${PRODUCT_SDK_UPDATE_SEQUENCE.length} Product / SDK set(s) in place, then reorganized once.` +
+    `Updated ${stats.updatedComponents} of ${sequence.length} ${kindLabel} in place, then reorganized once.` +
     (stats.failures.length > 0 ? ` ${stats.failures.length} failed.` : "") +
     (stats.skipped.length > 0
       ? ` ${stats.skipped.length} not present and skipped.`
       : "");
   return stats;
+}
+
+async function updateAllProductSdkComponents() {
+  return runUpdateSequence(PRODUCT_SDK_UPDATE_SEQUENCE, "Product / SDK set(s)");
+}
+
+async function updateAllCoreComponents() {
+  return runUpdateSequence(CORE_UPDATE_SEQUENCE, "Core set(s)");
 }
 
 function additionalComponentActionHandlers() {
@@ -9348,6 +9545,7 @@ function additionalComponentActionHandlers() {
     "update-feedback-card": updateFeedbackCardComponent,
     "rebuild-feedback-card": rebuildFeedbackCardComponent,
     "update-all-product-sdk": updateAllProductSdkComponents,
+    "update-all-core": updateAllCoreComponents,
     "build-adaptive-map-shell": buildAdaptiveMapShellComponent,
     "update-adaptive-map-shell": updateAdaptiveMapShellComponent,
     "rebuild-adaptive-map-shell": rebuildAdaptiveMapShellComponent,
@@ -11346,12 +11544,7 @@ function createExampleSurface({
   surface.primaryAxisSizingMode = "AUTO";
   surface.cornerRadius = 12;
   surface.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   surface.strokeWeight = 1;
   return surface;
@@ -11645,12 +11838,7 @@ function createExamplePlaceholder({
     paintFromVariable("Surface/200", "#ECEEF2", variableByName, stats),
   ];
   placeholder.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   placeholder.strokeWeight = 1;
   placeholder.appendChild(
@@ -22469,6 +22657,11 @@ async function applyTextStylesToComponentLibrary() {
         stats.textNodesUnmatched += 1;
       }
     }
+
+    // A pill's radius is half of whatever box it ends up in. Restyling text
+    // can change that box, so the pills are resolved again here rather than
+    // left at the value the painter computed for a smaller one.
+    resolvePillRadii(componentSet, stats);
   }
 
   stats.updated = true;
@@ -22523,7 +22716,13 @@ function textStyleKeyForSidebarText(textName, component) {
   return null;
 }
 
-function textStyleKeyForNavigationItemText(component) {
+function textStyleKeyForNavigationItemText(component, textName) {
+  // The badge is drawn with the sidebar section's typography — see
+  // createNavigationItemBadgeSlot — so the audit must expect that. Expecting
+  // the label style restyled every badge to 14/20 under Apply Text Styles,
+  // the badge grew from 22x18 to 24x22, and the pill radius resolved for the
+  // smaller box was left behind, which the nesting check then reported.
+  if (textName === "Badge Text") return "sidebarSection";
   const props =
     component && component.name
       ? parseNavigationItemVariantName(component.name)
@@ -22597,7 +22796,7 @@ function inferTextStyleKeyForComponentText(text, componentSet) {
   }
   if (setName === "BottomNavigation") return "fieldMeta";
   if (setName === "NavigationItem") {
-    return textStyleKeyForNavigationItemText(component);
+    return textStyleKeyForNavigationItemText(component, textName);
   }
   if (setName === "Navbar") {
     return textStyleKeyForNavbarText(textName);
@@ -22628,6 +22827,12 @@ function inferTextStyleKeyForComponentText(text, componentSet) {
     setName === "TreeParentItem" ||
     setName === "TreeChildItem"
   ) {
+    // A row's count is drawn with the Counter's small typography — see
+    // createTreeCount — so the audit must expect that, not the row text.
+    // Expecting treeItem here flagged every parent count as stale, 96 of
+    // them, and an Update could never clear it because the painter and the
+    // expectation disagreed with each other.
+    if (/Count Text$/.test(textName)) return "counterSmall";
     return "treeItem";
   }
   if (setName === "Table") {
@@ -27666,6 +27871,7 @@ function bindTimePickerGeometryVariables(
 function bindFileUploadGeometryVariables(
   component,
   dropzone,
+  fileList,
   fileRows,
   icons,
   variableByName,
@@ -27685,6 +27891,23 @@ function bindFileUploadGeometryVariables(
     variableByName,
     stats,
   );
+
+  if (fileList) {
+    bindFloatVariable(
+      fileList,
+      "itemSpacing",
+      "FileUpload/list/gap",
+      variableByName,
+      stats,
+    );
+    bindFloatVariable(
+      fileList,
+      "paddingTop",
+      "FileUpload/list/offset",
+      variableByName,
+      stats,
+    );
+  }
 
   if (dropzone) {
     bindFloatVariable(
@@ -36954,10 +37177,7 @@ function treeItemRow(props) {
   const state = normalizeTreeState(props.state);
   const actions =
     withActions && parent
-      ? [
-          { name: "Hide Action", iconName: "x-close" },
-          { name: "Lock Action", iconName: "lock-01" },
-        ]
+      ? TREE_PARENT_ACTIONS
       : withActions
         ? TREE_ITEM_ACTIONS
         : [];
@@ -37133,12 +37353,7 @@ function treeRows(props) {
       text: "Map content",
       countName: "Root Count Text",
       count: withCounts ? "23" : null,
-      actions: withActions
-        ? [
-            { name: "Hide Action", iconName: "x-close" },
-            { name: "Lock Action", iconName: "lock-01" },
-          ]
-        : [],
+      actions: withActions ? TREE_PARENT_ACTIONS : [],
       depth: 0,
       expandable: true,
       expanded,
@@ -37690,12 +37905,7 @@ async function updateScrollAreaVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -37821,12 +38031,7 @@ async function updateBottomNavigationVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = [
@@ -38233,12 +38438,7 @@ async function createNavigationItemBadgeSlot({
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   slot.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   slot.strokeWeight = 1;
   if (shell.reusedContent) return slot;
@@ -38332,12 +38532,7 @@ async function updateNavbarVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -39099,12 +39294,7 @@ async function updateSidebarVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -39614,12 +39804,7 @@ async function updateBottomSheetVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -40248,8 +40433,26 @@ async function configureTreeItemProperties(
  */
 function configureTreeActionVisibilityProperties(componentSet, stats) {
   let boundCount = 0;
+  const actions = treeSetVisibilityActions(componentSet);
 
-  for (const action of TREE_ITEM_ACTIONS) {
+  // Declared on an earlier run from the five-action list, and referenced by
+  // nothing on a set whose rows never draw them. Removed before the rest is
+  // declared so the set only ever carries what it renders.
+  const declaredNames = actions.map((action) => action.name);
+  const staleNames = [];
+  for (const action of TREE_ITEM_ACTIONS.concat(TREE_PARENT_ACTIONS)) {
+    if (declaredNames.indexOf(action.name) !== -1) continue;
+    if (staleNames.indexOf(`Show ${action.name}`) !== -1) continue;
+    staleNames.push(`Show ${action.name}`);
+  }
+  deleteComponentPropertiesByBaseName(
+    componentSet,
+    staleNames,
+    ["BOOLEAN"],
+    stats,
+  );
+
+  for (const action of actions) {
     const propertyName = ensureBooleanProperty(
       componentSet,
       `Show ${action.name}`,
@@ -40293,12 +40496,11 @@ async function configureTreeItemIconSlots(componentSet, variableByName, stats) {
       defaultComponent: leadingDefault,
     },
   ];
-  for (let index = 0; index < TREE_ITEM_ACTIONS.length; index += 1) {
+  const actions = treeSetActions(componentSet);
+  for (let index = 0; index < actions.length; index += 1) {
     // The parent set opens with a close affordance rather than an edit one.
     const iconName =
-      index === 0 && !isChildSet
-        ? "x-close"
-        : TREE_ITEM_ACTIONS[index].iconName;
+      index === 0 && !isChildSet ? "x-close" : actions[index].iconName;
     const resolved =
       (await findKozmosIconSourceComponent(iconName)) || defaultIcon;
     if (!resolved) continue;
@@ -40307,6 +40509,20 @@ async function configureTreeItemIconSlots(componentSet, variableByName, stats) {
       propertyName: `Action ${index + 1} Icon`,
       defaultComponent: resolved,
     });
+  }
+
+  // Positional swaps past the set's own list point at nothing.
+  const staleSwaps = [];
+  for (let n = actions.length + 1; n <= TREE_ITEM_ACTIONS.length; n += 1) {
+    staleSwaps.push(`Action ${n} Icon`);
+  }
+  if (staleSwaps.length > 0) {
+    deleteComponentPropertiesByBaseName(
+      componentSet,
+      staleSwaps,
+      ["INSTANCE_SWAP"],
+      stats,
+    );
   }
 
   for (const slot of slots) {
@@ -40654,7 +40870,7 @@ function tagConfig(variant) {
     return {
       background: "Surface/0",
       foreground: "Colors/foreground/0",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#FFFFFF",
       foregroundFallback: "#000000",
       strokeFallback: "#C7CAD1",
@@ -40956,7 +41172,7 @@ function createTimelineRail({
     connector.cornerRadius = KOZMOS_RADIUS.pill;
     connector.fills = [
       paintFromVariable(
-        active ? "Colors/theme/500" : "Colors/background/200",
+        active ? "Colors/theme/500" : "Border/Subtle",
         active ? "#135BEC" : "#C7CAD1",
         variableByName,
         stats,
@@ -40981,7 +41197,7 @@ function createTimelineRail({
   ];
   marker.strokes = [
     paintFromVariable(
-      active ? "Colors/theme/500" : "Colors/background/200",
+      active ? "Colors/theme/500" : "Border/Subtle",
       active ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -41073,7 +41289,7 @@ function searchBarConfig(variant, state) {
     height: floating ? 56 : 52,
     radius: floating ? 18 : 16,
     background: disabled ? "Colors/background/100" : "Colors/background/0",
-    stroke: focused ? "Colors/theme/500" : "Colors/foreground/500",
+    stroke: focused ? "Colors/theme/500" : "Border/Input",
     icon: disabled ? "Colors/foreground/500" : "Colors/foreground/400",
     placeholder: disabled ? "Colors/foreground/500" : "Colors/foreground/400",
     value: disabled ? "Colors/foreground/500" : "Colors/foreground/0",
@@ -42233,12 +42449,7 @@ function productSdkSurface(component, radiusToken, variableByName, stats) {
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.cornerRadius = radiusToken;
@@ -43045,12 +43256,7 @@ async function updateMapViewVariant(
     ),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -43077,12 +43283,7 @@ async function updateMapViewVariant(
       paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
     ];
     slot.strokes = [
-      paintFromVariable(
-        "Colors/background/200",
-        "#C7CAD1",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     slot.strokeWeight = 1;
     const slotLabel = await productSdkText({
@@ -43806,12 +44007,7 @@ async function productSdkSlot({
     ),
   ];
   slot.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   slot.strokeWeight = 1;
 
@@ -43931,7 +44127,7 @@ async function productSdkControlButton({
   ];
   button.strokes = [
     paintFromVariable(
-      pressed ? "Colors/theme/500" : "Colors/background/200",
+      pressed ? "Colors/theme/500" : "Border/Subtle",
       pressed ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -44109,12 +44305,7 @@ async function updateAdaptiveMapShellVariant(
     ),
   ];
   mapSurface.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   mapSurface.strokeWeight = 1;
 
@@ -44261,12 +44452,7 @@ async function updateMapControlButtonVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
 
@@ -45079,7 +45265,7 @@ async function updateCategoryTileVariant(
   ];
   component.strokes = [
     paintFromVariable(
-      selected ? "Colors/theme/500" : "Colors/background/200",
+      selected ? "Colors/theme/500" : "Border/Subtle",
       selected ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -45389,7 +45575,7 @@ async function updatePOIResultCardVariant(
   ];
   component.strokes = [
     paintFromVariable(
-      selected ? "Colors/theme/500" : "Colors/background/200",
+      selected ? "Colors/theme/500" : "Border/Subtle",
       selected ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -45759,7 +45945,7 @@ async function updateRouteOptionCardVariant(
   ];
   component.strokes = [
     paintFromVariable(
-      selected ? "Colors/theme/500" : "Colors/background/200",
+      selected ? "Colors/theme/500" : "Border/Subtle",
       selected ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
@@ -50054,13 +50240,11 @@ async function updateSeparatorVariant(
   component.name = `Orientation=${value}`;
   component.layoutMode = "NONE";
   component.resizeWithoutConstraints(horizontal ? 320 : 1, horizontal ? 1 : 44);
+  // A divider is a border drawn as a 1px rectangle, so it reads the border
+  // role like every other edge. It was foreground/500, a text colour at
+  // 4.2:1, while the web drew the same rule at 1.6:1.
   component.fills = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokes = [];
   component.strokeWeight = 0;
@@ -50666,12 +50850,7 @@ async function updateContainerVariant(
     ),
   ];
   content.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   content.strokeWeight = 1;
   content.clipsContent = false;
@@ -51382,12 +51561,7 @@ async function updateAccordionVariant(
   component.resizeWithoutConstraints(360, isOpen ? 128 : 53);
   component.fills = [];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#C7CAD1",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.strokeTopWeight = 0;
@@ -52097,12 +52271,7 @@ async function updateCardVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = [
@@ -52198,12 +52367,7 @@ async function updateListVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#E3E4E8",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -52290,12 +52454,7 @@ async function updateTableVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#E3E4E8",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -52460,12 +52619,7 @@ async function updateTooltipVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#E3E4E8",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -52536,12 +52690,7 @@ async function updateDialogVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -52623,12 +52772,7 @@ async function updateDrawerVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -52701,12 +52845,7 @@ async function updatePopoverVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -52777,12 +52916,7 @@ async function updateMenuVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -53820,12 +53954,7 @@ async function updateListboxVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
@@ -55112,8 +55241,8 @@ function createStepperConnector({ index, active, variableByName, stats }) {
   connector.cornerRadius = KOZMOS_RADIUS.pill;
   connector.fills = [
     paintFromVariable(
-      active ? "Colors/theme/500" : "Colors/foreground/500",
-      active ? "#135BEC" : "#747B8B",
+      active ? "Colors/theme/500" : "Border/Subtle",
+      active ? "#135BEC" : "#C7CAD1",
       variableByName,
       stats,
     ),
@@ -55411,12 +55540,7 @@ async function updateToastVariant(
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   component.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
   component.effects = tooltipShadowEffects();
@@ -56318,14 +56442,7 @@ async function syncListVariantChildren({
     item.fills = [];
     item.strokes =
       index < defaults.length - 1
-        ? [
-            paintFromVariable(
-              "Colors/background/200",
-              "#E3E4E8",
-              variableByName,
-              stats,
-            ),
-          ]
+        ? [paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats)]
         : [];
     item.strokeWeight = index < defaults.length - 1 ? 1 : 0;
     item.strokeTopWeight = 0;
@@ -56454,14 +56571,7 @@ async function syncTableRow({
     : [];
   row.strokes =
     rowIndex < metrics.rowCount - 1
-      ? [
-          paintFromVariable(
-            "Colors/background/200",
-            "#E3E4E8",
-            variableByName,
-            stats,
-          ),
-        ]
+      ? [paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats)]
       : [];
   row.strokeWeight = rowIndex < metrics.rowCount - 1 ? 1 : 0;
   row.strokeTopWeight = 0;
@@ -56559,12 +56669,7 @@ function syncRowSeparator({ parent, name, width, y, variableByName, stats }) {
   separator.x = 0;
   separator.y = y;
   separator.fills = [
-    paintFromVariable(
-      "Colors/background/200",
-      "#E3E4E8",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   separator.strokes = [];
   separator.strokeWeight = 0;
@@ -59403,15 +59508,11 @@ async function syncMenuItemRow({
 
 function syncMenuSeparator({ component, variableByName, stats }) {
   const separator = figma.createRectangle();
+  // The same rule as Separator: a divider is a border, whatever paints it.
   separator.name = "Menu Separator";
   separator.resizeWithoutConstraints(184, 1);
   separator.fills = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   separator.strokes = [];
   separator.setSharedPluginData(RUN_NAMESPACE, "kind", "menu-separator");
@@ -59539,12 +59640,7 @@ async function syncToastVariantChildren({
     action.cornerRadius = KOZMOS_RADIUS.control;
     action.fills = [];
     action.strokes = [
-      paintFromVariable(
-        "Colors/foreground/500",
-        "#747B8B",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Input", "#747B8B", variableByName, stats),
     ];
     action.strokeWeight = 1;
     action.clipsContent = false;
@@ -61852,12 +61948,7 @@ async function syncComboboxVariantChildren({
       paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
     ];
     listbox.strokes = [
-      paintFromVariable(
-        "Colors/foreground/500",
-        "#747B8B",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     listbox.strokeWeight = 1;
     listbox.effects = tooltipShadowEffects();
@@ -62213,12 +62304,7 @@ async function syncMultiSelectVariantChildren({
       paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
     ];
     listbox.strokes = [
-      paintFromVariable(
-        "Colors/foreground/500",
-        "#747B8B",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     listbox.strokeWeight = 1;
     listbox.effects = tooltipShadowEffects();
@@ -63008,12 +63094,7 @@ async function createDatePickerCalendar({
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   calendar.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   calendar.strokeWeight = 1;
   calendar.effects = tooltipShadowEffects();
@@ -63679,12 +63760,7 @@ async function createDateRangePickerCalendar({
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   calendar.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   calendar.strokeWeight = 1;
   calendar.effects = tooltipShadowEffects();
@@ -64162,12 +64238,7 @@ async function syncTimePickerVariantChildren({
       paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
     ];
     listbox.strokes = [
-      paintFromVariable(
-        "Colors/foreground/500",
-        "#747B8B",
-        variableByName,
-        stats,
-      ),
+      paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     listbox.strokeWeight = 1;
     listbox.effects = tooltipShadowEffects();
@@ -64548,10 +64619,10 @@ async function syncFileUploadVariantChildren({
     fileList.primaryAxisAlignItems = "MIN";
     fileList.counterAxisAlignItems = "MIN";
     setLayoutSizingHorizontal(fileList, "FILL");
-    fileList.itemSpacing = 8;
+    fileList.itemSpacing = FILE_UPLOAD_ROW_GAP;
     fileList.paddingLeft = 0;
     fileList.paddingRight = 0;
-    fileList.paddingTop = 0;
+    fileList.paddingTop = FILE_UPLOAD_LIST_OFFSET;
     fileList.paddingBottom = 0;
     fileList.fills = [];
     fileList.strokes = [];
@@ -64614,6 +64685,7 @@ async function syncFileUploadVariantChildren({
   bindFileUploadGeometryVariables(
     component,
     dropzone,
+    fileList,
     fileRows,
     icons,
     variableByName,
@@ -64650,19 +64722,14 @@ async function createFileUploadFileRow({
   row.paddingTop = 8;
   row.paddingBottom = 8;
   row.resizeWithoutConstraints(384, 44);
-  row.cornerRadius = KOZMOS_RADIUS.control;
+  row.cornerRadius = KOZMOS_RADIUS.container;
   row.clipsContent = false;
   row.setSharedPluginData(RUN_NAMESPACE, "kind", "file-upload-file-row");
   row.fills = [
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   row.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   row.strokeWeight = 1;
 
@@ -65021,7 +65088,7 @@ function createColorPickerSwatch({
   swatch.fills = [paintFromHex(colorPickerSafeHex(value))];
   swatch.strokes = [
     paintFromVariable(
-      selected ? "Colors/theme/500" : "Colors/foreground/500",
+      selected ? "Colors/theme/500" : "Border/Input",
       selected ? "#135BEC" : "#747B8B",
       variableByName,
       stats,
@@ -65107,12 +65174,7 @@ async function createColorPickerPopover({
     paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
   ];
   popover.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   popover.strokeWeight = 1;
   popover.effects = tooltipShadowEffects();
@@ -65404,12 +65466,7 @@ async function createColorPickerMiniField({
     ),
   ];
   field.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Input", "#747B8B", variableByName, stats),
   ];
   field.strokeWeight = 1;
 
@@ -65510,12 +65567,7 @@ async function createColorPickerPaletteSelect({
     ),
   ];
   select.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Input", "#747B8B", variableByName, stats),
   ];
   select.strokeWeight = 1;
 
@@ -65689,12 +65741,7 @@ function createColorPickerColorArea({
         ]),
       ];
   area.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   area.strokeWeight = 1;
 
@@ -65841,12 +65888,7 @@ async function createColorPickerSlider({
       ]
     : [paintFromHex(fill)];
   track.strokes = [
-    paintFromVariable(
-      "Colors/foreground/500",
-      "#747B8B",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Input", "#747B8B", variableByName, stats),
   ];
   track.strokeWeight = 1;
   track.setSharedPluginData(RUN_NAMESPACE, "kind", "colorpicker-slider-track");
@@ -65867,7 +65909,7 @@ async function createColorPickerSlider({
   ];
   thumb.strokes = [
     paintFromVariable(
-      disabled ? "Colors/foreground/500" : "Colors/theme/500",
+      disabled ? "Border/Input" : "Colors/theme/500",
       disabled ? "#747B8B" : "#135BEC",
       variableByName,
       stats,
@@ -69978,7 +70020,7 @@ function boxSurfaceConfig(surface) {
   if (surface === "Outlined") {
     return {
       background: "Surface/0",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#FFFFFF",
       strokeFallback: "#C7CAD1",
     };
@@ -70089,7 +70131,7 @@ function toggleButtonConfig(variant, state) {
     return {
       background: "Colors/background/100",
       foreground: "Colors/foreground/500",
-      stroke: variant === "Outline" ? "Colors/background/200" : null,
+      stroke: variant === "Outline" ? "Border/Subtle" : null,
       backgroundFallback: "#E4E6EA",
       foregroundFallback: "#747B8B",
       strokeFallback: "#C7CAD1",
@@ -70111,7 +70153,7 @@ function toggleButtonConfig(variant, state) {
     return {
       background: "Surface/0",
       foreground: "Colors/foreground/0",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#FFFFFF",
       foregroundFallback: "#000000",
       strokeFallback: "#C7CAD1",
@@ -70157,7 +70199,7 @@ function badgeConfig(variant) {
     Outline: {
       background: "Surface/0",
       foreground: "Colors/foreground/0",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#FFFFFF",
       foregroundFallback: "#000000",
       strokeFallback: "#C7CAD1",
@@ -70180,7 +70222,7 @@ function chipConfig(variant, state) {
     return {
       background: "Colors/background/100",
       foreground: "Colors/foreground/500",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#E4E6EA",
       foregroundFallback: "#747B8B",
       strokeFallback: "#C7CAD1",
@@ -70234,7 +70276,7 @@ function chipConfig(variant, state) {
   return {
     background: "Surface/0",
     foreground: "Colors/foreground/0",
-    stroke: "Colors/background/200",
+    stroke: "Border/Subtle",
     backgroundFallback: "#FFFFFF",
     foregroundFallback: "#000000",
     strokeFallback: "#C7CAD1",
@@ -70313,7 +70355,7 @@ function segmentedControlConfig(state) {
   if (state === "Disabled") {
     return {
       background: "Colors/background/100",
-      stroke: "Colors/background/200",
+      stroke: "Border/Subtle",
       backgroundFallback: "#E4E6EA",
       strokeFallback: "#C7CAD1",
     };
@@ -70330,7 +70372,7 @@ function segmentedControlConfig(state) {
 
   return {
     background: "Colors/background/100",
-    stroke: "Colors/background/200",
+    stroke: "Border/Subtle",
     backgroundFallback: "#E4E6EA",
     strokeFallback: "#C7CAD1",
   };
@@ -70403,7 +70445,7 @@ function checkboxConfig(checked, state) {
   if (isDisabled) {
     return {
       controlFill: isChecked ? "Colors/background/200" : null,
-      controlStroke: "Colors/foreground/500",
+      controlStroke: "Border/Input",
       mark: "Colors/foreground/500",
       label: "Colors/foreground/500",
       controlFillFallback: "#C7CAD1",
@@ -70419,7 +70461,7 @@ function checkboxConfig(checked, state) {
       ? "Colors/emotional/danger/600"
       : isChecked
         ? "Colors/theme/500"
-        : "Colors/foreground/500",
+        : "Border/Input",
     mark: "Colors/foreground/1000",
     label: isError ? "Colors/emotional/danger/600" : "Colors/foreground/0",
     controlFillFallback: "#135BEC",
@@ -70440,7 +70482,7 @@ function radioConfig(checked, state) {
 
   if (isDisabled) {
     return {
-      controlStroke: "Colors/foreground/500",
+      controlStroke: "Border/Input",
       dot: "Colors/foreground/500",
       label: "Colors/foreground/500",
       controlStrokeFallback: "#747B8B",
@@ -70454,7 +70496,7 @@ function radioConfig(checked, state) {
       ? "Colors/emotional/danger/600"
       : isChecked
         ? "Colors/theme/500"
-        : "Colors/foreground/500",
+        : "Border/Input",
     dot: isError ? "Colors/emotional/danger/600" : "Colors/theme/500",
     label: isError ? "Colors/emotional/danger/600" : "Colors/foreground/0",
     controlStrokeFallback: isError
@@ -70475,7 +70517,7 @@ function switchConfig(checked, state) {
   if (isDisabled) {
     return {
       trackFill: "Colors/foreground/500",
-      trackStroke: "Colors/foreground/500",
+      trackStroke: "Border/Input",
       thumbFill: "Colors/background/0",
       label: "Colors/foreground/500",
       trackFillFallback: "#747B8B",
@@ -70502,7 +70544,7 @@ function switchConfig(checked, state) {
 
   return {
     trackFill: isChecked ? "Colors/theme/500" : "Colors/foreground/500",
-    trackStroke: isChecked ? "Colors/theme/500" : "Colors/foreground/500",
+    trackStroke: isChecked ? "Colors/theme/500" : "Border/Input",
     thumbFill: "Colors/background/0",
     label: "Colors/foreground/0",
     trackFillFallback: isChecked ? "#135BEC" : "#747B8B",
@@ -70523,7 +70565,7 @@ function inputConfig(state, status) {
   if (isDisabled) {
     return {
       fieldFill: "Colors/background/100",
-      fieldStroke: "Colors/foreground/500",
+      fieldStroke: "Border/Input",
       label: "Colors/foreground/500",
       placeholder: "Colors/foreground/500",
       helper: "Colors/foreground/500",
@@ -70567,7 +70609,7 @@ function inputConfig(state, status) {
 
   return {
     fieldFill: isReadonly ? "Colors/background/100" : "Colors/background/0",
-    fieldStroke: isFocus ? "Colors/theme/500" : "Colors/foreground/500",
+    fieldStroke: isFocus ? "Colors/theme/500" : "Border/Input",
     label: "Colors/foreground/0",
     placeholder: "Colors/foreground/400",
     helper: "Colors/foreground/400",
@@ -70586,10 +70628,10 @@ function sliderConfig(state, status) {
   if (isDisabled) {
     return {
       trackFill: "Colors/background/200",
-      trackStroke: "Colors/foreground/500",
+      trackStroke: "Border/Input",
       rangeFill: "Colors/foreground/500",
       thumbFill: "Colors/background/0",
-      thumbStroke: "Colors/foreground/500",
+      thumbStroke: "Border/Input",
       label: "Colors/foreground/500",
       trackFillFallback: "#C7CAD1",
       trackStrokeFallback: "#747B8B",
@@ -70603,7 +70645,7 @@ function sliderConfig(state, status) {
   if (isError) {
     return {
       trackFill: "Colors/background/200",
-      trackStroke: "Colors/foreground/500",
+      trackStroke: "Border/Input",
       rangeFill: "Colors/emotional/danger/600",
       thumbFill: "Colors/background/0",
       thumbStroke: "Colors/emotional/danger/600",
@@ -70619,7 +70661,7 @@ function sliderConfig(state, status) {
 
   return {
     trackFill: "Colors/background/200",
-    trackStroke: "Colors/foreground/500",
+    trackStroke: "Border/Input",
     rangeFill: "Colors/theme/600",
     thumbFill: "Colors/background/0",
     thumbStroke: "Colors/theme/600",
@@ -70636,7 +70678,7 @@ function sliderConfig(state, status) {
 function progressConfig(_value) {
   return {
     trackFill: "Colors/background/200",
-    trackStroke: "Colors/foreground/500",
+    trackStroke: "Border/Input",
     rangeFill: "Colors/theme/600",
     trackFillFallback: "#C7CAD1",
     trackStrokeFallback: "#747B8B",
@@ -70695,10 +70737,10 @@ function alertConfig(variant) {
     Default: {
       icon: "info-circle",
       background: "Surface/0",
-      stroke: "Colors/foreground/500",
+      stroke: "Border/Subtle",
       foreground: "Colors/foreground/0",
       backgroundFallback: "#FFFFFF",
-      strokeFallback: "#747B8B",
+      strokeFallback: "#C7CAD1",
       foregroundFallback: "#000000",
     },
     Destructive: {
@@ -70787,6 +70829,19 @@ function createSpinnerGlyph(
   return glyph;
 }
 
+/**
+ * Border colours come from two roles, never from a primitive:
+ *
+ *   "Border/Subtle"  #C7CAD1  container edges — cards, popovers, menus, dialogs,
+ *                             drawers, toasts, list rows, dividers, the dropzone
+ *   "Border/Input"   #747B8B  control boundaries — fields, checkboxes, radios,
+ *                             switch and slider tracks, swatches, a toast action
+ *
+ * Both are Semantics.Border in packages/tokens; scripts/check-border-parity.mjs
+ * fails the build if a stroke here reaches for foreground/500 or background/200
+ * again. Two marks keep the text colour on purpose because they are not
+ * borders: a rating star's outline and a stepper's step ring.
+ */
 function paintFromVariable(name, fallback, variableByName, stats) {
   const color = parseColor(fallback);
   const paint = {

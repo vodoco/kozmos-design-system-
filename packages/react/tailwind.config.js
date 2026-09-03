@@ -77,8 +77,12 @@ module.exports = {
           DEFAULT: "var(--primitives-colors-emotional-info-700)",
           foreground: "var(--primitives-colors-foreground-1000)",
         },
-        border: "var(--primitives-colors-background-200)",
-        input: "var(--primitives-colors-background-200)",
+        // Border roles. `border` is the container edge, `border-input` the
+        // boundary of a control; both live in Semantics.Border in
+        // packages/tokens/src/tokens-*.json, and scripts/check-border-parity.mjs
+        // holds Figma, native and this file to the same two aliases.
+        border: "var(--semantics-border-subtle)",
+        input: "var(--semantics-border-input)",
         ring: "var(--primitives-colors-theme-600)",
       },
       borderRadius: {

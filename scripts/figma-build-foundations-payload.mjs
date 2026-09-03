@@ -1,110 +1,122 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from "node:fs";
+import path from "node:path";
 
 const ROOT = process.cwd();
-const LIGHT_TOKENS = path.join(ROOT, 'packages/tokens/src/tokens-light.json');
-const DARK_TOKENS = path.join(ROOT, 'packages/tokens/src/tokens-dark.json');
-const ENV_FILE = path.join(ROOT, '.env');
-const OUT_FILE = path.join(ROOT, 'docs/figma-foundations-payload.json');
+const LIGHT_TOKENS = path.join(ROOT, "packages/tokens/src/tokens-light.json");
+const DARK_TOKENS = path.join(ROOT, "packages/tokens/src/tokens-dark.json");
+const ENV_FILE = path.join(ROOT, ".env");
+const OUT_FILE = path.join(ROOT, "docs/figma-foundations-payload.json");
 
 const FIGMA_VARIABLE_TYPES = new Map([
-  ['color', 'COLOR'],
-  ['number', 'FLOAT'],
-  ['dimension', 'FLOAT'],
-  ['spacing', 'FLOAT'],
-  ['borderRadius', 'FLOAT'],
-  ['borderWidth', 'FLOAT'],
-  ['opacity', 'FLOAT'],
-  ['fontSizes', 'FLOAT'],
-  ['lineHeights', 'FLOAT'],
-  ['letterSpacing', 'FLOAT'],
-  ['paragraphSpacing', 'FLOAT'],
+  ["color", "COLOR"],
+  ["number", "FLOAT"],
+  ["dimension", "FLOAT"],
+  ["spacing", "FLOAT"],
+  ["borderRadius", "FLOAT"],
+  ["borderWidth", "FLOAT"],
+  ["opacity", "FLOAT"],
+  ["fontSizes", "FLOAT"],
+  ["lineHeights", "FLOAT"],
+  ["letterSpacing", "FLOAT"],
+  ["paragraphSpacing", "FLOAT"],
 ]);
 
 const STYLE_ONLY_TYPES = new Set([
-  'fontFamilies',
-  'fontWeights',
-  'cubicBezier',
-  'shadow',
-  'other',
+  "fontFamilies",
+  "fontWeights",
+  "cubicBezier",
+  "shadow",
+  "other",
 ]);
 
 function readJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
 function readEnv(filePath) {
   if (!fs.existsSync(filePath)) return {};
 
   return Object.fromEntries(
-    fs.readFileSync(filePath, 'utf8')
+    fs
+      .readFileSync(filePath, "utf8")
       .split(/\r?\n/)
-      .filter((line) => line && !line.trim().startsWith('#') && line.includes('='))
+      .filter(
+        (line) => line && !line.trim().startsWith("#") && line.includes("="),
+      )
       .map((line) => {
-        const index = line.indexOf('=');
+        const index = line.indexOf("=");
         return [line.slice(0, index), line.slice(index + 1).trim()];
       }),
   );
 }
 
 function flattenTokens(value, segments = []) {
-  if (!value || typeof value !== 'object') return [];
+  if (!value || typeof value !== "object") return [];
 
-  if ('$value' in value || 'value' in value) {
-    return [{
-      path: segments,
-      value: value.$value ?? value.value,
-      type: value.$type ?? value.type ?? 'unknown',
-      description: value.$description ?? value.description,
-    }];
+  if ("$value" in value || "value" in value) {
+    return [
+      {
+        path: segments,
+        value: value.$value ?? value.value,
+        type: value.$type ?? value.type ?? "unknown",
+        description: value.$description ?? value.description,
+      },
+    ];
   }
 
-  return Object.entries(value).flatMap(([key, child]) => flattenTokens(child, [...segments, key]));
+  return Object.entries(value).flatMap(([key, child]) =>
+    flattenTokens(child, [...segments, key]),
+  );
 }
 
 function kebab(value) {
   return String(value)
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function cssVariableName(segments) {
-  return `--${segments.map(kebab).filter(Boolean).join('-')}`;
+  return `--${segments.map(kebab).filter(Boolean).join("-")}`;
 }
 
 function toCamelCase(segments) {
   let result = segments
-    .join(' ')
+    .join(" ")
     .split(/[^a-zA-Z0-9]+/)
     .filter(Boolean)
     .map((part, index) => {
       const lower = part.toLowerCase();
-      return index === 0 ? lower : `${lower.charAt(0).toUpperCase()}${lower.slice(1)}`;
+      return index === 0
+        ? lower
+        : `${lower.charAt(0).toUpperCase()}${lower.slice(1)}`;
     })
-    .join('');
+    .join("");
 
   if (/^[0-9]/.test(result)) result = `_${result}`;
   return result;
 }
 
 function aliasPath(value) {
-  if (typeof value !== 'string') return null;
+  if (typeof value !== "string") return null;
   const match = value.match(/^\{(.+)\}$/);
   if (!match) return null;
-  return match[1].split('.').map((part) => part.trim()).filter(Boolean);
+  return match[1]
+    .split(".")
+    .map((part) => part.trim())
+    .filter(Boolean);
 }
 
 function parseNumber(value) {
-  if (typeof value === 'number') return value;
-  if (typeof value !== 'string') return null;
+  if (typeof value === "number") return value;
+  if (typeof value !== "string") return null;
 
   const trimmed = value.trim();
   const numeric = Number.parseFloat(trimmed);
   if (Number.isNaN(numeric)) return null;
 
-  if (trimmed.endsWith('rem')) return numeric * 16;
+  if (trimmed.endsWith("rem")) return numeric * 16;
   return numeric;
 }
 
@@ -112,57 +124,69 @@ function normalizeValue(token) {
   const alias = aliasPath(token.value);
   if (alias) {
     return {
-      kind: 'alias',
-      path: alias.join('/'),
+      kind: "alias",
+      path: alias.join("/"),
     };
   }
 
   const figmaType = FIGMA_VARIABLE_TYPES.get(token.type);
-  if (figmaType === 'FLOAT') {
+  if (figmaType === "FLOAT") {
     const parsed = parseNumber(token.value);
     return {
-      kind: parsed === null ? 'raw' : 'number',
+      kind: parsed === null ? "raw" : "number",
       value: parsed ?? token.value,
     };
   }
 
   return {
-    kind: 'raw',
+    kind: "raw",
     value: token.value,
   };
 }
 
 function collectionFor(pathSegments) {
   const [root] = pathSegments;
-  if (root === 'Primitives') return 'Kozmos Primitives';
-  if (root === 'Semantics') return 'Kozmos Semantics';
-  if (root === 'Components') return 'Kozmos Components';
-  if (root === 'shadow') return 'Kozmos Effects';
-  return 'Kozmos Misc';
+  if (root === "Primitives") return "Kozmos Primitives";
+  if (root === "Semantics") return "Kozmos Semantics";
+  if (root === "Components") return "Kozmos Components";
+  if (root === "shadow") return "Kozmos Effects";
+  return "Kozmos Misc";
 }
 
 function scopesFor(token) {
-  const joined = token.path.join('/').toLowerCase();
+  const joined = token.path.join("/").toLowerCase();
   const type = token.type;
 
-  if (type === 'color') {
-    if (joined.includes('text') || joined.includes('foreground') || joined.includes('content')) {
-      return ['TEXT_FILL'];
+  if (type === "color") {
+    if (
+      joined.includes("text") ||
+      joined.includes("foreground") ||
+      joined.includes("content")
+    ) {
+      return ["TEXT_FILL"];
     }
-    if (joined.includes('border') || joined.includes('stroke') || joined.includes('outline')) {
-      return ['STROKE_COLOR'];
+    if (
+      joined.includes("border") ||
+      joined.includes("stroke") ||
+      joined.includes("outline")
+    ) {
+      // Also fills: a divider is a border drawn as a 1px rectangle, and a
+      // designer reaching for the divider colour should find the role in the
+      // fill picker rather than a primitive.
+      return ["STROKE_COLOR", "SHAPE_FILL", "FRAME_FILL"];
     }
-    return ['FRAME_FILL', 'SHAPE_FILL'];
+    return ["FRAME_FILL", "SHAPE_FILL"];
   }
 
-  if (type === 'borderRadius') return ['CORNER_RADIUS'];
-  if (type === 'borderWidth') return ['STROKE_FLOAT'];
-  if (type === 'spacing' || joined.includes('gap') || joined.includes('space')) return ['GAP'];
-  if (type === 'fontSizes') return ['FONT_SIZE'];
-  if (type === 'lineHeights') return ['LINE_HEIGHT'];
-  if (type === 'letterSpacing') return ['LETTER_SPACING'];
-  if (type === 'paragraphSpacing') return ['PARAGRAPH_SPACING'];
-  if (type === 'opacity') return ['OPACITY'];
+  if (type === "borderRadius") return ["CORNER_RADIUS"];
+  if (type === "borderWidth") return ["STROKE_FLOAT"];
+  if (type === "spacing" || joined.includes("gap") || joined.includes("space"))
+    return ["GAP"];
+  if (type === "fontSizes") return ["FONT_SIZE"];
+  if (type === "lineHeights") return ["LINE_HEIGHT"];
+  if (type === "letterSpacing") return ["LETTER_SPACING"];
+  if (type === "paragraphSpacing") return ["PARAGRAPH_SPACING"];
+  if (type === "opacity") return ["OPACITY"];
 
   return [];
 }
@@ -171,19 +195,22 @@ function buildPayload() {
   const env = readEnv(ENV_FILE);
   const light = flattenTokens(readJson(LIGHT_TOKENS));
   const darkByPath = new Map(
-    flattenTokens(readJson(DARK_TOKENS)).map((token) => [token.path.join('/'), token]),
+    flattenTokens(readJson(DARK_TOKENS)).map((token) => [
+      token.path.join("/"),
+      token,
+    ]),
   );
 
   const variables = [];
   const styleOnly = [];
 
   for (const token of light) {
-    const canonicalName = token.path.join('/');
+    const canonicalName = token.path.join("/");
     const darkToken = darkByPath.get(canonicalName);
     const figmaType = FIGMA_VARIABLE_TYPES.get(token.type) ?? null;
     const record = {
       canonicalName,
-      figmaName: token.path.slice(1).join('/') || canonicalName,
+      figmaName: token.path.slice(1).join("/") || canonicalName,
       collection: collectionFor(token.path),
       sourceType: token.type,
       figmaType,
@@ -216,33 +243,33 @@ function buildPayload() {
     generatedAt: new Date().toISOString(),
     target: {
       fileKey: env.FIGMA_FILE_KEY ?? null,
-      fileName: 'Kozmos DS - Core Library',
-      modes: ['Light', 'Dark'],
+      fileName: "Kozmos DS - Core Library",
+      modes: ["Light", "Dark"],
     },
     sources: {
       lightTokens: path.relative(ROOT, LIGHT_TOKENS),
       darkTokens: path.relative(ROOT, DARK_TOKENS),
     },
     collections: [
-      { name: 'Kozmos Primitives', modes: ['Light', 'Dark'] },
-      { name: 'Kozmos Semantics', modes: ['Light', 'Dark'] },
-      { name: 'Kozmos Components', modes: ['Light', 'Dark'] },
-      { name: 'Kozmos Effects', modes: ['Light', 'Dark'] },
+      { name: "Kozmos Primitives", modes: ["Light", "Dark"] },
+      { name: "Kozmos Semantics", modes: ["Light", "Dark"] },
+      { name: "Kozmos Components", modes: ["Light", "Dark"] },
+      { name: "Kozmos Effects", modes: ["Light", "Dark"] },
     ],
     pages: [
-      'Cover',
-      'Getting Started',
-      'Foundations',
-      'Components',
-      'Utilities',
-      'Archive / Legacy Reference',
+      "Cover",
+      "Getting Started",
+      "Foundations",
+      "Components",
+      "Utilities",
+      "Archive / Legacy Reference",
     ],
     summary: {
       totalTokens: variables.length + styleOnly.length,
       variableTokens: variables.length,
       styleOnlyTokens: styleOnly.length,
       bySourceType,
-      note: 'Variables REST is unavailable without file_variables:read, so this payload is intended for a Figma plugin/MCP import path.',
+      note: "Variables REST is unavailable without file_variables:read, so this payload is intended for a Figma plugin/MCP import path.",
     },
     variables,
     styleOnly,

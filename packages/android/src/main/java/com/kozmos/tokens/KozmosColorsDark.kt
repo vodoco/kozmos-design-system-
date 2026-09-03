@@ -129,6 +129,8 @@ object KozmosColorsDark {
   val semanticsSurface100 = Color(0xff17191c)
   val semanticsSurface200 = Color(0xff2e3138)
   val semanticsSurface300 = Color(0xff464a53)
+  val semanticsBorderSubtle = Color(0xff2e3138)
+  val semanticsBorderInput = Color(0xff8b8474)
   val semanticsDataBlue = Color(0xff60a5fa)
   val semanticsDataPurple = Color(0xffc084fc)
   val semanticsDataTeal = Color(0xff2dd4bf)

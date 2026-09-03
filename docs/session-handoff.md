@@ -9,16 +9,17 @@ Branch: `codex/wave-2-figma-components`.
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing                   | State                                                                |
-| ----------------------- | -------------------------------------------------------------------- |
-| `pnpm figma:verify`     | **clean on all six checks**                                          |
-| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                        |
-| `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged |
-| Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                             |
-| `tokens:radius:nesting` | **22** findings, all in six Core sets awaiting a run                 |
-| Chromatic               | **snapshot limit reached** — visual gate is not running              |
-| Working tree            | clean; everything committed and pushed                               |
-| Local gates             | all green — see §7 for the list                                      |
+| Thing                   | State                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| `pnpm figma:verify`     | **clean on all six checks** — measured 2026-09-03 after the run                                       |
+| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                                                         |
+| `main`                  | `a2e8a0e` — PRs #1 through #4 merged                                                                  |
+| Branch vs `main`        | **14 commits ahead, unpushed** — the 2026-09-03 fixes, the border roles and the audit, ready for a PR |
+| `tokens:radius:nesting` | **0** — measured 2026-09-03 after the run; `--strict` is in CI                                        |
+| Chromatic               | **snapshot limit reached** — visual gate is not running                                               |
+| Working tree            | clean; fourteen commits on the branch, not pushed                                                     |
+| Style playbook          | `docs/style-playbook.md` — start here to change how it looks                                          |
+| Local gates             | all green — see §7 for the list                                                                       |
 
 **The library publishes.** Eleven unbound properties across five sets, two of
 them Core, had held it out of Figma; on 2026-08-31 all five were fixed, run
@@ -29,8 +30,11 @@ complaint — "uneven roundness", a 9999 sentinel, and two roles sharing one
 number — became a rule (`docs/nested-radius.md`), a checker
 (`tokens:radius:nesting`), and eleven commits. Measured, not modelled: the
 first plugin run took the file from **50 to 37** findings, which was the number
-predicted for it. The remaining 22 sit in six Core sets that have not been
-re-run yet; every fix for them is committed. See §4 item 2.
+predicted for it. The six Core sets were re-run by hand on 2026-09-03 and
+**15** remained: NavigationItem cleared, the other five did not move at all.
+Their popover padding is bound to a component variable that still said 4, so
+the painter's 12 never rendered — the variable now derives, and the run is
+pending. See §4 item 1 and §6.
 
 Two rules came out of the publishing work that are worth knowing before
 touching any component set, because both fail silently and both cost a round
@@ -1002,6 +1006,57 @@ properties, which the publish dialog does not.
 
 ## 4. Immediate Next Actions, In Order
 
+**Checkpoint 2026-09-03, late.** An adversarial audit of the week's work found
+nine things and fixed all of them. The largest: there was **no border role at
+all** — Figma painted container edges with `foreground/500` (4.2:1) while the
+web used `background/200` (1.6:1), and nothing compared them. Then the same
+defect again in dividers, which are borders drawn as 1px filled rectangles:
+Separator, the menu separator and the stepper connector were the dark text
+grey, and the web drew the same rules soft. `Semantics.Border.Subtle` and
+`.Input` now exist, 78 plugin sites and every other consumer read them, and
+`pnpm tokens:border:check` holds them together in CI — it caught the stepper
+connector on its first run after learning the class.
+
+Also fixed: the concentric popover inset had reached Figma and never the web
+(`p-1` → `p-3` on five components), now pinned by contract assertions in both
+directions; `Listbox/gap` aliased a badge; TreeItem declared none of the row
+action toggles its siblings had; ColorPicker's web popover sat at the container
+radius while every other popover and Figma sat at control, and its colour area
+now derives its own radius through `calc` the way Figma derives it; five
+fallbacks named a colour one ramp step away from the token beside them; and the
+token generator emitted an unresolved alias string as an iOS dark hex for any
+semantic colour alias, which had never fired because no semantic colour alias
+existed until now.
+
+**`Update All Core` exists.** 73 Core sets in one action, sharing a runner with
+`Update All Product / SDK`, node IDs preserved, one failure never stranding the
+rest. The sequence is derived from the dispatcher, and a contract assertion
+fails the build if a component with an update handler is missing from it.
+
+**`docs/style-playbook.md` is the document to hand anyone who has to change how
+this looks**: the role vocabulary with measured numbers, a cookbook per kind of
+change, the seven traps that fail silently, what each check guards, the Figma
+loop in order, and where everything lives.
+
+What is left, in order:
+
+1. **Import variables-only** — the payload is 620 token candidates now, and the
+   file's variable count should go 1412 → 1414 (`Border/Subtle`,
+   `Border/Input`). Then **Update All Core** and **Update All Product / SDK**,
+   which is now two clicks rather than 97. Every stroke and divider in the file
+   rebinds to the roles on that run; until then the file still draws the old
+   greys, because the painters changed and the file has not been re-run.
+2. **Verify**: `pnpm figma:verify` and `pnpm tokens:radius:nesting` should stay
+   clean, and the plugin's own audit should stay at 0 warnings. The nesting
+   check is `--strict` in CI now, so a regression fails the build.
+3. **Chromatic's billed snapshot limit** is still unresolved and still means the
+   visual gate compares nothing. It matters more after this change than before,
+   because the border sweep touches almost every story.
+4. **The native freeze**: the tracked `KozmosColors.swift` and `.kt` are a May
+   baseline that has drifted from the generator's output, and 13 iOS plus 16
+   Android border references still hard-code the old grey rather than reading
+   the role. Both need a decision before a sweep.
+
 Everything below is either one plugin run, one PR, one account setting, or a
 scoped piece of work with its own document. Nothing is blocked on a decision
 that has not been asked.
@@ -1013,16 +1068,50 @@ a development plugin's files when the plugin _launches_, so quit Figma entirely
 `pnpm figma:verify` is the cheap way to tell whether a run landed: it reads the
 file, not the plugin's own report.
 
-1. **Update six Core sets by hand**, from the plugin's dropdown, one at a time:
-   `Listbox`, `NavigationItem`, `MultiSelect`, `ColorPicker`, `Combobox`,
-   `TimePicker`. There is no "Update All Core" — `Update All Product / SDK` is
-   the only bulk action, and it has already been run. These six hold all 22
-   remaining nesting findings and the active/selected colour split.
-   **Prediction on record:** `tokens:radius:nesting` reads **0** afterwards
-   and reports `6 skipped as a control`. If it lands anywhere else, one of the
-   commits above is wrong.
+**Status at the end of 2026-09-03: done.** Nesting reads 0, `figma:verify`
+is clean, the strict gate is in CI, and the plugin's own audit is clean at
+1412 variables. The foundations import ran variables-only and created 14 —
+the two new background steps and twelve others the file had been missing
+since earlier in the week, which the plugin had been falling back on without
+anyone noticing. The active rows now bind `Colors/background/50`, distinct
+from the selected rows on `/100`, confirmed over REST. Everything below in
+this item is history, kept because each step hid a trap.
 
-2. **Then switch `tokens:radius:nesting --strict` on in CI.** It exits 0 today
+1. **Done 2026-09-03.** The record: quit Figma (⌘Q), then Update the sets by
+   hand, one at a time from the
+   plugin's dropdown: `Listbox`, `MultiSelect`, `ColorPicker`, `Combobox`,
+   `TimePicker`, `Menu`, and `TreeParentItem`. `NavigationItem` is already done.
+   Load the payload from **this checkout**, `docs/figma-foundations-payload.json`
+   with 618 token candidates; a second checkout under `P/Pointr Cloud/` holds
+   one from before `background/25` and `/50` existed, with 615, and an import
+   from it creates nothing new — which is why the active rows were still a
+   solid fallback after an import on 2026-09-03. TreeParentItem also needs an
+   Update for its count text: the audit expected the row style where the
+   painter applies Counter Small, and the rule now says so. NavigationItem
+   needs one more Update as well: Apply Text Styles restyled its badge text
+   to the label size, the badge grew, and the pill radius resolved for the
+   smaller box stayed behind — eight nesting findings on 2026-09-03. The rule
+   now expects the painter's sidebar-section style for badge text, and the
+   style pass re-resolves pills.
+   TreeParentItem is on the list because a run on 2026-09-03 declared the
+   five leaf-row actions on it while its rows render two, which left seven
+   properties bound to no layer and publishing blocked; the property pass
+   now declares from the set's own list and removes the rest. Check Figma's
+   sync state before starting: at 08:10Z on 2026-09-03 the file's last
+   modification was 06:39Z, so an import and four Updates reported after
+   that had not reached the file. The quit
+   matters: `code.js` changed on 2026-09-03 and the plugin runs cached code
+   until Figma restarts. There is still no "Update All Core". `Menu` was never
+   flagged — its rows carry no fill in the variants measured, so the checker
+   cannot see them — but it binds the same padding family and moves with the
+   same fix. **Prediction on record:** `tokens:radius:nesting` reads **0**
+   afterwards and reports `6 skipped as a control`. If ColorPicker's colour
+   area still reads 16, that one Update did not run: the area is recreated at
+   3 on every run.
+
+2. **Done 2026-09-03: `tokens:radius:nesting --strict` is in CI** as the
+   `Verify Nested Radius` step, skipped without the Figma token. The reasoning
+   it was held for, kept for the record: it exits 0 today
    while the backlog is open, by design — a gate that is red on purpose is a
    gate somebody switches off. Once item 2 lands it can fail the build, and it
    stops being a report.
@@ -1303,6 +1392,42 @@ Navigation Slot)`, and the earlier diagnosis here — that the builder emits
 - **Some commits on this branch bundle pre-existing uncommitted work.** Review
   before pushing.
 - **~588 files remain uncommitted** and are untouched pre-existing work.
+- **A bound property ignores the painter.** Most layout properties on
+  generated nodes are bound to component variables, and a bound property
+  renders the variable — a raw `paddingLeft = 12` in a painter changes
+  nothing. When the file disagrees with the code, read `boundVariables` on
+  the node first (`tokens:radius:nesting` prints them on every finding) and
+  fix the entry in the component-token table; `ensureComponentRuntimeVariables`
+  re-applies it on every Update. An alias typed beside a derived value is the
+  same trap one step over, which is what `spacingAliasFor()` is for.
+- **A set may only declare what its rows render.** The tree property pass
+  declared the five leaf-row actions on every tree set; TreeParentItem's rows
+  draw Hide and Lock, so four booleans and three icon swaps referenced no
+  layer, and one such property is enough for "Invalid assets". It is now
+  `treeSetActions()` per set, with the stale ones deleted on Update.
+  `pnpm figma:verify` catches this class; run it after any set Update.
+- **The audit's rules must agree with the painters.** Twice on 2026-09-03 a
+  text rule expected a different style from the one the painter applies
+  (TreeParentItem's count text, NavigationItem's badge text). The audit then
+  reports stale text no Update can clear, and Apply Text Styles rewrites the
+  node to the rule's style, which can resize a box and strand anything derived
+  from it. When a stale-text count survives an Update, compare
+  `inferTextStyleKeyForComponentText` with the painter before touching the
+  file.
+- **Corners bind one at a time.** A radius bound through the variables panel
+  arrives in REST as `rectangleCornerRadii`, four aliases in one object, and
+  `boundVariables.cornerRadius` stays empty. Reading only the latter is how
+  `ColorPicker/color-area/radius` passed for "not bound" for a day.
+- **"Found" is not "loaded".** The Setup badge says Found when the file
+  already carries foundations; the payload textarea and file picker are
+  separate, and Import Foundations is disabled until a payload is parsed. An
+  audit that keeps reporting the same contrast failures after every Update,
+  with the Variables count unchanged, means the import never ran.
+- **Two checkouts, two payloads.** `P/Pointr Cloud/kozmos-design-system-` is a
+  second clone with an older `docs/figma-foundations-payload.json`. The plugin
+  takes whichever file is picked; Figma is registered to run the plugin from
+  this checkout (`K/kozmos-design-system-dev`), and the payload must come from
+  the same place.
 
 ## 7. How To Check Anything Here
 
