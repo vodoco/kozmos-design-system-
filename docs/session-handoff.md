@@ -1025,7 +1025,12 @@ file, not the plugin's own report.
    from it creates nothing new — which is why the active rows were still a
    solid fallback after an import on 2026-09-03. TreeParentItem also needs an
    Update for its count text: the audit expected the row style where the
-   painter applies Counter Small, and the rule now says so.
+   painter applies Counter Small, and the rule now says so. NavigationItem
+   needs one more Update as well: Apply Text Styles restyled its badge text
+   to the label size, the badge grew, and the pill radius resolved for the
+   smaller box stayed behind — eight nesting findings on 2026-09-03. The rule
+   now expects the painter's sidebar-section style for badge text, and the
+   style pass re-resolves pills.
    TreeParentItem is on the list because a run on 2026-09-03 declared the
    five leaf-row actions on it while its rows render two, which left seven
    properties bound to no layer and publishing blocked; the property pass
@@ -1337,6 +1342,14 @@ Navigation Slot)`, and the earlier diagnosis here — that the builder emits
   layer, and one such property is enough for "Invalid assets". It is now
   `treeSetActions()` per set, with the stale ones deleted on Update.
   `pnpm figma:verify` catches this class; run it after any set Update.
+- **The audit's rules must agree with the painters.** Twice on 2026-09-03 a
+  text rule expected a different style from the one the painter applies
+  (TreeParentItem's count text, NavigationItem's badge text). The audit then
+  reports stale text no Update can clear, and Apply Text Styles rewrites the
+  node to the rule's style, which can resize a box and strand anything derived
+  from it. When a stale-text count survives an Update, compare
+  `inferTextStyleKeyForComponentText` with the painter before touching the
+  file.
 - **Corners bind one at a time.** A radius bound through the variables panel
   arrives in REST as `rectangleCornerRadii`, four aliases in one object, and
   `boundVariables.cornerRadius` stays empty. Reading only the latter is how

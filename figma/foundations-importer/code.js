@@ -22517,6 +22517,11 @@ async function applyTextStylesToComponentLibrary() {
         stats.textNodesUnmatched += 1;
       }
     }
+
+    // A pill's radius is half of whatever box it ends up in. Restyling text
+    // can change that box, so the pills are resolved again here rather than
+    // left at the value the painter computed for a smaller one.
+    resolvePillRadii(componentSet, stats);
   }
 
   stats.updated = true;
@@ -22571,7 +22576,13 @@ function textStyleKeyForSidebarText(textName, component) {
   return null;
 }
 
-function textStyleKeyForNavigationItemText(component) {
+function textStyleKeyForNavigationItemText(component, textName) {
+  // The badge is drawn with the sidebar section's typography — see
+  // createNavigationItemBadgeSlot — so the audit must expect that. Expecting
+  // the label style restyled every badge to 14/20 under Apply Text Styles,
+  // the badge grew from 22x18 to 24x22, and the pill radius resolved for the
+  // smaller box was left behind, which the nesting check then reported.
+  if (textName === "Badge Text") return "sidebarSection";
   const props =
     component && component.name
       ? parseNavigationItemVariantName(component.name)
@@ -22645,7 +22656,7 @@ function inferTextStyleKeyForComponentText(text, componentSet) {
   }
   if (setName === "BottomNavigation") return "fieldMeta";
   if (setName === "NavigationItem") {
-    return textStyleKeyForNavigationItemText(component);
+    return textStyleKeyForNavigationItemText(component, textName);
   }
   if (setName === "Navbar") {
     return textStyleKeyForNavbarText(textName);
