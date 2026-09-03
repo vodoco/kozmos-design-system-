@@ -84,6 +84,26 @@ const TREE_ITEM_ACTIONS = [
   { name: "Export Action", iconName: "download-01", visible: false },
   { name: "More Action", iconName: "settings-01", visible: false },
 ];
+/**
+ * The two actions a parent row carries, in the order they render.
+ *
+ * A parent row hides or locks the group it heads; the five actions above
+ * belong to the item itself. The property pass declares exactly what a set's
+ * rows can render, because a `Show Edit Action` declared on a set that never
+ * draws an Edit button is a property bound to no layer, and one of those is
+ * enough to block publishing the whole library. TreeParentItem had seven.
+ */
+const TREE_PARENT_ACTIONS = [
+  { name: "Hide Action", iconName: "x-close", visible: true },
+  { name: "Lock Action", iconName: "lock-01", visible: true },
+];
+
+/** The actions a tree set's rows can render, which is all it may declare. */
+function treeSetActions(componentSet) {
+  return componentSet && componentSet.name === "TreeParentItem"
+    ? TREE_PARENT_ACTIONS
+    : TREE_ITEM_ACTIONS;
+}
 const TREE_ITEM_DEPTHS = ["0", "1", "2"];
 const TIMELINE_CONTENT = ["Basic", "Detailed"];
 const TIMELINE_DENSITIES = ["Default", "Compact"];
@@ -36979,10 +36999,7 @@ function treeItemRow(props) {
   const state = normalizeTreeState(props.state);
   const actions =
     withActions && parent
-      ? [
-          { name: "Hide Action", iconName: "x-close" },
-          { name: "Lock Action", iconName: "lock-01" },
-        ]
+      ? TREE_PARENT_ACTIONS
       : withActions
         ? TREE_ITEM_ACTIONS
         : [];
@@ -37158,12 +37175,7 @@ function treeRows(props) {
       text: "Map content",
       countName: "Root Count Text",
       count: withCounts ? "23" : null,
-      actions: withActions
-        ? [
-            { name: "Hide Action", iconName: "x-close" },
-            { name: "Lock Action", iconName: "lock-01" },
-          ]
-        : [],
+      actions: withActions ? TREE_PARENT_ACTIONS : [],
       depth: 0,
       expandable: true,
       expanded,
@@ -40273,8 +40285,26 @@ async function configureTreeItemProperties(
  */
 function configureTreeActionVisibilityProperties(componentSet, stats) {
   let boundCount = 0;
+  const actions = treeSetActions(componentSet);
 
-  for (const action of TREE_ITEM_ACTIONS) {
+  // Declared on an earlier run from the five-action list, and referenced by
+  // nothing on a set whose rows never draw them. Removed before the rest is
+  // declared so the set only ever carries what it renders.
+  const declaredNames = actions.map((action) => action.name);
+  const staleNames = [];
+  for (const action of TREE_ITEM_ACTIONS.concat(TREE_PARENT_ACTIONS)) {
+    if (declaredNames.indexOf(action.name) !== -1) continue;
+    if (staleNames.indexOf(`Show ${action.name}`) !== -1) continue;
+    staleNames.push(`Show ${action.name}`);
+  }
+  deleteComponentPropertiesByBaseName(
+    componentSet,
+    staleNames,
+    ["BOOLEAN"],
+    stats,
+  );
+
+  for (const action of actions) {
     const propertyName = ensureBooleanProperty(
       componentSet,
       `Show ${action.name}`,
@@ -40318,12 +40348,11 @@ async function configureTreeItemIconSlots(componentSet, variableByName, stats) {
       defaultComponent: leadingDefault,
     },
   ];
-  for (let index = 0; index < TREE_ITEM_ACTIONS.length; index += 1) {
+  const actions = treeSetActions(componentSet);
+  for (let index = 0; index < actions.length; index += 1) {
     // The parent set opens with a close affordance rather than an edit one.
     const iconName =
-      index === 0 && !isChildSet
-        ? "x-close"
-        : TREE_ITEM_ACTIONS[index].iconName;
+      index === 0 && !isChildSet ? "x-close" : actions[index].iconName;
     const resolved =
       (await findKozmosIconSourceComponent(iconName)) || defaultIcon;
     if (!resolved) continue;
@@ -40332,6 +40361,20 @@ async function configureTreeItemIconSlots(componentSet, variableByName, stats) {
       propertyName: `Action ${index + 1} Icon`,
       defaultComponent: resolved,
     });
+  }
+
+  // Positional swaps past the set's own list point at nothing.
+  const staleSwaps = [];
+  for (let n = actions.length + 1; n <= TREE_ITEM_ACTIONS.length; n += 1) {
+    staleSwaps.push(`Action ${n} Icon`);
+  }
+  if (staleSwaps.length > 0) {
+    deleteComponentPropertiesByBaseName(
+      componentSet,
+      staleSwaps,
+      ["INSTANCE_SWAP"],
+      stats,
+    );
   }
 
   for (const slot of slots) {

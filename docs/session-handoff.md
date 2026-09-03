@@ -9,16 +9,16 @@ Branch: `codex/wave-2-figma-components`.
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing                   | State                                                                |
-| ----------------------- | -------------------------------------------------------------------- |
-| `pnpm figma:verify`     | **clean on all six checks**                                          |
-| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                        |
-| `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged |
-| Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                             |
-| `tokens:radius:nesting` | **15** — one stale variable explains 14; fix committed, run pending  |
-| Chromatic               | **snapshot limit reached** — visual gate is not running              |
-| Working tree            | clean; everything committed and pushed                               |
-| Local gates             | all green — see §7 for the list                                      |
+| Thing                   | State                                                                      |
+| ----------------------- | -------------------------------------------------------------------------- |
+| `pnpm figma:verify`     | **7 unbound properties on TreeParentItem** — fix committed, Update pending |
+| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                              |
+| `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged       |
+| Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                                   |
+| `tokens:radius:nesting` | **15** — one stale variable explains 14; fix committed, run pending        |
+| Chromatic               | **snapshot limit reached** — visual gate is not running                    |
+| Working tree            | clean; everything committed and pushed                                     |
+| Local gates             | all green — see §7 for the list                                            |
 
 **The library publishes.** Eleven unbound properties across five sets, two of
 them Core, had held it out of Figma; on 2026-08-31 all five were fixed, run
@@ -1018,7 +1018,14 @@ file, not the plugin's own report.
 
 1. **Quit Figma (⌘Q), then Update six sets by hand**, one at a time from the
    plugin's dropdown: `Listbox`, `MultiSelect`, `ColorPicker`, `Combobox`,
-   `TimePicker`, and `Menu`. `NavigationItem` is already done. The quit
+   `TimePicker`, `Menu`, and `TreeParentItem`. `NavigationItem` is already done.
+   TreeParentItem is on the list because a run on 2026-09-03 declared the
+   five leaf-row actions on it while its rows render two, which left seven
+   properties bound to no layer and publishing blocked; the property pass
+   now declares from the set's own list and removes the rest. Check Figma's
+   sync state before starting: at 08:10Z on 2026-09-03 the file's last
+   modification was 06:39Z, so an import and four Updates reported after
+   that had not reached the file. The quit
    matters: `code.js` changed on 2026-09-03 and the plugin runs cached code
    until Figma restarts. There is still no "Update All Core". `Menu` was never
    flagged — its rows carry no fill in the variants measured, so the checker
@@ -1317,6 +1324,12 @@ Navigation Slot)`, and the earlier diagnosis here — that the builder emits
   fix the entry in the component-token table; `ensureComponentRuntimeVariables`
   re-applies it on every Update. An alias typed beside a derived value is the
   same trap one step over, which is what `spacingAliasFor()` is for.
+- **A set may only declare what its rows render.** The tree property pass
+  declared the five leaf-row actions on every tree set; TreeParentItem's rows
+  draw Hide and Lock, so four booleans and three icon swaps referenced no
+  layer, and one such property is enough for "Invalid assets". It is now
+  `treeSetActions()` per set, with the stale ones deleted on Update.
+  `pnpm figma:verify` catches this class; run it after any set Update.
 
 ## 7. How To Check Anything Here
 
