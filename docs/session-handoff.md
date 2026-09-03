@@ -13,11 +13,11 @@ picking the work up cold, this is the whole picture in one screen.
 | ----------------------- | -------------------------------------------------------------------- |
 | `pnpm figma:verify`     | **clean on all six checks** — measured 2026-09-03 after the run      |
 | Figma publish           | **unblocked** — 0 unbound properties, 94 sets                        |
-| `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged |
-| Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                             |
+| `main`                  | `a2e8a0e` — PRs #1 through #4 merged                                 |
+| Branch vs `main`        | **5 commits ahead, unpushed** — the 2026-09-03 fixes, ready for a PR |
 | `tokens:radius:nesting` | **0** — measured 2026-09-03 after the run; `--strict` is in CI       |
 | Chromatic               | **snapshot limit reached** — visual gate is not running              |
-| Working tree            | clean; everything committed and pushed                               |
+| Working tree            | clean; five commits on the branch, not pushed                        |
 | Local gates             | all green — see §7 for the list                                      |
 
 **The library publishes.** Eleven unbound properties across five sets, two of
@@ -1016,19 +1016,17 @@ a development plugin's files when the plugin _launches_, so quit Figma entirely
 `pnpm figma:verify` is the cheap way to tell whether a run landed: it reads the
 file, not the plugin's own report.
 
-**Status at the end of 2026-09-03:** nesting reads 0, `figma:verify` is
-clean, and the strict gate is in CI. One action remains, and it is the reason
-the audit still reports contrast failures on Listbox, MultiSelect and
-TimePicker: **the foundations import has not run** — Variables still reads
-1398 in the plugin, and the two new steps would make it 1400. The Setup
-badge's "Found" means the file already has foundations, not that a payload is
-loaded; Import Foundations stays disabled until a payload file is chosen.
-Choose `docs/figma-foundations-payload.json` from this checkout, confirm
-"Loaded 618 token candidate(s)", keep "Create variables and modes" ticked,
-press Import Foundations, wait for "Foundations import complete.", then Update
-Listbox, MultiSelect and TimePicker. Everything below in this item is history.
+**Status at the end of 2026-09-03: done.** Nesting reads 0, `figma:verify`
+is clean, the strict gate is in CI, and the plugin's own audit is clean at
+1412 variables. The foundations import ran variables-only and created 14 —
+the two new background steps and twelve others the file had been missing
+since earlier in the week, which the plugin had been falling back on without
+anyone noticing. The active rows now bind `Colors/background/50`, distinct
+from the selected rows on `/100`, confirmed over REST. Everything below in
+this item is history, kept because each step hid a trap.
 
-1. **Quit Figma (⌘Q), then Update six sets by hand**, one at a time from the
+1. **Done 2026-09-03.** The record: quit Figma (⌘Q), then Update the sets by
+   hand, one at a time from the
    plugin's dropdown: `Listbox`, `MultiSelect`, `ColorPicker`, `Combobox`,
    `TimePicker`, `Menu`, and `TreeParentItem`. `NavigationItem` is already done.
    Load the payload from **this checkout**, `docs/figma-foundations-payload.json`
