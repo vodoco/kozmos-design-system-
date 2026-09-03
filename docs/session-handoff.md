@@ -9,16 +9,16 @@ Branch: `codex/wave-2-figma-components`.
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing                   | State                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| `pnpm figma:verify`     | **7 unbound properties on TreeParentItem** — fix committed, Update pending                            |
-| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                                                         |
-| `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged                                  |
-| Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                                                              |
-| `tokens:radius:nesting` | **1** after the 2026-09-03 run; the colour area's corners bind a second stale variable, fix committed |
-| Chromatic               | **snapshot limit reached** — visual gate is not running                                               |
-| Working tree            | clean; everything committed and pushed                                                                |
-| Local gates             | all green — see §7 for the list                                                                       |
+| Thing                   | State                                                                |
+| ----------------------- | -------------------------------------------------------------------- |
+| `pnpm figma:verify`     | **clean on all six checks** — measured 2026-09-03 after the run      |
+| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                        |
+| `main`                  | `fe4f4fa` — Wave 2, radius fixes, and the nesting backlog all merged |
+| Branch vs `main`        | **fully merged** — PRs #1, #2, #3 all in                             |
+| `tokens:radius:nesting` | **0** — measured 2026-09-03 after the run; `--strict` is in CI       |
+| Chromatic               | **snapshot limit reached** — visual gate is not running              |
+| Working tree            | clean; everything committed and pushed                               |
+| Local gates             | all green — see §7 for the list                                      |
 
 **The library publishes.** Eleven unbound properties across five sets, two of
 them Core, had held it out of Figma; on 2026-08-31 all five were fixed, run
@@ -1016,6 +1016,18 @@ a development plugin's files when the plugin _launches_, so quit Figma entirely
 `pnpm figma:verify` is the cheap way to tell whether a run landed: it reads the
 file, not the plugin's own report.
 
+**Status at the end of 2026-09-03:** nesting reads 0, `figma:verify` is
+clean, and the strict gate is in CI. One action remains, and it is the reason
+the audit still reports contrast failures on Listbox, MultiSelect and
+TimePicker: **the foundations import has not run** — Variables still reads
+1398 in the plugin, and the two new steps would make it 1400. The Setup
+badge's "Found" means the file already has foundations, not that a payload is
+loaded; Import Foundations stays disabled until a payload file is chosen.
+Choose `docs/figma-foundations-payload.json` from this checkout, confirm
+"Loaded 618 token candidate(s)", keep "Create variables and modes" ticked,
+press Import Foundations, wait for "Foundations import complete.", then Update
+Listbox, MultiSelect and TimePicker. Everything below in this item is history.
+
 1. **Quit Figma (⌘Q), then Update six sets by hand**, one at a time from the
    plugin's dropdown: `Listbox`, `MultiSelect`, `ColorPicker`, `Combobox`,
    `TimePicker`, `Menu`, and `TreeParentItem`. `NavigationItem` is already done.
@@ -1047,7 +1059,9 @@ file, not the plugin's own report.
    area still reads 16, that one Update did not run: the area is recreated at
    3 on every run.
 
-2. **Then switch `tokens:radius:nesting --strict` on in CI.** It exits 0 today
+2. **Done 2026-09-03: `tokens:radius:nesting --strict` is in CI** as the
+   `Verify Nested Radius` step, skipped without the Figma token. The reasoning
+   it was held for, kept for the record: it exits 0 today
    while the backlog is open, by design — a gate that is red on purpose is a
    gate somebody switches off. Once item 2 lands it can fail the build, and it
    stops being a report.
@@ -1354,6 +1368,11 @@ Navigation Slot)`, and the earlier diagnosis here — that the builder emits
   arrives in REST as `rectangleCornerRadii`, four aliases in one object, and
   `boundVariables.cornerRadius` stays empty. Reading only the latter is how
   `ColorPicker/color-area/radius` passed for "not bound" for a day.
+- **"Found" is not "loaded".** The Setup badge says Found when the file
+  already carries foundations; the payload textarea and file picker are
+  separate, and Import Foundations is disabled until a payload is parsed. An
+  audit that keeps reporting the same contrast failures after every Update,
+  with the Variables count unchanged, means the import never ran.
 - **Two checkouts, two payloads.** `P/Pointr Cloud/kozmos-design-system-` is a
   second clone with an older `docs/figma-foundations-payload.json`. The plugin
   takes whichever file is picked; Figma is registered to run the plugin from

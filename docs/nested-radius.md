@@ -277,8 +277,10 @@ and the space between them, and none of that exists in the builder's arguments.
 So it reports what is drawn, which is also its limit — it cannot see a fix that
 has been committed but not yet run through the plugin.
 
-It exits 0 while the backlog is open. `--strict` makes it fail, and it should be
-wired into CI on the day the 50 reach zero — not before, or it is a gate
+It exits 0 while a backlog is open and `--strict` makes it fail. The backlog
+reached zero on 2026-09-03 and `--strict` went into CI the same day, in the
+`Verify Nested Radius` step, skipped only when the Figma token is absent. It
+was not wired earlier on purpose: a gate that is red on purpose is a gate
 somebody switches off.
 
 Related: `pnpm tokens:radius:check` covers the other half of the question —
