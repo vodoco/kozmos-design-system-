@@ -9,16 +9,17 @@ Branch: `codex/wave-2-figma-components`.
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing                   | State                                                                                     |
-| ----------------------- | ----------------------------------------------------------------------------------------- |
-| `pnpm figma:verify`     | **clean on all six checks** — measured 2026-09-03 after the run                           |
-| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                                             |
-| `main`                  | `a2e8a0e` — PRs #1 through #4 merged                                                      |
-| Branch vs `main`        | **9 commits ahead, unpushed** — the 2026-09-03 fixes and the border roles, ready for a PR |
-| `tokens:radius:nesting` | **0** — measured 2026-09-03 after the run; `--strict` is in CI                            |
-| Chromatic               | **snapshot limit reached** — visual gate is not running                                   |
-| Working tree            | clean; nine commits on the branch, not pushed                                             |
-| Local gates             | all green — see §7 for the list                                                           |
+| Thing                   | State                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| `pnpm figma:verify`     | **clean on all six checks** — measured 2026-09-03 after the run                                       |
+| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                                                         |
+| `main`                  | `a2e8a0e` — PRs #1 through #4 merged                                                                  |
+| Branch vs `main`        | **14 commits ahead, unpushed** — the 2026-09-03 fixes, the border roles and the audit, ready for a PR |
+| `tokens:radius:nesting` | **0** — measured 2026-09-03 after the run; `--strict` is in CI                                        |
+| Chromatic               | **snapshot limit reached** — visual gate is not running                                               |
+| Working tree            | clean; fourteen commits on the branch, not pushed                                                     |
+| Style playbook          | `docs/style-playbook.md` — start here to change how it looks                                          |
+| Local gates             | all green — see §7 for the list                                                                       |
 
 **The library publishes.** Eleven unbound properties across five sets, two of
 them Core, had held it out of Figma; on 2026-08-31 all five were fixed, run
@@ -1006,48 +1007,55 @@ properties, which the publish dialog does not.
 ## 4. Immediate Next Actions, In Order
 
 **Checkpoint 2026-09-03, late.** An adversarial audit of the week's work found
-and fixed: the popover inset that reached Figma but not the web (`p-1` → `p-3`
-on Listbox, Combobox, MultiSelect, Menu, Select); `Listbox/gap` aliasing a
-badge; TreeItem lacking the parent row's action toggles; ColorPicker's web
-popover at the container radius while every other popover and Figma are at
-control; and, largest, that there was **no border role at all** — Figma painted
-containers with `foreground/500` (4.2:1) while the web used `background/200`
-(1.6:1). `Semantics.Border.Subtle` and `.Input` now exist and every consumer
-reads them (`pnpm tokens:border:check`, in CI). The generator also emitted an
-unresolved alias string as an iOS dark hex for any semantic colour alias; fixed
-in `packages/tokens/build.mjs`. What is still open, in order:
+nine things and fixed all of them. The largest: there was **no border role at
+all** — Figma painted container edges with `foreground/500` (4.2:1) while the
+web used `background/200` (1.6:1), and nothing compared them. Then the same
+defect again in dividers, which are borders drawn as 1px filled rectangles:
+Separator, the menu separator and the stepper connector were the dark text
+grey, and the web drew the same rules soft. `Semantics.Border.Subtle` and
+`.Input` now exist, 78 plugin sites and every other consumer read them, and
+`pnpm tokens:border:check` holds them together in CI — it caught the stepper
+connector on its first run after learning the class.
 
-1. **Import variables-only again** (two new: `Border/Subtle`, `Border/Input`;
-   the count goes 1412 → 1414), then run the plugin over every set so strokes
-   bind the roles. Until `Update All Core` exists that is 73 Core sets by hand
-   plus `Update All Product / SDK`; the sequence to build the bulk action from
-   is committed at `docs/agent-tracking/core-update-sequence.generated.txt`,
-   derived from the dispatcher (59 chain handlers minus icons, plus 14 map
-   handlers). Wire it as `updateAllCoreComponents` sharing the runner in
-   `updateAllProductSdkComponents`, a `"update-all-core"` map entry, and a
-   button beside `updateAllProductSdk` in `ui.html`; add a contract assertion
-   that every non-Product/SDK update handler appears in the sequence.
-2. **FileUpload**: list gap 12 (web `mt-3`), row radius on `Radius/Container`
-   (web `rounded-container`). Decided shape: tokens `FileUpload/list/gap`
-   (12, `spacingAliasFor(12)`) and `FileUpload/list/offset` (value derived,
-   12 − the stack's 6) bound to the list frame's `paddingTop`; the list is
-   created in `syncFileUploadVariantChildren` (`fileList`, "Selected Files")
-   and must be passed into `bindFileUploadGeometryVariables`.
-3. **Contract assertions** pinning the web inset to the plugin: `bg-popover p-3`
-   in the five React sources (the contracts `files` map already loads them as
-   `reactListbox` etc.) and `value: POPOVER_ROW_INSET` on the five padding
-   tokens.
-4. **Docs**: a style playbook (roles, the derive rule, bound properties, the
-   parity checklist, exact commands and file locations); `nested-radius.md`
-   gains the web's `calc(var(--semantics-radius-control)*1px - 13px)` pattern;
-   `generated-color-scales.md` gains two findings — `Semantics.Surface` 100–300
-   are hand-typed hexes off the ramp, and the dark grey ramp is warm-tinted
-   while the light one is cool. Native: the tracked `KozmosColors.swift/.kt`
-   are a frozen May baseline that has drifted from the generator's output;
-   13 iOS and 16 Android border references still hard-code foreground 500 —
-   a sweep once the freeze is decided.
-5. Then measure (`tokens:radius:nesting`, `figma:verify`, the plugin audit) and
-   open the PR for the nine-plus commits.
+Also fixed: the concentric popover inset had reached Figma and never the web
+(`p-1` → `p-3` on five components), now pinned by contract assertions in both
+directions; `Listbox/gap` aliased a badge; TreeItem declared none of the row
+action toggles its siblings had; ColorPicker's web popover sat at the container
+radius while every other popover and Figma sat at control, and its colour area
+now derives its own radius through `calc` the way Figma derives it; five
+fallbacks named a colour one ramp step away from the token beside them; and the
+token generator emitted an unresolved alias string as an iOS dark hex for any
+semantic colour alias, which had never fired because no semantic colour alias
+existed until now.
+
+**`Update All Core` exists.** 73 Core sets in one action, sharing a runner with
+`Update All Product / SDK`, node IDs preserved, one failure never stranding the
+rest. The sequence is derived from the dispatcher, and a contract assertion
+fails the build if a component with an update handler is missing from it.
+
+**`docs/style-playbook.md` is the document to hand anyone who has to change how
+this looks**: the role vocabulary with measured numbers, a cookbook per kind of
+change, the seven traps that fail silently, what each check guards, the Figma
+loop in order, and where everything lives.
+
+What is left, in order:
+
+1. **Import variables-only** — the payload is 620 token candidates now, and the
+   file's variable count should go 1412 → 1414 (`Border/Subtle`,
+   `Border/Input`). Then **Update All Core** and **Update All Product / SDK**,
+   which is now two clicks rather than 97. Every stroke and divider in the file
+   rebinds to the roles on that run; until then the file still draws the old
+   greys, because the painters changed and the file has not been re-run.
+2. **Verify**: `pnpm figma:verify` and `pnpm tokens:radius:nesting` should stay
+   clean, and the plugin's own audit should stay at 0 warnings. The nesting
+   check is `--strict` in CI now, so a regression fails the build.
+3. **Chromatic's billed snapshot limit** is still unresolved and still means the
+   visual gate compares nothing. It matters more after this change than before,
+   because the border sweep touches almost every story.
+4. **The native freeze**: the tracked `KozmosColors.swift` and `.kt` are a May
+   baseline that has drifted from the generator's output, and 13 iOS plus 16
+   Android border references still hard-code the old grey rather than reading
+   the role. Both need a decision before a sweep.
 
 Everything below is either one plugin run, one PR, one account setting, or a
 scoped piece of work with its own document. Nothing is blocked on a decision

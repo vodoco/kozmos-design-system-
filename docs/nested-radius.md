@@ -264,6 +264,25 @@ and the checker names per-corner bindings.
 The area is recreated on every Update, so the file reads 3 as soon as the set
 is run again with the derived variable in place.
 
+## The web derives it too
+
+Figma computes a nested radius in the painter; the web has to spell it in a
+class. ColorPicker's colour area is the one place both do it, and they agree:
+
+```
+rounded-[calc(var(--semantics-radius-control)*1px_-_13px)]
+```
+
+The popover is `rounded-control`, its padding is 12 and its border 1, so the
+area is the popover's radius minus 13. Written as the subtraction rather than
+as the 3 it currently equals, so repointing `Control` moves both surfaces
+together. Tailwind compiles it to
+`border-radius: calc(var(--semantics-radius-control) * 1px - 13px)`, verified
+by building the stylesheet rather than by reading the class.
+
+The radius variables are unitless numbers on purpose — the same scale iOS and
+Android read — which is why the `* 1px` is there.
+
 ## Running it
 
 ```bash
