@@ -427,6 +427,9 @@ const NAVBAR_SLOT_NAMES = [
 // Only two of them became slots. The leading region keeps its `Leading Icon`
 // instance-swap instead, because a property cannot drive a node inside its own
 // component's slot and Sidebar's rows depend on that property for their icons.
+/** A rail item is tighter than a side item, on both axes. */
+const NAVIGATION_ITEM_RAIL_PADDING_X = 8;
+
 const NAVIGATION_ITEM_SLOT_NAMES = ["Badge Slot", "Trailing Slot"];
 const NAVBAR_DEFAULT_WIDTH = 880;
 const NAVBAR_DEFAULT_HEIGHT = 64;
@@ -4885,15 +4888,43 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   { name: "NavigationItem/height/rail", value: 72, scopes: ["WIDTH_HEIGHT"] },
   {
-    name: "NavigationItem/padding/x",
+    name: "NavigationItem/padding/x/default",
     value: 12,
     alias: "Layout/spacing/150",
     scopes: ["GAP"],
   },
   {
-    name: "NavigationItem/gap",
+    name: "NavigationItem/gap/default",
     value: 8,
     alias: "Layout/spacing/100",
+    scopes: ["GAP"],
+  },
+  // A rail item is 72 wide and stacks its icon over its label, so it is tighter
+  // on both axes than a side item. One variable used to carry all three
+  // densities: the painter computed 8 for rail and 10 for compact, the
+  // variable said 12, and the variable won. The rail's label was then sized
+  // for a 56px content box that was really 48, and 40 variants overflowed.
+  {
+    name: "NavigationItem/padding/x/compact",
+    value: 10,
+    scopes: ["GAP"],
+  },
+  {
+    name: "NavigationItem/padding/x/rail",
+    value: NAVIGATION_ITEM_RAIL_PADDING_X,
+    alias: spacingAliasFor(NAVIGATION_ITEM_RAIL_PADDING_X),
+    scopes: ["GAP"],
+  },
+  {
+    name: "NavigationItem/gap/compact",
+    value: 6,
+    alias: spacingAliasFor(6),
+    scopes: ["GAP"],
+  },
+  {
+    name: "NavigationItem/gap/rail",
+    value: 4,
+    alias: spacingAliasFor(4),
     scopes: ["GAP"],
   },
   {
@@ -38241,7 +38272,7 @@ function navigationItemMetrics(props) {
   const top = props.placement === "Top";
   const compact = props.density === "Compact";
   const height = rail ? 72 : 44;
-  const paddingX = rail ? 8 : compact ? 10 : 12;
+  const paddingX = rail ? NAVIGATION_ITEM_RAIL_PADDING_X : compact ? 10 : 12;
   const paddingY = rail ? 8 : 0;
   const gap = rail ? 4 : compact ? 6 : 8;
   let width = top ? 112 : 248;
@@ -38250,7 +38281,14 @@ function navigationItemMetrics(props) {
   if (top && props.content === "Badge") width = 132;
   if (top && props.content === "Trailing") width = 148;
   if (top && props.content === "Icon Label") width = 128;
-  const labelWidth = rail ? 56 : top ? Math.max(56, width - 40) : 176;
+  // Derived, not written: the rail's label gets whatever the rail's padding
+  // leaves it. Written as 56 it was correct only while the padding was 8, and
+  // it silently overflowed the day a variable forced the padding to 12.
+  const labelWidth = rail
+    ? width - paddingX * 2
+    : top
+      ? Math.max(56, width - 40)
+      : 176;
 
   return {
     gap,
@@ -38329,24 +38367,35 @@ function bindNavigationItemGeometryVariables(
     variableByName,
     stats,
   );
+  // Same shape as width and height above: the variant chooses its own value.
+  const paddingToken =
+    props.placement === "Rail"
+      ? "NavigationItem/padding/x/rail"
+      : props.density === "Compact"
+        ? "NavigationItem/padding/x/compact"
+        : "NavigationItem/padding/x/default";
   bindFloatVariable(
     component,
     "paddingLeft",
-    "NavigationItem/padding/x",
+    paddingToken,
     variableByName,
     stats,
   );
   bindFloatVariable(
     component,
     "paddingRight",
-    "NavigationItem/padding/x",
+    paddingToken,
     variableByName,
     stats,
   );
   bindFloatVariable(
     component,
     "itemSpacing",
-    "NavigationItem/gap",
+    props.placement === "Rail"
+      ? "NavigationItem/gap/rail"
+      : props.density === "Compact"
+        ? "NavigationItem/gap/compact"
+        : "NavigationItem/gap/default",
     variableByName,
     stats,
   );
