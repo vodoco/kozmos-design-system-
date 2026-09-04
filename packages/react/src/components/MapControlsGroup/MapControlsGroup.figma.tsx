@@ -1,5 +1,4 @@
 import figma from "@figma/code-connect";
-import { MapControlsGroup } from "../MapControlsGroup/MapControlsGroup";
 import { MapControlsGroup } from "./MapControlsGroup";
 
 const mapControlsGroupUrl =

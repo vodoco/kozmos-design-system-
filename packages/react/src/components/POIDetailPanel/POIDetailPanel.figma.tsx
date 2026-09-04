@@ -1,5 +1,4 @@
 import figma from "@figma/code-connect";
-import { POIDetailPanel } from "../POIDetailPanel/POIDetailPanel";
 import { POIDetailPanel } from "./POIDetailPanel";
 
 const poiDetailPanelUrl =

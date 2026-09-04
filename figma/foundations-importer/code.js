@@ -46891,8 +46891,7 @@ async function updateUserLocationMarkerVariant(
   halo.opacity = 0.5;
   halo.strokes = [];
   component.appendChild(halo);
-  halo.x = 0;
-  halo.y = 0;
+  placeAbsolute(halo, 0, 0);
 
   if (showHeading) {
     // Heading is a distinct wedge on top of the halo, so a marker with a known
@@ -46906,8 +46905,7 @@ async function updateUserLocationMarkerVariant(
     ];
     cone.strokes = [];
     component.appendChild(cone);
-    cone.x = 18;
-    cone.y = 2;
+    placeAbsolute(cone, 18, 2);
   }
 
   const dot = figma.createEllipse();
@@ -46921,8 +46919,30 @@ async function updateUserLocationMarkerVariant(
   ];
   dot.strokeWeight = 3;
   component.appendChild(dot);
-  dot.x = 22;
-  dot.y = 22;
+  placeAbsolute(dot, 22, 22);
+}
+
+/**
+ * Place a child at an exact point inside an auto-layout parent.
+ *
+ * Setting `.x`/`.y` on a child of an auto-layout frame does nothing: the
+ * parent lays it out and the coordinates are ignored. The child has to opt out
+ * of the flow first. UserLocationMarker set coordinates without opting out, so
+ * its halo, cone and dot — three concentric shapes — rendered as a vertical
+ * stack with two of them outside the 64px frame.
+ *
+ * Wrapped because older Figma runtimes do not expose layoutPositioning on
+ * every node type, which is how the other five absolute children here are
+ * written.
+ */
+function placeAbsolute(node, x, y) {
+  try {
+    node.layoutPositioning = "ABSOLUTE";
+  } catch (_error) {
+    // Left in the flow; the coordinates below are then decorative.
+  }
+  node.x = x;
+  node.y = y;
 }
 
 function configureUserLocationMarkerProperties(_componentSet, _stats) {
