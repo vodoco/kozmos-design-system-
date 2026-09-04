@@ -180,6 +180,7 @@ async function main() {
   const lowContrast = [];
   const truncated = [];
   const unbound = [];
+  const overflowing = [];
 
   for (const name of names) {
     if (!sets[name]) {
@@ -273,6 +274,41 @@ async function main() {
         `${name} / ${property.split("#")[0]} (${definition.type}) — declared, referenced by no layer`,
       );
     }
+  }
+
+  // A child wider than the box its parent leaves it. This catches the failure
+  // that a hard-coded width hides: a node sized to a literal that happened to
+  // equal the content width, in a frame whose padding later moved. Menu drew
+  // its rows at 184 inside a 168 content box after the popover inset went from
+  // 4 to 12, and every row and its separator hung 8px past the rounded corner.
+  //
+  // The tolerance is 1.5px, which is arithmetic rather than a design flaw, and
+  // only auto-layout frames are judged, because a child of an absolutely
+  // positioned frame is placed on purpose.
+  const OVERFLOW_TOLERANCE = 1.5;
+  for (const [name, set] of Object.entries(sets)) {
+    const seen = new Set();
+    (function walk(node) {
+      const box = node.absoluteBoundingBox;
+      if (box && node.paddingLeft !== undefined && node.children) {
+        const content =
+          box.width - (node.paddingLeft || 0) - (node.paddingRight || 0);
+        for (const child of node.children) {
+          if (child.visible === false) continue;
+          const childBox = child.absoluteBoundingBox;
+          if (!childBox) continue;
+          const over = childBox.width - content;
+          if (over <= OVERFLOW_TOLERANCE) continue;
+          const key = `${name}|${node.name}|${child.name}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          overflowing.push(
+            `${name} / ${node.name} > ${child.name} — ${Math.round(childBox.width)} wide in a ${Math.round(content)} content box (over by ${Math.round(over)})`,
+          );
+        }
+      }
+      if (node.children) node.children.forEach(walk);
+    })(set);
   }
 
   // WCAG 1.4.3 exempts inactive controls, and a dimmed layer is a deliberate
@@ -371,6 +407,15 @@ async function main() {
   total += report("text truncated by its own box", truncated);
   total += report(`text contrast below ${AA}:1`, lowContrast);
   total += report("properties bound to no layer (blocks publishing)", unbound);
+  // Reported, not enforced, for the same reason the nesting check was: the
+  // 62 findings this arrived with are pre-existing and two of them are design
+  // calls, not bugs. NavigationItem computes 8px of padding for its rail, 10
+  // for compact and 12 for default, then binds all three to one variable worth
+  // 12, so the rail's content box is 48 where the painter assumed 56. Deciding
+  // whether the rail gets its own padding variable is a design question. Add
+  // this to `total` on the day the count reaches zero — a gate that is red on
+  // purpose is a gate somebody switches off.
+  report("children wider than the box holding them", overflowing);
 
   console.log(
     total === 0
