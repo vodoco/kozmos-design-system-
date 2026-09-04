@@ -245,6 +245,11 @@ Recorded so nobody rediscovers them:
 - **The tracked native colour files are a frozen May baseline** that has drifted
   from the generator's output, and 29 native border references still hard-code
   the old grey rather than reading the role.
+- **Two overflow findings remain** and are accepted: Dialog and Drawer give
+  their primary action a long label in a fixed-width button, so the text takes
+  2px of the button's 32px padding. `figma:verify` reports the overflow check
+  without failing on it; add it to the failing total on the day someone decides
+  those two are worth changing.
 - **Off-scale icon sizes**: 18px in NavigationItem, Sidebar and SearchBar where
   the web uses 20; 14px in IconButton, Tag and Breadcrumb. The scale is
   12/16/20/24.

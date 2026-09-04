@@ -427,6 +427,9 @@ const NAVBAR_SLOT_NAMES = [
 // Only two of them became slots. The leading region keeps its `Leading Icon`
 // instance-swap instead, because a property cannot drive a node inside its own
 // component's slot and Sidebar's rows depend on that property for their icons.
+/** A rail item is tighter than a side item, on both axes. */
+const NAVIGATION_ITEM_RAIL_PADDING_X = 8;
+
 const NAVIGATION_ITEM_SLOT_NAMES = ["Badge Slot", "Trailing Slot"];
 const NAVBAR_DEFAULT_WIDTH = 880;
 const NAVBAR_DEFAULT_HEIGHT = 64;
@@ -514,6 +517,9 @@ function spacingPx(step) {
 const FILE_UPLOAD_LIST_GAP = spacingPx(150);
 const FILE_UPLOAD_ROW_GAP = spacingPx(100);
 const FILE_UPLOAD_LIST_OFFSET = FILE_UPLOAD_LIST_GAP - spacingPx(75);
+
+/** The web's `min-h-11`: the row may be taller, never shorter. */
+const FILE_UPLOAD_ROW_MIN_HEIGHT = 44;
 
 /**
  * FloorSelector's tray, derived from the item it wraps.
@@ -4882,15 +4888,43 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   { name: "NavigationItem/height/rail", value: 72, scopes: ["WIDTH_HEIGHT"] },
   {
-    name: "NavigationItem/padding/x",
+    name: "NavigationItem/padding/x/default",
     value: 12,
     alias: "Layout/spacing/150",
     scopes: ["GAP"],
   },
   {
-    name: "NavigationItem/gap",
+    name: "NavigationItem/gap/default",
     value: 8,
     alias: "Layout/spacing/100",
+    scopes: ["GAP"],
+  },
+  // A rail item is 72 wide and stacks its icon over its label, so it is tighter
+  // on both axes than a side item. One variable used to carry all three
+  // densities: the painter computed 8 for rail and 10 for compact, the
+  // variable said 12, and the variable won. The rail's label was then sized
+  // for a 56px content box that was really 48, and 40 variants overflowed.
+  {
+    name: "NavigationItem/padding/x/compact",
+    value: 10,
+    scopes: ["GAP"],
+  },
+  {
+    name: "NavigationItem/padding/x/rail",
+    value: NAVIGATION_ITEM_RAIL_PADDING_X,
+    alias: spacingAliasFor(NAVIGATION_ITEM_RAIL_PADDING_X),
+    scopes: ["GAP"],
+  },
+  {
+    name: "NavigationItem/gap/compact",
+    value: 6,
+    alias: spacingAliasFor(6),
+    scopes: ["GAP"],
+  },
+  {
+    name: "NavigationItem/gap/rail",
+    value: 4,
+    alias: spacingAliasFor(4),
     scopes: ["GAP"],
   },
   {
@@ -7130,8 +7164,11 @@ const COMPONENT_FLOAT_TOKENS = [
     scopes: ["STROKE_FLOAT"],
   },
   {
-    name: "FileUpload/file-row/height",
-    value: 44,
+    name: "FileUpload/file-row/min-height",
+    // A floor, not a fixed height: the row grows to fit two lines of text.
+    // Named `height` and aliased to a button until 2026-09-04, which is how it
+    // came to cap a row that needed 52.
+    value: FILE_UPLOAD_ROW_MIN_HEIGHT,
     alias: "Button/height/default",
     scopes: ["WIDTH_HEIGHT"],
   },
@@ -27964,8 +28001,8 @@ function bindFileUploadGeometryVariables(
   for (const row of fileRows || []) {
     bindFloatVariable(
       row,
-      "height",
-      "FileUpload/file-row/height",
+      "minHeight",
+      "FileUpload/file-row/min-height",
       variableByName,
       stats,
     );
@@ -38235,7 +38272,7 @@ function navigationItemMetrics(props) {
   const top = props.placement === "Top";
   const compact = props.density === "Compact";
   const height = rail ? 72 : 44;
-  const paddingX = rail ? 8 : compact ? 10 : 12;
+  const paddingX = rail ? NAVIGATION_ITEM_RAIL_PADDING_X : compact ? 10 : 12;
   const paddingY = rail ? 8 : 0;
   const gap = rail ? 4 : compact ? 6 : 8;
   let width = top ? 112 : 248;
@@ -38244,7 +38281,14 @@ function navigationItemMetrics(props) {
   if (top && props.content === "Badge") width = 132;
   if (top && props.content === "Trailing") width = 148;
   if (top && props.content === "Icon Label") width = 128;
-  const labelWidth = rail ? 56 : top ? Math.max(56, width - 40) : 176;
+  // Derived, not written: the rail's label gets whatever the rail's padding
+  // leaves it. Written as 56 it was correct only while the padding was 8, and
+  // it silently overflowed the day a variable forced the padding to 12.
+  const labelWidth = rail
+    ? width - paddingX * 2
+    : top
+      ? Math.max(56, width - 40)
+      : 176;
 
   return {
     gap,
@@ -38323,24 +38367,35 @@ function bindNavigationItemGeometryVariables(
     variableByName,
     stats,
   );
+  // Same shape as width and height above: the variant chooses its own value.
+  const paddingToken =
+    props.placement === "Rail"
+      ? "NavigationItem/padding/x/rail"
+      : props.density === "Compact"
+        ? "NavigationItem/padding/x/compact"
+        : "NavigationItem/padding/x/default";
   bindFloatVariable(
     component,
     "paddingLeft",
-    "NavigationItem/padding/x",
+    paddingToken,
     variableByName,
     stats,
   );
   bindFloatVariable(
     component,
     "paddingRight",
-    "NavigationItem/padding/x",
+    paddingToken,
     variableByName,
     stats,
   );
   bindFloatVariable(
     component,
     "itemSpacing",
-    "NavigationItem/gap",
+    props.placement === "Rail"
+      ? "NavigationItem/gap/rail"
+      : props.density === "Compact"
+        ? "NavigationItem/gap/compact"
+        : "NavigationItem/gap/default",
     variableByName,
     stats,
   );
@@ -56204,7 +56259,6 @@ async function syncCardVariantChildren({
       ),
     ];
     title.resizeWithoutConstraints(312, 24);
-    setLayoutSizingHorizontal(title, "FILL");
     setTextAutoResize(title, "HEIGHT");
 
     let description = directChildNamed(header, "Description Text");
@@ -56232,11 +56286,12 @@ async function syncCardVariantChildren({
       ),
     ];
     description.resizeWithoutConstraints(312, 40);
-    setLayoutSizingHorizontal(description, "FILL");
     setTextAutoResize(description, "HEIGHT");
 
     header.appendChild(title);
+    setLayoutSizingHorizontal(title, "FILL");
     header.appendChild(description);
+    setLayoutSizingHorizontal(description, "FILL");
     appendWithSizing(component, header, "FILL", "HUG");
   } else if (header) {
     header.remove();
@@ -56267,7 +56322,6 @@ async function syncCardVariantChildren({
   body.fills = [];
   body.strokes = [];
   body.clipsContent = false;
-  setLayoutSizingHorizontal(body, "FILL");
 
   let bodyText = directChildNamed(body, "Body Text");
   if (bodyText && bodyText.type !== "TEXT") {
@@ -56284,10 +56338,11 @@ async function syncCardVariantChildren({
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   bodyText.resizeWithoutConstraints(312, 66);
-  setLayoutSizingHorizontal(bodyText, "FILL");
   setTextAutoResize(bodyText, "HEIGHT");
   body.appendChild(bodyText);
+  setLayoutSizingHorizontal(bodyText, "FILL");
   component.appendChild(body);
+  setLayoutSizingHorizontal(body, "FILL");
 
   let footer = directChildNamed(component, "Card Footer");
   if (footer && footer.type !== "FRAME") {
@@ -56315,7 +56370,6 @@ async function syncCardVariantChildren({
     footer.fills = [];
     footer.strokes = [];
     footer.clipsContent = false;
-    setLayoutSizingHorizontal(footer, "FILL");
 
     await syncCardFooterAction({
       footer,
@@ -56332,6 +56386,7 @@ async function syncCardVariantChildren({
       stats,
     });
     component.appendChild(footer);
+    setLayoutSizingHorizontal(footer, "FILL");
   } else if (footer) {
     footer.remove();
     footer = null;
@@ -56451,7 +56506,6 @@ async function syncListVariantChildren({
     item.strokeLeftWeight = 0;
     item.clipsContent = false;
     item.setSharedPluginData(RUN_NAMESPACE, "kind", "list-item");
-    setLayoutSizingHorizontal(item, "FILL");
     setLayoutSizingVertical(item, "FIXED");
 
     const text = figma.createText();
@@ -56469,11 +56523,12 @@ async function syncListVariantChildren({
       ),
     ];
     text.resizeWithoutConstraints(metrics.width - 32, metrics.textHeight);
-    setLayoutSizingHorizontal(text, "FILL");
     setLayoutSizingVertical(text, "HUG");
     item.appendChild(text);
+    setLayoutSizingHorizontal(text, "FILL");
 
     component.appendChild(item);
+    setLayoutSizingHorizontal(item, "FILL");
     items.push(item);
   }
 
@@ -56584,7 +56639,6 @@ async function syncTableRow({
     "kind",
     header ? "table-header" : "table-row",
   );
-  setLayoutSizingHorizontal(row, "FILL");
   setLayoutSizingVertical(row, "FIXED");
 
   const rowCells = [];
@@ -56619,7 +56673,6 @@ async function syncTableRow({
       "kind",
       header ? "table-header-cell" : "table-cell",
     );
-    setLayoutSizingHorizontal(cell, "FILL");
     setLayoutSizingVertical(cell, "FIXED");
     try {
       cell.layoutGrow = 1;
@@ -56651,14 +56704,16 @@ async function syncTableRow({
       metrics.width / metrics.columnCount - 32,
       metrics.textHeight,
     );
-    setLayoutSizingHorizontal(text, "FILL");
     setLayoutSizingVertical(text, "HUG");
     cell.appendChild(text);
+    setLayoutSizingHorizontal(text, "FILL");
     row.appendChild(cell);
+    setLayoutSizingHorizontal(cell, "FILL");
     rowCells.push(cell);
   }
 
   component.appendChild(row);
+  setLayoutSizingHorizontal(row, "FILL");
   return { row, cells: rowCells };
 }
 
@@ -56760,7 +56815,6 @@ async function syncTabsVariantChildren({
       "active",
       isActive ? "true" : "false",
     );
-    setLayoutSizingHorizontal(trigger, "FILL");
     try {
       trigger.layoutGrow = 1;
     } catch (_error) {
@@ -56803,6 +56857,7 @@ async function syncTabsVariantChildren({
     });
 
     component.appendChild(trigger);
+    setLayoutSizingHorizontal(trigger, "FILL");
     triggers.push(trigger);
   }
 
@@ -57111,7 +57166,6 @@ async function syncDialogVariantChildren({
   header.fills = [];
   header.strokes = [];
   header.clipsContent = false;
-  setLayoutSizingHorizontal(header, "FILL");
 
   let headerContent = directChildNamed(header, "Dialog Header Content");
   if (headerContent && headerContent.type !== "FRAME") {
@@ -57136,7 +57190,6 @@ async function syncDialogVariantChildren({
   headerContent.fills = [];
   headerContent.strokes = [];
   headerContent.clipsContent = false;
-  setLayoutSizingHorizontal(headerContent, "FILL");
   try {
     headerContent.layoutGrow = 1;
   } catch (_error) {
@@ -57160,7 +57213,6 @@ async function syncDialogVariantChildren({
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   title.resizeWithoutConstraints(420, 24);
-  setLayoutSizingHorizontal(title, "FILL");
   setTextAutoResize(title, "HEIGHT");
 
   let description =
@@ -57190,16 +57242,18 @@ async function syncDialogVariantChildren({
     ),
   ];
   description.resizeWithoutConstraints(420, 40);
-  setLayoutSizingHorizontal(description, "FILL");
   setTextAutoResize(description, "HEIGHT");
 
   headerContent.appendChild(title);
   setLayoutSizingHorizontal(title, "FILL");
+  setLayoutSizingHorizontal(title, "FILL");
   setLayoutSizingVertical(title, "HUG");
   headerContent.appendChild(description);
   setLayoutSizingHorizontal(description, "FILL");
+  setLayoutSizingHorizontal(description, "FILL");
   setLayoutSizingVertical(description, "HUG");
   header.appendChild(headerContent);
+  setLayoutSizingHorizontal(headerContent, "FILL");
   setLayoutSizingHorizontal(headerContent, "FILL");
   setLayoutSizingVertical(headerContent, "HUG");
 
@@ -57215,6 +57269,7 @@ async function syncDialogVariantChildren({
   });
 
   component.appendChild(header);
+  setLayoutSizingHorizontal(header, "FILL");
   setVerticalStackChildSizing(header);
 
   let body = directChildNamed(component, "Dialog Body");
@@ -57240,8 +57295,8 @@ async function syncDialogVariantChildren({
   body.fills = [];
   body.strokes = [];
   body.clipsContent = false;
-  setLayoutSizingHorizontal(body, "FILL");
   component.appendChild(body);
+  setLayoutSizingHorizontal(body, "FILL");
   setVerticalStackChildSizing(body);
 
   let bodyText = directChildNamed(body, "Body Text");
@@ -57259,9 +57314,9 @@ async function syncDialogVariantChildren({
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   bodyText.resizeWithoutConstraints(464, 44);
-  setLayoutSizingHorizontal(bodyText, "FILL");
   setTextAutoResize(bodyText, "HEIGHT");
   body.appendChild(bodyText);
+  setLayoutSizingHorizontal(bodyText, "FILL");
   setLayoutSizingHorizontal(bodyText, "FILL");
   setLayoutSizingVertical(bodyText, "HUG");
 
@@ -57403,7 +57458,6 @@ async function syncBottomSheetVariantChildren({
   header.fills = [];
   header.strokes = [];
   header.clipsContent = false;
-  setLayoutSizingHorizontal(header, "FILL");
 
   const headerContent = figma.createFrame();
   headerContent.name = "BottomSheet Header Content";
@@ -57436,7 +57490,6 @@ async function syncBottomSheetVariantChildren({
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   title.resizeWithoutConstraints(contentWidth - 56, 24);
-  setLayoutSizingHorizontal(title, "FILL");
   setTextAutoResize(title, "HEIGHT");
 
   const description = figma.createText();
@@ -57457,13 +57510,14 @@ async function syncBottomSheetVariantChildren({
     ),
   ];
   description.resizeWithoutConstraints(contentWidth - 56, 40);
-  setLayoutSizingHorizontal(description, "FILL");
   setTextAutoResize(description, "HEIGHT");
 
   headerContent.appendChild(title);
   setLayoutSizingHorizontal(title, "FILL");
+  setLayoutSizingHorizontal(title, "FILL");
   setLayoutSizingVertical(title, "HUG");
   headerContent.appendChild(description);
+  setLayoutSizingHorizontal(description, "FILL");
   setLayoutSizingHorizontal(description, "FILL");
   setLayoutSizingVertical(description, "HUG");
   header.appendChild(headerContent);
@@ -57489,6 +57543,7 @@ async function syncBottomSheetVariantChildren({
   }
 
   component.appendChild(header);
+  setLayoutSizingHorizontal(header, "FILL");
   setVerticalStackChildSizing(header);
 
   const body = figma.createFrame();
@@ -57507,8 +57562,8 @@ async function syncBottomSheetVariantChildren({
   body.fills = [];
   body.strokes = [];
   body.clipsContent = false;
-  setLayoutSizingHorizontal(body, "FILL");
   component.appendChild(body);
+  setLayoutSizingHorizontal(body, "FILL");
   setVerticalStackChildSizing(body);
 
   if (content === "Form") {
@@ -58019,7 +58074,6 @@ async function syncDrawerVariantChildren({
   header.fills = [];
   header.strokes = [];
   header.clipsContent = false;
-  setLayoutSizingHorizontal(header, "FILL");
 
   const headerContent = figma.createFrame();
   headerContent.name = "Drawer Header Content";
@@ -58037,7 +58091,6 @@ async function syncDrawerVariantChildren({
   headerContent.fills = [];
   headerContent.strokes = [];
   headerContent.clipsContent = false;
-  setLayoutSizingHorizontal(headerContent, "FILL");
   try {
     headerContent.layoutGrow = 1;
   } catch (_error) {
@@ -58052,7 +58105,6 @@ async function syncDrawerVariantChildren({
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   title.resizeWithoutConstraints(contentWidth - 56, 24);
-  setLayoutSizingHorizontal(title, "FILL");
   setTextAutoResize(title, "HEIGHT");
 
   const description = figma.createText();
@@ -58073,16 +58125,18 @@ async function syncDrawerVariantChildren({
     ),
   ];
   description.resizeWithoutConstraints(contentWidth - 56, 40);
-  setLayoutSizingHorizontal(description, "FILL");
   setTextAutoResize(description, "HEIGHT");
 
   headerContent.appendChild(title);
   setLayoutSizingHorizontal(title, "FILL");
+  setLayoutSizingHorizontal(title, "FILL");
   setLayoutSizingVertical(title, "HUG");
   headerContent.appendChild(description);
   setLayoutSizingHorizontal(description, "FILL");
+  setLayoutSizingHorizontal(description, "FILL");
   setLayoutSizingVertical(description, "HUG");
   header.appendChild(headerContent);
+  setLayoutSizingHorizontal(headerContent, "FILL");
   setLayoutSizingHorizontal(headerContent, "FILL");
   setLayoutSizingVertical(headerContent, "HUG");
 
@@ -58113,6 +58167,7 @@ async function syncDrawerVariantChildren({
   setLayoutSizingVertical(close, "FIXED");
 
   component.appendChild(header);
+  setLayoutSizingHorizontal(header, "FILL");
   setVerticalStackChildSizing(header);
 
   const body = figma.createFrame();
@@ -58131,7 +58186,6 @@ async function syncDrawerVariantChildren({
   body.fills = [];
   body.strokes = [];
   body.clipsContent = false;
-  setLayoutSizingHorizontal(body, "FILL");
 
   const bodyText = figma.createText();
   bodyText.name = "Body Text";
@@ -58141,9 +58195,9 @@ async function syncDrawerVariantChildren({
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   bodyText.resizeWithoutConstraints(contentWidth, 64);
-  setLayoutSizingHorizontal(bodyText, "FILL");
   setTextAutoResize(bodyText, "HEIGHT");
   body.appendChild(bodyText);
+  setLayoutSizingHorizontal(bodyText, "FILL");
   setLayoutSizingHorizontal(bodyText, "FILL");
   setLayoutSizingVertical(bodyText, "HUG");
 
@@ -58157,6 +58211,7 @@ async function syncDrawerVariantChildren({
   setVerticalStackFillChildSizing(contentSlot);
 
   component.appendChild(body);
+  setLayoutSizingHorizontal(body, "FILL");
   setVerticalStackFillChildSizing(body);
 
   const footer = figma.createFrame();
@@ -59167,7 +59222,6 @@ async function syncPopoverVariantChildren({
   content.fills = [];
   content.strokes = [];
   content.clipsContent = false;
-  setLayoutSizingHorizontal(content, "FILL");
 
   let title = directChildNamed(content, "Title Text");
   if (title && title.type !== "TEXT") {
@@ -59184,7 +59238,6 @@ async function syncPopoverVariantChildren({
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   title.resizeWithoutConstraints(256, 20);
-  setLayoutSizingHorizontal(title, "FILL");
   setTextAutoResize(title, "HEIGHT");
 
   let description = directChildNamed(content, "Description Text");
@@ -59212,12 +59265,14 @@ async function syncPopoverVariantChildren({
     ),
   ];
   description.resizeWithoutConstraints(256, 40);
-  setLayoutSizingHorizontal(description, "FILL");
   setTextAutoResize(description, "HEIGHT");
 
   content.appendChild(title);
+  setLayoutSizingHorizontal(title, "FILL");
   content.appendChild(description);
+  setLayoutSizingHorizontal(description, "FILL");
   component.appendChild(content);
+  setLayoutSizingHorizontal(content, "FILL");
   bindPopoverGeometryVariables(component, content, variableByName, stats);
 }
 
@@ -59428,7 +59483,6 @@ async function syncMenuItemRow({
   row.strokes = [];
   row.clipsContent = false;
   row.setSharedPluginData(RUN_NAMESPACE, "kind", "menu-item");
-  setLayoutSizingHorizontal(row, "FILL");
 
   if (icon) {
     const iconNode = await createFixedIconInstance(
@@ -59503,6 +59557,7 @@ async function syncMenuItemRow({
   }
 
   component.appendChild(row);
+  setLayoutSizingHorizontal(row, "FILL");
   return row;
 }
 
@@ -59516,7 +59571,6 @@ function syncMenuSeparator({ component, variableByName, stats }) {
   ];
   separator.strokes = [];
   separator.setSharedPluginData(RUN_NAMESPACE, "kind", "menu-separator");
-  setLayoutSizingHorizontal(separator, "FILL");
   bindFloatVariable(
     separator,
     "height",
@@ -59525,6 +59579,7 @@ function syncMenuSeparator({ component, variableByName, stats }) {
     stats,
   );
   component.appendChild(separator);
+  setLayoutSizingHorizontal(separator, "FILL");
   return separator;
 }
 
@@ -59558,7 +59613,6 @@ async function syncToastVariantChildren({
   textGroup.fills = [];
   textGroup.strokes = [];
   textGroup.clipsContent = false;
-  setLayoutSizingHorizontal(textGroup, "FILL");
   try {
     textGroup.layoutGrow = 1;
   } catch (_error) {
@@ -59580,7 +59634,6 @@ async function syncToastVariantChildren({
     paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
   ];
   title.resizeWithoutConstraints(260, 20);
-  setLayoutSizingHorizontal(title, "FILL");
   setTextAutoResize(title, "HEIGHT");
 
   let description = directChildNamed(textGroup, "Description Text");
@@ -59608,12 +59661,14 @@ async function syncToastVariantChildren({
     ),
   ];
   description.resizeWithoutConstraints(260, 20);
-  setLayoutSizingHorizontal(description, "FILL");
   setTextAutoResize(description, "HEIGHT");
 
   textGroup.appendChild(title);
+  setLayoutSizingHorizontal(title, "FILL");
   textGroup.appendChild(description);
+  setLayoutSizingHorizontal(description, "FILL");
   component.appendChild(textGroup);
+  setLayoutSizingHorizontal(textGroup, "FILL");
 
   let action = directChildNamed(component, "Toast Action");
   if (action && action.type !== "FRAME") {
@@ -60653,7 +60708,6 @@ async function syncInputVariantChildren({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 0;
   field.paddingLeft = 12;
   field.paddingRight = 12;
@@ -60749,6 +60803,7 @@ async function syncInputVariantChildren({
 
   component.appendChild(label);
   component.appendChild(field);
+  setLayoutSizingHorizontal(field, "FILL");
   component.appendChild(helper);
   normalizeInputFamilyChildSizing(component);
 }
@@ -61008,7 +61063,6 @@ async function syncFormFieldVariantChildren({
   header.fills = [];
   header.strokes = [];
   header.clipsContent = false;
-  setLayoutSizingHorizontal(header, "FILL");
 
   const labelWrap = figma.createFrame();
   labelWrap.name = "Field Label Group";
@@ -61091,6 +61145,7 @@ async function syncFormFieldVariantChildren({
   }
 
   component.appendChild(header);
+  setLayoutSizingHorizontal(header, "FILL");
 
   let description = null;
   if (showDescription) {
@@ -61285,7 +61340,6 @@ async function syncNumberInputVariantChildren({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 0;
   field.paddingLeft = 0;
   field.paddingRight = 0;
@@ -61458,6 +61512,7 @@ async function syncNumberInputVariantChildren({
 
   component.appendChild(label);
   component.appendChild(field);
+  setLayoutSizingHorizontal(field, "FILL");
   component.appendChild(helper);
   normalizeInputFamilyChildSizing(component);
   normalizeNumberInputSizing(component, field, valueSlot, stepperNodes);
@@ -61838,7 +61893,6 @@ async function syncComboboxVariantChildren({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 8;
   field.paddingLeft = 12;
   field.paddingRight = 12;
@@ -61934,7 +61988,6 @@ async function syncComboboxVariantChildren({
     listbox.counterAxisSizingMode = "FIXED";
     listbox.primaryAxisAlignItems = "MIN";
     listbox.counterAxisAlignItems = "MIN";
-    setLayoutSizingHorizontal(listbox, "FILL");
     listbox.itemSpacing = 2;
     listbox.paddingLeft = POPOVER_ROW_INSET;
     listbox.paddingRight = POPOVER_ROW_INSET;
@@ -62012,7 +62065,11 @@ async function syncComboboxVariantChildren({
 
   component.appendChild(label);
   component.appendChild(field);
-  if (listbox) component.appendChild(listbox);
+  setLayoutSizingHorizontal(field, "FILL");
+  if (listbox) {
+    component.appendChild(listbox);
+    setLayoutSizingHorizontal(listbox, "FILL");
+  }
   component.appendChild(helper);
   normalizeInputFamilyChildSizing(component);
 }
@@ -62153,7 +62210,6 @@ async function syncMultiSelectVariantChildren({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 6;
   field.paddingLeft = 8;
   field.paddingRight = 8;
@@ -62290,7 +62346,6 @@ async function syncMultiSelectVariantChildren({
     listbox.counterAxisSizingMode = "FIXED";
     listbox.primaryAxisAlignItems = "MIN";
     listbox.counterAxisAlignItems = "MIN";
-    setLayoutSizingHorizontal(listbox, "FILL");
     listbox.itemSpacing = 2;
     listbox.paddingLeft = POPOVER_ROW_INSET;
     listbox.paddingRight = POPOVER_ROW_INSET;
@@ -62370,7 +62425,11 @@ async function syncMultiSelectVariantChildren({
 
   component.appendChild(label);
   component.appendChild(field);
-  if (listbox) component.appendChild(listbox);
+  setLayoutSizingHorizontal(field, "FILL");
+  if (listbox) {
+    component.appendChild(listbox);
+    setLayoutSizingHorizontal(listbox, "FILL");
+  }
   component.appendChild(helper);
   normalizeInputFamilyChildSizing(component);
 }
@@ -62866,7 +62925,6 @@ async function syncDatePickerVariantChildren({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 8;
   field.paddingLeft = 12;
   field.paddingRight = 12;
@@ -63010,6 +63068,7 @@ async function syncDatePickerVariantChildren({
 
   component.appendChild(label);
   component.appendChild(field);
+  setLayoutSizingHorizontal(field, "FILL");
   if (calendar) component.appendChild(calendar);
   component.appendChild(helper);
   normalizeInputFamilyChildSizing(component);
@@ -63106,7 +63165,6 @@ async function createDatePickerCalendar({
   header.counterAxisSizingMode = "FIXED";
   header.primaryAxisAlignItems = "SPACE_BETWEEN";
   header.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(header, "FILL");
   header.itemSpacing = 8;
   header.paddingLeft = 0;
   header.paddingRight = 0;
@@ -63177,6 +63235,7 @@ async function createDatePickerCalendar({
   nav.appendChild(next);
   header.appendChild(nav);
   calendar.appendChild(header);
+  setLayoutSizingHorizontal(header, "FILL");
 
   const weekdayRow = figma.createFrame();
   weekdayRow.name = "DatePicker Weekdays";
@@ -63185,7 +63244,6 @@ async function createDatePickerCalendar({
   weekdayRow.counterAxisSizingMode = "AUTO";
   weekdayRow.primaryAxisAlignItems = "MIN";
   weekdayRow.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(weekdayRow, "FILL");
   weekdayRow.itemSpacing = 4;
   weekdayRow.paddingLeft = 0;
   weekdayRow.paddingRight = 0;
@@ -63215,6 +63273,7 @@ async function createDatePickerCalendar({
     weekdayRow.appendChild(label);
   }
   calendar.appendChild(weekdayRow);
+  setLayoutSizingHorizontal(weekdayRow, "FILL");
 
   const grid = figma.createFrame();
   grid.name = "DatePicker Calendar Grid";
@@ -63223,7 +63282,6 @@ async function createDatePickerCalendar({
   grid.counterAxisSizingMode = "FIXED";
   grid.primaryAxisAlignItems = "MIN";
   grid.counterAxisAlignItems = "MIN";
-  setLayoutSizingHorizontal(grid, "FILL");
   grid.itemSpacing = 4;
   grid.paddingLeft = 0;
   grid.paddingRight = 0;
@@ -63257,7 +63315,6 @@ async function createDatePickerCalendar({
     row.counterAxisSizingMode = "FIXED";
     row.primaryAxisAlignItems = "MIN";
     row.counterAxisAlignItems = "CENTER";
-    setLayoutSizingHorizontal(row, "FILL");
     row.itemSpacing = 4;
     row.paddingLeft = 0;
     row.paddingRight = 0;
@@ -63285,8 +63342,10 @@ async function createDatePickerCalendar({
       row.appendChild(day);
     }
     grid.appendChild(row);
+    setLayoutSizingHorizontal(row, "FILL");
   }
   calendar.appendChild(grid);
+  setLayoutSizingHorizontal(grid, "FILL");
 
   return {
     calendar,
@@ -63475,7 +63534,6 @@ async function syncDateRangePickerVariantChildren({
   fieldsRow.counterAxisSizingMode = "AUTO";
   fieldsRow.primaryAxisAlignItems = "MIN";
   fieldsRow.counterAxisAlignItems = "MIN";
-  setLayoutSizingHorizontal(fieldsRow, "FILL");
   fieldsRow.itemSpacing = 12;
   fieldsRow.paddingLeft = 0;
   fieldsRow.paddingRight = 0;
@@ -63602,6 +63660,7 @@ async function syncDateRangePickerVariantChildren({
 
   component.appendChild(label);
   component.appendChild(fieldsRow);
+  setLayoutSizingHorizontal(fieldsRow, "FILL");
   if (calendar) component.appendChild(calendar);
   component.appendChild(helper);
   normalizeInputFamilyChildSizing(component);
@@ -63665,7 +63724,6 @@ async function createDateRangePickerField({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 8;
   field.paddingLeft = 12;
   field.paddingRight = 12;
@@ -63727,6 +63785,7 @@ async function createDateRangePickerField({
   value.textAlignVertical = "CENTER";
   field.appendChild(value);
   group.appendChild(field);
+  setLayoutSizingHorizontal(field, "FILL");
 
   return { field, group, icon };
 }
@@ -64129,7 +64188,6 @@ async function syncTimePickerVariantChildren({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 8;
   field.paddingLeft = 12;
   field.paddingRight = 12;
@@ -64224,7 +64282,6 @@ async function syncTimePickerVariantChildren({
     listbox.counterAxisSizingMode = "FIXED";
     listbox.primaryAxisAlignItems = "MIN";
     listbox.counterAxisAlignItems = "MIN";
-    setLayoutSizingHorizontal(listbox, "FILL");
     listbox.itemSpacing = 2;
     listbox.paddingLeft = POPOVER_ROW_INSET;
     listbox.paddingRight = POPOVER_ROW_INSET;
@@ -64304,7 +64361,11 @@ async function syncTimePickerVariantChildren({
 
   component.appendChild(label);
   component.appendChild(field);
-  if (listbox) component.appendChild(listbox);
+  setLayoutSizingHorizontal(field, "FILL");
+  if (listbox) {
+    component.appendChild(listbox);
+    setLayoutSizingHorizontal(listbox, "FILL");
+  }
   component.appendChild(helper);
   normalizeInputFamilyChildSizing(component);
 }
@@ -64467,7 +64528,6 @@ async function syncFileUploadVariantChildren({
   dropzone.counterAxisSizingMode = "FIXED";
   dropzone.primaryAxisAlignItems = "CENTER";
   dropzone.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(dropzone, "FILL");
   dropzone.itemSpacing = 8;
   dropzone.paddingLeft = 16;
   dropzone.paddingRight = 16;
@@ -64593,8 +64653,8 @@ async function syncFileUploadVariantChildren({
   ];
   setTextAutoResize(description, "HEIGHT");
   description.resizeWithoutConstraints(320, 16);
-  setLayoutSizingHorizontal(description, "FILL");
   dropzone.appendChild(description);
+  setLayoutSizingHorizontal(description, "FILL");
 
   syncFocusRing(dropzone, {
     enabled: !disabled,
@@ -64618,7 +64678,6 @@ async function syncFileUploadVariantChildren({
     fileList.counterAxisSizingMode = "FIXED";
     fileList.primaryAxisAlignItems = "MIN";
     fileList.counterAxisAlignItems = "MIN";
-    setLayoutSizingHorizontal(fileList, "FILL");
     fileList.itemSpacing = FILE_UPLOAD_ROW_GAP;
     fileList.paddingLeft = 0;
     fileList.paddingRight = 0;
@@ -64694,7 +64753,11 @@ async function syncFileUploadVariantChildren({
 
   component.appendChild(label);
   component.appendChild(dropzone);
-  if (fileList) component.appendChild(fileList);
+  setLayoutSizingHorizontal(dropzone, "FILL");
+  if (fileList) {
+    component.appendChild(fileList);
+    setLayoutSizingHorizontal(fileList, "FILL");
+  }
   component.appendChild(helper);
   normalizeInputFamilyChildSizing(component);
 }
@@ -64712,7 +64775,11 @@ async function createFileUploadFileRow({
   row.name = `FileUpload File Row ${index + 1}`;
   row.layoutMode = "HORIZONTAL";
   row.primaryAxisSizingMode = "FIXED";
-  row.counterAxisSizingMode = "FIXED";
+  // The row holds two lines of text, 20 and 16, so it needs 52 with its
+  // padding. It was pinned to 44 by a token aliasing a button's height, which
+  // left 28 for 36 of text and pushed the file size one pixel past the bottom
+  // edge. The web writes this as `min-h-11`: a floor, not a ceiling.
+  row.counterAxisSizingMode = "AUTO";
   row.primaryAxisAlignItems = "MIN";
   row.counterAxisAlignItems = "CENTER";
   setLayoutSizingHorizontal(row, "FILL");
@@ -64722,6 +64789,7 @@ async function createFileUploadFileRow({
   row.paddingTop = 8;
   row.paddingBottom = 8;
   row.resizeWithoutConstraints(384, 44);
+  row.minHeight = FILE_UPLOAD_ROW_MIN_HEIGHT;
   row.cornerRadius = KOZMOS_RADIUS.container;
   row.clipsContent = false;
   row.setSharedPluginData(RUN_NAMESPACE, "kind", "file-upload-file-row");
@@ -64807,6 +64875,9 @@ async function createFileUploadFileRow({
   metaText.textAlignVertical = "CENTER";
   copy.appendChild(metaText);
   row.appendChild(copy);
+  // Hug, not fill: stretching this to the row's height is what spread the two
+  // lines apart and drove the second one into the padding.
+  setLayoutSizingVertical(copy, "HUG");
 
   const removeIcon = await createFixedIconInstance(
     "x-close",
@@ -64888,7 +64959,6 @@ async function syncColorPickerVariantChildren({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 8;
   field.paddingLeft = 12;
   field.paddingRight = 12;
@@ -65053,6 +65123,7 @@ async function syncColorPickerVariantChildren({
 
   component.appendChild(label);
   component.appendChild(field);
+  setLayoutSizingHorizontal(field, "FILL");
   if (popover) component.appendChild(popover);
   component.appendChild(helper);
   normalizeInputFamilyChildSizing(component);
@@ -65307,7 +65378,6 @@ async function createColorPickerValueRow({
   channelRow.counterAxisSizingMode = "FIXED";
   channelRow.primaryAxisAlignItems = "MIN";
   channelRow.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(channelRow, "FILL");
   setLayoutSizingVertical(channelRow, "HUG");
   channelRow.itemSpacing = 6;
   channelRow.paddingLeft = 0;
@@ -65418,6 +65488,7 @@ async function createColorPickerValueRow({
   alphaUnit.textAlignVertical = "CENTER";
   channelRow.appendChild(alphaUnit);
   stack.appendChild(channelRow);
+  setLayoutSizingHorizontal(channelRow, "FILL");
   resizeVerticalAutoLayoutFrameToVisibleChildren(stack, 296);
 
   return stack;
@@ -65669,7 +65740,6 @@ function createColorPickerPresetGrid({ disabled, variableByName, stats }) {
     row.counterAxisSizingMode = "FIXED";
     row.primaryAxisAlignItems = "MIN";
     row.counterAxisAlignItems = "CENTER";
-    setLayoutSizingHorizontal(row, "FILL");
     row.itemSpacing = gap;
     row.paddingLeft = 0;
     row.paddingRight = 0;
@@ -65696,6 +65766,7 @@ function createColorPickerPresetGrid({ disabled, variableByName, stats }) {
       row.appendChild(preset);
     }
     grid.appendChild(row);
+    setLayoutSizingHorizontal(row, "FILL");
   }
 
   return { grid, presets };
@@ -65860,7 +65931,6 @@ async function createColorPickerSlider({
   const rail = figma.createFrame();
   rail.name = `${labelText} Rail`;
   rail.layoutMode = "NONE";
-  setLayoutSizingHorizontal(rail, "FILL");
   rail.resizeWithoutConstraints(296, 24);
   rail.fills = [];
   rail.strokes = [];
@@ -65919,6 +65989,7 @@ async function createColorPickerSlider({
   thumb.setSharedPluginData(RUN_NAMESPACE, "kind", "colorpicker-slider-thumb");
   rail.appendChild(thumb);
   row.appendChild(rail);
+  setLayoutSizingHorizontal(rail, "FILL");
 
   return { row, rail, track, thumb };
 }
@@ -66038,7 +66109,6 @@ async function syncTextareaVariantChildren({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "MIN";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 0;
   field.paddingLeft = 12;
   field.paddingRight = 12;
@@ -66115,6 +66185,7 @@ async function syncTextareaVariantChildren({
 
   component.appendChild(label);
   component.appendChild(field);
+  setLayoutSizingHorizontal(field, "FILL");
   normalizeInputFamilyChildSizing(component);
 }
 
@@ -66154,7 +66225,6 @@ async function syncSearchVariantChildren({
   field.counterAxisSizingMode = "FIXED";
   field.primaryAxisAlignItems = "MIN";
   field.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(field, "FILL");
   field.itemSpacing = 8;
   field.paddingLeft = 12;
   field.paddingRight = 12;
@@ -66241,6 +66311,7 @@ async function syncSearchVariantChildren({
 
   component.appendChild(label);
   component.appendChild(field);
+  setLayoutSizingHorizontal(field, "FILL");
   normalizeInputFamilyChildSizing(component);
 }
 
@@ -66269,7 +66340,6 @@ async function syncSelectVariantChildren({
   trigger.counterAxisSizingMode = "FIXED";
   trigger.primaryAxisAlignItems = "SPACE_BETWEEN";
   trigger.counterAxisAlignItems = "CENTER";
-  setLayoutSizingHorizontal(trigger, "FILL");
   trigger.itemSpacing = 8;
   trigger.paddingLeft = 12;
   trigger.paddingRight = 12;
@@ -66355,6 +66425,7 @@ async function syncSelectVariantChildren({
   bindSelectGeometryVariables(component, trigger, icon, variableByName, stats);
 
   component.appendChild(trigger);
+  setLayoutSizingHorizontal(trigger, "FILL");
   normalizeInputFamilyChildSizing(component);
 }
 
@@ -66410,7 +66481,6 @@ async function syncSliderVariantChildren({
   }
 
   track.layoutMode = "NONE";
-  setLayoutSizingHorizontal(track, "FILL");
   track.resizeWithoutConstraints(320, 8);
   track.x = 0;
   track.y = 18;
@@ -66473,6 +66543,7 @@ async function syncSliderVariantChildren({
   range.setSharedPluginData(RUN_NAMESPACE, "kind", "slider-range");
   track.appendChild(range);
   root.appendChild(track);
+  setLayoutSizingHorizontal(track, "FILL");
 
   const thumbSpecs = isRange
     ? [
@@ -66886,7 +66957,6 @@ async function syncAlertVariantChildren({
   content.fills = [];
   content.strokes = [];
   content.clipsContent = false;
-  setLayoutSizingHorizontal(content, "FILL");
 
   let title = directChildNamed(content, "Title");
   if (title && title.type !== "TEXT") {
@@ -66909,7 +66979,6 @@ async function syncAlertVariantChildren({
       stats,
     ),
   ];
-  setLayoutSizingHorizontal(title, "FILL");
   setTextAutoResize(title, "HEIGHT");
   title.resizeWithoutConstraints(296, 20);
 
@@ -66939,13 +67008,15 @@ async function syncAlertVariantChildren({
       stats,
     ),
   ];
-  setLayoutSizingHorizontal(description, "FILL");
   setTextAutoResize(description, "HEIGHT");
   description.resizeWithoutConstraints(296, 36);
 
   content.appendChild(title);
+  setLayoutSizingHorizontal(title, "FILL");
   content.appendChild(description);
+  setLayoutSizingHorizontal(description, "FILL");
   component.appendChild(content);
+  setLayoutSizingHorizontal(content, "FILL");
   bindAlertGeometryVariables(component, icon, variableByName, stats);
 }
 
@@ -67018,7 +67089,6 @@ async function syncEmptyStateVariantChildren({
   content.fills = [];
   content.strokes = [];
   content.clipsContent = false;
-  setLayoutSizingHorizontal(content, "FILL");
 
   const title = figma.createText();
   title.name = "Title Text";
@@ -67031,7 +67101,6 @@ async function syncEmptyStateVariantChildren({
   ];
   setTextAutoResize(title, "HEIGHT");
   title.resizeWithoutConstraints(296, 20);
-  setLayoutSizingHorizontal(title, "FILL");
 
   const description = figma.createText();
   description.name = "Description Text";
@@ -67054,11 +67123,13 @@ async function syncEmptyStateVariantChildren({
   ];
   setTextAutoResize(description, "HEIGHT");
   description.resizeWithoutConstraints(280, 40);
-  setLayoutSizingHorizontal(description, "FILL");
 
   content.appendChild(title);
+  setLayoutSizingHorizontal(title, "FILL");
   content.appendChild(description);
+  setLayoutSizingHorizontal(description, "FILL");
   component.appendChild(content);
+  setLayoutSizingHorizontal(content, "FILL");
 
   if (hasAction) {
     const action = await createEmptyStateActionButton(stats);
