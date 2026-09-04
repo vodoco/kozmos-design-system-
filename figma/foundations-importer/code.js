@@ -515,6 +515,9 @@ const FILE_UPLOAD_LIST_GAP = spacingPx(150);
 const FILE_UPLOAD_ROW_GAP = spacingPx(100);
 const FILE_UPLOAD_LIST_OFFSET = FILE_UPLOAD_LIST_GAP - spacingPx(75);
 
+/** The web's `min-h-11`: the row may be taller, never shorter. */
+const FILE_UPLOAD_ROW_MIN_HEIGHT = 44;
+
 /**
  * FloorSelector's tray, derived from the item it wraps.
  *
@@ -7130,8 +7133,11 @@ const COMPONENT_FLOAT_TOKENS = [
     scopes: ["STROKE_FLOAT"],
   },
   {
-    name: "FileUpload/file-row/height",
-    value: 44,
+    name: "FileUpload/file-row/min-height",
+    // A floor, not a fixed height: the row grows to fit two lines of text.
+    // Named `height` and aliased to a button until 2026-09-04, which is how it
+    // came to cap a row that needed 52.
+    value: FILE_UPLOAD_ROW_MIN_HEIGHT,
     alias: "Button/height/default",
     scopes: ["WIDTH_HEIGHT"],
   },
@@ -27964,8 +27970,8 @@ function bindFileUploadGeometryVariables(
   for (const row of fileRows || []) {
     bindFloatVariable(
       row,
-      "height",
-      "FileUpload/file-row/height",
+      "minHeight",
+      "FileUpload/file-row/min-height",
       variableByName,
       stats,
     );
@@ -64720,7 +64726,11 @@ async function createFileUploadFileRow({
   row.name = `FileUpload File Row ${index + 1}`;
   row.layoutMode = "HORIZONTAL";
   row.primaryAxisSizingMode = "FIXED";
-  row.counterAxisSizingMode = "FIXED";
+  // The row holds two lines of text, 20 and 16, so it needs 52 with its
+  // padding. It was pinned to 44 by a token aliasing a button's height, which
+  // left 28 for 36 of text and pushed the file size one pixel past the bottom
+  // edge. The web writes this as `min-h-11`: a floor, not a ceiling.
+  row.counterAxisSizingMode = "AUTO";
   row.primaryAxisAlignItems = "MIN";
   row.counterAxisAlignItems = "CENTER";
   setLayoutSizingHorizontal(row, "FILL");
@@ -64730,6 +64740,7 @@ async function createFileUploadFileRow({
   row.paddingTop = 8;
   row.paddingBottom = 8;
   row.resizeWithoutConstraints(384, 44);
+  row.minHeight = FILE_UPLOAD_ROW_MIN_HEIGHT;
   row.cornerRadius = KOZMOS_RADIUS.container;
   row.clipsContent = false;
   row.setSharedPluginData(RUN_NAMESPACE, "kind", "file-upload-file-row");
@@ -64815,6 +64826,9 @@ async function createFileUploadFileRow({
   metaText.textAlignVertical = "CENTER";
   copy.appendChild(metaText);
   row.appendChild(copy);
+  // Hug, not fill: stretching this to the row's height is what spread the two
+  // lines apart and drove the second one into the padding.
+  setLayoutSizingVertical(copy, "HUG");
 
   const removeIcon = await createFixedIconInstance(
     "x-close",
