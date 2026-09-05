@@ -54,7 +54,9 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build && changeset publish",
-    "prepare": "husky"
+    "prepare": "husky",
+    "figma:stamp": "node scripts/stamp-figma-plugin.mjs",
+    "figma:stamp:check": "node scripts/stamp-figma-plugin.mjs --check"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.1",
