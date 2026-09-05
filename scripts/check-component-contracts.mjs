@@ -10184,6 +10184,34 @@ assertContains(
   }
 }
 
+// A map control is a Button wearing map chrome, not a rectangle drawn to look
+// like one. It used to type "+" into a text node while the library held 2,279
+// real icon instances; redrawing a primitive is what lets Figma and React drift.
+assertContains(
+  files.figma,
+  source.figma,
+  /componentSetName: "Button",\s*variantProperties: buttonVariant,\s*name: "Control Button"/,
+  "Figma MapControlButton nests a real Button instance",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  'const MAP_CONTROL_BUTTON_DEFAULT_ICON = "plus"',
+  "MapControlButton's icon is a named Pointr Icon Library symbol",
+);
+assertNotContains(
+  files.figma,
+  source.figma,
+  /name: "Control Glyph"/,
+  "MapControlButton no longer draws its icon as a text glyph",
+);
+assertContains(
+  files.reactMapControlButtonFigma,
+  source.reactMapControlButtonFigma,
+  'figma.nestedProps("Control Button"',
+  "Code Connect reads the label and icon from the nested Button",
+);
+
 // A map control is a mode, so the Figma set and the React component have to
 // agree on what "on" means. React has carried `pressed` with aria-pressed and
 // inherited `disabled` since it was written; Figma had one axis until
