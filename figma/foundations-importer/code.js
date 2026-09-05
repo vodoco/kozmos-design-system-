@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "378f8bcc5d39";
+const PLUGIN_BUILD = "c2ba952d7883";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -35878,6 +35878,13 @@ async function updatePlannedMatrixComponent(config) {
     }
   }
 
+  // Removals are collected and applied after the creation pass, never during
+  // it. Figma destroys a component set that has no children, so removing every
+  // variant before creating the replacements takes the set with it — and with
+  // it the node ID Code Connect pins. That is what happened to MapControlButton
+  // on 2026-09-05: six variants failed to parse, all six were removed, and the
+  // set was gone before the first replacement could be appended.
+  const pendingRemoval = [];
   const existingChildren = Array.from(existing.children || []);
   for (const child of existingChildren) {
     if (child.type !== "COMPONENT") continue;
@@ -35885,14 +35892,7 @@ async function updatePlannedMatrixComponent(config) {
     const props = config.parseVariantName(child.name);
     if (!props) {
       if (config.removeUnexpectedVariants) {
-        try {
-          child.remove();
-          stats.variantsRemoved += 1;
-        } catch (error) {
-          stats.warnings.push(
-            `Could not remove unrecognized ${config.componentName} variant "${child.name}" (${messageFor(error)}).`,
-          );
-        }
+        pendingRemoval.push({ node: child, kind: "unrecognized" });
         continue;
       }
       stats.warnings.push(
@@ -35903,27 +35903,13 @@ async function updatePlannedMatrixComponent(config) {
 
     const key = config.keyForProps(props);
     if (config.removeUnexpectedVariants && !desiredKeys[key]) {
-      try {
-        child.remove();
-        stats.variantsRemoved += 1;
-      } catch (error) {
-        stats.warnings.push(
-          `Could not remove stale ${config.componentName} variant "${child.name}" (${messageFor(error)}).`,
-        );
-      }
+      pendingRemoval.push({ node: child, kind: "stale" });
       continue;
     }
 
     if (seenKeys[key]) {
       if (config.removeDuplicateVariantKeys) {
-        try {
-          child.remove();
-          stats.variantsRemoved += 1;
-        } catch (error) {
-          stats.warnings.push(
-            `Could not remove duplicate ${config.componentName} variant "${child.name}" (${messageFor(error)}).`,
-          );
-        }
+        pendingRemoval.push({ node: child, kind: "duplicate" });
         continue;
       }
       stats.warnings.push(
@@ -35955,6 +35941,18 @@ async function updatePlannedMatrixComponent(config) {
     existing.appendChild(component);
     seenKeys[key] = true;
     stats.variantsCreated += 1;
+  }
+
+  // Safe now: every replacement exists, so the set cannot be emptied.
+  for (const entry of pendingRemoval) {
+    try {
+      entry.node.remove();
+      stats.variantsRemoved += 1;
+    } catch (error) {
+      stats.warnings.push(
+        `Could not remove ${entry.kind} ${config.componentName} variant "${entry.node.name}" (${messageFor(error)}).`,
+      );
+    }
   }
 
   if (typeof config.layoutVariants === "function") {
