@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "62c9a2a48d56";
+const PLUGIN_BUILD = "bac5daee33fd";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -71060,3 +71060,5 @@ function paintFromVariableWithOpacity(
 function nodeIdForUrl(id) {
   return id.replace(/:/g, "-");
 }
+
+// deliberate edit to test the hook
