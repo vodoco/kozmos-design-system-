@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "62c9a2a48d56";
+const PLUGIN_BUILD = "52ab79eacaf9";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -311,6 +311,21 @@ const POI_CARD_CONTENT = ["Basic", "Media", "Full"];
 const WAYFINDING_CARD_CONTENT = ["Basic", "Titled"];
 const ADAPTIVE_MAP_SHELL_PANEL_PLACEMENTS = ["Start", "End"];
 const MAP_CONTROL_BUTTON_PRESENTATIONS = ["IconOnly", "Labelled"];
+
+/**
+ * A map control is a mode, and a mode is on or off.
+ *
+ * Location tracking, wheelchair routing and 2D/3D are all toggles, and Mark My
+ * Car only applies once a car is saved. Until 2026-09-05 this set had one axis,
+ * Presentation, so none of that could be expressed and every product drew its
+ * own "on" state.
+ *
+ * `Pressed` rather than `Active`, because that is what `ToggleButton` already
+ * calls it, what the React prop is called, and what `aria-pressed` announces.
+ * Focus is not an axis here: the focus ring is a bound boolean property across
+ * the library, not a variant.
+ */
+const MAP_CONTROL_BUTTON_STATES = ["Default", "Pressed", "Disabled"];
 const MAP_CONTROLS_GROUP_PRESENTATIONS = ["IconOnly", "Labelled"];
 const MAP_OVERLAY_WIDTHS = ["Auto", "Small", "Medium", "Large", "Full"];
 const MAP_OVERLAY_WIDTH_SIZES = {
@@ -16151,6 +16166,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "MapControlButton") {
     return {
       Presentation: MAP_CONTROL_BUTTON_PRESENTATIONS,
+      State: MAP_CONTROL_BUTTON_STATES,
     };
   }
 
@@ -44555,22 +44571,31 @@ async function createMapControlButtonVariant(args) {
 }
 
 function parseMapControlButtonVariantName(name) {
-  return productSdkVariantValues(
-    name,
-    "Presentation",
-    MAP_CONTROL_BUTTON_PRESENTATIONS,
-  );
+  const values = parseVariantValueMap(name);
+  if (MAP_CONTROL_BUTTON_PRESENTATIONS.indexOf(values.Presentation) === -1) {
+    return null;
+  }
+  // The set existed with one axis before 2026-09-05, so its two variants are
+  // named `Presentation=X` with no State. Reading those as the Default state
+  // adopts and renames them in place, keeping their node IDs rather than
+  // orphaning them beside six new ones.
+  if (values.State === undefined) {
+    return { presentation: values.Presentation, state: "Default" };
+  }
+  if (MAP_CONTROL_BUTTON_STATES.indexOf(values.State) === -1) return null;
+  return { presentation: values.Presentation, state: values.State };
 }
 
 async function updateMapControlButtonVariant(
   component,
-  { value, variableByName, fonts, stats },
+  { presentation, state, variableByName, fonts, stats },
 ) {
-  const labelled = value === "Labelled";
+  const labelled = presentation === "Labelled";
+  const surface = mapControlButtonStateConfig(state);
   productSdkVariantRoot(
     component,
     "MapControlButton",
-    "Presentation=" + value,
+    "Presentation=" + presentation + ", State=" + state,
     {
       direction: "horizontal",
       primarySizing: labelled ? "AUTO" : "FIXED",
@@ -44588,12 +44613,23 @@ async function updateMapControlButtonVariant(
   );
   component.cornerRadius = KOZMOS_RADIUS.control;
   component.fills = [
-    paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
+    paintFromVariable(
+      surface.fill,
+      surface.fillFallback,
+      variableByName,
+      stats,
+    ),
   ];
   component.strokes = [
-    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
+    paintFromVariable(
+      surface.stroke,
+      surface.strokeFallback,
+      variableByName,
+      stats,
+    ),
   ];
   component.strokeWeight = 1;
+  markControlSurface(component);
 
   const glyph = await productSdkText({
     name: "Control Glyph",
@@ -44603,8 +44639,8 @@ async function updateMapControlButtonVariant(
     bold: true,
     fontSize: 18,
     lineHeight: 24,
-    colorToken: "Colors/foreground/0",
-    colorFallback: "#000000",
+    colorToken: surface.foreground,
+    colorFallback: surface.foregroundFallback,
     variableByName,
     stats,
     width: 20,
@@ -44622,8 +44658,8 @@ async function updateMapControlButtonVariant(
       bold: false,
       fontSize: 14,
       lineHeight: 20,
-      colorToken: "Colors/foreground/0",
-      colorFallback: "#000000",
+      colorToken: surface.foreground,
+      colorFallback: surface.foregroundFallback,
       variableByName,
       stats,
       width: 96,
@@ -44631,6 +44667,92 @@ async function updateMapControlButtonVariant(
     label.textAutoResize = "WIDTH_AND_HEIGHT";
     component.appendChild(label);
   }
+}
+
+/**
+ * The surface a map control wears in each state.
+ *
+ * The same recipe `toggleButtonConfig` uses, so a pressed map control and a
+ * pressed toggle are the same blue. The disabled fallback here is `#E3E4E8`,
+ * which is what `background/100` actually resolves to; `toggleButtonConfig`
+ * says `#E4E6EA`, one ramp step off, and that is recorded in the gap audit
+ * rather than copied.
+ */
+function mapControlButtonStateConfig(state) {
+  if (state === "Pressed") {
+    return {
+      fill: "Colors/theme/600",
+      fillFallback: "#1051E8",
+      stroke: "Colors/theme/600",
+      strokeFallback: "#1051E8",
+      foreground: "Colors/foreground/1000",
+      foregroundFallback: "#FFFFFF",
+    };
+  }
+  if (state === "Disabled") {
+    return {
+      fill: "Colors/background/100",
+      fillFallback: "#E3E4E8",
+      stroke: "Border/Subtle",
+      strokeFallback: "#C7CAD1",
+      foreground: "Colors/foreground/500",
+      foregroundFallback: "#747B8B",
+    };
+  }
+  return {
+    fill: "Surface/0",
+    fillFallback: "#FFFFFF",
+    stroke: "Border/Subtle",
+    strokeFallback: "#C7CAD1",
+    foreground: "Colors/foreground/0",
+    foregroundFallback: "#000000",
+  };
+}
+
+function mapControlButtonVariantCombinations() {
+  const combinations = [];
+  for (const presentation of MAP_CONTROL_BUTTON_PRESENTATIONS) {
+    for (const state of MAP_CONTROL_BUTTON_STATES) {
+      combinations.push({ presentation, state });
+    }
+  }
+  return combinations;
+}
+
+function mapControlButtonVariantKey(props) {
+  return `${props.presentation}/${props.state}`;
+}
+
+function layoutMapControlButtonVariants(componentSet) {
+  if (!componentSet || !componentSet.children) return;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const props = parseMapControlButtonVariantName(child.name);
+    if (!props) continue;
+    child.x =
+      MAP_CONTROL_BUTTON_PRESENTATIONS.indexOf(props.presentation) * 240;
+    child.y = MAP_CONTROL_BUTTON_STATES.indexOf(props.state) * 80;
+  }
+
+  resizeComponentSetToContainChildren(componentSet);
+}
+
+function mapControlButtonComponentConfig() {
+  return {
+    componentName: "MapControlButton",
+    componentSetName: "MapControlButton",
+    x: 80,
+    y: 11800,
+    combinations: mapControlButtonVariantCombinations,
+    keyForProps: mapControlButtonVariantKey,
+    parseVariantName: parseMapControlButtonVariantName,
+    createVariant: createMapControlButtonVariant,
+    updateVariant: updateMapControlButtonVariant,
+    layoutVariants: layoutMapControlButtonVariants,
+    configureProperties: configureMapControlButtonProperties,
+    description: MAP_CONTROL_BUTTON_DESCRIPTION,
+  };
 }
 
 function configureMapControlButtonProperties(componentSet, stats) {
@@ -44646,43 +44768,23 @@ function configureMapControlButtonProperties(componentSet, stats) {
 const MAP_CONTROL_BUTTON_DESCRIPTION = [
   "Kozmos MapControlButton generated from the React MapControlButton API.",
   "Presentation maps to MapControlButton.presentation (icon-only, labelled).",
+  "State maps to MapControlButton.pressed and .disabled: Pressed is aria-pressed, Disabled is the native attribute.",
+  "Pressed is for a mode that stays on - location tracking, wheelchair routing, 2D/3D - not the moment of a click.",
   "Label Text maps to MapControlButton.label, which is the accessible name in both presentations.",
   "stateLabel is appended to the accessible name and has no visual counterpart.",
   "Both presentations keep a 44px target so the touch-target contract holds.",
 ];
 
 async function buildMapControlButtonComponent() {
-  return buildSingleAxisComponent({
-    componentName: "MapControlButton",
-    componentSetName: "MapControlButton",
-    axisName: "Presentation",
-    values: MAP_CONTROL_BUTTON_PRESENTATIONS,
-    x: 80,
-    y: 11800,
-    xStep: 240,
-    createVariant: createMapControlButtonVariant,
-    configureProperties: configureMapControlButtonProperties,
-    autoReorganize: true,
-    description: MAP_CONTROL_BUTTON_DESCRIPTION,
-  });
+  return buildPlannedMatrixComponent(mapControlButtonComponentConfig());
 }
 
 async function updateMapControlButtonComponent() {
-  return updateSingleAxisComponent({
-    componentName: "MapControlButton",
-    componentSetName: "MapControlButton",
-    axisName: "Presentation",
-    values: MAP_CONTROL_BUTTON_PRESENTATIONS,
-    xStep: 240,
-    createVariant: createMapControlButtonVariant,
-    updateVariant: updateMapControlButtonVariant,
-    parseVariantName: parseMapControlButtonVariantName,
-    configureProperties: configureMapControlButtonProperties,
-    autoReorganize: true,
-    description: MAP_CONTROL_BUTTON_DESCRIPTION.concat([
-      "Updated in place to preserve the Code Connect node ID.",
-    ]),
-  });
+  const config = mapControlButtonComponentConfig();
+  config.description = MAP_CONTROL_BUTTON_DESCRIPTION.concat([
+    "Updated in place to preserve the Code Connect node ID.",
+  ]);
+  return updatePlannedMatrixComponent(config);
 }
 
 async function rebuildMapControlButtonComponent() {
