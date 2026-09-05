@@ -6,7 +6,7 @@ import com.figma.code.connect.FigmaConnect
 import com.figma.code.connect.FigmaProperty
 import com.figma.code.connect.FigmaType
 
-@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8388")
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1785-8821")
 class KozmosMapControlButtonConnect {
     @FigmaProperty(FigmaType.Text, "Label Text")
     val label: String = "Zoom in"

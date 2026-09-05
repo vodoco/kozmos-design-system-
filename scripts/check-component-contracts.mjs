@@ -220,6 +220,10 @@ const files = {
     "packages/react/src/components/MultiSelect/MultiSelect.figma.tsx",
   reactListbox: "packages/react/src/components/Listbox/Listbox.tsx",
   reactMenu: "packages/react/src/components/Menu/Menu.tsx",
+  reactMapControlButton:
+    "packages/react/src/components/MapControlButton/MapControlButton.tsx",
+  reactMapControlButtonFigma:
+    "packages/react/src/components/MapControlButton/MapControlButton.figma.tsx",
   reactFileUpload: "packages/react/src/components/FileUpload/FileUpload.tsx",
   reactListboxFigma: "packages/react/src/components/Listbox/Listbox.figma.tsx",
   reactPasswordInput:
@@ -10179,6 +10183,47 @@ assertContains(
     }
   }
 }
+
+// A map control is a mode, so the Figma set and the React component have to
+// agree on what "on" means. React has carried `pressed` with aria-pressed and
+// inherited `disabled` since it was written; Figma had one axis until
+// 2026-09-05 and could express neither, which is why products drew their own.
+assertContains(
+  files.figma,
+  source.figma,
+  /const MAP_CONTROL_BUTTON_STATES = \[\s*"Default",\s*"Pressed",\s*"Disabled",?\s*\]/,
+  "Figma MapControlButton has a State axis of Default, Pressed and Disabled",
+);
+assertContains(
+  files.figma,
+  source.figma,
+  /canonicalName === "MapControlButton"\)[\s\S]{0,200}State: MAP_CONTROL_BUTTON_STATES/,
+  "MapControlButton's expected axes include State, so drift is checked",
+);
+assertContains(
+  files.reactMapControlButton,
+  source.reactMapControlButton,
+  "pressed?: boolean",
+  "React MapControlButton exposes pressed",
+);
+assertContains(
+  files.reactMapControlButton,
+  source.reactMapControlButton,
+  "aria-pressed={pressed}",
+  "React MapControlButton announces pressed to assistive technology",
+);
+assertContains(
+  files.reactMapControlButtonFigma,
+  source.reactMapControlButtonFigma,
+  'figma.enum("State", { Pressed: true })',
+  "Code Connect maps the Pressed state to the pressed prop",
+);
+assertContains(
+  files.reactMapControlButtonFigma,
+  source.reactMapControlButtonFigma,
+  'figma.enum("State", { Disabled: true })',
+  "Code Connect maps the Disabled state to the disabled prop",
+);
 
 // Every Core set the plugin can update must appear in CORE_UPDATE_SEQUENCE.
 // A bulk action that quietly skips a component is worse than no bulk action:
