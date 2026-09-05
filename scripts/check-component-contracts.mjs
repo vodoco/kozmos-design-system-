@@ -10150,6 +10150,36 @@ assertContains(
   "Figma FileUpload row radius aliases the Container role",
 );
 
+// spacingPx() throws for a step that is not on the scale, and it is called at
+// module scope, so one bad constant stops the plugin loading at all rather than
+// drawing a wrong number. That is the right failure, but nothing would catch it
+// before Figma does — the plugin is never executed in Node. This makes the
+// throw unreachable in practice.
+{
+  const steps = /const SPACING_STEPS = new Set\(\[([^\]]*)\]/.exec(
+    source.figma,
+  );
+  if (!steps) {
+    fail("figma/foundations-importer/code.js: SPACING_STEPS was not found");
+  } else {
+    const known = new Set(
+      steps[1]
+        .split(",")
+        .map((n) => n.trim())
+        .filter(Boolean),
+    );
+    const bad = [];
+    for (const m of source.figma.matchAll(/spacingPx\((\d+)\)/g)) {
+      if (!known.has(m[1])) bad.push(m[1]);
+    }
+    if (bad.length > 0) {
+      fail(
+        `figma/foundations-importer/code.js: spacingPx() called with ${[...new Set(bad)].sort().join(", ")}, which SPACING_STEPS does not contain — the plugin would throw at load`,
+      );
+    }
+  }
+}
+
 // Every Core set the plugin can update must appear in CORE_UPDATE_SEQUENCE.
 // A bulk action that quietly skips a component is worse than no bulk action:
 // the sets it misses look updated because the run reported success.
