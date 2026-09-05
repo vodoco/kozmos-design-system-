@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "52ab79eacaf9";
+const PLUGIN_BUILD = "378f8bcc5d39";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -44588,8 +44588,14 @@ function parseMapControlButtonVariantName(name) {
 
 async function updateMapControlButtonVariant(
   component,
-  { presentation, state, variableByName, fonts, stats },
+  { props, variableByName, fonts, stats },
 ) {
+  // The matrix helper passes the axis values nested under props, the way
+  // LocationPin reads them. Destructuring them at the top level instead named
+  // six variants Presentation=undefined, State=undefined and left the set with
+  // no property definitions at all.
+  const presentation = props.presentation;
+  const state = props.state;
   const labelled = presentation === "Labelled";
   const surface = mapControlButtonStateConfig(state);
   productSdkVariantRoot(
@@ -44751,6 +44757,12 @@ function mapControlButtonComponentConfig() {
     updateVariant: updateMapControlButtonVariant,
     layoutVariants: layoutMapControlButtonVariants,
     configureProperties: configureMapControlButtonProperties,
+    // The full matrix is declared above, so anything that does not parse is
+    // stale by definition. This also clears the six variants a broken run
+    // left named Presentation=undefined on 2026-09-05, without a Rebuild —
+    // which would mint a new node ID and break the Code Connect pin.
+    removeUnexpectedVariants: true,
+    removeDuplicateVariantKeys: true,
     description: MAP_CONTROL_BUTTON_DESCRIPTION,
   };
 }

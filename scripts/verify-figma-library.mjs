@@ -181,6 +181,7 @@ async function main() {
   const truncated = [];
   const unbound = [];
   const overflowing = [];
+  const undefinedNames = [];
 
   for (const name of names) {
     if (!sets[name]) {
@@ -273,6 +274,20 @@ async function main() {
       unbound.push(
         `${name} / ${property.split("#")[0]} (${definition.type}) — declared, referenced by no layer`,
       );
+    }
+  }
+
+  // A variant whose name carries "undefined" is a painter that was handed the
+  // wrong argument shape. It is silent in Figma — the set simply has no usable
+  // property panel — and it took a screenshot to notice when MapControlButton
+  // gained an axis on 2026-09-05 and six variants came out named
+  // `Presentation=undefined, State=undefined`. One string search finds the
+  // whole class.
+  for (const [name, set] of Object.entries(sets)) {
+    for (const child of set.children || []) {
+      if (child.type !== "COMPONENT") continue;
+      if (!/undefined/.test(child.name)) continue;
+      undefinedNames.push(`${name} / ${child.name}`);
     }
   }
 
@@ -424,6 +439,7 @@ async function main() {
   total += report("text truncated by its own box", truncated);
   total += report(`text contrast below ${AA}:1`, lowContrast);
   total += report("properties bound to no layer (blocks publishing)", unbound);
+  total += report('variant names containing "undefined"', undefinedNames);
   // Reported, not enforced, for the same reason the nesting check was: the
   // 62 findings this arrived with are pre-existing and two of them are design
   // calls, not bugs. NavigationItem computes 8px of padding for its rail, 10
