@@ -3,7 +3,7 @@ import { LocateFixed } from "lucide-react";
 import { MapControlButton } from "./MapControlButton";
 
 const mapControlButtonUrl =
-  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8388";
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1785-8821";
 
 figma.connect(MapControlButton, mapControlButtonUrl, {
   props: {

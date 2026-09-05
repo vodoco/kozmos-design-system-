@@ -3,7 +3,7 @@ import Figma
 
 struct KozmosMapControlButtonConnect: FigmaConnect {
     let component = KozmosMapControlButton<Image>.self
-    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8388"
+    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1785-8821"
 
     @FigmaString("Label Text")
     var label: String = "Zoom in"
