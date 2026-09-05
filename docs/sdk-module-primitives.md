@@ -95,15 +95,15 @@ The first two are the ones a product cannot work around.
 
 The card itself should not be a component. Its parts should be.
 
-| Part                                                                                     | Uses in the design | In the library    |
-| ---------------------------------------------------------------------------------------- | ------------------ | ----------------- |
-| **Attribute section** — a label above a row of chips                                     | **~26**            | No                |
-| **Meta strip** — time, distance, rating, price, accessibility, crowd, access restriction | 7 cell kinds       | No                |
-| **Opening hours** — a week of day rows                                                   | 7 rows             | No                |
-| **Drag handle** — 60×4, the sheet affordance                                             | 2                  | No                |
-| Media gallery                                                                            | 1                  | `POIMediaGallery` |
-| Rating                                                                                   | 1                  | `Rating`          |
-| Chips and tags                                                                           | many               | `Chip`, `Tag`     |
+| Part                                                                                     | Uses in the design | In the library        |
+| ---------------------------------------------------------------------------------------- | ------------------ | --------------------- |
+| **Attribute section** — a label above a row of chips                                     | **~26**            | No                    |
+| **Meta strip** — time, distance, rating, price, accessibility, crowd, access restriction | 7 cell kinds       | No                    |
+| **Opening hours** — a week of day rows                                                   | 7 rows             | No                    |
+| **Drag handle** — 60×4, the sheet affordance                                             | 2                  | In `BottomSheet` only |
+| Media gallery                                                                            | 1                  | `POIMediaGallery`     |
+| Rating                                                                                   | 1                  | `Rating`              |
+| Chips and tags                                                                           | many               | `Chip`, `Tag`         |
 
 The attribute section is the dominant pattern of the whole card and the highest
 value item in this document after the control state. It is a label, a wrap of
@@ -120,7 +120,7 @@ cheapest item in this document.
 | ------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | **Step list with a connector** — several direction steps joined by a "follow the line" rail | `DirectionStep` is one 360×72 row. Nothing composes them  |
 | **Route meta strip** — 398×52 of route metrics                                              | No. Same shape as the POI meta strip                      |
-| **Journey progress** — a 348×4 rail                                                         | `Progress` may serve; worth checking before building      |
+| **Journey progress** — a 348×4 rail                                                         | `Progress` is 320×**8**; needs a thickness option         |
 | **Level-change marker** — 48×48                                                             | No                                                        |
 | **Accessible-route toggle** — 129×48, collapsed and expanded                                | No. This is the control-state gap plus an expandable form |
 | Checkpoints                                                                                 | No                                                        |
@@ -136,7 +136,7 @@ The step list and the meta strip are the two that recur.
 | Category grid                            | `CategoryTile`, `BrowseCategoriesPanel`            |
 | **Carousel** — a header plus paged cards | **No `Carousel`**                                  |
 | **Empty result card** — 375×96           | `EmptyState` exists but not in a result-card shape |
-| Drag handle                              | No, same as POI                                    |
+| Drag handle                              | In `BottomSheet` only, as POI                      |
 
 ## The missing primitives, ranked by reuse
 
@@ -149,7 +149,7 @@ Ordered by how many modules each unblocks, not by size.
 | 3   | **In-surface status message**                  | map status, and the prototype's saved-notice                    | Small                                           |
 | 4   | **Generic control cluster**                    | all four map corners; `MapControlsGroup` becomes a composition  | Small                                           |
 | 5   | **Meta strip** — a row of icon-and-value cells | POI card and route summary, same shape                          | Small                                           |
-| 6   | **Drag handle**                                | POI sheet, map panel, browse panel                              | Trivial                                         |
+| 6   | **Drag handle**, lifted out of `BottomSheet`   | POI sheet, map panel, browse panel                              | Trivial                                         |
 | 7   | **Step list with connector**                   | wayfinding directions                                           | Medium                                          |
 | 8   | **Collapsed-expandable control**               | level switcher, accessible route                                | Medium                                          |
 | 9   | **Filter row**                                 | search and browse                                               | Medium                                          |
