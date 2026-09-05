@@ -6,6 +6,20 @@ figma.showUI(__html__, {
 });
 
 const RUN_NAMESPACE = "kozmos_ds_importer";
+
+/**
+ * Which build of this file produced what is in the Figma document.
+ *
+ * Figma loads a development plugin's files when the plugin launches, so a
+ * panel left open after an edit runs the previous build and still reports
+ * success. Every component set this plugin touches records this id, so reading
+ * it back says which build did the work instead of leaving it to be inferred
+ * from a timestamp.
+ *
+ * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
+ * `pnpm figma:stamp --check`. Never edit it by hand.
+ */
+const PLUGIN_BUILD = "62c9a2a48d56";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -28642,6 +28656,7 @@ async function buildButtonComponent() {
   componentSet.x = 80;
   componentSet.y = 80;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Button");
   applyComponentSetDescription(componentSet, "Button", false, [
     "Kozmos Button component set generated from React Button API.",
@@ -28697,6 +28712,7 @@ async function updateButtonComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Button");
   applyComponentSetDescription(existing, "Button", true, [
     "Kozmos Button component set generated from React Button API.",
@@ -28819,6 +28835,7 @@ async function buildIconButtonComponent() {
   componentSet.x = 80;
   componentSet.y = 780;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "IconButton");
   applyComponentSetDescription(componentSet, "IconButton", false, [
     "Kozmos IconButton component set generated from React IconButton API.",
@@ -28882,6 +28899,7 @@ async function updateIconButtonComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "IconButton");
   applyComponentSetDescription(existing, "IconButton", true, [
     "Kozmos IconButton component set generated from React IconButton API.",
@@ -28996,6 +29014,7 @@ async function buildToggleButtonComponent() {
   componentSet.x = 80;
   componentSet.y = 1440;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "ToggleButton");
   applyComponentSetDescription(componentSet, "ToggleButton", false, [
     "Kozmos ToggleButton component set generated from React ToggleButton API.",
@@ -29050,6 +29069,7 @@ async function updateToggleButtonComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "ToggleButton");
   applyComponentSetDescription(existing, "ToggleButton", true, [
     "Kozmos ToggleButton component set generated from React ToggleButton API.",
@@ -29175,6 +29195,7 @@ async function buildSplitButtonComponent() {
   componentSet.x = 80;
   componentSet.y = 2080;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "SplitButton");
   applyComponentSetDescription(componentSet, "SplitButton", false, [
     "Kozmos SplitButton component set generated from React SplitButton API.",
@@ -29228,6 +29249,7 @@ async function updateSplitButtonComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "SplitButton");
   applyComponentSetDescription(existing, "SplitButton", true, [
     "Kozmos SplitButton component set generated from React SplitButton API.",
@@ -29356,6 +29378,7 @@ async function buildFloatingActionButtonComponent() {
   componentSet.x = 80;
   componentSet.y = 2800;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
@@ -29423,6 +29446,7 @@ async function updateFloatingActionButtonComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
@@ -29550,6 +29574,7 @@ async function buildTextComponent() {
   componentSet.x = 80;
   componentSet.y = 7600;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Text");
   applyComponentSetDescription(componentSet, "Text", false, [
     "Kozmos Text component set generated from React Text API.",
@@ -29603,6 +29628,7 @@ async function updateTextComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Text");
   applyComponentSetDescription(existing, "Text", true, [
     "Kozmos Text component set generated from React Text API.",
@@ -29759,6 +29785,7 @@ async function buildLinkComponent() {
   componentSet.x = 80;
   componentSet.y = 9100;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Link");
   applyComponentSetDescription(componentSet, "Link", false, [
     "Kozmos Link component set generated from React Link API.",
@@ -29810,6 +29837,7 @@ async function updateLinkComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Link");
   applyComponentSetDescription(existing, "Link", true, [
     "Kozmos Link component set generated from React Link API.",
@@ -30069,6 +30097,7 @@ async function buildStackComponent() {
   componentSet.x = 80;
   componentSet.y = 10820;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Stack");
   applyComponentSetDescription(componentSet, "Stack", false, [
     "Kozmos Stack component set generated from React Stack API.",
@@ -30120,6 +30149,7 @@ async function updateStackComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Stack");
   applyComponentSetDescription(existing, "Stack", true, [
     "Kozmos Stack component set generated from React Stack API.",
@@ -30225,6 +30255,7 @@ async function buildGridComponent() {
   componentSet.x = 80;
   componentSet.y = 11240;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Grid");
   applyComponentSetDescription(componentSet, "Grid", false, [
     "Kozmos Grid component set generated from React Grid API.",
@@ -30276,6 +30307,7 @@ async function updateGridComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Grid");
   applyComponentSetDescription(existing, "Grid", true, [
     "Kozmos Grid component set generated from React Grid API.",
@@ -30464,6 +30496,7 @@ async function buildPaginationComponent() {
   componentSet.x = 80;
   componentSet.y = 12060;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Pagination");
   applyComponentSetDescription(componentSet, "Pagination", false, [
     "Kozmos Pagination component set generated from React Pagination anatomy.",
@@ -30517,6 +30550,7 @@ async function updatePaginationComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Pagination");
   applyComponentSetDescription(existing, "Pagination", true, [
     "Kozmos Pagination component set generated from React Pagination anatomy.",
@@ -30676,6 +30710,7 @@ async function buildCounterComponent() {
   componentSet.x = 80;
   componentSet.y = 1280;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
   applyComponentSetDescription(componentSet, "Counter", false, [
     "Kozmos Counter component set generated from React Counter API.",
@@ -30733,6 +30768,7 @@ async function updateCounterComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
   applyComponentSetDescription(existing, "Counter", true, [
     "Kozmos Counter component set generated from React Counter API.",
@@ -30852,6 +30888,7 @@ async function buildBadgeComponent() {
   componentSet.x = 80;
   componentSet.y = 1440;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Badge");
   applyComponentSetDescription(componentSet, "Badge", false, [
     "Kozmos Badge component set generated from React Badge API.",
@@ -30924,6 +30961,7 @@ async function updateBadgeComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Badge");
   applyComponentSetDescription(existing, "Badge", true, [
     "Kozmos Badge component set generated from React Badge API.",
@@ -31050,6 +31088,7 @@ async function buildChipComponent() {
   componentSet.x = 80;
   componentSet.y = 1600;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Chip");
   applyComponentSetDescription(componentSet, "Chip", false, [
     "Kozmos Chip component set generated from React Chip API.",
@@ -31105,6 +31144,7 @@ async function updateChipComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Chip");
   applyComponentSetDescription(existing, "Chip", true, [
     "Kozmos Chip component set generated from React Chip API.",
@@ -31232,6 +31272,7 @@ async function buildSegmentedControlComponent() {
   componentSet.x = 80;
   componentSet.y = 1840;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
@@ -31290,6 +31331,7 @@ async function updateSegmentedControlComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "SegmentedControl");
   applyComponentSetDescription(existing, "SegmentedControl", true, [
     "Kozmos SegmentedControl component set generated from React SegmentedControl API.",
@@ -31562,6 +31604,7 @@ async function buildTabsComponent() {
   componentSet.x = 80;
   componentSet.y = 4620;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Tabs");
   applyComponentSetDescription(componentSet, "Tabs", false, [
     "Kozmos Tabs component set generated from React Tabs API.",
@@ -31614,6 +31657,7 @@ async function updateTabsComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Tabs");
   applyComponentSetDescription(existing, "Tabs", true, [
     "Kozmos Tabs component set generated from React Tabs API.",
@@ -31938,6 +31982,7 @@ async function buildCheckboxComponent() {
   componentSet.x = 80;
   componentSet.y = 1740;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Checkbox");
   applyComponentSetDescription(componentSet, "Checkbox", false, [
     "Kozmos Checkbox component set generated from React Checkbox API.",
@@ -31990,6 +32035,7 @@ async function updateCheckboxComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Checkbox");
   applyComponentSetDescription(existing, "Checkbox", true, [
     "Kozmos Checkbox component set generated from React Checkbox API.",
@@ -32098,6 +32144,7 @@ async function buildRadioComponent() {
   componentSet.x = 80;
   componentSet.y = 1900;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Radio");
   applyComponentSetDescription(componentSet, "Radio", false, [
     "Kozmos Radio component set generated from React RadioGroupItem API.",
@@ -32150,6 +32197,7 @@ async function updateRadioComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Radio");
   applyComponentSetDescription(existing, "Radio", true, [
     "Kozmos Radio component set generated from React RadioGroupItem API.",
@@ -32258,6 +32306,7 @@ async function buildSwitchComponent() {
   componentSet.x = 80;
   componentSet.y = 2060;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Switch");
   applyComponentSetDescription(componentSet, "Switch", false, [
     "Kozmos Switch component set generated from React Switch API.",
@@ -32310,6 +32359,7 @@ async function updateSwitchComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Switch");
   applyComponentSetDescription(existing, "Switch", true, [
     "Kozmos Switch component set generated from React Switch API.",
@@ -32422,6 +32472,7 @@ async function buildInputComponent() {
   componentSet.x = 80;
   componentSet.y = 2220;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Input");
   applyComponentSetDescription(componentSet, "Input", false, [
     "Kozmos Input component set generated from React Input API.",
@@ -32480,6 +32531,7 @@ async function updateInputComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Input");
   applyComponentSetDescription(existing, "Input", true, [
     "Kozmos Input component set generated from React Input API.",
@@ -32615,6 +32667,7 @@ async function buildPasswordInputComponent() {
   componentSet.x = 80;
   componentSet.y = 3320;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "PasswordInput");
   applyComponentSetDescription(componentSet, "PasswordInput", false, [
     "Kozmos PasswordInput component set generated from React PasswordInput API.",
@@ -32675,6 +32728,7 @@ async function updatePasswordInputComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "PasswordInput");
   applyComponentSetDescription(existing, "PasswordInput", true, [
     "Kozmos PasswordInput component set generated from React PasswordInput API.",
@@ -32820,6 +32874,7 @@ async function buildFormFieldComponent() {
   componentSet.x = 80;
   componentSet.y = 5880;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "FormField");
   applyComponentSetDescription(componentSet, "FormField", false, [
     "Kozmos FormField component set generated from React FieldWrapper/FormField API.",
@@ -32872,6 +32927,7 @@ async function updateFormFieldComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "FormField");
   applyComponentSetDescription(existing, "FormField", true, [
     "Kozmos FormField component set generated from React FieldWrapper/FormField API.",
@@ -33230,6 +33286,7 @@ async function buildNumberInputComponent() {
   componentSet.x = 440;
   componentSet.y = 2220;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "NumberInput");
   applyComponentSetDescription(componentSet, "NumberInput", false, [
     "Kozmos NumberInput component set generated from React NumberInput API.",
@@ -33286,6 +33343,7 @@ async function updateNumberInputComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "NumberInput");
   applyComponentSetDescription(existing, "NumberInput", true, [
     "Kozmos NumberInput component set generated from React NumberInput API.",
@@ -33432,6 +33490,7 @@ async function buildOTPInputComponent() {
   componentSet.x = 800;
   componentSet.y = 3320;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "OTPInput");
   applyComponentSetDescription(componentSet, "OTPInput", false, [
     "Kozmos OTPInput component set generated from React OTPInput API.",
@@ -33488,6 +33547,7 @@ async function updateOTPInputComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "OTPInput");
   applyComponentSetDescription(existing, "OTPInput", true, [
     "Kozmos OTPInput component set generated from React OTPInput API.",
@@ -33637,6 +33697,7 @@ async function buildComboboxComponent() {
   componentSet.x = 800;
   componentSet.y = 2220;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Combobox");
   applyComponentSetDescription(componentSet, "Combobox", false, [
     "Kozmos Combobox component set generated from React Combobox API.",
@@ -33693,6 +33754,7 @@ async function updateComboboxComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Combobox");
   applyComponentSetDescription(existing, "Combobox", true, [
     "Kozmos Combobox component set generated from React Combobox API.",
@@ -33843,6 +33905,7 @@ async function buildMultiSelectComponent() {
   componentSet.x = 80;
   componentSet.y = 3820;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "MultiSelect");
   applyComponentSetDescription(componentSet, "MultiSelect", false, [
     "Kozmos MultiSelect component set generated from React MultiSelect API.",
@@ -33899,6 +33962,7 @@ async function updateMultiSelectComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "MultiSelect");
   applyComponentSetDescription(existing, "MultiSelect", true, [
     "Kozmos MultiSelect component set generated from React MultiSelect API.",
@@ -34041,6 +34105,7 @@ async function buildListboxComponent() {
   componentSet.x = 80;
   componentSet.y = 5120;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Listbox");
   applyComponentSetDescription(componentSet, "Listbox", false, [
     "Kozmos Listbox component set generated from React Listbox API.",
@@ -34093,6 +34158,7 @@ async function updateListboxComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Listbox");
   applyComponentSetDescription(existing, "Listbox", true, [
     "Kozmos Listbox component set generated from React Listbox API.",
@@ -34235,6 +34301,7 @@ async function buildDatePickerComponent() {
   componentSet.x = 80;
   componentSet.y = 6220;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "DatePicker");
   applyComponentSetDescription(componentSet, "DatePicker", false, [
     "Kozmos DatePicker component set generated from React DatePicker API.",
@@ -34291,6 +34358,7 @@ async function updateDatePickerComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "DatePicker");
   applyComponentSetDescription(existing, "DatePicker", true, [
     "Kozmos DatePicker component set generated from React DatePicker API.",
@@ -34441,6 +34509,7 @@ async function buildDateRangePickerComponent() {
   componentSet.x = 80;
   componentSet.y = 7960;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
@@ -34502,6 +34571,7 @@ async function updateDateRangePickerComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "DateRangePicker");
   applyComponentSetDescription(existing, "DateRangePicker", true, [
     "Kozmos DateRangePicker component set generated from React DateRangePicker API.",
@@ -34652,6 +34722,7 @@ async function buildTimePickerComponent() {
   componentSet.x = 80;
   componentSet.y = 9840;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "TimePicker");
   applyComponentSetDescription(componentSet, "TimePicker", false, [
     "Kozmos TimePicker component set generated from React TimePicker API.",
@@ -34707,6 +34778,7 @@ async function updateTimePickerComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "TimePicker");
   applyComponentSetDescription(existing, "TimePicker", true, [
     "Kozmos TimePicker component set generated from React TimePicker API.",
@@ -34856,6 +34928,7 @@ async function buildFileUploadComponent() {
   componentSet.x = 80;
   componentSet.y = 11280;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "FileUpload");
   applyComponentSetDescription(componentSet, "FileUpload", false, [
     "Kozmos FileUpload component set generated from React FileUpload API.",
@@ -34910,6 +34983,7 @@ async function updateFileUploadComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "FileUpload");
   applyComponentSetDescription(existing, "FileUpload", true, [
     "Kozmos FileUpload component set generated from React FileUpload API.",
@@ -35066,6 +35140,7 @@ async function buildColorPickerComponent() {
   componentSet.x = 80;
   componentSet.y = 12840;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "ColorPicker");
   applyComponentSetDescription(componentSet, "ColorPicker", false, [
     "Kozmos ColorPicker component set generated from React ColorPicker API.",
@@ -35123,6 +35198,7 @@ async function updateColorPickerComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "ColorPicker");
   applyComponentSetDescription(existing, "ColorPicker", true, [
     "Kozmos ColorPicker component set generated from React ColorPicker API.",
@@ -35468,6 +35544,7 @@ async function buildStateStatusComponent(config) {
   componentSet.x = config.x;
   componentSet.y = config.y;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
@@ -35532,6 +35609,7 @@ async function updateStateStatusComponent(config) {
   const types = config.types || [null];
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
@@ -35684,6 +35762,7 @@ async function buildPlannedMatrixComponent(config) {
   componentSet.x = config.x;
   componentSet.y = config.y;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
@@ -35762,6 +35841,7 @@ async function updatePlannedMatrixComponent(config) {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
@@ -41906,6 +41986,7 @@ async function buildRatingComponent() {
   componentSet.x = 80;
   componentSet.y = 7040;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Rating");
   applyComponentSetDescription(componentSet, "Rating", false, [
     "Kozmos Rating component set generated from React Rating API.",
@@ -41957,6 +42038,7 @@ async function updateRatingComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Rating");
   applyComponentSetDescription(existing, "Rating", true, [
     "Kozmos Rating component set generated from React Rating API.",
@@ -42081,6 +42163,7 @@ async function buildStepperComponent() {
   componentSet.x = 80;
   componentSet.y = 7200;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Stepper");
   applyComponentSetDescription(componentSet, "Stepper", false, [
     "Kozmos Stepper component set generated from React Stepper API.",
@@ -42132,6 +42215,7 @@ async function updateStepperComponent() {
   const seenKeys = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Stepper");
   applyComponentSetDescription(existing, "Stepper", true, [
     "Kozmos Stepper component set generated from React Stepper API.",
@@ -47411,6 +47495,7 @@ async function buildSingleAxisComponent(config) {
   componentSet.x = config.x;
   componentSet.y = config.y;
   componentSet.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  componentSet.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   componentSet.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
@@ -47484,6 +47569,7 @@ async function updateSingleAxisComponent(config) {
   const seenValues = {};
 
   existing.setSharedPluginData(RUN_NAMESPACE, "kind", "component-set");
+  existing.setSharedPluginData(RUN_NAMESPACE, "build", PLUGIN_BUILD);
   existing.setSharedPluginData(
     RUN_NAMESPACE,
     "component",
