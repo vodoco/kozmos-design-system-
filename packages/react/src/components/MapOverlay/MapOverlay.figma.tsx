@@ -1,5 +1,4 @@
 import figma from "@figma/code-connect";
-import { MapOverlay } from "../MapOverlay/MapOverlay";
 import { MapOverlay } from "./MapOverlay";
 
 const mapOverlayUrl =

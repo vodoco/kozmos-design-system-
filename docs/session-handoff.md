@@ -19,6 +19,7 @@ picking the work up cold, this is the whole picture in one screen.
 | Chromatic               | **snapshot limit reached** — visual gate is not running                                               |
 | Working tree            | clean; fourteen commits on the branch, not pushed                                                     |
 | Style playbook          | `docs/style-playbook.md` — start here to change how it looks                                          |
+| Gap audit               | `docs/gap-audit-2026-09-05.md` — what is missing, measured                                            |
 | Local gates             | all green — see §7 for the list                                                                       |
 
 **The library publishes.** Eleven unbound properties across five sets, two of
@@ -1005,6 +1006,17 @@ It reads every set's `componentPropertyDefinitions`, walks its
 properties, which the publish dialog does not.
 
 ## 4. Immediate Next Actions, In Order
+
+**A gap audit ran overnight on 2026-09-05** against the POI Details Card Revamp
+designs and the whole monorepo: `docs/gap-audit-2026-09-05.md`. Its two
+cheapest findings are worth pulling forward. **Text, Heading and Label have
+never been built in Figma** — they are named in `CORE_UPDATE_SEQUENCE`, have
+builders, and `Update All Core` has been skipping them silently on every run,
+which is also why they are the only three components with no Code Connect on any
+platform. And **two font-size tokens carry floating-point noise**
+(`11.008000373840332`, `13.008000373840332`). The larger finding is that 95% of
+the library's text sits off its own font scale, which needs one decision before
+any sweep.
 
 **Checkpoint 2026-09-03, late.** An adversarial audit of the week's work found
 nine things and fixed all of them. The largest: there was **no border role at

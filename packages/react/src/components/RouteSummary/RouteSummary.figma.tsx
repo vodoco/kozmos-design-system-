@@ -1,5 +1,4 @@
 import figma from "@figma/code-connect";
-import { RouteSummary } from "../RouteSummary/RouteSummary";
 import { RouteSummary } from "./RouteSummary";
 
 const routeSummaryUrl =
