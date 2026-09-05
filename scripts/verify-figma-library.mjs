@@ -291,20 +291,37 @@ async function main() {
     (function walk(node) {
       const box = node.absoluteBoundingBox;
       if (box && node.paddingLeft !== undefined && node.children) {
-        const content =
+        const contentWidth =
           box.width - (node.paddingLeft || 0) - (node.paddingRight || 0);
+        const contentHeight =
+          box.height - (node.paddingTop || 0) - (node.paddingBottom || 0);
         for (const child of node.children) {
           if (child.visible === false) continue;
+          // An absolutely positioned child has opted out of the parent's
+          // layout, so the content box says nothing about where it belongs.
+          // Focus rings are deliberately larger than the thing they ring, and
+          // a tooltip's tip hangs outside on purpose. Judging them here is the
+          // same category error as demanding a pill be concentric with its
+          // card. 913 nodes in the file are absolute, 901 of them focus rings.
+          if (child.layoutPositioning === "ABSOLUTE") continue;
           const childBox = child.absoluteBoundingBox;
           if (!childBox) continue;
-          const over = childBox.width - content;
-          if (over <= OVERFLOW_TOLERANCE) continue;
-          const key = `${name}|${node.name}|${child.name}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          overflowing.push(
-            `${name} / ${node.name} > ${child.name} — ${Math.round(childBox.width)} wide in a ${Math.round(content)} content box (over by ${Math.round(over)})`,
-          );
+          // Both axes: the file row that pushed its second line past the
+          // bottom edge on 2026-09-04 was a height overflow, and a width-only
+          // rule was blind to it.
+          for (const [axis, size, content] of [
+            ["wide", childBox.width, contentWidth],
+            ["tall", childBox.height, contentHeight],
+          ]) {
+            const over = size - content;
+            if (over <= OVERFLOW_TOLERANCE) continue;
+            const key = `${name}|${node.name}|${child.name}|${axis}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            overflowing.push(
+              `${name} / ${node.name} > ${child.name} — ${Math.round(size)} ${axis} in a ${Math.round(content)} content box (over by ${Math.round(over)})`,
+            );
+          }
         }
       }
       if (node.children) node.children.forEach(walk);
@@ -415,7 +432,7 @@ async function main() {
   // whether the rail gets its own padding variable is a design question. Add
   // this to `total` on the day the count reaches zero — a gate that is red on
   // purpose is a gate somebody switches off.
-  report("children wider than the box holding them", overflowing);
+  report("children that overflow the box holding them", overflowing);
 
   console.log(
     total === 0
