@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "ae6d7885a3ab";
+const PLUGIN_BUILD = "b1c5a1a3cc15";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -37884,12 +37884,7 @@ async function createTreeCount({ name, value, variableByName, fonts, stats }) {
     ),
   ];
   count.strokes = [
-    paintFromVariable(
-      "Colors/foreground/300",
-      "#A9AFBB",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   count.strokeWeight = 1;
   count.setSharedPluginData(RUN_NAMESPACE, "kind", "tree-count");
@@ -39428,12 +39423,7 @@ async function createNavbarAccountSlot({
     ),
   ];
   avatar.strokes = [
-    paintFromVariable(
-      "Colors/background/300",
-      "#AEB4C0",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   avatar.strokeWeight = 1;
 

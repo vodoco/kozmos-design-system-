@@ -120,13 +120,32 @@ for (const role of ["Border/Subtle", "Border/Input"]) {
   if (plugin.includes(`"${role}"`)) ok(`plugin: references "${role}"`);
   else fail(`plugin: never references "${role}"`);
 }
-// Marks that happen to use a stroke but are not borders: a rating star's
-// outline, a stepper's step ring. They keep the text colour on purpose.
-const STROKE_MARKS_ALLOWED = new Set([
-  "createRatingStar",
-  "createStepperStepItem",
-]);
-const OLD = ["Colors/foreground/500", "Colors/background/200"];
+// Marks that happen to use a stroke but are not borders. Each names the one
+// primitive it may use, so a *different* primitive appearing in the same
+// painter is still caught — allow-listing a whole function is how
+// createTreeCount kept a dark grey badge outline for a month.
+const STROKE_MARKS_ALLOWED = {
+  createRatingStar: {
+    primitive: "Colors/foreground/500",
+    why: "an unfilled star's outline is the mark itself",
+  },
+  createStepperStepItem: {
+    primitive: "Colors/foreground/500",
+    why: "a pending step's ring is its glyph",
+  },
+  createColorPickerColorArea: {
+    primitive: "Colors/foreground/0",
+    why: "the handle needs a hard ring to stay visible on any colour beneath it",
+  },
+  updateLocationPinVariant: {
+    primitive: "Colors/foreground/1000",
+    why: "a white ring is what makes a pin read against an arbitrary map",
+  },
+};
+// Any grey primitive on a stroke, not just the two that were historically
+// wrong. The narrow list passed a badge painted foreground/300 and an avatar
+// ring painted background/300, because neither was one of the two it knew.
+const GREY = /"Colors\/(?:foreground|background)\/\d+"/g;
 const lines = plugin.split("\n");
 let fn = "(top)";
 let inStrokes = false;
@@ -160,22 +179,19 @@ for (let i = 0; i < lines.length; i += 1) {
         window += " " + lines[j];
       }
     }
-    for (const prim of OLD) {
-      if (
-        window.includes(`"${prim}"`) &&
-        !(scope === "strokes" && STROKE_MARKS_ALLOWED.has(fn))
-      ) {
-        const k = `${fn} still uses ${prim}`;
-        offenders.set(k, (offenders.get(k) || 0) + 1);
-      }
+    const allowed = STROKE_MARKS_ALLOWED[fn];
+    for (const quoted of window.match(GREY) || []) {
+      const prim = quoted.slice(1, -1);
+      if (scope === "strokes" && allowed && allowed.primitive === prim)
+        continue;
+      const k = `${fn} still uses ${prim}`;
+      offenders.set(k, (offenders.get(k) || 0) + 1);
     }
   }
   if (inStrokes && /\];/.test(lines[i])) inStrokes = false;
 }
 if (offenders.size === 0)
-  ok(
-    "plugin: no stroke, and no config stroke key, still paints foreground/500 or background/200",
-  );
+  ok("plugin: no stroke, and no config stroke key, paints a grey primitive");
 else
   for (const [k, n] of [...offenders.entries()].sort())
     fail(`plugin: ${k}${n > 1 ? ` (×${n})` : ""}`);
@@ -207,10 +223,11 @@ const dividerOffenders = new Map();
       if (/;\s*$/.test(lines[i]) && !/\[\s*$/.test(lines[i])) target = null;
     }
     if (target) {
-      for (const prim of OLD) {
-        if (lines[i].includes(`"${prim}"`))
-          dividerOffenders.set(`${target} fills with ${prim}`, true);
-      }
+      for (const quoted of lines[i].match(GREY) || [])
+        dividerOffenders.set(
+          `${target} fills with ${quoted.slice(1, -1)}`,
+          true,
+        );
       if (/\];/.test(lines[i])) target = null;
     }
   }
