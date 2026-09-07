@@ -510,7 +510,7 @@ ${dictionary.allTokens
     const varName = toCamelCase(token.path);
 
     const rgbaMatch = lightVal.match(
-      /rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?\\s*\\)/,
+      /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/,
     );
     let r = 0,
       g = 0,
@@ -523,7 +523,7 @@ ${dictionary.allTokens
       a = parseFloat(rgbaMatch[4] || "1");
     }
 
-    const dimMatch = lightVal.match(/([\\d.-]+)(px)?/g);
+    const dimMatch = lightVal.match(/([\d.-]+)(px)?/g);
     let x = 0,
       y = 4,
       blur = 8;

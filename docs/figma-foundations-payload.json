@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-04T18:52:53.553Z",
+  "generatedAt": "2026-09-07T15:52:17.792Z",
   "target": {
     "fileKey": "Yj4O8p6Y9h2Sa9zJVoAiVY",
     "fileName": "Kozmos DS - Core Library",
@@ -36,9 +36,9 @@
     "Archive / Legacy Reference"
   ],
   "summary": {
-    "totalTokens": 620,
+    "totalTokens": 623,
     "variableTokens": 579,
-    "styleOnlyTokens": 41,
+    "styleOnlyTokens": 44,
     "bySourceType": {
       "borderRadius": 8,
       "dimension": 18,
@@ -55,7 +55,7 @@
       "cubicBezier": 5,
       "fontFamilies": 7,
       "fontWeights": 5,
-      "shadow": 3
+      "shadow": 6
     },
     "note": "Variables REST is unavailable without file_variables:read, so this payload is intended for a Figma plugin/MCP import path."
   },
@@ -14699,6 +14699,78 @@
         "dark": {
           "kind": "raw",
           "value": "Light"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Elevation/Raised",
+      "figmaName": "Elevation/Raised",
+      "collection": "Kozmos Semantics",
+      "sourceType": "shadow",
+      "figmaType": null,
+      "cssVariable": "--semantics-elevation-raised",
+      "syntax": {
+        "web": "var(--semantics-elevation-raised)",
+        "ios": "semanticsElevationRaised",
+        "android": "semanticsElevationRaised"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "shadow/sm"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "shadow/sm"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Elevation/Floating",
+      "figmaName": "Elevation/Floating",
+      "collection": "Kozmos Semantics",
+      "sourceType": "shadow",
+      "figmaType": null,
+      "cssVariable": "--semantics-elevation-floating",
+      "syntax": {
+        "web": "var(--semantics-elevation-floating)",
+        "ios": "semanticsElevationFloating",
+        "android": "semanticsElevationFloating"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "shadow/md"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "shadow/md"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Elevation/Overlay",
+      "figmaName": "Elevation/Overlay",
+      "collection": "Kozmos Semantics",
+      "sourceType": "shadow",
+      "figmaType": null,
+      "cssVariable": "--semantics-elevation-overlay",
+      "syntax": {
+        "web": "var(--semantics-elevation-overlay)",
+        "ios": "semanticsElevationOverlay",
+        "android": "semanticsElevationOverlay"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "shadow/lg"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "shadow/lg"
         }
       }
     },

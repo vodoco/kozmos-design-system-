@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "893de5ebdce6";
+const PLUGIN_BUILD = "ae6d7885a3ab";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -474,6 +474,38 @@ const NAVBAR_CONTEXT_TEXT_WIDTH = 162;
 // copy drifts from the source. Name the job, not the size: the whole point is
 // that changing how round the product feels is one alias edit in the tokens,
 // not a sweep through 162 hardcoded numbers, which is what this replaced.
+/**
+ * Elevation, as three roles rather than ten hand-written shadows.
+ *
+ * These mirror Semantics.Elevation in packages/tokens, which aliases
+ * shadow.sm / md / lg; pnpm tokens:elevation:check fails if they drift apart.
+ * Figma renders the light mode, so these are the light values.
+ *
+ * Four shadows in this file are deliberately not roles, because the scale
+ * cannot express what they say: a FloatingActionButton is heavier than any
+ * step on purpose, a BottomNavigation casts upward, and a Tooltip stacks two
+ * layers. Forcing those into three roles would flatten real distinctions.
+ */
+const KOZMOS_ELEVATION = {
+  raised: { y: 2, blur: 4, alpha: 0.05 },
+  floating: { y: 4, blur: 8, alpha: 0.1 },
+  overlay: { y: 8, blur: 16, alpha: 0.1 },
+};
+
+function elevationEffect(role) {
+  const step = KOZMOS_ELEVATION[role];
+  if (!step) throw new Error("unknown elevation role: " + role);
+  return {
+    type: "DROP_SHADOW",
+    color: { r: 0, g: 0, b: 0, a: step.alpha },
+    offset: { x: 0, y: step.y },
+    radius: step.blur,
+    spread: 0,
+    visible: true,
+    blendMode: "NORMAL",
+  };
+}
+
 const KOZMOS_RADIUS = {
   none: 0,
   marker: 4,
@@ -41476,19 +41508,7 @@ function searchBarConfig(variant, state) {
     iconFallback: disabled ? "#747B8B" : "#5D626F",
     placeholderFallback: disabled ? "#747B8B" : "#5D626F",
     valueFallback: disabled ? "#747B8B" : "#000000",
-    effects: floating
-      ? [
-          {
-            type: "DROP_SHADOW",
-            color: { r: 0, g: 0, b: 0, a: 0.08 },
-            offset: { x: 0, y: 4 },
-            radius: 16,
-            spread: 0,
-            visible: true,
-            blendMode: "NORMAL",
-          },
-        ]
-      : [],
+    effects: floating ? [elevationEffect("floating")] : [],
   };
 }
 
@@ -44658,17 +44678,7 @@ async function updateMapControlButtonVariant(
   component.strokes = [];
   component.strokeWeight = 0;
   component.cornerRadius = 0;
-  component.effects = [
-    {
-      type: "DROP_SHADOW",
-      color: { r: 0, g: 0, b: 0, a: 0.12 },
-      offset: { x: 0, y: 2 },
-      radius: 8,
-      spread: 0,
-      visible: true,
-      blendMode: "NORMAL",
-    },
-  ];
+  component.effects = [elevationEffect("floating")];
   markControlSurface(component);
 
   removeDirectChildren(component);
@@ -49175,17 +49185,7 @@ async function createButtonVariant({
   );
 
   if (variant === "Glass") {
-    component.effects = [
-      {
-        type: "DROP_SHADOW",
-        color: { r: 0, g: 0, b: 0, a: 0.12 },
-        offset: { x: 0, y: 8 },
-        radius: 16,
-        spread: -8,
-        visible: true,
-        blendMode: "NORMAL",
-      },
-    ];
+    component.effects = [elevationEffect("overlay")];
   }
 
   if (state === "Loading") {
@@ -49322,20 +49322,7 @@ async function updateButtonVariant(
     stats,
   );
 
-  component.effects =
-    variant === "Glass"
-      ? [
-          {
-            type: "DROP_SHADOW",
-            color: { r: 0, g: 0, b: 0, a: 0.12 },
-            offset: { x: 0, y: 8 },
-            radius: 16,
-            spread: -8,
-            visible: true,
-            blendMode: "NORMAL",
-          },
-        ]
-      : [];
+  component.effects = variant === "Glass" ? [elevationEffect("overlay")] : [];
 
   await syncButtonVariantChildren({
     component,
@@ -49464,20 +49451,7 @@ async function updateIconButtonVariant(
     stats,
   );
 
-  component.effects =
-    variant === "Glass"
-      ? [
-          {
-            type: "DROP_SHADOW",
-            color: { r: 0, g: 0, b: 0, a: 0.12 },
-            offset: { x: 0, y: 8 },
-            radius: 16,
-            spread: -8,
-            visible: true,
-            blendMode: "NORMAL",
-          },
-        ]
-      : [];
+  component.effects = variant === "Glass" ? [elevationEffect("overlay")] : [];
 
   await syncIconButtonChildren({
     component,
@@ -52618,17 +52592,7 @@ async function updateCardVariant(
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
-  component.effects = [
-    {
-      type: "DROP_SHADOW",
-      color: { r: 0, g: 0, b: 0, a: 0.05 },
-      offset: { x: 0, y: 1 },
-      radius: 2,
-      spread: 0,
-      visible: true,
-      blendMode: "NORMAL",
-    },
-  ];
+  component.effects = [elevationEffect("raised")];
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Card");
 

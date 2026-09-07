@@ -165,6 +165,14 @@ module.exports = {
         sm: "var(--shadow-sm)",
         md: "var(--shadow-md)",
         lg: "var(--shadow-lg)",
+
+        // Elevation roles. Name the job, not the depth: a card is raised, map
+        // chrome floats, a menu overlays. These live in Semantics.Elevation in
+        // packages/tokens/src/tokens-*.json, and scripts/check-elevation-parity.mjs
+        // holds Figma, native and this file to the same three aliases.
+        raised: "var(--semantics-elevation-raised)",
+        floating: "var(--semantics-elevation-floating)",
+        overlay: "var(--semantics-elevation-overlay)",
       },
       transitionDuration: {
         DEFAULT: "calc(150ms * var(--semantics-motion-duration-scale, 1))", // Updated to semantics
