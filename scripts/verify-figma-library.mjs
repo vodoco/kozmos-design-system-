@@ -182,6 +182,7 @@ async function main() {
   const unbound = [];
   const overflowing = [];
   const undefinedNames = [];
+  const typedGlyphs = [];
 
   for (const name of names) {
     if (!sets[name]) {
@@ -275,6 +276,28 @@ async function main() {
         `${name} / ${property.split("#")[0]} (${definition.type}) — declared, referenced by no layer`,
       );
     }
+  }
+
+  // A symbol typed as a character instead of placed as an icon. The library
+  // holds 2,279 real icon instances across 41 sets, and a handful of sets type
+  // arrows and plus signs into text nodes instead — which no icon library can
+  // restyle, no product can swap, and no platform renders identically.
+  // Percentages and asterisks are real characters and are left alone.
+  const GLYPH = /^[^A-Za-z0-9%*\s]{1,2}$/;
+  for (const [name, set] of Object.entries(sets)) {
+    const seen = new Set();
+    (function walk(node) {
+      if (node.type === "TEXT" && GLYPH.test((node.characters || "").trim())) {
+        const key = name + "/" + node.name + "/" + node.characters.trim();
+        if (!seen.has(key)) {
+          seen.add(key);
+          typedGlyphs.push(
+            `${name} / ${node.name} — the character ${JSON.stringify(node.characters.trim())} where an icon belongs`,
+          );
+        }
+      }
+      if (node.children) node.children.forEach(walk);
+    })(set);
   }
 
   // A variant whose name carries "undefined" is a painter that was handed the
@@ -449,6 +472,9 @@ async function main() {
   // this to `total` on the day the count reaches zero — a gate that is red on
   // purpose is a gate somebody switches off.
   report("children that overflow the box holding them", overflowing);
+  // Reported, not enforced: this arrives with a backlog across the Product/SDK
+  // lane. Add it to the failing total on the day it reaches zero.
+  report("icons typed as characters", typedGlyphs);
 
   console.log(
     total === 0

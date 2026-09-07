@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "c2ba952d7883";
+const PLUGIN_BUILD = "893de5ebdce6";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -326,6 +326,9 @@ const MAP_CONTROL_BUTTON_PRESENTATIONS = ["IconOnly", "Labelled"];
  * the library, not a variant.
  */
 const MAP_CONTROL_BUTTON_STATES = ["Default", "Pressed", "Disabled"];
+
+/** The symbol a fresh map control carries, from the Pointr Icon Library. */
+const MAP_CONTROL_BUTTON_DEFAULT_ICON = "plus";
 const MAP_CONTROLS_GROUP_PRESENTATIONS = ["IconOnly", "Labelled"];
 const MAP_OVERLAY_WIDTHS = ["Auto", "Small", "Medium", "Large", "Full"];
 const MAP_OVERLAY_WIDTH_SIZES = {
@@ -13982,6 +13985,21 @@ function createMissingNestedComponentNode(name, message, stats) {
   return frame;
 }
 
+/** Does this set get its visuals from an instance of another set? */
+function composesNestedComponentSet(componentSet) {
+  if (!componentSet || !componentSet.children) return false;
+  let found = false;
+  (function walk(node) {
+    if (found) return;
+    if (isGeneratedNestedComponentInstance(node)) {
+      found = true;
+      return;
+    }
+    if (node.children) for (const child of node.children) walk(child);
+  })(componentSet);
+  return found;
+}
+
 function isGeneratedNestedComponentInstance(node) {
   return (
     node &&
@@ -15420,7 +15438,18 @@ function auditComponentSet(
     record.warnings.push("Component set has no child components.");
   }
 
-  if (record.boundVariableCount === 0) {
+  // A set that composes another one owns no bindings, and that is the point:
+  // MapControlButton is a Button wearing map chrome, so its colours, radius and
+  // border are bound inside the Button and audited there. collectBoundVariableIds
+  // deliberately skips nested instances to avoid double-counting, so a composed
+  // set reads zero — which is a fact about composition, not a defect.
+  //
+  // A set with no bindings and nothing nested is still worth flagging: it is
+  // painting with literals.
+  if (
+    record.boundVariableCount === 0 &&
+    !composesNestedComponentSet(componentSet)
+  ) {
     record.warnings.push("No bound variables found in component set.");
   }
 
@@ -44584,104 +44613,141 @@ function parseMapControlButtonVariantName(name) {
   return { presentation: values.Presentation, state: values.State };
 }
 
+/**
+ * A map control is a Button wearing map chrome.
+ *
+ * It used to be a rounded rectangle drawn from scratch with the character "+"
+ * typed into a text node as its icon. React has always composed the real
+ * Button; Figma redrew one, and redrawing is what lets the two drift. The
+ * library had 2,279 real icon instances at the time and this set used none of
+ * them.
+ *
+ * So the root now carries only what is specific to being over a map — the
+ * shadow that lifts it off the tiles — and everything else comes from the
+ * Button inside it: the surface, the radius, the border, the label, and an
+ * icon swapped from the Pointr Icon Library.
+ */
 async function updateMapControlButtonVariant(
   component,
   { props, variableByName, fonts, stats },
 ) {
-  // The matrix helper passes the axis values nested under props, the way
-  // LocationPin reads them. Destructuring them at the top level instead named
-  // six variants Presentation=undefined, State=undefined and left the set with
-  // no property definitions at all.
   const presentation = props.presentation;
   const state = props.state;
   const labelled = presentation === "Labelled";
-  const surface = mapControlButtonStateConfig(state);
+  const buttonVariant = mapControlButtonNestedVariant(presentation, state);
+
   productSdkVariantRoot(
     component,
     "MapControlButton",
     "Presentation=" + presentation + ", State=" + state,
     {
       direction: "horizontal",
-      primarySizing: labelled ? "AUTO" : "FIXED",
-      counterSizing: "FIXED",
+      primarySizing: "AUTO",
+      counterSizing: "AUTO",
       primaryAlign: "CENTER",
       counterAlign: "CENTER",
-      spacing: labelled ? 8 : 0,
-      paddingLeft: labelled ? 12 : 0,
-      paddingRight: labelled ? 12 : 0,
-      // 44px on both axes even when icon-only: this is the shared touch-target
-      // contract, not a visual choice.
-      width: 44,
+      spacing: 0,
+      padding: 0,
+      width: labelled ? 112 : 44,
       height: 44,
     },
   );
-  component.cornerRadius = KOZMOS_RADIUS.control;
-  component.fills = [
-    paintFromVariable(
-      surface.fill,
-      surface.fillFallback,
-      variableByName,
-      stats,
-    ),
+  // Fill, stroke and radius belong to the Button. A root that painted its own
+  // would draw a second border around the first.
+  component.fills = [];
+  component.strokes = [];
+  component.strokeWeight = 0;
+  component.cornerRadius = 0;
+  component.effects = [
+    {
+      type: "DROP_SHADOW",
+      color: { r: 0, g: 0, b: 0, a: 0.12 },
+      offset: { x: 0, y: 2 },
+      radius: 8,
+      spread: 0,
+      visible: true,
+      blendMode: "NORMAL",
+    },
   ];
-  component.strokes = [
-    paintFromVariable(
-      surface.stroke,
-      surface.strokeFallback,
-      variableByName,
-      stats,
-    ),
-  ];
-  component.strokeWeight = 1;
   markControlSurface(component);
 
-  const glyph = await productSdkText({
-    name: "Control Glyph",
-    characters: "+",
-    styleKey: "badgeLabel",
-    fonts,
-    bold: true,
-    fontSize: 18,
-    lineHeight: 24,
-    colorToken: surface.foreground,
-    colorFallback: surface.foregroundFallback,
-    variableByName,
+  removeDirectChildren(component);
+
+  const created = await createNestedComponentInstance({
+    componentSetName: "Button",
+    variantProperties: buttonVariant,
+    name: "Control Button",
     stats,
-    width: 20,
   });
-  glyph.textAlignHorizontal = "CENTER";
-  glyph.textAutoResize = "WIDTH_AND_HEIGHT";
-  component.appendChild(glyph);
+
+  if (!created) {
+    component.appendChild(
+      createMissingNestedComponentNode(
+        "Control Button",
+        "Build Button before updating MapControlButton.",
+        stats,
+      ),
+    );
+    return;
+  }
+
+  const button = created.instance;
+  component.appendChild(button);
+
+  // The icon is a real symbol from the Pointr Icon Library, swapped through
+  // the Button's own Icon property rather than typed as a character.
+  const icon = await findKozmosIconSourceComponent(
+    MAP_CONTROL_BUTTON_DEFAULT_ICON,
+  );
+  if (icon) {
+    setInstanceSwapProperty(
+      button,
+      created.componentSet,
+      "Icon",
+      icon.id,
+      stats,
+    );
+  } else {
+    stats.warnings.push(
+      `MapControlButton: icon "${MAP_CONTROL_BUTTON_DEFAULT_ICON}" was not found on the Icons page.`,
+    );
+  }
 
   if (labelled) {
-    const label = await productSdkText({
-      name: "Label Text",
-      characters: "Zoom in",
-      styleKey: "controlLabel",
-      fonts,
-      bold: false,
-      fontSize: 14,
-      lineHeight: 20,
-      colorToken: surface.foreground,
-      colorFallback: surface.foregroundFallback,
-      variableByName,
+    setInstanceTextProperty(
+      button,
+      created.componentSet,
+      "Label Text",
+      "Zoom in",
       stats,
-      width: 96,
-    });
-    label.textAutoResize = "WIDTH_AND_HEIGHT";
-    component.appendChild(label);
+    );
+  }
+
+  // A component's own property cannot drive a node inside a nested instance,
+  // so the Button's own panel is the API: exposing it puts Label Text and the
+  // Icon swap in the designer's reach on the parent.
+  try {
+    button.isExposedInstance = true;
+  } catch (_error) {
+    // Older Figma runtimes do not expose this; the instance still works.
   }
 }
 
 /**
- * The surface a map control wears in each state.
+ * Which Button a map control is, in each state.
  *
- * The same recipe `toggleButtonConfig` uses, so a pressed map control and a
- * pressed toggle are the same blue. The disabled fallback here is `#E3E4E8`,
- * which is what `background/100` actually resolves to; `toggleButtonConfig`
- * says `#E4E6EA`, one ramp step off, and that is recorded in the gap audit
- * rather than copied.
+ * React writes this as `variant = pressed ? "default" : "ghost"` over a white
+ * background with a ring, which is Outline in the library's vocabulary. Size
+ * follows the presentation: Icon is the 44px square, Default hugs its label.
  */
+function mapControlButtonNestedVariant(presentation, state) {
+  return {
+    Variant: state === "Pressed" ? "Default" : "Outline",
+    Size: presentation === "Labelled" ? "Default" : "Icon",
+    State: state === "Disabled" ? "Disabled" : "Default",
+  };
+}
+
 function mapControlButtonStateConfig(state) {
   if (state === "Pressed") {
     return {
@@ -44766,18 +44832,23 @@ function mapControlButtonComponentConfig() {
 }
 
 function configureMapControlButtonProperties(componentSet, stats) {
-  configureNamedTextProperty(
+  // The label lives on the nested Button now, and a component's own property
+  // cannot drive a node inside a nested instance. Leaving the old text
+  // property declared would bind it to nothing, and one unbound property
+  // blocks publishing the whole library.
+  deleteComponentPropertiesByBaseName(
     componentSet,
-    "Label Text",
-    "Label Text",
-    "Zoom in",
+    ["Label Text"],
+    ["TEXT"],
     stats,
   );
 }
 
 const MAP_CONTROL_BUTTON_DESCRIPTION = [
   "Kozmos MapControlButton generated from the React MapControlButton API.",
-  "Presentation maps to MapControlButton.presentation (icon-only, labelled).",
+  "Composed of a nested Button instance, the way React composes Button. The icon is a real Pointr Icon Library symbol swapped through the Button's own Icon property.",
+  "The nested Button is exposed, so its Label Text and Icon are edited on this instance rather than duplicated here.",
+  "Presentation maps to MapControlButton.presentation (icon-only, labelled), and picks the Button size: Icon or Default.",
   "State maps to MapControlButton.pressed and .disabled: Pressed is aria-pressed, Disabled is the native attribute.",
   "Pressed is for a mode that stays on - location tracking, wheelchair routing, 2D/3D - not the moment of a click.",
   "Label Text maps to MapControlButton.label, which is the accessible name in both presentations.",

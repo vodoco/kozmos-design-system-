@@ -1,5 +1,4 @@
 import figma from "@figma/code-connect";
-import { LocateFixed } from "lucide-react";
 import { MapControlButton } from "./MapControlButton";
 
 const mapControlButtonUrl =
@@ -7,22 +6,27 @@ const mapControlButtonUrl =
 
 figma.connect(MapControlButton, mapControlButtonUrl, {
   props: {
-    label: figma.string("Label Text"),
     presentation: figma.enum("Presentation", {
       IconOnly: "icon-only",
       Labelled: "labelled",
     }),
-    // Two React concerns, one Figma axis. \`Pressed\` is a mode that stays on and
-    // is announced by aria-pressed; \`Disabled\` is the native attribute. Default
+    // Two React concerns, one Figma axis. Pressed is a mode that stays on and
+    // is announced by aria-pressed; Disabled is the native attribute. Default
     // maps to neither, which is why both enums leave it undefined.
     pressed: figma.enum("State", { Pressed: true }),
     disabled: figma.enum("State", { Disabled: true }),
+    // The label and the icon live on the nested Button, because a component's
+    // own property cannot drive a node inside a nested instance.
+    button: figma.nestedProps("Control Button", {
+      label: figma.string("Label Text"),
+      icon: figma.instance("Icon"),
+    }),
   },
-  example: ({ label, presentation, pressed, disabled }) => (
+  example: ({ presentation, pressed, disabled, button }) => (
     <MapControlButton
       disabled={disabled}
-      icon={<LocateFixed aria-hidden="true" className="h-5 w-5" />}
-      label={label}
+      icon={button.icon}
+      label={button.label}
       presentation={presentation}
       pressed={pressed}
     />
