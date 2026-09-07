@@ -56,7 +56,8 @@
     "release": "turbo run build && changeset publish",
     "prepare": "husky",
     "figma:stamp": "node scripts/stamp-figma-plugin.mjs",
-    "figma:stamp:check": "node scripts/stamp-figma-plugin.mjs --check"
+    "figma:stamp:check": "node scripts/stamp-figma-plugin.mjs --check",
+    "tokens:elevation:check": "node scripts/check-elevation-parity.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.1",

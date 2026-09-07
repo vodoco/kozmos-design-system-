@@ -71,6 +71,9 @@ jobs:
       - name: Verify Border Parity
         run: pnpm tokens:border:check
 
+      - name: Verify Elevation Parity
+        run: pnpm tokens:elevation:check
+
       # A stale stamp means the plugin source changed without the build id
       # following, and the id is the only way to tell which build produced what
       # is in the Figma file.
