@@ -156,7 +156,9 @@ async function main() {
   // walks below, including everything nested past a variant's sixth level.
   // Fetching the whole tree costs 1.7 MB more and no extra time.
   const res = await fetch(
-    `https://api.figma.com/v1/files/${FILE_KEY}/nodes?ids=${encodeURIComponent(PAGE_NODE)}`,
+    // plugin_data=shared brings back the build stamp each set records, which is
+    // how the coverage line below knows whether the file is current with the code.
+    `https://api.figma.com/v1/files/${FILE_KEY}/nodes?ids=${encodeURIComponent(PAGE_NODE)}&plugin_data=shared`,
     { headers: { "X-Figma-Token": t } },
   );
   if (res.status !== 200) {
@@ -481,6 +483,40 @@ async function main() {
       ? "\nThe published file matches what the importer would generate."
       : `\n${total} drift item(s). The file is behind the code — re-run the importer, then verify again.`,
   );
+  // Which build produced what is in the file. Not a pass/fail: every edit to
+  // the plugin invalidates all 94 stamps, so a red gate here would be red
+  // permanently. It answers the question that keeps coming up instead — is the
+  // file current with the code, or is it waiting for a run?
+  {
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "figma/foundations-importer/code.js"),
+      "utf8",
+    );
+    const current = /const PLUGIN_BUILD = "([a-f0-9]+)"/.exec(plugin);
+    if (current) {
+      let matching = 0;
+      let stamped = 0;
+      for (const set of Object.values(sets)) {
+        const stamp =
+          set.sharedPluginData &&
+          set.sharedPluginData.kozmos_ds_importer &&
+          set.sharedPluginData.kozmos_ds_importer.build;
+        if (!stamp) continue;
+        stamped += 1;
+        if (stamp === current[1]) matching += 1;
+      }
+      const total = Object.keys(sets).length;
+      console.log(
+        `\nBuild coverage: ${matching} of ${total} set(s) were produced by the current plugin build (${current[1]}).` +
+          (matching < total
+            ? `\n  ${total - matching} are behind it. Painter changes — colours, shadows, spacing — only reach the` +
+              `\n  file when a set is re-run, and the drift checks above compare structure, not paint.` +
+              `\n  Update All Core and Update All Product / SDK bring the whole file current.`
+            : ""),
+      );
+    }
+  }
+
   console.log(
     "\nNote: the REST API resolves variables in the file's default mode, so contrast here is the light theme only.",
   );
