@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "fa0757162b19";
+const PLUGIN_BUILD = "893de5ebdce6";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -13985,6 +13985,21 @@ function createMissingNestedComponentNode(name, message, stats) {
   return frame;
 }
 
+/** Does this set get its visuals from an instance of another set? */
+function composesNestedComponentSet(componentSet) {
+  if (!componentSet || !componentSet.children) return false;
+  let found = false;
+  (function walk(node) {
+    if (found) return;
+    if (isGeneratedNestedComponentInstance(node)) {
+      found = true;
+      return;
+    }
+    if (node.children) for (const child of node.children) walk(child);
+  })(componentSet);
+  return found;
+}
+
 function isGeneratedNestedComponentInstance(node) {
   return (
     node &&
@@ -15423,7 +15438,18 @@ function auditComponentSet(
     record.warnings.push("Component set has no child components.");
   }
 
-  if (record.boundVariableCount === 0) {
+  // A set that composes another one owns no bindings, and that is the point:
+  // MapControlButton is a Button wearing map chrome, so its colours, radius and
+  // border are bound inside the Button and audited there. collectBoundVariableIds
+  // deliberately skips nested instances to avoid double-counting, so a composed
+  // set reads zero — which is a fact about composition, not a defect.
+  //
+  // A set with no bindings and nothing nested is still worth flagging: it is
+  // painting with literals.
+  if (
+    record.boundVariableCount === 0 &&
+    !composesNestedComponentSet(componentSet)
+  ) {
     record.warnings.push("No bound variables found in component set.");
   }
 
