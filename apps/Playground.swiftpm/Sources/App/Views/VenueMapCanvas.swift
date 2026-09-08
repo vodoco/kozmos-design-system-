@@ -11,10 +11,18 @@ private struct PlanLayout {
     let scale: CGFloat
     let origin: CGPoint
 
-    init(size: CGSize, insets: EdgeInsets, focus: CGPoint, zoom: CGFloat) {
+    init(size: CGSize, insets: KozmosMapCollisionInsets, focus: CGPoint, zoom: CGFloat) {
+        // Physical edges throughout. The plan is drawn in absolute coordinates,
+        // so a leading/trailing inset would put the reserved space on the wrong
+        // side of a right-to-left layout.
+        let left = CGFloat(insets.left)
+        let right = CGFloat(insets.right)
+        let top = CGFloat(insets.top)
+        let bottom = CGFloat(insets.bottom)
+
         let visible = CGSize(
-            width: max(size.width - insets.leading - insets.trailing, 1),
-            height: max(size.height - insets.top - insets.bottom, 1)
+            width: max(size.width - left - right, 1),
+            height: max(size.height - top - bottom, 1)
         )
 
         scale = visible.width / PlanSpace.size.width * zoom
@@ -24,8 +32,8 @@ private struct PlanLayout {
             height: PlanSpace.size.height * scale
         )
         let centre = CGPoint(
-            x: insets.leading + visible.width / 2,
-            y: insets.top + visible.height / 2
+            x: left + visible.width / 2,
+            y: top + visible.height / 2
         )
 
         func axis(
@@ -45,13 +53,13 @@ private struct PlanLayout {
             x: axis(
                 planLength: planSize.width,
                 visibleLength: visible.width,
-                leadingInset: insets.leading,
+                leadingInset: left,
                 centred: centre.x - focus.x * scale
             ),
             y: axis(
                 planLength: planSize.height,
                 visibleLength: visible.height,
-                leadingInset: insets.top,
+                leadingInset: top,
                 centred: centre.y - focus.y * scale
             )
         )
@@ -89,8 +97,9 @@ struct VenueMapCanvas: View {
     let userPosition: CGPoint?
     let userHeading: Double
     let zoom: CGFloat
-    /// Screen the map keeps clear of the top bar, the controls, and the panel.
-    let insets: EdgeInsets
+    /// Screen the map keeps clear of the top bar, the controls, and the panel,
+    /// in physical edges as the shell reports them.
+    let insets: KozmosMapCollisionInsets
     /// The plan point the camera keeps in view.
     let focus: CGPoint
     let onSelect: (String) -> Void
