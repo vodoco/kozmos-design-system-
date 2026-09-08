@@ -30,6 +30,7 @@ final class WayfindingStore: ObservableObject {
             guard query != oldValue else { return }
             if isSearching {
                 selectedCategoryId = nil
+                showsSavedOnly = false
                 if phase == .browse || phase == .results { phase = .results }
             } else if phase == .results, selectedCategoryId == nil {
                 phase = .browse
@@ -44,6 +45,7 @@ final class WayfindingStore: ObservableObject {
     }
     @Published private(set) var stepIndex: Int = 0
     @Published private(set) var savedPOIIds: Set<String> = []
+    @Published private(set) var showsSavedOnly = false
     @Published private(set) var announcement: String = ""
     @Published private(set) var actionMessage: DetailActionMessage?
     @Published var zoom: CGFloat = 1
@@ -112,11 +114,12 @@ final class WayfindingStore: ObservableObject {
 
     var isSearching: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
 
-    /// POIs matching the current query and category, ordered by walking time.
+    /// POIs matching the current filter, ordered by walking time.
     var results: [VenuePOI] {
         let needle = query.trimmingCharacters(in: .whitespaces).lowercased()
         return venue.pois
             .filter { poi in
+                guard !showsSavedOnly || savedPOIIds.contains(poi.id) else { return false }
                 let matchesCategory = selectedCategoryId.map { $0 == poi.categoryId } ?? true
                 guard matchesCategory else { return false }
                 guard !needle.isEmpty else { return true }
@@ -173,6 +176,7 @@ final class WayfindingStore: ObservableObject {
     var resultCountLabel: String { VenueFormat.results(results.count) }
 
     var resultsTitle: String {
+        if showsSavedOnly { return "Saved places" }
         if let id = selectedCategoryId, let category = venue.categories.first(where: { $0.id == id }) {
             return category.label
         }
@@ -319,6 +323,7 @@ final class WayfindingStore: ObservableObject {
 
     func selectCategory(_ id: String) {
         selectedCategoryId = id
+        showsSavedOnly = false
         query = ""
         phase = .results
         announce("\(resultsTitle), \(resultCountLabel)")
@@ -326,6 +331,7 @@ final class WayfindingStore: ObservableObject {
 
     func backToBrowse() {
         selectedCategoryId = nil
+        showsSavedOnly = false
         query = ""
         selectedPOIId = nil
         phase = .browse
@@ -428,6 +434,26 @@ final class WayfindingStore: ObservableObject {
         selectedFloorId = venue.originFloorId
         phase = selectedPOIId == nil ? .browse : .detail
         announce("Route ended")
+    }
+
+    /// The saved filter, labelled with its own count.
+    var savedChipLabel: String {
+        savedPOIIds.isEmpty ? "Saved" : "Saved · \(savedPOIIds.count)"
+    }
+
+    /// Saving a place used to be a dead end — the count was shown and the
+    /// places behind it were unreachable. This is the way in, and out.
+    func showSaved() {
+        guard !savedPOIIds.isEmpty else { return }
+        if showsSavedOnly {
+            backToBrowse()
+            return
+        }
+        query = ""
+        selectedCategoryId = nil
+        showsSavedOnly = true
+        phase = .results
+        announce("Saved places, \(resultCountLabel)")
     }
 
     // MARK: - Sheet

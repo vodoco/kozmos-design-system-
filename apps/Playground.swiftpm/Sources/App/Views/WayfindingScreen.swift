@@ -45,15 +45,17 @@ struct WayfindingScreen: View {
 
     /// The shell's insets are the exact bounds of its chrome; the plan keeps a
     /// little air beyond them.
-    private var mapEdgeInsets: EdgeInsets {
-        let gap = KozmosDimensions.primitivesLayoutSpacing200
-        return EdgeInsets(
-            top: CGFloat(collisionInsets.top) + gap,
-            leading: CGFloat(collisionInsets.left) + gap,
-            bottom: CGFloat(collisionInsets.bottom) + gap,
-            trailing: CGFloat(collisionInsets.right) + gap
+    private var mapInsets: KozmosMapCollisionInsets {
+        let gap = Double(KozmosDimensions.primitivesLayoutSpacing200)
+        return KozmosMapCollisionInsets(
+            top: collisionInsets.top + gap,
+            right: collisionInsets.right + gap,
+            bottom: collisionInsets.bottom + gap,
+            left: collisionInsets.left + gap
         )
     }
+
+
 
     /// The plan point the camera holds in view: the current manoeuvre while
     /// navigating, otherwise the selected place, otherwise the visitor.
@@ -89,10 +91,21 @@ struct WayfindingScreen: View {
                     userPosition: store.userPosition,
                     userHeading: store.userHeading,
                     zoom: store.zoom,
-                    insets: mapEdgeInsets,
+                    insets: mapInsets,
                     focus: mapFocus,
                     onSelect: { store.selectPOI($0) }
                 )
+                // A floor plan is geography, not text: it must not mirror in a
+                // right-to-left layout, or north-east ends up on the wrong side
+                // of the building. Pinning the canvas keeps its coordinates
+                // physical, which is also what the shell's insets are.
+                .environment(\.layoutDirection, .leftToRight)
+                // Labels painted into the plan are part of the drawing, like a
+                // printed map's. They still scale, but not past the point where
+                // a room name no longer fits its room — the pins carry the
+                // accessible names, and the rooms themselves are hidden from
+                // assistive technology.
+                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
             }
 
             KozmosNavigationAnnouncer(message: store.announcement)
@@ -101,14 +114,25 @@ struct WayfindingScreen: View {
 
     // MARK: - Controls
 
+    /// The shell proposes the band left between the top bar and the panel, so
+    /// the controls can pick a shape that fits it rather than disappearing
+    /// behind the sheet: a button per level while there is room, a stepper when
+    /// the band tightens, and a single row laid across a short wide band — a
+    /// landscape phone, or a sheet dragged nearly full-screen.
     private var controlsLayer: some View {
+        ViewThatFits {
+            controlsColumn(floorSelector: .verticalList)
+            controlsColumn(floorSelector: .compactStepper)
+            controlsRow
+            // `EmptyView` is elided from a ViewThatFits builder, so the last
+            // resort has to be a real view that occupies nothing.
+            Color.clear.frame(width: 0, height: 0)
+        }
+    }
+
+    private func controlsColumn(floorSelector: KozmosFloorSelectorVariant) -> some View {
         HStack(alignment: .top, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
-            KozmosFloorSelector(
-                floors: store.floorPresentations,
-                selectedFloor: $store.selectedFloorId,
-                variant: .verticalList,
-                label: "Floor selector, \(store.venue.buildingLabel)"
-            )
+            floorSelectorControl(floorSelector)
 
             KozmosMapControlsGroup(
                 onZoomIn: { store.zoomIn() },
@@ -118,6 +142,34 @@ struct WayfindingScreen: View {
                 locationStateLabel: store.locationStateLabel
             )
         }
+    }
+
+    /// `KozmosMapControlsGroup` stacks vertically by design, so a short band
+    /// composes the same controls from `KozmosMapControlButton` instead.
+    private var controlsRow: some View {
+        HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+            floorSelectorControl(.horizontalList)
+
+            KozmosMapControlButton(label: "Zoom in", systemImage: "plus") { store.zoomIn() }
+            KozmosMapControlButton(label: "Zoom out", systemImage: "minus") { store.zoomOut() }
+            KozmosMapControlButton(
+                label: "Centre on my location",
+                systemImage: "location.fill",
+                stateLabel: store.locationStateLabel,
+                pressed: true
+            ) {
+                store.recentre()
+            }
+        }
+    }
+
+    private func floorSelectorControl(_ variant: KozmosFloorSelectorVariant) -> some View {
+        KozmosFloorSelector(
+            floors: store.floorPresentations,
+            selectedFloor: $store.selectedFloorId,
+            variant: variant,
+            label: "Floor selector, \(store.venue.buildingLabel)"
+        )
     }
 
     // MARK: - Top bar
@@ -158,6 +210,7 @@ struct WayfindingScreen: View {
                 placeholder: "Search \(store.venue.name)",
                 onClear: { store.clearSearch() }
             )
+            .submitLabel(.search)
             .onSubmit { store.submitSearch() }
             // Reaching for the field means reading results, so the sheet opens
             // out of the way of the keyboard.
@@ -211,14 +264,20 @@ struct WayfindingScreen: View {
                     Text("\(store.venue.buildingLabel) · \(store.venue.pois.count) places")
                         .font(KozmosTypography.subheadline)
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                        // Wrap rather than truncate when the chip beside it
+                        // claims the width at large type sizes.
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             },
             actions: {
-                KozmosBadge(
-                    "Saved",
-                    variant: .secondary,
-                    counter: "\(store.savedPOIIds.count)",
-                    showCounter: true
+                // A badge here only counted; there was no way to reach the
+                // places it counted. A chip is the design system's filter.
+                KozmosChip(
+                    text: store.savedChipLabel,
+                    variant: .brand,
+                    selected: store.showsSavedOnly,
+                    disabled: store.savedPOIIds.isEmpty,
+                    action: { store.showSaved() }
                 )
             },
             emptyState: {
@@ -258,6 +317,8 @@ struct WayfindingScreen: View {
                 )
                 .padding(KozmosDimensions.primitivesLayoutSpacing200)
             }
+            // Scrolling the results is how you get the keyboard out of the way.
+            .scrollDismissesKeyboard(.interactively)
         }
     }
 
