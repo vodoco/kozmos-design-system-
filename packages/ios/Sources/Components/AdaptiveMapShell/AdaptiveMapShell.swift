@@ -116,6 +116,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     private let hasMapStatusContent: Bool
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.layoutDirection) private var layoutDirection
     @State private var topBarHeight: CGFloat = 0
     @State private var controlsWidth: CGFloat = 0
     @State private var uncontrolledDetent: KozmosMapPanelDetent?
@@ -221,6 +222,19 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         }
     }
 
+    /// Where the offered detents place this one. A caller can bind a detent
+    /// that is not in the set, and a set can collapse two detents that resolve
+    /// to the same height, so an exact match is not guaranteed — fall back to
+    /// whichever offered detent it sits closest to, or the handle goes dead.
+    private func detentIndex(of detent: KozmosMapPanelDetent, in shellHeight: CGFloat) -> Int? {
+        let ordered = orderedDetents(in: shellHeight)
+        if let exact = ordered.firstIndex(of: detent) { return exact }
+        guard let nearest = nearestDetent(to: detent.height(in: shellHeight), in: shellHeight) else {
+            return nil
+        }
+        return ordered.firstIndex(of: nearest)
+    }
+
     private var showsGrabber: Bool {
         hasPanel && !isRegularWidth && panelDetents.count > 1
     }
@@ -229,36 +243,57 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
 
     /// What the shell's own chrome is covering, merged with the caller's own
     /// insets. Each edge takes whichever is larger.
-    func resolvedCollisionInsets(in size: CGSize) -> KozmosMapCollisionInsets {
+    ///
+    /// `KozmosMapCollisionInsets` names physical edges, because that is what a
+    /// map camera's padding is — so the panel's placement has to be resolved
+    /// against the reading direction before it becomes a left or a right. In a
+    /// right-to-left layout a panel at `.end` sits on the physical left, and
+    /// the controls opposite it on the physical right.
+    func resolvedCollisionInsets(
+        in size: CGSize,
+        layoutDirection: LayoutDirection
+    ) -> KozmosMapCollisionInsets {
         let edgePadding = KozmosDimensions.primitivesLayoutSpacing200
         let sidePanelWidth = hasPanel && isRegularWidth
             ? min(416, size.width * 0.42) + edgePadding * 2
             : 0
-        let dockedPanelHeight = hasPanel && !isRegularWidth
-            ? settledPanelHeight(in: size.height)
-            : 0
+        let dockedPanel = dockedPanelHeight(in: size)
         let controlsColumn = hasControls ? controlsWidth + edgePadding * 2 : 0
-        let controlsOnLeading = panelPlacement == .end
+        let panelOnPhysicalRight = (panelPlacement == .end) == (layoutDirection == .leftToRight)
 
         return KozmosMapCollisionInsets(
-            top: max(collisionInsets.top, hasTopBar ? Double(topBarHeight) : 0),
+            top: max(collisionInsets.top, Double(topBarInset)),
             right: max(
                 collisionInsets.right,
-                Double(controlsOnLeading ? sidePanelWidth : controlsColumn)
+                Double(panelOnPhysicalRight ? sidePanelWidth : controlsColumn)
             ),
-            bottom: max(collisionInsets.bottom, Double(dockedPanelHeight)),
+            bottom: max(collisionInsets.bottom, Double(dockedPanel)),
             left: max(
                 collisionInsets.left,
-                Double(controlsOnLeading ? controlsColumn : sidePanelWidth)
+                Double(panelOnPhysicalRight ? controlsColumn : sidePanelWidth)
             )
         )
+    }
+
+    /// How much of the shell the docked panel is covering, at its settled
+    /// detent — zero when the panel floats beside the map instead.
+    private func dockedPanelHeight(in size: CGSize) -> CGFloat {
+        hasPanel && !isRegularWidth ? settledPanelHeight(in: size.height) : 0
+    }
+
+    /// How far down the top bar pushes anything sharing the top edge. Zero when
+    /// the slot renders nothing, so a caller passing a conditional top bar does
+    /// not permanently reserve the shell's padding for an empty view.
+    private var topBarInset: CGFloat {
+        guard hasTopBar, topBarHeight > 0 else { return 0 }
+        return topBarHeight + KozmosDimensions.primitivesLayoutSpacing200
     }
 
     // MARK: - Body
 
     public var body: some View {
         GeometryReader { geometry in
-            let insets = resolvedCollisionInsets(in: geometry.size)
+            let insets = resolvedCollisionInsets(in: geometry.size, layoutDirection: layoutDirection)
 
             ZStack(alignment: .topLeading) {
                 map
@@ -278,7 +313,8 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                     topBar
                         .frame(maxWidth: 672)
                         .frame(width: geometry.size.width, alignment: .center)
-                        .padding(.top, KozmosDimensions.primitivesLayoutSpacing200)
+                        // Measured before the padding, so a slot that renders
+                        // nothing measures nothing.
                         .background(
                             GeometryReader { proxy in
                                 Color.clear.preference(
@@ -287,6 +323,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                                 )
                             }
                         )
+                        .padding(.top, topBarHeight > 0 ? KozmosDimensions.primitivesLayoutSpacing200 : 0)
                         .zIndex(3)
                 }
 
@@ -304,9 +341,19 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                         // Both slots are anchored to the top edge, so the
                         // controls clear whatever the top bar occupies rather
                         // than sitting underneath it.
-                        .padding(.top, hasTopBar ? topBarHeight : 0)
+                        .padding(.top, topBarInset)
+                        // Bounded by the band left between the top bar and the
+                        // panel, rather than the whole shell. Controls that
+                        // overflowed used to disappear behind the panel with no
+                        // way for the caller to know; now the slot is proposed
+                        // the space it really has, so a `ViewThatFits` or a
+                        // GeometryReader in the slot can adapt to it.
                         .frame(
                             width: geometry.size.width,
+                            height: max(
+                                geometry.size.height - topBarInset - dockedPanelHeight(in: geometry.size),
+                                0
+                            ),
                             alignment: panelPlacement == .end ? .topLeading : .topTrailing
                         )
                         .zIndex(3)
@@ -446,7 +493,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         in shellHeight: CGFloat
     ) -> KozmosMapPanelDetent {
         let ordered = orderedDetents(in: shellHeight)
-        guard let index = ordered.firstIndex(of: detent) else { return detent }
+        guard let index = detentIndex(of: detent, in: shellHeight) else { return detent }
         return ordered[(index + 1) % ordered.count]
     }
 
@@ -457,7 +504,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         in shellHeight: CGFloat
     ) -> KozmosMapPanelDetent {
         let ordered = orderedDetents(in: shellHeight)
-        guard let index = ordered.firstIndex(of: detent) else { return detent }
+        guard let index = detentIndex(of: detent, in: shellHeight) else { return detent }
         let target = min(max(index + step, 0), ordered.count - 1)
         return ordered[target]
     }

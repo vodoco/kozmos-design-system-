@@ -24,6 +24,13 @@ public struct KozmosFloorSelector: View {
     let label: String
     @Environment(\.kozmosAnalytics) private var trackEvent
 
+    /// A fixed 40pt button truncates every level to an ellipsis once Dynamic
+    /// Type is turned up, which leaves the control unreadable — and a floor
+    /// selector whose floors cannot be told apart is not a control at all. The
+    /// target scales with the type it has to hold.
+    @ScaledMetric(relativeTo: .subheadline)
+    private var controlSize: CGFloat = KozmosDimensions.primitivesLayoutSizing500
+
     public init(
         floors: [KozmosFloorPresentation],
         selectedFloor: Binding<String>,
@@ -117,10 +124,9 @@ public struct KozmosFloorSelector: View {
             Text(floor.shortLabel)
                 .font(KozmosTypography.subheadline)
                 .bold()
-                .frame(
-                    width: KozmosDimensions.primitivesLayoutSizing500,
-                    height: KozmosDimensions.primitivesLayoutSizing500
-                )
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(width: controlSize, height: controlSize)
                 .background(isSelected ? KozmosColors.primitivesColorsTheme500 : Color.clear)
                 .foregroundColor(
                     isSelected
@@ -167,10 +173,7 @@ public struct KozmosFloorSelector: View {
         } label: {
             Image(systemName: systemImage)
                 .font(.system(size: 14, weight: .bold))
-                .frame(
-                    width: KozmosDimensions.primitivesLayoutSizing500,
-                    height: KozmosDimensions.primitivesLayoutSizing500
-                )
+                .frame(width: controlSize, height: controlSize)
                 .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 .contentShape(Rectangle())
         }
