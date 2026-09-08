@@ -168,6 +168,10 @@ public struct KozmosPOIResultCard: View {
                 }
                 .frame(minHeight: 96)
                 .padding(KozmosDimensions.primitivesLayoutSpacing200)
+                // The row has no fill of its own, so without an explicit hit
+                // shape only the text and the logo are tappable and the gaps
+                // between them swallow taps.
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(!available)
