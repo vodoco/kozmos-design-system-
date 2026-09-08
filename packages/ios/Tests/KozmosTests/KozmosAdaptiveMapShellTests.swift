@@ -137,25 +137,66 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
 
     func testReportedInsetsCoverTheDockedPanel() {
         let view = shell()
-        let insets = view.resolvedCollisionInsets(in: CGSize(width: 400, height: shellHeight))
+        let insets = view.resolvedCollisionInsets(
+            in: CGSize(width: 400, height: shellHeight),
+            layoutDirection: .leftToRight
+        )
 
         XCTAssertEqual(insets.bottom, Double(KozmosMapPanelDetent.medium.height(in: shellHeight)), accuracy: 0.001)
-        // The controls sit on the leading edge when the panel is placed at the
-        // end, and carry the shell's own padding either side.
+        // The controls sit opposite the panel, so with the panel at the end of
+        // a left-to-right layout they are on the physical left, carrying the
+        // shell's own padding either side.
         XCTAssertEqual(insets.left, Double(KozmosDimensions.primitivesLayoutSpacing200 * 2), accuracy: 0.001)
         XCTAssertEqual(insets.right, 0, accuracy: 0.001)
+        // Nothing was passed for the top bar slot, so it reserves nothing.
         XCTAssertEqual(insets.top, 0, accuracy: 0.001)
+    }
+
+    /// A map camera pads physical edges, so `.end` has to become a side only
+    /// after the reading direction is known. Mirrored, the controls are on the
+    /// right and the inset has to move with them.
+    func testReportedInsetsMirrorInARightToLeftLayout() {
+        let view = shell()
+        let size = CGSize(width: 400, height: shellHeight)
+        let ltr = view.resolvedCollisionInsets(in: size, layoutDirection: .leftToRight)
+        let rtl = view.resolvedCollisionInsets(in: size, layoutDirection: .rightToLeft)
+
+        XCTAssertEqual(rtl.right, ltr.left, accuracy: 0.001)
+        XCTAssertEqual(rtl.left, ltr.right, accuracy: 0.001)
+        XCTAssertEqual(rtl.bottom, ltr.bottom, accuracy: 0.001)
+        XCTAssertEqual(rtl.top, ltr.top, accuracy: 0.001)
+        XCTAssertEqual(rtl.right, Double(KozmosDimensions.primitivesLayoutSpacing200 * 2), accuracy: 0.001)
+        XCTAssertEqual(rtl.left, 0, accuracy: 0.001)
     }
 
     func testCallerInsetsWinWhenTheyAreLarger() {
         let view = shell(collisionInsets: KozmosMapCollisionInsets(top: 90, right: 12, bottom: 10, left: 4))
-        let insets = view.resolvedCollisionInsets(in: CGSize(width: 400, height: shellHeight))
+        let insets = view.resolvedCollisionInsets(
+            in: CGSize(width: 400, height: shellHeight),
+            layoutDirection: .leftToRight
+        )
 
         XCTAssertEqual(insets.top, 90, accuracy: 0.001)
         XCTAssertEqual(insets.right, 12, accuracy: 0.001)
         // The panel is taller than the caller's 10pt, so the shell's value wins.
         XCTAssertEqual(insets.bottom, Double(KozmosMapPanelDetent.medium.height(in: shellHeight)), accuracy: 0.001)
         XCTAssertEqual(insets.left, Double(KozmosDimensions.primitivesLayoutSpacing200 * 2), accuracy: 0.001)
+    }
+
+    /// A caller can bind a detent the shell was never offered. The panel has to
+    /// rest at the closest one it does have rather than freezing.
+    func testABoundDetentThatIsNotOnOfferFallsBackToTheClosest() {
+        var detent = KozmosMapPanelDetent.fraction(0.5)
+        let binding = Binding(get: { detent }, set: { detent = $0 })
+        let view = KozmosAdaptiveMapShell(
+            panelDetent: binding,
+            panelDetents: [.collapsed, .medium, .large],
+            map: { Color.clear },
+            panel: { Color.clear }
+        )
+        // 0.5 of 800 is 400, nearest to medium's 384 rather than large's 704.
+        XCTAssertEqual(view.nearestDetent(to: 400, in: shellHeight), .medium)
+        XCTAssertEqual(view.settledPanelHeight(in: shellHeight), 400, accuracy: 0.001)
     }
 
     func testAPanelWithASingleDetentDoesNotOfferAGrabHandle() {
