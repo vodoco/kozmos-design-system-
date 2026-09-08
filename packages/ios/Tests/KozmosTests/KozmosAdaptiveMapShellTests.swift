@@ -61,9 +61,11 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
 
     private func shell(
         detents: [KozmosMapPanelDetent] = [.collapsed, .medium, .large],
+        controlsPlacement: KozmosAdaptiveMapShell<Color, Color, EmptyView, Color, EmptyView>.ControlsPlacement = .top,
         collisionInsets: KozmosMapCollisionInsets = .zero
     ) -> KozmosAdaptiveMapShell<Color, Color, EmptyView, Color, EmptyView> {
         KozmosAdaptiveMapShell(
+            controlsPlacement: controlsPlacement,
             panelDetents: detents,
             collisionInsets: collisionInsets,
             map: { Color.clear },
@@ -197,6 +199,22 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
         // 0.5 of 800 is 400, nearest to medium's 384 rather than large's 704.
         XCTAssertEqual(view.nearestDetent(to: 400, in: shellHeight), .medium)
         XCTAssertEqual(view.settledPanelHeight(in: shellHeight), 400, accuracy: 0.001)
+    }
+
+    /// Controls along the bottom are above the panel, not beside the map, so
+    /// they extend the bottom inset rather than claiming a side.
+    func testBottomControlsExtendTheBottomInsetRatherThanASide() {
+        let view = shell(controlsPlacement: .bottom)
+        let insets = view.resolvedCollisionInsets(
+            in: CGSize(width: 400, height: shellHeight),
+            layoutDirection: .leftToRight
+        )
+        let panel = Double(KozmosMapPanelDetent.medium.height(in: shellHeight))
+        let padding = Double(KozmosDimensions.primitivesLayoutSpacing200 * 2)
+
+        XCTAssertEqual(insets.bottom, panel + padding, accuracy: 0.001)
+        XCTAssertEqual(insets.left, 0, accuracy: 0.001)
+        XCTAssertEqual(insets.right, 0, accuracy: 0.001)
     }
 
     func testAPanelWithASingleDetentDoesNotOfferAGrabHandle() {

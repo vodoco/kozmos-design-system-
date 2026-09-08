@@ -69,12 +69,14 @@ private struct KozmosMapShellTopBarHeightKey: PreferenceKey {
     }
 }
 
-/// Width of the controls column, which is part of what the map has to keep
-/// clear.
-private struct KozmosMapShellControlsWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
+/// Size of the controls cluster, which is part of what the map has to keep
+/// clear — its width when it sits in a top corner, its height when it runs
+/// along the bottom.
+private struct KozmosMapShellControlsSizeKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        let next = nextValue()
+        value = CGSize(width: max(value.width, next.width), height: max(value.height, next.height))
     }
 }
 
@@ -96,6 +98,15 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         case end
     }
 
+    /// Where the floating controls sit over the map.
+    public enum ControlsPlacement {
+        /// In the top corner opposite the panel.
+        case top
+        /// Across the bottom of the map, above the panel — where a thumb
+        /// reaches on a phone.
+        case bottom
+    }
+
     private let map: Map
     private let mapLabel: String
     private let mapStatus: KozmosMapReadiness
@@ -105,6 +116,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     private let panel: Panel
     private let panelLabel: String
     private let panelPlacement: PanelPlacement
+    private let controlsPlacement: ControlsPlacement
     private let panelDetentBinding: Binding<KozmosMapPanelDetent>?
     private let panelDetents: [KozmosMapPanelDetent]
     private let collisionInsets: KozmosMapCollisionInsets
@@ -118,17 +130,22 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.layoutDirection) private var layoutDirection
     @State private var topBarHeight: CGFloat = 0
-    @State private var controlsWidth: CGFloat = 0
+    @State private var controlsSize: CGSize = .zero
     @State private var uncontrolledDetent: KozmosMapPanelDetent?
     @State private var dragTranslation: CGFloat = 0
 
-    private static var grabberRowHeight: CGFloat { KozmosDimensions.primitivesLayoutSpacing400 }
+    /// Deliberately shallow. The handle is an affordance at the very top edge
+    /// of the sheet, not a row of chrome the content has to be pushed past —
+    /// the panel below keeps its own padding rather than stacking on top of
+    /// this.
+    private static var grabberRowHeight: CGFloat { KozmosDimensions.primitivesLayoutSpacing300 }
 
     public init(
         mapLabel: String = "Map",
         mapStatus: KozmosMapReadiness = .ready,
         panelLabel: String = "Map details",
         panelPlacement: PanelPlacement = .end,
+        controlsPlacement: ControlsPlacement = .top,
         panelDetent: Binding<KozmosMapPanelDetent>? = nil,
         panelDetents: [KozmosMapPanelDetent] = [.collapsed, .medium, .large],
         collisionInsets: KozmosMapCollisionInsets = .zero,
@@ -143,6 +160,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         self.mapStatus = mapStatus
         self.panelLabel = panelLabel
         self.panelPlacement = panelPlacement
+        self.controlsPlacement = controlsPlacement
         self.panelDetentBinding = panelDetent
         self.panelDetents = panelDetents.isEmpty ? [.medium] : panelDetents
         self.collisionInsets = collisionInsets
@@ -235,6 +253,17 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         return ordered.firstIndex(of: nearest)
     }
 
+    private var controlsAlignment: Alignment {
+        switch controlsPlacement {
+        case .top:
+            return panelPlacement == .end ? .topLeading : .topTrailing
+        case .bottom:
+            // Full width, bottom aligned: the caller decides which corner each
+            // control sits in, or spreads them across both.
+            return .bottom
+        }
+    }
+
     private var showsGrabber: Bool {
         hasPanel && !isRegularWidth && panelDetents.count > 1
     }
@@ -258,7 +287,11 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             ? min(416, size.width * 0.42) + edgePadding * 2
             : 0
         let dockedPanel = dockedPanelHeight(in: size)
-        let controlsColumn = hasControls ? controlsWidth + edgePadding * 2 : 0
+        let inCorner = hasControls && controlsPlacement == .top
+        let controlsColumn = inCorner ? controlsSize.width + edgePadding * 2 : 0
+        let controlsBand = hasControls && controlsPlacement == .bottom
+            ? controlsSize.height + edgePadding * 2
+            : 0
         let panelOnPhysicalRight = (panelPlacement == .end) == (layoutDirection == .leftToRight)
 
         return KozmosMapCollisionInsets(
@@ -267,7 +300,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                 collisionInsets.right,
                 Double(panelOnPhysicalRight ? sidePanelWidth : controlsColumn)
             ),
-            bottom: max(collisionInsets.bottom, Double(dockedPanel)),
+            bottom: max(collisionInsets.bottom, Double(dockedPanel + controlsBand)),
             left: max(
                 collisionInsets.left,
                 Double(panelOnPhysicalRight ? controlsColumn : sidePanelWidth)
@@ -332,29 +365,24 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                         .background(
                             GeometryReader { proxy in
                                 Color.clear.preference(
-                                    key: KozmosMapShellControlsWidthKey.self,
-                                    value: proxy.size.width
+                                    key: KozmosMapShellControlsSizeKey.self,
+                                    value: proxy.size
                                 )
                             }
                         )
                         .padding(KozmosDimensions.primitivesLayoutSpacing200)
-                        // Both slots are anchored to the top edge, so the
-                        // controls clear whatever the top bar occupies rather
-                        // than sitting underneath it.
+                        // The top bar shares this edge, so the controls clear
+                        // whatever it occupies rather than sitting under it.
                         .padding(.top, topBarInset)
-                        // Bounded by the band left between the top bar and the
-                        // panel, rather than the whole shell. Controls that
-                        // overflowed used to disappear behind the panel with no
-                        // way for the caller to know; now the slot is proposed
-                        // the space it really has, so a `ViewThatFits` or a
-                        // GeometryReader in the slot can adapt to it.
+                        // Bounded by the band left above the panel rather than
+                        // the whole shell. Controls that overflowed used to
+                        // disappear behind the panel with no way for the caller
+                        // to know; the slot is proposed the space it really
+                        // has, so a `ViewThatFits` in it can adapt.
                         .frame(
                             width: geometry.size.width,
-                            height: max(
-                                geometry.size.height - topBarInset - dockedPanelHeight(in: geometry.size),
-                                0
-                            ),
-                            alignment: panelPlacement == .end ? .topLeading : .topTrailing
+                            height: max(geometry.size.height - dockedPanelHeight(in: geometry.size), 0),
+                            alignment: controlsAlignment
                         )
                         .zIndex(3)
                 }
@@ -366,7 +394,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
             .onPreferenceChange(KozmosMapShellTopBarHeightKey.self) { topBarHeight = $0 }
-            .onPreferenceChange(KozmosMapShellControlsWidthKey.self) { controlsWidth = $0 }
+            .onPreferenceChange(KozmosMapShellControlsSizeKey.self) { controlsSize = $0 }
             .onAppear { onCollisionInsetsChange?(insets) }
             .onChange(of: insets) { onCollisionInsetsChange?($0) }
         }
@@ -438,10 +466,13 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         let detent = activeDetent(in: shellHeight)
 
         return Capsule()
-            .fill(KozmosColors.primitivesColorsForeground300)
-            .frame(width: KozmosDimensions.primitivesLayoutSizing500, height: 5)
+            // A background-scale grey: the handle is a passive affordance, and
+            // a foreground grey reads as content.
+            .fill(KozmosColors.primitivesColorsBackground300)
+            .frame(width: KozmosDimensions.primitivesLayoutSizing500, height: 4)
+            .padding(.top, KozmosDimensions.primitivesLayoutSpacing50)
             .frame(maxWidth: .infinity)
-            .frame(height: Self.grabberRowHeight)
+            .frame(height: Self.grabberRowHeight, alignment: .top)
             // The whole row is the target: a 5pt capsule is not a hit area.
             .contentShape(Rectangle())
             // One gesture handles both the drag and the tap. Two separate
@@ -516,6 +547,7 @@ public extension KozmosAdaptiveMapShell where TopBar == EmptyView {
         mapStatus: KozmosMapReadiness = .ready,
         panelLabel: String = "Map details",
         panelPlacement: PanelPlacement = .end,
+        controlsPlacement: ControlsPlacement = .top,
         panelDetent: Binding<KozmosMapPanelDetent>? = nil,
         panelDetents: [KozmosMapPanelDetent] = [.collapsed, .medium, .large],
         collisionInsets: KozmosMapCollisionInsets = .zero,
@@ -530,6 +562,7 @@ public extension KozmosAdaptiveMapShell where TopBar == EmptyView {
             mapStatus: mapStatus,
             panelLabel: panelLabel,
             panelPlacement: panelPlacement,
+            controlsPlacement: controlsPlacement,
             panelDetent: panelDetent,
             panelDetents: panelDetents,
             collisionInsets: collisionInsets,
@@ -549,6 +582,7 @@ where TopBar == EmptyView, MapStatusContent == EmptyView, Controls == EmptyView 
         mapLabel: String = "Map",
         panelLabel: String = "Map details",
         panelPlacement: PanelPlacement = .end,
+        controlsPlacement: ControlsPlacement = .top,
         panelDetent: Binding<KozmosMapPanelDetent>? = nil,
         panelDetents: [KozmosMapPanelDetent] = [.collapsed, .medium, .large],
         collisionInsets: KozmosMapCollisionInsets = .zero,
@@ -561,6 +595,7 @@ where TopBar == EmptyView, MapStatusContent == EmptyView, Controls == EmptyView 
             mapStatus: .ready,
             panelLabel: panelLabel,
             panelPlacement: panelPlacement,
+            controlsPlacement: controlsPlacement,
             panelDetent: panelDetent,
             panelDetents: panelDetents,
             collisionInsets: collisionInsets,
