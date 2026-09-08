@@ -147,13 +147,51 @@ for (const mode of ["light", "dark"]) {
 
 // 5. What is deliberately not a role.
 {
+  // Count reach, not sites. Counting `type: "DROP_SHADOW"` occurrences said
+  // five literals remained, which read like a rounding error next to six roles.
+  // One of those five is tooltipShadowEffects(), and thirteen painters call it —
+  // every overlay surface in the library. A helper is one site and many shadows,
+  // and the difference is the whole question.
   const plugin = read("figma/foundations-importer/code.js");
-  const literals = (plugin.match(/type: "DROP_SHADOW"/g) || []).length;
+  const lines = plugin.split("\n");
   const roles = (plugin.match(/elevationEffect\("/g) || []).length;
+
+  // Which functions contain a literal shadow, and how far does each one reach?
+  const literalFns = new Map();
+  let fn = "(top)";
+  for (const line of lines) {
+    const m = /^(?:async )?function ([A-Za-z0-9_]+)/.exec(line);
+    if (m) fn = m[1];
+    // elevationEffect builds the role, so its own DROP_SHADOW is the point.
+    if (line.includes(`type: "DROP_SHADOW"`) && fn !== "elevationEffect")
+      literalFns.set(fn, (literalFns.get(fn) || 0) + 1);
+  }
+  const reach = [];
+  for (const [name, shadows] of literalFns) {
+    const calls = lines.filter(
+      (l) => l.includes(name + "()") && !/^(?:async )?function /.test(l),
+    ).length;
+    reach.push({ name, shadows, calls });
+  }
+  reach.sort((a, b) => b.calls - a.calls);
+  const viaHelpers = reach.reduce((n, r) => n + Math.max(r.calls, 1), 0);
+
   console.log(
-    `\n  ${roles} shadow(s) read a role; ${literals} remain literal and are named in the KOZMOS_ELEVATION comment:` +
-      `\n  a FloatingActionButton is heavier than any step on purpose, a BottomNavigation casts upward,` +
-      `\n  and a Tooltip stacks two layers. The scale cannot say those, and flattening them would lose them.`,
+    `\n  ${roles} painter site(s) read an elevation role; ${viaHelpers} still paint a literal:`,
+  );
+  for (const r of reach) {
+    console.log(
+      `    ${String(Math.max(r.calls, 1)).padStart(3)}  ${r.name}` +
+        (r.calls > 1
+          ? `  — ${r.shadows} layer(s), called from ${r.calls} painters`
+          : ""),
+    );
+  }
+  console.log(
+    `  A FloatingActionButton is heavier than any step on purpose and a BottomNavigation` +
+      `\n  casts upward; those two the scale genuinely cannot say. tooltipShadowEffects is` +
+      `\n  not in that category — it is named for one component and paints every overlay` +
+      `\n  surface in the library, which is the thing the roles exist to stop.`,
   );
 }
 
