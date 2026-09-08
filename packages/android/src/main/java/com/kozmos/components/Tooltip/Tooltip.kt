@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
+import com.kozmos.tokens.KozmosShadows
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 
@@ -98,7 +99,7 @@ private fun TooltipSurface(text: String) {
         text = text,
         color = KozmosThemeTokens.primitivesColorsForeground0,
         modifier = Modifier
-            .shadow(elevation = 4.dp, shape = shape)
+            .shadow(elevation = KozmosShadows.semanticsElevationOverlay, shape = shape)
             .background(KozmosThemeTokens.primitivesColorsBackground0, shape)
             .border(1.dp, KozmosThemeTokens.primitivesColorsBackground200, shape)
             .padding(

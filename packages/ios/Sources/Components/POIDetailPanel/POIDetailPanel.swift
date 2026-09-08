@@ -179,11 +179,12 @@ public struct KozmosPOIDetailPanel: View {
                 lineWidth: 1
             )
         )
-        .shadow(
-            color: KozmosColors.primitivesColorsForeground900.opacity(presentation == .sheet ? 0 : 0.14),
-            radius: presentation == .panel ? 20 : 12,
-            x: 0,
-            y: 8
+        .kozmosElevation(
+            // A sheet is flush to the screen edge and casts nothing; a panel or
+            // a card sits above the map.
+            presentation == .sheet
+                ? KozmosShadows.none
+                : KozmosShadows.semanticsElevationOverlay
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel(poi.name)

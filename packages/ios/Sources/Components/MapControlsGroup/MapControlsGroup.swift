@@ -57,7 +57,7 @@ public struct KozmosMapControlsGroup: View {
                 RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer, style: .continuous)
                     .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
             )
-            .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.12), radius: 12, x: 0, y: 8)
+            .kozmosElevation(KozmosShadows.semanticsElevationFloating)
 
             if let onCompassReset {
                 controlButton(
@@ -69,7 +69,7 @@ public struct KozmosMapControlsGroup: View {
                 .rotationEffect(.degrees(compassBearing))
                 .background(surfaceColor)
                 .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer, style: .continuous))
-                .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.12), radius: 12, x: 0, y: 8)
+                .kozmosElevation(KozmosShadows.semanticsElevationFloating)
             }
 
             if let onMyLocation {

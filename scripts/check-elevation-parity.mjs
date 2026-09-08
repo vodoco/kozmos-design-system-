@@ -233,6 +233,99 @@ for (const mode of ["light", "dark"]) {
   else fail("web: Toast does not read shadow-floating");
 }
 
+// 7. The native components read the roles, not their own numbers.
+//
+// The roles were generated into packages/tokens/dist for both platforms the day
+// they were added, and nothing ever copied them into the shipped packages. So
+// every native component picked its own shadow: 23 iOS sites across fifteen
+// distinct values, and 4.dp / 6.dp / 20.dp on Android. Elevation existed on
+// three platforms and reached two.
+{
+  const IOS_TOKENS = "packages/ios/Sources/KozmosShadows.swift";
+  const ANDROID_TOKENS =
+    "packages/android/src/main/java/com/kozmos/tokens/KozmosShadows.kt";
+  for (const [file, label] of [
+    [IOS_TOKENS, "iOS"],
+    [ANDROID_TOKENS, "Android"],
+  ]) {
+    if (!fs.existsSync(path.join(ROOT, file))) {
+      fail(`${label}: ${file} is missing, so components have no role to read`);
+      continue;
+    }
+    const src = read(file);
+    const missing = ["Raised", "Floating", "Overlay"].filter(
+      (r) => !src.includes(`semanticsElevation${r}`),
+    );
+    if (missing.length === 0)
+      ok(`${label}: KozmosShadows carries all three roles`);
+    else fail(`${label}: KozmosShadows is missing ${missing.join(", ")}`);
+  }
+
+  // A shadow that is genuinely not a step on the scale. Each names why; a new
+  // literal anywhere else fails, which is the whole point.
+  const IOS_ALLOWED = {
+    FloatingActionButton:
+      "heavier than any step on purpose — the exemption Figma already records",
+    AdaptiveMapShell:
+      "the shell's paired chrome, one half of which casts upward",
+    ColorPicker:
+      "the handle's hard ring, which must stay visible on any colour beneath it",
+    LocationPin: "a pin has to read against an arbitrary map",
+  };
+  const ANDROID_ALLOWED = {
+    Card: "deliberately flat at 0.dp on Android",
+  };
+
+  const walk = (dir) => {
+    const out = [];
+    for (const entry of fs.readdirSync(path.join(ROOT, dir), {
+      withFileTypes: true,
+    })) {
+      const next = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) out.push(...walk(next));
+      else out.push(next);
+    }
+    return out;
+  };
+
+  for (const [dir, ext, pattern, allowed, label] of [
+    [
+      "packages/ios/Sources/Components",
+      ".swift",
+      /\.shadow\(/g,
+      IOS_ALLOWED,
+      "iOS",
+    ],
+    [
+      "packages/android/src/main/java/com/kozmos/components",
+      ".kt",
+      /\.shadow\(\s*[0-9]|elevation = [0-9]|defaultElevation = [0-9]/g,
+      ANDROID_ALLOWED,
+      "Android",
+    ],
+  ]) {
+    if (!fs.existsSync(path.join(ROOT, dir))) continue;
+    const offenders = [];
+    let literals = 0;
+    for (const file of walk(dir)) {
+      if (!file.endsWith(ext) || file.includes(".figma.")) continue;
+      const hits = (read(file).match(pattern) || []).length;
+      if (hits === 0) continue;
+      literals += hits;
+      const component = file.split("/").slice(-2)[0];
+      if (!allowed[component]) offenders.push(`${component} (${hits})`);
+    }
+    if (offenders.length === 0)
+      ok(
+        `${label}: every shadow reads a role except ${Object.keys(allowed).length} named exception(s), ${literals} literal(s) in total`,
+      );
+    else
+      fail(
+        `${label}: ${offenders.length} component(s) still write their own shadow — ${offenders.sort().join(", ")}`,
+      );
+  }
+}
+
 console.log(
   `\n${problems.length === 0 ? "ok    every consumer reads Semantics.Elevation" : `${problems.length} problem(s)`}`,
 );

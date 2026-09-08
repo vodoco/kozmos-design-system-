@@ -13,7 +13,7 @@ public struct KozmosCard<Content: View>: View {
         }
         .background(KozmosColors.primitivesColorsBackground0)
         .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
-        .shadow(color: KozmosColors.primitivesColorsBackground900.opacity(0.1), radius: 4, x: 0, y: 2)
+        .kozmosElevation(KozmosShadows.semanticsElevationRaised)
         .overlay(
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer)
                 .stroke(KozmosColors.primitivesColorsBackground200, lineWidth: 1)

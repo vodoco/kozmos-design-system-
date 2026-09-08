@@ -1,5 +1,6 @@
 package com.kozmos.components.poicard
 
+import com.kozmos.tokens.KozmosShadows
 import com.kozmos.tokens.KozmosDimensions
 
 import androidx.compose.foundation.Image
@@ -49,7 +50,7 @@ fun KozmosPOICard(
 ) {
     Card(
         modifier = modifier.width(300.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = KozmosShadows.semanticsElevationFloating),
         colors = CardDefaults.cardColors(containerColor = KozmosColors.primitivesColorsBackground0)
     ) {
         Column {
