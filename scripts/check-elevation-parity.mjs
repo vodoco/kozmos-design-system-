@@ -189,10 +189,48 @@ for (const mode of ["light", "dark"]) {
   }
   console.log(
     `  A FloatingActionButton is heavier than any step on purpose and a BottomNavigation` +
-      `\n  casts upward; those two the scale genuinely cannot say. tooltipShadowEffects is` +
-      `\n  not in that category — it is named for one component and paints every overlay` +
-      `\n  surface in the library, which is the thing the roles exist to stop.`,
+      `\n  casts upward; those two the scale genuinely cannot say. Anything else appearing` +
+      `\n  in this list is a painter that got away, and a helper counts once per caller —` +
+      `\n  tooltipShadowEffects sat here as a single literal while painting 334 shadows.`,
   );
+}
+
+// 6. The web overlay surfaces read the same role Figma paints. These two used
+// to be settled independently — Figma took a two-layer Tailwind md from a
+// helper named for Tooltip, the web took shadow-md or shadow-lg or nothing at
+// all, and no check compared them. Naming the pairs is what makes them one
+// decision instead of two.
+{
+  const OVERLAY_SURFACES = [
+    ["Tooltip", 1],
+    ["Menu", 2],
+    ["Popover", 1],
+    ["Dialog", 1],
+    ["Drawer", 1],
+    ["Combobox", 1],
+    ["MultiSelect", 1],
+    ["ColorPicker", 1],
+  ];
+  for (const [name, count] of OVERLAY_SURFACES) {
+    const file = `packages/react/src/components/${name}/${name}.tsx`;
+    const src = read(file);
+    const found = (src.match(/shadow-overlay/g) || []).length;
+    const stale = /shadow-(?:md|lg|sm)\b/.test(src);
+    if (found === count && !stale)
+      ok(
+        `web: ${name} reads shadow-overlay${count > 1 ? ` (${count} surfaces)` : ""}`,
+      );
+    else if (stale)
+      fail(`web: ${name} still carries a raw Tailwind shadow step`);
+    else
+      fail(
+        `web: ${name} reads shadow-overlay ${found} time(s), expected ${count}`,
+      );
+  }
+  const toast = read("packages/react/src/components/Toast/Toast.tsx");
+  if (/shadow-floating/.test(toast) && !/shadow-(?:md|lg|sm)\b/.test(toast))
+    ok("web: Toast reads shadow-floating — a status message, not a modal");
+  else fail("web: Toast does not read shadow-floating");
 }
 
 console.log(

@@ -73,7 +73,7 @@ const DrawerContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          "fixed z-50 flex flex-col gap-4 overflow-auto bg-background p-6 text-foreground shadow-lg outline-none transition ease-in-out data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:duration-200 data-[state=open]:duration-300",
+          "fixed z-50 flex flex-col gap-4 overflow-auto bg-background p-6 text-foreground shadow-overlay outline-none transition ease-in-out data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:duration-200 data-[state=open]:duration-300",
           "border-border",
           drawerSideClasses[side],
           className,

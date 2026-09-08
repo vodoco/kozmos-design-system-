@@ -358,7 +358,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
               id={listboxId}
               role="listbox"
               aria-multiselectable="true"
-              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-3 text-popover-foreground shadow-md"
+              className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-3 text-popover-foreground shadow-overlay"
             >
               {filteredOptions.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-muted-foreground">
