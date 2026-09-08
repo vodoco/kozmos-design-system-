@@ -57,7 +57,10 @@
     "prepare": "husky",
     "figma:stamp": "node scripts/stamp-figma-plugin.mjs",
     "figma:stamp:check": "node scripts/stamp-figma-plugin.mjs --check",
-    "tokens:elevation:check": "node scripts/check-elevation-parity.mjs"
+    "tokens:elevation:check": "node scripts/check-elevation-parity.mjs",
+    "native:check": "node scripts/check-native-builds.mjs",
+    "native:check:ios": "node scripts/check-native-builds.mjs ios",
+    "native:check:android": "node scripts/check-native-builds.mjs android"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.1",
