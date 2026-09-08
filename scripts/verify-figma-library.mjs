@@ -494,26 +494,57 @@ async function main() {
     );
     const current = /const PLUGIN_BUILD = "([a-f0-9]+)"/.exec(plugin);
     if (current) {
-      let matching = 0;
-      let stamped = 0;
-      for (const set of Object.values(sets)) {
+      // The spread, not a pass/fail. A build id is a hash of the whole plugin,
+      // so an edit that paints nothing — a stalled read removed, a UI fix —
+      // still moves all 94 sets "behind". Reported as one number that collapses
+      // to near zero after every commit, it reads as an alarm and gets ignored,
+      // and the honest reading is the distribution: which builds the file is
+      // actually made of, and how far apart they are.
+      const byBuild = new Map();
+      const unstamped = [];
+      for (const [name, set] of Object.entries(sets)) {
         const stamp =
           set.sharedPluginData &&
           set.sharedPluginData.kozmos_ds_importer &&
           set.sharedPluginData.kozmos_ds_importer.build;
-        if (!stamp) continue;
-        stamped += 1;
-        if (stamp === current[1]) matching += 1;
+        if (!stamp) {
+          unstamped.push(name);
+          continue;
+        }
+        byBuild.set(stamp, (byBuild.get(stamp) || 0) + 1);
       }
       const total = Object.keys(sets).length;
-      console.log(
-        `\nBuild coverage: ${matching} of ${total} set(s) were produced by the current plugin build (${current[1]}).` +
-          (matching < total
-            ? `\n  ${total - matching} are behind it. Painter changes — colours, shadows, spacing — only reach the` +
-              `\n  file when a set is re-run, and the drift checks above compare structure, not paint.` +
-              `\n  Update All Core and Update All Product / SDK bring the whole file current.`
-            : ""),
-      );
+      const matching = byBuild.get(current[1]) || 0;
+      const lines = [
+        `\nBuild coverage: ${matching} of ${total} set(s) are on the current plugin build (${current[1]}).`,
+      ];
+      const others = [...byBuild.entries()]
+        .filter(([b]) => b !== current[1])
+        .sort((a, b) => b[1] - a[1]);
+      if (others.length > 0 || unstamped.length > 0) {
+        lines.push("  The rest were produced by earlier builds:");
+        for (const [build, count] of others) {
+          lines.push(`    ${String(count).padStart(4)}  ${build}`);
+        }
+        if (unstamped.length > 0) {
+          const sample = unstamped.slice(0, 6).join(", ");
+          const more =
+            unstamped.length > 6 ? ` (+${unstamped.length - 6} more)` : "";
+          lines.push(
+            `    ${String(unstamped.length).padStart(4)}  never stamped — ${sample}${more}`,
+          );
+        }
+        lines.push(
+          "  Painter changes reach the file only when a set is re-run, and the drift checks",
+        );
+        lines.push(
+          "  above compare structure, not paint. A stamp cannot tell you whether the gap",
+        );
+        lines.push(
+          "  between two builds changed any paint at all — only that there is a gap.",
+        );
+      }
+      console.log(lines.join("\n"));
     }
   }
 

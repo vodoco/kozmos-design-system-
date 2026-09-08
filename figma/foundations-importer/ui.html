@@ -2493,7 +2493,15 @@
           renderAll();
           hideBootScreen();
           showComponentDone(message.result);
-          setLogContent(message.result);
+          // A run that warns opens its own details. The text was always in the
+          // log, but the log is collapsed by default and nothing said it was
+          // worth opening, so "1 warning" was the whole of what anyone saw.
+          const componentWarned = resultWarnings(message.result).length > 0;
+          setLogContent(
+            message.result,
+            componentWarned ? "warn" : null,
+            componentWarned,
+          );
           return;
         }
 
@@ -2503,7 +2511,15 @@
           renderAll();
           hideBootScreen();
           showExampleDone(message.result);
-          setLogContent(message.result);
+          // A run that warns opens its own details. The text was always in the
+          // log, but the log is collapsed by default and nothing said it was
+          // worth opening, so "1 warning" was the whole of what anyone saw.
+          const exampleWarned = resultWarnings(message.result).length > 0;
+          setLogContent(
+            message.result,
+            exampleWarned ? "warn" : null,
+            exampleWarned,
+          );
           return;
         }
 
@@ -2669,11 +2685,16 @@
           action && action.action ? capitalize(action.action) : "Action";
 
         if (result && result.message) {
-          componentHint.textContent = `${label}: ${result.message}`;
-          setActivity(
-            result.message,
-            result.warnings && result.warnings.length ? "warn" : "ok",
-          );
+          const warnings = resultWarnings(result);
+          const detail = warnings.length
+            ? " — " +
+              cleanTooltipLine(warnings[0]) +
+              (warnings.length > 1
+                ? " (+" + (warnings.length - 1) + " more below)"
+                : "")
+            : "";
+          componentHint.textContent = `${label}: ${result.message}${detail}`;
+          setActivity(result.message + detail, warnings.length ? "warn" : "ok");
           return;
         }
 
@@ -3662,6 +3683,10 @@
           `${label} needs attention:`,
           ...items.slice(0, 5).map((item) => `- ${item}`),
         ].join("\n");
+      }
+
+      function resultWarnings(result) {
+        return result && Array.isArray(result.warnings) ? result.warnings : [];
       }
 
       function cleanTooltipLine(value) {
