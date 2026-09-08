@@ -4,7 +4,8 @@ public struct KozmosUserLocationMarker: View {
     public let heading: Double
     public let showHeading: Bool
 
-    @State private var isAnimating = false
+    /// One full expand-and-fade of the pulse, in seconds.
+    private static let pulsePeriod: Double = 1.5
 
     public init(heading: Double = 0, showHeading: Bool = true) {
         self.heading = heading
@@ -13,17 +14,21 @@ public struct KozmosUserLocationMarker: View {
 
     public var body: some View {
         ZStack {
-            // Pulsing Background
-            Circle()
-                .fill(KozmosColors.semanticsDataBlue)
-                .frame(width: 24, height: 24)
-                .scaleEffect(isAnimating ? 1.8 : 1.0)
-                .opacity(isAnimating ? 0.0 : 0.5)
-                .animation(
-                    Animation.easeOut(duration: 1.5)
-                        .repeatForever(autoreverses: false),
-                    value: isAnimating
-                )
+            // Pulsing background.
+            //
+            // Driven from the timeline rather than a `repeatForever` animation
+            // on `@State` set in `onAppear`. A marker on a map is rebuilt
+            // constantly — the floor changes, the camera moves — and a
+            // repeating implicit animation left mid-flight by a rebuild renders
+            // a stray ring adrift from the marker. A clock cannot get stranded.
+            TimelineView(.animation) { context in
+                let phase = Self.pulsePhase(at: context.date)
+                Circle()
+                    .fill(KozmosColors.semanticsDataBlue)
+                    .frame(width: 24, height: 24)
+                    .scaleEffect(1 + 0.8 * phase)
+                    .opacity(0.5 * (1 - phase))
+            }
 
             // Static Ring
             Circle()
@@ -59,9 +64,13 @@ public struct KozmosUserLocationMarker: View {
                 )
         }
         .frame(width: 64, height: 64)
-        .onAppear {
-            isAnimating = true
-        }
+    }
+
+    /// 0 at the start of a pulse, approaching 1 as it fades out.
+    private static func pulsePhase(at date: Date) -> Double {
+        let elapsed = date.timeIntervalSinceReferenceDate
+            .truncatingRemainder(dividingBy: pulsePeriod)
+        return elapsed / pulsePeriod
     }
 }
 

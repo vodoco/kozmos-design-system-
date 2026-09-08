@@ -69,13 +69,15 @@ public struct KozmosPOIResultList<EmptyStateContent: View>: View {
                             )
                     )
             } else {
-                ForEach(items) { item in
-                    KozmosPOIResultCard(
-                        poi: item.poi,
-                        result: item.result.selecting(selectedPoiId),
-                        featuredLabel: featuredLabel,
-                        onSelect: onSelect
-                    )
+                LazyVStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                    ForEach(items) { item in
+                        KozmosPOIResultCard(
+                            poi: item.poi,
+                            result: item.result.selecting(selectedPoiId),
+                            featuredLabel: featuredLabel,
+                            onSelect: onSelect
+                        )
+                    }
                 }
             }
         }
