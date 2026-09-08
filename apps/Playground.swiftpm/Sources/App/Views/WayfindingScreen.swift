@@ -186,6 +186,11 @@ struct WayfindingScreen: View {
             // Reaching for the field means reading results, so the sheet opens
             // out of the way of the keyboard.
             .simultaneousGesture(TapGesture().onEnded { store.expandPanel() })
+            // No top padding: the shell's handle strip is already exactly one
+            // margin deep, so the field sits the same distance from the top of
+            // the sheet as it does from its sides.
+            .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
+            .padding(.bottom, KozmosDimensions.primitivesLayoutSpacing200)
 
         case .navigating:
             KozmosRouteSummary(
@@ -197,8 +202,7 @@ struct WayfindingScreen: View {
                 KozmosIcon("navigation-pointer-01", size: .md, color: .primary)
             }
             .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
-            .padding(.top, KozmosDimensions.primitivesLayoutSpacing100)
-            .padding(.bottom, KozmosDimensions.primitivesLayoutSpacing150)
+            .padding(.bottom, KozmosDimensions.primitivesLayoutSpacing200)
 
         case .detail, .routePreview:
             EmptyView()
