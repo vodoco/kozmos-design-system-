@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "b1c5a1a3cc15";
+const PLUGIN_BUILD = "4a8ac364956d";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -36237,7 +36237,6 @@ function buildTreeParentItemComponent() {
 function updateTreeParentItemComponent() {
   return updateRepairableTreeItemMatrixComponent({
     config: treeParentItemComponentConfig(),
-    build: buildTreeParentItemComponent,
   });
 }
 
@@ -36256,7 +36255,6 @@ function buildTreeChildItemComponent() {
 function updateTreeChildItemComponent() {
   return updateRepairableTreeItemMatrixComponent({
     config: treeChildItemComponentConfig(),
-    build: buildTreeChildItemComponent,
   });
 }
 
@@ -36275,7 +36273,6 @@ function buildTreeItemComponent() {
 function updateTreeItemComponent() {
   return updateRepairableTreeItemMatrixComponent({
     config: treeItemComponentConfig(),
-    build: buildTreeItemComponent,
   });
 }
 
@@ -36287,76 +36284,38 @@ async function rebuildTreeItemComponent() {
   });
 }
 
-async function updateRepairableTreeItemMatrixComponent({ config, build }) {
-  const preflight = await componentSetPropertyDefinitionReadStatus(
-    config.componentSetName,
-  );
-  if (preflight.error) {
-    return rebuildUnreadableComponentSet({
-      build,
-      config,
-      readError: preflight.error,
-    });
-  }
-
+async function updateRepairableTreeItemMatrixComponent({ config }) {
+  // No preflight. Reading componentPropertyDefinitions is a synchronous getter,
+  // and on TreeItem — 216 variants, the largest set in the library — it is where
+  // Update All Core stopped on 2026-09-07 and sat until morning without writing
+  // to the file again. TreeItem carried no build stamp, and the stamp is written
+  // before the first variant is touched, so the run never reached the work.
+  //
+  // The read bought nothing either way. updatePlannedMatrixComponent reads the
+  // same definitions through normalizeComponentSetVariantProperties, and the
+  // repair check below reaches the same verdict afterwards. All the preflight
+  // added was a second full read of the biggest set in the file, in front of an
+  // update that has to read it anyway.
   const stats = await updatePlannedMatrixComponent(config);
   const repairStatus = await treeItemComponentSetRepairStatus(
     config.componentSetName,
   );
   if (!repairStatus.needsRepair) return stats;
 
-  return rebuildUnreadableComponentSet({
-    build,
-    config,
-    readError:
-      repairStatus.reasons.join("; ") ||
-      (hasComponentPropertyDefinitionReadWarning(stats)
-        ? "post-update component property definitions are unreadable"
-        : ""),
-  });
-}
-
-async function componentSetPropertyDefinitionReadStatus(componentSetName) {
-  const page = await ensurePage("Components");
-  await figma.setCurrentPageAsync(page);
-  await page.loadAsync();
-
-  const existing = findComponentSetOnPage(page, componentSetName);
-  if (!existing || existing.type !== "COMPONENT_SET") {
-    return { definitions: {}, error: null };
-  }
-
-  return safeComponentPropertyDefinitions(
-    existing,
-    null,
-    `${componentSetName} preflight`,
+  // A rebuild mints new node IDs and Code Connect pins the old ones, so it is
+  // not a decision a bulk action gets to take on its own. Say what is wrong and
+  // let a person choose. None of the three sets on this path is pinned today,
+  // which is luck rather than design.
+  stats.warnings = stats.warnings || [];
+  stats.warnings.push(
+    config.componentSetName +
+      " still needs repair after the update (" +
+      repairStatus.reasons.join("; ") +
+      "). Rebuild " +
+      config.componentName +
+      " clears it, but it mints new node IDs — check Code Connect first.",
   );
-}
-
-async function rebuildUnreadableComponentSet({ config, build, readError }) {
-  const rebuilt = await rebuildGeneratedComponentSet({
-    componentName: config.componentName,
-    componentSetName: config.componentSetName,
-    build,
-  });
-  rebuilt.repairedPropertyDefinitions = true;
-  rebuilt.warnings = rebuilt.warnings || [];
-  const errorSuffix = readError ? ` (${readError})` : "";
-  rebuilt.warnings.push(
-    `${config.componentSetName} had unreadable Figma component property definitions${errorSuffix}, so the updater rebuilt it with a fresh component set and clean property panel.`,
-  );
-  return rebuilt;
-}
-
-function hasComponentPropertyDefinitionReadWarning(stats) {
-  if (!stats || !Array.isArray(stats.warnings)) return false;
-
-  return stats.warnings.some((warning) => {
-    if (typeof warning !== "string") return false;
-    return warning
-      .toLowerCase()
-      .includes("could not read component property definitions");
-  });
+  return stats;
 }
 
 async function treeItemComponentSetRepairStatus(componentSetName) {
