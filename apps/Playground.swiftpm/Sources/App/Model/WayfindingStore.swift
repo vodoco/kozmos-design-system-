@@ -22,6 +22,9 @@ final class WayfindingStore: ObservableObject {
         didSet {
             refreshRouting()
             revealPanel()
+            // A new surface re-frames the map, so a pan the visitor made
+            // against the old one should not survive it.
+            panOffset = .zero
         }
     }
     @Published var selectedFloorId: String
@@ -48,7 +51,10 @@ final class WayfindingStore: ObservableObject {
     @Published private(set) var showsSavedOnly = false
     @Published private(set) var announcement: String = ""
     @Published private(set) var actionMessage: DetailActionMessage?
-    @Published var zoom: CGFloat = 1
+    @Published private(set) var zoom: CGFloat = 1
+
+    /// How far the visitor has dragged the map away from what it was framing.
+    @Published private(set) var panOffset: CGSize = .zero
 
     /// How much of the screen the sheet is taking. The shell drives this while
     /// the visitor drags the handle; the flow raises it when a new surface
@@ -412,6 +418,7 @@ final class WayfindingStore: ObservableObject {
     func advanceStep() {
         guard stepIndex < steps.count - 1 else { return }
         stepIndex += 1
+        panOffset = .zero
         if let step = currentStep {
             selectedFloorId = step.floorId
             announce(step.instruction)
@@ -421,6 +428,7 @@ final class WayfindingStore: ObservableObject {
     func rewindStep() {
         guard stepIndex > 0 else { return }
         stepIndex -= 1
+        panOffset = .zero
         if let step = currentStep {
             selectedFloorId = step.floorId
             announce(step.instruction)
@@ -483,22 +491,35 @@ final class WayfindingStore: ObservableObject {
 
     // MARK: - Map controls
 
-    func zoomIn() { zoom = min(2.2, zoom + 0.2) }
+    /// Multiplicative, because that is what a pinch reports.
+    func zoom(by factor: CGFloat) {
+        zoom = min(max(zoom * factor, 0.6), 2.6)
+    }
 
-    func zoomOut() { zoom = max(0.6, zoom - 0.2) }
+    func pan(by translation: CGSize) {
+        panOffset = CGSize(
+            width: panOffset.width + translation.width,
+            height: panOffset.height + translation.height
+        )
+    }
 
     func recentre() {
         zoom = 1
+        panOffset = .zero
         selectedFloorId = phase == .navigating
             ? (currentStep?.floorId ?? venue.originFloorId)
             : venue.originFloorId
         announce("Centred on your location, \(venue.originLabel)")
     }
 
+    /// The map is framing the visitor when it is on their floor and has not
+    /// been dragged away from them.
+    var isTrackingUser: Bool {
+        panOffset == .zero && userPosition != nil
+    }
+
     var locationStateLabel: String {
-        selectedFloorId == (phase == .navigating ? currentStep?.floorId : venue.originFloorId)
-            ? "Following your location"
-            : "Location on another floor"
+        isTrackingUser ? "Following your location" : "Not centred on you"
     }
 
     private func announce(_ message: String) {

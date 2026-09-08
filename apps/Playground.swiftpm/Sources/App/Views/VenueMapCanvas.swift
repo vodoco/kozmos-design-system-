@@ -11,7 +11,7 @@ private struct PlanLayout {
     let scale: CGFloat
     let origin: CGPoint
 
-    init(size: CGSize, insets: KozmosMapCollisionInsets, focus: CGPoint, zoom: CGFloat) {
+    init(size: CGSize, insets: KozmosMapCollisionInsets, focus: CGPoint, zoom: CGFloat, pan: CGSize) {
         // Physical edges throughout. The plan is drawn in absolute coordinates,
         // so a leading/trailing inset would put the reserved space on the wrong
         // side of a right-to-left layout.
@@ -25,7 +25,14 @@ private struct PlanLayout {
             height: max(size.height - top - bottom, 1)
         )
 
-        scale = visible.width / PlanSpace.size.width * zoom
+        // Frame the whole floor when it fits the band, which is what a venue
+        // map should open on. But a band gets short — an expanded sheet leaves
+        // barely 90pt — and fitting a plan into that renders it unreadable, so
+        // the scale never drops below a fraction of the width and the camera
+        // pans instead.
+        let fillingWidth = visible.width / PlanSpace.size.width
+        let framingBoth = min(fillingWidth, visible.height / PlanSpace.size.height)
+        scale = max(framingBoth, fillingWidth * 0.45) * zoom
 
         let planSize = CGSize(
             width: PlanSpace.size.width * scale,
@@ -54,13 +61,13 @@ private struct PlanLayout {
                 planLength: planSize.width,
                 visibleLength: visible.width,
                 leadingInset: left,
-                centred: centre.x - focus.x * scale
+                centred: centre.x - focus.x * scale + pan.width
             ),
             y: axis(
                 planLength: planSize.height,
                 visibleLength: visible.height,
                 leadingInset: top,
-                centred: centre.y - focus.y * scale
+                centred: centre.y - focus.y * scale + pan.height
             )
         )
     }
@@ -102,11 +109,26 @@ struct VenueMapCanvas: View {
     let insets: KozmosMapCollisionInsets
     /// The plan point the camera keeps in view.
     let focus: CGPoint
+    /// How far the visitor has dragged the map away from that point.
+    let pan: CGSize
     let onSelect: (String) -> Void
+    /// Committed at the end of a gesture, so the camera is not rewritten on
+    /// every frame of one.
+    let onZoomBy: (CGFloat) -> Void
+    let onPanBy: (CGSize) -> Void
+
+    @GestureState private var pinch: CGFloat = 1
+    @GestureState private var drag: CGSize = .zero
 
     var body: some View {
         GeometryReader { geometry in
-            let layout = PlanLayout(size: geometry.size, insets: insets, focus: focus, zoom: zoom)
+            let layout = PlanLayout(
+                size: geometry.size,
+                insets: insets,
+                focus: focus,
+                zoom: zoom * pinch,
+                pan: CGSize(width: pan.width + drag.width, height: pan.height + drag.height)
+            )
 
             ZStack(alignment: .topLeading) {
                 slab(layout)
@@ -127,6 +149,20 @@ struct VenueMapCanvas: View {
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
             .clipped()
+            .contentShape(Rectangle())
+            // Pinch and drag are how a map is handled; the buttons that used to
+            // do this were spending map to say so. A minimum distance keeps a
+            // tap on a marker a tap.
+            .gesture(
+                MagnificationGesture()
+                    .updating($pinch) { value, state, _ in state = value }
+                    .onEnded { onZoomBy($0) }
+            )
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 8)
+                    .updating($drag) { value, state, _ in state = value.translation }
+                    .onEnded { onPanBy($0.translation) }
+            )
             .animation(.easeInOut(duration: 0.25), value: zoom)
             .animation(.easeInOut(duration: 0.25), value: focus)
             .animation(.easeInOut(duration: 0.3), value: floor.id)
@@ -134,6 +170,10 @@ struct VenueMapCanvas: View {
         .background(KozmosColors.primitivesColorsBackground200)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(floor.presentation.label) floor plan")
+        // Pinching is not available to everyone, so zoom stays reachable as an
+        // action now that it is no longer a button.
+        .accessibilityAction(named: "Zoom in") { onZoomBy(1.3) }
+        .accessibilityAction(named: "Zoom out") { onZoomBy(1 / 1.3) }
     }
 
     // MARK: - Plan layers
@@ -174,14 +214,11 @@ struct VenueMapCanvas: View {
                         // A wrapped label would run over the marker beneath it,
                         // and below this width it is unreadable anyway.
                         if rect.width >= 56 {
-                            Text(room.label)
-                                .font(KozmosTypography.caption2)
-                                .foregroundColor(KozmosColors.primitivesColorsForeground500)
-                                .lineLimit(1)
+                            KozmosText(room.label, style: .caption2, tone: .muted, lineLimit: 1)
                                 .minimumScaleFactor(0.6)
                                 .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing50)
                                 .frame(width: rect.width)
-                                .offset(y: -rect.height / 2 + KozmosDimensions.primitivesLayoutSpacing150)
+                                .offset(y: -rect.height / 2 + KozmosDimensions.primitivesLayoutSpacing100)
                         }
                     }
                 )
