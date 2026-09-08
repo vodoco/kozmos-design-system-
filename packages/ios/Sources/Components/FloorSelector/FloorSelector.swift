@@ -5,6 +5,10 @@ public enum KozmosFloorSelectorVariant: String, CaseIterable, Sendable {
     case verticalList = "vertical-list"
     case horizontalList = "horizontal-list"
     case compactStepper = "compact-stepper"
+    /// Shows the current level only, and opens the full list when touched.
+    /// For a control parked in a corner of a map, where a permanent column of
+    /// every level costs more of the map than it is worth.
+    case collapsible = "collapsible"
 }
 
 /// Switches the active level of a venue.
@@ -30,6 +34,8 @@ public struct KozmosFloorSelector: View {
     /// target scales with the type it has to hold.
     @ScaledMetric(relativeTo: .subheadline)
     private var controlSize: CGFloat = KozmosDimensions.primitivesLayoutSizing500
+
+    @State private var isExpanded = false
 
     public init(
         floors: [KozmosFloorPresentation],
@@ -62,6 +68,9 @@ public struct KozmosFloorSelector: View {
 
     private func select(_ floor: KozmosFloorPresentation) {
         guard !floor.disabled else { return }
+        if variant == .collapsible {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { isExpanded = false }
+        }
         trackEvent(
             KozmosAnalyticsEvent(
                 eventName: "floor_selected",
@@ -80,14 +89,50 @@ public struct KozmosFloorSelector: View {
         floors.first { $0.id == selectedFloor } ?? floors.first
     }
 
+    /// While the list is open the closed control would only repeat the level
+    /// already highlighted in it, so it is hidden — but it keeps its space, or
+    /// the control would change size and move the map after all.
+    private var baseIsHidden: Bool {
+        variant == .collapsible && isExpanded
+    }
+
     public var body: some View {
         container
+            .opacity(baseIsHidden ? 0 : 1)
+            .padding(KozmosDimensions.primitivesLayoutSpacing75)
+            .background(baseIsHidden ? Color.clear : KozmosColors.primitivesColorsBackground0.opacity(0.9))
+            .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
+            .kozmosElevation(baseIsHidden ? KozmosShadows.none : KozmosShadows.semanticsElevationFloating)
+            // Overlaid rather than stacked, so opening the list does not change
+            // what this control measures. A map shell reports the space its
+            // chrome covers, and a camera that re-frames every time a picker
+            // opens is worse than one that ignores it.
+            .overlay(alignment: .bottom) { expandedList }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(label)
+    }
+
+    /// The full list, floating above the closed control.
+    @ViewBuilder
+    private var expandedList: some View {
+        if variant == .collapsible, isExpanded {
+            VStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                ForEach(floors) { floor in
+                    floorButton(floor)
+                }
+            }
             .padding(KozmosDimensions.primitivesLayoutSpacing75)
             .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
             .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
             .kozmosElevation(KozmosShadows.semanticsElevationFloating)
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel(label)
+            .fixedSize()
+            .offset(
+                y: -(controlSize
+                     + KozmosDimensions.primitivesLayoutSpacing75 * 2
+                     + KozmosDimensions.primitivesLayoutSpacing100)
+            )
+            .transition(.opacity.combined(with: .scale(scale: 0.92, anchor: .bottom)))
+        }
     }
 
     @ViewBuilder
@@ -112,6 +157,12 @@ public struct KozmosFloorSelector: View {
                     floorButton(selectedPresentation)
                 }
                 stepperButton(systemImage: "chevron.down", step: 1, label: "Floor down")
+            }
+        case .collapsible:
+            // Only ever the current level. The list that opens is an overlay,
+            // not part of this footprint — see `expandedList`.
+            if let selectedPresentation {
+                collapsedButton(selectedPresentation)
             }
         }
     }
@@ -150,6 +201,40 @@ public struct KozmosFloorSelector: View {
         // one, which is the only place the level is spelled out.
         .accessibilityLabel(floor.label)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    /// The closed state: the level you are on, and a way in to the rest.
+    private func collapsedButton(_ floor: KozmosFloorPresentation) -> some View {
+        Button {
+            trackEvent(
+                KozmosAnalyticsEvent(
+                    eventName: "floor_selector_expanded",
+                    component: "FloorSelector",
+                    properties: ["floor": floor.id]
+                )
+            )
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { isExpanded = true }
+        } label: {
+            Text(floor.shortLabel)
+                .font(KozmosTypography.subheadline)
+                .bold()
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(width: controlSize, height: controlSize)
+                .background(KozmosColors.primitivesColorsTheme500)
+                .foregroundColor(KozmosColors.primitivesColorsBackground0)
+                .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
+                .contentShape(
+                    RoundedRectangle(
+                        cornerRadius: KozmosDimensions.semanticsRadiusPanel,
+                        style: .continuous
+                    )
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(floor.label)
+        .accessibilityHint("Shows every level")
+        .accessibilityAddTraits(.isButton)
     }
 
     /// The next selectable floor in list order, skipping any that are closed.
