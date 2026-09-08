@@ -138,7 +138,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     /// of the sheet, not a row of chrome the content has to be pushed past —
     /// the panel below keeps its own padding rather than stacking on top of
     /// this.
-    private static var grabberRowHeight: CGFloat { KozmosDimensions.primitivesLayoutSpacing300 }
+    private static var grabberRowHeight: CGFloat { KozmosDimensions.primitivesLayoutSpacing200 }
 
     public init(
         mapLabel: String = "Map",
@@ -470,7 +470,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             // a foreground grey reads as content.
             .fill(KozmosColors.primitivesColorsBackground300)
             .frame(width: KozmosDimensions.primitivesLayoutSizing500, height: 4)
-            .padding(.top, KozmosDimensions.primitivesLayoutSpacing50)
+            .padding(.top, KozmosDimensions.primitivesLayoutSpacing75)
             .frame(maxWidth: .infinity)
             .frame(height: Self.grabberRowHeight, alignment: .top)
             // The whole row is the target: a 5pt capsule is not a hit area.
