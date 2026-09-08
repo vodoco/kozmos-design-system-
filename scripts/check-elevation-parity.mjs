@@ -147,14 +147,90 @@ for (const mode of ["light", "dark"]) {
 
 // 5. What is deliberately not a role.
 {
+  // Count reach, not sites. Counting `type: "DROP_SHADOW"` occurrences said
+  // five literals remained, which read like a rounding error next to six roles.
+  // One of those five is tooltipShadowEffects(), and thirteen painters call it —
+  // every overlay surface in the library. A helper is one site and many shadows,
+  // and the difference is the whole question.
   const plugin = read("figma/foundations-importer/code.js");
-  const literals = (plugin.match(/type: "DROP_SHADOW"/g) || []).length;
+  const lines = plugin.split("\n");
   const roles = (plugin.match(/elevationEffect\("/g) || []).length;
+
+  // Which functions contain a literal shadow, and how far does each one reach?
+  const literalFns = new Map();
+  let fn = "(top)";
+  for (const line of lines) {
+    const m = /^(?:async )?function ([A-Za-z0-9_]+)/.exec(line);
+    if (m) fn = m[1];
+    // elevationEffect builds the role, so its own DROP_SHADOW is the point.
+    if (line.includes(`type: "DROP_SHADOW"`) && fn !== "elevationEffect")
+      literalFns.set(fn, (literalFns.get(fn) || 0) + 1);
+  }
+  const reach = [];
+  for (const [name, shadows] of literalFns) {
+    const calls = lines.filter(
+      (l) => l.includes(name + "()") && !/^(?:async )?function /.test(l),
+    ).length;
+    reach.push({ name, shadows, calls });
+  }
+  reach.sort((a, b) => b.calls - a.calls);
+  const viaHelpers = reach.reduce((n, r) => n + Math.max(r.calls, 1), 0);
+
   console.log(
-    `\n  ${roles} shadow(s) read a role; ${literals} remain literal and are named in the KOZMOS_ELEVATION comment:` +
-      `\n  a FloatingActionButton is heavier than any step on purpose, a BottomNavigation casts upward,` +
-      `\n  and a Tooltip stacks two layers. The scale cannot say those, and flattening them would lose them.`,
+    `\n  ${roles} painter site(s) read an elevation role; ${viaHelpers} still paint a literal:`,
   );
+  for (const r of reach) {
+    console.log(
+      `    ${String(Math.max(r.calls, 1)).padStart(3)}  ${r.name}` +
+        (r.calls > 1
+          ? `  — ${r.shadows} layer(s), called from ${r.calls} painters`
+          : ""),
+    );
+  }
+  console.log(
+    `  A FloatingActionButton is heavier than any step on purpose and a BottomNavigation` +
+      `\n  casts upward; those two the scale genuinely cannot say. Anything else appearing` +
+      `\n  in this list is a painter that got away, and a helper counts once per caller —` +
+      `\n  tooltipShadowEffects sat here as a single literal while painting 334 shadows.`,
+  );
+}
+
+// 6. The web overlay surfaces read the same role Figma paints. These two used
+// to be settled independently — Figma took a two-layer Tailwind md from a
+// helper named for Tooltip, the web took shadow-md or shadow-lg or nothing at
+// all, and no check compared them. Naming the pairs is what makes them one
+// decision instead of two.
+{
+  const OVERLAY_SURFACES = [
+    ["Tooltip", 1],
+    ["Menu", 2],
+    ["Popover", 1],
+    ["Dialog", 1],
+    ["Drawer", 1],
+    ["Combobox", 1],
+    ["MultiSelect", 1],
+    ["ColorPicker", 1],
+  ];
+  for (const [name, count] of OVERLAY_SURFACES) {
+    const file = `packages/react/src/components/${name}/${name}.tsx`;
+    const src = read(file);
+    const found = (src.match(/shadow-overlay/g) || []).length;
+    const stale = /shadow-(?:md|lg|sm)\b/.test(src);
+    if (found === count && !stale)
+      ok(
+        `web: ${name} reads shadow-overlay${count > 1 ? ` (${count} surfaces)` : ""}`,
+      );
+    else if (stale)
+      fail(`web: ${name} still carries a raw Tailwind shadow step`);
+    else
+      fail(
+        `web: ${name} reads shadow-overlay ${found} time(s), expected ${count}`,
+      );
+  }
+  const toast = read("packages/react/src/components/Toast/Toast.tsx");
+  if (/shadow-floating/.test(toast) && !/shadow-(?:md|lg|sm)\b/.test(toast))
+    ok("web: Toast reads shadow-floating — a status message, not a modal");
+  else fail("web: Toast does not read shadow-floating");
 }
 
 console.log(

@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "4a8ac364956d";
+const PLUGIN_BUILD = "3e597100b157";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -481,10 +481,16 @@ const NAVBAR_CONTEXT_TEXT_WIDTH = 162;
  * shadow.sm / md / lg; pnpm tokens:elevation:check fails if they drift apart.
  * Figma renders the light mode, so these are the light values.
  *
- * Four shadows in this file are deliberately not roles, because the scale
+ * Two shadows in this file are deliberately not roles, because the scale
  * cannot express what they say: a FloatingActionButton is heavier than any
- * step on purpose, a BottomNavigation casts upward, and a Tooltip stacks two
- * layers. Forcing those into three roles would flatten real distinctions.
+ * step on purpose, and a BottomNavigation casts upward.
+ *
+ * A third exception used to be listed here — a Tooltip stacking two layers.
+ * It was not an exception. tooltipShadowEffects() was called by thirteen
+ * painters, so the whole overlay surface of the library sat outside the scale
+ * under a name that suggested one component. Every one of them now reads a
+ * role: overlay for menus, tooltips, popovers, dialogs, drawers, sheets and
+ * the six dropdown panels; floating for a Toast, which is a status message.
  */
 const KOZMOS_ELEVATION = {
   raised: { y: 2, blur: 4, alpha: 0.05 },
@@ -39966,7 +39972,7 @@ async function updateBottomSheetVariant(
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
-  component.effects = tooltipShadowEffects();
+  component.effects = [elevationEffect("overlay")];
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "BottomSheet");
 
@@ -52879,7 +52885,7 @@ async function updateTooltipVariant(
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
-  component.effects = tooltipShadowEffects();
+  component.effects = [elevationEffect("overlay")];
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Tooltip");
   component.setSharedPluginData(RUN_NAMESPACE, "side", side);
@@ -52950,7 +52956,7 @@ async function updateDialogVariant(
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
-  component.effects = tooltipShadowEffects();
+  component.effects = [elevationEffect("overlay")];
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Dialog");
 
@@ -53032,7 +53038,7 @@ async function updateDrawerVariant(
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
-  component.effects = tooltipShadowEffects();
+  component.effects = [elevationEffect("overlay")];
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Drawer");
   component.setSharedPluginData(RUN_NAMESPACE, "side", side);
@@ -53105,7 +53111,7 @@ async function updatePopoverVariant(
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
-  component.effects = tooltipShadowEffects();
+  component.effects = [elevationEffect("overlay")];
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Popover");
   component.setSharedPluginData(RUN_NAMESPACE, "side", side);
@@ -53176,7 +53182,7 @@ async function updateMenuVariant(
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
-  component.effects = tooltipShadowEffects();
+  component.effects = [elevationEffect("overlay")];
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Menu");
 
@@ -55800,7 +55806,7 @@ async function updateToastVariant(
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   component.strokeWeight = 1;
-  component.effects = tooltipShadowEffects();
+  component.effects = [elevationEffect("floating")];
   component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
   component.setSharedPluginData(RUN_NAMESPACE, "component", "Toast");
 
@@ -57310,29 +57316,6 @@ function tooltipContentText(side) {
   if (side === "Right") return "View details";
   if (side === "Bottom") return "Copied";
   return "Keyboard shortcut";
-}
-
-function tooltipShadowEffects() {
-  return [
-    {
-      type: "DROP_SHADOW",
-      color: { r: 0, g: 0, b: 0, a: 0.1 },
-      offset: { x: 0, y: 4 },
-      radius: 6,
-      spread: -1,
-      visible: true,
-      blendMode: "NORMAL",
-    },
-    {
-      type: "DROP_SHADOW",
-      color: { r: 0, g: 0, b: 0, a: 0.06 },
-      offset: { x: 0, y: 2 },
-      radius: 4,
-      spread: -1,
-      visible: true,
-      blendMode: "NORMAL",
-    },
-  ];
 }
 
 async function syncDialogVariantChildren({
@@ -62206,7 +62189,7 @@ async function syncComboboxVariantChildren({
       paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     listbox.strokeWeight = 1;
-    listbox.effects = tooltipShadowEffects();
+    listbox.effects = [elevationEffect("overlay")];
 
     const optionLabels = [
       preservedText["Option 1 Text"] || "Metro Station",
@@ -62564,7 +62547,7 @@ async function syncMultiSelectVariantChildren({
       paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     listbox.strokeWeight = 1;
-    listbox.effects = tooltipShadowEffects();
+    listbox.effects = [elevationEffect("overlay")];
 
     const optionLabels = [
       preservedText["Option 1 Text"] || "Metro Station",
@@ -63358,7 +63341,7 @@ async function createDatePickerCalendar({
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   calendar.strokeWeight = 1;
-  calendar.effects = tooltipShadowEffects();
+  calendar.effects = [elevationEffect("overlay")];
 
   const header = figma.createFrame();
   header.name = "DatePicker Calendar Header";
@@ -64024,7 +64007,7 @@ async function createDateRangePickerCalendar({
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   calendar.strokeWeight = 1;
-  calendar.effects = tooltipShadowEffects();
+  calendar.effects = [elevationEffect("overlay")];
 
   const startMonth = await createDateRangePickerMonth({
     daySpecs: createCalendarDaySpecs({
@@ -64500,7 +64483,7 @@ async function syncTimePickerVariantChildren({
       paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
     ];
     listbox.strokeWeight = 1;
-    listbox.effects = tooltipShadowEffects();
+    listbox.effects = [elevationEffect("overlay")];
 
     const optionLabels = [
       preservedText["Option 1 Text"] || "08:00",
@@ -65450,7 +65433,7 @@ async function createColorPickerPopover({
     paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
   ];
   popover.strokeWeight = 1;
-  popover.effects = tooltipShadowEffects();
+  popover.effects = [elevationEffect("overlay")];
 
   const builtColorArea = createColorPickerColorArea({
     valueText,

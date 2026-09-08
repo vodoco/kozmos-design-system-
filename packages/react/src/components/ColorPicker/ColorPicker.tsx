@@ -421,7 +421,7 @@ export const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
           {showPickerPanel && isOpen && (
             <div
               id={panelId}
-              className="w-full min-w-0 space-y-3 rounded-control border bg-popover p-3 text-popover-foreground shadow-md"
+              className="w-full min-w-0 space-y-3 rounded-control border bg-popover p-3 text-popover-foreground shadow-overlay"
             >
               {/* Nested inside the popover at p-3 plus its 1px border, so the area's
                   radius is the popover's minus 13 — R_outer = R_inner + padding, see
