@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "3e597100b157";
+const PLUGIN_BUILD = "6cf5b38fff51";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -9505,10 +9505,39 @@ const PRODUCT_SDK_UPDATE_SEQUENCE = [
  * exists to remove. Node IDs are preserved throughout, because each entry
  * calls the set's own Update, never Rebuild.
  */
+// Yielding matters more than it looks. Without it the whole sequence is one
+// uninterrupted block of work, Figma cannot save until it ends, and on
+// 2026-09-08 that made a run that was progressing normally indistinguishable
+// from a hung one for forty-five minutes — long enough to be told twice to
+// quit and throw the work away.
+function yieldToFigma() {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, 0);
+  });
+}
+
+const SEQUENCE_COMPLETION_KEY = "completedBuild";
+
+// The "build" stamp is written before a set's first variant is touched, so it
+// says "this build started here", which is exactly wrong for deciding what to
+// skip. This one is written by the sequence runner after the updater returns
+// without throwing, so it says "finished" — the only claim worth resuming on.
+function markComponentSetCompleted(page, name) {
+  const set = findComponentSetOnPage(page, name);
+  if (set && set.type === "COMPONENT_SET") {
+    set.setSharedPluginData(
+      RUN_NAMESPACE,
+      SEQUENCE_COMPLETION_KEY,
+      PLUGIN_BUILD,
+    );
+  }
+}
+
 async function runUpdateSequence(sequence, kindLabel) {
   const stats = {
     updatedComponents: 0,
     skipped: [],
+    alreadyCurrent: [],
     failures: [],
     perComponent: [],
     warnings: [],
@@ -9516,10 +9545,42 @@ async function runUpdateSequence(sequence, kindLabel) {
 
   suppressAutoReorganize = true;
 
+  // Read the completion stamps once, before anything is touched. A run that
+  // died partway used to start again from the first set, redo everything it had
+  // already done, and reach the hard part carrying the entire run's undo stack.
+  const page = await ensurePage("Components");
+  await figma.setCurrentPageAsync(page);
+  await page.loadAsync();
+  const finished = {};
+  let stampable = 0;
+  for (let i = 0; i < sequence.length; i += 1) {
+    const set = findComponentSetOnPage(page, sequence[i][0]);
+    if (!set || set.type !== "COMPONENT_SET") continue;
+    stampable += 1;
+    if (
+      set.getSharedPluginData(RUN_NAMESPACE, SEQUENCE_COMPLETION_KEY) ===
+      PLUGIN_BUILD
+    ) {
+      finished[sequence[i][0]] = true;
+    }
+  }
+  // Only skip when there is something left to do. Pressing the button on an
+  // already-current library is a deliberate refresh, and a bulk action that
+  // silently does nothing looks broken.
+  const finishedCount = Object.keys(finished).length;
+  const resuming = stampable > 0 && finishedCount < stampable;
+
   try {
     for (let index = 0; index < sequence.length; index += 1) {
       const entry = sequence[index];
       const name = entry[0];
+
+      if (resuming && finished[name]) {
+        stats.alreadyCurrent.push(name);
+        stats.perComponent.push({ name, alreadyCurrent: true });
+        continue;
+      }
+
       postAuditProgress(
         index + 1,
         `Updating ${name}`,
@@ -9528,6 +9589,10 @@ async function runUpdateSequence(sequence, kindLabel) {
 
       try {
         const result = await entry[1]();
+        // Only on a real update. A set that was not found returns a message and
+        // updated:false, and stamping that as finished would make the next run
+        // skip a set it never touched.
+        if (result.updated) markComponentSetCompleted(page, name);
         const record = { name, variants: result.variants || 0 };
         if (result.updated) stats.updatedComponents += 1;
         else stats.skipped.push(name);
@@ -9544,6 +9609,8 @@ async function runUpdateSequence(sequence, kindLabel) {
         stats.failures.push(`${name}: ${message}`);
         stats.perComponent.push({ name, failed: message });
       }
+
+      await yieldToFigma();
     }
   } finally {
     suppressAutoReorganize = false;
@@ -9552,6 +9619,9 @@ async function runUpdateSequence(sequence, kindLabel) {
   stats.layout = await reorganizeComponentsPage();
   stats.message =
     `Updated ${stats.updatedComponents} of ${sequence.length} ${kindLabel} in place, then reorganized once.` +
+    (stats.alreadyCurrent.length > 0
+      ? ` Resumed past ${stats.alreadyCurrent.length} already on this build.`
+      : "") +
     (stats.failures.length > 0 ? ` ${stats.failures.length} failed.` : "") +
     (stats.skipped.length > 0
       ? ` ${stats.skipped.length} not present and skipped.`
@@ -12376,6 +12446,11 @@ async function reorganizeComponentsPage() {
   const activeSectionTitles = {};
   const sectionNodes = [];
   for (const section of COMPONENT_PAGE_LAYOUT_SECTIONS) {
+    // One yield per section. This pass repositions every set on the page and
+    // runs last, so without a break in it the end of a bulk run is a single
+    // block Figma cannot save through — which is what the panel's "then
+    // reorganizing once" was quietly costing.
+    await yieldToFigma();
     const nodes = [];
 
     for (const name of section.components) {
