@@ -10302,4 +10302,56 @@ assertContains(
   }
 }
 
+// A bulk run has to be able to pick up where it stopped. Update All Core died
+// three times on 2026-09-08, and each retry began at set one, redid the
+// sixty-odd it had already done, and arrived at the 432-variant Tree block
+// carrying the whole run. These four properties are what make a retry cheap;
+// each was absent at some point that day.
+{
+  const plugin = source.figma;
+  const runner = /async function runUpdateSequence\([\s\S]*?\n}/.exec(plugin);
+  if (!runner) {
+    fail("figma/foundations-importer/code.js: runUpdateSequence not found");
+  } else {
+    const body = runner[0];
+    const checks = [
+      [
+        /getSharedPluginData\(\s*RUN_NAMESPACE,\s*SEQUENCE_COMPLETION_KEY\s*\)/.test(
+          body,
+        ),
+        "reads the completion stamp, so a retry can skip finished sets",
+      ],
+      [
+        /if \(result\.updated\) markComponentSetCompleted\(page, name\);/.test(
+          body,
+        ),
+        "stamps completion only when the updater reports a real update",
+      ],
+      [
+        /await yieldToFigma\(\);/.test(body),
+        "yields between sets, so Figma can save mid-run",
+      ],
+      [
+        /const resuming = stampable > 0 && finishedCount < stampable;/.test(
+          body,
+        ),
+        "runs everything when nothing is left to resume, so the button is never a no-op",
+      ],
+    ];
+    for (const [held, what] of checks) {
+      if (!held)
+        fail(
+          `figma/foundations-importer/code.js: runUpdateSequence no longer ${what}`,
+        );
+    }
+  }
+  // The two stamps mean different things and must not be conflated: "build" is
+  // written before a set is touched, the completion key after it comes back.
+  if (!/SEQUENCE_COMPLETION_KEY = "completedBuild"/.test(plugin)) {
+    fail(
+      "figma/foundations-importer/code.js: the completion stamp is no longer a key distinct from build",
+    );
+  }
+}
+
 console.log("Component contract parity ok");
