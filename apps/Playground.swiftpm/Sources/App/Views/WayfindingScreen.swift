@@ -16,6 +16,7 @@ struct WayfindingScreen: View {
             mapStatus: .ready,
             panelLabel: panelLabel,
             panelPlacement: .end,
+            controlsPlacement: .bottom,
             panelDetent: $store.panelDetent,
             panelDetents: [.collapsed, .medium, .large],
             onCollisionInsetsChange: { collisionInsets = $0 },
@@ -93,7 +94,10 @@ struct WayfindingScreen: View {
                     zoom: store.zoom,
                     insets: mapInsets,
                     focus: mapFocus,
-                    onSelect: { store.selectPOI($0) }
+                    pan: store.panOffset,
+                    onSelect: { store.selectPOI($0) },
+                    onZoomBy: { store.zoom(by: $0) },
+                    onPanBy: { store.pan(by: $0) }
                 )
                 // A floor plan is geography, not text: it must not mirror in a
                 // right-to-left layout, or north-east ends up on the wrong side
@@ -114,62 +118,29 @@ struct WayfindingScreen: View {
 
     // MARK: - Controls
 
-    /// The shell proposes the band left between the top bar and the panel, so
-    /// the controls can pick a shape that fits it rather than disappearing
-    /// behind the sheet: a button per level while there is room, a stepper when
-    /// the band tightens, and a single row laid across a short wide band — a
-    /// landscape phone, or a sheet dragged nearly full-screen.
+    /// Thumb-reachable corners: tracking on the leading side, levels on the
+    /// trailing side. No zoom buttons — the map is pinched and dragged, and
+    /// zoom stays reachable as an accessibility action on the plan itself.
     private var controlsLayer: some View {
-        ViewThatFits {
-            controlsColumn(floorSelector: .verticalList)
-            controlsColumn(floorSelector: .compactStepper)
-            controlsRow
-            // `EmptyView` is elided from a ViewThatFits builder, so the last
-            // resort has to be a real view that occupies nothing.
-            Color.clear.frame(width: 0, height: 0)
-        }
-    }
-
-    private func controlsColumn(floorSelector: KozmosFloorSelectorVariant) -> some View {
-        HStack(alignment: .top, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
-            floorSelectorControl(floorSelector)
-
-            KozmosMapControlsGroup(
-                onZoomIn: { store.zoomIn() },
-                onZoomOut: { store.zoomOut() },
-                onMyLocation: { store.recentre() },
-                locationLabel: "Centre on my location",
-                locationStateLabel: store.locationStateLabel
-            )
-        }
-    }
-
-    /// `KozmosMapControlsGroup` stacks vertically by design, so a short band
-    /// composes the same controls from `KozmosMapControlButton` instead.
-    private var controlsRow: some View {
-        HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
-            floorSelectorControl(.horizontalList)
-
-            KozmosMapControlButton(label: "Zoom in", systemImage: "plus") { store.zoomIn() }
-            KozmosMapControlButton(label: "Zoom out", systemImage: "minus") { store.zoomOut() }
+        HStack(alignment: .bottom, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
             KozmosMapControlButton(
                 label: "Centre on my location",
                 systemImage: "location.fill",
                 stateLabel: store.locationStateLabel,
-                pressed: true
+                pressed: store.isTrackingUser
             ) {
                 store.recentre()
             }
-        }
-    }
 
-    private func floorSelectorControl(_ variant: KozmosFloorSelectorVariant) -> some View {
-        KozmosFloorSelector(
-            floors: store.floorPresentations,
-            selectedFloor: $store.selectedFloorId,
-            variant: variant,
-            label: "Floor selector, \(store.venue.buildingLabel)"
-        )
+            Spacer(minLength: 0)
+
+            KozmosFloorSelector(
+                floors: store.floorPresentations,
+                selectedFloor: $store.selectedFloorId,
+                variant: .collapsible,
+                label: "Floor selector, \(store.venue.buildingLabel)"
+            )
+        }
     }
 
     // MARK: - Top bar
@@ -259,14 +230,16 @@ struct WayfindingScreen: View {
                 KozmosIcon(category.iconName ?? "marker-pin-01", size: .lg, color: .primary)
             },
             search: {
-                VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing25) {
+                Stack(alignment: .start, spacing: KozmosDimensions.primitivesLayoutSpacing25) {
                     KozmosHeading(store.venue.name, level: .h4)
-                    Text("\(store.venue.buildingLabel) · \(store.venue.pois.count) places")
-                        .font(KozmosTypography.subheadline)
-                        .foregroundColor(KozmosColors.primitivesColorsForeground500)
-                        // Wrap rather than truncate when the chip beside it
-                        // claims the width at large type sizes.
-                        .fixedSize(horizontal: false, vertical: true)
+                    KozmosText(
+                        "\(store.venue.buildingLabel) · \(store.venue.pois.count) places",
+                        style: .subheadline,
+                        tone: .muted
+                    )
+                    // Wrap rather than truncate when the chip beside it claims
+                    // the width at large type sizes.
+                    .fixedSize(horizontal: false, vertical: true)
                 }
             },
             actions: {
@@ -361,9 +334,11 @@ struct WayfindingScreen: View {
                 statusContent: {
                     VStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                         KozmosSpinner()
-                        Text("Working out the best way there…")
-                            .font(KozmosTypography.subheadline)
-                            .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                        KozmosText(
+                            "Working out the best way there…",
+                            style: .subheadline,
+                            tone: .muted
+                        )
                     }
                 }
             )
@@ -441,16 +416,11 @@ private struct PanelHeader: View {
                     .accessibilityLabel(backLabel)
             }
 
-            VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing25) {
-                Text(title)
-                    .font(KozmosTypography.headline)
-                    .foregroundColor(KozmosColors.primitivesColorsForeground100)
-                    .lineLimit(1)
+            Stack(alignment: .start, spacing: KozmosDimensions.primitivesLayoutSpacing25) {
+                KozmosText(title, style: .headline, lineLimit: 1)
                     .accessibilityAddTraits(.isHeader)
 
-                Text(subtitle)
-                    .font(KozmosTypography.subheadline)
-                    .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                KozmosText(subtitle, style: .subheadline, tone: .muted)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
