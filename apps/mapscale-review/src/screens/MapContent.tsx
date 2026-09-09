@@ -92,7 +92,6 @@ import {
   typeLabel,
   type LevelTypeCount,
   type SpriteSheet,
-  subTypesOf,
 } from "../mock/taxonomy";
 
 /**
@@ -742,6 +741,15 @@ function TypeIcon({
     <span
       aria-hidden
       style={{
+        /**
+         * 🔴 **`display` is what makes this visible at all.** A `<span>` is a non-replaced INLINE
+         * box, and `width`/`height` do not apply to one — so this rendered 0×0 and the panel header
+         * showed nothing (Olcay, 2026-09-09: *"We should either render the icons next to title or
+         * remove it completely"*). The FALLBACK branch above sets `display: "grid"` and was drawn
+         * correctly, which is why the icon appeared for types with no sprite and vanished for types
+         * that have one — the exact opposite of what it looked like.
+         */
+        display: "block",
         width: 16,
         height: 16,
         flex: "0 0 auto",
@@ -2492,15 +2500,12 @@ export function MapContent({
    * The feature's own subType is still added if the taxonomy somehow does not carry it, so a
    * feature can never be looking at a list that excludes what it currently is.
    */
-  const subTypeOptions = useMemo(() => {
-    if (!shownProps) return [];
-    const mine = String(shownProps.mainType ?? "");
-    const fromTaxonomy = subTypesOf(mine).map((t) => t.subType!);
-    const own = shownProps.subType ? String(shownProps.subType) : null;
-    return own && !fromTaxonomy.includes(own)
-      ? [...fromTaxonomy, own]
-      : fromTaxonomy;
-  }, [shownProps]);
+  /**
+   * ⚠️ **`subTypeOptions` used to be computed here and handed down.** It is gone: `TypePicker`
+   * reads `typeTree()` itself, which is the whole taxonomy rather than one mainType's children, so
+   * the screen no longer has an opinion about what types exist. Removing it also removed the last
+   * caller of `subTypesOf` on this screen.
+   */
   /**
    * Saving an edit. Two consequences, and the second is the ruled one:
    * the panel shows the new values (via `edits`, which every surface reads), and **the flag clears**
@@ -3067,7 +3072,6 @@ export function MapContent({
               onDirtyChange={onDirtyChange}
               geometryDirty={!!geom.dirty}
               onCommitGeometry={() => sendGeom({ cmd: "commit" })}
-              subTypeOptions={subTypeOptions}
               onEdited={onEdited}
               onSaved={onSaved}
               onCancelEdit={onCancelEdit}

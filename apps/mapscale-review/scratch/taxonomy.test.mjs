@@ -81,6 +81,58 @@ check("an unknown type suggests nothing rather than borrowing", T.suggestedFor("
 check("search finds a type by what people call it",
   T.searchTypes(T.subTypesOf("section"), "food hall").some((t) => t.subType === "food-court"));
 
+/* ── the type picker's tree ────────────────────────────────────────────────────
+   43 mainTypes over 362 rows. The rules that are easy to get wrong are the ones checked. */
+const tree = T.typeTree();
+check("the tree groups by mainType", tree.length > 30 && tree.length < 45);
+check("system mainTypes are not offered",
+  !tree.some((g) => ["wayfinding-network", "geofence", "positioning-device"].includes(g.mainType)));
+check("…but including them is possible for a caller that wants to",
+  T.typeTree({ includeSystem: true }).some((g) => g.mainType === "geofence"));
+check("groups carry the taxonomy's own name", (tree.find((g) => g.mainType === "retail-space") || {}).label === "Retail Space");
+check("every group with a published row of its own is selectable",
+  tree.filter((g) => g.selectable).length >= 35);
+check("a mainType the taxonomy publishes no row for cannot be chosen alone",
+  tree.every((g) => g.selectable || g.subTypes.length > 0));
+check("groups are sorted by name", tree.map((g) => g.label).join() === tree.map((g) => g.label).slice().sort((a, b) => a.localeCompare(b)).join());
+
+/* ⚠️ Four mainTypes hold subtypes of MORE THAN ONE class, so a class filter has to filter rows. */
+const structural = T.typeTree({ cls: "structural" });
+const circ = structural.find((g) => g.mainType === "circulation-space");
+check("a class filter keeps a mixed group…", !!circ);
+check("…with only the children in that class", !!circ && circ.subTypes.every((t) => t.class === "structural"));
+check("…and drops the ones that are not", !!circ && circ.subTypes.length < T.subTypesOf("circulation-space").length);
+check("a class filter with no members yields no group",
+  !T.typeTree({ cls: "virtual" }).some((g) => g.mainType === "retail-space"));
+
+/* ⚠️ A query that matches the GROUP keeps all of its children — otherwise the row you aimed at
+   opens empty. */
+const retail = T.typeTree({ q: "retail" }).find((g) => g.mainType === "retail-space");
+check("searching a group name keeps the whole group",
+  !!retail && retail.subTypes.length === T.subTypesOf("retail-space").length);
+check("searching a child name finds it inside its group",
+  T.typeTree({ q: "food hall" }).some((g) => g.subTypes.some((t) => t.subType === "food-court")));
+check("…via alsoKnownAs, not just the printed name",
+  !T.typeTree({ q: "food hall" }).some((g) => g.subTypes.some((t) => t.displayName.toLowerCase().includes("food hall"))));
+check("a query that matches nothing yields nothing", T.typeTree({ q: "zzzznotatype" }).length === 0);
+
+/* ⚠️ A short needle used to match INSIDE words: "loo" returned Floor Outline, Blood Bank and Blood
+   Draw alongside the restroom it was aimed at. */
+const loo = T.typeTree({ q: "loo" });
+check("a short query finds what it means", loo.some((g) => g.mainType === "restroom-space"));
+check("…and not what merely contains it",
+  !loo.some((g) => g.subTypes.some((x) => /floor outline|blood/i.test(x.displayName))));
+check("a multi-word query is still matched as a phrase",
+  T.typeTree({ q: "food hall" }).some((g) => g.subTypes.some((x) => x.subType === "food-court")));
+check("query and class compose",
+  T.typeTree({ q: "room", cls: "poi" }).every((g) => g.subTypes.every((t) => t.class === "poi")));
+
+/* The picker's ⓘ has something to say on every row — checked, not assumed. */
+check("every group has a description or no row of its own",
+  tree.every((g) => !g.selectable || g.description.length > 0));
+check("every offered subtype has a description",
+  tree.every((g) => g.subTypes.every((t) => t.description.length > 0)));
+
 /* ── properties ───────────────────────────────────────────────────────────────
    Ten of the sixty were typed out by hand; the other fifty guessed at their own shape. */
 check("cuisines knows its 73 values", (P.propertyDef("cuisines").options || []).length === 73);

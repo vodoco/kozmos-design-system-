@@ -6,6 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@kozmos/react";
+import { Help } from "./icons";
 import {
   MAP_PERSONAS,
   personaStateAcross,
@@ -116,9 +117,17 @@ export function PersonaVisibility({
                     <span
                       tabIndex={0}
                       aria-label={`What is ${persona.displayName}?`}
-                      style={{ fontSize: 11, color: "#9AA0A6", cursor: "help" }}
+                      style={{
+                        display: "grid",
+                        placeItems: "center",
+                        color: "var(--primitives-colors-background-500)",
+                        cursor: "help",
+                      }}
                     >
-                      ⓘ
+                      {/* ⚠️ Was the literal character ⓘ, which renders in whatever the system font
+                          decides and sat a pixel off the baseline. The library's own `help-circle`
+                          is the mark the type picker and every property row now use. */}
+                      <Help size={14} />
                     </span>
                   </TooltipTrigger>
                   {/* The taxonomy's own definition — not a sentence written here. */}

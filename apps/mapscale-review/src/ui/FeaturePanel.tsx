@@ -1,4 +1,4 @@
-import { Copy } from "./icons";
+import { Copy, Star, StarFilled } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
@@ -9,17 +9,13 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Separator,
   Switch,
   Text,
 } from "@kozmos/react";
 import { PanelHeader, PANEL_PAD } from "./PanelHeader";
 import { PersonaVisibility } from "./PersonaVisibility";
+import { TypePicker } from "./TypePicker";
 import {
   CLASS_LABEL,
   categoryLabel,
@@ -79,7 +75,17 @@ export const FEATURE_PANEL_WIDTH = 360;
 const PANEL_INSET = 12;
 
 const MUTED = "var(--primitives-colors-background-600)";
-const LINE = "var(--primitives-colors-background-900)";
+/**
+ * ⚠️ **This was `background-900` — `#17191c`, near-black in the light theme.** A token named
+ * like a background doing a hairline's job, which is why every box in the panel had a hard
+ * outline (Olcay, 2026-09-09: *"the input outlines should not be black"*). The same mistake was
+ * already fixed once on the geometry toolbar's own border and not carried here.
+ *
+ * `background-500` is `#747b8b`, which is exactly what the design system's own `Input` uses for
+ * its border (`border-[color:var(--primitives-colors-foreground-500)]`, and the two ramps meet
+ * at 500). So a drawn box and a real input now agree instead of the drawn one being darker.
+ */
+const LINE = "var(--primitives-colors-background-500)";
 const INK = "var(--review-ink)";
 
 /** The tile properties that are identity, not content — shown, never edited. See the note above. */
@@ -99,6 +105,13 @@ const RESERVED = new Set([
   "mainType",
   "subType",
   "mapPersonas",
+  /**
+   * ⚠️ **`isFeatured` has a control of its own beside Name**, the way the dashboard draws it — so
+   * it must not ALSO appear as a generic property row or in the Add-field picker. The taxonomy
+   * publishes it as a plain `switch` in the *Prominence* segment; making it a star next to the name
+   * is this app's judgement about where a promotion flag belongs, not a reading.
+   */
+  "isFeatured",
 ]);
 
 /** `copy-01` from the Pointr Icon Library (see `./icons`). */
@@ -287,6 +300,59 @@ export function mergeForEditing(
 }
 
 /* ── editing: the dashboard's field editor ───────────────────────────────────── */
+
+/**
+ * **Featured** — the promotion flag, beside the name it promotes.
+ *
+ * A boxed star rather than a switch, because it sits on the title row where a switch would out-weigh
+ * the field it stands next to, and because "featured" is a mark you put ON something. The taxonomy's
+ * own words are the tooltip; `isFeatured` publishes *"Featured or sponsored"* and nothing here
+ * paraphrases it.
+ *
+ * ⚠️ **A merged selection can disagree**, and the third state has to be visible or Update would
+ * quietly set every feature to whichever way the box happened to look. `MULTIPLE` renders as neither
+ * on nor off, and clicking commits a decision for all of them.
+ */
+function FeaturedToggle({
+  value,
+  onChange,
+}: {
+  value: unknown;
+  onChange: (v: boolean) => void;
+}) {
+  const many = value === MULTIPLE;
+  const on = !many && value === true;
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={many ? "mixed" : on}
+      aria-label="Featured"
+      title={propertyDef("isFeatured").description || "Featured or sponsored"}
+      onClick={() => onChange(!on)}
+      style={{
+        flex: "0 0 auto",
+        display: "grid",
+        placeItems: "center",
+        gap: 2,
+        width: 68,
+        height: 44,
+        padding: 0,
+        borderRadius: "var(--primitives-radius-lg, 8px)",
+        border: `1px solid ${on ? "var(--primitives-colors-theme-500)" : LINE}`,
+        background: on ? "var(--primitives-colors-theme-0)" : "transparent",
+        color: on ? "var(--primitives-colors-theme-700)" : MUTED,
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ fontSize: 10, lineHeight: 1 }}>Featured</span>
+      {/* ⚠️ `@kozmos/icons` publishes 42 names and none of them is a star — the same gap that left
+          FID's copy glyph outside it. `./icons` carries the Pointr Library's own `star-01`
+          (node 1007:10447) in both states. */}
+      {on ? <StarFilled size={16} /> : <Star size={16} />}
+    </button>
+  );
+}
 
 /** One editable property, drawn by the control its taxonomy `inputType` asks for. */
 function PropertyField({
@@ -549,7 +615,18 @@ function PropertyField({
         onClick={onRemove}
         aria-label={`Remove ${label} field`}
         title="Remove field"
-        style={{ flex: "0 0 auto", marginTop: 18 }}
+        /**
+         * ⚠️ **The glyph sat 30px inside the panel edge** (Olcay, 2026-09-09: *"bin icons could be
+         * further to the right side"*). `IconButton` is `h-11 w-11` at every size, so a 16px trash
+         * is centred in a 44px box and the 14px of padding either side reads as a gap between the
+         * field and its own control.
+         *
+         * The negative margin lets the 44px TARGET hang into the panel's 20px gutter while the
+         * glyph moves to the edge. Shrinking the button would have been the easy fix and the wrong
+         * one — it is the only way to remove a field, and a 24px target in a dense list is a miss
+         * waiting to happen.
+         */
+        style={{ flex: "0 0 auto", marginTop: 18, marginRight: -12 }}
       >
         <Icon name="trash-01" />
       </IconButton>
@@ -707,7 +784,6 @@ export function FeaturePanel({
   onDirtyChange,
   geometryDirty,
   onCommitGeometry,
-  subTypeOptions,
   selection,
   onDeselect,
   recomposable,
@@ -733,7 +809,6 @@ export function FeaturePanel({
    */
   geometryDirty?: boolean;
   onCommitGeometry?: () => void;
-  subTypeOptions?: string[];
   /**
    * **Everything selected, primary first** (Olcay, 2026-08-16). One entry is the ordinary case and
    * changes nothing; more than one turns on the count strip, the *Multiple values* placeholders,
@@ -834,13 +909,6 @@ export function FeaturePanel({
   reviewFootnote?: string;
   onClose: () => void;
 }) {
-  const mainType = String(p.mainType ?? "");
-  const subType = p.subType ? String(p.subType) : undefined;
-  const name = p.name ? String(p.name) : "";
-  const cls = classOf(mainType, subType);
-  const category = categoryOf(mainType, subType);
-  const suggested = suggestedFor(mainType, subType);
-
   /**
    * **The panel opens in EDIT mode** (Olcay, 2026-08-14: *"click on a feature on the map and on
    * the listing should show the details panel in edit mode ... No need to add additional edit
@@ -951,14 +1019,29 @@ export function FeaturePanel({
   // Leaving the panel must not leave the app believing an edit is still open.
   useEffect(() => () => onDirtyChange?.(false, false), [onDirtyChange]);
 
+  /**
+   * **The type as it stands right now** — the draft's while editing, the feature's while reading.
+   *
+   * 🔴 **This read `p` on both paths, and everything downstream was stale.** `suggestedFor` is per
+   * `(mainType, subType)` PAIR, so re-typing a restroom as a Store left the *Suggested properties*
+   * list, the Add-field picker's suggested bucket, the class and category in the header and the
+   * *Unnamed …* fallback all describing the type the feature used to be — until you saved and the
+   * panel re-mounted. The bug predates the new picker (changing a subType had the same effect) and
+   * the picker made it reachable for mainTypes too, which is a bigger jump: Restroom Space and
+   * Retail Space suggest almost nothing in common.
+   *
+   * ⚠️ `??` and not `||`: clearing the subType sets it to `""`, which must NOT fall back to the
+   * saved value — that is exactly the state where the mainType alone is the answer.
+   */
   const values = editing ? draft : p;
+  const mainType = String(values.mainType ?? p.mainType ?? "");
+  const rawSub = values.subType ?? p.subType;
+  const subType = rawSub && rawSub !== MULTIPLE ? String(rawSub) : undefined;
+  const name = p.name ? String(p.name) : "";
+  const cls = classOf(mainType, subType);
+  const category = categoryOf(mainType, subType);
+  const suggested = suggestedFor(mainType, subType);
   const description = String(values.description ?? "");
-  const options = subTypeOptions?.length
-    ? subTypeOptions
-    : subType
-      ? [subType]
-      : [];
-
   /**
    * Not-yet-added properties, split the way the picker shows them.
    *
@@ -970,10 +1053,18 @@ export function FeaturePanel({
    * excluded because a content editor does not set them.
    */
   const canAdd = useMemo(() => {
+    /**
+     * ⚠️ **`RESERVED` was not consulted here**, so the picker offered properties that already have
+     * a dedicated control — `isFeatured` sat in *Suggested* beside the star it duplicates, and
+     * adding it would have drawn a second, disagreeing switch further down the panel. `fields` is
+     * built with `RESERVED` filtered out, so a reserved key can never be in `have` either: it has
+     * to be excluded explicitly on both sides.
+     */
     const have = new Set(fields);
-    const sug = (suggested ?? []).filter((k) => !have.has(k));
+    const offer = (k: string) => !have.has(k) && !RESERVED.has(k);
+    const sug = (suggested ?? []).filter(offer);
     const others = EDITABLE_PROPERTIES.map((d) => d.key).filter(
-      (k) => !have.has(k) && !sug.includes(k),
+      (k) => offer(k) && !sug.includes(k),
     );
     return { sug, others };
   }, [fields, suggested]);
@@ -1481,7 +1572,19 @@ export function FeaturePanel({
               Provide essential information below.
             </Text>
 
-            {/* FID: read-only with a copy button, exactly as the real panel draws it. */}
+            {/**
+             * **FID — a value you can copy, not a field you can type in** (Olcay, 2026-09-09:
+             * *"fid should not look like an input also it's height is larger than others, why?"*).
+             *
+             * ⚠️ **Both halves of that were true.** It had a 1px border and a tinted ground, which
+             * is the shape of every editable input beside it, so it read as one — and it was
+             * **60px** tall against the 44px of its neighbours, because an 8px/8px padded box wrapped
+             * a 44px `IconButton` (`h-11 w-11` at every `size`, so `sm` buys nothing).
+             *
+             * Now: no border, a flat tint that says read-only, and a 24px copy control. A convenience
+             * on a value nobody edits does not need a 44px primary target, and giving it one made the
+             * identity row the tallest thing in the panel.
+             */}
             <div>
               <Text
                 style={{
@@ -1498,10 +1601,10 @@ export function FeaturePanel({
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  padding: "8px 10px",
+                  padding: "6px 8px 6px 10px",
+                  minHeight: 32,
                   borderRadius: "var(--primitives-radius-lg, 8px)",
-                  border: `1px solid ${LINE}`,
-                  background: "var(--primitives-colors-theme-0)",
+                  background: "var(--primitives-colors-background-50)",
                 }}
               >
                 <Text
@@ -1515,70 +1618,99 @@ export function FeaturePanel({
                 >
                   {String(p.fid ?? "—")}
                 </Text>
-                <IconButton
-                  variant="ghost"
-                  size="sm"
+                <button
+                  type="button"
                   aria-label="Copy FID"
                   title="Copy"
                   onClick={() =>
                     navigator.clipboard?.writeText(String(p.fid ?? ""))
                   }
-                  style={{ flex: "0 0 auto" }}
+                  style={{
+                    flex: "0 0 auto",
+                    display: "grid",
+                    placeItems: "center",
+                    width: 24,
+                    height: 24,
+                    padding: 0,
+                    border: "none",
+                    background: "none",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    color: MUTED,
+                  }}
                 >
                   <CopyGlyph />
-                </IconButton>
+                </button>
               </div>
             </div>
 
-            {/* Select type: the mainType is context, the subType is the value — the real panel's
-                anatomy, and it is right, because a feature's mainType is not a free choice. */}
+            {/**
+             * **Type** — one fact with two parts, in one control. See `TypePicker`.
+             *
+             * ⚠️ **This replaced a plain `Select` of subtypes with the mainType printed above it as
+             * a separate caption**, which read as a label and a field rather than as one answer, and
+             * which offered no way to change the mainType at all. The dashboard's own picker offers
+             * the whole tree with a class pre-filter, so this does too.
+             */}
             <div style={{ marginTop: 12 }}>
-              <Text style={{ display: "block", fontSize: 11, color: MUTED }}>
-                Select type
-              </Text>
-              <Text
-                style={{
-                  display: "block",
-                  fontSize: 11,
-                  color: MUTED,
-                  marginBottom: 4,
-                }}
-              >
-                {typeLabel(mainType)}
-              </Text>
-              <Select
-                value={
-                  draft.subType === MULTIPLE ? "" : String(draft.subType ?? "")
+              <TypePicker
+                mainType={String(draft.mainType ?? mainType)}
+                subType={
+                  draft.subType === MULTIPLE
+                    ? undefined
+                    : String(draft.subType ?? "") || undefined
                 }
-                onValueChange={(v) => setDraft((d) => ({ ...d, subType: v }))}
-              >
-                <SelectTrigger aria-label="Sub type">
-                  <SelectValue
-                    placeholder={draft.subType === MULTIPLE ? MULTI_LABEL : "—"}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {options.map((o) => (
-                    <SelectItem key={o} value={o}>
-                      {typeLabel(o)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                multiple={draft.subType === MULTIPLE}
+                onChange={(next) =>
+                  setDraft((d) => ({
+                    ...d,
+                    mainType: next.mainType,
+                    // Cleared rather than left behind: a subType from the old mainType is not a
+                    // pair the taxonomy publishes, and saving it would invent a type.
+                    subType: next.subType ?? "",
+                  }))
+                }
+              />
             </div>
 
-            <div style={{ marginTop: 12 }}>
-              <Input
-                label="Name *"
-                value={draft.name === MULTIPLE ? "" : String(draft.name ?? "")}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, name: e.target.value }))
-                }
-                /* ⚠️ Typing here renames EVERY selected feature — leaving it be keeps their own
-                   names, which is why the placeholder has to say what is in there rather than
-                   look like an empty required field. */
-                placeholder={draft.name === MULTIPLE ? MULTI_LABEL : "Unnamed"}
-                aria-label="Feature name"
+            {/**
+             * **Name, and Featured beside it** — the dashboard's own anatomy, and the one the doc
+             * at the top of this file has described since the beginning without it being built.
+             *
+             * `isFeatured` is a published taxonomy property (`switch`, segment *Prominence*,
+             * *"Featured or sponsored"*). It is lifted out of the generic list because it is not a
+             * fact about the place, it is a decision about how the place is shown — and because a
+             * boolean that belongs to the title reads as part of the title, not as row nineteen.
+             */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                gap: 8,
+                marginTop: 12,
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Input
+                  label="Name *"
+                  value={
+                    draft.name === MULTIPLE ? "" : String(draft.name ?? "")
+                  }
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, name: e.target.value }))
+                  }
+                  /* ⚠️ Typing here renames EVERY selected feature — leaving it be keeps their own
+                     names, which is why the placeholder has to say what is in there rather than
+                     look like an empty required field. */
+                  placeholder={
+                    draft.name === MULTIPLE ? MULTI_LABEL : "Unnamed"
+                  }
+                  aria-label="Feature name"
+                />
+              </div>
+              <FeaturedToggle
+                value={draft.isFeatured}
+                onChange={(v) => setDraft((d) => ({ ...d, isFeatured: v }))}
               />
             </div>
 

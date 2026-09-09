@@ -10,18 +10,21 @@
  * ⚠️ **Two things the lookup taught us, both easy to get wrong:**
  *
  * 1. **Class depends on the PAIR, not on `mainType`.** `circulation-space/walkway` is
- *    *structural*, while `circulation-space/elevator-lobby` is *poi*. So `SUBTYPE_CLASS` overrides
- *    `MAIN_CLASS`, never the other way round.
+ *    *structural*, while `circulation-space/elevator-lobby` is *poi* — which is why `classOf`
+ *    takes both, and why a class filter has to filter ROWS. Four of the 43 mainTypes carry more
+ *    than one class across their subtypes.
  * 2. **There are five classes, not the three the dashboard shows.** `system` (wayfinding nodes) and
  *    `interior-asset` (loose furniture) are real and simply aren't drawn as groups there.
  *
- * ⚠️ **This table covers the types the demo building actually contains.** It is a cache of a
- * service the app can't reach at runtime, so an unknown type falls back to `poi` rather than
- * vanishing — a level is better off showing a feature under a slightly wrong heading than not at
- * all. A full pass against the taxonomy service is the proper fix when this stops being a mock.
+ * ⚠️ **Nothing here is a hand-kept table any more.** It reads `./taxonomyData`, which
+ * `pnpm taxonomy:gen` writes from the published release. The judgements this app makes ON that data
+ * — which mainTypes are not editable, which are system — stay here as explicit literals, because
+ * they are product decisions and not readings. An unpublished type still falls back to `poi` rather
+ * than vanishing: a level is better off showing a feature under a slightly wrong heading than not
+ * at all.
  */
 
-import { TYPES, type TaxonomyType } from "./taxonomyData";
+import { TYPES, TAXONOMY_VERSION, type TaxonomyType } from "./taxonomyData";
 export { TAXONOMY_VERSION, TAXONOMY_SOURCE } from "./taxonomyData";
 
 export type FeatureClass =
@@ -183,12 +186,120 @@ export function subTypesOf(mainType: string): TaxonomyType[] {
 export function searchTypes(rows: TaxonomyType[], q: string): TaxonomyType[] {
   const needle = q.trim().toLowerCase();
   if (!needle) return rows;
+  /**
+   * ⚠️ **Matched at word STARTS, not anywhere in the string.** A plain `includes` looked right
+   * until a short word was typed: "loo" — which is genuinely one of the restroom's `alsoKnownAs`
+   * — also returned Floor Outline, Blood Bank and Blood Draw, because "loo" sits inside "floor"
+   * and "blood". Four of the five results were noise on a query aimed at one type.
+   *
+   * A multi-word needle ("food hall") is tested as a phrase instead, since its own space already
+   * anchors it and splitting it would match each word separately.
+   */
+  const phrase = needle.includes(" ");
+  const hit = (hay: string) => {
+    const h = hay.toLowerCase();
+    if (phrase) return h.includes(needle);
+    return h.split(/[^a-z0-9]+/).some((w) => w.startsWith(needle));
+  };
   return rows.filter(
     (t) =>
-      t.displayName.toLowerCase().includes(needle) ||
-      (t.subType || "").includes(needle) ||
-      t.alsoKnownAs.some((a) => a.toLowerCase().includes(needle)),
+      hit(t.displayName) ||
+      hit(t.subType || "") ||
+      t.alsoKnownAs.some((a) => hit(a)),
   );
+}
+
+/** One `mainType` and the subtypes of it that survived the current filters. */
+export interface TypeGroup {
+  mainType: string;
+  /** The taxonomy's own name for the mainType. */
+  label: string;
+  description: string;
+  /** The class of the mainType's OWN row — not of its children, which may differ. */
+  cls: FeatureClass;
+  /**
+   * Whether the mainType can be chosen on its own. 39 of the 43 publish a row with no subType;
+   * the other four exist only as parents, and offering them would save a type that is not in the
+   * taxonomy.
+   */
+  selectable: boolean;
+  subTypes: TaxonomyType[];
+}
+
+/**
+ * **The type picker's tree** — 43 groups over 362 rows, filtered by a query and a class.
+ *
+ * The picker is the one place a person meets the whole taxonomy, so the filtering rules matter more
+ * than they look:
+ *
+ * ⚠️ **The class filter runs over ROWS, not mainTypes.** `circulation-space` holds both *poi* and
+ * *structural* subtypes; filtering to Structural has to show that group with only its structural
+ * children rather than all of it or none of it. Four mainTypes are mixed this way.
+ *
+ * ⚠️ **A query that matches a GROUP keeps all of its children.** Typing "retail" should open Retail
+ * Space and show everything in it — filtering the children by the same needle would leave the group
+ * that matched showing nothing, which reads as "no results" on the row you were aiming for.
+ *
+ * ⚠️ **System types are excluded by default.** They are written by the platform — a person picking
+ * a type for a shop should not be offered `annotation`. `SYSTEM_MAIN_TYPES` is this app's judgement
+ * and is deliberately not read from the taxonomy; see the note on it above.
+ */
+export function typeTree(opts?: {
+  q?: string;
+  cls?: FeatureClass | "all";
+  includeSystem?: boolean;
+}): TypeGroup[] {
+  const q = (opts?.q ?? "").trim();
+  const cls = opts?.cls ?? "all";
+  const system = new Set(opts?.includeSystem ? [] : SYSTEM_MAIN_TYPES);
+
+  const groups = new Map<string, TypeGroup>();
+  for (const t of TYPES) {
+    if (system.has(t.mainType)) continue;
+    if (!groups.has(t.mainType))
+      groups.set(t.mainType, {
+        mainType: t.mainType,
+        label: typeLabel(t.mainType),
+        description: "",
+        cls: "poi",
+        selectable: false,
+        subTypes: [],
+      });
+    const g = groups.get(t.mainType)!;
+    if (t.subType) g.subTypes.push(t);
+    else {
+      // the mainType's own row: its name, its description, its class, and the fact it can be chosen
+      g.label = t.displayName || g.label;
+      g.description = t.description;
+      g.cls = (t.class as FeatureClass) ?? "poi";
+      g.selectable = true;
+    }
+  }
+
+  const needle = q.toLowerCase();
+  const out: TypeGroup[] = [];
+  for (const g of groups.values()) {
+    // A group matches on its own name or slug; its children match through `searchTypes`, which
+    // also reads `alsoKnownAs` — "food hall" finds Food Court, "loo" finds a restroom.
+    const groupMatches =
+      !q ||
+      g.label.toLowerCase().includes(needle) ||
+      g.mainType.includes(needle);
+    const inClass =
+      cls === "all" ? g.subTypes : g.subTypes.filter((t) => t.class === cls);
+    const kept = groupMatches ? inClass : searchTypes(inClass, q);
+    const selfKept =
+      g.selectable && (cls === "all" || g.cls === cls) && groupMatches;
+    if (!kept.length && !selfKept) continue;
+    out.push({
+      ...g,
+      selectable: selfKept,
+      subTypes: kept
+        .slice()
+        .sort((a, b) => a.displayName.localeCompare(b.displayName)),
+    });
+  }
+  return out.sort((a, b) => a.label.localeCompare(b.label));
 }
 
 /**
@@ -198,8 +309,16 @@ export function searchTypes(rows: TaxonomyType[], q: string): TaxonomyType[] {
  * against the live sheet: 22 of 27 types seen on the demo floor hit directly, and the rest fall
  * back cleanly (`wall`, `section` and `furniture` have no icon of their own).
  */
-export const SPRITE_BASE =
-  "https://pointrmapstorage.blob.core.windows.net/taxonomy/10.upcoming-rc/icons/sprites/sprite";
+/**
+ * ⚠️ **Pinned to the same release as the data, and derived rather than typed.** It used to read
+ * `10.upcoming-rc` while `taxonomyData.ts` was pinned to 10.11.0 — a release candidate that can be
+ * republished under its own name, so the artwork could change under a type list that could not.
+ * That is the drift `pnpm taxonomy:gen` exists to prevent, sitting one constant away from it.
+ *
+ * Checked before switching: both sheets are 2046×588 with 633 frames and identical coordinates for
+ * `restroom`, so the pin changes nothing today — which is the point at which it is safe to make.
+ */
+export const SPRITE_BASE = `https://pointrmapstorage.blob.core.windows.net/taxonomy/${TAXONOMY_VERSION}/icons/sprites/sprite`;
 
 export interface SpriteEntry {
   x: number;
