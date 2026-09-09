@@ -21,6 +21,9 @@
  * all. A full pass against the taxonomy service is the proper fix when this stops being a mock.
  */
 
+import { TYPES, type TaxonomyType } from "./taxonomyData";
+export { TAXONOMY_VERSION, TAXONOMY_SOURCE } from "./taxonomyData";
+
 export type FeatureClass =
   | "poi"
   | "structural"
@@ -28,67 +31,51 @@ export type FeatureClass =
   | "system"
   | "interior-asset";
 
-/** Read from the taxonomy service (`class` per mainType, where the whole mainType agrees). */
-const MAIN_CLASS: Record<string, FeatureClass> = {
-  wall: "structural",
-  transition: "structural",
-  "entrance-exit": "structural",
-  "circulation-space": "structural",
-  "virtual-obstacle": "virtual",
-  /**
-   * The three `system` types, and the reason this table now names all of them.
-   *
-   * Each belongs to its **own section of the dashboard** — the left rail's *Wayfinding Network*,
-   * *Geofences* and *IoT Devices* — and none of them is map content. Read from the taxonomy
-   * service, 2026-08-16, together with the layers that draw them:
-   *
-   * | type | subTypes | style layers |
-   * |---|---|---|
-   * | `wayfinding-network` | path-node · building-entrance-exit · custom-transition · elevator-node · escalator-node · stairs-node | `symbol_wayfinding-network_ptr` |
-   * | `geofence` | gps-geofence · beacon-geofence | `fill_geofence_ptr` · `fill_geofence_hatch_ptr` · `symbol_geofence_ptr` |
-   * | `positioning-device` | beacon | `symbol_positioning-device_ptr` |
-   *
-   * All three are `isPoi=false` and have **no sprite of their own**, so every one of them falls
-   * through the icon cascade to `default-poi` — which is why a floor's several hundred path-nodes
-   * and its geofence pins arrive as the same anonymous blue marker, in quantity.
-   */
-  "wayfinding-network": "system",
-  geofence: "system",
-  "positioning-device": "system",
-  furniture: "interior-asset",
-  equipment: "poi",
-  "operational-space": "poi",
-  "retail-space": "poi",
-  "food-beverage-space": "poi",
-  "service-space": "poi",
-  "amenity-space": "poi",
-  "medical-space": "poi",
-  "security-space": "poi",
-  "social-space": "poi",
-  "work-space": "poi",
-  "faith-worship-space": "poi",
-  "transportation-space": "poi",
-  "restroom-space": "poi",
-  "wellness-space": "poi",
-  "activity-space": "poi",
-  "entertainment-space": "poi",
-  "parking-space": "poi",
-  section: "poi",
-};
+/**
+ * **Every (mainType, subType) the taxonomy publishes, indexed two ways.**
+ *
+ * ⚠️ **This replaced three hand-kept caches on 2026-09-08** — class, category and suggested
+ * properties, each a partial copy of the published taxonomy typed out by hand because the app
+ * could not reach the service. They covered the 27 main types the demo floor happens to contain,
+ * out of 43, and they were already wrong in places a reader could not see. `taxonomyData.ts` is
+ * generated from the published file, so there is nothing left to drift.
+ *
+ * The two things the old caches taught, both still true and both now free:
+ *
+ * 1. **Class depends on the PAIR, not on `mainType`.** `circulation-space/walkway` is
+ *    *structural* while `circulation-space/elevator-lobby` is *poi*, and `section` is split the
+ *    same way. So the pair is looked up first and the main type is the fallback.
+ * 2. **There are five classes, not the three the dashboard shows.** `system` and `interior-asset`
+ *    are real and simply are not drawn as groups there.
+ */
+const BY_PAIR = new Map<string, TaxonomyType>();
+const BY_MAIN = new Map<string, TaxonomyType>();
+/** subType → its row, for the many call sites that hold a slug and no context. */
+const BY_SLUG = new Map<string, TaxonomyType>();
+for (const t of TYPES) {
+  if (t.subType) BY_PAIR.set(`${t.mainType}/${t.subType}`, t);
+  else BY_MAIN.set(t.mainType, t);
+  const slug = t.subType || t.mainType;
+  if (!BY_SLUG.has(slug)) BY_SLUG.set(slug, t);
+}
 
-/** Where a subType disagrees with its mainType — see the warning above. */
-const SUBTYPE_CLASS: Record<string, FeatureClass> = {
-  "circulation-space/elevator-lobby": "poi",
-  // `section` is a POI grouping, except where the area is a hole in the floor rather than a place
-  // you can go — those two are structural.
-  "section/construction": "structural",
-  "section/no-access": "structural",
-};
+/** The taxonomy row for a type, most specific first. `null` for a type it does not publish. */
+export function typeRow(
+  mainType: string,
+  subType?: string,
+): TaxonomyType | null {
+  if (subType) {
+    const pair = BY_PAIR.get(`${mainType}/${subType}`);
+    if (pair) return pair;
+  }
+  return BY_MAIN.get(mainType) ?? null;
+}
 
 export function classOf(mainType: string, subType?: string): FeatureClass {
-  if (subType && SUBTYPE_CLASS[`${mainType}/${subType}`])
-    return SUBTYPE_CLASS[`${mainType}/${subType}`];
-  return MAIN_CLASS[mainType] ?? "poi";
+  const row = typeRow(mainType, subType);
+  // An unknown type falls back to `poi` rather than vanishing — a level is better off showing a
+  // feature under a slightly wrong heading than not at all.
+  return (row?.class as FeatureClass) ?? "poi";
 }
 
 /** The order and words the dashboard uses. `system` is hidden — it is plumbing, not content. */
@@ -101,33 +88,33 @@ export function classOf(mainType: string, subType?: string): FeatureClass {
  * and short. The map treats "has a fid and is not in here" as editable, which keeps the two in
  * step as the taxonomy grows.
  */
-export const NON_EDITABLE_MAIN_TYPES: string[] = Object.entries(MAIN_CLASS)
-  .filter(([, cls]) => cls !== "poi" && cls !== "interior-asset")
-  .map(([mainType]) => mainType);
+export const NON_EDITABLE_MAIN_TYPES: string[] = [
+  "wall",
+  "transition",
+  "entrance-exit",
+  "circulation-space",
+  "virtual-obstacle",
+  "wayfinding-network",
+  "geofence",
+  "positioning-device",
+];
+
+export const SYSTEM_MAIN_TYPES: string[] = [
+  "wayfinding-network",
+  "geofence",
+  "positioning-device",
+];
 
 /**
- * The `mainType`s the map must NOT **draw** on Map Content — Olcay, 2026-08-16: *"Wayfinding
- * Network should show in when wayfinding network is selected. Geofences when geofence selected and
- * beacons when beacon selected."*
- *
- * ⚠️ **The tree and the map had disagreed about what map content IS.** `groupByClass` has always
- * dropped `system` — *plumbing, not content* — while the map went on drawing every one of them, so
- * a floor arrived with several hundred wayfinding path-nodes and its geofence zones painted over
- * the content the screen is actually for, none of which had a row anywhere in the panel beside it.
- * The tree was right. This is the same sentence said to the map.
- *
- * Derived from `MAIN_CLASS`, deliberately, exactly as `NON_EDITABLE_MAIN_TYPES` is: each of these
- * belongs to its own section of the left rail, and a section that becomes real takes its own type
- * **out** of this list rather than adding a lookup somewhere new.
- *
- * ⚠️ Not the same channel as `editabletypes`, and they must not be merged. That one says *may I
- * touch this?* and is the hook layer-locking will hang off; this one says *may I draw it at all?*
- * — and drawing is the stronger claim, because a hidden layer is not in `queryRenderedFeatures` at
- * all, so it cannot be hovered, clicked or selected either.
+ * ⚠️ **The taxonomy calls five more main types `system` than the list above does** — `blueprint`,
+ * `building-outline`, `level-outline`, `site-outline` and `georeferencing-anchor`, plus `annotation`
+ * which it splits between `system` and `virtual`. Adding them here would stop the map DRAWING
+ * them, which is a product decision about what a floor looks like rather than a reading of the
+ * taxonomy, so it is a question for the hand-off and not a change made in passing.
  */
-export const SYSTEM_MAIN_TYPES: string[] = Object.entries(MAIN_CLASS)
-  .filter(([, cls]) => cls === "system")
-  .map(([mainType]) => mainType);
+export const TAXONOMY_SYSTEM_MAIN_TYPES: string[] = [
+  ...new Set(TYPES.filter((t) => t.class === "system").map((t) => t.mainType)),
+];
 
 export const CLASS_ORDER: FeatureClass[] = [
   "poi",
@@ -144,14 +131,64 @@ export const CLASS_LABEL: Record<FeatureClass, string> = {
 };
 
 /**
- * `bag-drop-checkin` → `Bag Drop Checkin`. The taxonomy is kebab-case throughout and the dashboard
- * shows Title Case, so this is the whole of the transformation — no lookup table to drift.
+ * **The taxonomy's own display name for a type slug**, with the mechanical kebab→Title Case rule
+ * as the fallback for anything it does not publish.
+ *
+ * ⚠️ **41 of the 362 types were being mislabelled** by the mechanical rule alone — `atm` read as
+ * *Atm*, `cctv` as *Cctv*, `mri-room` as *Mri Room*, `x-ray-room` as *X Ray Room*,
+ * `food-beverage-space` as *Food Beverage Space*. The taxonomy has always carried the right words;
+ * nothing here was reading them.
+ *
+ * A slug is enough: no two types in the taxonomy share a slug and disagree about its name (checked,
+ * not assumed). Where the caller has the pair, `typeName` is the exact answer.
  */
 export function typeLabel(slug: string): string {
+  const row = BY_SLUG.get(slug);
+  if (row?.displayName) return row.displayName;
   return slug
     .split("-")
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
     .join(" ");
+}
+
+/** The display name for a type, given both halves — the precise form of `typeLabel`. */
+export function typeName(mainType: string, subType?: string): string {
+  const row = typeRow(mainType, subType);
+  return row?.displayName || typeLabel(subType || mainType);
+}
+
+/** The taxonomy's own one-line explanation of a type — the ⓘ beside it in the picker. */
+export function typeDescription(mainType: string, subType?: string): string {
+  return typeRow(mainType, subType)?.description || "";
+}
+
+/**
+ * **Every subType the taxonomy publishes for a main type**, in display order.
+ *
+ * ⚠️ **This is what the type picker offers now.** It used to offer only the subTypes the FLOOR
+ * already contained, which meant a `section` on a floor with no other sections offered nothing at
+ * all — the empty "—" in Olcay's screenshot of 2026-09-08. A content editor cannot classify a
+ * feature from a list of what is already classified.
+ */
+export function subTypesOf(mainType: string): TaxonomyType[] {
+  return TYPES.filter((t) => t.mainType === mainType && t.subType).sort(
+    (a, b) => a.displayName.localeCompare(b.displayName),
+  );
+}
+
+/**
+ * Type search, over the name, the slug and the taxonomy's **`alsoKnownAs`** — so "food hall" finds
+ * Food Court and "loo" finds a restroom. A list of 362 is only usable if you can type at it.
+ */
+export function searchTypes(rows: TaxonomyType[], q: string): TaxonomyType[] {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return rows;
+  return rows.filter(
+    (t) =>
+      t.displayName.toLowerCase().includes(needle) ||
+      (t.subType || "").includes(needle) ||
+      t.alsoKnownAs.some((a) => a.toLowerCase().includes(needle)),
+  );
 }
 
 /**
@@ -196,7 +233,9 @@ export function spriteName(
 /* ── what a type is EXPECTED to carry ──────────────────────────────────────── */
 
 /**
- * The taxonomy's `category` and `suggestedProperties` per type — the honest shape of a POI card.
+ * **What this type is expected to carry**, and **which category it belongs to** — both read
+ * straight off the published taxonomy now (`taxonomyData.ts`), where they used to be hand-typed
+ * caches covering the 27 main types the demo floor happens to contain out of 43.
  *
  * `suggestedProperties` is what the product expects a feature of this type to carry
  * (`food-beverage-space` → `cuisines · dietaryOptions · openingHours · priceRange …`). The vector
@@ -204,195 +243,27 @@ export function spriteName(
  * So the panel shows them as *expected and not loaded* rather than inventing values — the same
  * honesty as "as loaded" on the counts.
  *
- * ⚠️ **Keyed by `mainType`, and that is a measured simplification, not a shortcut.** Class depends
- * on the *pair* (see `SUBTYPE_CLASS`), but suggested properties are overwhelmingly constant across
- * a mainType's subTypes — all 17 `circulation-space` subTypes suggest the same three, all 18
- * `retail-space` subTypes the same six. Only the genuine exceptions are listed below. Read from the
- * taxonomy service, same as the class table, and carrying the same limit: **it is a cache of a
- * service the app can't reach at runtime.** An unknown type reports *no* suggestions rather than a
- * borrowed list — claiming a wall should have opening hours would be worse than saying nothing.
- *
  * ⚠️ **Plenty of types legitimately suggest NOTHING** — `wall`, `furniture`, `operational-space`,
  * `virtual-obstacle` all come back empty. That is a real answer ("this type expects no extra
- * properties"), not a gap in this table, and the panel says so in words.
- */
-const MAIN_SUGGESTED: Record<string, string[]> = {
-  "food-beverage-space": [
-    "cuisines",
-    "description",
-    "dietaryOptions",
-    "hasAlcoholService",
-    "hasWifi",
-    "isPetFriendly",
-    "phoneNumber",
-    "priceRange",
-    "serviceOptions",
-    "websiteUrl",
-  ],
-  "retail-space": [
-    "description",
-    "hasAssistance",
-    "isAnchor",
-    "isFeatured",
-    "productTypes",
-    "websiteUrl",
-  ],
-  "service-space": [
-    "description",
-    "hasAssistance",
-    "openingHours",
-    "phoneNumber",
-    "serviceTypes",
-    "websiteUrl",
-  ],
-  "restroom-space": [
-    "genderDesignation",
-    "hasChangingFacilities",
-    "hasLockers",
-    "hasRestrooms",
-    "isFamilyFriendly",
-    "isWheelchairAccessible",
-  ],
-  "amenity-space": ["hasAssistance", "openingHours", "serviceTypes"],
-  "activity-space": [
-    "accessRestrictions",
-    "crowdLevel",
-    "description",
-    "hasChangingFacilities",
-    "occupancyStatus",
-    "openingHours",
-    "sportTypes",
-  ],
-  "entrance-exit": [
-    "description",
-    "hasAssistance",
-    "isWheelchairAccessible",
-    "waitTime",
-  ],
-  "circulation-space": ["hasWifi", "isPetFriendly", "isWheelchairAccessible"],
-  "faith-worship-space": ["description", "genderDesignation", "hasAssistance"],
-  "entertainment-space": ["accessRestrictions", "description"],
-  equipment: ["description", "languageSupport"],
-  "social-space": ["description", "hasWifi"],
-  transition: ["isWheelchairAccessible"],
-  "transportation-space": ["hasAssistance"],
-  "security-space": ["description"],
-  "parking-space": ["description"],
-  "wellness-space": ["genderDesignation"],
-  "work-space": ["description"],
-  // `section` groups a floor into named areas (Customs & Immigration, Food Court, Terminal). Missed
-  // on the first sweep, which is how B2's *F&J Departure Hall Security Check-in* came to report
-  // "isn't in the cached taxonomy" — spotted by Olcay, 2026-08-12.
-  section: ["description", "hasRestrooms"],
-  // Deliberately empty — the service returns no suggestions for these.
-  wall: [],
-  furniture: [],
-  "operational-space": [],
-  "medical-space": [],
-  "virtual-obstacle": [],
-  "wayfinding-network": [],
-};
-
-/** The handful of subTypes whose suggestions genuinely differ from their mainType's. */
-const SUBTYPE_SUGGESTED: Record<string, string[]> = {
-  "service-space/lounge": [
-    "accessRestrictions",
-    "description",
-    "hasAssistance",
-    "openingHours",
-    "phoneNumber",
-    "serviceTypes",
-    "websiteUrl",
-  ],
-  "activity-space/play-area": [
-    "accessRestrictions",
-    "ageRestriction",
-    "crowdLevel",
-    "description",
-    "hasChangingFacilities",
-    "occupancyStatus",
-    "openingHours",
-    "sportTypes",
-  ],
-};
-
-/** The taxonomy's own `category` — a second axis beside `class`, and the one a POI card names. */
-const MAIN_CATEGORY: Record<string, string> = {
-  "food-beverage-space": "COMMERCIAL",
-  "retail-space": "COMMERCIAL",
-  "service-space": "SERVICES",
-  "transportation-space": "SERVICES",
-  "parking-space": "SERVICES",
-  "restroom-space": "FACILITIES",
-  "amenity-space": "FACILITIES",
-  equipment: "FACILITIES",
-  "operational-space": "OPERATIONS",
-  "activity-space": "RECREATION",
-  "social-space": "RECREATION",
-  "entertainment-space": "GATHERINGS",
-  "medical-space": "CARE",
-  "wellness-space": "CARE",
-  "faith-worship-space": "WORK",
-  "work-space": "WORK",
-  "circulation-space": "ACCESS",
-  transition: "ACCESS",
-  "entrance-exit": "ACCESS",
-  "security-space": "ACCESS",
-  wall: "ACCESS",
-  furniture: "ACCESS",
-  "wayfinding-network": "ACCESS",
-  "virtual-obstacle": "SYSTEM",
-};
-
-/**
- * Where a subType is filed under a different category from its mainType.
+ * properties"), not a gap, and the panel says so in words.
  *
- * `section` is the one that really needs this: the mainType has **no** category of its own, and its
- * subTypes scatter across four (a food court is COMMERCIAL, a terminal is SERVICES, customs is
- * ACCESS, an exhibit hall is GATHERINGS).
- */
-const SUBTYPE_CATEGORY: Record<string, string> = {
-  "retail-space/returns-desk": "OPERATIONS",
-  "retail-space/personal-shopper-assist": "SERVICES",
-  "amenity-space/pet-relief": "WORK",
-  "restroom-space/mothers-room": "CARE",
-  "restroom-space/baby-care-hygiene": "CARE",
-  "section/customs-immigration": "ACCESS",
-  "section/aisle": "ACCESS",
-  "section/construction": "ACCESS",
-  "section/no-access": "ACCESS",
-  "section/food-court": "COMMERCIAL",
-  "section/terminal": "SERVICES",
-  "section/exhibit-hall": "GATHERINGS",
-};
-
-/**
- * What this type is expected to carry. `null` means *we don't know* (an unknown type); an **empty
- * array** means *the taxonomy suggests nothing*, which is a different and equally honest answer.
- *
- * ⚠️ The service sometimes suggests a **value**, not just a name — `transition/ramp` returns
- * `isWheelchairAccessible:true` and `escalator` returns `:false`. Names only here; a read-only card
- * naming the property is the useful half, and a "suggested default" is a claim about content this
- * prototype has no way to check.
+ * ⚠️ **The taxonomy sometimes suggests a VALUE, not just a name** — `transition/ramp` carries
+ * `isWheelchairAccessible: true`. Names only here; a read-only card naming the property is the
+ * useful half, and a "suggested default" is a claim about content this prototype cannot check.
  */
 export function suggestedFor(
   mainType: string,
   subType?: string,
 ): string[] | null {
-  if (subType && SUBTYPE_SUGGESTED[`${mainType}/${subType}`])
-    return SUBTYPE_SUGGESTED[`${mainType}/${subType}`];
-  return MAIN_SUGGESTED[mainType] ?? null;
+  const row = typeRow(mainType, subType);
+  return row ? row.suggested : null;
 }
 
 export function categoryOf(mainType: string, subType?: string): string | null {
-  if (subType && SUBTYPE_CATEGORY[`${mainType}/${subType}`])
-    return SUBTYPE_CATEGORY[`${mainType}/${subType}`];
-  return MAIN_CATEGORY[mainType] ?? null;
+  const row = typeRow(mainType, subType);
+  return row?.category || null;
 }
 
-/**
- * `COMMERCIAL` → `Commercial`. The taxonomy shouts its categories; the dashboard doesn't.
- */
 export function categoryLabel(cat: string): string {
   return cat.charAt(0) + cat.slice(1).toLowerCase();
 }
