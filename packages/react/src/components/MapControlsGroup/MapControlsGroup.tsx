@@ -64,7 +64,7 @@ const MapControlsGroup = React.forwardRef<
       >
         {/* Zoom Cluster */}
         {(onZoomIn || onZoomOut) && (
-          <div className="flex w-11 flex-col overflow-hidden rounded-container bg-background/90 shadow-lg ring-1 ring-border backdrop-blur-2xl">
+          <div className="flex w-11 flex-col overflow-hidden rounded-container bg-background/90 shadow-floating ring-1 ring-border backdrop-blur-2xl">
             {onZoomIn && (
               <MapControlButton
                 icon={<Plus className="h-5 w-5" />}
@@ -100,7 +100,7 @@ const MapControlsGroup = React.forwardRef<
             }
             label="Reset bearing"
             variant="ghost"
-            className="rounded-container bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-2xl transition-all duration-300 hover:bg-background"
+            className="rounded-container bg-background/90 text-foreground shadow-floating ring-1 ring-border backdrop-blur-2xl transition-all duration-300 hover:bg-background"
             onClick={() => {
               trackEvent("MapControls", "compass_reset", {});
               onCompassReset();
@@ -119,7 +119,7 @@ const MapControlsGroup = React.forwardRef<
               locationState === "following" || locationState === "heading"
             }
             stateLabel={locationStateLabel}
-            className="rounded-container shadow-md"
+            className="rounded-container shadow-floating"
             onClick={() => {
               trackEvent("MapControls", "my_location_triggered", {});
               onMyLocation();

@@ -126,7 +126,7 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
             </span>
           )}
           {featured && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-pill bg-background text-primary shadow-sm ring-1 ring-border">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-pill bg-background text-primary shadow-raised ring-1 ring-border">
               <Star aria-hidden="true" className="h-2.5 w-2.5 fill-current" />
             </span>
           )}
@@ -135,7 +135,7 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
           <span
             aria-hidden="true"
             className={cn(
-              "absolute max-w-48 whitespace-nowrap rounded-control bg-background px-2 py-1 text-xs font-medium text-foreground shadow-md ring-1 ring-border",
+              "absolute max-w-48 whitespace-nowrap rounded-control bg-background px-2 py-1 text-xs font-medium text-foreground shadow-floating ring-1 ring-border",
               externalLabelClasses[labelPlacement],
             )}
           >

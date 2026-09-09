@@ -5,7 +5,7 @@ import { cn } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 
 const searchBarVariants = cva(
-  "flex items-center w-full rounded-2xl bg-background shadow-lg px-4 h-14 border border-input transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+  "flex items-center w-full rounded-2xl bg-background shadow-floating px-4 h-14 border border-input transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
   {
     variants: {
       variant: {

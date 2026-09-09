@@ -37,7 +37,7 @@ const SplitButton = React.forwardRef<HTMLDivElement, SplitButtonProps>(
     return (
       <div
         ref={ref}
-        className={cn("inline-flex rounded-control shadow-sm", className)}
+        className={cn("inline-flex rounded-control shadow-raised", className)}
         {...props}
       >
         <Button

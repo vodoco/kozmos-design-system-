@@ -56,7 +56,7 @@ const DynamicIsland = React.forwardRef<HTMLDivElement, DynamicIslandProps>(
           }}
           transition={springConfig}
           className={cn(
-            "bg-foreground text-background overflow-hidden shadow-2xl relative max-w-[calc(100vw-32px)]",
+            "bg-foreground text-background overflow-hidden shadow-overlay relative max-w-[calc(100vw-32px)]",
             className,
           )}
           {...props}
