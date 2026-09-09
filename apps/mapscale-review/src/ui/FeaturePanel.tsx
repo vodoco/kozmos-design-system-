@@ -1292,11 +1292,22 @@ export function FeaturePanel({
     // One Update commits both halves. The map keeps the shape and re-baselines, so the panel does
     // not stay dirty against an outline it has just saved.
     onCommitGeometry?.();
-    // Only the keys the editor owns; identity is never in the draft's gift.
-    const next: Record<string, unknown> = {
-      name: draft.name ?? "",
-      subType: draft.subType,
-    };
+    /**
+     * Only the keys the editor owns; identity — `fid`/`bid`/`sid`/`lvl` — is never in the draft's
+     * gift.
+     *
+     * 🔴 **`mainType` and `isFeatured` were being dropped on the floor.** `fields` is built with
+     * `RESERVED` filtered out, so anything with a control of its own — the type picker, the star —
+     * never reached this object, and pressing Update discarded it without a word. `subType` was
+     * listed here by hand and `mainType` was not, which was harmless only while the mainType could
+     * not be changed; the new picker made it changeable and the change went nowhere.
+     *
+     * Listed explicitly rather than by subtracting from `RESERVED`, because the two sets are not
+     * complements: `fid` is reserved AND not the editor's, `isFeatured` is reserved AND is.
+     */
+    const OWNED = ["name", "mainType", "subType", "isFeatured"] as const;
+    const next: Record<string, unknown> = { name: draft.name ?? "" };
+    for (const k of OWNED) if (k in draft) next[k] = draft[k];
     for (const k of fields) next[k] = draft[k];
     /**
      * ⚠️ **A field still showing its sentinel was never settled, so it is not saved.**

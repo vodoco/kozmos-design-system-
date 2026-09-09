@@ -680,8 +680,8 @@ const LevelTypesContext = createContext<{
   hover: (
     sel: { fid?: string; mainType?: string; subType?: string } | null,
   ) => void;
-  /** Local edits by `fid`, so a rename in the panel shows in the tree too. In memory only (D3). */
-  edits: Record<string, { name?: string; subType?: string }>;
+  /** Local edits by `fid` — the whole edited bag, so the tree and the panel agree. In memory only (D3). */
+  edits: Record<string, Record<string, unknown>>;
   /** The rail's selected layer group — the tree lists that section's rows and no others. */
   section: MapSection;
   /** The networks the map found, by level — the Wayfinding section's entities. */
@@ -957,8 +957,10 @@ function FeatureRow({
   const editor = fid ? editors[fid] : undefined;
   const selected = !!fid && focused === fid;
   // A rename in the panel shows here too — one edit, every surface. In memory only (D3).
+  // `edits` holds the whole bag, so the name comes out as `unknown` and is narrowed here rather
+  // than assumed: a row label has to be a string or React will not render it.
   const edited = fid ? edits[fid]?.name : undefined;
-  const shown = edited !== undefined && edited !== "" ? edited : name;
+  const shown = typeof edited === "string" && edited !== "" ? edited : name;
   return (
     <div
       onMouseEnter={() => {
@@ -1853,9 +1855,16 @@ export function MapContent({
    * with the panel, which is the whole design principle this app is arranged around. A reload
    * restores whatever the tiles say.
    */
-  const [edits, setEdits] = useState<
-    Record<string, { name?: string; subType?: string }>
-  >({});
+  /**
+   * ⚠️ **Typed as the whole bag, because that is what it holds.** It was
+   * `{ name?: string; subType?: string }`, which was true when only a rename could be saved and has
+   * been wrong since the panel started handing back every property — `isFeatured`, `keywords`,
+   * `mapPersonas` and the rest all live in here. Nothing broke because the two places that read it
+   * only ever asked for `name`; the type simply stopped describing the value.
+   */
+  const [edits, setEdits] = useState<Record<string, Record<string, unknown>>>(
+    {},
+  );
   const onFeatureProps = useCallback(
     (fid: string, p: Record<string, unknown>) => setProps({ fid, props: p }),
     [],
@@ -2310,8 +2319,26 @@ export function MapContent({
 
   // Only ever show properties for the feature currently selected: a late reply about a feature you
   // have already moved on from must not repaint the panel.
-  const shownProps =
-    focused && props && props.fid === focused.fid ? props.props : null;
+  /**
+   * 🔴 **The panel showed the PUBLISHED values, not the edited ones.** Rename a feature, press
+   * Update, reopen it: the content list showed the new name — it merges `edits` at the point it
+   * builds a row — and the panel showed the old one. The one surface you would check to confirm an
+   * edit took was the one surface that forgot it.
+   *
+   * The comment on `selectionList` below has claimed since it was written that this *"carries local
+   * edits merged in"*. It did not. Now it does, and with the same spread the list uses, so the two
+   * cannot disagree again.
+   *
+   * ⚠️ Memoised because several effects take it as a dependency — a fresh object each render would
+   * re-send `begin` to the map on every keystroke.
+   */
+  const shownProps = useMemo(
+    () =>
+      focused && props && props.fid === focused.fid
+        ? { ...props.props, ...(edits[props.fid] ?? {}) }
+        : null,
+    [focused, props, edits],
+  );
 
   /**
    * Tell everyone what this tab has open. Driven by `shownProps` rather than `focused`, because a
