@@ -39,7 +39,7 @@ const BLOCKS = ["INK",
                 "FOCUS-ENGINE",
                 "BOX-ENGINE",
                 "GJRENDER-ENGINE", "GJSWAP-ENGINE",
-                "EDGE-ENGINE", "PATHS-ENGINE", "REACH-ENGINE",
+                "EDGE-ENGINE", "SEL-ENGINE", "DELETE-ENGINE", "PATHS-ENGINE", "REACH-ENGINE",
                 "PREVIEW-ENGINE", "FPSRC-ENGINE"];
 const found = BLOCKS.map((name) => {
   const from = src.indexOf(`/* ${name}-START`);
@@ -100,6 +100,16 @@ let applyPrefsCalls = 0, addFloorplanCalls = 0;
 function applyPrefs() { applyPrefsCalls++; }
 function addFloorplan() { addFloorplanCalls++; }
 function __setMap(m) { map = m; }
+/**
+ * What geomDeleteSelected calls back into. Thin on purpose — none of them decides anything the
+ * delete's own arithmetic depends on, and POSTED above already records the refusals, which is the
+ * half of this function a person actually sees.
+ */
+function __setGEOM(g) { GEOM = g; }
+let geomPushCalls = 0;
+function geomPush() { geomPushCalls++; }
+function geomDraw() {}
+function geomState() { return { selected: GEOM && GEOM.sel ? GEOM.sel.size : 0 }; }
 function __env() { return { TARGET, prefs, POSTED, FP_LAYERS, HIDDEN_FILTERS,
   applyPrefsCalls, addFloorplanCalls }; }
 `;
@@ -231,13 +241,15 @@ writeFileSync(
       `  guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,\n` +
       `  findBridge, bridgeRings, combineRings,\n` +
       `  ringGap, ringSetArea, largestSet, liesBetween,\n` +
-      `  focusView, focusPan, FOCUS_MARGIN,\n` +
+      `  focusView, focusPan, FOCUS_MARGIN, FOCUS_DEADBAND,\n` +
       `  unwrapGrid, orientedBox, geomResizeCursor,\n` +
       `  flatType, sourceLayerIndex, groupBySourceLayer, cloneLayerDef,\n` +
       `  GJ, GJ_SRC, GJ_LYR, gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,\n` +
       `  layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,\n` +
       `  applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,\n` +
-      `  edgeKeys, selectedEdgeCount, grabOffset, aimPoint, networkEdges, moveNetworkNode,\n` +
+      `  selKey, parseKey, edgeKeys, selectedEdgeCount, geomAllRings, geomRingsAt,\n` +
+      `  geomDeleteSelected, __setGEOM,\n` +
+      `  grabOffset, aimPoint, networkEdges, moveNetworkNode,\n` +
       `  networkComponents, networkRun, networkAdjacency, deleteNetworkNodes,\n` +
       `  unlinkNetworkNodes,\n` +
       `  wfBuildEdges, wfEnsureEdges, WF_NODES, wfPaint,\n` +
@@ -276,13 +288,15 @@ const {
   guideTolFor, GUIDE_TOLS, GUIDE_WIDE_TOLS, GUIDE_STEP_FREE, GUIDE_STEP_SNAP,
   findBridge, bridgeRings, combineRings,
   ringGap, ringSetArea, largestSet, liesBetween,
-  focusView, focusPan, FOCUS_MARGIN,
+  focusView, focusPan, FOCUS_MARGIN, FOCUS_DEADBAND,
   unwrapGrid, orientedBox, geomResizeCursor,
   flatType, sourceLayerIndex, groupBySourceLayer, cloneLayerDef,
   gjTick, gjTeardown, gjLive, indoorPairs, srcLayerOf,
   layerTypeGroup, typeHidden, applyHiddenTypes, HIDDEN_BY_TYPE,
   applyWayfinding, wfRemove, wfFilter, WF_NODE, WF_TRANSITION, WF_HIDE, WF_EDGE,
-  edgeKeys, selectedEdgeCount, grabOffset, aimPoint, networkEdges, moveNetworkNode,
+  selKey, parseKey, edgeKeys, selectedEdgeCount, geomAllRings, geomRingsAt,
+  geomDeleteSelected, __setGEOM,
+  grabOffset, aimPoint, networkEdges, moveNetworkNode,
   networkComponents, networkRun, deleteNetworkNodes, unlinkNetworkNodes,
   wfBuildEdges, wfEnsureEdges, wfPaint,
   wfSetEditing, wfNetworkNodes, wfHighlight, WF_R, wfNearerEnd, personaOk,
@@ -1322,6 +1336,47 @@ console.log("\nfocus engine");
 
 const M = FOCUS_MARGIN;
 /** A 1440×900 map with no panel, and the same with the 384px properties panel open. */
+/* F5. ⚠️ CENTRING is a different question from REVEALING, and the panel is what separates them.
+
+       Olcay, 2026-08-16: the map must not move when you click something you are already looking
+       at. Olcay, 2026-09-09: "the geometry should offset too when the edit panel is open to center
+       to available map area."
+
+       Both are right. With no panel the whole pane is map, so visible is usable and the camera
+       stays put. With 384px of panel over it, a shape can be visible and still sit hard against the
+       panel's edge with none of its surroundings on that side. */
+console.log("\nfocus · centring with the panel open");
+
+{
+  const withPanel2 = focusView(1440, 900, 384);
+  const at2 = (cx, cy, w, h) => ({ x0: cx - w / 2, x1: cx + w / 2, y0: cy - h / 2, y1: cy + h / 2 });
+  const mid = [(withPanel2.x0 + withPanel2.x1) / 2, (withPanel2.y0 + withPanel2.y1) / 2];
+
+  // The exact case from the screenshot: inside the padded view, but well left of its centre.
+  const off = at2(690, 470, 360, 380);
+  check("REVEAL leaves a feature that is merely visible alone",
+        focusPan(off, withPanel2, false) === null);
+  const p2 = focusPan(off, withPanel2, true);
+  check("CENTRE moves it", !!p2);
+  check("…to the middle of the strip the panel left",
+        !!p2 && Math.abs((690 - p2[0]) - mid[0]) < 1e-9);
+
+  // ⚠️ Without a deadband every click with the panel open would nudge the camera a few pixels,
+  // which is the twitchiness the reveal rule exists to avoid, arriving by another door.
+  check("a feature already near the centre is left alone",
+        focusPan(at2(mid[0] + FOCUS_DEADBAND - 2, mid[1], 100, 100), withPanel2, true) === null);
+  check("…and one just past the deadband is not",
+        !!focusPan(at2(mid[0] + FOCUS_DEADBAND + 4, mid[1], 100, 100), withPanel2, true));
+
+  // A shape too big for the strip still centres — that is what a concourse needs.
+  check("a feature larger than the view centres rather than refusing",
+        !!focusPan(at2(200, 470, 3000, 200), withPanel2, true));
+
+  // With no panel the old rule is untouched.
+  check("no panel, no centring — reveal still governs",
+        focusPan(at2(600, 400, 120, 90), focusView(1440, 900, 0), false) === null);
+}
+
 const bare = focusView(1440, 900, 0);
 const withPanel = focusView(1440, 900, 384);
 const at = (x, y, w, h) => ({ x0: x, x1: x + w, y0: y, y1: y + h });
@@ -1357,16 +1412,22 @@ const at = (x, y, w, h) => ({ x0: x, x1: x + w, y0: y, y1: y + h });
         focusPan(at(1200, 400, 100, 100), bare) === null);
 }
 
-/* F4. The properties panel is not map you can use, so "centre" means centre of what is left. */
+/* F4. The properties panel is not map you can use, so "centre" means centre of what is left.
+       ⚠️ The panel moved to the LEFT (2026-09-08), and the padding moved with it: `focusView`'s
+       third argument is now `padLeft`, reserving x0 rather than shrinking x1. So the feature this
+       block hides is on the left, and the pan is negative — the mirror of what it used to assert. */
 {
-  const p = focusPan(at(1000, 400, 60, 60), withPanel);
-  // The panel starts at 1440-384=1056, so the usable strip is 48..1008 and its centre is 528.
+  const p = focusPan(at(200, 400, 60, 60), withPanel);
+  // The panel ends at 384, so the usable strip is 432..1392 and its centre is 912.
   check("with the panel open a feature under it is moved out", !!p);
   check("…to the centre of the map that is still visible",
-        p && Math.abs(p[0] - (1030 - 528)) < 1e-9, p ? String(p[0]) : "null");
+        p && Math.abs(p[0] - (230 - 912)) < 1e-9, p ? String(p[0]) : "null");
   // The same feature, same place, with no panel: comfortably visible and nothing happens.
   check("…and the very same feature is fine without the panel",
-        focusPan(at(1000, 400, 60, 60), bare) === null);
+        focusPan(at(200, 400, 60, 60), bare) === null);
+  // And the feature this block used to use is now on the VISIBLE side, so it must not move.
+  check("…while a feature clear of the panel is left alone",
+        focusPan(at(1000, 400, 60, 60), withPanel) === null);
 }
 
 /* F5. ⚠️ A feature too big to fit is judged on its CENTRE. Containment would say "not visible"
@@ -2105,39 +2166,235 @@ console.log("\nedge select");
   const rings = [ring];
 
   check("edge 0 runs between corners 0 and 1",
-        JSON.stringify(edgeKeys(0, 0, ring.length)) === JSON.stringify(["0:0", "0:1"]));
+        JSON.stringify(edgeKeys(0, 0, 0, ring.length)) === JSON.stringify(["0:0:0", "0:0:1"]));
   /**
    * ⚠️ **The wrap is the whole subtlety.** The last edge runs to `ring[4]`, which IS `ring[0]` —
    * and only the four REAL corners get a handle. Naming the closing index gives a key nothing
    * draws and nothing drags: the edge would look selected at one end and move at one end.
    */
   check("the last edge wraps to corner 0, not to the closing point",
-        JSON.stringify(edgeKeys(0, 3, ring.length)) === JSON.stringify(["0:3", "0:0"]));
+        JSON.stringify(edgeKeys(0, 0, 3, ring.length)) === JSON.stringify(["0:0:3", "0:0:0"]));
 
+  // `selectedEdgeCount` is given the whole SELECTION — one entry per feature, primary first.
+  const one = [rings];
   const sel = new Set();
-  check("nothing selected is no edges", selectedEdgeCount(rings, sel) === 0);
-  sel.add("0:0");
-  check("one end of an edge is not an edge", selectedEdgeCount(rings, sel) === 0);
-  sel.add("0:1");
-  check("both ends are", selectedEdgeCount(rings, sel) === 1);
+  check("nothing selected is no edges", selectedEdgeCount(one, sel) === 0);
+  sel.add("0:0:0");
+  check("one end of an edge is not an edge", selectedEdgeCount(one, sel) === 0);
+  sel.add("0:0:1");
+  check("both ends are", selectedEdgeCount(one, sel) === 1);
   // Two adjacent edges share a corner: three corners, two edges. This is also what a MARQUEE that
   // happens to catch three corners in a row reports — correctly, and nobody wrote it.
-  sel.add("0:2");
-  check("three corners in a row are two edges", selectedEdgeCount(rings, sel) === 2);
-  sel.add("0:3");
+  sel.add("0:0:2");
+  check("three corners in a row are two edges", selectedEdgeCount(one, sel) === 2);
+  sel.add("0:0:3");
   check("the whole ring selected is four edges — the wrap included",
-        selectedEdgeCount(rings, sel) === 4);
+        selectedEdgeCount(one, sel) === 4);
 
   // Opposite corners of a square are not an edge, however many of them you pick.
-  const across = new Set(["0:0", "0:2"]);
+  const across = new Set(["0:0:0", "0:0:2"]);
   check("two corners with no edge between them are no edges",
-        selectedEdgeCount(rings, across) === 0);
+        selectedEdgeCount(one, across) === 0);
 
   // A second ring's corners cannot form an edge with the first's.
-  const two = [ring, [[20, 20], [30, 20], [30, 30], [20, 20]]];
-  check("keys are per ring", selectedEdgeCount(two, new Set(["0:1", "1:0"])) === 0);
+  const two = [[ring, [[20, 20], [30, 20], [30, 30], [20, 20]]]];
+  check("keys are per ring", selectedEdgeCount(two, new Set(["0:0:1", "0:1:0"])) === 0);
   check("…and the second ring's own edges count",
-        selectedEdgeCount(two, new Set(["1:0", "1:1"])) === 1);
+        selectedEdgeCount(two, new Set(["0:1:0", "0:1:1"])) === 1);
+
+  /* ⚠️ The FEATURE index, added 2026-09-08 — Olcay: "when multiple features selected I should be
+     able to transform all selected and be able to adjust all selected geometry nodes as well".
+
+     Without it two selected features share one key space. Everything below fails the moment `fi`
+     is dropped from the key: the two shapes' corner 0 would be the same corner, so selecting one
+     would light up both and dragging one would tear them apart. */
+  const second = [[100, 100], [110, 100], [110, 110], [100, 110], [100, 100]];
+  const pair = [[ring], [second]];
+
+  check("edge 0 of the SECOND feature is keyed to that feature",
+        JSON.stringify(edgeKeys(1, 0, 0, second.length)) === JSON.stringify(["1:0:0", "1:0:1"]));
+  check("the same ring and corner in two features are two different keys",
+        selKey(0, 0, 0) !== selKey(1, 0, 0));
+  check("a corner of each is not an edge",
+        selectedEdgeCount(pair, new Set(["0:0:0", "1:0:0"])) === 0);
+  check("the second feature's own edge counts",
+        selectedEdgeCount(pair, new Set(["1:0:0", "1:0:1"])) === 1);
+  check("an edge in each is two edges",
+        selectedEdgeCount(pair, new Set(["0:0:0", "0:0:1", "1:0:0", "1:0:1"])) === 2);
+  check("a key naming a feature that is not selected counts for nothing",
+        selectedEdgeCount(one, new Set(["1:0:0", "1:0:1"])) === 0);
+
+  // The key and its inverse have to agree, because the delete and the drag both read keys back.
+  check("a key round-trips through parseKey",
+        JSON.stringify(parseKey(selKey(2, 1, 7))) === JSON.stringify([2, 1, 7]));
+  check("…as NUMBERS, not the strings they were written as",
+        parseKey("1:0:3").every(n => typeof n === "number"));
+}
+
+/* G5b. ⚠️ DELETING corners across a multi-feature selection — the one path here that can destroy
+       geometry without saying which feature it came out of.
+
+       Olcay, 2026-09-07: "when multiple features selected I should be able to transform all
+       selected and be able to adjust all selected geometry nodes as well". Adjusting includes
+       deleting a corner, and the feature index in the key is the only thing standing between
+       "delete the corner you picked" and "delete that corner out of every selected shape". */
+console.log("\ndelete across a selection");
+
+{
+  const square = (x, y, w) =>
+    [[x, y], [x + w, y], [x + w, y + w], [x, y + w], [x, y]];
+  /** A five-corner shape, so a delete can take one out and still leave a legal ring. */
+  const five = (x, y) =>
+    [[x, y], [x + 10, y], [x + 12, y + 5], [x + 5, y + 10], [x, y + 8], [x, y]];
+
+  const scene = () => {
+    const g = {
+      kind: "area",
+      fid: "A",
+      rings: [five(0, 0)],
+      pieceOf: [0],
+      also: [{ fid: "B", rings: [five(100, 0)] }],
+      sel: new Set(),
+    };
+    __setGEOM(g);
+    return g;
+  };
+
+  // The list the whole refactor is built on: primary first, then the rest of the selection.
+  {
+    const g = scene();
+    check("geomAllRings is the primary followed by the rest", geomAllRings().length === 2);
+    check("…and feature 0 IS the primary's own array", geomAllRings()[0] === g.rings);
+    check("geomRingsAt(0) is the primary", geomRingsAt(0) === g.rings);
+    check("geomRingsAt(1) is the first of the others", geomRingsAt(1) === g.also[0].rings);
+    check("geomRingsAt past the end is null, not a throw", geomRingsAt(9) === null);
+  }
+
+  /* ⚠️ The heart of it. Delete a corner of the SECOND feature and the FIRST must not lose one —
+     which is exactly what happened while the key was "ri:ci": "0:1" named a corner of both. */
+  {
+    const g = scene();
+    g.sel.add("1:0:1");
+    geomDeleteSelected();
+    check("a corner deleted from the second feature leaves the first alone",
+          g.rings[0].length === 6);
+    check("…and comes out of the second", g.also[0].rings[0].length === 5);
+    check("…the corner taken is the one that was picked",
+          !g.also[0].rings[0].some(c => c[0] === 110 && c[1] === 0));
+    check("…the ring still closes on its own first point",
+          JSON.stringify(g.also[0].rings[0][0]) ===
+          JSON.stringify(g.also[0].rings[0][g.also[0].rings[0].length - 1]));
+    check("…and the selection is dropped, because every later index has shifted",
+          g.sel.size === 0);
+  }
+
+  // One corner from each: both features lose exactly one, and neither loses the other's.
+  {
+    const g = scene();
+    g.sel.add("0:0:1");
+    g.sel.add("1:0:2");
+    geomDeleteSelected();
+    check("a corner picked in each feature comes out of each",
+          g.rings[0].length === 5 && g.also[0].rings[0].length === 5);
+    check("…the primary lost the corner IT was holding",
+          !g.rings[0].some(c => c[0] === 10 && c[1] === 0));
+    check("…and the second lost the one it was holding",
+          !g.also[0].rings[0].some(c => c[0] === 112 && c[1] === 5));
+  }
+
+  /* ⚠️ A ring cannot go below a triangle, and the refusal has to be per FEATURE — one shape at its
+     minimum must not block a legal delete on the shape beside it. */
+  {
+    const g = {
+      kind: "area", fid: "A",
+      rings: [square(0, 0, 10)],                 // four corners: at the floor already
+      pieceOf: [0],
+      also: [{ fid: "B", rings: [five(100, 0)] }],
+      sel: new Set(["0:0:0", "0:0:1", "1:0:1"]),
+    };
+    __setGEOM(g);
+    POSTED.length = 0;
+    geomDeleteSelected();
+    check("the shape that would go under three corners keeps them",
+          g.rings[0].length === 5);
+    check("…while the shape beside it still loses the corner it was asked to",
+          g.also[0].rings[0].length === 5);
+    check("…and the refusal is said out loud",
+          POSTED.some(p => p.type === "geomerror" && /three is the minimum/.test(p.message)));
+  }
+
+  // Nothing legal to do: refuse the whole thing rather than half-do it.
+  {
+    const g = {
+      kind: "area", fid: "A",
+      rings: [square(0, 0, 10)],
+      pieceOf: [0],
+      also: [{ fid: "B", rings: [square(100, 0, 10)] }],
+      sel: new Set(["0:0:0", "0:0:1", "1:0:0", "1:0:1"]),
+    };
+    __setGEOM(g);
+    POSTED.length = 0;
+    const before = JSON.stringify([g.rings, g.also]);
+    geomDeleteSelected();
+    check("when nothing can legally go, nothing goes",
+          JSON.stringify([g.rings, g.also]) === before);
+    check("…and it says why rather than failing quietly",
+          POSTED.some(p => p.type === "geomerror" && /at least three corners/.test(p.message)));
+    check("…and the selection is left standing, so the user can change it",
+          g.sel.size === 4);
+  }
+
+  // Selecting the whole of one PIECE deletes the piece — and only in the feature it belongs to.
+  {
+    const g = {
+      kind: "area", fid: "A",
+      rings: [square(0, 0, 10), square(40, 0, 10)],
+      pieceOf: [0, 1],
+      also: [{ fid: "B", rings: [square(100, 0, 10)] }],
+      sel: new Set(["0:1:0", "0:1:1", "0:1:2", "0:1:3"]),
+    };
+    __setGEOM(g);
+    geomDeleteSelected();
+    check("the whole of one piece selected removes that piece", g.rings.length === 1);
+    check("…the piece that was left is the other one", g.rings[0][0][0] === 0);
+    check("…pieceOf shrinks with it", g.pieceOf.length === 1 && g.pieceOf[0] === 0);
+    check("…and the other feature is untouched", g.also[0].rings[0].length === 5);
+  }
+
+  /* ⚠️ **"Is this the last shape?" is asked of the FEATURE, not of the editor.** The primary being
+     in two pieces says nothing about whether the room beside it can be emptied — and if that
+     question is asked of `GEOM.rings` instead of the feature's own, selecting all four corners of
+     a single-ring neighbour deletes its only ring and leaves a feature with no geometry at all. */
+  {
+    const g = {
+      kind: "area", fid: "A",
+      rings: [square(0, 0, 10), square(40, 0, 10)],   // the PRIMARY is in two pieces
+      pieceOf: [0, 1],
+      also: [{ fid: "B", rings: [square(100, 0, 10)] }],  // the neighbour is one ring, and only one
+      sel: new Set(["1:0:0", "1:0:1", "1:0:2", "1:0:3"]),
+      };
+    __setGEOM(g);
+    POSTED.length = 0;
+    geomDeleteSelected();
+    check("a neighbour's only ring is never emptied, whatever the primary is made of",
+          g.also[0].rings.length === 1 && g.also[0].rings[0].length === 5);
+    check("…the primary keeps both of its pieces", g.rings.length === 2);
+    check("…and the refusal is said out loud",
+          POSTED.some(p => p.type === "geomerror"));
+  }
+
+  // A key naming a feature nobody selected must not reach into the primary.
+  {
+    const g = scene();
+    g.also = [];
+    g.sel = new Set(["1:0:1"]);
+    POSTED.length = 0;
+    geomDeleteSelected();
+    check("a key for a feature that is no longer selected deletes nothing",
+          g.rings[0].length === 6);
+    check("…and refuses rather than silently doing nothing",
+          POSTED.some(p => p.type === "geomerror"));
+  }
 }
 
 /* G6. ⚠️ A drag moves what you grabbed by how far the POINTER moved. Olcay, 2026-08-17: "dragging
