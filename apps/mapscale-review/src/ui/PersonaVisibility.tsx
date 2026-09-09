@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from "@kozmos/react";
 import { Help } from "./icons";
+import { SectionHeading } from "./FeaturePanel";
 import {
   MAP_PERSONAS,
   personaStateAcross,
@@ -43,21 +44,14 @@ export function PersonaVisibility({
   const many = features.length > 1;
 
   return (
-    <div style={{ marginTop: 18 }}>
-      <Text
-        style={{
-          display: "block",
-          fontSize: 10,
-          letterSpacing: 1,
-          fontWeight: 600,
-          color: "#9AA0A6",
-          marginBottom: 6,
-        }}
-      >
+    <div>
+      {/* ⚠️ Was a hand-rolled <Text> with a raw #9AA0A6. The property sections now draw the same
+          heading, so it comes from one component and the two cannot drift apart. */}
+      <SectionHeading>
         {many
           ? `PERSONA VISIBILITY · applies to all ${features.length}`
           : "PERSONA VISIBILITY"}
-      </Text>
+      </SectionHeading>
 
       {MAP_PERSONAS.map((persona) => {
         const original = personaStateAcross(persona.key, features);

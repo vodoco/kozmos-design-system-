@@ -9,6 +9,11 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Separator,
   Switch,
   Text,
@@ -33,6 +38,7 @@ import {
   toArray,
   type PropertyDef,
   EDITABLE_PROPERTIES,
+  valueLabel,
 } from "../mock/properties";
 
 /**
@@ -302,6 +308,28 @@ export function mergeForEditing(
 /* ── editing: the dashboard's field editor ───────────────────────────────────── */
 
 /**
+ * A section heading, in the panel's one heading style — the same one `PersonaVisibility` draws.
+ * Kept here rather than duplicated so the two can never drift apart.
+ */
+export function SectionHeading({ children }: { children: string }) {
+  return (
+    <Text
+      style={{
+        display: "block",
+        fontSize: 10,
+        letterSpacing: 1,
+        fontWeight: 600,
+        color: "var(--primitives-colors-background-400)",
+        marginTop: 18,
+        marginBottom: 2,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+/**
  * **Featured** — the promotion flag, beside the name it promotes.
  *
  * A boxed star rather than a switch, because it sits on the title row where a switch would out-weigh
@@ -332,24 +360,52 @@ function FeaturedToggle({
       onClick={() => onChange(!on)}
       style={{
         flex: "0 0 auto",
-        display: "grid",
-        placeItems: "center",
-        gap: 2,
+        /**
+         * ⚠️ **`display: grid` with `placeItems` and a `gap` centres each cell, not the pair.** The
+         * word and the star were each centred in their own track, so they drifted apart as the
+         * label wrapped. A flex column centres them as one block.
+         */
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 3,
         width: 68,
         height: 44,
         padding: 0,
         borderRadius: "var(--primitives-radius-lg, 8px)",
-        border: `1px solid ${on ? "var(--primitives-colors-theme-500)" : LINE}`,
-        background: on ? "var(--primitives-colors-theme-0)" : "transparent",
-        color: on ? "var(--primitives-colors-theme-700)" : MUTED,
+        /**
+         * ⚠️ **Amber, not the theme blue** (Olcay, 2026-09-09: *"featured star should be accent
+         * color. yellowish."*). A featured place is not a selected place, and a blue star beside a
+         * blue Update button read as "this control is on" rather than as a mark of prominence.
+         * `emotional/alert` is the published amber ramp — 500 for the star, 300 for its border,
+         * 0 for the ground.
+         */
+        border: `1px solid ${on ? "var(--primitives-colors-emotional-alert-300)" : LINE}`,
+        background: on
+          ? "var(--primitives-colors-emotional-alert-0)"
+          : "transparent",
+        color: on ? "var(--primitives-colors-emotional-alert-700)" : MUTED,
         cursor: "pointer",
       }}
     >
+      {/* Caption and star share one centred column; the star carries the colour, the word stays
+          readable — amber text on amber ground at 10px would not be. */}
       <span style={{ fontSize: 10, lineHeight: 1 }}>Featured</span>
       {/* ⚠️ `@kozmos/icons` publishes 42 names and none of them is a star — the same gap that left
           FID's copy glyph outside it. `./icons` carries the Pointr Library's own `star-01`
           (node 1007:10447) in both states. */}
-      {on ? <StarFilled size={16} /> : <Star size={16} />}
+      <span
+        style={{
+          display: "grid",
+          placeItems: "center",
+          color: on
+            ? "var(--primitives-colors-emotional-alert-500)"
+            : "inherit",
+        }}
+      >
+        {on ? <StarFilled size={16} /> : <Star size={16} />}
+      </span>
     </button>
   );
 }
@@ -368,6 +424,8 @@ function PropertyField({
 }) {
   const label = propertyLabel(def.key);
   const [pick, setPick] = useState(false);
+  /** The half-typed value in a free-text list (`tags`, `keywords`), before Enter commits it. */
+  const [typed, setTyped] = useState("");
   /**
    * ⚠️ **A field the selection disagrees about shows as EMPTY with a placeholder, never as its
    * sentinel.** Every control below reads `shown` rather than `value`, so the sentinel exists only
@@ -378,258 +436,340 @@ function PropertyField({
   const shown = many ? undefined : value;
   const chips = toArray(shown);
 
+  /**
+   * 🔴 **The bin was nudged down by a hard-coded 18px, and nothing lined up** (Olcay, 2026-09-09:
+   * *"there are alignment issues — thrash can, featured title and star"*).
+   *
+   * No constant could have worked: measured in the browser, the caption above the control is **24px**
+   * for a design-system `Input` (its own built-in label), **27px** for the captions this file draws,
+   * and **35px** for the chip box. Three different heights, one offset.
+   *
+   * So the caption is drawn ONCE here — including for the `Input`, whose `label` prop is no longer
+   * used — and the control and the bin share a flex row. The bin is then aligned by construction
+   * rather than by a number, and the number is gone.
+   */
+  const inlineControl = def.valueType === "boolean";
+  /**
+   * Tall controls — a textarea, an image list, an opening-hours grid — take the bin at their TOP
+   * row; short ones take it on their centre line. Both are correct and neither needs a number.
+   */
+  const tallControl =
+    def.inputType === "textArea" || def.inputType === "custom";
+
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 8,
-        marginTop: 12,
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {def.valueType === "boolean" ? (
-          /**
-           * **Label first, switch at the right edge** (Olcay, 2026-08-16: *"the toggles should be
-           * on the right side not left"*).
-           *
-           * Not only a preference — it is what makes the column read. Every other field in this
-           * panel puts its name at the left edge and its control below or beside it, so a leading
-           * switch made the booleans the one row whose *text* started 44px in, and their labels
-           * lined up with nothing. Right-aligned controls also share one edge down the form, which
-           * is the thing that makes a settings list scannable.
-           *
-           * ⚠️ The DS `Switch`'s own `label` prop puts the label AFTER the control, so it is not
-           * used here — the label is the app's, and the switch is given the row's far end.
-           */
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 10,
-              padding: "6px 0",
-            }}
-          >
-            <label
-              htmlFor={`f-${def.key}`}
-              style={{
-                fontSize: 13,
-                color: INK,
-                cursor: "pointer",
-                minWidth: 0,
-              }}
-            >
-              {label}
-              {/* A switch has no third position, so a disagreement is said beside the label
-                  instead — and it reads OFF, which is the safe way round: nothing is written to
-                  any feature until it is actually toggled. */}
-              {many && <MultiHint />}
-            </label>
-            {/**
-             * ⚠️ **A span, because the DS wrapper is `w-full` and `wrapperClassName` cannot undo
-             * it.** Passing `!w-auto` looked like the fix and did nothing: this app does not run
-             * Tailwind over its own source, so a class it invents is never compiled and the
-             * attribute lands on an element with no rule behind it. Measured, not assumed — the
-             * wrapper was still 254px and the switch still sat where the label left it.
+    <div style={{ marginTop: 12 }}>
+      {/* One caption for every branch. See the note above. */}
+      {!inlineControl && (
+        <Text
+          style={{
+            display: "block",
+            fontSize: 11,
+            color: MUTED,
+            marginBottom: 4,
+          }}
+        >
+          {label}
+          {many && <MultiHint />}
+        </Text>
+      )}
+      <div
+        style={{
+          display: "flex",
+          alignItems: tallControl ? "flex-start" : "center",
+          gap: 8,
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {def.valueType === "boolean" ? (
+            /**
+             * **Label first, switch at the right edge** (Olcay, 2026-08-16: *"the toggles should be
+             * on the right side not left"*).
              *
-             * Shrink-to-fit here resolves the inner `width: 100%` against the switch's own
-             * max-content, so the control ends up its natural width at the row's right edge.
-             */}
-            <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-              <Switch
-                checked={isTruthy(shown)}
-                onCheckedChange={(c: boolean) => onChange(c)}
-                id={`f-${def.key}`}
-              />
-            </span>
-          </div>
-        ) : def.valueType === "text" && def.inputType === "textArea" ? (
-          <div>
-            <Text
-              style={{
-                display: "block",
-                fontSize: 11,
-                color: MUTED,
-                marginBottom: 4,
-              }}
-            >
-              {label}
-            </Text>
-            <textarea
-              value={String(shown ?? "")}
-              placeholder={many ? MULTI_LABEL : undefined}
-              onChange={(e) => onChange(e.target.value)}
-              rows={3}
-              aria-label={label}
-              style={{
-                width: "100%",
-                resize: "vertical",
-                fontFamily: "inherit",
-                fontSize: 13,
-                color: INK,
-                padding: "8px 10px",
-                borderRadius: "var(--primitives-radius-lg, 8px)",
-                border: `1px solid ${LINE}`,
-                background: "var(--primitives-colors-background-0, #fff)",
-              }}
-            />
-          </div>
-        ) : def.options?.length ? (
-          /* A closed list: chips you have, plus a picker. `array` takes many, `enum` takes one —
-             which is the only difference between them and the reason both are kept. */
-          <div>
-            <Text
-              style={{
-                display: "block",
-                fontSize: 11,
-                color: MUTED,
-                marginBottom: 4,
-              }}
-            >
-              {label}
-              {/* An empty chip row would otherwise read as "none of them have any", which is a
-                  different and wronger claim than "they differ". */}
-              {many && <MultiHint />}
-            </Text>
+             * Not only a preference — it is what makes the column read. Every other field in this
+             * panel puts its name at the left edge and its control below or beside it, so a leading
+             * switch made the booleans the one row whose *text* started 44px in, and their labels
+             * lined up with nothing. Right-aligned controls also share one edge down the form, which
+             * is the thing that makes a settings list scannable.
+             *
+             * ⚠️ The DS `Switch`'s own `label` prop puts the label AFTER the control, so it is not
+             * used here — the label is the app's, and the switch is given the row's far end.
+             */
             <div
               style={{
                 display: "flex",
-                flexWrap: "wrap",
-                gap: 6,
                 alignItems: "center",
-                padding: "7px 8px",
-                borderRadius: "var(--primitives-radius-lg, 8px)",
-                border: `1px solid ${LINE}`,
-                minHeight: 38,
+                justifyContent: "space-between",
+                gap: 10,
+                padding: "6px 0",
               }}
             >
-              {chips.map((c) => (
-                <span
-                  key={c}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                    fontSize: 11.5,
-                    padding: "3px 4px 3px 9px",
-                    borderRadius: 999,
-                    background: "var(--primitives-colors-background-100)",
-                    color: INK,
-                  }}
-                >
-                  {c}
-                  <button
-                    onClick={() => onChange(chips.filter((x) => x !== c))}
-                    aria-label={`Remove ${c}`}
+              <label
+                htmlFor={`f-${def.key}`}
+                style={{
+                  fontSize: 13,
+                  color: INK,
+                  cursor: "pointer",
+                  minWidth: 0,
+                }}
+              >
+                {label}
+                {/* A switch has no third position, so a disagreement is said beside the label
+                  instead — and it reads OFF, which is the safe way round: nothing is written to
+                  any feature until it is actually toggled. */}
+                {many && <MultiHint />}
+              </label>
+              {/**
+               * ⚠️ **A span, because the DS wrapper is `w-full` and `wrapperClassName` cannot undo
+               * it.** Passing `!w-auto` looked like the fix and did nothing: this app does not run
+               * Tailwind over its own source, so a class it invents is never compiled and the
+               * attribute lands on an element with no rule behind it. Measured, not assumed — the
+               * wrapper was still 254px and the switch still sat where the label left it.
+               *
+               * Shrink-to-fit here resolves the inner `width: 100%` against the switch's own
+               * max-content, so the control ends up its natural width at the row's right edge.
+               */}
+              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+                <Switch
+                  checked={isTruthy(shown)}
+                  onCheckedChange={(c: boolean) => onChange(c)}
+                  id={`f-${def.key}`}
+                />
+              </span>
+            </div>
+          ) : def.valueType === "text" && def.inputType === "textArea" ? (
+            <div>
+              <textarea
+                value={String(shown ?? "")}
+                placeholder={many ? MULTI_LABEL : undefined}
+                onChange={(e) => onChange(e.target.value)}
+                rows={3}
+                aria-label={label}
+                style={{
+                  width: "100%",
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                  fontSize: 13,
+                  color: INK,
+                  padding: "8px 10px",
+                  borderRadius: "var(--primitives-radius-lg, 8px)",
+                  border: `1px solid ${LINE}`,
+                  background: "var(--primitives-colors-background-0, #fff)",
+                }}
+              />
+            </div>
+          ) : def.valueType === "enum" && def.options?.length ? (
+            /**
+             * **`enum` is ONE value** (Olcay, 2026-09-09: *"some of the inputs are single selection
+             * and some are multi value — check properties document"*).
+             *
+             * 🔴 **Five properties were drawn as multi-value and are not.** `serviceOptions`,
+             * `ageRestriction`, `genderDesignation`, `crowdLevel` and `occupancyStatus` are `enum`
+             * with a closed list; they rendered as a chip row with `+ Add`, which offers to add a
+             * second value to a field that holds one. The code underneath already replaced rather
+             * than appended, so the control was promising something it then refused to do.
+             *
+             * A `Select` says it in the shape. The twelve `array` properties keep the chip row, which
+             * is what genuinely takes many.
+             */
+            <div>
+              <Select
+                value={chips[0] ?? ""}
+                onValueChange={(v) => onChange([v])}
+              >
+                <SelectTrigger aria-label={label}>
+                  <SelectValue placeholder={many ? MULTI_LABEL : "—"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {def.options.map((o) => (
+                    <SelectItem key={o} value={o}>
+                      {valueLabel(def.key, o)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : def.valueType === "array" ? (
+            /* Many values: the chips you have, plus a way to add another — a picker when the
+             taxonomy publishes a closed list, free text when it does not. */
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 6,
+                  alignItems: "center",
+                  padding: "7px 8px",
+                  borderRadius: "var(--primitives-radius-lg, 8px)",
+                  border: `1px solid ${LINE}`,
+                  minHeight: 38,
+                }}
+              >
+                {chips.map((c) => (
+                  <span
+                    key={c}
                     style={{
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                      color: MUTED,
-                      lineHeight: 1,
-                      padding: 2,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      fontSize: 11.5,
+                      padding: "3px 4px 3px 9px",
+                      borderRadius: 999,
+                      background: "var(--primitives-colors-background-100)",
+                      color: INK,
                     }}
                   >
-                    ✕
-                  </button>
-                </span>
-              ))}
-              <Popover open={pick} onOpenChange={setPick}>
-                <PopoverTrigger asChild>
-                  <button
-                    aria-label={`Add ${label}`}
-                    style={{
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                      color: "var(--primitives-colors-theme-700)",
-                      fontSize: 12,
-                      padding: "2px 4px",
-                    }}
-                  >
-                    + Add
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="start"
-                  style={{
-                    width: 260,
-                    padding: 4,
-                    maxHeight: 260,
-                    overflow: "auto",
-                  }}
-                >
-                  {def.options
-                    .filter((o) => !chips.includes(o))
-                    .map((o) => (
+                    {c}
+                    <button
+                      onClick={() => onChange(chips.filter((x) => x !== c))}
+                      aria-label={`Remove ${c}`}
+                      style={{
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        color: MUTED,
+                        lineHeight: 1,
+                        padding: 2,
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+                {def.options?.length ? (
+                  <Popover open={pick} onOpenChange={setPick}>
+                    <PopoverTrigger asChild>
                       <button
-                        key={o}
-                        onClick={() => {
-                          onChange(
-                            def.valueType === "enum" ? [o] : [...chips, o],
-                          );
-                          setPick(false);
-                        }}
+                        aria-label={`Add ${label}`}
                         style={{
-                          display: "block",
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "7px 10px",
                           border: "none",
                           background: "none",
                           cursor: "pointer",
-                          fontSize: 12.5,
-                          color: INK,
-                          borderRadius: 6,
+                          color: "var(--primitives-colors-theme-700)",
+                          fontSize: 12,
+                          padding: "2px 4px",
                         }}
                       >
-                        {o}
+                        + Add
                       </button>
-                    ))}
-                </PopoverContent>
-              </Popover>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="start"
+                      style={{
+                        width: 260,
+                        padding: 4,
+                        maxHeight: 260,
+                        overflow: "auto",
+                      }}
+                    >
+                      {def.options
+                        .filter((o) => !chips.includes(o))
+                        .map((o) => (
+                          <button
+                            key={o}
+                            onClick={() => {
+                              onChange([...chips, o]);
+                              setPick(false);
+                            }}
+                            style={{
+                              display: "block",
+                              width: "100%",
+                              textAlign: "left",
+                              padding: "7px 10px",
+                              border: "none",
+                              background: "none",
+                              cursor: "pointer",
+                              fontSize: 12.5,
+                              color: INK,
+                              borderRadius: 6,
+                            }}
+                          >
+                            {valueLabel(def.key, o)}
+                          </button>
+                        ))}
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  /**
+                   * 🔴 **`tags` and `keywords` publish NO list, and were falling through to a text
+                   * input** — which rendered the array itself, so the panel showed a field containing
+                   * the literal characters `[]`. They are `array / comboBox`: many values, typed
+                   * rather than chosen. Enter commits one, and the chips above are the same chips the
+                   * closed lists use.
+                   */
+                  <input
+                    value={typed}
+                    onChange={(e) => setTyped(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter") return;
+                      e.preventDefault();
+                      const v = typed.trim();
+                      // No duplicates, and no empty chip from a stray Enter.
+                      if (v && !chips.includes(v)) onChange([...chips, v]);
+                      setTyped("");
+                    }}
+                    onBlur={() => {
+                      const v = typed.trim();
+                      if (v && !chips.includes(v)) onChange([...chips, v]);
+                      setTyped("");
+                    }}
+                    aria-label={`Add ${label}`}
+                    placeholder={
+                      chips.length ? "Add another…" : "Type and press Enter"
+                    }
+                    style={{
+                      flex: 1,
+                      minWidth: 110,
+                      border: "none",
+                      outline: "none",
+                      background: "none",
+                      fontFamily: "inherit",
+                      fontSize: 12,
+                      color: INK,
+                      padding: "2px 4px",
+                    }}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        ) : (
-          <Input
-            label={label}
-            value={String(shown ?? "")}
-            onChange={(e) => onChange(e.target.value)}
-            type={def.valueType === "integer" ? "number" : "text"}
-            placeholder={
-              many
-                ? MULTI_LABEL
-                : def.valueType === "hyperlink"
-                  ? "https://"
-                  : undefined
-            }
-            aria-label={label}
-          />
-        )}
+          ) : (
+            <Input
+              value={String(shown ?? "")}
+              onChange={(e) => onChange(e.target.value)}
+              type={def.valueType === "integer" ? "number" : "text"}
+              placeholder={
+                many
+                  ? MULTI_LABEL
+                  : def.valueType === "hyperlink"
+                    ? "https://"
+                    : undefined
+              }
+              aria-label={label}
+            />
+          )}
+        </div>
+        {/* The dashboard's own affordance: a field you added is a field you can take away. */}
+        <IconButton
+          variant="ghost"
+          size="sm"
+          onClick={onRemove}
+          aria-label={`Remove ${label} field`}
+          title="Remove field"
+          /**
+           * ⚠️ **The glyph sat 30px inside the panel edge** (Olcay, 2026-09-09: *"bin icons could be
+           * further to the right side"*). `IconButton` is `h-11 w-11` at every size, so a 16px trash
+           * is centred in a 44px box and the 14px of padding either side reads as a gap between the
+           * field and its own control.
+           *
+           * The negative margin lets the 44px TARGET hang into the panel's 20px gutter while the
+           * glyph moves to the edge. Shrinking the button would have been the easy fix and the wrong
+           * one — it is the only way to remove a field, and a 24px target in a dense list is a miss
+           * waiting to happen.
+           */
+          style={{ flex: "0 0 auto", marginRight: -12 }}
+        >
+          <Icon name="trash-01" />
+        </IconButton>
       </div>
-      {/* The dashboard's own affordance: a field you added is a field you can take away. */}
-      <IconButton
-        variant="ghost"
-        size="sm"
-        onClick={onRemove}
-        aria-label={`Remove ${label} field`}
-        title="Remove field"
-        /**
-         * ⚠️ **The glyph sat 30px inside the panel edge** (Olcay, 2026-09-09: *"bin icons could be
-         * further to the right side"*). `IconButton` is `h-11 w-11` at every size, so a 16px trash
-         * is centred in a 44px box and the 14px of padding either side reads as a gap between the
-         * field and its own control.
-         *
-         * The negative margin lets the 44px TARGET hang into the panel's 20px gutter while the
-         * glyph moves to the edge. Shrinking the button would have been the easy fix and the wrong
-         * one — it is the only way to remove a field, and a 24px target in a dense list is a miss
-         * waiting to happen.
-         */
-        style={{ flex: "0 0 auto", marginTop: 18, marginRight: -12 }}
-      >
-        <Icon name="trash-01" />
-      </IconButton>
     </div>
   );
 }
@@ -1052,6 +1192,41 @@ export function FeaturePanel({
    * has, in the taxonomy's own order, with the system-written ones (`isAccessible`, `travelTime`)
    * excluded because a content editor does not set them.
    */
+  /**
+   * **The fields, grouped into the sections that earn one** (Olcay, 2026-09-09: *"Sections should
+   * look like PERSONA VISIBILITY for properties"*).
+   *
+   * This is candidate **B** from the Workbench, landing in the running panel. The rule is the one
+   * that block argued for, and it is a rule rather than a list because which fields a feature
+   * carries changes with the feature:
+   *
+   * ⚠️ **A heading is earned by grouping, not by existing.** The taxonomy has 31 segments and **23
+   * of them hold exactly one property**, so segmenting by segment alone gives a column of headings
+   * over single fields — five of which repeat the field's own name back at it (the heading CUISINES
+   * over a field labelled Cuisines). A segment gets a heading here only when **two or more** of its
+   * properties are actually present; the rest stay plain fields, which is what they already look
+   * like.
+   *
+   * Order is the taxonomy's `segmentRank`, and singles keep their place in it rather than being
+   * swept to the end — moving a field because its neighbours left is not something a person editing
+   * a form should have to follow.
+   */
+  const sections = useMemo(() => {
+    const rank = (k: string) => segmentRank(propertyDef(k).segment);
+    const ordered = [...fields].sort((a, b) => rank(a) - rank(b));
+    const out: { segment: string; heading: string | null; keys: string[] }[] =
+      [];
+    for (const k of ordered) {
+      const seg = propertyDef(k).segment;
+      const last = out[out.length - 1];
+      if (last && last.segment === seg) last.keys.push(k);
+      else out.push({ segment: seg, heading: null, keys: [k] });
+    }
+    for (const g of out)
+      g.heading = g.keys.length > 1 ? g.segment.toUpperCase() : null;
+    return out;
+  }, [fields]);
+
   const canAdd = useMemo(() => {
     /**
      * ⚠️ **`RESERVED` was not consulted here**, so the picker offered properties that already have
@@ -1714,21 +1889,28 @@ export function FeaturePanel({
               />
             </div>
 
-            {fields.map((k) => (
-              <PropertyField
-                key={k}
-                def={propertyDef(k)}
-                value={draft[k]}
-                onChange={(v) => setDraft((d) => ({ ...d, [k]: v }))}
-                onRemove={() => {
-                  setFields((f) => f.filter((x) => x !== k));
-                  setDraft((d) => {
-                    const n = { ...d };
-                    delete n[k];
-                    return n;
-                  });
-                }}
-              />
+            {sections.map((g) => (
+              <div key={g.segment}>
+                {/* Same mark as PERSONA VISIBILITY below — 10px, letter-spaced, muted, upper case
+                    — so the panel has one kind of section heading rather than two. */}
+                {g.heading && <SectionHeading>{g.heading}</SectionHeading>}
+                {g.keys.map((k) => (
+                  <PropertyField
+                    key={k}
+                    def={propertyDef(k)}
+                    value={draft[k]}
+                    onChange={(v) => setDraft((d) => ({ ...d, [k]: v }))}
+                    onRemove={() => {
+                      setFields((f) => f.filter((x) => x !== k));
+                      setDraft((d) => {
+                        const n = { ...d };
+                        delete n[k];
+                        return n;
+                      });
+                    }}
+                  />
+                ))}
+              </div>
             ))}
 
             <AddFieldPicker
