@@ -74,6 +74,14 @@ jobs:
       - name: Verify Elevation Parity
         run: pnpm tokens:elevation:check
 
+      # A ratchet over a known backlog rather than a pass mark. Every other
+      # parity check verifies a named list of consumers, which can only confirm
+      # what someone already looked at — elevation passed for two days while 44
+      # raw shadow classes sat in components it did not name. This one scans
+      # everything and fails when a count goes up.
+      - name: Verify No New Raw Values
+        run: pnpm tokens:raw:check
+
       # A stale stamp means the plugin source changed without the build id
       # following, and the id is the only way to tell which build produced what
       # is in the Figma file.
