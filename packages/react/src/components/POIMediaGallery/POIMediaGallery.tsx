@@ -77,7 +77,7 @@ const POIMediaGallery = React.forwardRef<HTMLElement, POIMediaGalleryProps>(
               <IconButton
                 aria-controls={galleryId}
                 aria-label={previousLabel}
-                className="bg-background shadow-sm ring-1 ring-border"
+                className="bg-background shadow-raised ring-1 ring-border"
                 disabled={currentIndex === 0}
                 onClick={() => selectIndex(currentIndex - 1)}
                 type="button"
@@ -87,7 +87,7 @@ const POIMediaGallery = React.forwardRef<HTMLElement, POIMediaGalleryProps>(
               <IconButton
                 aria-controls={galleryId}
                 aria-label={nextLabel}
-                className="bg-background shadow-sm ring-1 ring-border"
+                className="bg-background shadow-raised ring-1 ring-border"
                 disabled={currentIndex === media.length - 1}
                 onClick={() => selectIndex(currentIndex + 1)}
                 type="button"

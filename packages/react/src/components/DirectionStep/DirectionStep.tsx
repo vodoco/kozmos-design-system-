@@ -30,7 +30,7 @@ const DirectionStep = React.forwardRef<HTMLDivElement, DirectionStepProps>(
       <div
         ref={ref}
         className={cn(
-          "flex items-center p-3 bg-background border border-border rounded-container shadow-sm",
+          "flex items-center p-3 bg-background border border-border rounded-container shadow-raised",
           className,
         )}
         {...props}

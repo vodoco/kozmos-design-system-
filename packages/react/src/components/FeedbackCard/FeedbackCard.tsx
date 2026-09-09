@@ -41,7 +41,7 @@ const FeedbackCard = React.forwardRef<HTMLDivElement, FeedbackCardProps>(
       <div
         ref={ref}
         className={cn(
-          "bg-white/70 dark:bg-black/70 backdrop-blur-3xl ring-1 ring-black/5 dark:ring-white/10 shadow-2xl rounded-[var(--primitives-radius-2xl)] p-6 flex flex-col gap-4 transition-all duration-300",
+          "bg-white/70 dark:bg-black/70 backdrop-blur-3xl ring-1 ring-black/5 dark:ring-white/10 shadow-overlay rounded-[var(--primitives-radius-2xl)] p-6 flex flex-col gap-4 transition-all duration-300",
           className,
         )}
         {...props}

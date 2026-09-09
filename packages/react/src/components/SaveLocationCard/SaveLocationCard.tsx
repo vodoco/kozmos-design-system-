@@ -36,7 +36,7 @@ const SaveLocationCard = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "bg-white/70 dark:bg-black/70 backdrop-blur-3xl ring-1 ring-black/5 dark:ring-white/10 shadow-2xl rounded-[var(--primitives-radius-2xl)] p-5 flex flex-col gap-4 transition-all duration-300",
+          "bg-white/70 dark:bg-black/70 backdrop-blur-3xl ring-1 ring-black/5 dark:ring-white/10 shadow-overlay rounded-[var(--primitives-radius-2xl)] p-5 flex flex-col gap-4 transition-all duration-300",
           className,
         )}
         {...props}
@@ -45,7 +45,7 @@ const SaveLocationCard = React.forwardRef<
         <div className="flex items-center gap-4">
           <div
             className={cn(
-              "w-12 h-12 rounded-pill flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5 dark:ring-white/10",
+              "w-12 h-12 rounded-pill flex items-center justify-center shrink-0 shadow-raised ring-1 ring-black/5 dark:ring-white/10",
               isSaved
                 ? "bg-primary text-primary-foreground"
                 : "bg-white dark:bg-black/50 text-foreground",

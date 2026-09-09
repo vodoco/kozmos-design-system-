@@ -81,10 +81,10 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
         className={cn(
           "flex min-w-0 flex-col bg-background text-foreground",
           presentation === "inline" &&
-            "rounded-container border border-border shadow-lg",
+            "rounded-container border border-border shadow-overlay",
           presentation === "sheet" && "rounded-t-container",
           presentation === "panel" &&
-            "rounded-container border border-border shadow-xl",
+            "rounded-container border border-border shadow-overlay",
           className,
         )}
         data-presentation={presentation}
