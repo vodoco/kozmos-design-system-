@@ -1,12 +1,8 @@
 import { useState, useId } from "react";
 import {
   Combine,
-  Move,
   Redo,
   Reset,
-  Reshape,
-  Simplify,
-  Snap,
   Split,
   Straighten,
   Transform,
@@ -71,7 +67,7 @@ export interface GeomState {
    * editor has. There is nothing left for a Combine mode to do: the features are chosen before you
    * reach for it, so it is an act you perform on a selection — a button, like Straighten.
    */
-  mode?: "vertices" | "transform" | "split";
+  mode?: "vertices" | "transform" | "split" | "adjust";
   snap?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
@@ -137,7 +133,7 @@ export interface GeomState {
 }
 
 export type GeomCommand =
-  | { cmd: "mode"; mode: "vertices" | "transform" }
+  | { cmd: "mode"; mode: "vertices" | "transform" | "adjust" }
   | { cmd: "snap" }
   | { cmd: "undo" }
   | { cmd: "redo" }
@@ -345,8 +341,7 @@ function Sep() {
 }
 
 /**
- * A plain tool: press it, it happens. `on` is for the one that is a toggle (Snap) and the three
- * that are modes — a pressed tile is filled, because at this size an outline reads as a border
+ * A plain tool: press it, it happens. `on` is for the three tiles that are modes — a pressed tile is filled, because at this size an outline reads as a border
  * rather than as a state.
  */
 function Tile({
@@ -399,6 +394,7 @@ function Tile({
 export function GeometryToolbar({
   state,
   notice,
+  noticeBad = true,
   padLeft = 0,
   padRight = 0,
   onCommand,
@@ -406,17 +402,19 @@ export function GeometryToolbar({
   state: GeomState;
   /** The editor refusing something, in its own words. Transient — the app clears it. */
   notice?: string | null;
+  /** False for a hint — see the note where the two share this line. */
+  noticeBad?: boolean;
   /**
    * ⚠️ **Screen space the properties panel is covering on the right.**
    *
    * Measured in the real app 2026-08-15: the bar is 707px and was centred on the whole map, so
    * with the panel open at x=1068 on a 1440 viewport, **five of the twelve tools** — Straighten,
-   * Snap, Undo, Redo and Reset — sat underneath it. They were in the DOM and reachable by keyboard,
+   * Simplify, Undo, Redo and Reset — sat underneath it. They were in the DOM and reachable by keyboard,
    * and completely invisible to a mouse.
    *
    * It could only be this way round: the panel is only ever open when the toolbar is (selecting a
    * feature is edit mode), so the overlap is not an edge case — it is the *only* case. Centring on
-   * the map the user can actually see is the same correction `focusPadRight` already makes for the
+   * the map the user can actually see is the same correction `focusPadLeft` already makes for the
    * camera.
    */
   /**
@@ -476,7 +474,7 @@ export function GeometryToolbar({
    * comes last: it is a standing fact, not a prompt.
    */
   const caption = notice
-    ? { text: notice, bad: true }
+    ? { text: notice, bad: noticeBad }
     : state.mode === "split"
       ? {
           text: state.cutting
@@ -709,22 +707,27 @@ export function GeometryToolbar({
          * which is what actually says "this one is on", and did all along.
          */}
         {/**
-         * **A point opens in Move, and the bar says so** (Olcay, 2026-08-23). Until now a point
-         * showed no mode at all: the caption said "drag it to move it" and the bar looked inert,
-         * as though the feature could not be edited.
+         * **Every kind opens in ADJUST, and the bar says so** (Olcay, 2026-09-09: *"we should not
+         * have separate move button for map Content… Adjust enables all, and for Beacon variation
+         * instead of move 'adjust' should work fine"*).
          *
-         * The rule this completes: **every kind opens in its one editing mode, shown pressed** —
-         * an area and a network in Reshape, a point in Move. What differs is only how many modes
-         * the kind HAS, which is exactly what the group should be showing.
+         * ⚠️ **A point's tile used to be captioned "Move" — and fire `mode: "adjust"`.** There has
+         * never been a move MODE in this editor: moving is what dragging the FACE of an adjusted
+         * shape does, and for a point the face IS the point. So the label was the only thing that
+         * differed between a point's bar and an area's, and it differed from the thing it did.
+         *
+         * The rule this completes: **one name for direct manipulation, whatever the kind is.** What
+         * differs between kinds is what you can grab — an area's corners and box, a network's nodes,
+         * a point's single coordinate — not what the act is called.
          */}
         {isPoint && (
           <Group>
             <Tile
-              icon={<Move size={ICON_PX} />}
-              label="Move"
+              icon={<Transform size={ICON_PX} />}
+              label="Adjust"
               title="Drag the point to reposition it"
               on
-              onClick={() => onCommand({ cmd: "mode", mode: "vertices" })}
+              onClick={() => onCommand({ cmd: "mode", mode: "adjust" })}
             />
           </Group>
         )}
@@ -740,27 +743,27 @@ export function GeometryToolbar({
              *
              * Its two neighbours were already verbs, so it was also the odd one out in its own group.
              */}
-            <Tile
-              icon={<Reshape size={ICON_PX} />}
-              label="Reshape"
-              title="Drag a corner to move it · click a midpoint to add one · Alt-click to remove"
-              on={state.mode === "vertices"}
-              onClick={() => onCommand({ cmd: "mode", mode: "vertices" })}
-            />
             {/**
-             * **Move → Transform** (Olcay, 2026-08-16). The mode moves, rotates AND scales the
-             * whole shape — it has done since the handles replaced the stepped buttons — so "Move"
-             * had become the name of just one of the three things it does.
+             * **Reshape + Transform are one tool, "Adjust"** (Olcay, 2026-09-08). They were two
+             * modes you switched between; both are direct manipulation of the same selected shape,
+             * and the switch was a step the user had to take before every gesture.
+             *
+             * ⚠️ **Not "Edit"** — you already pressed Edit to get here, so a tile of that name reads
+             * as a button that does nothing. And not "Select" for the same reason. "Adjust" names
+             * what separates this tile from its neighbours: Split, Cut-out, Combine, Straighten and
+             * Simplify all COMPUTE a result; this is the one you do by hand.
+             *
+             * ⚠️ The glyph is Transform's for now — a square with corner marks, which is the closest
+             * the library has to "handles on a shape". A near-match is not a match: an `adjust` mark
+             * is owed (see ⑦'s icon rule).
              */}
-            {ringTools && (
-              <Tile
-                icon={<Transform size={ICON_PX} />}
-                label="Transform"
-                title="Drag to move · corners scale · the knob rotates · Shift or ⌥ snaps to 5° and 5%"
-                on={state.mode === "transform"}
-                onClick={() => onCommand({ cmd: "mode", mode: "transform" })}
-              />
-            )}
+            <Tile
+              icon={<Transform size={ICON_PX} />}
+              label="Adjust"
+              title="Drag a corner to move it · click a midpoint to add one · box corners scale, the knob rotates"
+              on={state.mode === "adjust"}
+              onClick={() => onCommand({ cmd: "mode", mode: "adjust" })}
+            />
           </Group>
         )}
 
@@ -813,46 +816,26 @@ export function GeometryToolbar({
                 onClick={() => onCommand({ cmd: "combine" })}
               />
             </WhyTip>
+            {/*
+              **Straighten sits with the shape operations** (Olcay, 2026-09-08). It used to have a
+              group of its own with Simplify, and a separator between them — one more rule on a bar
+              that is being cut down, dividing four operations from a fifth that is the same kind of
+              act: pick it, it changes this shape.
+
+              ⚠️ **Simplify is gone** — out of scope for this phase. `cmd: "simplify"` and
+              `geomSimplify` survive in the map page, so nothing is lost if it comes back; only the
+              tile has been taken off the bar.
+            */}
+            {ringTools && (
+              <Tile
+                icon={<Straighten size={ICON_PX} />}
+                label="Straighten"
+                title="Square the shape onto its own grid — near-right-angle corners become right angles, genuine diagonals are left alone"
+                onClick={() => onCommand({ cmd: "square" })}
+              />
+            )}
           </Group>
         )}
-
-        {/* ⚠️ Gated on `ringTools`, not `!isPoint`, because the group ABOVE it is too: leave it on
-            `!isPoint` and a network draws this separator immediately after the one before it, with
-            nothing in between for either of them to divide. */}
-        {ringTools && <Sep />}
-
-        <Group>
-          {/* Straighten and Simplify need corners to drop; neither a point nor a network has any.
-              Snap survives both, because a node or a point dragged onto the corner of a room is
-              exactly when you want it. */}
-          {ringTools && (
-            <Tile
-              icon={<Straighten size={ICON_PX} />}
-              label="Straighten"
-              title="Square the shape onto its own grid — near-right-angle corners become right angles, genuine diagonals are left alone"
-              onClick={() => onCommand({ cmd: "square" })}
-            />
-          )}
-          {ringTools && (
-            <Tile
-              icon={<Simplify size={ICON_PX} />}
-              label="Simplify"
-              title="Drop corners that already sit on the line between their neighbours"
-              onClick={() => onCommand({ cmd: "simplify" })}
-            />
-          )}
-          <Tile
-            icon={<Snap size={ICON_PX} />}
-            label="Snap"
-            title={
-              isPoint
-                ? "Snap this point to nearby corners of other features"
-                : "Snap points to nearby corners of other features"
-            }
-            on={!!state.snap}
-            onClick={() => onCommand({ cmd: "snap" })}
-          />
-        </Group>
 
         <Sep />
 

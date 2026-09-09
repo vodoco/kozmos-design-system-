@@ -28,34 +28,45 @@ export function LevelSelector({
   buildingId,
   levelIndex,
   onChange,
-  offsetRight = 0,
+  offsetLeft = 0,
 }: {
   buildings: MapBuilding[];
   buildingId: string;
   levelIndex: number;
   onChange: (buildingId: string, levelIndex: number) => void;
   /**
-   * Width taken out of the map on the right — the POI panel, when it is open (§19). The selector
-   * re-centres on the map you can still SEE, for the same reason the focused feature does: at
-   * 1280px the map pane is 744px wide, so a 340px panel and a centred 268px selector overlap by
-   * 114px. Centring in the free space is not a nudge to dodge a collision; it is the selector
-   * continuing to mean "the middle of the map".
+   * Width taken out of the map on the LEFT — the properties panel, when it is open (§19). The
+   * selector re-centres on the map you can still SEE, for the same reason the focused feature
+   * does: at 1280px the map pane is 744px wide, so a 360px panel and a centred 268px selector
+   * overlap by 114px. Centring in the free space is not a nudge to dodge a collision; it is the
+   * selector continuing to mean "the middle of the map".
+   *
+   * ⚠️ It was `offsetRight` until the panel moved to the left, and the SIGN flips with it — the
+   * selector now shifts right by half the panel, not left.
    */
-  offsetRight?: number;
+  offsetLeft?: number;
 }) {
   const [open, setOpen] = useState(false);
-  const i = Math.max(0, buildings.findIndex((b) => b.id === buildingId));
+  const i = Math.max(
+    0,
+    buildings.findIndex((b) => b.id === buildingId),
+  );
   const building = buildings[i];
   if (!building) return null;
-  const level = building.levels.find((l) => l.index === levelIndex) ?? building.levels[0];
+  const level =
+    building.levels.find((l) => l.index === levelIndex) ?? building.levels[0];
 
   // Stepping to another building lands on its nearest level to the one you were on, so you keep
   // your place vertically instead of being dumped on the ground floor.
   const step = (by: number) => {
     const next = buildings[(i + by + buildings.length) % buildings.length];
-    const nearest = next.levels.reduce((best, l) =>
-      Math.abs(l.index - levelIndex) < Math.abs(best.index - levelIndex) ? l : best,
-    next.levels[0]);
+    const nearest = next.levels.reduce(
+      (best, l) =>
+        Math.abs(l.index - levelIndex) < Math.abs(best.index - levelIndex)
+          ? l
+          : best,
+      next.levels[0],
+    );
     setOpen(false);
     onChange(next.id, nearest.index);
   };
@@ -66,7 +77,7 @@ export function LevelSelector({
         position: "absolute",
         top: 16,
         left: "50%",
-        transform: `translateX(calc(-50% - ${offsetRight / 2}px))`,
+        transform: `translateX(calc(-50% + ${offsetLeft / 2}px))`,
         transition: "transform .18s ease",
         width: 268,
         background: "#fff",
@@ -77,21 +88,43 @@ export function LevelSelector({
         zIndex: 4,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", padding: "8px 10px" }}>
+      <div
+        style={{ display: "flex", alignItems: "center", padding: "8px 10px" }}
+      >
         <button
           onClick={() => step(-1)}
           aria-label="Previous building"
-          style={{ background: "none", border: "none", cursor: "pointer", color: "#5d626f", display: "grid" }}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#5d626f",
+            display: "grid",
+          }}
         >
           <Icon name="arrow-left" />
         </button>
-        <div style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600, color: INK }}>
+        <div
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 14,
+            fontWeight: 600,
+            color: INK,
+          }}
+        >
           {building.name}
         </div>
         <button
           onClick={() => step(1)}
           aria-label="Next building"
-          style={{ background: "none", border: "none", cursor: "pointer", color: "#5d626f", display: "grid" }}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#5d626f",
+            display: "grid",
+          }}
         >
           <Icon name="arrow-right" />
         </button>
@@ -101,8 +134,14 @@ export function LevelSelector({
         building.levels.map((l) => (
           <button
             key={l.index}
-            onClick={() => { setOpen(false); onChange(building.id, l.index); }}
-            style={{ ...ROW, background: l.index === level.index ? "#eceef1" : "none" }}
+            onClick={() => {
+              setOpen(false);
+              onChange(building.id, l.index);
+            }}
+            style={{
+              ...ROW,
+              background: l.index === level.index ? "#eceef1" : "none",
+            }}
           >
             {l.long} ({l.short})
           </button>
@@ -111,7 +150,13 @@ export function LevelSelector({
         <button
           onClick={() => setOpen(true)}
           aria-expanded={false}
-          style={{ ...ROW, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+          style={{
+            ...ROW,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+          }}
         >
           <span style={{ flex: 1, textAlign: "center" }}>
             {level.long} ({level.short})

@@ -19,6 +19,7 @@ import {
   Text,
 } from "@kozmos/react";
 import { PanelHeader, PANEL_PAD } from "./PanelHeader";
+import { PersonaVisibility } from "./PersonaVisibility";
 import {
   CLASS_LABEL,
   categoryLabel,
@@ -35,16 +36,17 @@ import {
   segmentRank,
   toArray,
   type PropertyDef,
+  EDITABLE_PROPERTIES,
 } from "../mock/properties";
 
 /**
  * The POI properties panel (§19) — what a selected feature *is*, and now what it can be *made* to
  * be.
  *
- * **Floating over the map's right edge, not a third column** (Olcay, 2026-08-12: *"floating panel
- * on the map's right, don't resize map but center — offset the key element on the map"*). The map
- * keeps its width and the *camera* makes room: `focusPadRight` frames the feature in the part of
- * the map the panel doesn't cover.
+ * **Floating over the map's LEFT edge, not a third column** (Olcay: *"floating panel … don't
+ * resize map but center — offset the key element on the map"*, then *"I want it on the left side
+ * floating"*). The map keeps its width and the *camera* makes room: `focusPadLeft` frames the
+ * feature in the part of the map the panel doesn't cover.
  *
  * **Two modes, deliberately modelled on two different real screens** (Olcay, 2026-08-12, with the
  * dashboard's *Editing Map Content* panel and the SDK's POI-card contract attached — *"all
@@ -574,8 +576,16 @@ function AddFieldPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const match = (k: string) =>
-    !q || propertyLabel(k).toLowerCase().includes(q.toLowerCase());
+  // Matched on the printed name AND the raw key — a developer types `phoneNumber`, a content
+  // editor types "phone", and both should land on the same row.
+  const match = (k: string) => {
+    if (!q) return true;
+    const needle = q.toLowerCase();
+    return (
+      propertyLabel(k).toLowerCase().includes(needle) ||
+      k.toLowerCase().includes(needle)
+    );
+  };
   const s = suggested.filter(match);
   const o = others.filter(match);
 
@@ -737,6 +747,12 @@ export function FeaturePanel({
     name: string;
     typeLabel: string;
     /**
+     * This feature's OWN `mapPersonas`. The merged bag cannot carry it: persona visibility
+     * disagrees per persona, not per field, so the control needs each feature's list to know
+     * which of the six are indeterminate.
+     */
+    mapPersonas?: unknown;
+    /**
      * What happened to this row (Olcay, 2026-08-16: *"we should update the selected items section
      * for combination results - what's joined for what's removed"*).
      *
@@ -766,7 +782,16 @@ export function FeaturePanel({
    * feature. `removed` is the fields binned, which cannot be inferred from `next` for the same
    * reason: absent means "leave alone", and only this says "take it away".
    */
-  onEdited?: (next: Record<string, unknown>, removed?: string[]) => void;
+  onEdited?: (
+    next: Record<string, unknown>,
+    removed?: string[],
+    /**
+     * Persona decisions, applied per feature rather than merged into `next`. A persona left
+     * indeterminate is in neither list and is therefore untouched — which is the only way to say
+     * "leave this one as it is" across features that disagree (US4).
+     */
+    personaEdits?: Record<string, boolean>,
+  ) => void;
   /**
    * Update finished — the panel is done and the screen should close it. Separate from `onEdited`
    * because they answer different questions: `onEdited` is *what changed*, and every surface that
@@ -855,6 +880,8 @@ export function FeaturePanel({
   /** The list of what is selected, collapsed by default — a count you can check when you want to. */
   const [listOpen, setListOpen] = useState(false);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
+  /** Personas the user has explicitly decided this session. Absent = leave alone. */
+  const [personaEdits, setPersonaEdits] = useState<Record<string, boolean>>({});
   /** Which optional properties the editor is showing — those with values, plus what you add. */
   const [fields, setFields] = useState<string[]>([]);
 
@@ -879,6 +906,7 @@ export function FeaturePanel({
   useEffect(() => {
     setEditing(true);
     setDraft({ ...p });
+    setPersonaEdits({});
     setFields(Object.keys(p).filter((k) => !RESERVED.has(k)));
     // Keyed on the seed alone: re-seeding on every property change would wipe a half-typed
     // edit. (No eslint-disable — this config has no `react-hooks/exhaustive-deps` rule, so
@@ -902,8 +930,8 @@ export function FeaturePanel({
     const keys = new Set([...Object.keys(p), ...Object.keys(draft)]);
     for (const k of keys)
       if (JSON.stringify(p[k]) !== JSON.stringify(draft[k])) return true;
-    return false;
-  }, [p, draft, fields]);
+    return Object.keys(personaEdits).length > 0;
+  }, [p, draft, fields, personaEdits]);
   /**
    * The SHAPE counts as an edit too. Geometry lives on the map, but it is the same edit session, so
    * dragging a corner must light Update exactly as typing a name does — otherwise the only way to
@@ -931,18 +959,22 @@ export function FeaturePanel({
       ? [subType]
       : [];
 
-  /** Not-yet-added properties, split the way the picker shows them. */
+  /**
+   * Not-yet-added properties, split the way the picker shows them.
+   *
+   * ⚠️ **`others` was a hard-coded list of six** — description, websiteUrl, hasAssistance,
+   * serviceTypes, openingHours, priceRange — out of the sixty the taxonomy publishes. So a room
+   * could never be given a capacity, a restaurant could never be given its cuisines, and the picker
+   * quietly implied those properties did not exist. It is now every editable property the taxonomy
+   * has, in the taxonomy's own order, with the system-written ones (`isAccessible`, `travelTime`)
+   * excluded because a content editor does not set them.
+   */
   const canAdd = useMemo(() => {
     const have = new Set(fields);
     const sug = (suggested ?? []).filter((k) => !have.has(k));
-    const others = [
-      "description",
-      "websiteUrl",
-      "hasAssistance",
-      "serviceTypes",
-      "openingHours",
-      "priceRange",
-    ].filter((k) => !have.has(k) && !sug.includes(k));
+    const others = EDITABLE_PROPERTIES.map((d) => d.key).filter(
+      (k) => !have.has(k) && !sug.includes(k),
+    );
     return { sug, others };
   }, [fields, suggested]);
 
@@ -1017,7 +1049,11 @@ export function FeaturePanel({
     const removed = Object.keys(p).filter(
       (k) => !RESERVED.has(k) && !fields.includes(k),
     );
-    onEdited?.(next, removed);
+    onEdited?.(
+      next,
+      removed,
+      Object.keys(personaEdits).length ? personaEdits : undefined,
+    );
     /**
      * What the confirmation calls this. With several selected the name is either shared or a
      * sentinel, and neither is worth announcing — the count is what happened.
@@ -1046,7 +1082,7 @@ export function FeaturePanel({
       style={{
         position: "absolute",
         top: PANEL_INSET,
-        right: PANEL_INSET,
+        left: PANEL_INSET,
         bottom: PANEL_INSET,
         width: FEATURE_PANEL_WIDTH,
         display: "flex",
@@ -1573,6 +1609,16 @@ export function FeaturePanel({
                   [k]: propertyDef(k).valueType === "boolean" ? false : "",
                 }));
               }}
+            />
+
+            <PersonaVisibility
+              features={
+                liveRows.length
+                  ? liveRows.map((r) => ({ mapPersonas: r.mapPersonas }))
+                  : [{ mapPersonas: p.mapPersonas }]
+              }
+              edits={personaEdits}
+              onEdit={setPersonaEdits}
             />
 
             <Text

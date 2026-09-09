@@ -276,6 +276,12 @@ const PointrMap = forwardRef<
        * of what the shape now covers, not a list of things that have gone.
        */
       absorbed?: string[],
+      /**
+       * **The rest of the selection, and its geometry too.** Since 2026-09-08 a transform and a
+       * corner drag both act on every selected feature, so a commit is a change to all of them —
+       * reporting only the primary's rings would under-report what the user just did.
+       */
+      also?: { fid: string; rings: number[][][] }[],
     ) => void;
     /**
      * ⚠️ **The editor says the edit now belongs to a DIFFERENT feature.**
@@ -300,11 +306,17 @@ const PointrMap = forwardRef<
      */
     onGeomError?: (fid: string, message: string) => void;
     /**
-     * Screen space to keep clear on the RIGHT when framing a focused feature — the panel's own
+     * **How to use the editor that has just opened.** A hint, not a refusal — and a separate
+     * channel for exactly that reason: the notice line is drawn red for a refusal, and an
+     * instruction coloured like a refusal is one people learn to dismiss.
+     */
+    onGeomHint?: (fid: string, message: string) => void;
+    /**
+     * Screen space to keep clear on the LEFT when framing a focused feature — the panel's own
      * width. The map is not resized; the feature is simply framed in the part of it you can still
      * see.
      */
-    focusPadRight?: number;
+    focusPadLeft?: number;
   }
 >(function PointrMap(
   {
@@ -337,7 +349,8 @@ const PointrMap = forwardRef<
     onGeomIdentity,
     onSelectClear,
     onGeomError,
-    focusPadRight,
+    onGeomHint,
+    focusPadLeft,
     section = "content",
     target,
   },
@@ -359,7 +372,7 @@ const PointrMap = forwardRef<
     active,
     dropOn: !!onFileDrop,
     canDecide: !!onDecision,
-    focusPadRight,
+    focusPadLeft,
     section,
   });
   latest.current = {
@@ -369,7 +382,7 @@ const PointrMap = forwardRef<
     active,
     dropOn: !!onFileDrop,
     canDecide: !!onDecision,
-    focusPadRight,
+    focusPadLeft,
     section,
   };
 
@@ -385,7 +398,7 @@ const PointrMap = forwardRef<
         {
           type: "focusfeature",
           fid: focusFeature,
-          padRight: latest.current.focusPadRight ?? 0,
+          padLeft: latest.current.focusPadLeft ?? 0,
         },
         "*",
       );
@@ -595,7 +608,7 @@ const PointrMap = forwardRef<
         {
           type: "active",
           id: latest.current.active,
-          padRight: latest.current.focusPadRight ?? 0,
+          padLeft: latest.current.focusPadLeft ?? 0,
         },
         "*",
       );
@@ -625,6 +638,14 @@ const PointrMap = forwardRef<
             Number(ev.data.pieces) || 1,
             ev.data.point ?? null,
             Array.isArray(ev.data.absorbed) ? ev.data.absorbed.map(String) : [],
+            Array.isArray(ev.data.also)
+              ? ev.data.also.map(
+                  (a: { fid: unknown; rings: number[][][] }) => ({
+                    fid: String(a.fid),
+                    rings: a.rings ?? [],
+                  }),
+                )
+              : [],
           );
       } else if (ev.data.type === "geomidentity") {
         // `props` is required, not optional: the shell refuses to send an identity it cannot also
@@ -667,6 +688,9 @@ const PointrMap = forwardRef<
       } else if (ev.data.type === "geomerror") {
         if (ev.source === ref.current?.contentWindow && ev.data.message)
           onGeomError?.(String(ev.data.fid ?? ""), String(ev.data.message));
+      } else if (ev.data.type === "geomhint") {
+        if (ev.source === ref.current?.contentWindow && ev.data.message)
+          onGeomHint?.(String(ev.data.fid ?? ""), String(ev.data.message));
       } else if (ev.data.type === "cursor") {
         if (
           ev.source === ref.current?.contentWindow &&
@@ -760,7 +784,7 @@ const PointrMap = forwardRef<
        * focuses through `focusChange`, which is a different function from `focusFeature` and had
        * no padding parameter at all — so a feature the camera centred landed behind an open panel.
        */
-      { type: "active", id: active ?? null, padRight: focusPadRight ?? 0 },
+      { type: "active", id: active ?? null, padLeft: focusPadLeft ?? 0 },
       "*",
     );
   }, [active]);

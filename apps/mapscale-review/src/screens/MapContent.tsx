@@ -59,10 +59,13 @@ import {
   type Change,
 } from "../mock/diff";
 import { PANEL_WIDTH } from "../ui/Chrome";
+/** The width the content list keeps when collapsed — enough for its own expand control. */
+const LIST_RAIL = 44;
 import { MapSettings, type MapPrefsState } from "../ui/MapSettings";
 import { LevelSelector } from "../ui/LevelSelector";
 import { levelGeometry, type LevelGeometry } from "../cloud/levelFeatures";
 import { levelPaths, type PathNode } from "../cloud/levelPaths";
+import { applyPersonaEdits } from "../mock/personas";
 import {
   FeaturePanel,
   FEATURE_PANEL_WIDTH,
@@ -89,6 +92,7 @@ import {
   typeLabel,
   type LevelTypeCount,
   type SpriteSheet,
+  subTypesOf,
 } from "../mock/taxonomy";
 
 /**
@@ -2167,6 +2171,7 @@ export function MapContent({
       pieces: number,
       point?: [number, number] | null,
       absorbed?: string[],
+      also?: { fid: string; rings: number[][][] }[],
     ) => {
       console.info(
         "[geometry] edited",
@@ -2181,6 +2186,17 @@ export function MapContent({
         // rows in the tree. Saying "absorbed" rather than "removed" is the whole of the honesty
         // available here; a real merge needs a write path this prototype does not have.
         absorbed?.length ? `· absorbed ${absorbed.join(", ")}` : "",
+        /**
+         * ⚠️ **The rest of the selection is part of this edit, not a footnote to it.** Transform
+         * and Adjust both act on every selected feature now, so a commit that mentioned only the
+         * primary would be a false record of what changed — and this log is the only record the
+         * prototype keeps.
+         */
+        also?.length
+          ? `· and ${also.length} more: ${also
+              .map((a) => `${a.fid} (${a.rings.length} ring(s))`)
+              .join(", ")}`
+          : "",
       );
     },
     [],
@@ -2259,8 +2275,20 @@ export function MapContent({
    * the message is an instruction — "move it a little and try again" is useless in a console.
    */
   const [geomNotice, setGeomNotice] = useState<string | null>(null);
+  /**
+   * ⚠️ **A refusal and an instruction share the line but not the colour.** Both land above the
+   * toolbar and both fade, so they need one slot — but a hint drawn in the refusal's red teaches
+   * people that red means nothing, which costs the refusals their only advantage.
+   */
+  const [geomNoticeBad, setGeomNoticeBad] = useState(true);
   const onGeomError = useCallback((_fid: string, message: string) => {
     setGeomNotice(message);
+    setGeomNoticeBad(true);
+  }, []);
+  /** How to use the editor that just opened — see `geomBegin` in the map shell. */
+  const onGeomHint = useCallback((_fid: string, message: string) => {
+    setGeomNotice(message);
+    setGeomNoticeBad(false);
   }, []);
   useEffect(() => {
     if (!geomNotice) return;
@@ -2290,7 +2318,13 @@ export function MapContent({
    */
   useEffect(() => {
     const fid = shownProps ? String(props?.fid ?? "") : "";
-    if (fid) sendGeom({ cmd: "begin", fid });
+    /**
+     * ⚠️ **The rest of the selection travels with it.** The editor holds one feature's rings and
+     * the others' too, so a transform turns the whole selection about one centre and every one of
+     * them carries its own corner handles (US4). Resolved map-side from the fids — the app has
+     * never held these rings.
+     */
+    if (fid) sendGeom({ cmd: "begin", fid, alsoFids: alsoRef.current });
     else sendGeom({ cmd: "end", commit: false });
   }, [shownProps, props?.fid, sendGeom]);
 
@@ -2356,6 +2390,8 @@ export function MapContent({
       fid: String(b.fid ?? ""),
       name: String(b.name ?? ""),
       typeLabel: typeLabel(String(b.subType ?? "") || String(b.mainType ?? "")),
+      // Its OWN list, not the merged bag — the persona control needs to see the disagreement.
+      mapPersonas: b.mapPersonas,
       fate: undefined as "joined" | "removed" | undefined,
     }));
     const shown = new Set(rows.map((r) => r.fid));
@@ -2369,6 +2405,7 @@ export function MapContent({
         typeLabel: typeLabel(
           String(bag.subType ?? "") || String(bag.mainType ?? ""),
         ),
+        mapPersonas: bag.mapPersonas,
         fate: "joined",
       });
     }
@@ -2376,6 +2413,8 @@ export function MapContent({
       if (shown.has(r.fid)) continue;
       shown.add(r.fid);
       rows.push({
+        // A removed feature is off the map, so it has no persona visibility to offer.
+        mapPersonas: undefined,
         fid: r.fid,
         name: r.name,
         typeLabel: r.type,
@@ -2443,30 +2482,36 @@ export function MapContent({
    */
 
   /**
-   * Which subTypes this feature's mainType offers — taken from **the floor's own types**, so the
-   * list can't drift from the taxonomy the rest of the screen is drawn from. A type the floor
-   * doesn't have yet is not offered, which is the honest limit of reading options off the content
-   * rather than off the taxonomy service.
+   * **Every subType the taxonomy publishes for this feature's mainType.**
+   *
+   * ⚠️ **This used to read the FLOOR's own types** — the subTypes already present on the level —
+   * which meant a `section` on a floor with no other sections offered nothing at all, and the
+   * picker showed "—" (Olcay's screenshot, 2026-09-08). A content editor cannot classify a feature
+   * from a list of what is already classified; that is the one job the taxonomy exists for.
+   *
+   * The feature's own subType is still added if the taxonomy somehow does not carry it, so a
+   * feature can never be looking at a list that excludes what it currently is.
    */
   const subTypeOptions = useMemo(() => {
-    if (!shownProps || !target) return [];
-    const rows = typesByLevel[`${target.building}:${target.level}`] ?? [];
+    if (!shownProps) return [];
     const mine = String(shownProps.mainType ?? "");
-    const set = new Set(
-      rows
-        .filter((r) => r.mainType === mine && r.subType)
-        .map((r) => r.subType!),
-    );
-    if (shownProps.subType) set.add(String(shownProps.subType));
-    return [...set].sort();
-  }, [shownProps, target, typesByLevel]);
+    const fromTaxonomy = subTypesOf(mine).map((t) => t.subType!);
+    const own = shownProps.subType ? String(shownProps.subType) : null;
+    return own && !fromTaxonomy.includes(own)
+      ? [...fromTaxonomy, own]
+      : fromTaxonomy;
+  }, [shownProps]);
   /**
    * Saving an edit. Two consequences, and the second is the ruled one:
    * the panel shows the new values (via `edits`, which every surface reads), and **the flag clears**
    * — §18a, implicit on edit.
    */
   const onEdited = useCallback(
-    (next: Record<string, unknown>, removed?: string[]) => {
+    (
+      next: Record<string, unknown>,
+      removed?: string[],
+      personaEdits?: Record<string, boolean>,
+    ) => {
       if (!focused || !target) return;
       /**
        * ⚠️ **A multi-edit MERGES; a single edit REPLACES.** They cannot share one rule.
@@ -2479,8 +2524,24 @@ export function MapContent({
        * is missing.
        */
       const alsoFids = alsoRef.current;
+      /**
+       * Persona decisions are applied to each feature's OWN list rather than merged into `next` —
+       * a persona left indeterminate is in neither list, so it is untouched, which is the only way
+       * to say "leave this one alone" across features that disagree (US4).
+       */
+      const withPersonas = (fid: string, bag: Record<string, unknown>) =>
+        personaEdits
+          ? {
+              ...bag,
+              mapPersonas: applyPersonaEdits(
+                (propsOfRef.current[fid] ?? {}).mapPersonas,
+                personaEdits,
+              ),
+            }
+          : bag;
       setEdits((cur) => {
-        if (!alsoFids.length) return { ...cur, [focused.fid]: next };
+        if (!alsoFids.length)
+          return { ...cur, [focused.fid]: withPersonas(focused.fid, next) };
         const out = { ...cur };
         for (const fid of [focused.fid, ...alsoFids]) {
           const base = {
@@ -2488,7 +2549,7 @@ export function MapContent({
             ...(cur[fid] ?? {}),
           };
           for (const k of removed ?? []) delete base[k as keyof typeof base];
-          out[fid] = { ...base, ...next };
+          out[fid] = withPersonas(fid, { ...base, ...next });
         }
         return out;
       });
@@ -2715,9 +2776,16 @@ export function MapContent({
       */}
         <div
           style={{
-            width: listOpen ? PANEL_WIDTH : 0,
-            flex: `0 0 ${listOpen ? PANEL_WIDTH : 0}px`,
-            borderRight: listOpen ? `1px solid ${LINE}` : "none",
+            /**
+             * **Collapsed is a slim rail, not nothing** (Olcay, 2026-09-08). Collapsing to zero
+             * left the expand control with nowhere to live: it became a tab floating on the map,
+             * and once the properties panel took the map's left edge it ended up mid-air beside the
+             * panel, attached to neither. A 44px rail keeps the column — and therefore the control —
+             * exactly where the list was, so expanding it is the same gesture in the same place.
+             */
+            width: listOpen ? PANEL_WIDTH : LIST_RAIL,
+            flex: `0 0 ${listOpen ? PANEL_WIDTH : LIST_RAIL}px`,
+            borderRight: `1px solid ${LINE}`,
             background: "#fff",
             display: "flex",
             flexDirection: "column",
@@ -2726,84 +2794,148 @@ export function MapContent({
             transition: "width .16s ease, flex-basis .16s ease",
           }}
         >
-          <div style={{ padding: "16px 16px 12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Text style={{ fontSize: 18, fontWeight: 600, color: INK }}>
-                Map Content
-              </Text>
-              <span
-                style={{ color: MUTED, display: "grid", placeItems: "center" }}
-              >
-                <Icon name="info-circle" />
-              </span>
-              <span style={{ flex: 1 }} />
-              <AddNewMenu onAddBuilding={onAddBuilding} />
-            </div>
-            <Text style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>
-              You are viewing buildings for{" "}
-              <b style={{ color: "var(--review-ink)" }}>
-                Dubai International Airports
-              </b>
-            </Text>
-            <div style={{ marginTop: 12 }}>
-              <Input placeholder="Search" aria-label="Search map content" />
-            </div>
-            <Text style={{ fontSize: 12, color: MUTED, marginTop: 8 }}>
-              316 Map Content found.
-            </Text>
-          </div>
-
-          <div
-            data-tour="tree"
-            style={{
-              overflow: "auto",
-              flex: 1,
-              borderTop: `1px solid ${LINE}`,
-            }}
-          >
-            <div
+          {!listOpen && (
+            <button
+              type="button"
+              onClick={toggleList}
+              aria-expanded={false}
+              aria-label="Show the content list"
+              title="Show the list"
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: `10px 12px 10px ${indent(0)}px`,
-                borderBottom: `1px solid ${LINE}`,
+                margin: "16px auto",
+                width: 28,
+                height: 28,
+                display: "grid",
+                placeItems: "center",
+                padding: 0,
+                cursor: "pointer",
+                border: `1px solid ${LINE}`,
+                borderRadius: 8,
+                background: "#fff",
+                color: MUTED,
+                flex: "0 0 auto",
               }}
             >
-              <Chevron open={false} />
-              <span
-                style={{ color: MUTED, display: "grid", placeItems: "center" }}
+              <ChevronRight size={14} />
+            </button>
+          )}
+          {listOpen && (
+            <>
+              <div style={{ padding: "16px 16px 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Text style={{ fontSize: 18, fontWeight: 600, color: INK }}>
+                    Map Content
+                  </Text>
+                  <span
+                    style={{
+                      color: MUTED,
+                      display: "grid",
+                      placeItems: "center",
+                    }}
+                  >
+                    <Icon name="info-circle" />
+                  </span>
+                  <span style={{ flex: 1 }} />
+                  <AddNewMenu onAddBuilding={onAddBuilding} />
+                  {/*
+                The collapse control sits with the list's own actions rather than as a tab floating
+                on the map, because it acts on the LIST — putting it on the map made it read as map
+                chrome. Its counterpart at the map's edge survives for the collapsed state alone:
+                once the list is gone, so is its header, and the control has to be somewhere.
+              */}
+                  <button
+                    type="button"
+                    onClick={toggleList}
+                    aria-expanded={listOpen}
+                    aria-label="Hide the content list"
+                    title="Hide the list"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      display: "grid",
+                      placeItems: "center",
+                      padding: 0,
+                      cursor: "pointer",
+                      border: `1px solid ${LINE}`,
+                      borderRadius: 8,
+                      background: "#fff",
+                      color: MUTED,
+                    }}
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                </div>
+                <Text style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>
+                  You are viewing buildings for{" "}
+                  <b style={{ color: "var(--review-ink)" }}>
+                    Dubai International Airports
+                  </b>
+                </Text>
+                <div style={{ marginTop: 12 }}>
+                  <Input placeholder="Search" aria-label="Search map content" />
+                </div>
+                <Text style={{ fontSize: 12, color: MUTED, marginTop: 8 }}>
+                  316 Map Content found.
+                </Text>
+              </div>
+
+              <div
+                data-tour="tree"
+                style={{
+                  overflow: "auto",
+                  flex: 1,
+                  borderTop: `1px solid ${LINE}`,
+                }}
               >
-                <Icon name="map-01" />
-              </span>
-              <span style={{ fontSize: 13, color: "var(--review-ink)" }}>
-                {OUTDOOR.name}
-              </span>
-              <Count n={OUTDOOR.count} />
-            </div>
-            {tree.map((b) => (
-              <BuildingRow
-                key={b.id}
-                building={b}
-                open={openBuildings.has(b.id)}
-                onToggle={() => toggleBuilding(b.id)}
-                onEdit={onEditLevel}
-                onReview={onReviewLevel}
-                onUpdate={onUpdateLevel}
-                onEditBuilding={(bb) =>
-                  onEditBuilding({
-                    id: bb.id,
-                    name: bb.name,
-                    levels: (bb.levels ?? []).map((l) => ({
-                      index: l.index,
-                      short: l.short,
-                      name: l.name,
-                    })),
-                  })
-                }
-              />
-            ))}
-          </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: `10px 12px 10px ${indent(0)}px`,
+                    borderBottom: `1px solid ${LINE}`,
+                  }}
+                >
+                  <Chevron open={false} />
+                  <span
+                    style={{
+                      color: MUTED,
+                      display: "grid",
+                      placeItems: "center",
+                    }}
+                  >
+                    <Icon name="map-01" />
+                  </span>
+                  <span style={{ fontSize: 13, color: "var(--review-ink)" }}>
+                    {OUTDOOR.name}
+                  </span>
+                  <Count n={OUTDOOR.count} />
+                </div>
+                {tree.map((b) => (
+                  <BuildingRow
+                    key={b.id}
+                    building={b}
+                    open={openBuildings.has(b.id)}
+                    onToggle={() => toggleBuilding(b.id)}
+                    onEdit={onEditLevel}
+                    onReview={onReviewLevel}
+                    onUpdate={onUpdateLevel}
+                    onEditBuilding={(bb) =>
+                      onEditBuilding({
+                        id: bb.id,
+                        name: bb.name,
+                        levels: (bb.levels ?? []).map((l) => ({
+                          index: l.index,
+                          short: l.short,
+                          name: l.name,
+                        })),
+                      })
+                    }
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div
@@ -2814,39 +2946,6 @@ export function MapContent({
             minWidth: 0,
           }}
         >
-          {/* On the map's own left edge, so it sits where the list's boundary is and reads as the
-            handle for it — the arrow points the way the list will move. */}
-          <button
-            type="button"
-            onClick={toggleList}
-            aria-expanded={listOpen}
-            aria-label={
-              listOpen ? "Hide the content list" : "Show the content list"
-            }
-            title={listOpen ? "Hide the list" : "Show the list"}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 16,
-              zIndex: 3,
-              width: 22,
-              height: 44,
-              display: "grid",
-              placeItems: "center",
-              padding: 0,
-              cursor: "pointer",
-              border: `1px solid ${LINE}`,
-              borderLeft: "none",
-              borderRadius: "0 8px 8px 0",
-              background: "#fff",
-              color: MUTED,
-              boxShadow: "0 1px 4px rgba(0,0,0,.10)",
-            }}
-          >
-            {/* `chevron-left` / `chevron-right` from the Pointr Icon Library — the direction is
-                the state, so it is two glyphs rather than one rotated (see `../ui/icons`). */}
-            {listOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
-          </button>
           {/*
           Switching away from a half-edited feature. Three ways out and none of them auto-saves:
           keep editing (the default and the safe one), or discard and go where you were heading.
@@ -2855,10 +2954,11 @@ export function MapContent({
           <GeometryToolbar
             state={geom}
             notice={geomNotice}
-            // The same reservation the camera already makes — see `focusPadRight` below. Driven by
+            noticeBad={geomNoticeBad}
+            // The same reservation the camera already makes — see `focusPadLeft` below. Driven by
             // `shownProps`, so it matches when the panel is actually on screen rather than when a
             // focus has merely been requested.
-            padRight={shownProps ? FEATURE_PANEL_WIDTH + 24 : 0}
+            padLeft={shownProps ? FEATURE_PANEL_WIDTH + 24 : 0}
             onCommand={onGeomCommand}
           />
           {saved && <SavedNotice name={saved} />}
@@ -2933,9 +3033,10 @@ export function MapContent({
             onGeomIdentity={onGeomIdentity}
             onSelectClear={onSelectClear}
             onGeomError={onGeomError}
+            onGeomHint={onGeomHint}
             // Reserved on the right so a focused feature frames in the map the panel doesn't cover.
             // Read from a ref inside PointrMap, so changing it can never re-fly the camera on its own.
-            focusPadRight={focused ? FEATURE_PANEL_WIDTH + 24 : 0}
+            focusPadLeft={focused ? FEATURE_PANEL_WIDTH + 24 : 0}
             target={target}
           />
           {live.length > 0 && target && (
@@ -2944,7 +3045,7 @@ export function MapContent({
               buildingId={target.building}
               levelIndex={target.level}
               onChange={(building, level) => setTarget({ building, level })}
-              offsetRight={shownProps ? FEATURE_PANEL_WIDTH + 24 : 0}
+              offsetLeft={shownProps ? FEATURE_PANEL_WIDTH + 24 : 0}
             />
           )}
           {shownProps && (
@@ -2976,7 +3077,13 @@ export function MapContent({
               onClose={onCancelEdit}
             />
           )}
-          <MapSettings prefs={prefs} onChange={setPrefs} />
+          <MapSettings
+            prefs={prefs}
+            onChange={setPrefs}
+            snap={!!geom.snap}
+            onSnapToggle={() => onGeomCommand({ cmd: "snap" })}
+            shiftRight={!!shownProps}
+          />
           {dropped && live.length > 0 && target && (
             <UploadDropConfirm
               file={dropped}

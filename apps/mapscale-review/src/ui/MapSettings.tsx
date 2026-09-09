@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@kozmos/react";
 import type { MapPrefs } from "../map/PointrMap";
+import { FEATURE_PANEL_WIDTH } from "./FeaturePanel";
 
 export type MapPrefsState = MapPrefs;
 
@@ -92,9 +93,27 @@ export function MapSettings({
   prefs,
   onChange,
   focus = false,
+  snap,
+  onSnapToggle,
+  shiftRight = false,
 }: {
   prefs: MapPrefs;
   onChange: (p: MapPrefs) => void;
+  /**
+   * Snap's state and its toggle, passed ONLY by a screen that is editing geometry — which is what
+   * "when applicable" means: the row is simply absent everywhere else.
+   *
+   * ⚠️ Snap used to be a tile on the geometry bar. It is a map-wide preference that outlives any
+   * one gesture, not a per-gesture tool, and it sat oddly among tools that act once and finish.
+   */
+  snap?: boolean;
+  onSnapToggle?: () => void;
+  /**
+   * Step the trigger clear of the properties panel. It **stays on the left** — it is map chrome and
+   * the left is where that lives; it simply moves right by the width the panel is occupying, the
+   * same reservation the geometry bar and the list's collapse tab already make.
+   */
+  shiftRight?: boolean;
   /**
    * Show the FOCUS section. Set by the screens that draw a **diff** — Manual Review, and S1 for
    * its diff-drawing panes (§3: focus follows the diff, not the screen). A screen with no diff
@@ -109,7 +128,14 @@ export function MapSettings({
           title="Map settings"
           style={{
             position: "absolute",
-            left: 16,
+            /**
+             * Home is `left: 16`. While the properties panel is open it steps past it and keeps the
+             * same 16px margin — the panel is inset 12 and 360 wide, so its right edge is at 372 and
+             * the button sits at 388. It does NOT cross to the right-hand corner: that corner holds
+             * the zoom controls, and this is not a different control when a panel happens to be up.
+             */
+            left: shiftRight ? FEATURE_PANEL_WIDTH + 12 + 16 : 16,
+            transition: "left .18s ease",
             bottom: 16,
             width: 44,
             height: 44,
@@ -167,6 +193,17 @@ export function MapSettings({
          * the diagnostic can be driven from code; it just no longer wears a row in a
          * product-shaped popover.
          */}
+        {onSnapToggle && (
+          <>
+            <div style={SECTION_HEAD}>EDITING</div>
+            <PrefRow
+              label="Snap to nearby features"
+              checked={!!snap}
+              onCheckedChange={() => onSnapToggle()}
+            />
+          </>
+        )}
+
         <div style={SECTION_HEAD}>FLOOR-PLAN OVERLAY</div>
         {/*
          * One row, and the slider lives BEHIND a transparency symbol (Olcay, 2026-08-18: "Can we

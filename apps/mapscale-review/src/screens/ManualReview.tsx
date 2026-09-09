@@ -1699,21 +1699,19 @@ export function ManualReview({
            * The camera must frame the feature in the map the panel leaves — see the note on
            * `focusChange` in the shell, which had no reservation of its own until now.
            */
-          focusPadRight={panelFor ? FEATURE_PANEL_WIDTH + 24 : 0}
+          focusPadLeft={panelFor ? FEATURE_PANEL_WIDTH + 24 : 0}
         />
         {/*
           The same bar Map Content uses, on the same map, driven by the same queue.
 
-          ⚠️ **`padLeft` exists because of a collision `padRight` uncovers.** With the panel open the
-          bar's centre moves left, and its LEFT EDGE lands on x=16 — exactly where the Map Settings
-          button sits (`left 16, bottom 16`, 44×44). They overlap by 44×28. It happens in Map Content
-          today too, on any 1440 window with the tree open, and nothing about it is visible until a
-          panel is there. Reserving the left is the bar's own mechanism, mirrored.
+          ⚠️ **The reservation follows the panel.** The panel now floats on the LEFT, so the bar
+          reserves the LEFT and its centre moves right. The old 72px left reservation existed for the
+          opposite case — the bar drifting onto the Map Settings button at `left 16` — and that button
+          has itself moved to the right, because the panel now covers the map's left edge.
         */}
         <GeometryToolbar
           state={geom}
-          padLeft={panelFor ? 72 : 0}
-          padRight={panelFor ? FEATURE_PANEL_WIDTH + 24 : 0}
+          padLeft={panelFor ? FEATURE_PANEL_WIDTH + 24 : 0}
           onCommand={onGeomCommand}
         />
         {panelFor && (
