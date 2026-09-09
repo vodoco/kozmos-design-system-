@@ -88,7 +88,7 @@ export function OnlinePeople() {
                   placeItems: "center",
                   fontSize: 11,
                   color: "var(--primitives-colors-background-600)",
-                  border: "1px dashed var(--primitives-colors-background-900)",
+                  border: "1px dashed var(--primitives-colors-background-200)",
                 }}
               >
                 0
@@ -269,7 +269,7 @@ export function OnlinePeople() {
             style={{
               marginTop: 6,
               padding: "8px 8px 4px",
-              borderTop: "1px solid var(--primitives-colors-background-900)",
+              borderTop: "1px solid var(--primitives-colors-background-200)",
               fontSize: 11,
               lineHeight: 1.45,
               color: "var(--primitives-colors-background-600)",

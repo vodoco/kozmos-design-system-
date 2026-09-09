@@ -1,4 +1,5 @@
-import { useState, useId } from "react";
+import { useState, useId, useRef, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Combine,
   Redo,
@@ -185,7 +186,13 @@ const ACCEL = (() => {
 
 const BAR_INK = "var(--review-ink)";
 const BAR_MUTED = "var(--primitives-colors-background-600)";
-const BAR_LINE = "var(--primitives-colors-background-900)";
+/**
+ * The rules between groups. ⚠️ **Was `background-900`** — the same near-black that had already
+ * been taken off this bar's outer border, still drawing the separators inside it (Olcay,
+ * 2026-09-09: *"Toolbar seperaters should have a softer color not harsh black"*). A separator
+ * should be quieter than the controls it divides, not louder.
+ */
+const BAR_LINE = "var(--primitives-colors-background-200)";
 /**
  * The caption's ground. Deliberately a raw near-black rather than `background-900`: that token IS
  * near-black in the light theme, but it is named like a background and has already been mis-read
@@ -254,7 +261,19 @@ function WhyTip({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const anchor = useRef<HTMLSpanElement>(null);
+  /** Where to pin the bubble, in viewport coordinates — measured, not guessed. */
+  const [at, setAt] = useState<{ top: number; left: number } | null>(null);
   const tipId = useId();
+  // Measured before paint so the bubble never appears at 0,0 for a frame.
+  useLayoutEffect(() => {
+    if (!open) {
+      setAt(null);
+      return;
+    }
+    const r = anchor.current?.getBoundingClientRect();
+    if (r) setAt({ top: r.top - 8, left: r.left + r.width / 2 });
+  }, [open]);
   if (!text) return <>{children}</>;
   return (
     /**
@@ -276,6 +295,7 @@ function WhyTip({
      * reason*; reaching it silently is the same failure one step later.
      */
     <span
+      ref={anchor}
       tabIndex={0}
       aria-describedby={open ? tipId : undefined}
       style={{ position: "relative", display: "inline-flex" }}
@@ -285,35 +305,49 @@ function WhyTip({
       onBlur={() => setOpen(false)}
     >
       {children}
-      {open && (
-        <span
-          id={tipId}
-          role="tooltip"
-          style={{
-            position: "absolute",
-            // Above the bar, which sits at the bottom of the map — below would be off-screen.
-            bottom: "calc(100% + 8px)",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 244,
-            padding: "8px 10px",
-            borderRadius: 8,
-            background: "var(--review-ink, #1d2433)",
-            color: "#fff",
-            // ⚠️ NOT the `font` shorthand: `font: 12px/1.4 inherit` is INVALID — `inherit` is
-            // not a family — so the browser drops the whole declaration and the text silently
-            // renders at the inherited size. Three of these were live before 2026-08-23.
-            fontSize: 12,
-            lineHeight: 1.4,
-            textAlign: "left",
-            boxShadow: "0 6px 20px rgba(11,54,156,.22)",
-            pointerEvents: "none",
-            zIndex: 3,
-          }}
-        >
-          {text}
-        </span>
-      )}
+      {open &&
+        at &&
+        createPortal(
+          <span
+            id={tipId}
+            role="tooltip"
+            style={{
+              /**
+               * ⚠️ **`position: absolute` put this INSIDE the bar, and the bar clips** (Olcay,
+               * 2026-09-09: *"the tooltip doesn't show, maybe it's inside the container and no
+               * overflow?"* — exactly right). The bar sets `overflowX: "auto"` so it can scroll on a
+               * narrow map, and per CSS a computed `overflow-x: auto` with `overflow-y: visible`
+               * forces `overflow-y` to `auto` as well. So the one tooltip in the bar that genuinely
+               * matters — the reason Combine is unavailable — was drawn above a clipping edge and
+               * never seen. No amount of `z-index` fixes a clip.
+               *
+               * A portal to `document.body` with `position: fixed` is the only thing that escapes it,
+               * measured from the anchor at open time.
+               */
+              position: "fixed",
+              top: at.top,
+              left: at.left,
+              transform: "translate(-50%, -100%)",
+              width: 244,
+              padding: "8px 10px",
+              borderRadius: 8,
+              background: "var(--review-ink, #1d2433)",
+              color: "#fff",
+              // ⚠️ NOT the `font` shorthand: `font: 12px/1.4 inherit` is INVALID — `inherit` is
+              // not a family — so the browser drops the whole declaration and the text silently
+              // renders at the inherited size. Three of these were live before 2026-08-23.
+              fontSize: 12,
+              lineHeight: 1.4,
+              textAlign: "left",
+              boxShadow: "0 6px 20px rgba(11,54,156,.22)",
+              pointerEvents: "none",
+              zIndex: 90,
+            }}
+          >
+            {text}
+          </span>,
+          document.body,
+        )}
     </span>
   );
 }
@@ -858,6 +892,17 @@ export function GeometryToolbar({
             icon={<Reset size={ICON_PX} />}
             label="Reset"
             title="Back to the published outline — discards every change to this shape"
+            /**
+             * ⚠️ **Reset was always enabled, including on an untouched shape** (Olcay,
+             * 2026-09-09: *"If undo is disabled reset should be disabled too."*). It offered to
+             * discard changes that did not exist.
+             *
+             * `canUndo` is the right gate and not merely the one asked for: the engine sets
+             * `canUndo = history.length > 0` and `dirty = snapshot !== original`, and every
+             * mutation pushes history — so `dirty` implies `canUndo` and there is no state where
+             * a shape needs resetting but cannot be undone.
+             */
+            disabled={!state.canUndo}
             onClick={() => onCommand({ cmd: "reset" })}
           />
         </Group>

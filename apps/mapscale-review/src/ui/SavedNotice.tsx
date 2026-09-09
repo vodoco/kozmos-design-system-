@@ -39,7 +39,7 @@ export function SavedNotice({ name }: { name: string }) {
         padding: "9px 14px 9px 11px",
         borderRadius: 10,
         background: "#fff",
-        border: "1px solid var(--primitives-colors-background-900)",
+        border: "1px solid var(--primitives-colors-background-200)",
         boxShadow: "0 8px 28px rgba(11,54,156,.16)",
         pointerEvents: "none",
         maxWidth: 420,

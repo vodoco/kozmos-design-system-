@@ -19,3 +19,55 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/**
+ * **A scrollbar that belongs to the app, not to the operating system.**
+ *
+ * Olcay, 2026-09-09: *"Can we have thinner custom scroll that matches color?"* — the default macOS
+ * overlay bar is 15px of neutral grey that lands on top of the trash icons at the right edge of
+ * every property row, and on Windows it is a permanent light-grey gutter.
+ *
+ * ⚠️ **Applied globally, not per element.** The first version was a `.thin-scroll` class on the
+ * feature panel; the app has **thirteen** scrolling regions — the content list, the type picker, the
+ * notification tray, the wizard, version history, the feedback panel — and one custom bar among
+ * twelve system ones reads as a bug rather than as a style. A class you have to remember is a class
+ * someone will forget.
+ *
+ * 🔴 **The two syntaxes are mutually exclusive, and getting that wrong is silent.** Chrome and
+ * Safari style scrollbars with `::-webkit-scrollbar`; Firefox uses the standard `scrollbar-width` /
+ * `scrollbar-color`. But **when either standard property is set, Chrome ignores the pseudo-elements
+ * entirely** — so the first version, which declared `scrollbar-color` globally and put only
+ * `scrollbar-width` behind the feature query, disabled its own 6px rule and left the bar at the OS
+ * default. It measured 15px in the browser while every rule was present and correct in the sheet.
+ *
+ * So the feature query gates BOTH branches, and neither can reach the other's engine.
+ *
+ * The thumb is `background-200`, the same hairline the panel draws its boxes with, so the bar reads
+ * as part of the surface rather than as chrome sitting over it.
+ */
+@supports selector(::-webkit-scrollbar) {
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--primitives-colors-background-200);
+    border-radius: 999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--primitives-colors-background-300);
+  }
+  /* Where a horizontal and a vertical bar meet, which otherwise stays OS-grey. */
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primitives-colors-background-200) transparent;
+  }
+}
