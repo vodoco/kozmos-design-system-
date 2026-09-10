@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { Button, Icon } from "@kozmos/react";
 
 /**
@@ -85,6 +85,7 @@ export function ConfirmOverlay({
 }) {
   const confirmRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const bodyId = useId();
 
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -134,9 +135,16 @@ export function ConfirmOverlay({
     >
       <div
         ref={cardRef}
-        role="dialog"
+        /**
+         * `alertdialog` for the two tones that interrupt with a consequence, and the body as its
+         * description — so a screen reader reads what will happen, not only the question.
+         */
+        role={
+          tone === "danger" || tone === "warning" ? "alertdialog" : "dialog"
+        }
         aria-modal="true"
         aria-label={title}
+        aria-describedby={bodyId}
         onClick={(e) => e.stopPropagation()}
         style={{
           /**
@@ -207,6 +215,7 @@ export function ConfirmOverlay({
           </span>
         </div>
         <div
+          id={bodyId}
           style={{
             padding: "0 16px",
             fontSize: 16,

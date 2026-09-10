@@ -524,6 +524,34 @@ function Bench() {
         </div>
       </div>
 
+      {/* The notice Delete leaves behind — Update's, with its verb; no Undo (undo is for geometry
+          drawing only, for now). */}
+      <div style={{ marginBottom: 22 }}>
+        <div
+          style={{
+            font: "12px/1.4 system-ui",
+            color: "#5d626f",
+            marginBottom: 6,
+          }}
+        >
+          The notice Delete leaves behind
+        </div>
+        <div
+          data-deletedbox
+          style={{
+            position: "relative",
+            height: 180,
+            borderRadius: 12,
+            overflow: "hidden",
+            background:
+              "repeating-linear-gradient(45deg,#dfe4ec 0 10px,#e7ebf2 10px 20px)",
+            border: "1px solid #d3d9e3",
+          }}
+        >
+          <SavedNotice name="Gate A12 Waiting Area" verb="deleted" />
+        </div>
+      </div>
+
       {/* The Delete confirmation, open. `transform` makes this box the overlay's containing block, so
           its fixed backdrop stays inside the case instead of covering the bench. */}
       <div style={{ marginBottom: 22 }}>

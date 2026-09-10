@@ -2502,6 +2502,15 @@ export function MapContent({
     if (!pendingDelete) return;
     const fids = pendingDelete.fids;
     setDeleted((d) => [...new Set([...d, ...fids])]);
+    // Delete says so on the way out, as Update does — with no Undo: undo is for geometry drawing
+    // only, for now (Olcay, 2026-09-10).
+    setSaved({
+      name:
+        pendingDelete.names.length > 1
+          ? `${pendingDelete.names.length} features`
+          : pendingDelete.names[0],
+      verb: "deleted",
+    });
     setPendingDelete(null);
     // Straight out, past the unsaved-work guard: the work was on the thing that is now gone.
     closeProps();
@@ -2672,10 +2681,13 @@ export function MapContent({
    * says the change was *applied*, which is exactly what happened. The demo needs the gesture to
    * complete; it does not need a lie about a round-trip.
    */
-  const [saved, setSaved] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{
+    name: string;
+    verb: "updated" | "deleted";
+  } | null>(null);
   const onSaved = useCallback(
     (name: string) => {
-      setSaved(name || "Feature");
+      setSaved({ name: name || "Feature", verb: "updated" });
       /**
        * Where to go afterwards depends on why we saved. Pressing **Update** closes the panel,
        * because saving finished the task. Answering **Save changes** to the unsaved-work overlay
@@ -3040,7 +3052,7 @@ export function MapContent({
             padLeft={shownProps ? FEATURE_PANEL_WIDTH + 24 : 0}
             onCommand={onGeomCommand}
           />
-          {saved && <SavedNotice name={saved} />}
+          {saved && <SavedNotice name={saved.name} verb={saved.verb} />}
 
           {/**
            * One conversation for all three ways an unsaved edit can be interrupted — switching

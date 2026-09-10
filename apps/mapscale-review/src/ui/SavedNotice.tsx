@@ -21,7 +21,18 @@ import { Check } from "./icons";
  * whole life; `bottom: 122` clears them with the same 12px breathing room the rest of the over-map
  * chrome uses, and `right: 16` keeps it in that chrome's column.
  */
-export function SavedNotice({ name }: { name: string }) {
+/**
+ * `verb` — Update's "updated", or Delete's "deleted" (Olcay, 2026-09-10): a delete removes the panel
+ * AND the feature, so it has even more reason to say something on the way out. There is no Undo —
+ * undo is for geometry drawing only, for now (Olcay, 2026-09-10).
+ */
+export function SavedNotice({
+  name,
+  verb = "updated",
+}: {
+  name: string;
+  verb?: "updated" | "deleted";
+}) {
   return (
     <div
       // Announced rather than just drawn: the panel it replaces held focus, and a sighted user gets
@@ -74,7 +85,7 @@ export function SavedNotice({ name }: { name: string }) {
             textOverflow: "ellipsis",
           }}
         >
-          <strong style={{ fontWeight: 500 }}>{name}</strong> updated
+          <strong style={{ fontWeight: 500 }}>{name}</strong> {verb}
         </span>
         <span
           style={{
