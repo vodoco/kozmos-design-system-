@@ -863,6 +863,8 @@ function PropertyField({
           onClick={onRemove}
           aria-label={`Remove ${label} field`}
           title="Remove field"
+          // Red, not the themed blue the DS ghost paints. See `.remove-field` in index.css.
+          className="remove-field"
           /**
            * ⚠️ **The glyph sat 30px inside the panel edge** (Olcay, 2026-09-09: *"bin icons could be
            * further to the right side"*). `IconButton` is `h-11 w-11` at every size, so a 16px trash

@@ -71,3 +71,31 @@ body {
     scrollbar-color: var(--primitives-colors-background-200) transparent;
   }
 }
+
+/**
+ * **The remove-field bin is red, not the brand blue.**
+ *
+ * Olcay, 2026-09-10: *"thrash buttons should not be blue. maybe red?"* — and he is right twice
+ * over. The design system's `IconButton variant="ghost"` paints its glyph with the *themed*
+ * foreground, so the one control in the panel whose whole job is to take something away was drawn
+ * in the same colour as Update. A destructive affordance that matches the confirm button teaches
+ * people that colour means nothing here.
+ *
+ * ⚠️ **A class rather than an inline style, because the hover state is the point.** At rest this is
+ * `danger/500`, so it reads as red without shouting across twenty rows; on hover it deepens to
+ * `danger/700`, which is the feedback that says the click will do something you cannot undo.
+ * Inline styles cannot express `:hover`.
+ *
+ * ⚠️ **`!important` is not needed and is not used.** The DS sets its colour through a Tailwind
+ * `text-[color:…]` utility of the same specificity, and this rule is loaded after it — see
+ * `main.tsx`, which imports the design system's stylesheet first.
+ *
+ * The danger ramp inverts properly in dark mode (0 goes #fceaee → #430915), so this needs no
+ * dark-mode branch of its own — unlike Figma's copy of the same ramp, which publishes three steps.
+ */
+.remove-field {
+  color: var(--primitives-colors-emotional-danger-500);
+}
+.remove-field:hover {
+  color: var(--primitives-colors-emotional-danger-700);
+}
