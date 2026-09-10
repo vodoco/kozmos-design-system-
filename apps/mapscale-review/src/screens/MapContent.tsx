@@ -1688,6 +1688,26 @@ export function MapContent({
   );
 
   /**
+   * Features deleted in this session (C, Olcay 2026-09-10) — off the map and out of Map Content.
+   * Local to the prototype, like every edit here; the map is told through PointrMap's `deleted`.
+   */
+  const [deleted, setDeleted] = useState<string[]>([]);
+  /** The list reads the map's per-level counts, so deleted features are taken out of them here. */
+  const visibleTypesByLevel = useMemo(() => {
+    if (!deleted.length) return typesByLevel;
+    const gone = new Set(deleted);
+    const out: Record<string, LevelTypeCount[]> = {};
+    for (const [k, list] of Object.entries(typesByLevel))
+      out[k] = list.flatMap((t) => {
+        if (!t.names) return [t];
+        const names = t.names.filter((n) => !gone.has(n.fid));
+        const count = t.count - (t.names.length - names.length);
+        return count > 0 ? [{ ...t, names, count }] : [];
+      });
+    return out;
+  }, [typesByLevel, deleted]);
+
+  /**
    * The taxonomy's sprite sheet, fetched once. It is a published, versioned artefact, so the icons
    * cannot drift from the types they label — and one PNG plus one JSON costs one request each
    * rather than an icon per type.
@@ -2405,6 +2425,12 @@ export function MapContent({
     return out;
   }, [focused, shownProps, also, edits]);
   /** One bag standing for all of them — see `mergeForEditing`. */
+  /** "Main Mall / LG" — the building and level the panel's feature is on, for C's header line. */
+  const locationLabel = useMemo(() => {
+    const b = live.find((x) => x.id === target?.building);
+    const l = b?.levels.find((x) => x.index === target?.level);
+    return b ? [b.name, l?.short].filter(Boolean).join(" / ") : undefined;
+  }, [live, target]);
   const mergedProps = useMemo(
     () => (selectionProps.length ? mergeForEditing(selectionProps) : null),
     [selectionProps],
@@ -2459,6 +2485,27 @@ export function MapContent({
     return rows;
   }, [selectionProps, geom.joined, geom.removed]);
   /** The ordinary case: a live selection shrinking by one. */
+  /** Delete from the panel: the confirmation names what goes, then it leaves the map and the list. */
+  const [pendingDelete, setPendingDelete] = useState<{
+    fids: string[];
+    names: string[];
+  } | null>(null);
+  const onDelete = useCallback(() => {
+    const rows = selectionList.filter((r) => !r.fate);
+    if (!rows.length) return;
+    setPendingDelete({
+      fids: rows.map((r) => r.fid),
+      names: rows.map((r) => r.name || `Unnamed ${r.typeLabel}`),
+    });
+  }, [selectionList]);
+  const confirmDelete = useCallback(() => {
+    if (!pendingDelete) return;
+    const fids = pendingDelete.fids;
+    setDeleted((d) => [...new Set([...d, ...fids])]);
+    setPendingDelete(null);
+    // Straight out, past the unsaved-work guard: the work was on the thing that is now gone.
+    closeProps();
+  }, [pendingDelete, closeProps]);
   const onDeselectLive = useCallback((fid: string) => {
     setAlso((cur) => {
       if (cur.includes(fid)) return cur.filter((f) => f !== fid);
@@ -2655,7 +2702,7 @@ export function MapContent({
   } | null>(null);
   const typesCtx = useMemo(
     () => ({
-      byLevel: typesByLevel,
+      byLevel: visibleTypesByLevel,
       current: target,
       request: requestTypes,
       sheet,
@@ -2668,7 +2715,7 @@ export function MapContent({
       networks: netsByLevel,
     }),
     [
-      typesByLevel,
+      visibleTypesByLevel,
       target,
       requestTypes,
       sheet,
@@ -3025,6 +3072,25 @@ export function MapContent({
                 ? "This feature has edits you have not saved. Closing will lose them."
                 : "This feature has edits you have not saved. Opening another one will lose them."}
           </ConfirmOverlay>
+          <ConfirmOverlay
+            open={!!pendingDelete}
+            tone="warning"
+            title={
+              pendingDelete && pendingDelete.fids.length > 1
+                ? `Delete ${pendingDelete.fids.length} features?`
+                : `Delete ${pendingDelete?.names[0] ?? "this feature"}?`
+            }
+            confirmLabel="Delete"
+            cancelLabel="Keep"
+            onConfirm={confirmDelete}
+            onCancel={() => setPendingDelete(null)}
+          >
+            {pendingDelete && pendingDelete.names.length > 1
+              ? `${pendingDelete.names.slice(0, -1).join(", ")} and ${pendingDelete.names[pendingDelete.names.length - 1]} come off this level's map and out of Map Content.`
+              : "It comes off this level's map and out of Map Content."}{" "}
+            Edits are local to this prototype — nothing is written back to
+            Pointr Cloud.
+          </ConfirmOverlay>
           <PointrMap
             /* Browsing is not reviewing, and a concluded review leaves nothing to draw. */
             changes={NO_CHANGES}
@@ -3032,6 +3098,7 @@ export function MapContent({
             onBuildings={onBuildings}
             onLevel={onLevel}
             onTypes={onTypes}
+            deleted={deleted}
             onFileDrop={onFileDrop}
             focusFeature={focused?.fid ?? null}
             focusNonce={focused?.n ?? 0}
@@ -3088,14 +3155,8 @@ export function MapContent({
               selection={selectionList}
               onDeselect={onDeselect}
               recomposable={!!geom.recomposable}
-              icon={
-                <TypeIcon
-                  mainType={String(shownProps.mainType ?? "")}
-                  subType={
-                    shownProps.subType ? String(shownProps.subType) : undefined
-                  }
-                />
-              }
+              location={locationLabel}
+              onDelete={onDelete}
               onDirtyChange={onDirtyChange}
               geometryDirty={!!geom.dirty}
               onCommitGeometry={() => sendGeom({ cmd: "commit" })}

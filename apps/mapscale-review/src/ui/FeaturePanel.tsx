@@ -1,4 +1,4 @@
-import { ChevronRight, Copy, Help, Star, StarFilled } from "./icons";
+import { ChevronRight, Copy, Star, StarFilled } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
@@ -9,16 +9,23 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Separator,
-  Switch,
   Text,
 } from "@kozmos/react";
-import { PanelHeader, PANEL_PAD } from "./PanelHeader";
+import {
+  BoxField,
+  Chip,
+  ChipsField,
+  ChoiceField,
+  FIELD,
+  OpeningHoursField,
+  PriceBand,
+  RowField,
+  Stepper,
+  TextField,
+  Toggle,
+  addLink,
+} from "./fields";
+import { PanelHeader } from "./PanelHeader";
 import { PersonaVisibility } from "./PersonaVisibility";
 import { SectionHeading } from "./SectionHeading";
 import { FEATURE_PANEL_WIDTH } from "./panelMetrics";
@@ -110,7 +117,7 @@ const RESERVED = new Set([
 
 /** `copy-01` from the Pointr Icon Library (see `./icons`). */
 function CopyGlyph() {
-  return <Copy size={16} />;
+  return <Copy size={14} />;
 }
 
 function SectionTitle({ children }: { children: string }) {
@@ -266,9 +273,7 @@ function ImageList({
   onChange,
 }: {
   urls: string[];
-  /** The selection disagrees — say so rather than draw an empty list. */
   many?: boolean;
-  /** `logo` holds one: adding replaces rather than appends. */
   single?: boolean;
   max?: number;
   note: string;
@@ -276,10 +281,16 @@ function ImageList({
 }) {
   const [typed, setTyped] = useState("");
   const full = !single && max != null && urls.length >= max;
-  // Adding here would put one URL on every selected feature; open one to edit its images.
   if (many)
     return (
-      <Text style={{ fontSize: 12, fontStyle: "italic", color: MUTED }}>
+      <Text
+        style={{
+          fontSize: 11,
+          lineHeight: "14px",
+          fontStyle: "italic",
+          color: FIELD.muted,
+        }}
+      >
         {MULTI_LABEL} — open one feature to edit its images.
       </Text>
     );
@@ -289,46 +300,28 @@ function ImageList({
     if (!v || urls.includes(v)) return;
     onChange(single ? [v] : full ? urls : [...urls, v]);
   };
+  // C (Workbench 589:1079): a 38×22 thumbnail per image, 24×24 for the logo; the address in 10px
+  // grey; the count is the box's own aside, drawn by the caller. The logo has no per-row remove —
+  // pasting replaces it, and the field's bin removes the property.
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {!single && max != null && (
-        <Text style={{ alignSelf: "flex-end", fontSize: 9.5, color: MUTED }}>
-          {urls.length} / {max}
-        </Text>
-      )}
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {urls.map((u) => (
         <div
           key={u}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            minWidth: 0,
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}
         >
-          {/**
-           * A real thumbnail, not a grey box: the value IS an image URL, so showing it is the
-           * cheapest way to see that a link is wrong. `onError` falls back to the placeholder ⑤
-           * draws, because a broken image icon says less than an empty frame.
-           */}
           <img
             src={u}
             alt=""
-            /**
-             * ⚠️ **`visibility: hidden` hid the frame as well as the broken glyph**, leaving a gap
-             * where ⑤ draws a placeholder. Dropping the `src` instead keeps the element — and its
-             * grey ground — and stops the browser drawing its broken-image icon. An empty frame says
-             * "no preview"; a gap says nothing and a broken icon says "the app is broken".
-             */
             onError={(e) => {
               e.currentTarget.removeAttribute("src");
             }}
             style={{
               flex: "0 0 auto",
-              width: single ? 28 : 44,
-              height: single ? 28 : 32,
+              width: single ? 24 : 38,
+              height: single ? 24 : 22,
               objectFit: "cover",
-              borderRadius: 4,
+              borderRadius: 3,
               background: "var(--primitives-colors-background-100)",
             }}
           />
@@ -337,8 +330,9 @@ function ImageList({
             style={{
               flex: 1,
               minWidth: 0,
-              fontSize: 10.5,
-              color: INK,
+              fontSize: 10,
+              lineHeight: "13px",
+              color: FIELD.muted,
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -346,30 +340,31 @@ function ImageList({
           >
             {u}
           </Text>
-          <button
-            type="button"
-            onClick={() => onChange(urls.filter((x) => x !== u))}
-            aria-label={`Remove ${u}`}
-            className="remove-field"
-            style={{
-              flex: "0 0 auto",
-              display: "grid",
-              placeItems: "center",
-              width: 20,
-              height: 20,
-              padding: 0,
-              border: "none",
-              background: "none",
-              cursor: "pointer",
-            }}
-          >
-            <Icon name="x-close" />
-          </button>
+          {!single && (
+            <button
+              type="button"
+              onClick={() => onChange(urls.filter((x) => x !== u))}
+              aria-label={`Remove ${u}`}
+              className="remove-field"
+              style={{
+                flex: "0 0 auto",
+                display: "grid",
+                placeItems: "center",
+                width: 20,
+                height: 20,
+                padding: 0,
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+              }}
+            >
+              <Icon name="x-close" />
+            </button>
+          )}
         </div>
       ))}
-      {/* At the cap the add control goes, and says why — ⑤'s own words. */}
       {full ? (
-        <Text style={{ fontSize: 9.5, color: MUTED }}>
+        <Text style={{ fontSize: 9.5, lineHeight: "12px", color: FIELD.label }}>
           Remove one to add another.
         </Text>
       ) : (
@@ -392,50 +387,22 @@ function ImageList({
           }
           style={{
             width: "100%",
+            boxSizing: "border-box",
             fontFamily: "inherit",
             fontSize: 11.5,
-            color: INK,
+            lineHeight: "14px",
+            color: FIELD.ink,
             padding: "7px 10px",
-            borderRadius: "var(--primitives-radius-lg, 8px)",
-            border: `1px solid ${LINE}`,
+            borderRadius: 8,
+            border: `1px solid ${FIELD.label}`,
             background: "transparent",
           }}
         />
       )}
-      <Text style={{ fontSize: 9.5, color: MUTED }}>* {note}</Text>
+      <Text style={{ fontSize: 9.5, lineHeight: "12px", color: FIELD.label }}>
+        * {note}
+      </Text>
     </div>
-  );
-}
-
-/**
- * **The taxonomy's own one-line explanation, beside the field it explains.**
- *
- * 🔴 **The design has carried a ⓘ on every property since ⑤ and the panel had none.** All sixty
- * published properties have a description — checked, none blank — so the affordance always has
- * something to say, and the words are the taxonomy's rather than ours. A field called *Service
- * Options* is not self-explanatory; *"Which food service options are supported (eg. in-store dining,
- * takeout, takeaway)"* is.
- *
- * ⚠️ Not focusable. A form of twenty fields would otherwise take forty tab stops to cross — the same
- * arithmetic that made the type picker unusable. It is `title` on hover, and it is the same
- * `help-circle` the picker and the persona rows draw.
- */
-function PropertyInfo({ def }: { def: PropertyDef }) {
-  if (!def.description) return null;
-  return (
-    <span
-      aria-hidden
-      title={def.description}
-      style={{
-        flex: "0 0 auto",
-        display: "grid",
-        placeItems: "center",
-        color: MUTED,
-        cursor: "help",
-      }}
-    >
-      <Help size={13} />
-    </span>
   );
 }
 
@@ -483,7 +450,7 @@ function FeaturedToggle({
         width: 68,
         height: 44,
         padding: 0,
-        borderRadius: "var(--primitives-radius-lg, 8px)",
+        borderRadius: 8, // C: 8, not the 16 radius-lg renders
         /**
          * ⚠️ **Amber, not the theme blue** (Olcay, 2026-09-09: *"featured star should be accent
          * color. yellowish."*). A featured place is not a selected place, and a blue star beside a
@@ -534,470 +501,304 @@ function PropertyField({
 }) {
   const label = propertyLabel(def.key);
   const [pick, setPick] = useState(false);
-  /** The half-typed value in a free-text list (`tags`, `keywords`), before Enter commits it. */
+  const [adding, setAdding] = useState(false);
   const [typed, setTyped] = useState("");
-  /**
-   * ⚠️ **A field the selection disagrees about shows as EMPTY with a placeholder, never as its
-   * sentinel.** Every control below reads `shown` rather than `value`, so the sentinel exists only
-   * between the merge and the save and is never something a person can see or type over by
-   * accident. Typing replaces it outright, which is exactly "changing it affects all selected".
-   */
   const many = value === MULTIPLE;
   const shown = many ? undefined : value;
   const chips = toArray(shown);
+  const info = def.description || undefined;
+  const text = shown == null ? "" : String(shown);
+  const addTyped = () => {
+    const v = typed.trim();
+    if (v && !chips.includes(v)) onChange([...chips, v]);
+    setTyped("");
+  };
 
   /**
-   * 🔴 **The bin was nudged down by a hard-coded 18px, and nothing lined up** (Olcay, 2026-09-09:
-   * *"there are alignment issues — thrash can, featured title and star"*).
+   * **Each shape of data in the shell C draws for it** (Workbench `589:1079`, Olcay 2026-09-10).
+   * Switches, whole numbers and the price band are rows — label left, control right. Free text,
+   * images, opening hours and the rating are boxes with the label on top. One-line values and
+   * single choices are the product's own input, label inside. Chips keep their label above a box.
    *
-   * No constant could have worked: measured in the browser, the caption above the control is **24px**
-   * for a design-system `Input` (its own built-in label), **27px** for the captions this file draws,
-   * and **35px** for the chip box. Three different heights, one offset.
-   *
-   * So the caption is drawn ONCE here — including for the `Input`, whose `label` prop is no longer
-   * used — and the control and the bin share a flex row. The bin is then aligned by construction
-   * rather than by a number, and the number is gone.
+   * ⚠️ **Opening hours is a schedule now, not a summary.** It was read-only because editing the
+   * object as TEXT had destroyed it; C draws a day-by-day editor, and `OpeningHoursField` writes the
+   * one shape it reads (see `readHours`). The rating stays read-only — C draws it as a sentence.
    */
-  const inlineControl = def.valueType === "boolean";
-  /**
-   * Tall controls — a textarea, an image list, an opening-hours grid — take the bin at their TOP
-   * row; short ones take it on their centre line. Both are correct and neither needs a number.
-   */
-  const tallControl =
-    def.inputType === "textArea" || def.inputType === "custom";
-
-  return (
-    <div style={{ marginTop: 12 }}>
-      {/* One caption for every branch. See the note above. */}
-      {!inlineControl && (
-        <span
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 5,
-            marginBottom: 4,
-          }}
-        >
-          <Text style={{ fontSize: 11, color: MUTED }}>
+  let control: React.ReactNode;
+  if (def.valueType === "boolean") {
+    control = (
+      <RowField
+        label={
+          <>
             {label}
             {many && <MultiHint />}
-          </Text>
-          <PropertyInfo def={def} />
-        </span>
-      )}
-      <div
+          </>
+        }
+        info={info}
+        htmlFor={`f-${def.key}`}
+      >
+        <Toggle
+          id={`f-${def.key}`}
+          checked={isTruthy(shown)}
+          onChange={(c) => onChange(c)}
+          label={label}
+        />
+      </RowField>
+    );
+  } else if (def.key === "priceRange") {
+    control = (
+      <RowField label={label} info={info}>
+        <PriceBand value={shown} onChange={onChange} />
+      </RowField>
+    );
+  } else if (def.valueType === "integer") {
+    control = (
+      <RowField label={label} info={info}>
+        <Stepper
+          label={label}
+          value={text}
+          onChange={onChange}
+          placeholder={many ? MULTI_LABEL : undefined}
+        />
+      </RowField>
+    );
+  } else if (def.valueType === "text" && def.inputType === "textArea") {
+    control = (
+      <BoxField label={label} info={info}>
+        <textarea
+          value={text}
+          placeholder={many ? MULTI_LABEL : undefined}
+          onChange={(e) => onChange(e.target.value)}
+          rows={4}
+          aria-label={label}
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            resize: "vertical",
+            padding: 0,
+            border: "none",
+            outline: "none",
+            background: "none",
+            fontFamily: "inherit",
+            fontSize: 11,
+            lineHeight: 1.45,
+            color: FIELD.ink,
+          }}
+        />
+        <Text style={{ fontSize: 9, lineHeight: "11px", color: FIELD.muted }}>
+          {text.length} characters
+        </Text>
+      </BoxField>
+    );
+  } else if (def.valueType === "enum" && def.options?.length) {
+    control = (
+      <ChoiceField
+        label={label}
+        info={info}
+        value={chips[0] ?? ""}
+        options={def.options}
+        display={(o) => valueLabel(def.key, o)}
+        onChange={(v) => onChange([v])}
+        many={many}
+      />
+    );
+  } else if (def.valueType === "image") {
+    control = (
+      <BoxField
+        label={label}
+        info={info}
+        aside={
+          def.key !== "logo" && def.maxCount != null && !many
+            ? `${chips.length} / ${def.maxCount}`
+            : undefined
+        }
+      >
+        <ImageList
+          urls={chips}
+          many={many}
+          single={def.key === "logo"}
+          max={def.maxCount}
+          note={
+            def.key === "logo"
+              ? "Max 1MB · JPG & PNG · 1:1"
+              : "Max 2MB · JPG & PNG · 16:9"
+          }
+          onChange={(next) =>
+            onChange(def.key === "logo" ? (next[0] ?? "") : next)
+          }
+        />
+      </BoxField>
+    );
+  } else if (def.key === "openingHours") {
+    control = (
+      <OpeningHoursField
+        label={label}
+        info={info}
+        value={shown}
+        onChange={onChange}
+        many={many}
+      />
+    );
+  } else if (def.valueType === "object") {
+    control = (
+      <BoxField label={label} info={info}>
+        <Text style={{ fontSize: 11, lineHeight: "14px", color: FIELD.ink }}>
+          {many ? MULTI_LABEL : summariseObject(def.key, shown)}
+        </Text>
+      </BoxField>
+    );
+  } else if (def.valueType === "array") {
+    control = (
+      <ChipsField
+        label={
+          <>
+            {label}
+            {many && <MultiHint />}
+          </>
+        }
+        info={info}
+      >
+        {chips.map((c) => (
+          <Chip
+            key={c}
+            label={def.options?.length ? valueLabel(def.key, c) : c}
+            onRemove={() => onChange(chips.filter((x) => x !== c))}
+          />
+        ))}
+        {def.options?.length ? (
+          <Popover open={pick} onOpenChange={setPick}>
+            <PopoverTrigger asChild>
+              <button type="button" aria-label={`Add ${label}`} style={addLink}>
+                <Icon name="plus" size="xs" />
+                Add
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              style={{
+                width: 260,
+                padding: 4,
+                maxHeight: 260,
+                overflow: "auto",
+              }}
+            >
+              {def.options
+                .filter((o) => !chips.includes(o))
+                .map((o) => (
+                  <button
+                    key={o}
+                    type="button"
+                    onClick={() => {
+                      onChange([...chips, o]);
+                      setPick(false);
+                    }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "7px 10px",
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      fontSize: 12.5,
+                      color: FIELD.ink,
+                      borderRadius: 6,
+                    }}
+                  >
+                    {valueLabel(def.key, o)}
+                  </button>
+                ))}
+            </PopoverContent>
+          </Popover>
+        ) : adding ? (
+          <input
+            autoFocus
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addTyped();
+              } else if (e.key === "Escape") {
+                setTyped("");
+                setAdding(false);
+              }
+            }}
+            onBlur={() => {
+              addTyped();
+              setAdding(false);
+            }}
+            aria-label={`Add ${label}`}
+            placeholder="Type and press Enter"
+            style={{
+              flex: 1,
+              minWidth: 110,
+              border: "none",
+              outline: "none",
+              background: "none",
+              fontFamily: "inherit",
+              fontSize: 12,
+              color: FIELD.ink,
+              padding: "2px 4px",
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            aria-label={`Add ${label}`}
+            style={addLink}
+            onClick={() => setAdding(true)}
+          >
+            <Icon name="plus" size="xs" />
+            Add
+          </button>
+        )}
+      </ChipsField>
+    );
+  } else {
+    control = (
+      <TextField
+        label={label}
+        info={info}
+        value={text}
+        onChange={onChange}
+        placeholder={
+          many
+            ? MULTI_LABEL
+            : def.valueType === "hyperlink"
+              ? "https://"
+              : undefined
+        }
+      />
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>{control}</div>
+      {/* C's bin: the 20px trash in danger-500, in a 24px target 4px from the field — which
+          leaves the field at C's 332. The DS IconButton has no size under 44. */}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${label} field`}
+        title="Remove field"
+        className="remove-field"
         style={{
-          display: "flex",
-          alignItems: tallControl ? "flex-start" : "center",
-          gap: 8,
+          flex: "0 0 auto",
+          display: "grid",
+          placeItems: "center",
+          width: 24,
+          height: 24,
+          padding: 0,
+          border: "none",
+          background: "none",
+          cursor: "pointer",
         }}
       >
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {def.valueType === "boolean" ? (
-            /**
-             * **Label first, switch at the right edge** (Olcay, 2026-08-16: *"the toggles should be
-             * on the right side not left"*).
-             *
-             * Not only a preference — it is what makes the column read. Every other field in this
-             * panel puts its name at the left edge and its control below or beside it, so a leading
-             * switch made the booleans the one row whose *text* started 44px in, and their labels
-             * lined up with nothing. Right-aligned controls also share one edge down the form, which
-             * is the thing that makes a settings list scannable.
-             *
-             * ⚠️ The DS `Switch`'s own `label` prop puts the label AFTER the control, so it is not
-             * used here — the label is the app's, and the switch is given the row's far end.
-             */
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 10,
-                padding: "6px 0",
-              }}
-            >
-              <label
-                htmlFor={`f-${def.key}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  fontSize: 13,
-                  color: INK,
-                  cursor: "pointer",
-                  minWidth: 0,
-                }}
-              >
-                {label}
-                {/* A switch has no third position, so a disagreement is said beside the label
-                  instead — and it reads OFF, which is the safe way round: nothing is written to
-                  any feature until it is actually toggled. */}
-                {many && <MultiHint />}
-                <PropertyInfo def={def} />
-              </label>
-              {/**
-               * ⚠️ **A span, because the DS wrapper is `w-full` and `wrapperClassName` cannot undo
-               * it.** Passing `!w-auto` looked like the fix and did nothing: this app does not run
-               * Tailwind over its own source, so a class it invents is never compiled and the
-               * attribute lands on an element with no rule behind it. Measured, not assumed — the
-               * wrapper was still 254px and the switch still sat where the label left it.
-               *
-               * Shrink-to-fit here resolves the inner `width: 100%` against the switch's own
-               * max-content, so the control ends up its natural width at the row's right edge.
-               */}
-              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-                <Switch
-                  checked={isTruthy(shown)}
-                  onCheckedChange={(c: boolean) => onChange(c)}
-                  id={`f-${def.key}`}
-                />
-              </span>
-            </div>
-          ) : def.valueType === "text" && def.inputType === "textArea" ? (
-            <div>
-              <textarea
-                value={String(shown ?? "")}
-                placeholder={many ? MULTI_LABEL : undefined}
-                onChange={(e) => onChange(e.target.value)}
-                rows={3}
-                aria-label={label}
-                style={{
-                  width: "100%",
-                  resize: "vertical",
-                  fontFamily: "inherit",
-                  fontSize: 13,
-                  color: INK,
-                  padding: "8px 10px",
-                  borderRadius: "var(--primitives-radius-lg, 8px)",
-                  border: `1px solid ${LINE}`,
-                  background: "var(--primitives-colors-background-0, #fff)",
-                }}
-              />
-            </div>
-          ) : def.valueType === "enum" && def.options?.length ? (
-            /**
-             * **`enum` is ONE value** (Olcay, 2026-09-09: *"some of the inputs are single selection
-             * and some are multi value — check properties document"*).
-             *
-             * 🔴 **Five properties were drawn as multi-value and are not.** `serviceOptions`,
-             * `ageRestriction`, `genderDesignation`, `crowdLevel` and `occupancyStatus` are `enum`
-             * with a closed list; they rendered as a chip row with `+ Add`, which offers to add a
-             * second value to a field that holds one. The code underneath already replaced rather
-             * than appended, so the control was promising something it then refused to do.
-             *
-             * A `Select` says it in the shape. The twelve `array` properties keep the chip row, which
-             * is what genuinely takes many.
-             */
-            <div>
-              <Select
-                value={chips[0] ?? ""}
-                onValueChange={(v) => onChange([v])}
-              >
-                <SelectTrigger aria-label={label}>
-                  <SelectValue placeholder={many ? MULTI_LABEL : "—"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {def.options.map((o) => (
-                    <SelectItem key={o} value={o}>
-                      {valueLabel(def.key, o)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : def.key === "priceRange" ? (
-            /**
-             * **Price range is four steps, not a number box.** The taxonomy calls it
-             * `integer / custom` and leaves the control to us; ⑤ draws exactly this and the panel
-             * was rendering a spinner you could type 97 into.
-             */
-            <div style={{ display: "flex", gap: 0 }}>
-              {[1, 2, 3, 4].map((n) => {
-                const on = Number(shown) === n;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    aria-pressed={on}
-                    aria-label={`Price level ${n} of 4`}
-                    onClick={() => onChange(on ? "" : n)}
-                    style={{
-                      flex: 1,
-                      height: 34,
-                      fontSize: 12.5,
-                      fontFamily: "inherit",
-                      cursor: "pointer",
-                      // White on the theme fill — the token, not the literal.
-                      color: on
-                        ? "var(--primitives-colors-foreground-1000)"
-                        : INK,
-                      background: on
-                        ? "var(--primitives-colors-theme-700)"
-                        : "transparent",
-                      border: `1px solid ${LINE}`,
-                      borderLeftWidth: n === 1 ? 1 : 0,
-                      borderTopLeftRadius: n === 1 ? 8 : 0,
-                      borderBottomLeftRadius: n === 1 ? 8 : 0,
-                      borderTopRightRadius: n === 4 ? 8 : 0,
-                      borderBottomRightRadius: n === 4 ? 8 : 0,
-                    }}
-                  >
-                    {"$".repeat(n)}
-                  </button>
-                );
-              })}
-            </div>
-          ) : def.valueType === "image" ? (
-            /**
-             * **The two image properties, drawn the way ⑤ specifies them.**
-             *
-             * `images` takes many and publishes a cap; `logo` takes one. Both are `image / custom` —
-             * the taxonomy names the shape and leaves the control to us — and both were falling
-             * through to a plain text box.
-             *
-             * ⚠️ **The cap is read from the taxonomy, never typed here.** `maxCount` is 7 today and
-             * had to be carried through `PropertyDef` to reach this line; a 7 written into a component
-             * is a number nobody can trace and one that stops being true the day the release moves.
-             *
-             * ⚠️ **The prototype takes a URL, not a file.** There is nowhere to upload to, and a
-             * disabled file picker would be a promise the app cannot keep. A URL is exactly what the
-             * property holds.
-             */
-            <ImageList
-              urls={chips}
-              /**
-               * ⚠️ **`chips` is empty when the selection disagrees**, which would draw as "no
-               * images" — the same trap ⑤ names on the chip row: *an empty row reads as "none of
-               * them have any", which is a different and wronger claim than "they differ"*.
-               */
-              many={many}
-              single={def.key === "logo"}
-              max={def.maxCount}
-              note={
-                def.key === "logo"
-                  ? "Max 1MB · JPG & PNG · 1:1"
-                  : "Max 2MB · JPG & PNG · 16:9"
-              }
-              onChange={(next) =>
-                onChange(def.key === "logo" ? (next[0] ?? "") : next)
-              }
-            />
-          ) : def.valueType === "object" ? (
-            /**
-             * 🔴 **An object was editable as TEXT, and editing it destroyed it.** `openingHours` and
-             * `rating` are `object / custom`; the generic branch put them in a text input, so a
-             * feature carrying a real schedule showed `[object Object]` and one keystroke replaced a
-             * week of opening times with a string.
-             *
-             * They are read-only here until they have the controls ⑤ draws for them — a schedule grid
-             * and a rating line. Read-only is not the answer, but it is not a lie and it cannot lose
-             * anybody's data; an editable box that corrupts on touch is both.
-             */
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                minHeight: 34,
-                padding: "6px 10px",
-                borderRadius: "var(--primitives-radius-lg, 8px)",
-                background: "var(--primitives-colors-background-50)",
-              }}
-            >
-              <Text style={{ flex: 1, minWidth: 0, fontSize: 12, color: INK }}>
-                {summariseObject(def.key, shown)}
-              </Text>
-              <Text style={{ fontSize: 10.5, color: MUTED }}>read-only</Text>
-            </div>
-          ) : def.valueType === "array" ? (
-            /* Many values: the chips you have, plus a way to add another — a picker when the
-             taxonomy publishes a closed list, free text when it does not. */
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 6,
-                  alignItems: "center",
-                  padding: "7px 8px",
-                  borderRadius: "var(--primitives-radius-lg, 8px)",
-                  border: `1px solid ${LINE}`,
-                  minHeight: 38,
-                }}
-              >
-                {chips.map((c) => (
-                  <span
-                    key={c}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 4,
-                      fontSize: 11.5,
-                      padding: "3px 4px 3px 9px",
-                      borderRadius: 999,
-                      background: "var(--primitives-colors-background-100)",
-                      color: INK,
-                    }}
-                  >
-                    {c}
-                    <button
-                      type="button"
-                      onClick={() => onChange(chips.filter((x) => x !== c))}
-                      aria-label={`Remove ${c}`}
-                      style={{
-                        display: "grid",
-                        placeItems: "center",
-                        border: "none",
-                        background: "none",
-                        cursor: "pointer",
-                        color: MUTED,
-                        padding: 2,
-                      }}
-                    >
-                      {/* `xs` is 12px. The default `md` is 20 — larger than the chip's own
-                        11.5px text, which is why the size is named rather than inherited. */}
-                      <Icon name="x-close" size="xs" />
-                    </button>
-                  </span>
-                ))}
-                {def.options?.length ? (
-                  <Popover open={pick} onOpenChange={setPick}>
-                    <PopoverTrigger asChild>
-                      <button
-                        aria-label={`Add ${label}`}
-                        style={{
-                          border: "none",
-                          background: "none",
-                          cursor: "pointer",
-                          color: "var(--primitives-colors-theme-700)",
-                          fontSize: 12,
-                          padding: "2px 4px",
-                        }}
-                      >
-                        + Add
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      align="start"
-                      style={{
-                        width: 260,
-                        padding: 4,
-                        maxHeight: 260,
-                        overflow: "auto",
-                      }}
-                    >
-                      {def.options
-                        .filter((o) => !chips.includes(o))
-                        .map((o) => (
-                          <button
-                            key={o}
-                            onClick={() => {
-                              onChange([...chips, o]);
-                              setPick(false);
-                            }}
-                            style={{
-                              display: "block",
-                              width: "100%",
-                              textAlign: "left",
-                              padding: "7px 10px",
-                              border: "none",
-                              background: "none",
-                              cursor: "pointer",
-                              fontSize: 12.5,
-                              color: INK,
-                              borderRadius: 6,
-                            }}
-                          >
-                            {valueLabel(def.key, o)}
-                          </button>
-                        ))}
-                    </PopoverContent>
-                  </Popover>
-                ) : (
-                  /**
-                   * 🔴 **`tags` and `keywords` publish NO list, and were falling through to a text
-                   * input** — which rendered the array itself, so the panel showed a field containing
-                   * the literal characters `[]`. They are `array / comboBox`: many values, typed
-                   * rather than chosen. Enter commits one, and the chips above are the same chips the
-                   * closed lists use.
-                   */
-                  <input
-                    value={typed}
-                    onChange={(e) => setTyped(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key !== "Enter") return;
-                      e.preventDefault();
-                      const v = typed.trim();
-                      // No duplicates, and no empty chip from a stray Enter.
-                      if (v && !chips.includes(v)) onChange([...chips, v]);
-                      setTyped("");
-                    }}
-                    onBlur={() => {
-                      const v = typed.trim();
-                      if (v && !chips.includes(v)) onChange([...chips, v]);
-                      setTyped("");
-                    }}
-                    aria-label={`Add ${label}`}
-                    placeholder={
-                      chips.length ? "Add another…" : "Type and press Enter"
-                    }
-                    style={{
-                      flex: 1,
-                      minWidth: 110,
-                      border: "none",
-                      outline: "none",
-                      background: "none",
-                      fontFamily: "inherit",
-                      fontSize: 12,
-                      color: INK,
-                      padding: "2px 4px",
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-          ) : (
-            <Input
-              value={String(shown ?? "")}
-              onChange={(e) => onChange(e.target.value)}
-              type={def.valueType === "integer" ? "number" : "text"}
-              placeholder={
-                many
-                  ? MULTI_LABEL
-                  : def.valueType === "hyperlink"
-                    ? "https://"
-                    : undefined
-              }
-              aria-label={label}
-            />
-          )}
-        </div>
-        {/* The dashboard's own affordance: a field you added is a field you can take away. */}
-        <IconButton
-          variant="ghost"
-          size="sm"
-          onClick={onRemove}
-          aria-label={`Remove ${label} field`}
-          title="Remove field"
-          // Red, not the themed blue the DS ghost paints. See `.remove-field` in index.css.
-          className="remove-field"
-          /**
-           * ⚠️ **The glyph sat 30px inside the panel edge** (Olcay, 2026-09-09: *"bin icons could be
-           * further to the right side"*). `IconButton` is `h-11 w-11` at every size and the trash is
-           * `Icon`'s default `md` — at this app's 15px root, an 18.75px glyph centred in a 41.25px box
-           * (measured 2026-09-10) — so the 11.25px of padding either side reads as a gap between the
-           * field and its own control.
-           *
-           * The negative margin lets the 41.25px TARGET hang into the panel's 20px gutter while the
-           * glyph moves to the edge. Shrinking the button would have been the easy fix and the wrong
-           * one — it is the only way to remove a field, and a 24px target in a dense list is a miss
-           * waiting to happen.
-           */
-          style={{ flex: "0 0 auto", marginRight: -12 }}
-        >
-          <Icon name="trash-01" />
-        </IconButton>
-      </div>
+        <Icon name="trash-01" />
+      </button>
     </div>
   );
 }
@@ -1071,21 +872,28 @@ function AddFieldPicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
+        {/* C's tinted row: full width, 36 tall, theme-0 ground, theme-800 words. */}
         <button
+          type="button"
           style={{
             display: "flex",
             alignItems: "center",
+            justifyContent: "center",
             gap: 6,
-            marginTop: 14,
-            padding: 0,
+            width: "100%",
+            height: 36,
+            padding: "0 12px",
             border: "none",
-            background: "none",
+            borderRadius: 6,
+            background: "var(--primitives-colors-theme-0)",
             cursor: "pointer",
-            color: "var(--primitives-colors-theme-700)",
-            fontSize: 13,
+            fontFamily: "inherit",
+            fontSize: 11.5,
+            fontWeight: 500,
+            color: "var(--primitives-colors-theme-800)",
           }}
         >
-          <Icon name="plus" /> Add additional field
+          <Icon name="plus" size="xs" /> Add additional field
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -1148,7 +956,8 @@ function AddFieldPicker({
 
 export function FeaturePanel({
   props: p,
-  icon,
+  location,
+  onDelete,
   onDirtyChange,
   geometryDirty,
   onCommitGeometry,
@@ -1165,7 +974,10 @@ export function FeaturePanel({
 }: {
   /** The tile's own property bag plus any local edits, exactly as the app holds it. */
   props: Record<string, unknown>;
-  icon?: React.ReactNode;
+  /** Where the feature is — "Main Mall / LG" — for C's header line, after its type. */
+  location?: string;
+  /** Delete what the panel is editing. Present only where the host can — see the Delete block. */
+  onDelete?: () => void;
   /**
    * Told whenever the panel gains or loses unsaved changes — the app guards feature switches with
    * it (Olcay: *"warn the user if they changed a POI then tried to select some other POI"*).
@@ -1450,8 +1262,6 @@ export function FeaturePanel({
       segment: string;
       heading: string | null;
       keys: string[];
-      /** Follows a section and has no heading of its own — see the note below. */
-      detach?: boolean;
     }[] = [];
     for (const k of ordered) {
       const seg = propertyDef(k).segment;
@@ -1569,54 +1379,56 @@ export function FeaturePanel({
         flexDirection: "column",
         minHeight: 0,
         zIndex: 5,
+        // C's panel: radius 16, a 1px background-200 edge, and no shadow.
+        borderRadius: 16,
+        border: "1px solid var(--primitives-colors-background-200)",
+        boxShadow: "none",
       }}
     >
-      {/* The header is chrome, not content: its own non-scrolling block with PANEL_PAD, so the ✕
-          can neither scroll away nor be pushed left by the scrollbar the body grows (§0). */}
-      <div style={{ padding: PANEL_PAD, flex: "0 0 auto" }}>
-        <PanelHeader
-          // Its own column, so the name and the line beneath it share a left edge — see the note
-          // on `leading`. It used to be folded into the title node, and only the title moved.
-          leading={icon}
-          title={
-            /* Wraps, never truncates — a feature's name is the one thing here you can't
+      {/* The header is chrome, not content: C's band, outside the scroller, so the ✕ can neither
+          scroll away nor be pushed left by the scrollbar the body grows (§0). */}
+      <PanelHeader
+        tone="band"
+        title={
+          /* Wraps, never truncates — a feature's name is the one thing here you can't
                reconstruct from anything else. */
-            <Text
-              style={{
-                display: "block",
-                fontSize: 16,
-                fontWeight: 600,
-                lineHeight: 1.3,
-                color: "var(--primitives-colors-theme-900)",
-                overflowWrap: "anywhere",
-              }}
-            >
-              {multi
-                ? `${liveRows.length} features`
-                : /**
-                   * ⚠️ **Never the sentinel.** It leaked into the title on the bench the moment
-                   * one live feature was left holding a merged bag, and a raw `\u0000multiple`
-                   * on screen is the worst possible way to find out. Guarded here rather than
-                   * only upstream: this is the one string a person always reads.
-                   */
-                  (draft.name !== MULTIPLE
-                    ? String(draft.name ?? "")
-                    : name === MULTIPLE
-                      ? ""
-                      : name) || `Unnamed ${typeLabel(subType || mainType)}`}
-            </Text>
-          }
-          subtitle={
-            multi
-              ? "Editing all of them — a change here is a change to every one."
-              : (reviewNote ?? "You are editing this feature’s properties.")
-          }
-          onClose={onClose}
-          closeLabel="Close feature properties"
-        />
-      </div>
-
-      <Separator />
+          <Text
+            style={{
+              display: "block",
+              fontSize: 13,
+              fontWeight: 500,
+              lineHeight: "16px",
+              color: "var(--primitives-colors-background-900)",
+              overflowWrap: "anywhere",
+            }}
+          >
+            {multi
+              ? `${liveRows.length} features`
+              : /**
+                 * ⚠️ **Never the sentinel.** It leaked into the title on the bench the moment
+                 * one live feature was left holding a merged bag, and a raw `\u0000multiple`
+                 * on screen is the worst possible way to find out. Guarded here rather than
+                 * only upstream: this is the one string a person always reads.
+                 */
+                (draft.name !== MULTIPLE
+                  ? String(draft.name ?? "")
+                  : name === MULTIPLE
+                    ? ""
+                    : name) || `Unnamed ${typeLabel(subType || mainType)}`}
+          </Text>
+        }
+        subtitle={
+          multi
+            ? "Editing all of them — a change here is a change to every one."
+            : // C: "Food & Beverage Space · Main Mall / LG" — what it is, and where.
+              (reviewNote ??
+              [typeLabel(subType || mainType), location]
+                .filter(Boolean)
+                .join(" · "))
+        }
+        onClose={onClose}
+        closeLabel="Close feature properties"
+      />
 
       <div
         style={{
@@ -1626,435 +1438,464 @@ export function FeaturePanel({
           padding: "14px 20px 16px",
         }}
       >
-        {/**
-         * **What is selected, and the way to check it** (Olcay, 2026-08-16: *"There should be an
-         * indicator of multiple items selected and upon expand the items should be listed to show
-         * which ones."*).
-         *
-         * Collapsed by default and at the very top of the body: a count is enough almost always,
-         * and the moment it is not — you are about to rename all of them — the answer is one click
-         * away rather than a trip back to the map to count outlines.
-         *
-         * Each row can drop itself out. Shift-clicking the outline does the same thing, but only if
-         * you can still find it on screen; a selection you built by panning around cannot always be
-         * unpicked the way it was picked.
-         */}
-        {showStrip && (
-          <div
-            style={{
-              marginBottom: 16,
-              borderRadius: 10,
-              border: `1px solid ${LINE}`,
-              background: "var(--primitives-colors-background-50, #f7f8fa)",
-              overflow: "hidden",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setListOpen((o) => !o)}
-              aria-expanded={listOpen}
+        {/* C: one column, 12 between everything. Its own box and not the scroller's: a flex column
+            that scrolls SHRINKS its fixed-height children to fit — the 36px Add row measured 29.6 —
+            where a block scroller lets them overflow and scroll. */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/**
+           * **What is selected, and the way to check it** (Olcay, 2026-08-16: *"There should be an
+           * indicator of multiple items selected and upon expand the items should be listed to show
+           * which ones."*).
+           *
+           * Collapsed by default and at the very top of the body: a count is enough almost always,
+           * and the moment it is not — you are about to rename all of them — the answer is one click
+           * away rather than a trip back to the map to count outlines.
+           *
+           * Each row can drop itself out. Shift-clicking the outline does the same thing, but only if
+           * you can still find it on screen; a selection you built by panning around cannot always be
+           * unpicked the way it was picked.
+           */}
+          {showStrip && (
+            <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                width: "100%",
-                padding: "9px 12px",
-                border: "none",
-                background: "none",
-                font: "inherit",
-                fontSize: 12.5,
-                color: INK,
-                cursor: "pointer",
-                textAlign: "left",
+                marginBottom: 4,
+                borderRadius: 10,
+                border: `1px solid ${LINE}`,
+                background: "var(--primitives-colors-background-50, #f7f8fa)",
+                overflow: "hidden",
               }}
             >
-              <span
-                aria-hidden
+              <button
+                type="button"
+                onClick={() => setListOpen((o) => !o)}
+                aria-expanded={listOpen}
                 style={{
-                  display: "grid",
-                  placeItems: "center",
-                  transition: "transform .15s ease",
-                  transform: listOpen ? "rotate(90deg)" : "none",
-                  color: MUTED,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: "100%",
+                  padding: "9px 12px",
+                  border: "none",
+                  background: "none",
+                  font: "inherit",
+                  fontSize: 12.5,
+                  color: INK,
+                  cursor: "pointer",
+                  textAlign: "left",
                 }}
               >
-                {/* Was the literal ▶, drawn in whatever font the OS picked. The library chevron,
+                <span
+                  aria-hidden
+                  style={{
+                    display: "grid",
+                    placeItems: "center",
+                    transition: "transform .15s ease",
+                    transform: listOpen ? "rotate(90deg)" : "none",
+                    color: MUTED,
+                  }}
+                >
+                  {/* Was the literal ▶, drawn in whatever font the OS picked. The library chevron,
                   turned a quarter when the list is open. */}
-                <ChevronRight size={12} />
-              </span>
-              {/* After a combine the count is not a selection any more — it is a report of what
+                  <ChevronRight size={12} />
+                </span>
+                {/* After a combine the count is not a selection any more — it is a report of what
                   the shape now consists of, and saying "selected" about a removed wall would be
                   plainly untrue. */}
-              <span style={{ fontWeight: 500 }}>{tally}</span>
-              <span style={{ marginLeft: "auto", fontSize: 11, color: MUTED }}>
-                {listOpen ? "Hide" : "Show"}
-              </span>
-            </button>
-            {listOpen && (
-              <ul
-                style={{
-                  listStyle: "none",
-                  margin: 0,
-                  padding: "0 0 4px",
-                  maxHeight: 180,
-                  overflow: "auto",
-                }}
-              >
-                {selection!.map((s, i) => (
-                  <li
-                    key={s.fid}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "5px 12px 5px 30px",
-                    }}
-                  >
-                    <span style={{ minWidth: 0, flex: 1 }}>
-                      <Text
-                        style={{
-                          display: "block",
-                          // 12, down from 12.5 (Olcay, 2026-09-10: *"the title text for selected
-                          // items could be slightly smaller"*). This list is a check on what is
-                          // selected, not the panel's subject — the feature's own name in the
-                          // header is, and at 16 it should stay the largest thing on screen. The
-                          // 11px type beneath keeps the step that tells the two apart.
-                          fontSize: 12,
-                          color: INK,
-                          overflowWrap: "anywhere",
-                        }}
-                      >
+                <span style={{ fontWeight: 500 }}>{tally}</span>
+                <span
+                  style={{ marginLeft: "auto", fontSize: 11, color: MUTED }}
+                >
+                  {listOpen ? "Hide" : "Show"}
+                </span>
+              </button>
+              {listOpen && (
+                <ul
+                  style={{
+                    listStyle: "none",
+                    margin: 0,
+                    padding: "0 0 4px",
+                    maxHeight: 180,
+                    overflow: "auto",
+                  }}
+                >
+                  {selection!.map((s, i) => (
+                    <li
+                      key={s.fid}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "5px 12px 5px 30px",
+                      }}
+                    >
+                      <span style={{ minWidth: 0, flex: 1 }}>
                         <Text
-                          as="span"
                           style={{
-                            // A removed feature is struck through: it is on this list to say what
-                            // happened to it, not because it is still there.
-                            textDecoration:
-                              s.fate === "removed" ? "line-through" : "none",
-                            color: s.fate === "removed" ? MUTED : INK,
+                            display: "block",
+                            // 12, down from 12.5 (Olcay, 2026-09-10: *"the title text for selected
+                            // items could be slightly smaller"*). This list is a check on what is
+                            // selected, not the panel's subject — the feature's own name in the
+                            // header is, and at 16 it should stay the largest thing on screen. The
+                            // 11px type beneath keeps the step that tells the two apart.
+                            fontSize: 12,
+                            color: INK,
+                            overflowWrap: "anywhere",
                           }}
                         >
-                          {s.name || `Unnamed ${s.typeLabel}`}
-                        </Text>
-                        {/* What happened to it. The first row is the anchor — the panel's
+                          <Text
+                            as="span"
+                            style={{
+                              // A removed feature is struck through: it is on this list to say what
+                              // happened to it, not because it is still there.
+                              textDecoration:
+                                s.fate === "removed" ? "line-through" : "none",
+                              color: s.fate === "removed" ? MUTED : INK,
+                            }}
+                          >
+                            {s.name || `Unnamed ${s.typeLabel}`}
+                          </Text>
+                          {/* What happened to it. The first row is the anchor — the panel's
                             identity, the shape the geometry tools act on, and the one Escape
                             leaves behind — which is why the list has an order at all. */}
+                          <Text
+                            as="span"
+                            style={{
+                              marginLeft: 6,
+                              fontSize: 10.5,
+                              color: MUTED,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {s.fate ?? (i === 0 ? "primary" : "")}
+                          </Text>
+                        </Text>
                         <Text
-                          as="span"
                           style={{
-                            marginLeft: 6,
-                            fontSize: 10.5,
+                            display: "block",
+                            fontSize: 11,
                             color: MUTED,
-                            whiteSpace: "nowrap",
                           }}
                         >
-                          {s.fate ?? (i === 0 ? "primary" : "")}
+                          {s.typeLabel}
                         </Text>
-                      </Text>
-                      <Text
-                        style={{ display: "block", fontSize: 11, color: MUTED }}
+                      </span>
+                      {/**
+                       * ⚠️ **Three meanings, one control.** Dropping a *selected* row changes only
+                       * the selection; taking a *joined* one out **recomputes the shape**; putting a
+                       * *removed* one back draws it over the combined room again — which is a
+                       * coherent thing to want, and what was asked for.
+                       *
+                       * A joined row is only offered while the combine is still a composition. Once
+                       * the shape has been hand-edited, recomputing from fewer members would throw
+                       * that work away, so the control goes quiet and the title says why instead of
+                       * doing it silently.
+                       */}
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        disabled={s.fate === "joined" && !recomposable}
+                        title={
+                          s.fate === "joined"
+                            ? recomposable
+                              ? "Take this feature back out of the combined shape"
+                              : "The shape has been edited since it was combined — undo to take this back out"
+                            : s.fate === "removed"
+                              ? "Put this back on the map, over the combined shape"
+                              : "Remove from selection"
+                        }
+                        onClick={() => onDeselect?.(s.fid, s.fate)}
+                        aria-label={
+                          s.fate === "joined"
+                            ? `Take ${s.name || "this feature"} back out of the combined shape`
+                            : s.fate === "removed"
+                              ? `Put ${s.name || "this feature"} back on the map`
+                              : `Remove ${s.name || "this feature"} from the selection`
+                        }
                       >
-                        {s.typeLabel}
-                      </Text>
-                    </span>
-                    {/**
-                     * ⚠️ **Three meanings, one control.** Dropping a *selected* row changes only
-                     * the selection; taking a *joined* one out **recomputes the shape**; putting a
-                     * *removed* one back draws it over the combined room again — which is a
-                     * coherent thing to want, and what was asked for.
-                     *
-                     * A joined row is only offered while the combine is still a composition. Once
-                     * the shape has been hand-edited, recomputing from fewer members would throw
-                     * that work away, so the control goes quiet and the title says why instead of
-                     * doing it silently.
-                     */}
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      disabled={s.fate === "joined" && !recomposable}
-                      title={
-                        s.fate === "joined"
-                          ? recomposable
-                            ? "Take this feature back out of the combined shape"
-                            : "The shape has been edited since it was combined — undo to take this back out"
-                          : s.fate === "removed"
-                            ? "Put this back on the map, over the combined shape"
-                            : "Remove from selection"
-                      }
-                      onClick={() => onDeselect?.(s.fid, s.fate)}
-                      aria-label={
-                        s.fate === "joined"
-                          ? `Take ${s.name || "this feature"} back out of the combined shape`
-                          : s.fate === "removed"
-                            ? `Put ${s.name || "this feature"} back on the map`
-                            : `Remove ${s.name || "this feature"} from the selection`
-                      }
-                    >
-                      {/* `sm` is 16px, not `PanelHeader`'s default 20: these rows are dense
+                        {/* `sm` is 16px, not `PanelHeader`'s default 20: these rows are dense
                         (their title is 12px) and the full-size mark dominates them. */}
-                      <Icon name="x-close" size="sm" />
-                    </IconButton>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
+                        <Icon name="x-close" size="sm" />
+                      </IconButton>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
-        {/*
+          {/*
           ⚠️ **A "Flagged during review" alert stood here until 2026-08-25.** It carried the
           reviewer's note in their own words, and the honest admission that a flag matched by name
           might belong to any of the features sharing it. Flagging is gone (Olcay: *"once review
           concluded the map becomes the current map"*), and with it the one state this panel could
           inherit from a finished review. A feature you open while browsing is simply a feature.
         */}
-        {/**
-         * ⚠️ **A read view lived here and could not be reached.** `editing` started true, reset
-         * to true on every selection change, and was set false only by `save()` — and both
-         * screens close the panel on save, so the read branch rendered for at most one frame
-         * between the save and the unmount. A leftover from when the panel had an Edit button:
-         * removing that button removed the way back to it.
-         *
-         * Deleted rather than left as a curiosity — ~190 lines that looked load-bearing, drawn
-         * from the SDK's POI-card contract, which nobody could ever see. The contract is not
-         * lost with it: it is written up in the record and drawn in ⑤.
-         */}
-        <>
-          <Text
-            style={{
-              display: "block",
-              fontSize: 12.5,
-              color: MUTED,
-              marginBottom: 12,
-            }}
-          >
-            Provide essential information below.
-          </Text>
-
           {/**
-           * **FID — a value you can copy, not a field you can type in** (Olcay, 2026-09-09:
-           * *"fid should not look like an input also it's height is larger than others, why?"*).
+           * ⚠️ **A read view lived here and could not be reached.** `editing` started true, reset
+           * to true on every selection change, and was set false only by `save()` — and both
+           * screens close the panel on save, so the read branch rendered for at most one frame
+           * between the save and the unmount. A leftover from when the panel had an Edit button:
+           * removing that button removed the way back to it.
            *
-           * ⚠️ **Both halves of that were true.** It had a 1px border and a tinted ground, which
-           * is the shape of every editable input beside it, so it read as one — and it was
-           * **60px** tall against the 44px of its neighbours, because an 8px/8px padded box wrapped
-           * a 44px `IconButton` (`h-11 w-11` at every `size`, so `sm` buys nothing).
-           *
-           * Now: no border, a flat tint that says read-only, and a 24px copy control. A convenience
-           * on a value nobody edits does not need a 44px primary target, and giving it one made the
-           * identity row the tallest thing in the panel.
+           * Deleted rather than left as a curiosity — ~190 lines that looked load-bearing, drawn
+           * from the SDK's POI-card contract, which nobody could ever see. The contract is not
+           * lost with it: it is written up in the record and drawn in ⑤.
            */}
-          <div>
+          <>
+            {/**
+             * **FID — a value you can copy, not a field you can type in** (Olcay, 2026-09-09:
+             * *"fid should not look like an input also it's height is larger than others, why?"*).
+             *
+             * ⚠️ **Both halves of that were true.** It had a 1px border and a tinted ground, which
+             * is the shape of every editable input beside it, so it read as one — and it was
+             * **60px** tall against the 44px of its neighbours, because an 8px/8px padded box wrapped
+             * a 44px `IconButton` (`h-11 w-11` at every `size`, so `sm` buys nothing).
+             *
+             * Now: no border, a flat tint that says read-only, and a 24px copy control. A convenience
+             * on a value nobody edits does not need a 44px primary target, and giving it one made the
+             * identity row the tallest thing in the panel.
+             */}
+            <div>
+              <Text
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  lineHeight: "14px",
+                  color: MUTED,
+                  marginBottom: 4,
+                }}
+              >
+                FID
+              </Text>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "6px 8px 6px 10px",
+                  minHeight: 40,
+                  boxSizing: "border-box",
+                  borderRadius: 8,
+                  background: "var(--primitives-colors-background-100)",
+                }}
+              >
+                <Text
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    fontSize: 12,
+                    lineHeight: "16px",
+                    color: "var(--primitives-colors-background-900)",
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {String(p.fid ?? "—")}
+                </Text>
+                <button
+                  type="button"
+                  aria-label="Copy FID"
+                  title="Copy"
+                  onClick={() =>
+                    navigator.clipboard?.writeText(String(p.fid ?? ""))
+                  }
+                  style={{
+                    flex: "0 0 auto",
+                    display: "grid",
+                    placeItems: "center",
+                    width: 24,
+                    height: 24,
+                    padding: 0,
+                    border: "none",
+                    background: "none",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    color: MUTED,
+                  }}
+                >
+                  <CopyGlyph />
+                </button>
+              </div>
+            </div>
+
+            {/**
+             * **Type** — one fact with two parts, in one control. See `TypePicker`.
+             *
+             * ⚠️ **This replaced a plain `Select` of subtypes with the mainType printed above it as
+             * a separate caption**, which read as a label and a field rather than as one answer, and
+             * which offered no way to change the mainType at all. The dashboard's own picker offers
+             * the whole tree with a class pre-filter, so this does too.
+             */}
+            <div>
+              <TypePicker
+                mainType={String(draft.mainType ?? mainType)}
+                subType={
+                  draft.subType === MULTIPLE
+                    ? undefined
+                    : String(draft.subType ?? "") || undefined
+                }
+                multiple={draft.subType === MULTIPLE}
+                onChange={(next) =>
+                  setDraft((d) => ({
+                    ...d,
+                    mainType: next.mainType,
+                    // Cleared rather than left behind: a subType from the old mainType is not a
+                    // pair the taxonomy publishes, and saving it would invent a type.
+                    subType: next.subType ?? "",
+                  }))
+                }
+              />
+            </div>
+
+            {/**
+             * **Name, and Featured beside it** — the dashboard's own anatomy, and the one the doc
+             * at the top of this file has described since the beginning without it being built.
+             *
+             * `isFeatured` is a published taxonomy property (`switch`, segment *Prominence*,
+             * *"Featured or sponsored"*). It is lifted out of the generic list because it is not a
+             * fact about the place, it is a decision about how the place is shown — and because a
+             * boolean that belongs to the title reads as part of the title, not as row nineteen.
+             */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {/* ⚠️ Typing here renames EVERY selected feature — leaving it be keeps their own
+                  names, which is why the placeholder has to say what is in there rather than look
+                  like an empty required field. */}
+                <TextField
+                  label="Name *"
+                  info={propertyDef("name").description || undefined}
+                  value={
+                    draft.name === MULTIPLE ? "" : String(draft.name ?? "")
+                  }
+                  onChange={(v) => setDraft((d) => ({ ...d, name: v }))}
+                  placeholder={
+                    draft.name === MULTIPLE ? MULTI_LABEL : "Unnamed"
+                  }
+                  ariaLabel="Feature name"
+                />
+              </div>
+              <FeaturedToggle
+                value={draft.isFeatured}
+                onChange={(v) => setDraft((d) => ({ ...d, isFeatured: v }))}
+              />
+            </div>
+
+            {sections.map((g) => (
+              <div
+                key={g.segment}
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
+                {/* Same mark as PERSONA VISIBILITY below — 10px, letter-spaced, muted, upper case
+                    — so the panel has one kind of section heading rather than two. */}
+                {g.heading && <SectionHeading>{g.heading}</SectionHeading>}
+                {g.keys.map((k) => (
+                  <PropertyField
+                    key={k}
+                    def={propertyDef(k)}
+                    value={draft[k]}
+                    onChange={(v) => setDraft((d) => ({ ...d, [k]: v }))}
+                    onRemove={() => {
+                      setFields((f) => f.filter((x) => x !== k));
+                      setDraft((d) => {
+                        const n = { ...d };
+                        delete n[k];
+                        return n;
+                      });
+                    }}
+                  />
+                ))}
+              </div>
+            ))}
+
+            <AddFieldPicker
+              suggested={canAdd.sug}
+              others={canAdd.others}
+              onAdd={(k) => {
+                setFields((f) => [...f, k]);
+                setDraft((d) => ({
+                  ...d,
+                  [k]: propertyDef(k).valueType === "boolean" ? false : "",
+                }));
+              }}
+            />
+
+            <PersonaVisibility
+              features={
+                liveRows.length
+                  ? liveRows.map((r) => ({ mapPersonas: r.mapPersonas }))
+                  : [{ mapPersonas: p.mapPersonas }]
+              }
+              edits={personaEdits}
+              onEdit={setPersonaEdits}
+            />
+
+            {/**
+             * **Delete** — C's own block (Workbench `589:1079`, Olcay 2026-09-10): full width, a tonal
+             * danger ground rather than a filled red. Present only where the host can delete; the
+             * review screen does not pass `onDelete`, so it has none. The confirmation is the host's,
+             * and it names what goes.
+             */}
+            {onDelete && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="delete-feature"
+                  style={{
+                    width: "100%",
+                    height: 36,
+                    flexShrink: 0,
+                    border: "none",
+                    borderRadius: 6,
+                    background: "var(--primitives-colors-emotional-danger-0)",
+                    color: "var(--primitives-colors-emotional-danger-700)",
+                    fontFamily: "inherit",
+                    fontSize: 11.5,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  {multi
+                    ? `Delete ${liveRows.length} features`
+                    : "Delete feature"}
+                </button>
+                {multi && (
+                  <Text
+                    style={{ fontSize: 9.5, lineHeight: "12px", color: MUTED }}
+                  >
+                    The confirmation will name{" "}
+                    {liveRows.length === 2 ? "both" : `all ${liveRows.length}`}
+                  </Text>
+                )}
+              </div>
+            )}
+
             <Text
               style={{
                 display: "block",
                 fontSize: 11,
                 color: MUTED,
-                marginBottom: 4,
+                lineHeight: 1.45,
               }}
             >
-              FID
+              {reviewFootnote ??
+                "Edits are local to this prototype — nothing is written back to Pointr Cloud."}
             </Text>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "6px 8px 6px 10px",
-                minHeight: 32,
-                borderRadius: "var(--primitives-radius-lg, 8px)",
-                background: "var(--primitives-colors-background-50)",
-              }}
-            >
-              <Text
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  fontSize: 12,
-                  color: INK,
-                  overflowWrap: "anywhere",
-                }}
-              >
-                {String(p.fid ?? "—")}
-              </Text>
-              <button
-                type="button"
-                aria-label="Copy FID"
-                title="Copy"
-                onClick={() =>
-                  navigator.clipboard?.writeText(String(p.fid ?? ""))
-                }
-                style={{
-                  flex: "0 0 auto",
-                  display: "grid",
-                  placeItems: "center",
-                  width: 24,
-                  height: 24,
-                  padding: 0,
-                  border: "none",
-                  background: "none",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                  color: MUTED,
-                }}
-              >
-                <CopyGlyph />
-              </button>
-            </div>
-          </div>
-
-          {/**
-           * **Type** — one fact with two parts, in one control. See `TypePicker`.
-           *
-           * ⚠️ **This replaced a plain `Select` of subtypes with the mainType printed above it as
-           * a separate caption**, which read as a label and a field rather than as one answer, and
-           * which offered no way to change the mainType at all. The dashboard's own picker offers
-           * the whole tree with a class pre-filter, so this does too.
-           */}
-          <div style={{ marginTop: 12 }}>
-            <TypePicker
-              mainType={String(draft.mainType ?? mainType)}
-              subType={
-                draft.subType === MULTIPLE
-                  ? undefined
-                  : String(draft.subType ?? "") || undefined
-              }
-              multiple={draft.subType === MULTIPLE}
-              onChange={(next) =>
-                setDraft((d) => ({
-                  ...d,
-                  mainType: next.mainType,
-                  // Cleared rather than left behind: a subType from the old mainType is not a
-                  // pair the taxonomy publishes, and saving it would invent a type.
-                  subType: next.subType ?? "",
-                }))
-              }
-            />
-          </div>
-
-          {/**
-           * **Name, and Featured beside it** — the dashboard's own anatomy, and the one the doc
-           * at the top of this file has described since the beginning without it being built.
-           *
-           * `isFeatured` is a published taxonomy property (`switch`, segment *Prominence*,
-           * *"Featured or sponsored"*). It is lifted out of the generic list because it is not a
-           * fact about the place, it is a decision about how the place is shown — and because a
-           * boolean that belongs to the title reads as part of the title, not as row nineteen.
-           */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 8,
-              marginTop: 12,
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Input
-                label="Name *"
-                value={draft.name === MULTIPLE ? "" : String(draft.name ?? "")}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, name: e.target.value }))
-                }
-                /* ⚠️ Typing here renames EVERY selected feature — leaving it be keeps their own
-                     names, which is why the placeholder has to say what is in there rather than
-                     look like an empty required field. */
-                placeholder={draft.name === MULTIPLE ? MULTI_LABEL : "Unnamed"}
-                aria-label="Feature name"
-              />
-            </div>
-            <FeaturedToggle
-              value={draft.isFeatured}
-              onChange={(v) => setDraft((d) => ({ ...d, isFeatured: v }))}
-            />
-          </div>
-
-          {sections.map((g) => (
-            <div
-              key={g.segment}
-              style={g.detach ? { marginTop: 16 } : undefined}
-            >
-              {/* Same mark as PERSONA VISIBILITY below — 10px, letter-spaced, muted, upper case
-                    — so the panel has one kind of section heading rather than two. */}
-              {g.heading && <SectionHeading>{g.heading}</SectionHeading>}
-              {g.keys.map((k) => (
-                <PropertyField
-                  key={k}
-                  def={propertyDef(k)}
-                  value={draft[k]}
-                  onChange={(v) => setDraft((d) => ({ ...d, [k]: v }))}
-                  onRemove={() => {
-                    setFields((f) => f.filter((x) => x !== k));
-                    setDraft((d) => {
-                      const n = { ...d };
-                      delete n[k];
-                      return n;
-                    });
-                  }}
-                />
-              ))}
-            </div>
-          ))}
-
-          <AddFieldPicker
-            suggested={canAdd.sug}
-            others={canAdd.others}
-            onAdd={(k) => {
-              setFields((f) => [...f, k]);
-              setDraft((d) => ({
-                ...d,
-                [k]: propertyDef(k).valueType === "boolean" ? false : "",
-              }));
-            }}
-          />
-
-          <PersonaVisibility
-            features={
-              liveRows.length
-                ? liveRows.map((r) => ({ mapPersonas: r.mapPersonas }))
-                : [{ mapPersonas: p.mapPersonas }]
-            }
-            edits={personaEdits}
-            onEdit={setPersonaEdits}
-          />
-
-          <Text
-            style={{
-              display: "block",
-              fontSize: 11,
-              color: MUTED,
-              marginTop: 14,
-            }}
-          >
-            * Required
-          </Text>
-
-          <Text
-            style={{
-              display: "block",
-              fontSize: 11,
-              color: MUTED,
-              lineHeight: 1.45,
-              marginTop: 10,
-            }}
-          >
-            {reviewFootnote ??
-              "Edits are local to this prototype — nothing is written back to Pointr Cloud."}
-          </Text>
-        </>
+          </>
+        </div>
       </div>
 
       {/* The editor's footer, pinned like the real panel's — Cancel beside a primary that only
           lights when there is something to save. */}
       {
         <>
-          <Separator />
+          {/* C's footer: the two buttons on a background-100 band, no rule above. */}
           <div
             style={{
               display: "flex",
               gap: 8,
               padding: "12px 20px",
               flex: "0 0 auto",
+              background: "var(--primitives-colors-background-100)",
             }}
           >
             <Button

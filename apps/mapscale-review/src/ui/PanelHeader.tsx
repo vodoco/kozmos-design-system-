@@ -30,6 +30,7 @@ export function PanelHeader({
   subtitle,
   onClose,
   closeLabel = "Close",
+  tone = "plain",
 }: {
   /** The small muted line above the title — a breadcrumb or the parent's name. */
   eyebrow?: string;
@@ -54,9 +55,28 @@ export function PanelHeader({
   onClose?: () => void;
   /** Accessible name for the ✕ — say what closes, not just "close". */
   closeLabel?: string;
+  /**
+   * `band` is C's header (Workbench `589:1079`, Olcay 2026-09-10): a `theme-0` strip, 8/16 padding,
+   * a 13px title over a 10px line, and a 14px ✕. It carries its own padding — do not wrap it in
+   * `PANEL_PAD`. ⚠️ So its ✕ sits 8px higher and 4px further right than a `plain` panel's.
+   */
+  tone?: "plain" | "band";
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+    <div
+      style={
+        tone === "band"
+          ? {
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              flex: "0 0 auto",
+              background: "var(--primitives-colors-theme-0)",
+            }
+          : { display: "flex", alignItems: "flex-start", gap: 8 }
+      }
+    >
       {leading != null && (
         <span style={{ flex: "0 0 auto", marginTop: 3 }}>{leading}</span>
       )}
@@ -90,11 +110,11 @@ export function PanelHeader({
         {subtitle != null && (
           <Text
             style={{
-              fontSize: 12.5,
+              fontSize: tone === "band" ? 10 : 12.5,
               color: "var(--primitives-colors-background-600)",
               display: "block",
-              marginTop: 2,
-              lineHeight: 1.4,
+              marginTop: tone === "band" ? 4 : 2,
+              lineHeight: tone === "band" ? "13px" : 1.4,
             }}
           >
             {subtitle}
@@ -110,7 +130,11 @@ export function PanelHeader({
           title="Close"
           style={{ flex: "0 0 auto" }}
         >
-          <Icon name="x-close" />
+          {tone === "band" ? (
+            <Icon name="x-close" style={{ width: 14, height: 14 }} />
+          ) : (
+            <Icon name="x-close" />
+          )}
         </IconButton>
       )}
     </div>

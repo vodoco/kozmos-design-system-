@@ -4197,6 +4197,7 @@ function start() {
     ensureIndoorVisible();
     hideBuildingChrome(); // the SDK re-shows its layers after switches and 3D recoveries
     applyHiddenTypes();   // …and it re-shows the wayfinding network and geofences with them
+    ensureDeletedHidden(); // …and a level switch rebuilds layers without this session's deletions
     relaxPtrMinzoom();
     // One step of the render swap per idle — and, once it is live, the re-assertion that keeps the
     // tiles off and the clones' filters in step with the SDK's. See the GJ block.
@@ -6814,6 +6815,36 @@ function geomPxPerMetre(anchor) {
 const HIDDEN_FILTERS = new Map();
 
 /**
+ * Features deleted in this session (C, Olcay 2026-09-10). A third contributor to the ONE composer
+ * below — beside Combine's hidden walls and the preview's ghosts — but applied to EVERY vector
+ * layer, because a deleted feature must not survive in any layer that draws it: fill, outline,
+ * icon or label. Local to the prototype, like every edit here.
+ */
+let DELETED_FIDS = [];
+/**
+ * Every layer a feature can be drawn in — by TYPE, not by source. ⚠️ Not "every layer with a
+ * `source-layer`": the prototype also draws features from its own GeoJSON sources (the `__gj_*`
+ * render swap and the `__fpdr_*` floor plan), which have no source-layer, and a deleted feature
+ * would come back from them the moment the swap went live. A layer whose features carry no `fid`
+ * is untouched by the filter: `==` against null is simply false.
+ */
+const FILTERABLE = new Set(["fill", "line", "symbol", "circle", "fill-extrusion", "heatmap"]);
+function featureLayerIds() {
+  try {
+    return map.getStyle().layers.filter(l => FILTERABLE.has(l.type)).map(l => l.id);
+  } catch (e) { return []; }
+}
+/** On idle: a level switch rebuilds layers with the SDK's own filters, so re-apply if one lost ours. */
+function ensureDeletedHidden() {
+  if (!map || !DELETED_FIDS.length) return;
+  const probe = JSON.stringify(DELETED_FIDS[0]);
+  try {
+    if (featureLayerIds().some(id => !JSON.stringify(map.getFilter(id) || null).includes(probe)))
+      geomApplyHiddenFilter();
+  } catch (e) {}
+}
+
+/**
  * Rebuild every wall filter from `GEOM.hidden`, from scratch.
  *
  * Restore-then-reapply rather than patch: undo, redo and reset all move `hidden` wholesale, and a
@@ -6841,8 +6872,9 @@ function geomApplyHiddenFilter() {
      */
     const g = (GEOM && GEOM.hidden) || { fids: [], layers: [] };
     const h = {
-      fids: [...new Set(g.fids.concat(PREVIEW_HIDDEN.fids))],
-      layers: [...new Set(g.layers.concat(PREVIEW_HIDDEN.layers))],
+      fids: [...new Set(g.fids.concat(PREVIEW_HIDDEN.fids, DELETED_FIDS))],
+      layers: [...new Set(g.layers.concat(PREVIEW_HIDDEN.layers,
+        DELETED_FIDS.length ? featureLayerIds() : []))],
     };
     if (!h.fids.length) return;
     /**
@@ -8435,6 +8467,9 @@ window.addEventListener("message", (ev) => {
     SECTION_TYPE = d.mainType || null;
     HOVER_FEATURE = null;      // a card raised by the section you just left must not survive it
     renderTip();
+  } else if (d.type === "deleted") {
+    DELETED_FIDS = Array.isArray(d.fids) ? d.fids.map(String) : [];
+    geomApplyHiddenFilter();
   } else if (d.type === "hiddentypes") {
     /**
      * What this screen may not **draw** — the wayfinding network, geofences and positioning

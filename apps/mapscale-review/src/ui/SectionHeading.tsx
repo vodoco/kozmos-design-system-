@@ -14,6 +14,10 @@ import { Text } from "@kozmos/react";
  * The shape — 10px, letter-spaced, semibold, muted, upper case — is what PERSONA VISIBILITY has
  * always drawn, and now what an earned property section draws too, so the panel has one kind of
  * heading rather than two that merely look alike.
+ *
+ * ⚠️ **No margins, and a line height of its own** (C, Olcay 2026-09-10). The panel is one column
+ * with a 12px gap, so spacing belongs to the column, not to the heading; and without an explicit
+ * line height the DS `Text`'s `text-base` 1.5rem would make a 10px heading 22px tall.
  */
 export function SectionHeading({ children }: { children: string }) {
   return (
@@ -24,8 +28,8 @@ export function SectionHeading({ children }: { children: string }) {
         letterSpacing: 1,
         fontWeight: 600,
         color: "var(--primitives-colors-background-400)",
-        marginTop: 18,
-        marginBottom: 2,
+        lineHeight: "13px",
+        margin: 0,
       }}
     >
       {children}

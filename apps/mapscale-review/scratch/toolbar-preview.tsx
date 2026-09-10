@@ -14,10 +14,10 @@ import type { MapPrefs } from "../src/map/PointrMap";
 import { FeaturePanel, mergeForEditing } from "../src/ui/FeaturePanel";
 
 /**
- * The real panel, with a realistic property bag — for measuring the header's alignment
- * (Olcay, 2026-08-16: *"alignent issue at the feature header"*). Rendered twice: once with an icon
- * the size `TypeIcon` produces, and once with none, because the title is a flex row with a `gap`
- * and an absent icon still gets gapped away from the block's left edge.
+ * The real panel, with a realistic property bag — for measuring it against C on the Workbench
+ * (Figma `589:1079`, Olcay 2026-09-10). ⚠️ It used to render the header twice, with and without a
+ * type icon, to measure the icon's gap (2026-08-16); C's band carries no icon, so the two cases
+ * had become the same render and one of them went.
  */
 /** The bench does not act on commands; it exists to be looked at. */
 const noop = () => {};
@@ -69,36 +69,21 @@ function HeaderBench() {
   return (
     <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
       {[
-        {
-          k: "with icon",
-          icon: (
-            <span
-              style={{
-                width: 16,
-                height: 16,
-                flex: "0 0 auto",
-                display: "block",
-                background: "#c9d3e6",
-                borderRadius: 3,
-              }}
-            />
-          ),
-        },
-        { k: "no icon", icon: undefined },
+        { k: "one feature" },
         /**
          * ⚠️ **Several features selected** — the count strip, and every field the selection
          * disagrees about reading *Multiple values* rather than one feature's answer. This is the
          * case the bench exists for: it is the only place to see that a merged panel still reads as
          * one coherent form rather than a page of empty boxes.
          */
-        { k: "3 selected", icon: undefined, multi: true },
+        { k: "3 selected", multi: true },
         /**
          * ⚠️ **After a Combine** — one feature left, and the strip reporting what became of the
          * others. The three fates have to be legible in one reading: what you still have, what
          * went into it, and what it took off the floor.
          */
-        { k: "after combine", icon: undefined, multi: true, combined: true },
-      ].map(({ k, icon, multi, combined }) => (
+        { k: "after combine", multi: true, combined: true },
+      ].map(({ k, multi, combined }) => (
         <div
           key={k}
           style={{
@@ -130,7 +115,6 @@ function HeaderBench() {
             }
             /* The combine is still a composition here, so a joined row can be taken back out. */
             recomposable={combined}
-            icon={icon}
             onClose={() => {}}
           />
         </div>

@@ -1,16 +1,17 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
-  Icon,
   Input,
   Popover,
   PopoverContent,
   PopoverTrigger,
   Text,
 } from "@kozmos/react";
-import { ChevronDown, Help } from "./icons";
+import { Help } from "./icons";
+import { Caret, ClearDisc, FIELD, InnerLabel, innerShell } from "./fields";
 import { PANEL_CONTENT_WIDTH } from "./panelMetrics";
 import {
   CLASS_LABEL,
+  typeDescription,
   typeLabel,
   typeTree,
   type FeatureClass,
@@ -46,7 +47,6 @@ const FILTERS: (FeatureClass | "all")[] = [
 ];
 
 const MUTED = "var(--primitives-colors-background-600)";
-const LINE = "var(--primitives-colors-background-500)";
 const HAIR = "var(--primitives-colors-background-200)";
 const INK = "var(--review-ink)";
 const THEME = "var(--primitives-colors-theme-700)";
@@ -207,17 +207,6 @@ export function TypePicker({
 
   return (
     <div>
-      <Text
-        style={{
-          display: "block",
-          fontSize: 11,
-          color: MUTED,
-          marginBottom: 4,
-        }}
-      >
-        Select type
-      </Text>
-
       <Popover
         open={open}
         onOpenChange={(o) => {
@@ -231,67 +220,55 @@ export function TypePicker({
           <button
             type="button"
             aria-label="Select type"
+            className="inner-field"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              width: "100%",
-              // 46, not 44: two lines of 11/1.3 + 13/1.35 over 6px padding measure 46, and a
-              // mainType-only selection is one line — so a smaller floor makes the control jump
-              // 2px as you pick. Measured in the browser, not derived.
-              minHeight: 46,
-              padding: "6px 10px",
-              textAlign: "left",
-              borderRadius: "var(--primitives-radius-lg, 8px)",
-              border: `1px solid ${LINE}`,
-              background: "var(--primitives-colors-background-0)",
+              ...innerShell(),
               cursor: "pointer",
+              textAlign: "left",
+              fontFamily: "inherit",
             }}
           >
-            <span style={{ flex: 1, minWidth: 0 }}>
-              {multiple ? (
-                <Text style={{ fontSize: 13, color: MUTED }}>
-                  Multiple values
-                </Text>
-              ) : (
-                <>
-                  {/**
-                   * The mainType is CONTEXT, so it is shown above the value — quiet, and only when
-                   * it is not the value itself.
-                   *
-                   * ⚠️ **It was drawn unconditionally at first, and a mainType-only selection then
-                   * read "Retail Space" twice** — once muted, once bold. Olcay asked for *"Retail
-                   * Space in bold"*, singular. `minHeight` on the control keeps the box the same
-                   * height whether it holds one line or two, which is what I had wrongly been using
-                   * the duplicate to do.
-                   */}
-                  {subType && (
-                    <Text
-                      style={{
-                        display: "block",
-                        fontSize: 11,
-                        lineHeight: 1.3,
-                        color: MUTED,
-                      }}
-                    >
-                      {typeLabel(mainType) || "—"}
-                    </Text>
-                  )}
-                  <Text
-                    style={{
-                      display: "block",
-                      fontSize: 13,
-                      lineHeight: 1.35,
-                      fontWeight: 600,
-                      color: subType ? INK : THEME,
-                    }}
-                  >
-                    {subType
-                      ? typeLabel(subType)
-                      : typeLabel(mainType) || "Choose a type"}
-                  </Text>
-                </>
-              )}
+            <span
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              {/**
+               * C's input (Workbench `589:1079`): the label INSIDE the box, the value under it. Once a
+               * subType is chosen the label slot carries the mainType — the product's own "Support
+               * Space above Kitchenette" — so the context stays in view without a third line.
+               */}
+              <InnerLabel
+                label={
+                  !multiple && subType
+                    ? typeLabel(mainType) || "Select type"
+                    : "Select type"
+                }
+                info={typeDescription(subType || mainType) || undefined}
+              />
+              <span
+                style={{
+                  display: "block",
+                  fontSize: 12,
+                  lineHeight: "16px",
+                  color:
+                    multiple || !(subType || mainType)
+                      ? FIELD.label
+                      : FIELD.value,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {multiple
+                  ? "Multiple values"
+                  : subType
+                    ? typeLabel(subType)
+                    : typeLabel(mainType) || "Choose a type"}
+              </span>
             </span>
             {/* Clearing goes back to the mainType, which is a type in its own right — not to empty,
                 which is not a state a feature can be saved in. */}
@@ -316,27 +293,16 @@ export function TypePicker({
                   flex: "0 0 auto",
                   display: "grid",
                   placeItems: "center",
-                  width: 20,
-                  height: 20,
-                  color: MUTED,
+                  width: 24,
+                  height: 24,
                   cursor: "pointer",
                 }}
               >
-                {/* The DS `x-close`, matching `PanelHeader`'s own ✕ — the one glyph the
-                  app already takes from @kozmos/icons rather than from ./icons. */}
-                <Icon name="x-close" />
+                {/* C's clear: the disc with the DS x-close on it — see ClearDisc. */}
+                <ClearDisc />
               </span>
             )}
-            <span
-              style={{
-                flex: "0 0 auto",
-                display: "grid",
-                placeItems: "center",
-                color: MUTED,
-              }}
-            >
-              <ChevronDown size={16} />
-            </span>
+            <Caret />
           </button>
         </PopoverTrigger>
 

@@ -1,11 +1,11 @@
 import {
-  Checkbox,
   Text,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@kozmos/react";
+import { TriCheck } from "./fields";
 import { Help } from "./icons";
 import { SectionHeading } from "./SectionHeading";
 import {
@@ -44,7 +44,15 @@ export function PersonaVisibility({
   const many = features.length > 1;
 
   return (
-    <div>
+    // C: the block sits 12px further down than the column's gap, and its rows 2px apart.
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        paddingTop: 12,
+      }}
+    >
       {/* ⚠️ Was a hand-rolled <Text> with a raw #9AA0A6. The property sections now draw the same
           heading, so it comes from one component and the two cannot drift apart. */}
       <SectionHeading>
@@ -81,7 +89,7 @@ export function PersonaVisibility({
               alignItems: "center",
               justifyContent: "space-between",
               gap: 12,
-              minHeight: 30,
+              height: 30,
             }}
           >
             <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -141,13 +149,11 @@ export function PersonaVisibility({
               </TooltipProvider>
             </span>
 
-            <Checkbox
-              checked={
-                state === "indeterminate" ? "indeterminate" : state === "on"
-              }
-              onCheckedChange={cycle}
-              aria-label={persona.displayName}
-              wrapperClassName="w-auto"
+            {/* The DS Checkbox's look without its 44px row — see TriCheck. */}
+            <TriCheck
+              checked={state === "indeterminate" ? "mixed" : state === "on"}
+              onChange={cycle}
+              label={persona.displayName}
             />
           </div>
         );

@@ -130,6 +130,8 @@ const PointrMap = forwardRef<
       forLevel: { building: string; level: number },
       types: LevelTypeCount[],
     ) => void;
+    /** Fids deleted in this session — hidden from every layer that draws them (C, 2026-09-10). */
+    deleted?: string[];
     /**
      * A decision taken on the map itself — the pinned card's ✓ / 🚩 / ✗ (Olcay, 2026-08-11). The
      * map reports it and changes nothing; the app applies it and posts the result back down, so the
@@ -328,6 +330,7 @@ const PointrMap = forwardRef<
     onFileDrop,
     onFeatures,
     onTypes,
+    deleted,
     onDecision,
     active,
     onSelect,
@@ -374,6 +377,7 @@ const PointrMap = forwardRef<
     canDecide: !!onDecision,
     focusPadLeft,
     section,
+    deleted,
   });
   latest.current = {
     changes,
@@ -384,6 +388,7 @@ const PointrMap = forwardRef<
     canDecide: !!onDecision,
     focusPadLeft,
     section,
+    deleted,
   };
 
   // Its own effect: a focus is an EVENT, not state to re-send on every `ready` — re-posting it
@@ -419,6 +424,14 @@ const PointrMap = forwardRef<
       "*",
     );
   }, [peers]);
+
+  // Deletions ride their own effect: rare, and a map reload re-sends them through `send()`.
+  useEffect(() => {
+    ref.current?.contentWindow?.postMessage(
+      { type: "deleted", fids: deleted ?? [] },
+      "*",
+    );
+  }, [deleted]);
 
   /**
    * The level's true geometry, posted on its own because it arrives **asynchronously** — the fetch
@@ -559,6 +572,11 @@ const PointrMap = forwardRef<
      * content. `hiddenForSection` is that whole sentence.
      */
     win.postMessage({ type: "hiddentypes", types: hidden }, "*");
+    // A reloaded map forgets; `send()` is how it is told again.
+    win.postMessage(
+      { type: "deleted", fids: latest.current.deleted ?? [] },
+      "*",
+    );
     /**
      * ⚠️ **What may ANSWER, which is not the same as what is drawn** (Olcay, 2026-08-16: *"Clicking
      * would only edit the network and transitions but not POIs and other indoor data. Similar
