@@ -195,40 +195,54 @@ for (const mode of ["light", "dark"]) {
   );
 }
 
-// 6. The web overlay surfaces read the same role Figma paints. These two used
-// to be settled independently — Figma took a two-layer Tailwind md from a
-// helper named for Tooltip, the web took shadow-md or shadow-lg or nothing at
-// all, and no check compared them. Naming the pairs is what makes them one
-// decision instead of two.
+// 6. The web reads the roles — every component, not a list of names.
+//
+// The first version of this named the nine components converted alongside the
+// Figma overlay surfaces and asserted those. It passed while 44 raw Tailwind
+// shadow classes remained across 29 other components, because a check that
+// names what was fixed can only ever confirm what was fixed. That is the same
+// defect as counting DROP_SHADOW occurrences and calling tooltipShadowEffects
+// one literal. Scan everything; name only the exceptions.
 {
-  const OVERLAY_SURFACES = [
-    ["Tooltip", 1],
-    ["Menu", 2],
-    ["Popover", 1],
-    ["Dialog", 1],
-    ["Drawer", 1],
-    ["Combobox", 1],
-    ["MultiSelect", 1],
-    ["ColorPicker", 1],
-  ];
-  for (const [name, count] of OVERLAY_SURFACES) {
-    const file = `packages/react/src/components/${name}/${name}.tsx`;
+  const dir = "packages/react/src/components";
+  // shadow-none is not a literal elevation — it is the absence of one, the way
+  // KozmosShadows.none is on iOS.
+  const RAW = /\bshadow-(?:sm|md|lg|xl|2xl|inner)\b|\bshadow-\[/g;
+  const ALLOWED = {
+    ColorPicker:
+      "the handle's hard ring, which must stay visible on any colour beneath it",
+    FloatingActionButton:
+      "heavier than any step on purpose — the exemption Figma and iOS both record",
+  };
+  const offenders = [];
+  let raw = 0;
+  let roleReaders = 0;
+  for (const entry of fs.readdirSync(path.join(ROOT, dir), {
+    withFileTypes: true,
+  })) {
+    if (!entry.isDirectory()) continue;
+    const file = `${dir}/${entry.name}/${entry.name}.tsx`;
+    if (!fs.existsSync(path.join(ROOT, file))) continue;
     const src = read(file);
-    const found = (src.match(/shadow-overlay/g) || []).length;
-    const stale = /shadow-(?:md|lg|sm)\b/.test(src);
-    if (found === count && !stale)
-      ok(
-        `web: ${name} reads shadow-overlay${count > 1 ? ` (${count} surfaces)` : ""}`,
-      );
-    else if (stale)
-      fail(`web: ${name} still carries a raw Tailwind shadow step`);
-    else
-      fail(
-        `web: ${name} reads shadow-overlay ${found} time(s), expected ${count}`,
-      );
+    if (/shadow-(?:raised|floating|overlay)\b/.test(src)) roleReaders += 1;
+    const hits = (src.match(RAW) || []).length;
+    if (hits === 0) continue;
+    raw += hits;
+    if (!ALLOWED[entry.name]) offenders.push(`${entry.name} (${hits})`);
   }
-  const toast = read("packages/react/src/components/Toast/Toast.tsx");
-  if (/shadow-floating/.test(toast) && !/shadow-(?:md|lg|sm)\b/.test(toast))
+  if (offenders.length === 0)
+    ok(
+      `web: ${roleReaders} component(s) read an elevation role; the only raw shadows left are ${Object.keys(ALLOWED).length} named exception(s), ${raw} class(es)`,
+    );
+  else
+    fail(
+      `web: ${offenders.length} component(s) still pick a raw Tailwind shadow — ${offenders.sort().join(", ")}`,
+    );
+
+  // Toast is the one role assignment worth pinning by name, because it is the
+  // call that distinguishes a status message from a modal on all four platforms.
+  const toast = read(`${dir}/Toast/Toast.tsx`);
+  if (/shadow-floating/.test(toast))
     ok("web: Toast reads shadow-floating — a status message, not a modal");
   else fail("web: Toast does not read shadow-floating");
 }
@@ -322,6 +336,115 @@ for (const mode of ["light", "dark"]) {
     else
       fail(
         `${label}: ${offenders.length} component(s) still write their own shadow — ${offenders.sort().join(", ")}`,
+      );
+  }
+}
+
+// 8. The native values are the token values — in both themes.
+//
+// The tracked native KozmosShadows files are hand-maintained copies, which is
+// exactly how the tracked colour files became a frozen May baseline. Section 7
+// checked that the three role *names* existed and nothing about what they held,
+// so the first iOS copy passed while carrying the light values only: every
+// native shadow was close to invisible in dark mode while the web's followed
+// the theme. Compare the numbers, in both modes.
+//
+// Android is held to geometry only. Compose draws a shadow from a single
+// elevation in dp with the platform's own ambient and spot light, and Material
+// answers dark mode with tonal elevation rather than a deeper shadow, so a
+// dark alpha has nowhere to go there. That is a platform model, not a gap.
+{
+  const lookupToken = (tree, dotted) =>
+    dotted
+      .split(".")
+      .reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), tree);
+  const resolveToken = (tree, value, depth = 0) => {
+    if (depth > 10) throw new Error(`alias too deep: ${value}`);
+    const m = /^\{(.+)\}$/.exec(String(value).trim());
+    if (!m) return value;
+    const target = lookupToken(tree, m[1]);
+    if (!target || target.$value === undefined)
+      throw new Error(`unresolved alias ${value}`);
+    return resolveToken(tree, target.$value, depth + 1);
+  };
+  const parseShadow = (value, where) => {
+    const rgba =
+      /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/.exec(
+        String(value),
+      );
+    const dims = String(value)
+      .replace(/rgba?\([^)]*\)/, "")
+      .match(/-?[\d.]+/g);
+    if (!rgba || !dims || dims.length < 3)
+      throw new Error(`cannot parse ${where}: ${value}`);
+    return {
+      a: parseFloat(rgba[4] === undefined ? "1" : rgba[4]),
+      x: Number(dims[0]),
+      y: Number(dims[1]),
+      blur: Number(dims[2]),
+    };
+  };
+
+  const ROLES = ["Raised", "Floating", "Overlay"];
+  const expected = {};
+  for (const mode of ["light", "dark"]) {
+    const tree = JSON.parse(read(`packages/tokens/src/tokens-${mode}.json`));
+    for (const role of ROLES) {
+      const value = resolveToken(
+        tree,
+        lookupToken(tree, `Semantics.Elevation.${role}`).$value,
+      );
+      expected[role] = expected[role] || {};
+      expected[role][mode] = parseShadow(
+        value,
+        `${mode} Semantics.Elevation.${role}`,
+      );
+    }
+  }
+
+  const ios = read("packages/ios/Sources/KozmosShadows.swift");
+  for (const role of ROLES) {
+    const m = new RegExp(
+      `semanticsElevation${role} = ShadowToken\\(\\s*color: kozmosShadowColor\\(\\s*light: \\(([^)]*)\\),\\s*dark: \\(([^)]*)\\)\\s*\\),\\s*radius: ([\\d.]+),\\s*x: ([\\d.-]+),\\s*y: ([\\d.-]+)\\s*\\)`,
+    ).exec(ios);
+    if (!m) {
+      fail(
+        `iOS: semanticsElevation${role} is not a theme-aware ShadowToken — it has no dark value`,
+      );
+      continue;
+    }
+    const lightAlpha = Number(m[1].split(",")[3]);
+    const darkAlpha = Number(m[2].split(",")[3]);
+    const e = expected[role];
+    const wrong = [];
+    if (lightAlpha !== e.light.a)
+      wrong.push(`light alpha ${lightAlpha}, token ${e.light.a}`);
+    if (darkAlpha !== e.dark.a)
+      wrong.push(`dark alpha ${darkAlpha}, token ${e.dark.a}`);
+    if (Number(m[3]) !== e.light.blur)
+      wrong.push(`radius ${m[3]}, token blur ${e.light.blur}`);
+    if (Number(m[4]) !== e.light.x) wrong.push(`x ${m[4]}, token ${e.light.x}`);
+    if (Number(m[5]) !== e.light.y) wrong.push(`y ${m[5]}, token ${e.light.y}`);
+    if (wrong.length === 0)
+      ok(
+        `iOS: ${role} matches the tokens in both themes — alpha ${lightAlpha} light, ${darkAlpha} dark`,
+      );
+    else fail(`iOS: ${role} disagrees with the tokens — ${wrong.join("; ")}`);
+  }
+
+  const android = read(
+    "packages/android/src/main/java/com/kozmos/tokens/KozmosShadows.kt",
+  );
+  for (const role of ROLES) {
+    const m = new RegExp(`semanticsElevation${role} = ([\\d.]+)\\.dp`).exec(
+      android,
+    );
+    const want = expected[role].light.blur;
+    if (m && Number(m[1]) === want)
+      ok(`Android: ${role} is ${want}.dp, the role's blur`);
+    else
+      fail(
+        `Android: semanticsElevation${role} is ${m ? `${m[1]}.dp` : "missing"}, the role's blur is ${want}`,
       );
   }
 }

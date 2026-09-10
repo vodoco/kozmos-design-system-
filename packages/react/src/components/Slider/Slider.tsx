@@ -174,7 +174,7 @@ const Slider = React.forwardRef<
                   // pointer-events-none matters: the bubble sits directly above
                   // the knob, and a bubble that eats the pointer ends the drag
                   // the moment it appears.
-                  className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-control border bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md"
+                  className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-control border bg-popover px-2 py-1 text-xs text-popover-foreground shadow-overlay"
                   role="tooltip"
                 >
                   {formatValue

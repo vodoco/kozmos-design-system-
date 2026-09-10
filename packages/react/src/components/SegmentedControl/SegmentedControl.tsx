@@ -33,7 +33,7 @@ const segmentedControlVariants = cva(
 );
 
 const segmentedControlItemVariants = cva(
-  "inline-flex min-w-0 items-center justify-center whitespace-nowrap rounded-[12px] font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm",
+  "inline-flex min-w-0 items-center justify-center whitespace-nowrap rounded-[12px] font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-raised",
   {
     variants: {
       fullWidth: {

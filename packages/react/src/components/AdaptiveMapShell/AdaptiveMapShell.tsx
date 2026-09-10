@@ -96,7 +96,7 @@ const AdaptiveMapShell = React.forwardRef<
           <aside
             aria-label={panelLabel}
             className={cn(
-              "absolute inset-x-0 bottom-0 z-40 max-h-[min(64dvh,42rem)] overflow-hidden rounded-t-container bg-background shadow-2xl md:inset-y-[max(1rem,env(safe-area-inset-top))] md:max-h-none md:w-[min(26rem,42vw)] md:rounded-container",
+              "absolute inset-x-0 bottom-0 z-40 max-h-[min(64dvh,42rem)] overflow-hidden rounded-t-container bg-background shadow-overlay md:inset-y-[max(1rem,env(safe-area-inset-top))] md:max-h-none md:w-[min(26rem,42vw)] md:rounded-container",
               panelPlacement === "end"
                 ? "md:left-auto md:right-[max(1rem,env(safe-area-inset-right))]"
                 : "md:left-[max(1rem,env(safe-area-inset-left))] md:right-auto",

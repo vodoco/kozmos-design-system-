@@ -24,7 +24,7 @@ const WayfindingCard = React.forwardRef<HTMLDivElement, WayfindingCardProps>(
     return (
       <Card
         ref={ref}
-        className={cn("w-full max-w-sm shadow-lg", className)}
+        className={cn("w-full max-w-sm shadow-floating", className)}
         {...props}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -98,7 +98,7 @@ export const WayfindingInputRow = React.forwardRef<
             placeholder={originPlaceholder}
             className={cn(
               inputVariants(),
-              "h-10 border-none shadow-sm bg-muted/50 focus-visible:ring-1",
+              "h-10 border-none shadow-raised bg-muted/50 focus-visible:ring-1",
             )}
           />
           <input
@@ -107,14 +107,14 @@ export const WayfindingInputRow = React.forwardRef<
             placeholder={destinationPlaceholder}
             className={cn(
               inputVariants(),
-              "h-10 border-none shadow-sm bg-muted/50 focus-visible:ring-1",
+              "h-10 border-none shadow-raised bg-muted/50 focus-visible:ring-1",
             )}
           />
 
           <Button
             size="icon"
             variant="secondary"
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-pill shadow-sm z-10"
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-pill shadow-raised z-10"
             onClick={() => {
               trackEvent("WayfindingInputRow", "wayfinding_route_swapped", {
                 origin: originValue,

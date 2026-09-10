@@ -57,7 +57,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
       <article
         ref={ref}
         className={cn(
-          "relative rounded-container border bg-card text-card-foreground shadow-sm transition-shadow",
+          "relative rounded-container border bg-card text-card-foreground shadow-raised transition-shadow",
           result.selected
             ? "border-primary ring-2 ring-primary/20"
             : "border-border",

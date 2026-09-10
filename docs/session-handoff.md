@@ -1,26 +1,41 @@
 # Session Handoff
 
-Written 2026-08-24, updated 2026-08-31. Everything below was verified by
+Written 2026-08-24, updated 2026-09-10. Everything below was verified by
 running it, not recalled.
-Branch: `codex/wave-2-figma-components`.
+Branches: `codex/wave-2-figma-components` (#16) and `codex/elevation-audit` (#18), stacked; §0 has the order.
 
 ## 0. Where things stand right now
 
 This document is long because it records reasoning, not just state. If you are
 picking the work up cold, this is the whole picture in one screen.
 
-| Thing                   | State                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| `pnpm figma:verify`     | **clean on all six checks** — measured 2026-09-03 after the run                                       |
-| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                                                         |
-| `main`                  | `a2e8a0e` — PRs #1 through #4 merged                                                                  |
-| Branch vs `main`        | **14 commits ahead, unpushed** — the 2026-09-03 fixes, the border roles and the audit, ready for a PR |
-| `tokens:radius:nesting` | **0** — measured 2026-09-03 after the run; `--strict` is in CI                                        |
-| Chromatic               | **snapshot limit reached** — visual gate is not running                                               |
-| Working tree            | clean; fourteen commits on the branch, not pushed                                                     |
-| Style playbook          | `docs/style-playbook.md` — start here to change how it looks                                          |
-| Gap audit               | `docs/gap-audit-2026-09-05.md` — what is missing, measured                                            |
-| Local gates             | all green — see §7 for the list                                                                       |
+| Thing                   | State                                                                                                                                                                                                                                                       |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm figma:verify`     | matches what the importer generates; **94 of 94 sets on one build**, measured 2026-09-08 after a full Core and Product/SDK run. The stamp has moved since — the resumability change touched no painter — so the paint is current and the stamp reads behind |
+| Figma publish           | **unblocked** — 0 unbound properties, 94 sets                                                                                                                                                                                                               |
+| `main`                  | `46eb224` — PRs #1 through #15 merged                                                                                                                                                                                                                       |
+| Open PRs                | **#16** native elevation → **#18** web elevation, native shadows that follow dark mode, and `tokens:raw:check`, stacked on #16 → **#17** iOS map panel and Playground app, from a parallel session                                                          |
+| Merge order             | #16, then #18 (GitHub retargets it to `main`), then #17 once its tests pass — see §4                                                                                                                                                                        |
+| Elevation               | roles on all four platforms, native following dark mode; every exception named in `tokens:elevation:check`                                                                                                                                                  |
+| `tokens:raw:check`      | **a ratchet, not a pass mark** — 35 raw colours across 7 components, 7 raw radii across 6                                                                                                                                                                   |
+| `tokens:radius:nesting` | **0** — measured 2026-09-03 after the run; `--strict` is in CI                                                                                                                                                                                              |
+| Chromatic               | **snapshot limit reached** — nothing has been visually compared since early September, including a shadow change on 27 web components                                                                                                                       |
+| Working tree            | **shared with parallel sessions** that switch branches and leave work uncommitted — stage by file path, never `-A` or a directory                                                                                                                           |
+| Style playbook          | `docs/style-playbook.md` — start here to change how it looks                                                                                                                                                                                                |
+| Gap audit               | `docs/gap-audit-2026-09-05.md` — what is missing, measured                                                                                                                                                                                                  |
+| Local gates             | all green — the checks table in the playbook, plus `pnpm native:check` (Swift and Kotlin, about six seconds)                                                                                                                                                |
+
+**This week, 2026-09-07 to 09-10: elevation reached the library.** The roles
+added on 2026-09-07 had reached six Figma painters and no native component
+by the next day, when this audit looked.
+Thirteen Figma painters took a two-layer Tailwind shadow from a helper named
+for Tooltip — 334 of the file's 368 shadows — and the check counted it as one
+literal. The web had settled the same question on its own, in raw Tailwind
+steps from `shadow-sm` to `shadow-2xl`. The roles had been generated for iOS
+and Android and never copied into either package. All four platforms now read
+them, native follows dark mode, and a bulk plugin run that dies partway resumes
+instead of starting again. §3 has it in full, including the overnight stall
+that led to the last of those.
 
 **The library publishes.** Eleven unbound properties across five sets, two of
 them Core, had held it out of Figma; on 2026-08-31 all five were fixed, run
@@ -1005,7 +1020,114 @@ It reads every set's `componentPropertyDefinitions`, walks its
 `componentPropertyReferences`, and reports the difference — naming the
 properties, which the publish dialog does not.
 
+### Elevation reaches the library, a stalled run, and checks that name nothing
+
+Written 2026-09-10. PRs #13 to #16, and #18.
+
+**Figma.** Thirteen painters — Tooltip, Menu, Popover, Dialog, Drawer,
+BottomSheet, Toast, and the dropdown panels of Combobox, MultiSelect,
+DatePicker, DateRangePicker, TimePicker and ColorPicker — called
+`tooltipShadowEffects()`, Tailwind's two-layer `shadow-md`. Update All Core ran
+over all of them and changed none, which is how it surfaced: the shadows were
+never stale, the painters never used the roles. Twelve now read `overlay` and
+Toast reads `floating`. The file went from 34 shadows on a role and 334 off to
+186 and 30, and the 30 are the two documented exceptions. The check had passed
+throughout because it counted `type: "DROP_SHADOW"` occurrences, and a helper
+is one occurrence; it now counts reach — which functions hold a literal, and how
+many painters call each.
+
+**Web.** The first web assertion named the nine components converted alongside
+Figma, and checked those nine. It passed while 44 raw Tailwind shadow classes
+sat in 29 components it did not name. It now scans every component and names
+only the exceptions: 36 components read a role and 2 raw classes remain, both
+named. Four map panels were first mapped to `floating` and are `overlay`, for
+the reason given in the playbook.
+
+**Native.** `KozmosShadows` was generated into `packages/tokens/dist` for both
+platforms and never copied into either package, so 23 iOS sites held fifteen
+distinct values and Android picked 4, 6 and 20 dp. Both packages now carry the
+roles and the components read them. The first iOS copy carried the light values
+only — 0.05, 0.1 and 0.1 alpha where dark mode wants 0.3, 0.4 and 0.5 — so every
+native shadow was close to invisible in dark mode while the web's followed the
+theme. The generator had the same defect: its shadow formatter read `lightVal`
+and ignored the `darkValue` the colour formatter already used. Both follow the
+theme now, the generator throws on a token whose geometry differs between modes,
+and `tokens:elevation:check` compares the tracked native numbers against both
+token files rather than only checking that three names exist.
+
+**Update All Core stalled overnight on 2026-09-07**, on TreeItem — the largest
+set at 216 variants — in a preflight read of `componentPropertyDefinitions`
+that only the three Tree\*Item sets performed and that duplicated a read the
+update makes anyway. It is gone, and so is that path's habit of rebuilding a set
+on its own, which minted new node IDs behind Code Connect's back. Bulk runs now
+resume: a completion stamp, written after an updater returns and distinct from
+the `build` stamp written before it starts, lets a retry skip what is finished.
+The runner also yields between sets and through the reorganize, because without
+that a run is one block Figma cannot save through — a run progressing normally
+looked identical to a hung one for forty-five minutes, long enough that the
+advice to quit was given twice. **Silence in `lastModified` is not a stall.** The
+only honest signal was a jump in saved sets after a quiet spell.
+
+**Checks that name nothing.** Every parity check verified the tokens and then a
+named list of consumers, which can only confirm what someone already looked at.
+`pnpm tokens:raw:check` scans every component for values that bypass a role —
+35 raw colours across 7 components and 7 raw radii across 6 — as a ratchet: it
+fails when a count goes up, and also when one goes down, so a fix has to be
+recorded rather than quietly re-spent. Its largest item is a missing role rather
+than sloppiness: three map panels repeat the same translucent-panel classes
+because there is no glass surface to read. The scan also found the web's rating
+star at Tailwind's `#facc15`, where Figma and iOS agree on `Data/Yellow`; it now
+reads the token.
+
+**Tooling, and the shared checkout.** `pnpm native:check` compiles Swift and
+Kotlin in about six seconds. Android needs `packages/android/local.properties`
+pointing at the SDK, which was already installed — its absence is why the native
+rollout first went to CI unverified. This checkout is shared with parallel
+sessions that switch branches and leave work uncommitted; directory-wide staging
+swept two of their changes into these commits before the practice changed to
+staging by file path.
+
 ## 4. Immediate Next Actions, In Order
+
+**Checkpoint 2026-09-10.** In order:
+
+1. **Merge #16, then #18.** #18 is stacked on #16, and GitHub retargets it to
+   `main` when #16 lands. Both are green apart from Chromatic.
+2. **#17 needs its tests fixed before it merges.** Seven of the twelve
+   `KozmosAdaptiveMapShellTests` fail under `swift test`, reproducibly. The
+   shell decides where its panel docks from `isRegularWidth`, which is
+   `horizontalSizeClass == .regular` on iOS and hard-wired to `true` everywhere
+   else — and `swift test` runs on macOS, so every test sees the side-docked
+   layout and the insets land on the wrong edge: a bottom inset of 0 where 384
+   is expected, a side inset of 200 where 0 is. `resolvedCollisionInsets`
+   already takes the size and layout direction as arguments so that it can be
+   tested; the width class wants to be an argument too, pinned compact by the
+   tests.
+3. **The parallel session's local branch carries two of #18's commits.** Of the
+   25 commits on `codex/wayfinding-map-panel` that it has not pushed, the first
+   two are `dbc5fca` and `d0f36cf` — #18's elevation commits under their
+   pre-split hashes — and the other 23 are its own mapscale work on top. The
+   pushed branch is clean, so nothing is wrong unless it is pushed as it stands.
+   **The fix is the merge order, not surgery.** Simulated on 2026-09-10: with #16
+   and #18 merged, rebasing that branch onto `main` completes with no conflicts;
+   git skips `d0f36cf` as already applied, and `dbc5fca` shrinks to the one file
+   that was never #18's, `Checkbox.tsx` — still under an elevation title, so it
+   is worth rewording during that rebase. The indeterminate-checkbox change is
+   that session's own work, and is also preserved on
+   `codex/checkbox-indeterminate`.
+4. **Name a glass surface role.** Three map panels repeat the same
+   translucent-panel classes because there is no role for them; naming one clears
+   29 of the 35 raw colours in `tokens:raw:check`. A token decision.
+5. **19 Figma sets cast no shadow** where at least one implementation does:
+   POICard, WayfindingCard, RouteSummary, FeedbackCard, SaveLocationCard,
+   RoutingInputGroup, MapControlsGroup, FloorSelector, POIDetailPanel,
+   LocationPin, AdaptiveMapShell, UserLocationMarker, Navbar, DirectionStep,
+   POIResultCard, POIMediaGallery, Listbox, Select and DynamicIsland. Each needs
+   `elevationEffect(role)` in its painter, then a run.
+6. **The type scale**, unchanged: 14 and 12 join the scale, or the library moves
+   to 13 and 11. It governs 95% of the text in the file.
+7. **Chromatic.** The snapshot limit has left every build since early September
+   visually uncompared.
 
 **A gap audit ran overnight on 2026-09-05** against the POI Details Card Revamp
 designs and the whole monorepo: `docs/gap-audit-2026-09-05.md`. Its two

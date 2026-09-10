@@ -60,7 +60,7 @@ const UserLocationMarker = React.forwardRef<
       )}
 
       {/* Core Dot bordered with white */}
-      <div className="relative h-[18px] w-[18px] rounded-pill border-2 border-background bg-data-blue shadow-md z-10" />
+      <div className="relative h-[18px] w-[18px] rounded-pill border-2 border-background bg-data-blue shadow-floating z-10" />
     </div>
   );
 });

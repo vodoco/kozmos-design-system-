@@ -34,7 +34,7 @@ const RouteSummary = React.forwardRef<HTMLDivElement, RouteSummaryProps>(
       <div
         ref={ref}
         className={cn(
-          "flex w-full flex-col gap-4 rounded-[var(--primitives-radius-2xl)] border border-border bg-background/90 p-4 text-foreground shadow-2xl backdrop-blur-3xl transition-all duration-300",
+          "flex w-full flex-col gap-4 rounded-[var(--primitives-radius-2xl)] border border-border bg-background/90 p-4 text-foreground shadow-overlay backdrop-blur-3xl transition-all duration-300",
           className,
         )}
         {...props}
@@ -73,7 +73,7 @@ const RouteSummary = React.forwardRef<HTMLDivElement, RouteSummaryProps>(
         {state === "preview" && onStartNavigation && (
           <Button
             size="lg"
-            className="w-full h-12 rounded-pill font-semibold text-base shadow-sm"
+            className="w-full h-12 rounded-pill font-semibold text-base shadow-raised"
             onClick={onStartNavigation}
           >
             <Navigation aria-hidden="true" className="w-5 h-5 mr-2" />

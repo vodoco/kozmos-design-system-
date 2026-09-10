@@ -62,6 +62,41 @@ boundary carries meaning. The nearest softer step, `background/400`, reads
 rectangle. Separator, the menu separator, row separators, the timeline
 connector and the stepper connector all read `Subtle`.
 
+### Elevation — `Semantics.Elevation`
+
+| Role       | Light               | Dark                | For                                                          |
+| ---------- | ------------------- | ------------------- | ------------------------------------------------------------ |
+| `raised`   | `0 2px 4px` at 0.05 | `0 2px 4px` at 0.3  | On the page: cards, rows, a lifted control affordance        |
+| `floating` | `0 4px 8px` at 0.1  | `0 4px 8px` at 0.4  | Over the map: map chrome, content cards presented on the map |
+| `overlay`  | `0 8px 16px` at 0.1 | `0 8px 16px` at 0.5 | Above everything, with what is behind it dimmed or ignored   |
+
+**The role follows what a surface sits on**, not which number it happened to
+be nearest. A Toast is `floating` on every platform because it is a status
+message, not a modal. RouteSummary, FeedbackCard, SaveLocationCard and
+RoutingInputGroup are `overlay` although they sit over the map, because they
+take focus — both implementations had chosen a heavy value independently,
+before there was a role to say so.
+
+Dark mode deepens the alpha and keeps the geometry, so a surface still reads as
+lifted against a dark page. The token generator refuses a token whose geometry
+differs between modes, because a native `ShadowToken` holds one geometry.
+
+Named exceptions. Each is listed in `pnpm tokens:elevation:check`, and a literal
+anywhere else fails:
+
+- **FloatingActionButton** in Figma, on the web and on iOS: heavier than any
+  step on purpose. Android draws it with Material's own elevation.
+- **BottomNavigation** in Figma: casts upward.
+- **AdaptiveMapShell** on iOS: a paired chrome, one half casting upward.
+- **The colour-picker handle**, web and iOS: a hard ring that must stay visible
+  on any colour beneath it.
+- **LocationPin** on iOS: has to read against an arbitrary map.
+- **Card** on Android: deliberately flat at 0.dp.
+
+Android is held to geometry only. Compose draws a shadow from one elevation in
+dp with the platform's own ambient and spot light, and Material answers dark
+mode with tonal elevation rather than a deeper shadow.
+
 ### Colour ramps — `Primitives.Colors`
 
 `background` and `foreground` are 13-step greys, `theme` 11 steps, `emotional`
@@ -105,6 +140,21 @@ pnpm tokens:border:check
 
 That check refuses a `Subtle` at or above 3:1 and an `Input` below it, so the
 accessible boundary cannot be softened away by accident.
+
+### Change how raised things feel
+
+Edit `shadow.sm`, `md` or `lg` in both token files — the elevation roles alias
+them — then:
+
+```bash
+pnpm tokens:build && pnpm tokens:elevation:check
+```
+
+The check compares the tracked native files against both token files, so it
+names `packages/ios/Sources/KozmosShadows.swift` and the Android
+`KozmosShadows.kt` until they carry the new numbers. They are hand-maintained
+copies of what the generator writes to `packages/tokens/dist`; copy the values
+across rather than re-deriving them.
 
 ### Add a colour step
 
@@ -179,22 +229,38 @@ anything derived from it. When a stale-text count survives an Update, compare
 **A set may only declare what its rows render.** A property bound to no layer
 blocks publishing the whole library with "Invalid assets". One is enough.
 
+**A check that names its consumers can only confirm what someone already
+looked at.** The elevation check passed for a day while 44 raw shadow
+classes sat in 29 components it did not name, and a Figma helper called by
+thirteen painters counted as a single literal because the check counted
+occurrences. Scan everything and name only the exceptions; count reach, not
+sites. `tokens:raw:check` exists because every other parity check had this
+shape.
+
+**A quiet file is not a stalled run.** Figma cannot save while the plugin holds
+the thread, so `lastModified` can sit still for forty minutes while a bulk run
+works through the Tree sets. The runner now yields between sets, but the rule
+stands: a jump in saved sets after a silence is the only honest signal, and
+quitting to unstick a run throws that work away.
+
 ## The checks
 
 All of these run in CI. Run them locally before pushing; the whole set takes
 under a minute apart from the two that call Figma.
 
-| Command                          | Guards                                                            |
-| -------------------------------- | ----------------------------------------------------------------- |
-| `pnpm tokens:radius:check`       | Plugin, Tailwind and native agree with `Semantics.Radius`         |
-| `pnpm tokens:border:check`       | Every consumer reads `Semantics.Border`, and the contrast bands   |
-| `pnpm tokens:contrast:check`     | 50 text pairs clear WCAG AA in both themes                        |
-| `pnpm tokens:typography:check`   | Type scale parity                                                 |
-| `pnpm components:contract:check` | Variant axes, props, and the bulk sequences' completeness         |
-| `pnpm figma:plugin:check`        | The plugin's restricted syntax (no spread, `?.` or `??`)          |
-| `pnpm native:check`              | Both native packages compile, the way CI's two build jobs do      |
-| `pnpm tokens:radius:nesting`     | **Reads the live Figma file.** Concentric radii; `--strict` in CI |
-| `pnpm figma:verify`              | **Reads the live Figma file.** Six publishing checks              |
+| Command                          | Guards                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| `pnpm tokens:radius:check`       | Plugin, Tailwind and native agree with `Semantics.Radius`                |
+| `pnpm tokens:border:check`       | Every consumer reads `Semantics.Border`, and the contrast bands          |
+| `pnpm tokens:elevation:check`    | Every platform reads `Semantics.Elevation`; native values in both themes |
+| `pnpm tokens:raw:check`          | No new value bypasses a role — a ratchet over a recorded backlog         |
+| `pnpm tokens:contrast:check`     | 50 text pairs clear WCAG AA in both themes                               |
+| `pnpm tokens:typography:check`   | Type scale parity                                                        |
+| `pnpm components:contract:check` | Variant axes, props, and the bulk sequences' completeness                |
+| `pnpm figma:plugin:check`        | The plugin's restricted syntax (no spread, `?.` or `??`)                 |
+| `pnpm native:check`              | Both native packages compile, the way CI's two build jobs do             |
+| `pnpm tokens:radius:nesting`     | **Reads the live Figma file.** Concentric radii; `--strict` in CI        |
+| `pnpm figma:verify`              | **Reads the live Figma file.** Six publishing checks                     |
 
 The two that read Figma need `FIGMA_ACCESS_TOKEN` in `.env`. In CI they skip
 with a notice when the secret is absent, so a fork's build still passes.
@@ -233,7 +299,8 @@ In order, every time:
    complete."
 3. **Update** the affected sets. `Update All Core` covers 73 sets and
    `Update All Product / SDK` covers 24; both preserve node IDs and reorganize
-   once at the end. Never Rebuild.
+   once at the end. Never Rebuild. A run that dies partway resumes: pressing
+   the button again skips every set already finished on this build.
 4. **Verify from the terminal**, not from the plugin's audit alone:
    ```bash
    pnpm figma:verify && pnpm tokens:radius:nesting
@@ -280,3 +347,14 @@ Recorded so nobody rediscovers them:
 - **Screen breakpoints are emitted 16× inflated** to native.
 - **Figma's TimePicker models an open dropdown; the web's does not** render one
   at all, so the two disagree structurally rather than stylistically.
+- **No glass surface role.** FeedbackCard, RoutingInputGroup and
+  SaveLocationCard each repeat `bg-white/70 dark:bg-black/70 backdrop-blur-3xl
+ring-1 ring-black/5` — 29 of the 35 raw colours `tokens:raw:check` counts.
+- **19 Figma sets cast no shadow** where at least one implementation does. The
+  list is in `docs/session-handoff.md` §4.
+- **Card disagrees across platforms**: raised on the web and iOS, flat on
+  Android. **The iOS FloatingActionButton** uses a bare SwiftUI default where
+  Figma paints it heavier than any step.
+- **`KozmosColors` on macOS tests for dark with `appearance.name == .darkAqua`**,
+  which misses the vibrant and high-contrast dark appearances. The shadow helper
+  uses `bestMatch(from:)`; the colour file predates it.

@@ -486,76 +486,108 @@ StyleDictionary.registerFormat({
   name: "ios-swift/shadows",
   format: ({ dictionary, options }) => {
     const className = options.className || "KozmosShadows";
+    // A shadow is a colour and a geometry, and only the colour follows the
+    // theme — dark mode deepens the alpha so a surface still reads as lifted
+    // against a dark page. So the geometry must agree between modes, and a token
+    // where it does not is refused rather than quietly resolved to the light
+    // one. An unparseable value throws for the same reason: this formatter once
+    // fell back to a default and shipped one shadow under three names.
+    const parse = (value, where) => {
+      const rgba = String(value).match(
+        /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/,
+      );
+      const dims = String(value)
+        .replace(/rgba?\([^)]*\)/, "")
+        .match(/-?[\d.]+/g);
+      if (!rgba || !dims || dims.length < 3) {
+        throw new Error(
+          `ios-swift/shadows: cannot parse ${where} value "${value}"`,
+        );
+      }
+      return {
+        r: parseInt(rgba[1], 10) / 255,
+        g: parseInt(rgba[2], 10) / 255,
+        b: parseInt(rgba[3], 10) / 255,
+        a: parseFloat(rgba[4] === undefined ? "1" : rgba[4]),
+        x: parseFloat(dims[0]),
+        y: parseFloat(dims[1]),
+        blur: parseFloat(dims[2]),
+      };
+    };
+    const tuple = (c) => `(${c.r}, ${c.g}, ${c.b}, ${c.a})`;
+    const lines = dictionary.allTokens
+      .filter(
+        (token) =>
+          token.type === "shadow" ||
+          token.$type === "shadow" ||
+          (token.attributes && token.attributes.category === "shadow"),
+      )
+      .map((token) => {
+        const name = toCamelCase(token.path);
+        const lightValue = token.value || token.$value;
+        const darkValue =
+          (token.attributes && token.attributes.darkValue) || lightValue;
+        const light = parse(lightValue, `${name} light`);
+        const dark = parse(darkValue, `${name} dark`);
+        if (
+          light.x !== dark.x ||
+          light.y !== dark.y ||
+          light.blur !== dark.blur
+        ) {
+          throw new Error(
+            `ios-swift/shadows: ${name} changes geometry between modes (${lightValue} / ${darkValue}); ShadowToken holds one geometry`,
+          );
+        }
+        return `    public static let ${name} = ShadowToken(color: kozmosShadowColor(light: ${tuple(light)}, dark: ${tuple(dark)}), radius: ${light.blur}, x: ${light.x}, y: ${light.y})`;
+      });
     return `import Foundation
 import CoreGraphics
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 public struct ShadowToken {
     public let color: Color
     public let radius: CGFloat
     public let x: CGFloat
     public let y: CGFloat
+
+    public init(color: Color, radius: CGFloat, x: CGFloat, y: CGFloat) {
+        self.color = color
+        self.radius = radius
+        self.x = x
+        self.y = y
+    }
+}
+
+/// A shadow colour that follows the appearance: dark mode deepens the alpha so
+/// a surface still reads as lifted against a dark page.
+func kozmosShadowColor(
+    light: (Double, Double, Double, Double),
+    dark: (Double, Double, Double, Double)
+) -> Color {
+    #if canImport(UIKit)
+    return Color(UIColor { traits in
+        let c = traits.userInterfaceStyle == .dark ? dark : light
+        return UIColor(red: c.0, green: c.1, blue: c.2, alpha: c.3)
+    })
+    #elseif canImport(AppKit)
+    return Color(NSColor(name: nil, dynamicProvider: { appearance in
+        let c = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? dark : light
+        return NSColor(red: c.0, green: c.1, blue: c.2, alpha: c.3)
+    }))
+    #else
+    return Color(red: light.0, green: light.1, blue: light.2, opacity: light.3)
+    #endif
 }
 
 public struct ${className} {
-${dictionary.allTokens
-  .filter(
-    (token) =>
-      token.type === "shadow" ||
-      token.$type === "shadow" ||
-      (token.attributes && token.attributes.category === "shadow"),
-  )
-  .map((token) => {
-    const lightVal = token.value || token.$value;
-    const varName = toCamelCase(token.path);
-
-    const rgbaMatch = lightVal.match(
-      /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/,
-    );
-    let r = 0,
-      g = 0,
-      b = 0,
-      a = 0.1;
-    if (rgbaMatch) {
-      r = parseInt(rgbaMatch[1], 10) / 255;
-      g = parseInt(rgbaMatch[2], 10) / 255;
-      b = parseInt(rgbaMatch[3], 10) / 255;
-      a = parseFloat(rgbaMatch[4] || "1");
-    }
-
-    const dimMatch = lightVal.match(/([\d.-]+)(px)?/g);
-    let x = 0,
-      y = 4,
-      blur = 8;
-    if (dimMatch && dimMatch.length >= 3) {
-      x = parseFloat(dimMatch[0]);
-      y = parseFloat(dimMatch[1]);
-      blur = parseFloat(dimMatch[2]);
-    }
-
-    return (
-      "    public static let " +
-      varName +
-      " = ShadowToken(color: Color(red: " +
-      r +
-      ", green: " +
-      g +
-      ", blue: " +
-      b +
-      ", opacity: " +
-      a +
-      "), radius: " +
-      blur +
-      ", x: " +
-      x +
-      ", y: " +
-      y +
-      ")"
-    );
-  })
-  .filter(Boolean)
-  .join("\n")}
-}`;
+${lines.join("\n")}
+}
+`;
   },
 });
 

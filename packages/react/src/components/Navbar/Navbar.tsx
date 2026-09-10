@@ -39,7 +39,7 @@ const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
         ref={ref}
         data-slot="navbar"
         className={cn(
-          "sticky top-0 z-50 flex h-16 w-full items-center border-b bg-background px-4 shadow-sm",
+          "sticky top-0 z-50 flex h-16 w-full items-center border-b bg-background px-4 shadow-raised",
           className,
         )}
         {...props}
