@@ -11,7 +11,8 @@
     "typecheck": "tsc -b --noEmit",
     "taxonomy:gen": "node scripts/gen-taxonomy.mjs",
     "test:taxonomy": "node scratch/taxonomy.test.mjs",
-    "test:geometry": "node scratch/geometry.test.mjs"
+    "test:geometry": "node scratch/geometry.test.mjs",
+    "test:cycles": "node scratch/cycles.mjs"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "1.4.0",

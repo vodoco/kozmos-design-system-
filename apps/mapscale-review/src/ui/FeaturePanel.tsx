@@ -21,6 +21,7 @@ import {
 import { PanelHeader, PANEL_PAD } from "./PanelHeader";
 import { PersonaVisibility } from "./PersonaVisibility";
 import { SectionHeading } from "./SectionHeading";
+import { FEATURE_PANEL_WIDTH } from "./panelMetrics";
 import { TypePicker } from "./TypePicker";
 import {
   CLASS_LABEL,
@@ -77,7 +78,8 @@ import {
  * inspector. The DS has no dense property-list component, so the rows are the app's own, built from
  * DS type and tokens.
  */
-export const FEATURE_PANEL_WIDTH = 360;
+// The panel geometry lives in ./panelMetrics — see the note there on why not here.
+export { FEATURE_PANEL_WIDTH } from "./panelMetrics";
 /** The inset from the map's edges — matched to the Map Settings control in the opposite corner. */
 const PANEL_INSET = 12;
 

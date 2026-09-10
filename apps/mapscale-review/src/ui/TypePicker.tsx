@@ -8,6 +8,7 @@ import {
   Text,
 } from "@kozmos/react";
 import { ChevronDown, Help } from "./icons";
+import { PANEL_CONTENT_WIDTH } from "./panelMetrics";
 import {
   CLASS_LABEL,
   typeLabel,
@@ -341,7 +342,8 @@ export function TypePicker({
 
         <PopoverContent
           align="start"
-          style={{ width: 320, padding: 0, overflow: "hidden" }}
+          // As wide as the field it opens under — see PANEL_CONTENT_WIDTH.
+          style={{ width: PANEL_CONTENT_WIDTH, padding: 0, overflow: "hidden" }}
         >
           <div style={{ padding: 8, borderBottom: `1px solid ${HAIR}` }}>
             <Input
