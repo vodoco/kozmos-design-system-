@@ -81,6 +81,6 @@ public struct KozmosFeedbackCard: View {
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                 .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
         )
-        .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.14), radius: 16, x: 0, y: 10)
+        .kozmosElevation(KozmosShadows.semanticsElevationFloating)
     }
 }

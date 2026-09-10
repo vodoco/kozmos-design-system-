@@ -69,7 +69,7 @@ public struct KozmosPOICard<ImageContent: View, DescriptionContent: View, Action
         }
         .background(KozmosColors.primitivesColorsBackground0)
         .cornerRadius(KozmosDimensions.primitivesLayoutSpacing150)
-        .shadow(radius: 5)
+        .kozmosElevation(KozmosShadows.semanticsElevationFloating)
         .frame(width: 300)
     }
 }

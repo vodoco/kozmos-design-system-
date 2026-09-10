@@ -142,7 +142,7 @@ private struct KozmosTooltipBubble: View {
                 RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                     .stroke(KozmosColors.primitivesColorsBackground200, lineWidth: 1)
             )
-            .shadow(color: KozmosColors.primitivesColorsForeground0.opacity(0.1), radius: 6, x: 0, y: 4)
+            .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 }
 

@@ -51,12 +51,7 @@ public struct KozmosFloorSelector: View {
             .padding(KozmosDimensions.primitivesLayoutSpacing75)
             .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
             .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
-            .shadow(
-                color: KozmosColors.primitivesColorsForeground900.opacity(0.1),
-                radius: 4,
-                x: 0,
-                y: 2
-            )
+            .kozmosElevation(KozmosShadows.semanticsElevationFloating)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(label)
     }

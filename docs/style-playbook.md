@@ -192,11 +192,31 @@ under a minute apart from the two that call Figma.
 | `pnpm tokens:typography:check`   | Type scale parity                                                 |
 | `pnpm components:contract:check` | Variant axes, props, and the bulk sequences' completeness         |
 | `pnpm figma:plugin:check`        | The plugin's restricted syntax (no spread, `?.` or `??`)          |
+| `pnpm native:check`              | Both native packages compile, the way CI's two build jobs do      |
 | `pnpm tokens:radius:nesting`     | **Reads the live Figma file.** Concentric radii; `--strict` in CI |
 | `pnpm figma:verify`              | **Reads the live Figma file.** Six publishing checks              |
 
 The two that read Figma need `FIGMA_ACCESS_TOKEN` in `.env`. In CI they skip
 with a notice when the secret is absent, so a fork's build still passes.
+
+`native:check` compiles Swift and Kotlin locally in about six seconds, which
+is the difference between finding a typo now and finding it eight minutes into
+a pull request. It takes an optional `ios` or `android` argument.
+
+**Android needs one line of machine-local setup.** The SDK is usually already
+installed at `~/Library/Android/sdk`, but Gradle cannot find it unless
+`ANDROID_HOME` is set or `packages/android/local.properties` exists:
+
+```bash
+echo "sdk.dir=$HOME/Library/Android/sdk" > packages/android/local.properties
+```
+
+That file is gitignored, so it stays on your machine. Without it the native
+elevation rollout went to CI with its Kotlin half unverified — not because
+compiling locally was hard, but because nothing said how. `native:check` now
+prints this exact command rather than only reporting that a toolchain is
+missing, and skips instead of failing where a platform genuinely cannot build
+(a Linux checkout has no Xcode, and that is not an error).
 
 `figma:verify` is the cheap way to tell whether a plugin run actually landed:
 it reads the file, not the plugin's own report.

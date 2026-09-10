@@ -86,11 +86,10 @@ public struct KozmosMapControlButton<Icon: View>: View {
                 RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                     .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
             )
-            .shadow(
-                color: KozmosColors.primitivesColorsForeground900.opacity(pressed ? 0.08 : 0.14),
-                radius: pressed ? 4 : 8,
-                x: 0,
-                y: pressed ? 1 : 4
+            .kozmosElevation(
+                pressed
+                    ? KozmosShadows.semanticsElevationRaised
+                    : KozmosShadows.semanticsElevationFloating
             )
         }
         .buttonStyle(.plain)

@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosShadows
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 
@@ -231,26 +232,26 @@ private fun androidx.compose.foundation.layout.BoxScope.drawerSurfaceModifier(si
             .fillMaxWidth(0.88f)
             .widthIn(max = 384.dp)
             .align(Alignment.CenterStart)
-            .shadow(20.dp, drawerShape(side))
+            .shadow(KozmosShadows.semanticsElevationOverlay, drawerShape(side))
 
         KozmosDrawerSide.Right -> Modifier
             .fillMaxHeight()
             .fillMaxWidth(0.88f)
             .widthIn(max = 384.dp)
             .align(Alignment.CenterEnd)
-            .shadow(20.dp, drawerShape(side))
+            .shadow(KozmosShadows.semanticsElevationOverlay, drawerShape(side))
 
         KozmosDrawerSide.Top -> Modifier
             .fillMaxWidth()
             .heightIn(max = 360.dp)
             .align(Alignment.TopCenter)
-            .shadow(20.dp, drawerShape(side))
+            .shadow(KozmosShadows.semanticsElevationOverlay, drawerShape(side))
 
         KozmosDrawerSide.Bottom -> Modifier
             .fillMaxWidth()
             .heightIn(max = 360.dp)
             .align(Alignment.BottomCenter)
-            .shadow(20.dp, drawerShape(side))
+            .shadow(KozmosShadows.semanticsElevationOverlay, drawerShape(side))
     }
 
 private fun androidx.compose.foundation.layout.BoxScope.closeButtonModifier(side: KozmosDrawerSide): Modifier =

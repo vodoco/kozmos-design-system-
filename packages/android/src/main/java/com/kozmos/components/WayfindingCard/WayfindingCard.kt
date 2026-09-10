@@ -1,5 +1,6 @@
 package com.kozmos.components.wayfindingcard
 
+import com.kozmos.tokens.KozmosShadows
 import com.kozmos.tokens.KozmosDimensions
 
 import androidx.compose.foundation.layout.Column
@@ -34,7 +35,7 @@ fun KozmosWayfindingCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = KozmosShadows.semanticsElevationFloating),
         colors = CardDefaults.cardColors(containerColor = KozmosColors.primitivesColorsBackground0)
     ) {
         Column(modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)) {

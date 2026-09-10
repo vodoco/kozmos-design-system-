@@ -97,7 +97,7 @@ public struct KozmosRoutingInputGroup: View {
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                 .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
         )
-        .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.12), radius: 14, x: 0, y: 8)
+        .kozmosElevation(KozmosShadows.semanticsElevationFloating)
     }
 
     private var routeTimeline: some View {

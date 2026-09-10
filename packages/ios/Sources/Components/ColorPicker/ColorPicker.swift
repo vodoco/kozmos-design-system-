@@ -152,7 +152,7 @@ public struct KozmosColorPicker: View {
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
         )
-        .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.18), radius: 8, x: 0, y: 4)
+        .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 
     private var saturationLightnessArea: some View {

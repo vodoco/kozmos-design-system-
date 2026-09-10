@@ -36,7 +36,7 @@ public struct KozmosSearchBar: View {
         .padding(EdgeInsets(top: KozmosDimensions.primitivesLayoutSpacing200, leading: KozmosDimensions.primitivesLayoutSpacing200, bottom: KozmosDimensions.primitivesLayoutSpacing200, trailing: KozmosDimensions.primitivesLayoutSpacing200))
         .background(KozmosColors.primitivesColorsBackground0)
         .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
-        .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.15), radius: 8, x: 0, y: 4)
+        .kozmosElevation(KozmosShadows.semanticsElevationFloating)
         .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
         .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing100)
     }

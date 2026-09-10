@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
+import com.kozmos.tokens.KozmosShadows
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
@@ -123,7 +124,7 @@ fun KozmosFloorSelector(
     }
 
     val rootModifier = modifier
-        .shadow(4.dp, RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel))
+        .shadow(KozmosShadows.semanticsElevationFloating, RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel))
         .background(
             KozmosColors.primitivesColorsBackground0,
             RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel)

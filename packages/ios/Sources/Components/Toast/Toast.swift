@@ -99,7 +99,7 @@ public struct KozmosToast: View {
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
                 .stroke(KozmosColors.primitivesColorsForeground400, lineWidth: 1)
         )
-        .shadow(color: KozmosColors.primitivesColorsForeground0.opacity(0.12), radius: 16, x: 0, y: 8)
+        .kozmosElevation(KozmosShadows.semanticsElevationFloating)
     }
 
     private func scheduleAutoDismiss() {

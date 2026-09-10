@@ -32,7 +32,7 @@ public struct KozmosWayfindingCard<Content: View>: View {
         }
         .background(KozmosColors.primitivesColorsBackground0)
         .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
-        .shadow(radius: 5)
+        .kozmosElevation(KozmosShadows.semanticsElevationFloating)
     }
 }
 
