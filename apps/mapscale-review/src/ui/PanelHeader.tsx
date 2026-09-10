@@ -80,7 +80,9 @@ export function PanelHeader({
       {leading != null && (
         <span style={{ flex: "0 0 auto", marginTop: 3 }}>{leading}</span>
       )}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      {/* `anywhere`: a feature name with no break in it (an ID, a URL) wraps inside the band instead
+          of running out past the ✕. Inherited by the title and subtitle alike. */}
+      <div style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>
         {eyebrow != null && (
           <Text
             style={{
