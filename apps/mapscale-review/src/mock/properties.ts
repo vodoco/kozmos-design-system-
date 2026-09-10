@@ -111,6 +111,18 @@ export const EDITABLE_PROPERTIES: PropertyDef[] = PROPERTIES.filter(
 ).map((p) => DEFS[p.key]);
 
 /**
+ * **Where a key the taxonomy does not publish is filed.**
+ *
+ * ⚠️ **It was `"Other"`, and the panel printed that as a heading reading OTHER** — vague, and
+ * indistinguishable from a real segment. Checked before renaming: **no published property uses the
+ * segment `Other`**, so this bucket can only ever hold keys the taxonomy has never heard of —
+ * `sl`, `Color`, `Icon Image` on the demo floor. Saying so is the whole of the improvement, and it
+ * answers one of the open questions on the Workbench: custom fields live together, under their own
+ * heading, at the point their rank puts them.
+ */
+export const CUSTOM_SEGMENT = "Custom";
+
+/**
  * **For a key the taxonomy does not publish** — and a feature really does carry them: the demo
  * floor has `sl`, `Color` and `Icon Image` on its sections, none of which is in the 60.
  *
@@ -120,7 +132,12 @@ export const EDITABLE_PROPERTIES: PropertyDef[] = PROPERTIES.filter(
  */
 function inferDef(key: string): PropertyDef {
   if (/^(has|is|allows|requires)[A-Z]/.test(key))
-    return { key, valueType: "boolean", inputType: "switch", segment: "Other" };
+    return {
+      key,
+      valueType: "boolean",
+      inputType: "switch",
+      segment: CUSTOM_SEGMENT,
+    };
   if (/Url$/.test(key))
     return {
       key,
@@ -140,7 +157,7 @@ function inferDef(key: string): PropertyDef {
       key,
       valueType: "array",
       inputType: "autoComplete",
-      segment: "Other",
+      segment: CUSTOM_SEGMENT,
     };
   if (/(capacity|waitTime|Level|Count)$/i.test(key))
     return {
@@ -149,7 +166,12 @@ function inferDef(key: string): PropertyDef {
       inputType: "numberField",
       segment: "Capacity",
     };
-  return { key, valueType: "text", inputType: "textField", segment: "Other" };
+  return {
+    key,
+    valueType: "text",
+    inputType: "textField",
+    segment: CUSTOM_SEGMENT,
+  };
 }
 
 export function propertyDef(key: string): PropertyDef {

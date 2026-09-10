@@ -1323,8 +1323,13 @@ export function FeaturePanel({
   const sections = useMemo(() => {
     const rank = (k: string) => segmentRank(propertyDef(k).segment);
     const ordered = [...fields].sort((a, b) => rank(a) - rank(b));
-    const out: { segment: string; heading: string | null; keys: string[] }[] =
-      [];
+    const out: {
+      segment: string;
+      heading: string | null;
+      keys: string[];
+      /** Follows a section and has no heading of its own — see the note below. */
+      detach?: boolean;
+    }[] = [];
     for (const k of ordered) {
       const seg = propertyDef(k).segment;
       const last = out[out.length - 1];
@@ -2010,7 +2015,10 @@ export function FeaturePanel({
             </div>
 
             {sections.map((g) => (
-              <div key={g.segment}>
+              <div
+                key={g.segment}
+                style={g.detach ? { marginTop: 16 } : undefined}
+              >
                 {/* Same mark as PERSONA VISIBILITY below — 10px, letter-spaced, muted, upper case
                     — so the panel has one kind of section heading rather than two. */}
                 {g.heading && <SectionHeading>{g.heading}</SectionHeading>}
