@@ -3,7 +3,7 @@
  *
  * Every other parity check verifies the tokens, then verifies a *named list* of
  * consumers. That structure can only ever confirm what someone already looked
- * at. Elevation passed for two days while 44 raw Tailwind shadow classes sat in
+ * at. Elevation passed for a day while 44 raw Tailwind shadow classes sat in
  * 29 components the check did not name; the same blind spot covers radius and
  * colour today.
  *
