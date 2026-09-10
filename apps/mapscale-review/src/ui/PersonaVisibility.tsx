@@ -7,7 +7,7 @@ import {
   TooltipTrigger,
 } from "@kozmos/react";
 import { Help } from "./icons";
-import { SectionHeading } from "./FeaturePanel";
+import { SectionHeading } from "./SectionHeading";
 import {
   MAP_PERSONAS,
   personaStateAcross,

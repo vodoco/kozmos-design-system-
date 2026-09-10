@@ -1,4 +1,4 @@
-import { Copy, Star, StarFilled } from "./icons";
+import { Copy, Help, Star, StarFilled } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
@@ -20,6 +20,7 @@ import {
 } from "@kozmos/react";
 import { PanelHeader, PANEL_PAD } from "./PanelHeader";
 import { PersonaVisibility } from "./PersonaVisibility";
+import { SectionHeading } from "./SectionHeading";
 import { TypePicker } from "./TypePicker";
 import {
   CLASS_LABEL,
@@ -308,24 +309,59 @@ export function mergeForEditing(
 /* ── editing: the dashboard's field editor ───────────────────────────────────── */
 
 /**
- * A section heading, in the panel's one heading style — the same one `PersonaVisibility` draws.
- * Kept here rather than duplicated so the two can never drift apart.
+ * What an object-valued property has in it, in one line. The taxonomy publishes no shape for these
+ * beyond `object`, so this counts and names rather than pretending to parse a schema it does not
+ * have.
  */
-export function SectionHeading({ children }: { children: string }) {
+function summariseObject(key: string, v: unknown): string {
+  if (v == null || v === "") return "Not set";
+  if (typeof v !== "object") return String(v);
+  const o = v as Record<string, unknown>;
+  if (key === "openingHours") {
+    const days = Object.keys(o).length;
+    return days ? `${days} day${days === 1 ? "" : "s"} set` : "Not set";
+  }
+  if (key === "rating") {
+    const score = o.value ?? o.score ?? o.rating;
+    const count = o.count ?? o.total ?? o.votes;
+    if (score != null)
+      return count != null
+        ? `${score} out of 5, from ${count} ratings`
+        : `${score} out of 5`;
+  }
+  const n = Object.keys(o).length;
+  return `${n} field${n === 1 ? "" : "s"}`;
+}
+
+/**
+ * **The taxonomy's own one-line explanation, beside the field it explains.**
+ *
+ * 🔴 **The design has carried a ⓘ on every property since ⑤ and the panel had none.** All sixty
+ * published properties have a description — checked, none blank — so the affordance always has
+ * something to say, and the words are the taxonomy's rather than ours. A field called *Service
+ * Options* is not self-explanatory; *"Which food service options are supported (eg. in-store dining,
+ * takeout, takeaway)"* is.
+ *
+ * ⚠️ Not focusable. A form of twenty fields would otherwise take forty tab stops to cross — the same
+ * arithmetic that made the type picker unusable. It is `title` on hover, and it is the same
+ * `help-circle` the picker and the persona rows draw.
+ */
+function PropertyInfo({ def }: { def: PropertyDef }) {
+  if (!def.description) return null;
   return (
-    <Text
+    <span
+      aria-hidden
+      title={def.description}
       style={{
-        display: "block",
-        fontSize: 10,
-        letterSpacing: 1,
-        fontWeight: 600,
-        color: "var(--primitives-colors-background-400)",
-        marginTop: 18,
-        marginBottom: 2,
+        flex: "0 0 auto",
+        display: "grid",
+        placeItems: "center",
+        color: MUTED,
+        cursor: "help",
       }}
     >
-      {children}
-    </Text>
+      <Help size={13} />
+    </span>
   );
 }
 
@@ -460,17 +496,20 @@ function PropertyField({
     <div style={{ marginTop: 12 }}>
       {/* One caption for every branch. See the note above. */}
       {!inlineControl && (
-        <Text
+        <span
           style={{
-            display: "block",
-            fontSize: 11,
-            color: MUTED,
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
             marginBottom: 4,
           }}
         >
-          {label}
-          {many && <MultiHint />}
-        </Text>
+          <Text style={{ fontSize: 11, color: MUTED }}>
+            {label}
+            {many && <MultiHint />}
+          </Text>
+          <PropertyInfo def={def} />
+        </span>
       )}
       <div
         style={{
@@ -506,6 +545,9 @@ function PropertyField({
               <label
                 htmlFor={`f-${def.key}`}
                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
                   fontSize: 13,
                   color: INK,
                   cursor: "pointer",
@@ -517,6 +559,7 @@ function PropertyField({
                   instead — and it reads OFF, which is the safe way round: nothing is written to
                   any feature until it is actually toggled. */}
                 {many && <MultiHint />}
+                <PropertyInfo def={def} />
               </label>
               {/**
                * ⚠️ **A span, because the DS wrapper is `w-full` and `wrapperClassName` cannot undo
@@ -587,6 +630,72 @@ function PropertyField({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          ) : def.key === "priceRange" ? (
+            /**
+             * **Price range is four steps, not a number box.** The taxonomy calls it
+             * `integer / custom` and leaves the control to us; ⑤ draws exactly this and the panel
+             * was rendering a spinner you could type 97 into.
+             */
+            <div style={{ display: "flex", gap: 0 }}>
+              {[1, 2, 3, 4].map((n) => {
+                const on = Number(shown) === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    aria-pressed={on}
+                    aria-label={`Price level ${n} of 4`}
+                    onClick={() => onChange(on ? "" : n)}
+                    style={{
+                      flex: 1,
+                      height: 34,
+                      fontSize: 12.5,
+                      fontFamily: "inherit",
+                      cursor: "pointer",
+                      color: on ? "#fff" : INK,
+                      background: on
+                        ? "var(--primitives-colors-theme-700)"
+                        : "transparent",
+                      border: `1px solid ${LINE}`,
+                      borderLeftWidth: n === 1 ? 1 : 0,
+                      borderTopLeftRadius: n === 1 ? 8 : 0,
+                      borderBottomLeftRadius: n === 1 ? 8 : 0,
+                      borderTopRightRadius: n === 4 ? 8 : 0,
+                      borderBottomRightRadius: n === 4 ? 8 : 0,
+                    }}
+                  >
+                    {"$".repeat(n)}
+                  </button>
+                );
+              })}
+            </div>
+          ) : def.valueType === "object" ? (
+            /**
+             * 🔴 **An object was editable as TEXT, and editing it destroyed it.** `openingHours` and
+             * `rating` are `object / custom`; the generic branch put them in a text input, so a
+             * feature carrying a real schedule showed `[object Object]` and one keystroke replaced a
+             * week of opening times with a string.
+             *
+             * They are read-only here until they have the controls ⑤ draws for them — a schedule grid
+             * and a rating line. Read-only is not the answer, but it is not a lie and it cannot lose
+             * anybody's data; an editable box that corrupts on touch is both.
+             */
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                minHeight: 34,
+                padding: "6px 10px",
+                borderRadius: "var(--primitives-radius-lg, 8px)",
+                background: "var(--primitives-colors-background-50)",
+              }}
+            >
+              <Text style={{ flex: 1, minWidth: 0, fontSize: 12, color: INK }}>
+                {summariseObject(def.key, shown)}
+              </Text>
+              <Text style={{ fontSize: 10.5, color: MUTED }}>read-only</Text>
             </div>
           ) : def.valueType === "array" ? (
             /* Many values: the chips you have, plus a way to add another — a picker when the
