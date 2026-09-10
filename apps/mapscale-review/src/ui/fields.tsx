@@ -5,17 +5,19 @@
  *
  * C draws three shells, and every property control sits inside one of them:
  *
- * - **InnerField** — the product's own input (the old "Text-Inputs · small"): 40px tall, a 2px
- *   `background-100` border, radius 8, and the label INSIDE the box at 10px above a 12px value.
+ * - **InnerField** — the product's own input (the old "Text-Inputs · small"): 40px tall, the one
+ *   1px border, radius 8, and the label INSIDE the box at 10px above a 12px value.
  *   Text, links, the name, the type and every single choice.
  * - **BoxField** — a 1px `background-200` box with a 9.5px label on top: description, opening
  *   hours, rating, images, logo. Chips put the same label *above* the box instead of in it.
  * - **RowField** — a 12px label on the left and the control on the right: switches, the number
  *   stepper, the price band.
  *
- * ⚠️ **Two borders, because C draws two.** The inputs carry the product input's 2px `#e3e4e8`; the
- * drawn boxes carry 1px `#c7cad1`. They are reproduced as drawn rather than reconciled here — if
- * they should be one border, that is a change to C first.
+ * **One border** (Olcay, 2026-09-10: *"use one border style, the 1px box one"*). C drew two — the
+ * product input's 2px `#e3e4e8` and the drawn box's 1px `#c7cad1` — and every field now takes the
+ * box's: 1px `background-200`. ⚠️ At about 1.6:1 on white it is under WCAG 1.4.11's 3:1 for an
+ * input's boundary (the DS's `Border/Input`, `#747b8b`, passes); the 2px style it replaced was
+ * under it too. Focus is shown by a theme ring, not by the border alone — see `index.css`.
  */
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { Icon, Popover, PopoverContent, PopoverTrigger } from "@kozmos/react";
@@ -33,10 +35,10 @@ export const FIELD = {
   muted: "var(--primitives-colors-background-600)",
   /** The clear button's disc — `foreground/400`. */
   faint: "var(--primitives-colors-background-400)",
-  /** The input's 2px border — C's `#e3e4e8`. */
-  inputBorder: "var(--primitives-colors-background-100)",
-  /** The drawn box's 1px border — `foreground/200`. */
-  boxBorder: "var(--primitives-colors-background-200)",
+  /** The panel's one field border, 1px — C's box border, `foreground/200` (Olcay, 2026-09-10). */
+  border: "var(--primitives-colors-background-200)",
+  /** A chip's ground — `foreground/100`. */
+  chip: "var(--primitives-colors-background-100)",
   surface: "var(--primitives-colors-background-0)",
   link: "var(--primitives-colors-theme-700)",
   /** A switch that is on — C's toggle track. */
@@ -78,7 +80,7 @@ export const innerShell = (height = 40): CSSProperties => ({
   padding: "4px 8px",
   boxSizing: "border-box",
   borderRadius: 8,
-  border: `2px solid ${FIELD.inputBorder}`,
+  border: `1px solid ${FIELD.border}`,
   background: FIELD.surface,
 });
 
@@ -443,7 +445,7 @@ export function BoxField({
         gap: 6,
         padding: "10px 12px",
         borderRadius: 8,
-        border: `1px solid ${FIELD.boxBorder}`,
+        border: `1px solid ${FIELD.border}`,
         background: FIELD.surface,
       }}
     >
@@ -509,7 +511,7 @@ export function Toggle({
   onChange: (next: boolean) => void;
   label: string;
 }) {
-  const ink = checked ? FIELD.on : FIELD.boxBorder;
+  const ink = checked ? FIELD.on : FIELD.border;
   return (
     <button
       type="button"
@@ -647,7 +649,7 @@ export function PriceBand({
         display: "inline-flex",
         flex: "0 0 auto",
         borderRadius: 8,
-        border: `1px solid ${FIELD.boxBorder}`,
+        border: `1px solid ${FIELD.border}`,
         overflow: "hidden",
         background: FIELD.surface,
       }}
@@ -695,7 +697,7 @@ export function Chip({
         gap: 4,
         padding: "3px 4px 3px 9px",
         borderRadius: 999,
-        background: FIELD.inputBorder,
+        background: FIELD.chip,
         fontSize: 11.5,
         lineHeight: "16px",
         color: FIELD.ink,
@@ -762,7 +764,7 @@ export function ChipsField({
           padding: "7px 8px",
           boxSizing: "border-box",
           borderRadius: 8,
-          border: `1px solid ${FIELD.boxBorder}`,
+          border: `1px solid ${FIELD.border}`,
           background: FIELD.surface,
         }}
       >

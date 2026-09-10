@@ -394,7 +394,7 @@ function ImageList({
             color: FIELD.ink,
             padding: "7px 10px",
             borderRadius: 8,
-            border: `1px solid ${FIELD.label}`,
+            border: `1px solid ${FIELD.border}`,
             background: "transparent",
           }}
         />

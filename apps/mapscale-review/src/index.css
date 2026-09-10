@@ -102,11 +102,13 @@ body {
   color: var(--primitives-colors-emotional-danger-700);
 }
 
-/* C's inputs (src/ui/fields.tsx): the product input's 2px border takes the theme colour while the
+/* C's inputs (src/ui/fields.tsx): the field's 1px border takes the theme colour while the
    field has focus — C draws no focus state, and a keyboard user still needs one — and its
    placeholder is the label's grey (C: foreground/500). */
 .inner-field:focus-within {
   border-color: var(--primitives-colors-theme-500) !important;
+  /* The border is 1px now (one border style), so focus adds a 1px ring to read as 2px. */
+  box-shadow: 0 0 0 1px var(--primitives-colors-theme-500);
 }
 .inner-field input::placeholder {
   color: var(--primitives-colors-background-500);
