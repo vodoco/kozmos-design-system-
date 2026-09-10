@@ -84,17 +84,6 @@ export { FEATURE_PANEL_WIDTH } from "./panelMetrics";
 const PANEL_INSET = 12;
 
 const MUTED = "var(--primitives-colors-background-600)";
-/**
- * ⚠️ **This was `background-900` — `#17191c`, near-black in the light theme.** A token named
- * like a background doing a hairline's job, which is why every box in the panel had a hard
- * outline (Olcay, 2026-09-09: *"the input outlines should not be black"*). The same mistake was
- * already fixed once on the geometry toolbar's own border and not carried here.
- *
- * `background-500` is `#747b8b`, which is exactly what the design system's own `Input` uses for
- * its border (`border-[color:var(--primitives-colors-foreground-500)]`, and the two ramps meet
- * at 500). So a drawn box and a real input now agree instead of the drawn one being darker.
- */
-const LINE = "var(--primitives-colors-background-500)";
 const INK = "var(--review-ink)";
 /** Handled by their own dedicated controls rather than as generic properties. */
 const RESERVED = new Set([
@@ -456,9 +445,10 @@ function FeaturedToggle({
          * color. yellowish."*). A featured place is not a selected place, and a blue star beside a
          * blue Update button read as "this control is on" rather than as a mark of prominence.
          * `emotional/alert` is the published amber ramp — 500 for the star, 300 for its border,
-         * 0 for the ground.
+         * 0 for the ground. Off, it takes the panel's one border, like the fields beside it
+         * (Olcay, 2026-09-10).
          */
-        border: `1px solid ${on ? "var(--primitives-colors-emotional-alert-300)" : LINE}`,
+        border: `1px solid ${on ? "var(--primitives-colors-emotional-alert-300)" : FIELD.border}`,
         background: on
           ? "var(--primitives-colors-emotional-alert-0)"
           : "transparent",
@@ -1460,7 +1450,7 @@ export function FeaturePanel({
               style={{
                 marginBottom: 4,
                 borderRadius: 10,
-                border: `1px solid ${LINE}`,
+                border: `1px solid ${FIELD.border}`, // the panel's one border (Olcay, 2026-09-10)
                 background: "var(--primitives-colors-background-50, #f7f8fa)",
                 overflow: "hidden",
               }}
