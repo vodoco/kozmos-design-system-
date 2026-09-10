@@ -1,4 +1,4 @@
-import { Warning, Pencil, Reset } from "./icons";
+import { ChevronDown, Pencil, Reset, Warning } from "./icons";
 import { useState } from "react";
 import {
   SegmentedControl,
@@ -603,8 +603,16 @@ export function ChangeReviewRow({
               : mine.capped.length
                 ? `Details · ${mine.capped.length} more of yours`
                 : "Details"}
-            <span style={{ fontSize: 8, lineHeight: 1 }}>
-              {expanded ? "▲" : "▼"}
+            {/* Was the literal ▲/▼. The library chevron, turned over when open. */}
+            <span
+              aria-hidden
+              style={{
+                display: "grid",
+                placeItems: "center",
+                transform: expanded ? "rotate(180deg)" : undefined,
+              }}
+            >
+              <ChevronDown size={12} />
             </span>
           </button>
         </div>

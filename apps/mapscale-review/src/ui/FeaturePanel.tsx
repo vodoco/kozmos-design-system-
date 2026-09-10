@@ -1,4 +1,4 @@
-import { Copy, Help, Star, StarFilled } from "./icons";
+import { ChevronRight, Copy, Help, Star, StarFilled } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
@@ -1671,14 +1671,16 @@ export function FeaturePanel({
               <span
                 aria-hidden
                 style={{
-                  display: "inline-block",
+                  display: "grid",
+                  placeItems: "center",
                   transition: "transform .15s ease",
                   transform: listOpen ? "rotate(90deg)" : "none",
-                  fontSize: 10,
                   color: MUTED,
                 }}
               >
-                ▶
+                {/* Was the literal ▶, drawn in whatever font the OS picked. The library chevron,
+                  turned a quarter when the list is open. */}
+                <ChevronRight size={12} />
               </span>
               {/* After a combine the count is not a selection any more — it is a report of what
                   the shape now consists of, and saying "selected" about a removed wall would be
