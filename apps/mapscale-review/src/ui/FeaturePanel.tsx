@@ -23,14 +23,7 @@ import { PersonaVisibility } from "./PersonaVisibility";
 import { SectionHeading } from "./SectionHeading";
 import { FEATURE_PANEL_WIDTH } from "./panelMetrics";
 import { TypePicker } from "./TypePicker";
-import {
-  CLASS_LABEL,
-  categoryLabel,
-  categoryOf,
-  classOf,
-  suggestedFor,
-  typeLabel,
-} from "../mock/taxonomy";
+import { suggestedFor, typeLabel } from "../mock/taxonomy";
 import {
   TYPE_LABEL,
   isTruthy,
@@ -96,14 +89,6 @@ const MUTED = "var(--primitives-colors-background-600)";
  */
 const LINE = "var(--primitives-colors-background-500)";
 const INK = "var(--review-ink)";
-
-/** The tile properties that are identity, not content — shown, never edited. See the note above. */
-const IDENTITY: { key: string; label: string }[] = [
-  { key: "fid", label: "FID" },
-  { key: "bid", label: "Building ID" },
-  { key: "sid", label: "Site ID" },
-  { key: "lvl", label: "Level index" },
-];
 /** Handled by their own dedicated controls rather than as generic properties. */
 const RESERVED = new Set([
   "fid",
@@ -145,78 +130,7 @@ function SectionTitle({ children }: { children: string }) {
   );
 }
 
-/** A value chip — the SDK card's own unit for "one of a set". */
-function ValueChip({ children, muted }: { children: string; muted?: boolean }) {
-  return (
-    <span
-      style={{
-        fontSize: 11.5,
-        padding: "4px 9px",
-        borderRadius: 999,
-        border: `1px ${muted ? "dashed" : "solid"} ${LINE}`,
-        background: muted
-          ? "transparent"
-          : "var(--primitives-colors-background-100)",
-        color: muted ? MUTED : INK,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
 /* ── reading: the card, derived from properties ──────────────────────────────── */
-
-/**
- * One derived section of the read view.
- *
- * Built by walking the property bag rather than a field list, which is what makes this *the same
- * shape* as the SDK card instead of a lookalike: the card has 23 sections because the feature has
- * 23 properties worth drawing, not because anybody enumerated them.
- */
-function DerivedSections({ values }: { values: Record<string, unknown> }) {
-  const sections = useMemo(() => {
-    const out: { key: string; def: PropertyDef; chips: string[] }[] = [];
-    for (const [key, v] of Object.entries(values)) {
-      if (RESERVED.has(key)) continue;
-      const def = propertyDef(key);
-      // Booleans and hyperlinks are drawn elsewhere (stat chips / actions); text is a paragraph.
-      if (def.valueType !== "array" && def.valueType !== "enum") continue;
-      const chips = toArray(v);
-      if (chips.length) out.push({ key, def, chips });
-    }
-    return out.sort(
-      (a, b) => segmentRank(a.def.segment) - segmentRank(b.def.segment),
-    );
-  }, [values]);
-
-  if (!sections.length) return null;
-  return (
-    <>
-      {sections.map((s) => (
-        <div key={s.key} style={{ marginTop: 16 }}>
-          <Text
-            style={{
-              display: "block",
-              fontSize: 12.5,
-              fontWeight: 600,
-              color: INK,
-              marginBottom: 6,
-            }}
-          >
-            {propertyLabel(s.key)}
-          </Text>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {s.chips.map((c) => (
-              <ValueChip key={c}>{c}</ValueChip>
-            ))}
-          </div>
-        </div>
-      ))}
-    </>
-  );
-}
 
 /* ── editing several features at once ─────────────────────────────────────────
    Olcay, 2026-08-16: *"edit metadata panel would update based on the combined information (e.g.
@@ -1367,7 +1281,15 @@ export function FeaturePanel({
    * Safe because nothing commits until **Update**, which stays disabled until something actually
    * changes — so a look still costs nothing, exactly as it did before.
    */
-  const [editing, setEditing] = useState(true);
+  /**
+   * ⚠️ **`editing` was state that could only ever be true**, and it is gone with the read view it
+   * switched to. It began true, the seed effect set it true again on every selection change, and
+   * only `save()` set it false — immediately before both screens unmounted the panel. A flag whose
+   * false branch nobody can reach is not a state, it is a comment that compiles.
+   *
+   * The panel is an editor. Selecting a feature IS edit mode here (Olcay, 2026-08-14), and that is
+   * now said by the code rather than only in a note above it.
+   */
   /**
    * ⚠️ **Live rows only.** After a Combine the list still carries the joined and removed features —
    * that is the point of it — but only one feature is actually being edited. Counting the whole
@@ -1421,7 +1343,6 @@ export function FeaturePanel({
   const seed =
     (selection ?? []).map((s) => s.fid).join(",") || String(p.fid ?? "");
   useEffect(() => {
-    setEditing(true);
     setDraft({ ...p });
     setPersonaEdits({});
     setFields(Object.keys(p).filter((k) => !RESERVED.has(k)));
@@ -1482,15 +1403,12 @@ export function FeaturePanel({
    * ⚠️ `??` and not `||`: clearing the subType sets it to `""`, which must NOT fall back to the
    * saved value — that is exactly the state where the mainType alone is the answer.
    */
-  const values = editing ? draft : p;
+  const values = draft;
   const mainType = String(values.mainType ?? p.mainType ?? "");
   const rawSub = values.subType ?? p.subType;
   const subType = rawSub && rawSub !== MULTIPLE ? String(rawSub) : undefined;
   const name = p.name ? String(p.name) : "";
-  const cls = classOf(mainType, subType);
-  const category = categoryOf(mainType, subType);
   const suggested = suggestedFor(mainType, subType);
-  const description = String(values.description ?? "");
   /**
    * Not-yet-added properties, split the way the picker shows them.
    *
@@ -1558,39 +1476,6 @@ export function FeaturePanel({
     return { sug, others };
   }, [fields, suggested]);
 
-  /** Booleans that are true, and scalars worth a chip — the card's stat row. */
-  const stats = useMemo(() => {
-    const out: string[] = [];
-    for (const [k, v] of Object.entries(values)) {
-      if (RESERVED.has(k)) continue;
-      const def = propertyDef(k);
-      if (def.valueType === "boolean" && isTruthy(v))
-        out.push(propertyLabel(k));
-      else if (def.valueType === "integer" && v != null && v !== "")
-        out.push(
-          k === "priceRange"
-            ? "$".repeat(Math.max(1, Math.min(4, Number(v) || 1)))
-            : `${propertyLabel(k)} ${v}`,
-        );
-    }
-    return out;
-  }, [values]);
-
-  const links = useMemo(
-    () =>
-      Object.entries(values)
-        .filter(
-          ([k, v]) =>
-            !RESERVED.has(k) && propertyDef(k).valueType === "hyperlink" && v,
-        )
-        .map(([k, v]) => ({
-          key: k,
-          label: propertyDef(k).actionName ?? propertyLabel(k),
-          href: String(v),
-        })),
-    [values],
-  );
-
   /**
    * **Update saves and finishes.** (Olcay, 2026-08-15: *"update a feature should close the edit and
    * save the changes"*.) Selecting a feature IS edit mode here, so leaving the panel open after
@@ -1602,7 +1487,6 @@ export function FeaturePanel({
    * would discard the outline it was about to save.
    */
   const save = () => {
-    setEditing(false);
     // One Update commits both halves. The map keeps the shape and re-baselines, so the panel does
     // not stay dirty against an outline it has just saved.
     onCommitGeometry?.();
@@ -1710,7 +1594,7 @@ export function FeaturePanel({
                    * on screen is the worst possible way to find out. Guarded here rather than
                    * only upstream: this is the one string a person always reads.
                    */
-                  (editing && draft.name !== MULTIPLE
+                  (draft.name !== MULTIPLE
                     ? String(draft.name ?? "")
                     : name === MULTIPLE
                       ? ""
@@ -1720,15 +1604,7 @@ export function FeaturePanel({
           subtitle={
             multi
               ? "Editing all of them — a change here is a change to every one."
-              : editing
-                ? (reviewNote ?? "You are editing this feature’s properties.")
-                : [
-                    CLASS_LABEL[cls],
-                    category ? categoryLabel(category) : null,
-                    typeLabel(subType || mainType),
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")
+              : (reviewNote ?? "You are editing this feature’s properties.")
           }
           onClose={onClose}
           closeLabel="Close feature properties"
@@ -1831,7 +1707,12 @@ export function FeaturePanel({
                       <Text
                         style={{
                           display: "block",
-                          fontSize: 12.5,
+                          // 12, down from 12.5 (Olcay, 2026-09-10: *"the title text for selected
+                          // items could be slightly smaller"*). This list is a check on what is
+                          // selected, not the panel's subject — the feature's own name in the
+                          // header is, and at 16 it should stay the largest thing on screen. The
+                          // 11px type beneath keeps the step that tells the two apart.
+                          fontSize: 12,
                           color: INK,
                           overflowWrap: "anywhere",
                         }}
@@ -1920,379 +1801,245 @@ export function FeaturePanel({
           concluded the map becomes the current map"*), and with it the one state this panel could
           inherit from a finished review. A feature you open while browsing is simply a feature.
         */}
-        {!editing ? (
-          /* ── reading: the POI card, derived ─────────────────────────────────── */
-          <>
-            {/* No Edit button: the panel opens in edit mode, so there is nothing to switch INTO.
-                Reading is what you get after saving, or on a feature the taxonomy will not edit. */}
-            <SectionTitle>Details</SectionTitle>
+        {/**
+         * ⚠️ **A read view lived here and could not be reached.** `editing` started true, reset
+         * to true on every selection change, and was set false only by `save()` — and both
+         * screens close the panel on save, so the read branch rendered for at most one frame
+         * between the save and the unmount. A leftover from when the panel had an Edit button:
+         * removing that button removed the way back to it.
+         *
+         * Deleted rather than left as a curiosity — ~190 lines that looked load-bearing, drawn
+         * from the SDK's POI-card contract, which nobody could ever see. The contract is not
+         * lost with it: it is written up in the record and drawn in ⑤.
+         */}
+        <>
+          <Text
+            style={{
+              display: "block",
+              fontSize: 12.5,
+              color: MUTED,
+              marginBottom: 12,
+            }}
+          >
+            Provide essential information below.
+          </Text>
 
-            {description && (
-              <Text
-                style={{
-                  display: "block",
-                  fontSize: 13,
-                  lineHeight: 1.5,
-                  color: INK,
-                  marginTop: 8,
-                }}
-              >
-                {description}
-              </Text>
-            )}
-
-            {links.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 6,
-                  marginTop: 10,
-                }}
-              >
-                {links.map((l) => (
-                  <Button key={l.key} variant="outline" size="sm" asChild>
-                    <a href={l.href} target="_blank" rel="noreferrer noopener">
-                      {l.label}
-                    </a>
-                  </Button>
-                ))}
-              </div>
-            )}
-
-            {stats.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 6,
-                  marginTop: 10,
-                }}
-              >
-                {stats.map((s) => (
-                  <ValueChip key={s}>{s}</ValueChip>
-                ))}
-              </div>
-            )}
-
-            <DerivedSections values={values} />
-
-            {/* What this type SHOULD carry that nothing has filled in — the honest other half.
-                It doubles as the reason to press Edit. */}
-            <div style={{ marginTop: 20 }}>
-              <SectionTitle>Expected for this type</SectionTitle>
-              <div style={{ marginTop: 6 }}>
-                {suggested == null ? (
-                  <Text style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>
-                    This type isn’t in the cached taxonomy, so what it should
-                    carry isn’t known here.
-                  </Text>
-                ) : suggested.length === 0 ? (
-                  <Text style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>
-                    The taxonomy suggests no additional properties for this
-                    type.
-                  </Text>
-                ) : (
-                  <>
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        color: MUTED,
-                        lineHeight: 1.5,
-                        display: "block",
-                        marginBottom: 8,
-                      }}
-                    >
-                      The taxonomy expects a{" "}
-                      {typeLabel(subType || mainType).toLowerCase()} to carry
-                      these. Values live in the content API, which this
-                      prototype doesn’t call — so the unfilled ones are named,
-                      not invented.
-                    </Text>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {suggested.map((s) => (
-                        <ValueChip key={s} muted={!values[s]}>
-                          {propertyLabel(s)}
-                        </ValueChip>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Identity last and quiet: the SDK card never shows an id, but a dashboard has to. */}
-            <div style={{ marginTop: 22 }}>
-              <SectionTitle>Identifiers</SectionTitle>
-              <div style={{ marginTop: 4 }}>
-                {IDENTITY.map((f, i) => (
-                  <div key={f.key}>
-                    {i > 0 && <Separator />}
-                    <div style={{ padding: "8px 0" }}>
-                      <Text
-                        style={{
-                          display: "block",
-                          fontSize: 11,
-                          lineHeight: "14px",
-                          color: MUTED,
-                        }}
-                      >
-                        {f.label}
-                      </Text>
-                      <Text
-                        style={{
-                          display: "block",
-                          fontSize: 12.5,
-                          lineHeight: "17px",
-                          marginTop: 2,
-                          color: INK,
-                          // Long, space-free ids wrap rather than ellipsis away the half you need.
-                          overflowWrap: "anywhere",
-                        }}
-                      >
-                        {String(p[f.key] ?? "—")}
-                      </Text>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          /* ── editing: the dashboard's field editor ──────────────────────────── */
-          <>
+          {/**
+           * **FID — a value you can copy, not a field you can type in** (Olcay, 2026-09-09:
+           * *"fid should not look like an input also it's height is larger than others, why?"*).
+           *
+           * ⚠️ **Both halves of that were true.** It had a 1px border and a tinted ground, which
+           * is the shape of every editable input beside it, so it read as one — and it was
+           * **60px** tall against the 44px of its neighbours, because an 8px/8px padded box wrapped
+           * a 44px `IconButton` (`h-11 w-11` at every `size`, so `sm` buys nothing).
+           *
+           * Now: no border, a flat tint that says read-only, and a 24px copy control. A convenience
+           * on a value nobody edits does not need a 44px primary target, and giving it one made the
+           * identity row the tallest thing in the panel.
+           */}
+          <div>
             <Text
               style={{
                 display: "block",
-                fontSize: 12.5,
+                fontSize: 11,
                 color: MUTED,
-                marginBottom: 12,
+                marginBottom: 4,
               }}
             >
-              Provide essential information below.
+              FID
             </Text>
-
-            {/**
-             * **FID — a value you can copy, not a field you can type in** (Olcay, 2026-09-09:
-             * *"fid should not look like an input also it's height is larger than others, why?"*).
-             *
-             * ⚠️ **Both halves of that were true.** It had a 1px border and a tinted ground, which
-             * is the shape of every editable input beside it, so it read as one — and it was
-             * **60px** tall against the 44px of its neighbours, because an 8px/8px padded box wrapped
-             * a 44px `IconButton` (`h-11 w-11` at every `size`, so `sm` buys nothing).
-             *
-             * Now: no border, a flat tint that says read-only, and a 24px copy control. A convenience
-             * on a value nobody edits does not need a 44px primary target, and giving it one made the
-             * identity row the tallest thing in the panel.
-             */}
-            <div>
-              <Text
-                style={{
-                  display: "block",
-                  fontSize: 11,
-                  color: MUTED,
-                  marginBottom: 4,
-                }}
-              >
-                FID
-              </Text>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "6px 8px 6px 10px",
-                  minHeight: 32,
-                  borderRadius: "var(--primitives-radius-lg, 8px)",
-                  background: "var(--primitives-colors-background-50)",
-                }}
-              >
-                <Text
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    fontSize: 12,
-                    color: INK,
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  {String(p.fid ?? "—")}
-                </Text>
-                <button
-                  type="button"
-                  aria-label="Copy FID"
-                  title="Copy"
-                  onClick={() =>
-                    navigator.clipboard?.writeText(String(p.fid ?? ""))
-                  }
-                  style={{
-                    flex: "0 0 auto",
-                    display: "grid",
-                    placeItems: "center",
-                    width: 24,
-                    height: 24,
-                    padding: 0,
-                    border: "none",
-                    background: "none",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                    color: MUTED,
-                  }}
-                >
-                  <CopyGlyph />
-                </button>
-              </div>
-            </div>
-
-            {/**
-             * **Type** — one fact with two parts, in one control. See `TypePicker`.
-             *
-             * ⚠️ **This replaced a plain `Select` of subtypes with the mainType printed above it as
-             * a separate caption**, which read as a label and a field rather than as one answer, and
-             * which offered no way to change the mainType at all. The dashboard's own picker offers
-             * the whole tree with a class pre-filter, so this does too.
-             */}
-            <div style={{ marginTop: 12 }}>
-              <TypePicker
-                mainType={String(draft.mainType ?? mainType)}
-                subType={
-                  draft.subType === MULTIPLE
-                    ? undefined
-                    : String(draft.subType ?? "") || undefined
-                }
-                multiple={draft.subType === MULTIPLE}
-                onChange={(next) =>
-                  setDraft((d) => ({
-                    ...d,
-                    mainType: next.mainType,
-                    // Cleared rather than left behind: a subType from the old mainType is not a
-                    // pair the taxonomy publishes, and saving it would invent a type.
-                    subType: next.subType ?? "",
-                  }))
-                }
-              />
-            </div>
-
-            {/**
-             * **Name, and Featured beside it** — the dashboard's own anatomy, and the one the doc
-             * at the top of this file has described since the beginning without it being built.
-             *
-             * `isFeatured` is a published taxonomy property (`switch`, segment *Prominence*,
-             * *"Featured or sponsored"*). It is lifted out of the generic list because it is not a
-             * fact about the place, it is a decision about how the place is shown — and because a
-             * boolean that belongs to the title reads as part of the title, not as row nineteen.
-             */}
             <div
               style={{
                 display: "flex",
-                alignItems: "flex-end",
+                alignItems: "center",
                 gap: 8,
-                marginTop: 12,
+                padding: "6px 8px 6px 10px",
+                minHeight: 32,
+                borderRadius: "var(--primitives-radius-lg, 8px)",
+                background: "var(--primitives-colors-background-50)",
               }}
             >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Input
-                  label="Name *"
-                  value={
-                    draft.name === MULTIPLE ? "" : String(draft.name ?? "")
-                  }
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, name: e.target.value }))
-                  }
-                  /* ⚠️ Typing here renames EVERY selected feature — leaving it be keeps their own
-                     names, which is why the placeholder has to say what is in there rather than
-                     look like an empty required field. */
-                  placeholder={
-                    draft.name === MULTIPLE ? MULTI_LABEL : "Unnamed"
-                  }
-                  aria-label="Feature name"
-                />
-              </div>
-              <FeaturedToggle
-                value={draft.isFeatured}
-                onChange={(v) => setDraft((d) => ({ ...d, isFeatured: v }))}
-              />
-            </div>
-
-            {sections.map((g) => (
-              <div
-                key={g.segment}
-                style={g.detach ? { marginTop: 16 } : undefined}
+              <Text
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  fontSize: 12,
+                  color: INK,
+                  overflowWrap: "anywhere",
+                }}
               >
-                {/* Same mark as PERSONA VISIBILITY below — 10px, letter-spaced, muted, upper case
-                    — so the panel has one kind of section heading rather than two. */}
-                {g.heading && <SectionHeading>{g.heading}</SectionHeading>}
-                {g.keys.map((k) => (
-                  <PropertyField
-                    key={k}
-                    def={propertyDef(k)}
-                    value={draft[k]}
-                    onChange={(v) => setDraft((d) => ({ ...d, [k]: v }))}
-                    onRemove={() => {
-                      setFields((f) => f.filter((x) => x !== k));
-                      setDraft((d) => {
-                        const n = { ...d };
-                        delete n[k];
-                        return n;
-                      });
-                    }}
-                  />
-                ))}
-              </div>
-            ))}
+                {String(p.fid ?? "—")}
+              </Text>
+              <button
+                type="button"
+                aria-label="Copy FID"
+                title="Copy"
+                onClick={() =>
+                  navigator.clipboard?.writeText(String(p.fid ?? ""))
+                }
+                style={{
+                  flex: "0 0 auto",
+                  display: "grid",
+                  placeItems: "center",
+                  width: 24,
+                  height: 24,
+                  padding: 0,
+                  border: "none",
+                  background: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  color: MUTED,
+                }}
+              >
+                <CopyGlyph />
+              </button>
+            </div>
+          </div>
 
-            <AddFieldPicker
-              suggested={canAdd.sug}
-              others={canAdd.others}
-              onAdd={(k) => {
-                setFields((f) => [...f, k]);
+          {/**
+           * **Type** — one fact with two parts, in one control. See `TypePicker`.
+           *
+           * ⚠️ **This replaced a plain `Select` of subtypes with the mainType printed above it as
+           * a separate caption**, which read as a label and a field rather than as one answer, and
+           * which offered no way to change the mainType at all. The dashboard's own picker offers
+           * the whole tree with a class pre-filter, so this does too.
+           */}
+          <div style={{ marginTop: 12 }}>
+            <TypePicker
+              mainType={String(draft.mainType ?? mainType)}
+              subType={
+                draft.subType === MULTIPLE
+                  ? undefined
+                  : String(draft.subType ?? "") || undefined
+              }
+              multiple={draft.subType === MULTIPLE}
+              onChange={(next) =>
                 setDraft((d) => ({
                   ...d,
-                  [k]: propertyDef(k).valueType === "boolean" ? false : "",
-                }));
-              }}
-            />
-
-            <PersonaVisibility
-              features={
-                liveRows.length
-                  ? liveRows.map((r) => ({ mapPersonas: r.mapPersonas }))
-                  : [{ mapPersonas: p.mapPersonas }]
+                  mainType: next.mainType,
+                  // Cleared rather than left behind: a subType from the old mainType is not a
+                  // pair the taxonomy publishes, and saving it would invent a type.
+                  subType: next.subType ?? "",
+                }))
               }
-              edits={personaEdits}
-              onEdit={setPersonaEdits}
             />
+          </div>
 
-            <Text
-              style={{
-                display: "block",
-                fontSize: 11,
-                color: MUTED,
-                marginTop: 14,
-              }}
-            >
-              * Required
-            </Text>
+          {/**
+           * **Name, and Featured beside it** — the dashboard's own anatomy, and the one the doc
+           * at the top of this file has described since the beginning without it being built.
+           *
+           * `isFeatured` is a published taxonomy property (`switch`, segment *Prominence*,
+           * *"Featured or sponsored"*). It is lifted out of the generic list because it is not a
+           * fact about the place, it is a decision about how the place is shown — and because a
+           * boolean that belongs to the title reads as part of the title, not as row nineteen.
+           */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              gap: 8,
+              marginTop: 12,
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Input
+                label="Name *"
+                value={draft.name === MULTIPLE ? "" : String(draft.name ?? "")}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, name: e.target.value }))
+                }
+                /* ⚠️ Typing here renames EVERY selected feature — leaving it be keeps their own
+                     names, which is why the placeholder has to say what is in there rather than
+                     look like an empty required field. */
+                placeholder={draft.name === MULTIPLE ? MULTI_LABEL : "Unnamed"}
+                aria-label="Feature name"
+              />
+            </div>
+            <FeaturedToggle
+              value={draft.isFeatured}
+              onChange={(v) => setDraft((d) => ({ ...d, isFeatured: v }))}
+            />
+          </div>
 
-            <Text
-              style={{
-                display: "block",
-                fontSize: 11,
-                color: MUTED,
-                lineHeight: 1.45,
-                marginTop: 10,
-              }}
+          {sections.map((g) => (
+            <div
+              key={g.segment}
+              style={g.detach ? { marginTop: 16 } : undefined}
             >
-              {reviewFootnote ??
-                "Edits are local to this prototype — nothing is written back to Pointr Cloud."}
-            </Text>
-          </>
-        )}
+              {/* Same mark as PERSONA VISIBILITY below — 10px, letter-spaced, muted, upper case
+                    — so the panel has one kind of section heading rather than two. */}
+              {g.heading && <SectionHeading>{g.heading}</SectionHeading>}
+              {g.keys.map((k) => (
+                <PropertyField
+                  key={k}
+                  def={propertyDef(k)}
+                  value={draft[k]}
+                  onChange={(v) => setDraft((d) => ({ ...d, [k]: v }))}
+                  onRemove={() => {
+                    setFields((f) => f.filter((x) => x !== k));
+                    setDraft((d) => {
+                      const n = { ...d };
+                      delete n[k];
+                      return n;
+                    });
+                  }}
+                />
+              ))}
+            </div>
+          ))}
+
+          <AddFieldPicker
+            suggested={canAdd.sug}
+            others={canAdd.others}
+            onAdd={(k) => {
+              setFields((f) => [...f, k]);
+              setDraft((d) => ({
+                ...d,
+                [k]: propertyDef(k).valueType === "boolean" ? false : "",
+              }));
+            }}
+          />
+
+          <PersonaVisibility
+            features={
+              liveRows.length
+                ? liveRows.map((r) => ({ mapPersonas: r.mapPersonas }))
+                : [{ mapPersonas: p.mapPersonas }]
+            }
+            edits={personaEdits}
+            onEdit={setPersonaEdits}
+          />
+
+          <Text
+            style={{
+              display: "block",
+              fontSize: 11,
+              color: MUTED,
+              marginTop: 14,
+            }}
+          >
+            * Required
+          </Text>
+
+          <Text
+            style={{
+              display: "block",
+              fontSize: 11,
+              color: MUTED,
+              lineHeight: 1.45,
+              marginTop: 10,
+            }}
+          >
+            {reviewFootnote ??
+              "Edits are local to this prototype — nothing is written back to Pointr Cloud."}
+          </Text>
+        </>
       </div>
 
       {/* The editor's footer, pinned like the real panel's — Cancel beside a primary that only
           lights when there is something to save. */}
-      {editing && (
+      {
         <>
           <Separator />
           <div
@@ -2324,7 +2071,7 @@ export function FeaturePanel({
             </Button>
           </div>
         </>
-      )}
+      }
     </Card>
   );
 }
