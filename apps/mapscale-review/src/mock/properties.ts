@@ -73,6 +73,12 @@ export interface PropertyDef {
   max?: number;
   /** Set where the property is an action on the card (`websiteUrl` → a *Website* button). */
   actionName?: string;
+  /**
+   * How many values the taxonomy allows. Only `images` publishes one today (**7**), but the cap
+   * belongs to the taxonomy and not to the control — a 7 typed into a component is a number nobody
+   * can trace, and it silently stops being true the day the release moves.
+   */
+  maxCount?: number;
   /** True when this entry came from the taxonomy service rather than from `inferDef()`. */
   grounded?: true;
 }
@@ -92,6 +98,7 @@ const DEFS: Record<string, PropertyDef> = Object.fromEntries(
       key: p.key,
       displayName: p.displayName,
       description: p.description || undefined,
+      maxCount: p.maxCount ?? undefined,
       valueType: p.valueType as PropertyValueType,
       inputType: p.inputType as PropertyDef["inputType"],
       segment: p.segment,

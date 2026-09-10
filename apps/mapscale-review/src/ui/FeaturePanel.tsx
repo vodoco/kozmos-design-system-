@@ -334,6 +334,154 @@ function summariseObject(key: string, v: unknown): string {
 }
 
 /**
+ * **A list of image URLs — `images` and `logo`.**
+ *
+ * ⑤ draws the head with its count, a row per image as thumbnail + URL + ✕, an add control, and a
+ * footnote of constraints. ⚠️ **Those constraints — 2MB, JPG & PNG, 16:9 — are ⑤'s, not the
+ * taxonomy's.** The taxonomy publishes only `image` and `maxCount`; the rest is a product decision
+ * this file carries rather than invents, and it is marked here so nobody mistakes it for a reading.
+ */
+function ImageList({
+  urls,
+  single,
+  max,
+  note,
+  onChange,
+}: {
+  urls: string[];
+  /** `logo` holds one: adding replaces rather than appends. */
+  single?: boolean;
+  max?: number;
+  note: string;
+  onChange: (next: string[]) => void;
+}) {
+  const [typed, setTyped] = useState("");
+  const full = !single && max != null && urls.length >= max;
+  const commit = () => {
+    const v = typed.trim();
+    setTyped("");
+    if (!v || urls.includes(v)) return;
+    onChange(single ? [v] : full ? urls : [...urls, v]);
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {!single && max != null && (
+        <Text style={{ alignSelf: "flex-end", fontSize: 9.5, color: MUTED }}>
+          {urls.length} / {max}
+        </Text>
+      )}
+      {urls.map((u) => (
+        <div
+          key={u}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            minWidth: 0,
+          }}
+        >
+          {/**
+           * A real thumbnail, not a grey box: the value IS an image URL, so showing it is the
+           * cheapest way to see that a link is wrong. `onError` falls back to the placeholder ⑤
+           * draws, because a broken image icon says less than an empty frame.
+           */}
+          <img
+            src={u}
+            alt=""
+            /**
+             * ⚠️ **`visibility: hidden` hid the frame as well as the broken glyph**, leaving a gap
+             * where ⑤ draws a placeholder. Dropping the `src` instead keeps the element — and its
+             * grey ground — and stops the browser drawing its broken-image icon. An empty frame says
+             * "no preview"; a gap says nothing and a broken icon says "the app is broken".
+             */
+            onError={(e) => {
+              e.currentTarget.removeAttribute("src");
+            }}
+            style={{
+              flex: "0 0 auto",
+              width: single ? 28 : 44,
+              height: single ? 28 : 32,
+              objectFit: "cover",
+              borderRadius: 4,
+              background: "var(--primitives-colors-background-100)",
+            }}
+          />
+          <Text
+            title={u}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              fontSize: 10.5,
+              color: INK,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {u}
+          </Text>
+          <button
+            type="button"
+            onClick={() => onChange(urls.filter((x) => x !== u))}
+            aria-label={`Remove ${u}`}
+            className="remove-field"
+            style={{
+              flex: "0 0 auto",
+              display: "grid",
+              placeItems: "center",
+              width: 20,
+              height: 20,
+              padding: 0,
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+            }}
+          >
+            <Icon name="x-close" />
+          </button>
+        </div>
+      ))}
+      {/* At the cap the add control goes, and says why — ⑤'s own words. */}
+      {full ? (
+        <Text style={{ fontSize: 9.5, color: MUTED }}>
+          Remove one to add another.
+        </Text>
+      ) : (
+        <input
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            commit();
+          }}
+          onBlur={commit}
+          aria-label={single ? "Logo URL" : "Add another image"}
+          placeholder={
+            single && urls.length
+              ? "Paste a URL to replace it"
+              : single
+                ? "Paste the logo URL"
+                : "Paste an image URL and press Enter"
+          }
+          style={{
+            width: "100%",
+            fontFamily: "inherit",
+            fontSize: 11.5,
+            color: INK,
+            padding: "7px 10px",
+            borderRadius: "var(--primitives-radius-lg, 8px)",
+            border: `1px solid ${LINE}`,
+            background: "transparent",
+          }}
+        />
+      )}
+      <Text style={{ fontSize: 9.5, color: MUTED }}>* {note}</Text>
+    </div>
+  );
+}
+
+/**
  * **The taxonomy's own one-line explanation, beside the field it explains.**
  *
  * 🔴 **The design has carried a ⓘ on every property since ⑤ and the panel had none.** All sixty
@@ -670,6 +818,35 @@ function PropertyField({
                 );
               })}
             </div>
+          ) : def.valueType === "image" ? (
+            /**
+             * **The two image properties, drawn the way ⑤ specifies them.**
+             *
+             * `images` takes many and publishes a cap; `logo` takes one. Both are `image / custom` —
+             * the taxonomy names the shape and leaves the control to us — and both were falling
+             * through to a plain text box.
+             *
+             * ⚠️ **The cap is read from the taxonomy, never typed here.** `maxCount` is 7 today and
+             * had to be carried through `PropertyDef` to reach this line; a 7 written into a component
+             * is a number nobody can trace and one that stops being true the day the release moves.
+             *
+             * ⚠️ **The prototype takes a URL, not a file.** There is nowhere to upload to, and a
+             * disabled file picker would be a promise the app cannot keep. A URL is exactly what the
+             * property holds.
+             */
+            <ImageList
+              urls={chips}
+              single={def.key === "logo"}
+              max={def.maxCount}
+              note={
+                def.key === "logo"
+                  ? "Max 1MB · JPG & PNG · 1:1"
+                  : "Max 2MB · JPG & PNG · 16:9"
+              }
+              onChange={(next) =>
+                onChange(def.key === "logo" ? (next[0] ?? "") : next)
+              }
+            />
           ) : def.valueType === "object" ? (
             /**
              * 🔴 **An object was editable as TEXT, and editing it destroyed it.** `openingHours` and
