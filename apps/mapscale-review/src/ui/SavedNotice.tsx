@@ -38,8 +38,8 @@ export function SavedNotice({ name }: { name: string }) {
         gap: 10,
         padding: "9px 14px 9px 11px",
         borderRadius: 10,
-        background: "#fff",
-        border: "1px solid var(--primitives-colors-background-200)",
+        background: "var(--semantics-surface-0)",
+        border: "1px solid var(--semantics-border-subtle)",
         boxShadow: "0 8px 28px rgba(11,54,156,.16)",
         pointerEvents: "none",
         maxWidth: 420,
@@ -54,18 +54,21 @@ export function SavedNotice({ name }: { name: string }) {
           width: 20,
           height: 20,
           borderRadius: "50%",
-          background: "#0b369c",
+          background: "var(--primitives-colors-theme-800)",
         }}
       >
         {/* `check` from the Pointr Icon Library (see `./icons`); white on the disc. */}
-        <Check size={12} style={{ color: "#fff" }} />
+        <Check
+          size={12}
+          style={{ color: "var(--primitives-colors-foreground-1000)" }}
+        />
       </span>
       <span style={{ minWidth: 0 }}>
         <span
           style={{
             display: "block",
             fontSize: 13,
-            color: "var(--review-ink)",
+            color: "var(--primitives-colors-foreground-100)",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -77,7 +80,7 @@ export function SavedNotice({ name }: { name: string }) {
           style={{
             display: "block",
             fontSize: 11.5,
-            color: "var(--primitives-colors-background-600)",
+            color: "var(--primitives-colors-foreground-400)",
           }}
         >
           Applied to this session — not published

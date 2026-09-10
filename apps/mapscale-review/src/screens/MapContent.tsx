@@ -3074,7 +3074,7 @@ export function MapContent({
           </ConfirmOverlay>
           <ConfirmOverlay
             open={!!pendingDelete}
-            tone="warning"
+            tone="danger"
             title={
               pendingDelete && pendingDelete.fids.length > 1
                 ? `Delete ${pendingDelete.fids.length} features?`

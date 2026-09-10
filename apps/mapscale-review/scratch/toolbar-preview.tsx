@@ -9,6 +9,7 @@ import "@kozmos/react/dist/style.css";
 import "../src/index.css";
 import { GeometryToolbar, type GeomState } from "../src/ui/GeometryToolbar";
 import { SavedNotice } from "../src/ui/SavedNotice";
+import { ConfirmOverlay } from "../src/ui/ConfirmOverlay";
 import { MapSettings } from "../src/ui/MapSettings";
 import type { MapPrefs } from "../src/map/PointrMap";
 import { FeaturePanel, mergeForEditing } from "../src/ui/FeaturePanel";
@@ -520,6 +521,44 @@ function Bench() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* The Delete confirmation, open. `transform` makes this box the overlay's containing block, so
+          its fixed backdrop stays inside the case instead of covering the bench. */}
+      <div style={{ marginBottom: 22 }}>
+        <div
+          style={{
+            font: "12px/1.4 system-ui",
+            color: "#5d626f",
+            marginBottom: 6,
+          }}
+        >
+          The Delete confirmation, opened from the panel
+        </div>
+        <div
+          data-confirmbox
+          style={{
+            position: "relative",
+            height: 320,
+            borderRadius: 12,
+            overflow: "hidden",
+            transform: "translateZ(0)",
+            border: "1px solid #d3d9e3",
+          }}
+        >
+          <ConfirmOverlay
+            open
+            tone="danger"
+            title="Delete Gate A12 Waiting Area?"
+            confirmLabel="Delete"
+            cancelLabel="Keep"
+            onConfirm={noop}
+            onCancel={noop}
+          >
+            It comes off this level&apos;s map and out of Map Content. Edits are
+            local to this prototype — nothing is written back to Pointr Cloud.
+          </ConfirmOverlay>
         </div>
       </div>
 

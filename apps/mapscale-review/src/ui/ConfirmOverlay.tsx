@@ -13,16 +13,43 @@ import { Button, Icon } from "@kozmos/react";
  * the list.) Escape and the backdrop still dismiss; the confirm button takes focus on open.
  */
 
-export type OverlayTone = "info" | "neutral" | "warning";
+/**
+ * `danger` is v9's `error-danger` variant (Olcay, 2026-09-10: "Delete → v9 danger") — a permanent
+ * delete. Only it tones its buttons as v9 draws them: the DS `destructive` confirm and an outlined
+ * cancel. v9 tones the other variants' confirm too (amber for warning, info blue …); those were
+ * left as they are.
+ */
+export type OverlayTone = "info" | "neutral" | "warning" | "danger";
 
-/** Header tint / border / icon ink per variant, straight off the v9 component's own exports. */
+/**
+ * Header tint / border / icon ink per variant, off the v9 component's own exports — every one of which
+ * is exactly a Kozmos DS token in light (checked 2026-09-10, MAP-595 record §186), so they are the
+ * tokens now and follow the theme instead of staying light in dark.
+ */
 const TONE: Record<
   OverlayTone,
   { tint: string; border: string; icon: string }
 > = {
-  info: { tint: "#ecf6fb", border: "#cae6f3", icon: "#2A92C6" },
-  neutral: { tint: "#e3e4e8", border: "#e3e4e8", icon: "#5D626F" },
-  warning: { tint: "#fffcf8", border: "#feeed0", icon: "#F9A707" },
+  info: {
+    tint: "var(--primitives-colors-emotional-info-0)",
+    border: "var(--primitives-colors-emotional-info-100)",
+    icon: "var(--primitives-colors-emotional-info-600)",
+  },
+  neutral: {
+    tint: "var(--primitives-colors-background-100)",
+    border: "var(--primitives-colors-background-100)",
+    icon: "var(--primitives-colors-foreground-400)",
+  },
+  warning: {
+    tint: "var(--primitives-colors-emotional-alert-0)",
+    border: "var(--primitives-colors-emotional-alert-100)",
+    icon: "var(--primitives-colors-emotional-alert-600)",
+  },
+  danger: {
+    tint: "var(--primitives-colors-emotional-danger-0)",
+    border: "var(--primitives-colors-emotional-danger-100)",
+    icon: "var(--primitives-colors-emotional-danger-600)",
+  },
 };
 
 export function ConfirmOverlay({
@@ -57,12 +84,15 @@ export function ConfirmOverlay({
   onAlt?: () => void;
 }) {
   const confirmRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    confirmRef.current?.focus();
+    // A destructive confirmation focuses the way out, not the deed: Enter on open must never delete
+    // (the ARIA alertdialog pattern). Every other tone focuses its confirm, as before.
+    (tone === "danger" ? cancelRef : confirmRef).current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCancel();
       // A modal owns the keyboard: Tab cycles inside the card instead of escaping into the page
@@ -85,7 +115,7 @@ export function ConfirmOverlay({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onCancel]);
+  }, [open, onCancel, tone]);
 
   if (!open) return null;
   const t = TONE[tone];
@@ -125,7 +155,7 @@ export function ConfirmOverlay({
           width: altLabel && onAlt ? 480 : 400,
           minWidth: 320,
           maxWidth: 480,
-          background: "#fff",
+          background: "var(--semantics-surface-0)",
           borderRadius: 16,
           boxShadow: "0 10px 20px rgba(0,0,0,0.25)",
           overflow: "hidden",
@@ -151,7 +181,7 @@ export function ConfirmOverlay({
               fontSize: 20,
               fontWeight: 500,
               letterSpacing: "-0.2px",
-              color: "#000",
+              color: "var(--primitives-colors-foreground-0)",
               /**
                * Titles **wrap** rather than truncate (2026-08-11). They were `nowrap` + ellipsis,
                * which is right for a label in a row and wrong for the one sentence a confirmation
@@ -182,7 +212,7 @@ export function ConfirmOverlay({
             fontSize: 16,
             lineHeight: "26px",
             letterSpacing: "-0.2px",
-            color: "#464a53",
+            color: "var(--primitives-colors-foreground-300)",
           }}
         >
           {children}
@@ -203,7 +233,11 @@ export function ConfirmOverlay({
             flexWrap: "wrap",
           }}
         >
-          <Button variant="ghost" onClick={onCancel}>
+          <Button
+            ref={cancelRef}
+            variant={tone === "danger" ? "outline" : "ghost"}
+            onClick={onCancel}
+          >
             {cancelLabel}
           </Button>
           {altLabel && onAlt && (
@@ -211,7 +245,11 @@ export function ConfirmOverlay({
               {altLabel}
             </Button>
           )}
-          <Button ref={confirmRef} onClick={onConfirm}>
+          <Button
+            ref={confirmRef}
+            variant={tone === "danger" ? "destructive" : "default"}
+            onClick={onConfirm}
+          >
             {confirmLabel}
           </Button>
         </div>
