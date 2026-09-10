@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Icon, Input, Text } from "@kozmos/react";
+import { Check } from "./icons";
 import { Tour, TOUR_STEPS, type TourScreen } from "./Tour";
 
 /**
@@ -476,9 +477,12 @@ export function FeedbackLayer({
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: "pointer",
+                display: "grid",
+                placeItems: "center",
               }}
             >
-              {n.resolved ? "✓" : i + 1}
+              {/* A number centres itself in a button; an SVG does not, hence the grid above. */}
+              {n.resolved ? <Check size={13} label="Resolved" /> : i + 1}
             </button>
             {openNote === n.id && (
               <div
@@ -551,13 +555,13 @@ export function FeedbackLayer({
                       background: "none",
                       cursor: "pointer",
                       color: "#737373",
-                      fontSize: 14,
-                      lineHeight: 1,
+                      display: "grid",
+                      placeItems: "center",
                       padding: 2,
                       flex: "0 0 auto",
                     }}
                   >
-                    ✕
+                    <Icon name="x-close" size="sm" />
                   </button>
                 </div>
 
@@ -625,13 +629,19 @@ export function FeedbackLayer({
                     {n.resolved && (
                       <div
                         style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
                           fontSize: 10.5,
                           color: "#4b7a5c",
                           marginTop: 6,
                           fontWeight: 600,
                         }}
                       >
-                        ✓ Resolved{n.resolvedBy ? ` by ${n.resolvedBy}` : ""}
+                        <Check size={12} />
+                        <span>
+                          Resolved{n.resolvedBy ? ` by ${n.resolvedBy}` : ""}
+                        </span>
                       </div>
                     )}
                     <div
@@ -846,13 +856,23 @@ export function FeedbackLayer({
                   >
                     <span
                       style={{
+                        /* inline-flex, not inline: an SVG sits on the text baseline and
+                           hangs below it, where a digit does not. */
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
                         fontSize: 11,
                         color: ACCENT_DARK,
                         fontWeight: 600,
                         flex: 1,
                       }}
                     >
-                      {n.resolved ? "✓" : i + 1} ·{" "}
+                      {n.resolved ? (
+                        <Check size={12} label="Resolved" />
+                      ) : (
+                        i + 1
+                      )}
+                      {" · "}
                       {SCREEN_LABEL[n.screen] ?? n.screen}
                     </span>
                   </div>

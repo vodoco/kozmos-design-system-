@@ -863,7 +863,10 @@ export function BuildingWizard({
               {others.map((l) => (
                 <SelectItem key={l.id} value={String(l.id)}>
                   {l.short} — {l.long}
-                  {aligned.has(l.id) ? " ✓" : ""}
+                  {/* ⚠️ **Not a tick.** `SelectItem` already draws one, in its own reserved
+                    slot, to mean *this is the selected row*. A second tick in the same row
+                    meaning *this one is already aligned* reads as the first one repeated. */}
+                  {aligned.has(l.id) ? " · aligned" : ""}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -1,3 +1,4 @@
+import { Icon } from "@kozmos/react";
 import { useEffect, useRef, useState } from "react";
 
 /**
@@ -24,7 +25,13 @@ const PREVIEW_SRC = "/floorplan-preview.png";
 const LINE = "#e3e4e8";
 const MUTED = "#5d626f";
 
-function PreviewOverlay({ file, onClose }: { file: string; onClose: () => void }) {
+function PreviewOverlay({
+  file,
+  onClose,
+}: {
+  file: string;
+  onClose: () => void;
+}) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -58,7 +65,13 @@ function PreviewOverlay({ file, onClose }: { file: string; onClose: () => void }
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 12,
+        }}
       >
         <img
           src={PREVIEW_SRC}
@@ -103,14 +116,12 @@ function PreviewOverlay({ file, onClose }: { file: string; onClose: () => void }
             background: "#fff",
             boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
             color: MUTED,
-            fontSize: 14,
-            lineHeight: 1,
             cursor: "pointer",
             display: "grid",
             placeItems: "center",
           }}
         >
-          ✕
+          <Icon name="x-close" size="sm" />
         </button>
       </div>
     </div>

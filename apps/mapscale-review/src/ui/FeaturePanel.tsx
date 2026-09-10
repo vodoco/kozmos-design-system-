@@ -841,18 +841,22 @@ function PropertyField({
                   >
                     {c}
                     <button
+                      type="button"
                       onClick={() => onChange(chips.filter((x) => x !== c))}
                       aria-label={`Remove ${c}`}
                       style={{
+                        display: "grid",
+                        placeItems: "center",
                         border: "none",
                         background: "none",
                         cursor: "pointer",
                         color: MUTED,
-                        lineHeight: 1,
                         padding: 2,
                       }}
                     >
-                      ✕
+                      {/* `xs` is 12px. The default `md` is 20 — larger than the chip's own
+                        11.5px text, which is why the size is named rather than inherited. */}
+                      <Icon name="x-close" size="xs" />
                     </button>
                   </span>
                 ))}
@@ -979,11 +983,12 @@ function PropertyField({
           className="remove-field"
           /**
            * ⚠️ **The glyph sat 30px inside the panel edge** (Olcay, 2026-09-09: *"bin icons could be
-           * further to the right side"*). `IconButton` is `h-11 w-11` at every size, so a 16px trash
-           * is centred in a 44px box and the 14px of padding either side reads as a gap between the
+           * further to the right side"*). `IconButton` is `h-11 w-11` at every size and the trash is
+           * `Icon`'s default `md` — at this app's 15px root, an 18.75px glyph centred in a 41.25px box
+           * (measured 2026-09-10) — so the 11.25px of padding either side reads as a gap between the
            * field and its own control.
            *
-           * The negative margin lets the 44px TARGET hang into the panel's 20px gutter while the
+           * The negative margin lets the 41.25px TARGET hang into the panel's 20px gutter while the
            * glyph moves to the edge. Shrinking the button would have been the easy fix and the wrong
            * one — it is the only way to remove a field, and a 24px target in a dense list is a miss
            * waiting to happen.
@@ -1783,9 +1788,9 @@ export function FeaturePanel({
                             : `Remove ${s.name || "this feature"} from the selection`
                       }
                     >
-                      <span aria-hidden style={{ fontSize: 13 }}>
-                        ✕
-                      </span>
+                      {/* `sm` is 16px, not `PanelHeader`'s default 20: these rows are dense
+                        (their title is 12px) and the full-size mark dominates them. */}
+                      <Icon name="x-close" size="sm" />
                     </IconButton>
                   </li>
                 ))}

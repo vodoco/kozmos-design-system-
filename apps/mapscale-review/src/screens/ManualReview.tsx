@@ -1062,7 +1062,9 @@ export function ManualReview({
                   {creation.levels.items.map((l) => (
                     <SelectItem key={l.id} value={String(l.id)}>
                       {l.label} · {l.issues} issue{l.issues === 1 ? "" : "s"}
-                      {l.done ? " ✓" : ""}
+                      {/* ⚠️ **Not a tick** — `SelectItem` draws its own, meaning *selected*.
+                        See the same note in `BuildingWizard`'s level picker. */}
+                      {l.done ? " · done" : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
