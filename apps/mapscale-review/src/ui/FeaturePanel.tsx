@@ -1878,14 +1878,16 @@ export function FeaturePanel({
           lights when there is something to save. */}
       {
         <>
-          {/* C's footer: the two buttons on a background-100 band, no rule above. */}
+          {/* C's footer (`footer · pinned`): white, under a 1px rule in the panel's one border. It was
+              a grey band with no rule until 2026-09-10 — C draws neither. */}
           <div
             style={{
               display: "flex",
               gap: 8,
               padding: "12px 20px",
               flex: "0 0 auto",
-              background: "var(--primitives-colors-background-100)",
+              borderTop: `1px solid ${FIELD.border}`,
+              background: FIELD.surface,
             }}
           >
             <Button
