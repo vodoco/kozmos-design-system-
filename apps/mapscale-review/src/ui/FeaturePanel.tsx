@@ -83,7 +83,7 @@ export { FEATURE_PANEL_WIDTH } from "./panelMetrics";
 /** The inset from the map's edges — matched to the Map Settings control in the opposite corner. */
 const PANEL_INSET = 12;
 
-const MUTED = "var(--primitives-colors-background-600)";
+const MUTED = FIELD.muted;
 /** Handled by their own dedicated controls rather than as generic properties. */
 const RESERVED = new Set([
   "fid",
@@ -1371,9 +1371,9 @@ export function FeaturePanel({
         flexDirection: "column",
         minHeight: 0,
         zIndex: 5,
-        // C's panel: radius 16, a 1px background-200 edge, and no shadow.
+        // C's panel: radius 16, a 1px Border/Subtle edge, and no shadow.
         borderRadius: 16,
-        border: "1px solid var(--primitives-colors-background-200)",
+        border: `1px solid ${FIELD.border}`,
         boxShadow: "none",
       }}
     >
@@ -1390,7 +1390,7 @@ export function FeaturePanel({
               fontSize: 13,
               fontWeight: 500,
               lineHeight: "16px",
-              color: "var(--primitives-colors-background-900)",
+              color: FIELD.ink,
               overflowWrap: "anywhere",
             }}
           >
@@ -1679,7 +1679,7 @@ export function FeaturePanel({
                     minWidth: 0,
                     fontSize: 12,
                     lineHeight: "16px",
-                    color: "var(--primitives-colors-background-900)",
+                    color: FIELD.ink,
                     overflowWrap: "anywhere",
                   }}
                 >

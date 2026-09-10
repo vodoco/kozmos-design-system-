@@ -27,7 +27,7 @@ export function SectionHeading({ children }: { children: string }) {
         fontSize: 10,
         letterSpacing: 1,
         fontWeight: 600,
-        color: "var(--primitives-colors-background-400)",
+        color: "var(--primitives-colors-foreground-600)",
         lineHeight: "13px",
         margin: 0,
       }}

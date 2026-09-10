@@ -110,13 +110,13 @@ export function PersonaVisibility({
                   fontWeight: 500,
                   /**
                    * ⚠️ **Was `#171A1C` and `#0B369C` typed by hand** — both are token values,
-                   * `background-900` and `theme-800`, written out where the variable would do. A
+                   * `foreground-100` and `theme-800`, written out where the variable would do. A
                    * literal that happens to match a token today is a literal that stops matching it
                    * the day the ramp moves, and it cannot follow the theme at all.
                    */
                   color:
                     state === "off"
-                      ? "var(--primitives-colors-background-900)"
+                      ? "var(--primitives-colors-foreground-100)"
                       : "var(--primitives-colors-theme-800)",
                 }}
               >
@@ -131,7 +131,7 @@ export function PersonaVisibility({
                       style={{
                         display: "grid",
                         placeItems: "center",
-                        color: "var(--primitives-colors-background-500)",
+                        color: "var(--primitives-colors-foreground-500)",
                         cursor: "help",
                       }}
                     >

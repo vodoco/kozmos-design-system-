@@ -46,8 +46,8 @@ const FILTERS: (FeatureClass | "all")[] = [
   "virtual",
 ];
 
-const MUTED = "var(--primitives-colors-background-600)";
-const HAIR = "var(--primitives-colors-background-200)";
+const MUTED = "var(--primitives-colors-foreground-400)";
+const HAIR = "var(--semantics-border-subtle)";
 const INK = "var(--review-ink)";
 const THEME = "var(--primitives-colors-theme-700)";
 

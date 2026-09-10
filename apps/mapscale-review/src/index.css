@@ -44,7 +44,7 @@ body {
  *
  * So the feature query gates BOTH branches, and neither can reach the other's engine.
  *
- * The thumb is `background-200`, the same hairline the panel draws its boxes with, so the bar reads
+ * The thumb is `background-200`, the grey of the panel's `border-subtle` boxes (a fill, so the surface ramp's name), so the bar reads
  * as part of the surface rather than as chrome sitting over it.
  */
 @supports selector(::-webkit-scrollbar) {
@@ -111,7 +111,7 @@ body {
   box-shadow: 0 0 0 1px var(--primitives-colors-theme-500);
 }
 .inner-field input::placeholder {
-  color: var(--primitives-colors-background-500);
+  color: var(--primitives-colors-foreground-500);
 }
 /* The panel's own buttons — Featured, the selection strip, the Add row — take the same ring. */
 .tri-check:focus-visible,

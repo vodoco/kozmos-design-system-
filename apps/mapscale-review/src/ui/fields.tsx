@@ -8,14 +8,14 @@
  * - **InnerField** — the product's own input (the old "Text-Inputs · small"): 40px tall, the one
  *   1px border, radius 8, and the label INSIDE the box at 10px above a 12px value.
  *   Text, links, the name, the type and every single choice.
- * - **BoxField** — a 1px `background-200` box with a 9.5px label on top: description, opening
+ * - **BoxField** — a 1px `border-subtle` box with a 9.5px label on top: description, opening
  *   hours, rating, images, logo. Chips put the same label *above* the box instead of in it.
  * - **RowField** — a 12px label on the left and the control on the right: switches, the number
  *   stepper, the price band.
  *
  * **One border** (Olcay, 2026-09-10: *"use one border style, the 1px box one"*). C drew two — the
  * product input's 2px `#e3e4e8` and the drawn box's 1px `#c7cad1` — and every field now takes the
- * box's: 1px `background-200`. ⚠️ At about 1.6:1 on white it is under WCAG 1.4.11's 3:1 for an
+ * box's: 1px `--semantics-border-subtle` (Figma `Border/Subtle`). ⚠️ At about 1.6:1 on white it is under WCAG 1.4.11's 3:1 for an
  * input's boundary (the DS's `Border/Input`, `#747b8b`, passes); the 2px style it replaced was
  * under it too. Focus is shown by a theme ring, not by the border alone — see `index.css`.
  */
@@ -23,23 +23,28 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Icon, Popover, PopoverContent, PopoverTrigger } from "@kozmos/react";
 import { ChevronDown, Help } from "./icons";
 
-/** C's inks, each the CSS twin of the Figma token C is bound to. */
+/**
+ * C's colours, by DS role — each the same name as the Kozmos DS - Core Library variable C binds (one
+ * name on both sides since 2026-09-10, MAP-595 record §185): text takes the `foreground` ramp, grounds
+ * `Surface/0` and the `background` tints, the one border `Border/Subtle`.
+ */
 export const FIELD = {
   /** The label inside an input — Figma `foreground/500`. */
-  label: "var(--primitives-colors-background-500)",
-  /** The value inside an input — `foreground/800`. */
-  value: "var(--primitives-colors-background-800)",
-  /** Row labels and box contents — `foreground/900`. */
-  ink: "var(--primitives-colors-background-900)",
-  /** Box labels, notes, counts, carets — `foreground/600`. */
-  muted: "var(--primitives-colors-background-600)",
-  /** The clear button's disc — `foreground/400`. */
-  faint: "var(--primitives-colors-background-400)",
-  /** The panel's one field border, 1px — C's box border, `foreground/200` (Olcay, 2026-09-10). */
-  border: "var(--primitives-colors-background-200)",
-  /** A chip's ground — `foreground/100`. */
+  label: "var(--primitives-colors-foreground-500)",
+  /** The value inside an input — `foreground/200`. */
+  value: "var(--primitives-colors-foreground-200)",
+  /** Row labels and box contents — `foreground/100`. */
+  ink: "var(--primitives-colors-foreground-100)",
+  /** Box labels, notes, counts, carets — `foreground/400`. */
+  muted: "var(--primitives-colors-foreground-400)",
+  /** The clear button's disc — `foreground/600`. */
+  faint: "var(--primitives-colors-foreground-600)",
+  /** The panel's one field border, 1px — `Border/Subtle` (Olcay, 2026-09-10). Also the off switch's track. */
+  border: "var(--semantics-border-subtle)",
+  /** A chip's ground, and FID's — `background/100`. */
   chip: "var(--primitives-colors-background-100)",
-  surface: "var(--primitives-colors-background-0)",
+  /** Every white ground — `Surface/0`. */
+  surface: "var(--semantics-surface-0)",
   link: "var(--primitives-colors-theme-700)",
   /** A switch that is on — C's toggle track. */
   on: "var(--primitives-colors-theme-500)",
@@ -126,7 +131,7 @@ export function InnerLabel({
   );
 }
 
-/** C's `clear`: a 16px disc in `foreground/400` with the DS x-close on it, in a 24px target. */
+/** C's `clear`: a 16px disc in `foreground/600` with the DS x-close on it, in a 24px target. */
 export function ClearButton({
   label,
   onClick,

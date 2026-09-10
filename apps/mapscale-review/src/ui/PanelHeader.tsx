@@ -85,7 +85,7 @@ export function PanelHeader({
           <Text
             style={{
               fontSize: 12,
-              color: "var(--primitives-colors-background-600)",
+              color: "var(--primitives-colors-foreground-400)",
               display: "block",
             }}
           >
@@ -111,7 +111,7 @@ export function PanelHeader({
           <Text
             style={{
               fontSize: tone === "band" ? 10 : 12.5,
-              color: "var(--primitives-colors-background-600)",
+              color: "var(--primitives-colors-foreground-400)",
               display: "block",
               marginTop: tone === "band" ? 4 : 2,
               lineHeight: tone === "band" ? "13px" : 1.4,
