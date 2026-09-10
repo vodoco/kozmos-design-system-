@@ -406,7 +406,10 @@ export function TypePicker({
                       background: on
                         ? THEME
                         : "var(--primitives-colors-background-100)",
-                      color: on ? "#fff" : INK,
+                      // White on the theme fill — the token, not the literal.
+                      color: on
+                        ? "var(--primitives-colors-foreground-1000)"
+                        : INK,
                     }}
                   >
                     {c === "all" ? "Everything" : CLASS_LABEL[c]}

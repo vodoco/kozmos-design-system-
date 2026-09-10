@@ -3279,6 +3279,40 @@ const { overrideLine, overrideDetails, splitOverrideLines, REMOVAL_OVERRIDDEN, S
   check("a short override caps nothing", few.capped.length === 0 && few.shown.length === 2);
 }
 
+/* ── R. the two the harness extracted and never asked about ───────────────────
+   ⚠️ `alignGuides` and `wfPaint` were destructured out of the shell and then unused — lint said so
+   for months and it read as noise. It was a COVERAGE hole: two live functions in the geometry
+   engine, pulled into the test and never asserted on. */
+
+/* `alignGuides` is pure: the nearest reference within tolerance on each axis, independently. */
+check("aligns on x when a reference shares the column",
+  alignGuides(100, 100, [[102, 400]], 5).some((g) => g.axis === "x"));
+check("aligns on y when a reference shares the row",
+  alignGuides(100, 100, [[400, 98]], 5).some((g) => g.axis === "y"));
+check("both axes can fire at once, from different references",
+  alignGuides(100, 100, [[102, 400], [400, 98]], 5).length === 2);
+check("nothing outside the tolerance", alignGuides(100, 100, [[130, 130]], 5).length === 0);
+check("the tolerance is exclusive at its edge", alignGuides(100, 100, [[105, 400]], 5).length === 0);
+/* ⚠️ Nearest wins — not first seen. A guide that latched onto whichever reference came first in
+   the array would jump between two candidates as the array order changed under a redraw. */
+check("the NEAREST reference wins, not the first",
+  alignGuides(100, 100, [[104, 400], [101, 400]], 5)[0].ref[0] === 101);
+check("an empty reference set guides nothing", alignGuides(1, 1, [], 9).length === 0);
+
+/**
+ * ⚠️ **`wfPaint` cannot be exercised here, and the reason is worth writing down.** It reads the
+ * shell's module-level `map`, which is declared OUTSIDE every marker block — so in the extracted
+ * module the identifier does not exist and any call raises a `ReferenceError` before reaching the
+ * function's own `if (!map …) return`. A check that called it would be testing the extraction, not
+ * the engine, and would fail for a reason that has nothing to do with the app.
+ *
+ * So it is asserted as PRESENT and no further. That is a smaller claim than the others here make,
+ * and saying so is better than a green tick that means nothing. Exercising it properly needs either
+ * a map stub injected into the module or `map` moved inside a marker block — a change to the shell,
+ * for a session that is looking at the shell.
+ */
+check("wfPaint is extracted, though only its presence can be asserted", typeof wfPaint === "function");
+
 /* ── verdict ──────────────────────────────────────────────────────────────── */
 
 console.log(failures

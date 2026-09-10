@@ -343,12 +343,15 @@ function summariseObject(key: string, v: unknown): string {
  */
 function ImageList({
   urls,
+  many,
   single,
   max,
   note,
   onChange,
 }: {
   urls: string[];
+  /** The selection disagrees — say so rather than draw an empty list. */
+  many?: boolean;
   /** `logo` holds one: adding replaces rather than appends. */
   single?: boolean;
   max?: number;
@@ -357,6 +360,13 @@ function ImageList({
 }) {
   const [typed, setTyped] = useState("");
   const full = !single && max != null && urls.length >= max;
+  // Adding here would put one URL on every selected feature; open one to edit its images.
+  if (many)
+    return (
+      <Text style={{ fontSize: 12, fontStyle: "italic", color: MUTED }}>
+        {MULTI_LABEL} — open one feature to edit its images.
+      </Text>
+    );
   const commit = () => {
     const v = typed.trim();
     setTyped("");
@@ -801,7 +811,10 @@ function PropertyField({
                       fontSize: 12.5,
                       fontFamily: "inherit",
                       cursor: "pointer",
-                      color: on ? "#fff" : INK,
+                      // White on the theme fill — the token, not the literal.
+                      color: on
+                        ? "var(--primitives-colors-foreground-1000)"
+                        : INK,
                       background: on
                         ? "var(--primitives-colors-theme-700)"
                         : "transparent",
@@ -836,6 +849,12 @@ function PropertyField({
              */
             <ImageList
               urls={chips}
+              /**
+               * ⚠️ **`chips` is empty when the selection disagrees**, which would draw as "no
+               * images" — the same trap ⑤ names on the chip row: *an empty row reads as "none of
+               * them have any", which is a different and wronger claim than "they differ"*.
+               */
+              many={many}
               single={def.key === "logo"}
               max={def.maxCount}
               note={

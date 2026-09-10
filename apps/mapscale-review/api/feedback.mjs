@@ -83,10 +83,6 @@ async function readState(t) {
   return fetched;
 }
 
-async function readNotes(t) {
-  return (await readState(t)).notes;
-}
-
 async function writeNotes(t, notes, baseRev = 0) {
   const rev = Math.max(baseRev, lastWrite.rev) + 1;
   const res = await fetch(`${API}/${PATHNAME}`, {
