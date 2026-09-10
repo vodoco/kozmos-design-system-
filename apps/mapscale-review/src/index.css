@@ -113,7 +113,9 @@ body {
 .inner-field input::placeholder {
   color: var(--primitives-colors-background-500);
 }
-.tri-check:focus-visible {
+/* The panel's own buttons — Featured, the selection strip, the Add row — take the same ring. */
+.tri-check:focus-visible,
+.panel-control:focus-visible {
   outline: 2px solid var(--primitives-colors-theme-500);
   outline-offset: 2px;
 }

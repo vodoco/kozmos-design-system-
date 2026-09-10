@@ -84,7 +84,6 @@ export { FEATURE_PANEL_WIDTH } from "./panelMetrics";
 const PANEL_INSET = 12;
 
 const MUTED = "var(--primitives-colors-background-600)";
-const INK = "var(--review-ink)";
 /** Handled by their own dedicated controls rather than as generic properties. */
 const RESERVED = new Set([
   "fid",
@@ -403,9 +402,9 @@ function ImageList({
  * own words are the tooltip; `isFeatured` publishes *"Featured or sponsored"* and nothing here
  * paraphrases it.
  *
- * ⚠️ **A merged selection can disagree**, and the third state has to be visible or Update would
- * quietly set every feature to whichever way the box happened to look. `MULTIPLE` renders as neither
- * on nor off, and clicking commits a decision for all of them.
+ * ⚠️ **A merged selection can disagree.** As a toggle button it can say so — `aria-pressed` is `mixed`,
+ * where the `switch` role it had has no mixed state and was read out as "off". It still LOOKS off: the
+ * third look is an open design question (MAP-595 record §183). Clicking commits "featured" for all.
  */
 function FeaturedToggle({
   value,
@@ -419,9 +418,9 @@ function FeaturedToggle({
   return (
     <button
       type="button"
-      role="switch"
-      aria-checked={many ? "mixed" : on}
+      aria-pressed={many ? "mixed" : on}
       aria-label="Featured"
+      className="panel-control"
       title={propertyDef("isFeatured").description || "Featured or sponsored"}
       onClick={() => onChange(!on)}
       style={{
@@ -444,15 +443,14 @@ function FeaturedToggle({
          * ⚠️ **Amber, not the theme blue** (Olcay, 2026-09-09: *"featured star should be accent
          * color. yellowish."*). A featured place is not a selected place, and a blue star beside a
          * blue Update button read as "this control is on" rather than as a mark of prominence.
-         * `emotional/alert` is the published amber ramp — 500 for the star, 300 for its border,
-         * 0 for the ground. Off, it takes the panel's one border, like the fields beside it
-         * (Olcay, 2026-09-10).
+         * `emotional/alert` is the published amber ramp. C (Workbench `589:1079`) draws the star at 600
+         * and the border at 300, with no ground, and the caption keeps its grey — the code had added an
+         * `alert-0` ground and an `alert-700` caption that C never drew. Off, it takes the panel's one
+         * border, like the fields beside it (Olcay, 2026-09-10).
          */
         border: `1px solid ${on ? "var(--primitives-colors-emotional-alert-300)" : FIELD.border}`,
-        background: on
-          ? "var(--primitives-colors-emotional-alert-0)"
-          : "transparent",
-        color: on ? "var(--primitives-colors-emotional-alert-700)" : MUTED,
+        background: "transparent",
+        color: MUTED,
         cursor: "pointer",
       }}
     >
@@ -467,7 +465,7 @@ function FeaturedToggle({
           display: "grid",
           placeItems: "center",
           color: on
-            ? "var(--primitives-colors-emotional-alert-500)"
+            ? "var(--primitives-colors-emotional-alert-600)"
             : "inherit",
         }}
       >
@@ -531,7 +529,8 @@ function PropertyField({
           id={`f-${def.key}`}
           checked={isTruthy(shown)}
           onChange={(c) => onChange(c)}
-          label={label}
+          /* The hint beside the label is visual only, and a switch has no mixed state to say it. */
+          label={many ? `${label}, ${MULTI_LABEL.toLowerCase()}` : label}
         />
       </RowField>
     );
@@ -554,7 +553,7 @@ function PropertyField({
     );
   } else if (def.valueType === "text" && def.inputType === "textArea") {
     control = (
-      <BoxField label={label} info={info}>
+      <BoxField label={label} info={info} focusRing>
         <textarea
           value={text}
           placeholder={many ? MULTI_LABEL : undefined}
@@ -849,7 +848,9 @@ function AddFieldPicker({
           borderRadius: 6,
         }}
       >
-        <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: INK }}>
+        <span
+          style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: FIELD.ink }}
+        >
           {propertyLabel(k)}
         </span>
         <span style={{ flex: "0 0 auto", fontSize: 11, color: MUTED }}>
@@ -865,6 +866,7 @@ function AddFieldPicker({
         {/* C's tinted row: full width, 36 tall, theme-0 ground, theme-800 words. */}
         <button
           type="button"
+          className="panel-control"
           style={{
             display: "flex",
             alignItems: "center",
@@ -1451,25 +1453,27 @@ export function FeaturePanel({
                 marginBottom: 4,
                 borderRadius: 10,
                 border: `1px solid ${FIELD.border}`, // the panel's one border (Olcay, 2026-09-10)
-                background: "var(--primitives-colors-background-50, #f7f8fa)",
+                background: "var(--semantics-surface-100)", // C: Surface/100
                 overflow: "hidden",
               }}
             >
               <button
                 type="button"
                 onClick={() => setListOpen((o) => !o)}
+                className="panel-control"
                 aria-expanded={listOpen}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
                   width: "100%",
-                  padding: "9px 12px",
+                  padding: "8px 12px", // C: 34 tall, its 1px ring included
                   border: "none",
                   background: "none",
                   font: "inherit",
                   fontSize: 12.5,
-                  color: INK,
+                  lineHeight: "16px",
+                  color: FIELD.ink,
                   cursor: "pointer",
                   textAlign: "left",
                 }}
@@ -1528,7 +1532,7 @@ export function FeaturePanel({
                             // header is, and at 16 it should stay the largest thing on screen. The
                             // 11px type beneath keeps the step that tells the two apart.
                             fontSize: 12,
-                            color: INK,
+                            color: FIELD.ink,
                             overflowWrap: "anywhere",
                           }}
                         >
@@ -1539,7 +1543,7 @@ export function FeaturePanel({
                               // happened to it, not because it is still there.
                               textDecoration:
                                 s.fate === "removed" ? "line-through" : "none",
-                              color: s.fate === "removed" ? MUTED : INK,
+                              color: s.fate === "removed" ? MUTED : FIELD.ink,
                             }}
                           >
                             {s.name || `Unnamed ${s.typeLabel}`}

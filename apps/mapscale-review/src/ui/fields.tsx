@@ -430,15 +430,19 @@ export function BoxField({
   label,
   info,
   aside,
+  focusRing,
   children,
 }: {
   label: ReactNode;
   info?: string;
   aside?: ReactNode;
+  /** The box IS the field (the textarea, which draws no edge of its own): it takes the inputs' focus state. */
+  focusRing?: boolean;
   children: ReactNode;
 }) {
   return (
     <div
+      className={focusRing ? "inner-field" : undefined}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -754,7 +758,9 @@ export function ChipsField({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <FieldLabel label={label} info={info} />
+      {/* The chips box is the field: focus inside it — the add input, a chip's ✕ — lights it. */}
       <div
+        className="inner-field"
         style={{
           display: "flex",
           flexWrap: "wrap",

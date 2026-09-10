@@ -60,7 +60,13 @@ const COMBINED_SELECTION = [
   { fid: "w9", name: "", typeLabel: "Wall", fate: "removed" as const },
 ];
 const MERGED = mergeForEditing([
-  { ...DEMO_PROPS, description: "Back of house", hasAssistance: true },
+  /* Featured on one of three: the mixed state, to read its aria-pressed. */
+  {
+    ...DEMO_PROPS,
+    description: "Back of house",
+    hasAssistance: true,
+    isFeatured: true,
+  },
   { ...DEMO_PROPS, fid: "b2", name: "Store Room 4", description: "Deliveries" },
   { ...DEMO_PROPS, fid: "c3", name: "", hasAssistance: true },
 ]);
@@ -83,7 +89,9 @@ function HeaderBench() {
          * went into it, and what it took off the floor.
          */
         { k: "after combine", multi: true, combined: true },
-      ].map(({ k, multi, combined }) => (
+        /** C's Featured, on: the amber border and star, no ground, the caption still grey. */
+        { k: "featured", featured: true },
+      ].map(({ k, multi, combined, featured }) => (
         <div
           key={k}
           style={{
@@ -109,13 +117,23 @@ function HeaderBench() {
           <FeaturePanel
             /* After a combine ONE feature survives, so its own bag is what the panel holds —
                a merged bag there would be the bug that put the sentinel in the title. */
-            props={combined ? DEMO_PROPS : multi ? MERGED : DEMO_PROPS}
+            props={
+              featured
+                ? { ...DEMO_PROPS, isFeatured: true }
+                : combined
+                  ? DEMO_PROPS
+                  : multi
+                    ? MERGED
+                    : DEMO_PROPS
+            }
             selection={
               combined ? COMBINED_SELECTION : multi ? DEMO_SELECTION : undefined
             }
             /* The combine is still a composition here, so a joined row can be taken back out. */
             recomposable={combined}
             onClose={() => {}}
+            /* Delete renders only where the host can delete — the bench has to show it to measure it. */
+            onDelete={noop}
           />
         </div>
       ))}
