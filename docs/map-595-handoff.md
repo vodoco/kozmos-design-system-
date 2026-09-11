@@ -15,6 +15,43 @@ Paste this as the first message of the new chat:
 
 Read order: this file → the record's "Where it stands" → §184–§189 → the memory files named in §8.
 
+## 0a · 2026-09-11 — what changed after this handoff was written (read before §1–§9)
+
+Olcay's rulings on 2026-09-11 (record §190) reverse or narrow several items below:
+
+- **Focus is the stories and the Figma file only.** The prototype is not the subject; do not touch
+  `apps/mapscale-review` or PR #17 unless asked. "The rest of the team doesn't need to know about the
+  prototype and its notes" — every note naming the prototype, its code, the record or a person's ruling
+  was rewritten or deleted. Keep it that way: new notes speak of the product, the stories and the file.
+- **Colours are the product's own tokens, not Kozmos DS - Core Library.** §3's rulings 4 and 5 are
+  reversed: every paint on the file's own layers binds the dashboard's four-mode **Primitive Tokens**
+  (cached in the file; 14 variables) or, where a step is missing there, the same-named **Kozmos DS 2.0
+  `Primitives`**. Switches are `theme/500 (base)` `#346df1`; Delete's block is raw `#fdf2f2` on
+  `#b42318`. Kozmos DS component instances keep their own defaults. §9's colour map is obsolete on the
+  Figma side.
+- **The stories document now has US1–US8** (pasted in §190): US2 prompts (keep editing · save ·
+  discard); US3 saves pasted features at once and does not select them; US4 edits type, name and
+  additional fields across a selection, adds shift-right-click with checkboxes and an expandable
+  selection list; **US5 is Transform on the floor plan alignment page**; US6 has a value order for
+  the snaps; **US8 is new** (search results that stay). ①, ③, ④, ⑦ follow it. §1's "US5 ships with
+  MAP-272" is out of date.
+- **C lives on ⑤** as "Edit panel — the design (a POI with everything)" `589:1082`; the Kit copy
+  `678:2010` is gone. A new **Context menu** set `794:2062` on ⑤ is drawn to v9's design.
+- **③'s screens use the actual components and the dashboard's own chrome** (record §191): the panel,
+  personas, context menu and toolbar are instances of ⑤'s sets; header, rail, list, level selector and
+  toast are v9 instances from four screens pasted onto the Workbench (x ≥ 9200, `v9 · …`) by driving the
+  Figma desktop app (`open figma://…` to select, `osascript` to activate, cmd-C/cmd-V as display-scope
+  keystrokes). The map is a per-screen bitmap and is captioned as illustrative. Not drawn: US4's
+  shift-right-click checklist and expanded selection list, US3's paste prompt, US5's Transform frame on
+  the plan, US8's searched list.
+- **Pages are never deleted.** ②, ⑥ and the Workbench stay; delete only notes about unrelated
+  things. Chris's mock-ups (Workbench `20:11`) stay exactly as they are.
+- **New traps** (§190): a library variable imported by key in one `use_figma` call is gone in the
+  next unless bound — import inside the call that binds; `getNodeByIdAsync` across pages returns
+  instances without children — hash from the node's own page; a paint's `opacity` is dropped by
+  `setBoundVariableForPaint` and a change to it on a master did not reach an existing instance;
+  `search_design_system` is clamped to one query per call; `fetch` is undefined in the sandbox.
+
 ## 1 · The work, and how Olcay works
 
 - **What:** MAP-595 "Easier Content Editing — Part 2" at Pointr — editing map content in the Map
@@ -121,11 +158,10 @@ the record.
 3. **One field border** — _"use one border style, the 1px box one"_: 1px `#c7cad1` (`Border/Subtle`)
    on every field. Then _"yes, make them #c7cad1 too"_ extended it to Featured when off, the
    several-features strip, and the footer's rule. The footer is white under that rule (§180–§182).
-4. **Colours by DS role, both sides.** Figma binds Kozmos DS - Core Library by role, and the code
-   uses the same names (§184–§185). This was extended to the rest of the file's **components and
-   screens**; documentation text stays on Kozmos DS 2.0's one-mode set (§189).
-5. **Switches are Kozmos `theme-500`, `#135bec`,** in Figma too. C had the dead set's `#346df1`
-   (§186).
+4. ~~Colours by DS role, both sides.~~ **Reversed 2026-09-11 (§0a, §190): the file binds the product's
+   own Primitive Tokens; the code still carries the Kozmos-role names from §185.**
+5. ~~Switches are Kozmos `theme-500`, `#135bec`, in Figma too.~~ **Reversed 2026-09-11: the product's
+   `theme/500 (base)`, `#346df1`, in Figma.**
 6. **Delete confirms in v9's danger tone**: a danger header and icon, the DS destructive "Delete"
    button, and an outlined "Keep" that takes focus, so Enter never deletes. The unsaved-changes
    guard stays in the warning tone (§186).
