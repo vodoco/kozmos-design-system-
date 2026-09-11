@@ -54,6 +54,24 @@ Olcay's rulings on 2026-09-11 (record §190) reverse or narrow several items bel
   indeterminate step exists only where the features differed at selection. The guard's third button
   reads **Update**, as the footer does. ⚠️ v9's screen frames stack first-on-top (`itemReverseZIndex`)
   on the root and `body` — a layer appended there renders underneath; `insertChild(0, …)` instead.
+- **Toolbars and geometry states (record §193, 2026-09-11):** Combine is hidden everywhere (out of
+  scope); Map Content / Edit is 7 tiles at 512px. ③'s selection marks are vectors drawn to the
+  prototype's overlay (`public/map/index.html`: faces .10/.06, r5 corners, r3.5 midpoints, box 18px
+  out dashed 5/4 at .7, r7 knob on a 26px stem, 9px scale squares) over the dashboard's own highlight;
+  v9's map bitmap was retouched per state (Python, uploaded with `upload_assets`). Render a MASTER to
+  check a master change — an instance's cached render can be stale.
+- **Map View Preferences (record §194, 2026-09-11):** v9's overlay (with its Editing › Snap row) and
+  its 32×32 trigger are on ⑤ as components (Focus rows hidden — out of scope); the button sits at
+  (16, 796) on ③'s Map Content screens and steps to x 428 while the panel is open, as the prototype
+  does; a US6 screen shows the overlay open.
+- **Four more gaps drawn (record §195):** US5's Transform frame on the plan, US8's searched list
+  (the drawer's own rows renamed and hidden), US4's shift-right-click checklist `879:1921` and the
+  panel's `List=expanded` variant `879:1964`, Delete's confirmation (US1·d) and the Saved notice
+  (US7·d). Still not drawn: the cross-floor block, cut-out/split/straighten across a selection, the
+  guard before a selection changes, clearing a search — all behaviour.
+- **Reset is hidden on every bar (record §197, 2026-09-11):** Undo and Redo suffice. The Edit bars are
+  Undo · Redo · Clear (Wayfinding: Undo · Redo). The prototype's toolbar still renders Reset — for
+  others (§7).
 - **New traps** (§190): a library variable imported by key in one `use_figma` call is gone in the
   next unless bound — import inside the call that binds; `getNodeByIdAsync` across pages returns
   instances without children — hash from the node's own page; a paint's `opacity` is dropped by
@@ -103,7 +121,14 @@ True vs Representative · ⑦ Handover · 🛠 Workbench.
 | Confirmation overlay | `733:1991` | `Tone=danger` `733:1957` (Delete) · `Tone=warning` `733:1973` (guard) |
 | Saved notice         | `741:1974` | `Action=updated` `733:1995` · `Action=deleted` `741:1966`             |
 
-The same section holds the heading `733:1992` and the captions `733:1993`, `733:1994` and `733:2003`.
+The same section holds the heading `733:1992` and the captions `733:1993`, `733:1994` and `733:2003`
+(that column now starts at x 1960), plus — since 2026-09-11 — **Map View Preferences** `874:5070`, its
+**button** `874:5097`, the **Selection checklist** `879:1921`, and the Properties panel's third
+variant `Selection=several, List=expanded` `879:1964`. ③'s screens: US1·a `820:4979`, US1·b
+`820:5007`, US1·d `878:9382`, US2 `820:5150`, US3 `820:5178`, US4 `880:13436`, US5 `820:5285`, US6
+`875:9918`, US7·a `820:5066`, b `820:5094`, c `820:5122`, d `878:9503`, US8 `878:10528`. The
+afternoon's change list: `docs/map-595-file-changes-2026-09-11-pm.md`; the bitmap pipeline:
+`docs/map-595-assets/`.
 
 Elsewhere on ⑤:
 
@@ -304,6 +329,8 @@ Until §188 a fixed 36px block clipped that note. The block now hugs (54px) and 
 
 - **The stories' author:** v9's placement bar ends with Confirm while US3 commits on a left-click and
   saves at once (⑦, US3 row). US4 and US7 were updated in the 2026-09-11 revision.
+- **The prototype (not MAP-595's subject):** `src/ui/GeometryToolbar.tsx` still renders Reset and
+  Combine tiles; the file hides both (§193, §197).
 - **Kozmos DS owners:**
   - scopes for coloured text, strokes and icons (theme, emotional and foreground are scoped to fills
     or text only);
