@@ -46,6 +46,14 @@ Olcay's rulings on 2026-09-11 (record §190) reverse or narrow several items bel
   the plan, US8's searched list.
 - **Pages are never deleted.** ②, ⑥ and the Workbench stay; delete only notes about unrelated
   things. Chris's mock-ups (Workbench `20:11`) stay exactly as they are.
+- **The stories were revised on 2026-09-11 and are no longer a draft** (record §192). The diff and
+  every node touched are in `docs/map-595-stories-revision-2026-09-11.md`. Behaviour changes: US4
+  shows the unsaved guard before a selection with unsaved changes is added to or reduced (it no longer
+  freezes); mid-action the first Esc cancels and a second Esc de-selects; a feature pasted on another
+  floor or building belongs to it; Transform rotates or scales a selection; the persona control's
+  indeterminate step exists only where the features differed at selection. The guard's third button
+  reads **Update**, as the footer does. ⚠️ v9's screen frames stack first-on-top (`itemReverseZIndex`)
+  on the root and `body` — a layer appended there renders underneath; `insertChild(0, …)` instead.
 - **New traps** (§190): a library variable imported by key in one `use_figma` call is gone in the
   next unless bound — import inside the call that binds; `getNodeByIdAsync` across pages returns
   instances without children — hash from the node's own page; a paint's `opacity` is dropped by
@@ -57,7 +65,8 @@ Olcay's rulings on 2026-09-11 (record §190) reverse or narrow several items bel
 - **What:** MAP-595 "Easier Content Editing — Part 2" at Pointr — editing map content in the Map
   Content screen: one-click selection, several at once, copy and paste, transform, snaps, and the
   **metadata panel** (the edit panel), which is this workstream's main deliverable. The stories,
-  US1–US7, are on ④. US5 (Transform) is MAP-272's and ships with it, not in this phase.
+  US1–US8, live in their document (revised 2026-09-11, no longer a draft) and are summarised on ④.
+  US5 is Transform on the floor plan alignment page.
 - **Figma is the subject.** Olcay, 2026-09-10: _"Why are we talking about the app? We should be
   talking about the Figma for Easier Content Editing Phase 2."_ The prototype matters as Figma's
   implementation. Do not drift into PR, CI or iOS work unless asked.
@@ -78,7 +87,8 @@ Olcay's rulings on 2026-09-11 (record §190) reverse or narrow several items bel
 
 ## 2 · Where everything is
 
-**The design:** Workbench **C** `589:1079` (panel `589:1082`, note `589:1081`).
+**The design:** ⑤ UI Kit, “Edit panel — the design (a POI with everything)” `589:1082`; the
+Workbench's C frame `589:1079` is now only a pointer to it.
 
 **The Figma file:** `nm6qdzaC9B1lknllbwaMTh`, "[MAP-595] Easier Content Editing — Part 2". Pages: 📕
 Cover · 📑 Contents · ① Context & decisions · ② Research · ③ Flows · ④ User Stories · ⑤ UI Kit · ⑥
@@ -97,17 +107,17 @@ The same section holds the heading `733:1992` and the captions `733:1993`, `733:
 
 Elsewhere on ⑤:
 
-- the Kit copy of C, `678:2010`: it replaced the stale example `479:877`, in the section "Properties
-  panel — every control the taxonomy can ask for" (`479:874`; intro `479:876`, controls table
-  `484:1566`);
+- the section "Properties panel — every control the taxonomy can ask for" (`479:874`; intro `479:876`,
+  controls table `484:1566`) holds the edit panel design `589:1082`; the Kit copy `678:2010` is gone;
 - the six custom controls, in "The controls the taxonomy leaves to us" (the type picker is `495:1832`);
 - the Geometry toolbar set `101:1690` and the Toolbar tile set `98:160`;
 - `392:900`, the accordion proposal, kept as the case against accordions.
 
 **The other pages:**
 
-- **③ Flows:** the panel set's instances `396:1164` (one) and `396:1238` (several). US7's screens are
-  a `285:8`, b `284:8` and c `285:94`.
+- **③ Flows:** eight screens on v9's own chrome — US1·a `820:4979`, US1·b `820:5007`, US2 `820:5150`,
+  US3 `820:5178`, US5 `820:5285`, US7·a `820:5066`, b `820:5094`, c `820:5122`; the panel instances sit
+  inside b, c and US2. The four pasted v9 sources are on the Workbench at x ≥ 9200.
 - **① and ⑦:**
   - ① has the decision log;
   - ⑦ has the coverage table, the open-decisions table, and the panel's developer notes (seven lines
@@ -169,8 +179,7 @@ the record.
    for geometry drawings for now."_ (§187)
 8. **Several selected is the design — every property.** Each applicable property is editable across
    the selection and reads "Multiple values" where the selection disagrees, alongside personas and
-   Delete. US4 ("persona visibility is the only metadata it accepts") and US7 ("a message instead of
-   fields") are for their author to update (§189).
+   Delete. US4 and US7 say so in the stories since their 2026-09-11 revision.
 9. **The panel's other states are drawn on ⑤.** Done: the Confirmation overlay and Saved notice sets
    (§186–§187).
 10. **Settled earlier:**
@@ -199,19 +208,15 @@ The several variant shows:
 
 Until §188 a fixed 36px block clipped that note. The block now hugs (54px) and the variant is 713px.
 
-**Colour sources:**
+**Colour sources (2026-09-11):**
 
-- **Kozmos DS - Core Library, by role:**
-  - the panel, the overlays and the notice;
-  - the toolbar sets, Transform and the guides;
-  - the US6 snaps, the layer marks and the control drawings;
-  - ③'s screen mock-ups.
-
-  1,559 paints moved, every one with an identical light value: 630 in §185 and 929 in §189.
-
-- **Kozmos DS 2.0's one-mode `Primitives`:** documentation text only, by choice.
-- **The orphaned "Primitive Tokens":** still in the Workbench's A/B drafts, and in about 228 bindings
-  that the PDS and Pointr library components carry themselves.
+- **The product's own Primitive Tokens** (the dashboard's four-mode set, cached in the file) on every
+  paint of the file's own layers — the panel, the overlays, the notice, the toolbar sets, Transform, the
+  guides, the US6 snaps, the layer marks, the control drawings, ③'s screens.
+- **Kozmos DS 2.0's one-mode `Primitives`** only where that set lacks a step.
+- **Kozmos DS component instances** keep their own defaults; v9's pasted screens bind v9's collection.
+- Raw values only where no token has the value: Delete's block `#fdf2f2` on `#b42318`, the drawn
+  rings and the context menu's picker (translucent paints — see the traps).
 
 **Notes brought up to date (§187–§189):**
 
@@ -291,13 +296,14 @@ Until §188 a fixed 36px block clipped that note. The block now hugs (54px) and 
    - Its radii are 16 (panel), 8 (inputs), 6 (the Add row and Delete) and 10 (the strip); Kozmos's
      radius roles are Container 20, Control 16 and Marker 4.
    - C was approved as drawn; which scale wins is Olcay's call (§186).
-9. **④'s US4 summary** could not take the "the design goes further" note: its frame is 134px and
-   full. Either grow the frame, or let its "several variant" link be the pointer.
+9. ~~④'s US4 summary could not take the "the design goes further" note.~~ Resolved 2026-09-11: ④'s
+   row frames grow with their summary (US2, US3 and US6 rows are 126 tall; the rows below shift).
 10. **PR #17's title** still names only the iOS sheet. Asked, not answered.
 
 ## 7 · Open — for others
 
-- **The stories' author:** update US4 and US7 to the several-selected decision.
+- **The stories' author:** v9's placement bar ends with Confirm while US3 commits on a left-click and
+  saves at once (⑦, US3 row). US4 and US7 were updated in the 2026-09-11 revision.
 - **Kozmos DS owners:**
   - scopes for coloured text, strokes and icons (theme, emotional and foreground are scoped to fills
     or text only);
@@ -326,8 +332,9 @@ Until §188 a fixed 36px block clipped that note. The block now hugs (54px) and 
     after it.
   - Measure text fit before editing a note. Rows keep fixed pitches (46px in ⑦).
   - Rebind only where the light value is identical, and report the rest.
-  - Bind from **Kozmos DS - Core Library** by role. Never bind "Primitive Tokens" (orphaned); use
-    Kozmos DS 2.0's one-mode set only for documentation.
+  - Bind the product's **Primitive Tokens** (the four-mode set cached in the file) and, where a step is
+    missing there, Kozmos DS 2.0 `Primitives`. Never rebind to Kozmos DS - Core Library without a new
+    ruling (§0a). v9's screen frames stack first-on-top — insert added layers at index 0 (§192).
   - Import by key works only for published assets; v9's overlay is not published.
 - **Verify:**
   - The Browser pane never paints (`requestAnimationFrame` never fires), so use the bench and read
