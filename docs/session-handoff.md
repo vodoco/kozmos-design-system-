@@ -1,5 +1,10 @@
 # Session Handoff
 
+> **Start with [`ds-handoff.md`](ds-handoff.md) instead.** Written 2026-09-12, it is the short door
+> in: current state, open decisions, next actions and the traps. This file is the long historical
+> record behind it — read §3 here when you need the reasoning behind a specific decision, and note
+> that §0 and §4 below are a 2026-09-10 snapshot that `ds-handoff.md` supersedes.
+
 Written 2026-08-24, updated 2026-09-10. Everything below was verified by
 running it, not recalled.
 Branches: `codex/wave-2-figma-components` (#16) and `codex/elevation-audit` (#18), stacked; §0 has the order.
