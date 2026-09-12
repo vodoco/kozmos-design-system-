@@ -130,9 +130,9 @@ bitmap pipeline `docs/map-595-assets/` (the 2× source render, `geometry.json`, 
 
 **The stories document:** Google Doc, linked from ④ (`157:12`). US9–US10 are empty stubs.
 
-**Git:** branch `codex/wayfinding-map-panel`; origin is at `3e5c084` (the 2026-09-11 handoff).
-Today's docs — the record, the change list, this handoff, the archived handoff — are **uncommitted**
-in the tree, waiting for "commit the docs". PR #17 targets `main`, retitled 2026-09-12.
+**Git:** branch `codex/wayfinding-map-panel`; origin is at `3e5c084` (the 2026-09-11 handoff);
+today's docs are committed as `ddd2e7b` and the follow-up below, **not pushed** (pushes only on a
+go-ahead). PR #17 targets `main`, retitled 2026-09-12.
 
 ## 3 · Decided — do not reopen
 
@@ -298,6 +298,9 @@ never `git add -A` (shared checkout); lint-staged runs prettier on commit.
 
 ## 8 · Commits
 
-None today. `3e5c084` (2026-09-11) is the last commit and is on origin. Uncommitted in the tree:
-`docs/map-595-figma-2026-09-07.md` (§198 and the summary), `docs/map-595-file-changes-2026-09-12.md`,
-`docs/map-595-handoff.md`, `docs/archive/map-595-handoff-2026-09-11-b.md`. Stage those four by path.
+| Commit    | What                                                                                                                                   |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| (next)    | handoff §2 and §8 — this table                                                                                                         |
+| `ddd2e7b` | §198 — the nine open items ruled and applied; `docs/map-595-file-changes-2026-09-12.md`; this handoff; the 2026-09-11 handoff archived |
+
+Both on the branch only; `origin` is at `3e5c084`. Stage docs by path, never `git add -A`.
