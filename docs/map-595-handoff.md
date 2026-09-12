@@ -1,23 +1,23 @@
 # MAP-595 — handoff for the next session
 
-Written 2026-09-11, evening, at the end of the second long session (the record now runs §1–§197).
-Every node ID, hash and number below was read back from the Figma file, the repo and the record at
-the time of writing. The earlier handoff (written that morning, then patched through the day) is
-archived at `docs/archive/map-595-handoff-2026-09-11-a.md`; nothing in it overrides this one.
+Written 2026-09-12, at the end of the third session (the record runs §1–§198). Every node ID, hash
+and number below was read back from the Figma file, the repo and the record at the time of writing.
+The earlier handoffs are archived at `docs/archive/map-595-handoff-2026-09-11-a.md` (morning) and
+`docs/archive/map-595-handoff-2026-09-11-b.md` (evening); nothing in them overrides this one.
 
 ## 0 · Start here
 
 Paste this as the first message of the new chat:
 
 > Continue MAP-595 (Easier Content Editing — Part 2). Read `docs/map-595-handoff.md` first, then the
-> "Where it stands" summary at the top of `docs/map-595-figma-2026-09-07.md` and §190–§197. The
-> subject is the stories document and the Figma file `nm6qdzaC9B1lknllbwaMTh` — the team's reference
-> for QA and implementation. The prototype `apps/mapscale-review` is not the subject. Pick up from §5,
+> "Where it stands" summary at the top of `docs/map-595-figma-2026-09-07.md` and §198. The subject
+> is the stories document and the Figma file `nm6qdzaC9B1lknllbwaMTh` — the team's reference for QA
+> and implementation. The prototype `apps/mapscale-review` is not the subject. Pick up from §5,
 > "Open — waiting on Olcay".
 
-Read order: this file → the record's "Where it stands" → §190–§197 → the two change lists
-(`docs/map-595-stories-revision-2026-09-11.md`, `docs/map-595-file-changes-2026-09-11-pm.md`) → the
-memory files named in §7.
+Read order: this file → the record's "Where it stands" → §198 → the three change lists
+(`docs/map-595-file-changes-2026-09-12.md`, `docs/map-595-file-changes-2026-09-11-pm.md`,
+`docs/map-595-stories-revision-2026-09-11.md`) → the memory files named in §7.
 
 ## 1 · The work, and how Olcay works
 
@@ -28,7 +28,8 @@ memory files named in §7.
   2026-09-11, no longer a draft); ④ links to it and summarises each story. **The Figma file is the
   team's reference for QA and implementation** (Olcay, 2026-09-11) — "the rest of the team doesn't
   need to know about the prototype and its notes". No note in the file names the prototype, its code,
-  the record or a person's ruling; notes speak of the product, the stories and the file.
+  the record or a person's ruling; notes speak of the product, the stories and the file — where a
+  drawing follows the implementation the note says "as implemented" (§198). ① quotes Olcay's rulings.
 - **The prototype** matters only as a source of measured behaviour (§7 says where the geometry
   numbers came from). Do not touch `apps/mapscale-review`, PR #17, CI or iOS unless asked.
 - **The standing instruction** — Olcay repeats it; treat it as the default mode:
@@ -39,16 +40,18 @@ memory files named in §7.
   > make changes myself. But remember you have CLI access. I don't want to miss anything"
 
 - **How Olcay likes it:** an adversarial self-audit before "done"; verify by measuring and rendering,
-  never assert; decisions as short multiple-choice questions with the recommended option first; every
-  change in the record with its numbers; a change list a person can redo by hand; mistakes stated
-  plainly; pushes, PR edits and merges only on a go-ahead; commits only when asked ("commit the docs").
+  never assert; decisions as short multiple-choice questions with the recommended option first, and
+  "proceed with your recommendation" means every recommended option, including a PR edit that the
+  recommendation named; every change in the record with its numbers; a change list a person can redo
+  by hand; mistakes stated plainly; pushes and merges only on a go-ahead; commits only when asked
+  ("commit the docs").
 
 ## 2 · Where everything is
 
 **The Figma file** `nm6qdzaC9B1lknllbwaMTh`, "[MAP-595] Easier Content Editing — Part 2". Pages
-(never deleted — only notes about unrelated things go): 📕 Cover · 📑 Contents · ① Context & decisions
-(`1:4`… find by name) · ② Research · ③ Flows `1:5` · ④ User Stories `1:6` · ⑥ True vs Representative
-`1:8` · ⑤ UI Kit `1:7` · ⑦ Handover `1:9` · 🛠 Workbench `20:4`.
+(never deleted — only notes about unrelated things go): 📕 Cover `0:1` · 📑 Contents `1:2` · ① Context
+& decisions `1:3` · ② Research `1:4` · ③ Flows `1:5` · ④ User Stories `1:6` · ⑥ True vs
+Representative `1:8` · ⑤ UI Kit `1:7` · ⑦ Handover `1:9` · 🛠 Workbench `20:4`.
 
 **③ Flows** — one section per story, each: title, a one-paragraph intent, numbered step cards
 (380 wide, 400 pitch), ⚠️ notes (glyph at x 80, text at x 104, 28px pitch), a coverage box on US1
@@ -72,43 +75,48 @@ instance (its "Mapsicle Map" image fill is the per-state bitmap), the **geometry
 frame (index 1), the toast, `topLeft` (hidden), the Building-Level Selector (x 312, or 518 beside a
 panel), then the panel / menu / toolbar / checklist / overlay instances, and the **Map View
 Preferences button** (16, 796 — or x 428 while the panel is open). US2 and US1·d carry their scrim
-and overlay at the ROOT's indices 0 and 1 (the root stacks first-on-top). Data conventions: the
-selected feature is **Check-in 3** everywhere (panel header, Section "Bag Drop / Check-in", Name,
+and overlay at the ROOT's indices 0 and 1 (the root stacks first-on-top). The panel instances on the
+screens are 400×820 (their own size); US1·c's two are 651 (they follow the master). Data conventions:
+the selected feature is **Check-in 3** everywhere (panel header, Section "Bag Drop / Check-in", Name,
 the Delete question, the Saved notice); one lit list row; the selector reads **Ground Floor (GF)**,
 the floor the list has expanded.
 
-**⑤ UI Kit** — the panel section `406:988` (x 0–3016, y 10300–12392) holds:
+**⑤ UI Kit** — the panel section `406:988` (x 0–3016) holds:
 
-| Component                               | Node       | Variants / notes                                                                                                                  |
-| --------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Properties panel                        | `396:1093` | `Selection=one, List=collapsed` `396:1091` · `several, collapsed` `396:1092` · `several, expanded` `879:1964`                     |
-| Persona row                             | `395:1020` | 6 personas × on / off / indeterminate (checkboxes)                                                                                |
-| Confirmation overlay                    | `733:1991` | `Tone=danger` `733:1957` (Delete: Keep · Delete) · `Tone=warning` `733:1973` (the guard: Keep editing · Discard changes · Update) |
-| Saved notice                            | `741:1974` | `Action=updated` `733:1995` · `Action=deleted` `741:1966`                                                                         |
-| Context menu                            | `794:2062` | `Features at point=one` `794:2060` · `several` `794:2061` (the picker); drawn to v9's contextualMenu                              |
-| Selection checklist (shift-right-click) | `879:1921` | Context-menu chrome, "FEATURES AT THIS POINT" + ✕, rows with the Persona row's checkbox                                           |
-| Map View Preferences                    | `874:5070` | v9's PreferencesOverlay pasted; Editing › Snap on; Focus rows hidden (out of scope)                                               |
-| Map View Preferences button             | `874:5097` | v9's 32×32 Buttons trigger                                                                                                        |
-| Edit panel — the design                 | `589:1082` | "a POI with everything", in section `479:874`                                                                                     |
-| Geometry toolbar                        | `101:1690` | Entity × Mode, 12 variants; Map Content / Edit `101:1683` = Adjust · Split · Cut-out · Straighten · Undo · Redo · Clear, 512px    |
-| Toolbar tile                            | `98:160`   | idle · hover · selected · disabled                                                                                                |
+| Component                               | Node       | Variants / notes                                                                                                                                                                                                                                            |
+| --------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Properties panel                        | `396:1093` | `Selection=one, List=collapsed` `396:1091` (651 tall) · `several, collapsed` `396:1092` (646) · `several, expanded` `879:1964` (646). Several: the FID row hidden, Featured drawn **mixed** (amber border, half-filled star — clip `907:18615`/`907:18617`) |
+| Persona row                             | `395:1020` | 6 personas × on / off / indeterminate (checkboxes), 360×30                                                                                                                                                                                                  |
+| Confirmation overlay                    | `733:1991` | `Tone=danger` `733:1957` (Delete: Keep · Delete) · `Tone=warning` `733:1973` (the guard: Keep editing · Discard changes · Update)                                                                                                                           |
+| Saved notice                            | `741:1974` | `Action=updated` `733:1995` · `Action=deleted` `741:1966`                                                                                                                                                                                                   |
+| Context menu                            | `794:2062` | `Features at point=one` `794:2060` · `several` `794:2061` (the picker); drawn to v9's contextualMenu                                                                                                                                                        |
+| Selection checklist (shift-right-click) | `879:1921` | Context-menu chrome, "FEATURES AT THIS POINT" + ✕, rows with the Persona row's checkbox                                                                                                                                                                     |
+| Map View Preferences                    | `874:5070` | v9's PreferencesOverlay pasted; Editing › Snap on; Focus rows hidden (out of scope)                                                                                                                                                                         |
+| Map View Preferences button             | `874:5097` | v9's 32×32 Buttons trigger                                                                                                                                                                                                                                  |
+| Edit panel — the design                 | `589:1082` | "a POI with everything", 400×2377, in section `479:874`; type 10 · 11 · 12 · 13 (DS buttons 14), radius 4 · 8 · 16 · full, body padding 16 / 20 / 12 / 16                                                                                                   |
+| Geometry toolbar                        | `101:1690` | Entity × Mode, 12 variants; Map Content / Edit `101:1683` = Adjust · Split · Cut-out · Straighten · Undo · Redo · Clear, 512px                                                                                                                              |
+| Toolbar tile                            | `98:160`   | idle · hover · selected · disabled                                                                                                                                                                                                                          |
 
 Also on ⑤: the ten toolbar state bars (`102:709`… — two Combine examples marked SUPERSEDED), the
 Transform anatomy section `122:1148` (drawn at the SVG's rendered sizes), the snap family and the
-ten US6 snaps at true size, the layer sections, the six custom controls and the type picker, the
-accordion proposal `392:900` (kept as the case against). Dev Mode descriptions on every set say what
-it does.
+ten US6 snaps at true size, the layer sections, the six custom controls and the type picker
+(the Textarea's error state `486:1550` in the product's red `#b42318`), the accordion proposal
+`392:900` (kept as the case against). Dev Mode descriptions on every set say what it does — read
+them knowing the API getter returns them HTML-escaped (§7).
 
-**Other pages:** ① the scope list and the decision log (46px rows; the last rows are 2026-09-11's);
-④ one row per story with "WHERE IT IS DRAWN" links (row frames 112/126/148 tall); ⑥ one line per
-drawn thing, TRUE / REPRESENTATIVE / MIXED; ⑦ the coverage table (what is drawn, what is stated
-only), developer notes, the keyboard list, the open-decisions table with an owner each, and the
-panel's developer notes at the end.
+**Other pages:** ① the scope list and the decision log (46px rows; seven rows dated 2026-09-12 at
+y 2183–2459, page bottom 2490); ④ one row per story with "WHERE IT IS DRAWN" links (all 24 resolve);
+⑥ one line per drawn thing, TRUE / REPRESENTATIVE / MIXED; ⑦ the coverage table, developer notes,
+the keyboard list, the open-decisions table with an owner each (the last two rows: the bar beside
+the panel `797:993`, owner design; input border contrast `908:18618`, owner product · Kozmos DS),
+and the panel's developer notes at the end (heading `743:302` at y 2810, eight notes from 2852,
+page bottom 3048).
 
 **🛠 Workbench:** Chris's mock-ups `20:11` (untouched, by ruling); the v9 sources at x ≥ 9200
 (`807:10227` Default Contextual Menu, `807:11850` Overlapping Features, `807:12844` placement,
 `807:26970` Adding Level, `872:35961` Map View Preferences + button) under their own heading; two
-2026-08 exploration frames (`46:15`, `59:62`) marked superseded; the C frame `589:1079` as a pointer.
+2026-08 exploration frames (`46:15`, `59:62`) marked superseded; the C frame `589:1079` as a pointer;
+a hidden "stray grey rectangle" `256:97` kept as evidence.
 
 **The dashboard's own file** (read-only, unpublished): Pointr Cloud Dashboard v9
 `b8dqhE3CPxitYfqlXuQJTC` — page "0 - Common UI Components" (PreferencesOverlay `19452:258615`, the
@@ -116,15 +124,15 @@ error overlay `7581:268934`), page "2.5 - Map Content", page "2.4 - Levels". It 
 `listItem`; everything else arrives by copy-paste through the desktop app (§7).
 
 **The docs:** the record `docs/map-595-figma-2026-09-07.md` ("Where it stands" at the top, then
-§1–§197); the morning's change list `docs/map-595-stories-revision-2026-09-11.md` (the stories' diff
-and every node); the afternoon's `docs/map-595-file-changes-2026-09-11-pm.md`; the bitmap pipeline
-`docs/map-595-assets/` (the 2× source render, `geometry.json`, `retouch-map.py`).
+§1–§198); the change lists `docs/map-595-file-changes-2026-09-12.md` (today),
+`docs/map-595-file-changes-2026-09-11-pm.md`, `docs/map-595-stories-revision-2026-09-11.md`; the
+bitmap pipeline `docs/map-595-assets/` (the 2× source render, `geometry.json`, `retouch-map.py`).
 
-**The stories document:** Google Doc, linked from ④ (`157:12`). The 2026-09-07 and 2026-09-11 texts
-were pasted in chat; the diff is in the morning's change list. US9–US10 are empty stubs.
+**The stories document:** Google Doc, linked from ④ (`157:12`). US9–US10 are empty stubs.
 
-**Git:** branch `codex/wayfinding-map-panel`, pushed to `origin` (`49eaf22` at the time of writing).
-PR #17 targets `main` and is not this workstream's concern unless asked.
+**Git:** branch `codex/wayfinding-map-panel`; origin is at `3e5c084` (the 2026-09-11 handoff).
+Today's docs — the record, the change list, this handoff, the archived handoff — are **uncommitted**
+in the tree, waiting for "commit the docs". PR #17 targets `main`, retitled 2026-09-12.
 
 ## 3 · Decided — do not reopen
 
@@ -133,72 +141,94 @@ Olcay's rulings, each in ①'s decision log and the record.
 1. **The file is the team's reference; the prototype is out of it** (2026-09-11, §190).
 2. **Colours are the product's own tokens** — the dashboard's four-mode Primitive Tokens cached in
    the file, Kozmos DS 2.0 `Primitives` where a step is missing; never Kozmos DS - Core Library on the
-   file's own layers (2026-09-11, reversing 2026-09-10). Switches `theme/500` `#346df1`.
+   file's own layers (2026-09-11). Switches `theme/500` `#346df1`. The file's own annotation palette
+   (callouts, status chips, coverage boxes, legend dots, swatches) stays raw (2026-09-12, §198).
 3. **Pages are never deleted; Chris's mock-ups stay as they are** (2026-09-11).
 4. **③'s screens use the actual components on the dashboard's own chrome** (2026-09-11).
-5. **The geometry states are drawn as the prototype implements them** — the dashboard's highlight
-   for hover and selection, the editor's overlay on top: face theme/800 at 10% with a 2px edge (others
-   6%, 1.5px at 55%), r5 corners, r3.5 midpoints, the box 18px out (12 in plain transform) dashed 5/4
-   at 70%, r7 knob on a 26px stem, 9px scale squares (2026-09-11, §193).
-6. **Combine is hidden — out of scope** (2026-09-11, §193). **Reset is hidden — Undo and Redo
-   suffice** (2026-09-11, §197). Simplify and Eraser were already off.
+5. **The geometry states are drawn as implemented** — the dashboard's highlight for hover and
+   selection, the editor's overlay on top: face theme/800 at 10% with a 2px edge (others 6%, 1.5px at
+   55%), r5 corners, r3.5 midpoints, the box 18px out (12 in plain transform) dashed 5/4 at 70%, r7
+   knob on a 26px stem, 9px scale squares (2026-09-11, §193).
+6. **Combine is hidden — out of scope; Reset is hidden — Undo and Redo suffice** (2026-09-11).
 7. **Map View Preferences carries Snap; Grey out unchanged and Hide POI labels are out of scope; the
-   button steps right of an open panel (x 428) as the prototype does** (2026-09-11, §194).
+   button steps right of an open panel (x 428 = 12 + 400 + 16)** (2026-09-11, §194).
 8. **The unsaved guard's third button reads Update**, the footer's verb (2026-09-11, §192).
-9. **The stories' 2026-09-11 revision is applied:** US4 prompts before a selection with unsaved
-   changes changes (no freeze); a second Esc de-selects after the first cancels an action; a pasted
-   feature belongs to the floor and building it lands on; Transform rotates or scales a selection;
-   indeterminate is in the persona cycle only where the features differed at selection (§192).
-10. **From 2026-09-10 (still standing):** C is the design; Cancel and Update never hidden — Update
-    greyed until a change; one 1px `#c7cad1` field border; Delete confirms in v9's danger tone with
-    Keep focused; a delete leaves a notice and has no Undo (undo is for geometry drawing only, for
-    now); several selected edits every applicable property, "Multiple values" where they differ.
+9. **The stories' 2026-09-11 revision is applied** (§192).
+10. **From 2026-09-10:** C is the design; Cancel and Update never hidden — Update greyed until a
+    change; one 1px `#c7cad1` field border; Delete confirms in v9's danger tone with Keep focused; a
+    delete leaves a notice and has no Undo; several selected edits every applicable property.
 11. **Settled earlier:** the Featured star is amber; ⑤'s panel is a component set and ③ instances
     it; no accordions; the panel is flat, no shadow.
+12. **The one border stays `foreground/200`; the 3:1 bar is the product's** — logged on ⑦ for the
+    product and Kozmos DS (2026-09-12, §198).
+13. **Featured has a third look with several selected** — mixed: the on-state amber border with a
+    half-filled star, only where the features differed at selection; on → off → mixed like the
+    personas; left mixed at Update it writes nothing (2026-09-12).
+14. **The FID row is hidden with several selected** (2026-09-12).
+15. **Hit areas are a developer note, not a redraw** — the whole persona row is the target; bins and
+    chip ✕ carry a 24×24 hit area in code (2026-09-12).
+16. **The panel's numbers sit on the product's scales** — type 10 · 11 · 12 · 13 (12 is a product
+    size, no token names it), radius 4 · 8 · 16 · full, body top padding 16; the Kozmos Toggle keeps
+    its own 30 (2026-09-12).
+17. **Closed: the ✕ is consistent; Terminal C stays hidden in US8** (2026-09-12).
+18. **The Textarea's error red is the product's Delete red `#b42318`** — danger/500 fails as text
+    (2026-09-12).
 
 ## 4 · The Figma file now — what is drawn, what is stated only
 
-- **Drawn:** every story has a flow and at least one screen (see the §2 table). Components on ⑤ for
-  everything the screens instance. The map bitmaps are v9's, retouched per state so the baked
-  selection matches (clean · selected · selected + hovered · all three lit).
+- **Drawn:** every story has a flow and at least one screen (the §2 table). Components on ⑤ for
+  everything the screens instance, including Featured's mixed look and the hidden FID row with
+  several selected. The map bitmaps are v9's, retouched per state.
 - **Stated only (⑦ says so):** the cross-floor and cross-building block; cut-out, split and
   straighten across a selection; the guard firing before a selection with unsaved changes changes;
   clearing a search without the map jumping; the paste-meets-unsaved prompt (the same guard); US1's
   "select from the list" and "leave" steps; US6's mark at the moment a snap takes; the 10%–400% clamp
-  (a number on ⑤).
+  (a number on ⑤); hit areas (a developer note).
 - **Known compromises, written on the file:** the map is illustrative; US8 shows six results because
-  Terminal C is hidden (rows inside an instance cannot be reordered); v9's placement bar ends with
-  Confirm while US3 commits on a left-click; the geometry bar (512px) does not fit beside the 400px
-  panel in a 904px map, so the panel screens leave it off and move the selector right.
+  Terminal C is hidden (rows inside an instance cannot be reordered — closed as such); v9's placement
+  bar ends with Confirm while US3 commits on a left-click; the geometry bar (512px) does not fit
+  beside the 400px panel in a 904px map, so the panel screens leave it off and move the selector
+  right (still open — §5).
 
 ## 5 · Open — waiting on Olcay
 
-1. **Colours with no identical token** (§189): the old ink `#1a1c24` on ③, the near-grey grounds,
-   `#b81c1c` and `#7a8699` on ⑤ — snap the ink to `foreground/100`, leave the greys (recommended, not
-   approved).
-2. **Featured's look with several selected** (§181) — reports "mixed", looks off.
-3. **The one border's contrast** — `#c7cad1` on white is 1.64:1; `Border/Input` `#747b8b` would pass.
-4. **C's band ✕** sits 8px higher and 4px further right than every other panel's.
-5. **FID with several selected** shows the primary's FID.
-6. **Touch targets:** 30px persona rows and 24px bins.
-7. **Type and radius scales** — C's 12 / 12.5 / 11.5 / 9.5 and 16 / 8 / 6 / 10 against Kozmos's steps.
-8. **The Terminal C row in US8** — hidden to keep the results under Terminal B; a third building
-   needs a row below the POI rows in v9's tree, which changes its icon.
-9. **PR #17's title** still names only the iOS sheet.
+1. **The geometry bar beside the floating panel** (⑦ `797:993`, owner "design"; the record's open
+   list carried it, the 2026-09-11 handoff had dropped it). Measured 2026-09-12: Map Content / Edit
+   is 512px — 7 tiles of 64 plus two 8px separators, with 8px padding and 8px gaps, so there is no
+   slack to give; beside the 400px panel (inset 12) a 904px map leaves a 492px strip, whose top
+   holds the Building-Level Selector (x 518–798, y 24–90) and whose bottom edge holds the Map View
+   Preferences button (428, 796) and the zoom control (848, 748–820). The bar does not fit the strip
+   at any height, and it cannot hide while the panel is open: a selection opens the panel, and the
+   tools are for the selection. Olcay chose "dock it at the top centre of the strip" on a claim that
+   it needed no component change — that claim was wrong by 20px and the choice goes back to him with
+   the real options: (c) tiles 56×48 (glyph 24 unchanged) — the bar becomes 456 and sits under the
+   selector at y 102 with 18px to spare each side; one change to the Tile component, the set and the
+   ten state bars follow, ⑦ `160:51` updated; recommended. (e) The bar keeps its tiles and drops its
+   8px group gaps beside the panel — 480px, 6px to spare, an instance override, tight. (f) A
+   vertical bar on the map's right edge. Nothing is drawn until he answers.
+
+The nine items of the 2026-09-11 handoff were ruled and applied on 2026-09-12 (§198,
+`docs/map-595-file-changes-2026-09-12.md`).
 
 ## 6 · Open — for others
 
 - **The stories' author:** v9's placement bar ends with Confirm while US3 commits on a left-click and
   saves at once (⑦, US3 row).
-- **The prototype (not this workstream's):** `src/ui/GeometryToolbar.tsx` still renders Reset and
-  Combine tiles; its Map View Preferences trigger is 44×44 where v9's is 32×32; it carries the Kozmos
-  role token names from §185 while the file binds the product's tokens.
-- **Kozmos DS owners:** scopes for coloured text, strokes and icons; a neutral outline button; the
-  destructive button's shade; the six custom controls missing from Core (Textarea first); v9's overlay
-  is unpublished; ~228 PDS / Pointr bindings still on "Primitive Tokens"; the record's DS asks.
+- **The product and Kozmos DS owners:** the input border's 3:1 bar (⑦ `908:18618`): the dashboard's
+  own input border is `foreground/100` at 2px (1.27:1); `foreground/500` (4.24:1) would pass, one
+  token for every box at once. Also: scopes for coloured text, strokes and icons; a neutral outline
+  button; the destructive button's shade; the six custom controls missing from Core (Textarea
+  first); v9's overlay is unpublished; ~228 PDS / Pointr bindings still on "Primitive Tokens".
+- **The prototype's code (not this workstream's):** `FeaturePanel.tsx` — hide the FID row with
+  several selected; draw Featured's mixed look (amber border, half-filled star; `aria-pressed`
+  already carries `mixed`); make the whole persona row the click target and give the bins and chip ✕
+  a 24×24 hit area; place the band's ✕ where the app's other panels do; snap the panel's type and
+  radius to the file's numbers (§3, 16). `GeometryToolbar.tsx` still renders Reset and Combine
+  tiles; `MapSettings.tsx`'s trigger is 44×44 where v9's is 32×32; the app carries the Kozmos-role
+  token names from §185 while the file binds the product's tokens.
 - **iOS / deploy** (not MAP-595): PR #17's iOS tests fail since 2026-09-08 (four tests in
   `KozmosAdaptiveMapShellTests.swift`); the deploy never rebuilds `@kozmos/react` — see the archived
-  handoff §7 for the detail.
+  2026-09-11 morning handoff §7.
 
 ## 7 · How to work here — the traps that cost time
 
@@ -214,24 +244,37 @@ Olcay's rulings, each in ①'s decision log and the record.
   frames. Anything added to an auto-layout frame needs `layoutPositioning = 'ABSOLUTE'`.
 - A bound paint with `opacity` renders opaque on new nodes and inside instances — use raw
   translucent paints; bind only opaque strokes. A library variable imported by key is gone in the next
-  call unless bound. Rebind only where the light value is identical.
+  call unless bound. Rebind only where the light value is identical (or, by ruling, a hair off).
+- **`description` reads back HTML-escaped** (`&#39;`): set descriptions from plain text and compare
+  the read-back with an untouched component's; never write a read-back (§198).
+- **Instances of a documentation component read its fill by inheritance**, not override: a guard
+  that checks each instance's raw value after the component was bound throws. Bind the master, then
+  only the instances that really override (`boundVariables` already set = follows).
+- **A fixed-size text box switched to auto-height inside a horizontal auto-layout row** can wrap a
+  single word (13 → 26 tall): use `WIDTH_AND_HEIGHT` for labels (§198).
+- **Count a block by id, not by a y-threshold** — ⑦'s notes block is a heading and six bullets.
+- **A guard that throws rolls the whole script back** — write fix scripts as verify-or-throw, and
+  read the error's node before retrying.
 - The dashboard's `listItem` rows: rename by the `entitiyName` property, never by editing the text
   (the text is bound to the property and rewrites it); `Property 1` is idle | inFocus; rows inside an
   instance cannot be reordered — hide instead.
 - Renders: `get_screenshot` never upscales — render a temp frame at the size you want; a REST render
-  of an unchanged INSTANCE can be stale after its master changed — render the master; download with
-  `curl -k` (the sandbox has no CA bundle). Images go in through `upload_assets` (single-use URLs,
-  multipart POST) and land as 400×300 frames on the desktop app's current page — read the hash, set
-  it as a fill, delete the frame.
+  of an unchanged INSTANCE can be stale after its master changed — render in-app
+  (`await node.screenshot({scale})`, which returns the image inline; the tool may drop one image of
+  several — render the one you need alone); download with `curl -k` (the sandbox has no CA bundle).
+  Images go in through `upload_assets` (single-use URLs, multipart POST) and land as 400×300 frames
+  on the desktop app's current page — read the hash, set it as a fill, delete the frame.
 - Copying from v9: `osascript -e 'tell application "Figma" to activate'`, then
   `open "figma://file/<key>?node-id=<id>"` selects the node; `computer_batch` ⌘C, `open` this file's
   Workbench, ⌘V (needs the screen-takeover approval — ask Olcay to watch for the card).
-- Measure text fit before editing: ③ notes 28px pitch, one line; ⑦ / ① / ⑥ rows 46px; developer-note
-  bullets 24px; ④ row frames grow with their summary (WHERE line at 78 or 92). Check overlaps
-  pairwise after moving anything; captions sit 12px under screens.
+- Measure text fit before editing: ③ notes 28px pitch, one line; ⑦ / ① / ⑥ rows 46px (a WHY text may
+  be 28 tall above the rule at +30); developer-note bullets 24px pitch, 38 after a 28-tall one; ④ row
+  frames grow with their summary. Check overlaps pairwise after moving anything; captions sit 12px
+  under screens. Text edits inside styled text: `deleteCharacters` + `insertCharacters` keep the
+  surrounding styles; load the fonts of every segment first.
 - `search_design_system` is clamped to one query per call; `fetch` is undefined; import by key works
   only for published assets (the Pointr Icon Library is: `settings-04` `4a7bc953…`, `x-close`
-  `6c340143…`).
+  `6c340143…`, `star-01` `ff0eb2f1…`).
 
 **The geometry numbers** come from `apps/mapscale-review/public/map/index.html` (readable source):
 `EDIT_INK`, `geomDrawFaces`, `geomDrawHandles`, `orientedBox`, `dominantAngle`, `BOX_PAD`,
@@ -239,21 +282,22 @@ Olcay's rulings, each in ①'s decision log and the record.
 `docs/map-595-assets/retouch-map.py`'s companion script in §193 of the record; the corners of the
 bitmap's features are in `geometry.json`.
 
+**Contrast** (on white): `foreground/100` 1.27:1 · `/200` 1.64:1 · `/300` 2.19:1 · `/400` 3.00:1 ·
+`/500` 4.24:1 · `/600` 6.10:1; `danger/500 (Base)` `#e43458` 3.9:1 (fails as small text).
+
 **Shell (zsh):** `set -e` does not gate and `cmd | tail || exit 1` tests `tail`; unquoted
 `--include=*.ts` aborts; `====` in an `echo` is an equals-expansion; ugrep chokes on long regexes —
-use Python. Stage by file, never `git add -A` (shared checkout); lint-staged runs prettier on commit.
+use Python. `gh pr edit` can fail on GitHub's classic-Projects deprecation — `gh api -X PATCH
+repos/vodoco/kozmos-design-system-/pulls/17 -f title=…` does the edit; read it back. Stage by file,
+never `git add -A` (shared checkout); lint-staged runs prettier on commit.
 
 **Memory files with the detail:** `map-595-handoff-pointer`, `figma-use-figma-traps`,
 `kozmos-token-roles`, `figma-hidden-instances-read-layerless`, `figma-pages-read-empty-until-loaded`,
 `bash-tool-set-e-does-not-gate`, `shell-is-zsh-three-traps`, `kozmos-shared-checkout-stage-by-file`,
 `browser-pane-never-paints-shim-raf`, `mapscale-tsc-noemit-checks-nothing`.
 
-## 8 · Today's commits, newest first
+## 8 · Commits
 
-| Commit    | What                                                                                                     |
-| --------- | -------------------------------------------------------------------------------------------------------- |
-| `49eaf22` | §197 — the last sweep's leftovers                                                                        |
-| `465dc68` | §193–§197 — toolbars and Combine, geometry states, Map View Preferences, four gap screens, layout, Reset |
-| `13c9f1b` | §192 — the stories' 2026-09-11 revision applied; the morning's change list                               |
-| `69bb194` | §190–§191 — the product's tokens back, the prototype out, ③ on the dashboard's chrome                    |
-| `f29a501` | The morning's handoff (now archived)                                                                     |
+None today. `3e5c084` (2026-09-11) is the last commit and is on origin. Uncommitted in the tree:
+`docs/map-595-figma-2026-09-07.md` (§198 and the summary), `docs/map-595-file-changes-2026-09-12.md`,
+`docs/map-595-handoff.md`, `docs/archive/map-595-handoff-2026-09-11-b.md`. Stage those four by path.
