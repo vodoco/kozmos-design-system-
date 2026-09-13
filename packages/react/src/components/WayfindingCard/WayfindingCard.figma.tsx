@@ -1,8 +1,12 @@
 import figma from "@figma/code-connect";
-import { WayfindingCard } from "./WayfindingCard";
+import { WayfindingCard, type WayfindingCardProps } from "./WayfindingCard";
 
 const wayfindingCardUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6893";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against it; Code Connect renders the name as written.
+declare const dismiss: NonNullable<WayfindingCardProps["onClose"]>;
 
 figma.connect(WayfindingCard, wayfindingCardUrl, {
   props: {

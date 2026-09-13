@@ -1,8 +1,14 @@
 import figma from "@figma/code-connect";
-import { POIResultCard } from "./POIResultCard";
+import { POIResultCard, type POIResultCardProps } from "./POIResultCard";
 
 const poiResultCardUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8150";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against them; Code Connect renders the names as written.
+declare const poi: POIResultCardProps["poi"];
+declare const result: POIResultCardProps["result"];
+declare const selectPoi: POIResultCardProps["onSelect"];
 
 figma.connect(POIResultCard, poiResultCardUrl, {
   props: {

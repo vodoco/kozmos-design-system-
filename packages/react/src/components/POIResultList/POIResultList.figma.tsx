@@ -1,9 +1,15 @@
 import figma from "@figma/code-connect";
 import { EmptyState } from "../EmptyState/EmptyState";
-import { POIResultList } from "./POIResultList";
+import { POIResultList, type POIResultListProps } from "./POIResultList";
 
 const poiResultListUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8171";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against them; Code Connect renders the names as written.
+declare const items: POIResultListProps["items"];
+declare const selectedPoiId: POIResultListProps["selectedPoiId"];
+declare const selectPoi: POIResultListProps["onSelect"];
 
 figma.connect(POIResultList, poiResultListUrl, {
   props: {

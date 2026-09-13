@@ -1,16 +1,21 @@
 import figma from "@figma/code-connect";
-import { POIMediaGallery } from "./POIMediaGallery";
+import { POIMediaGallery, type POIMediaGalleryProps } from "./POIMediaGallery";
 
 const poiMediaGalleryUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8119";
 
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against them; Code Connect renders the names as written.
+declare const media: POIMediaGalleryProps["media"];
+declare const setActiveIndex: NonNullable<
+  POIMediaGalleryProps["onActiveIndexChange"]
+>;
+
+// Nothing on the Figma set maps to a prop. Position Text is what positionLabel
+// returns for the active index, and Content maps to how many items media
+// holds: Single hides the paging controls, Empty renders nothing.
 figma.connect(POIMediaGallery, poiMediaGalleryUrl, {
-  props: {
-    positionText: figma.string("Position Text"),
-  },
-  // Content maps to how many items media holds: Single hides the paging
-  // controls, Empty renders nothing, and neither is a prop.
-  example: ({ positionText }) => (
+  example: () => (
     <POIMediaGallery
       media={media}
       label="Venue photographs"

@@ -1,8 +1,16 @@
 import figma from "@figma/code-connect";
-import { RouteSummary } from "./RouteSummary";
+import { RouteSummary, type RouteSummaryProps } from "./RouteSummary";
 
 const routeSummaryUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8296";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against them; Code Connect renders the names as written.
+declare const transportModeIcon: RouteSummaryProps["transportModeIcon"];
+declare const startNavigation: NonNullable<
+  RouteSummaryProps["onStartNavigation"]
+>;
+declare const endRoute: RouteSummaryProps["onEndRoute"];
 
 figma.connect(RouteSummary, routeSummaryUrl, {
   props: {
