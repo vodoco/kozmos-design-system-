@@ -278,15 +278,23 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     /// against the reading direction before it becomes a left or a right. In a
     /// right-to-left layout a panel at `.end` sits on the physical left, and
     /// the controls opposite it on the physical right.
+    ///
+    /// The width class is an argument for the same reason the size and the
+    /// direction are: so the geometry can be tested. `swift test` runs on
+    /// macOS, where the environment reports no size class and the shell would
+    /// float the panel beside the map — every test would see the side-docked
+    /// layout, with the bottom inset at 0 where the docked panel's height was
+    /// expected. The body passes `isRegularWidth`; the tests pin compact.
     func resolvedCollisionInsets(
         in size: CGSize,
-        layoutDirection: LayoutDirection
+        layoutDirection: LayoutDirection,
+        isRegularWidth: Bool
     ) -> KozmosMapCollisionInsets {
         let edgePadding = KozmosDimensions.primitivesLayoutSpacing200
         let sidePanelWidth = hasPanel && isRegularWidth
             ? min(416, size.width * 0.42) + edgePadding * 2
             : 0
-        let dockedPanel = dockedPanelHeight(in: size)
+        let dockedPanel = dockedPanelHeight(in: size, isRegularWidth: isRegularWidth)
         let inCorner = hasControls && controlsPlacement == .top
         let controlsColumn = inCorner ? controlsSize.width + edgePadding * 2 : 0
         let controlsBand = hasControls && controlsPlacement == .bottom
@@ -310,7 +318,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
 
     /// How much of the shell the docked panel is covering, at its settled
     /// detent — zero when the panel floats beside the map instead.
-    private func dockedPanelHeight(in size: CGSize) -> CGFloat {
+    private func dockedPanelHeight(in size: CGSize, isRegularWidth: Bool) -> CGFloat {
         hasPanel && !isRegularWidth ? settledPanelHeight(in: size.height) : 0
     }
 
@@ -326,7 +334,11 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
 
     public var body: some View {
         GeometryReader { geometry in
-            let insets = resolvedCollisionInsets(in: geometry.size, layoutDirection: layoutDirection)
+            let insets = resolvedCollisionInsets(
+                in: geometry.size,
+                layoutDirection: layoutDirection,
+                isRegularWidth: isRegularWidth
+            )
 
             ZStack(alignment: .topLeading) {
                 map
@@ -381,7 +393,10 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                         // has, so a `ViewThatFits` in it can adapt.
                         .frame(
                             width: geometry.size.width,
-                            height: max(geometry.size.height - dockedPanelHeight(in: geometry.size), 0),
+                            height: max(
+                                geometry.size.height - dockedPanelHeight(in: geometry.size, isRegularWidth: isRegularWidth),
+                                0
+                            ),
                             alignment: controlsAlignment
                         )
                         .zIndex(3)

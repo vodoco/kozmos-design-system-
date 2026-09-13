@@ -141,7 +141,8 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
         let view = shell()
         let insets = view.resolvedCollisionInsets(
             in: CGSize(width: 400, height: shellHeight),
-            layoutDirection: .leftToRight
+            layoutDirection: .leftToRight,
+            isRegularWidth: false
         )
 
         XCTAssertEqual(insets.bottom, Double(KozmosMapPanelDetent.medium.height(in: shellHeight)), accuracy: 0.001)
@@ -160,8 +161,8 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
     func testReportedInsetsMirrorInARightToLeftLayout() {
         let view = shell()
         let size = CGSize(width: 400, height: shellHeight)
-        let ltr = view.resolvedCollisionInsets(in: size, layoutDirection: .leftToRight)
-        let rtl = view.resolvedCollisionInsets(in: size, layoutDirection: .rightToLeft)
+        let ltr = view.resolvedCollisionInsets(in: size, layoutDirection: .leftToRight, isRegularWidth: false)
+        let rtl = view.resolvedCollisionInsets(in: size, layoutDirection: .rightToLeft, isRegularWidth: false)
 
         XCTAssertEqual(rtl.right, ltr.left, accuracy: 0.001)
         XCTAssertEqual(rtl.left, ltr.right, accuracy: 0.001)
@@ -175,7 +176,8 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
         let view = shell(collisionInsets: KozmosMapCollisionInsets(top: 90, right: 12, bottom: 10, left: 4))
         let insets = view.resolvedCollisionInsets(
             in: CGSize(width: 400, height: shellHeight),
-            layoutDirection: .leftToRight
+            layoutDirection: .leftToRight,
+            isRegularWidth: false
         )
 
         XCTAssertEqual(insets.top, 90, accuracy: 0.001)
@@ -207,7 +209,8 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
         let view = shell(controlsPlacement: .bottom)
         let insets = view.resolvedCollisionInsets(
             in: CGSize(width: 400, height: shellHeight),
-            layoutDirection: .leftToRight
+            layoutDirection: .leftToRight,
+            isRegularWidth: false
         )
         let panel = Double(KozmosMapPanelDetent.medium.height(in: shellHeight))
         let padding = Double(KozmosDimensions.primitivesLayoutSpacing200 * 2)
@@ -221,5 +224,23 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
         let one = shell(detents: [.medium])
         XCTAssertEqual(one.orderedDetents(in: shellHeight).count, 1)
         XCTAssertEqual(one.settledPanelHeight(in: shellHeight), 384, accuracy: 0.001)
+    }
+
+    /// On a regular width the panel floats beside the map instead of docking,
+    /// so the inset moves from the bottom edge to the panel's own side, and the
+    /// controls opposite it keep their column. This is the layout every test
+    /// used to see by accident: `swift test` runs on macOS, where the
+    /// environment reports no size class, which is why the width class is an
+    /// argument here rather than read from the environment.
+    func testAWidePanelFloatsBesideTheMapAndReportsItsSide() {
+        let view = shell()
+        let size = CGSize(width: 400, height: shellHeight)
+        let insets = view.resolvedCollisionInsets(in: size, layoutDirection: .leftToRight, isRegularWidth: true)
+        let padding = Double(KozmosDimensions.primitivesLayoutSpacing200)
+
+        // The panel is min(416, 42% of the width) plus the shell's padding either side.
+        XCTAssertEqual(insets.right, Double(min(416, size.width * 0.42)) + padding * 2, accuracy: 0.001)
+        XCTAssertEqual(insets.bottom, 0, accuracy: 0.001)
+        XCTAssertEqual(insets.left, padding * 2, accuracy: 0.001)
     }
 }
