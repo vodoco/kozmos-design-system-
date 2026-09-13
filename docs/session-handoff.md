@@ -282,7 +282,7 @@ column holds a contiguous slice of the alphabetized list.
 ### The remaining 18 Figma builders
 
 Every Product / SDK component now has a builder, plus the two platform surfaces.
-Full axis table in `docs/figma-upcoming-components.md`. Five of them close real
+Full axis table in `docs/archive/figma-upcoming-components.md`. Five of them close real
 variant-parity gaps, taking Figma from 6/25 gaps to 1/25.
 
 `DynamicIsland` and `FeedbackCard` went into a new `Platform / Form-Factor`
@@ -1319,7 +1319,7 @@ this item is history, kept because each step hid a trap.
 
 14. **`RoutePreviewPanel`'s five states look like two** — see §5.
 
-15. **The Pointr Cloud dashboard work** in `docs/figma-upcoming-components.md`.
+15. **The Pointr Cloud dashboard work** in `docs/archive/figma-upcoming-components.md`.
     Drawer's slots, TreeChildItem's row actions, and the four DS components
     the prototype's backlog asked for (`PopoverArrow`, disabled-trigger
     `Tooltip`, `Slider` value bubble, `SegmentedControl` deselect) are done.
@@ -1637,7 +1637,7 @@ inline. Full write-up: `docs/component-variant-gap-analysis.md`.
 - Components page node: `4:4`. Product / SDK section: `1340:6764`.
 - Components are inserted into Figma **through the plugin**
   (`figma/foundations-importer/manifest.json`), not via MCP writes.
-- Product / SDK is deliberately outside Core — see `docs/figma-core-gap-audit.md`.
+- Product / SDK is deliberately outside Core — see `docs/archive/figma-core-gap-audit.md`.
 - Native presentation contracts mirror `@kozmos/product-contracts`:
   `packages/ios/Sources/ProductContracts/` and `com.kozmos.contracts`.
 - Build commands:

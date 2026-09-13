@@ -186,7 +186,7 @@ Button first-pass notes:
 - All Core React, SwiftUI, and Compose linked Code Connect mappings now point at the new `Kozmos DS - Core Library` file key.
 - `Button` is audited in Figma as component set node `77:1055` (`node-id=77-1055`) with 84 variants and is linked in React, SwiftUI, and Compose Code Connect.
 - Designer change governance lives in `docs/figma-change-workflow.md`.
-- Icon strategy lives in `docs/figma-icon-strategy.md`; use the existing Simple Icons library as the artwork source and expose icon slots from Kozmos components.
+- Icon strategy lives in `docs/archive/figma-icon-strategy.md`; use the existing Simple Icons library as the artwork source and expose icon slots from Kozmos components.
 
 ### Phase 4: Remaining Web Coverage
 

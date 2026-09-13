@@ -35,7 +35,7 @@ The new `Kozmos DS - Core Library` is now the active Figma target.
 - Core component sets no longer use the `/ v1` suffix. The importer keeps legacy lookup compatibility so older files can be updated safely, but new canonical names are unsuffixed.
 - Rebuild no longer creates Archive / Legacy Reference content for rebuilt component sets. The safe path is still Update, because it preserves node IDs; Rebuild intentionally creates a new node ID.
 - Composition debt is audited: Card/Dialog updates should compose live Button and Input instances instead of local frame clones for actions and form fields. `Audit Library` reports cloned subcomponent frames as warnings.
-- Upcoming code components that are not yet canonical Figma component sets are tracked in [`docs/figma-upcoming-components.md`](figma-upcoming-components.md).
+- Upcoming code components that are not yet canonical Figma component sets are tracked in [`docs/archive/figma-upcoming-components.md`](figma-upcoming-components.md).
 - Core React Code Connect validates for all 40 current linked component-set mappings through `pnpm figma:parse:linked`; publish uses the same linked config when credentials are available.
 - Native Code Connect validates for all 40 current linked component-set mappings through `pnpm figma:publish:native:linked:dry` across SwiftUI and Compose.
 - NumberInput now has React, SwiftUI, and Compose Code Connect scaffolds plus local Figma importer build/update/rebuild actions. PasswordInput now has the React primitive, Code Connect scaffold, and local Figma importer build/update/rebuild actions. Both are intentionally unlinked until their Figma component sets are built and `node-id=TBD` is replaced.
