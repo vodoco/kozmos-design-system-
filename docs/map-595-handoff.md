@@ -296,13 +296,16 @@ never `git add -A` (shared checkout); lint-staged runs prettier on commit.
 
 ## 8 · Commits
 
-| Commit                      | What                                                                                                                                   |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| (2026-09-13, see `git log`) | §199 and its audit addendum, the change list §11, this handoff with §9 — the tile ruling                                               |
-| `e326144`                   | handoff §2 and §8 — the docs commit                                                                                                    |
-| `ddd2e7b`                   | §198 — the nine open items ruled and applied; `docs/map-595-file-changes-2026-09-12.md`; this handoff; the 2026-09-11 handoff archived |
+| Commit    | What                                                                                                                                   |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| (next)    | this handoff — §8 and §9 say the reviewer's pass is pushed                                                                             |
+| `5b42b6b` | §199's reviewer-pass addendum, the change list §11b, this handoff with the shortened §9                                                |
+| `f982cf4` | handoff — the branch is pushed                                                                                                         |
+| `a05697b` | §199 and its audit addendum, the change list §11, this handoff with §9 — the tile ruling                                               |
+| `e326144` | handoff §2 and §8 — the docs commit                                                                                                    |
+| `ddd2e7b` | §198 — the nine open items ruled and applied; `docs/map-595-file-changes-2026-09-12.md`; this handoff; the 2026-09-11 handoff archived |
 
-Pushed to `origin` up to `f982cf4` on 2026-09-13 ("push the branch"); the reviewer-pass commit waits for the next word. Stage docs by path, never `git add -A`.
+All pushed to `origin` on 2026-09-13 ("push the branch", twice). Stage docs by path, never `git add -A`.
 
 ## 9 · What's next — the recommendation, 2026-09-13
 
@@ -312,8 +315,7 @@ and every ③ and ⑤ section rendered and read. Three small things were fixed o
 toolbar-states DevNote's stale numbers, US1·c's "after" name, the Contents titles now linking to
 their pages). What remains is Olcay's:
 
-1. ~~Push the branch~~ — done 2026-09-13 (`f982cf4`); the reviewer-pass docs commit after it is
-   unpushed until his next word.
+1. ~~Push the branch~~ — done 2026-09-13; everything through the reviewer's pass is on `origin`.
 2. **One check in the file, one click:** ⑤'s "Layer sections & the wayfinding network" section
    `77:144` renders faint — every child at a fifth of its ink — and every measurable cause is
    excluded (opacity, blend, modes, effects, masks, overlaps, the lock, the fill; each child renders
