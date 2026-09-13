@@ -260,6 +260,15 @@ mark over a tile. Audited 2026-09-13: all 279 tool instances (170 of them hidden
 re-hidden in one run) are 56×48 with the symbol at (16, 4) and a one-line label. ⚠️ Widths read in the same script as the tile change still showed the old values —
 layout propagates lazily; read them in the next call.
 
+## 11b · The reviewer's pass (2026-09-13)
+
+| Where                    | Node                                                                            | Was → now                                                                                                                                                        | By hand                                                         |
+| ------------------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| ⑤ toolbar-states DevNote | `I12:16;1:27`                                                                   | "Measured: bar 58 tall on 5px padding, tiles 64×48 with a 24px symbol" → "bar 64 tall on 8px padding, tiles 56×48 (64 wide until 2026-09-12) with a 24px symbol" | text                                                            |
+| ③ US1·c "after" panel    | `I797:764;679:1926` (header), `I797:764;679:1937;13188:51774;13108:8236` (Name) | "Immigration Control · Arrivals" → "Check-in 3 · Economy"                                                                                                        | text                                                            |
+| 📑 Contents titles       | `3:12` `3:21` `3:30` `3:39` `3:48` `3:57` `3:66`                                | no link → each links to its page (`…?node-id=1-3` … `1-9`)                                                                                                       | select the title → link → paste the page URL                    |
+| ⑤ Layer sections section | `77:144`                                                                        | renders faint; every measurable cause excluded; a dev status the API cannot read is the one left — **not changed, Olcay's call**                                 | select the section; if it shows a status (Completed), remove it |
+
 ## 12 · Records
 
 - Record: `docs/map-595-figma-2026-09-07.md` §198 and its "Where it stands" summary.

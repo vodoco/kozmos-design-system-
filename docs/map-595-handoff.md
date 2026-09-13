@@ -49,7 +49,7 @@ Read order: this file → the record's "Where it stands" → §198–§199 → t
 ## 2 · Where everything is
 
 **The Figma file** `nm6qdzaC9B1lknllbwaMTh`, "[MAP-595] Easier Content Editing — Part 2". Pages
-(never deleted — only notes about unrelated things go): 📕 Cover `0:1` · 📑 Contents `1:2` · ① Context
+(never deleted — only notes about unrelated things go): 📕 Cover `0:1` · 📑 Contents `1:2` (its seven titles link to their pages since 2026-09-13) · ① Context
 & decisions `1:3` · ② Research `1:4` · ③ Flows `1:5` · ④ User Stories `1:6` · ⑥ True vs
 Representative `1:8` · ⑤ UI Kit `1:7` · ⑦ Handover `1:9` · 🛠 Workbench `20:4`.
 
@@ -302,21 +302,29 @@ never `git add -A` (shared checkout); lint-staged runs prettier on commit.
 | `e326144`                   | handoff §2 and §8 — the docs commit                                                                                                    |
 | `ddd2e7b`                   | §198 — the nine open items ruled and applied; `docs/map-595-file-changes-2026-09-12.md`; this handoff; the 2026-09-11 handoff archived |
 
-All pushed to `origin` on 2026-09-13 ("push the branch"). Stage docs by path, never `git add -A`.
+Pushed to `origin` up to `f982cf4` on 2026-09-13 ("push the branch"); the reviewer-pass commit waits for the next word. Stage docs by path, never `git add -A`.
 
 ## 9 · What's next — the recommendation, 2026-09-13
 
-Nothing in the file waits on Olcay. The work that remains is outward, and each step needs his hand
-or his go-ahead:
+The file was walked as a reviewer would on 2026-09-13 morning (record §199, its last addendum):
+every page's links, overlaps, captions, descriptions and instances checked by script, every page
+and every ③ and ⑤ section rendered and read. Three small things were fixed on the way (the
+toolbar-states DevNote's stale numbers, US1·c's "after" name, the Contents titles now linking to
+their pages). What remains is Olcay's:
 
-1. ~~Push the branch~~ — done 2026-09-13 on his word (`a05697b` and this follow-up).
-2. **His own pass through the file**, in this order: 📕 Cover → ④ (one row per story, every link)
-   → ③ (the fourteen screens and their captions) → ⑤ (the Properties panel set, the Toolbar tile
-   and Geometry toolbar sets, the overlays and menus) → ⑦ (coverage, the open rows with their
-   owners, the developer notes) → ① (the log) → ⑥. Then the eight "In review" status chips on the
-   Cover and the Contents, and the Cover's "STATUS IN JIRA — Backlog", are his to move to whatever
-   the team uses next.
-3. **Three messages out**, drafted below to paste; none has been sent.
+1. ~~Push the branch~~ — done 2026-09-13 (`f982cf4`); the reviewer-pass docs commit after it is
+   unpushed until his next word.
+2. **One check in the file, one click:** ⑤'s "Layer sections & the wayfinding network" section
+   `77:144` renders faint — every child at a fifth of its ink — and every measurable cause is
+   excluded (opacity, blend, modes, effects, masks, overlaps, the lock, the fill; each child renders
+   crisp alone). The one state this API build cannot read is the section's dev status, and a
+   section marked Completed is what Figma greys out. Select the section and look at its status in
+   the right panel: clear it, or keep it as a deliberate "Part 1, done" signal. Replacing the section
+   would clear it but would change the id ④'s "⑤ layer sections" link points at.
+3. **His own pass**, now short: Cover → ④ → ③ → ⑤ → ⑦ → ① → ⑥, then the nine Status chips
+   (`state=In review` → `Signed off` — the set `1:23` has Draft · In review · Signed off) and the
+   Cover's "STATUS IN JIRA — Backlog".
+4. **Three messages out**, drafted below to paste; none has been sent.
 
 **To the stories' author.**
 
@@ -354,5 +362,5 @@ or his go-ahead:
 > overlays, chrome and controls arrive in other files only by copy-paste. (5) About 228 PDS /
 > Pointr bindings still point at the unpublished "Primitive Tokens" collection.
 
-4. **Not this workstream's, still open:** the prototype's code follow-ups (§6), PR #17's failing
+5. **Not this workstream's, still open:** the prototype's code follow-ups (§6), PR #17's failing
    iOS tests, and the deploy that never rebuilds `@kozmos/react`.
