@@ -133,8 +133,8 @@ bitmap pipeline `docs/map-595-assets/` (the 2× source render, `geometry.json`, 
 **The stories document:** Google Doc, linked from ④ (`157:12`). US9–US10 are empty stubs.
 
 **Git:** branch `codex/wayfinding-map-panel`; origin is at `3e5c084` (the 2026-09-11 handoff);
-`ddd2e7b` and `e326144` carry the day's docs, **not pushed** (pushes only on a go-ahead); the tile
-ruling's docs (§199) are uncommitted in the tree. PR #17 targets `main`, retitled 2026-09-12.
+`ddd2e7b`, `e326144` and `a05697b` carry the 2026-09-12/13 docs and are **pushed** (Olcay,
+2026-09-13: "push the branch"). PR #17 targets `main`, retitled 2026-09-12.
 
 ## 3 · Decided — do not reopen
 
@@ -302,15 +302,14 @@ never `git add -A` (shared checkout); lint-staged runs prettier on commit.
 | `e326144`                   | handoff §2 and §8 — the docs commit                                                                                                    |
 | `ddd2e7b`                   | §198 — the nine open items ruled and applied; `docs/map-595-file-changes-2026-09-12.md`; this handoff; the 2026-09-11 handoff archived |
 
-All on the branch only; `origin` is at `3e5c084`. Stage docs by path, never `git add -A`.
+All pushed to `origin` on 2026-09-13 ("push the branch"). Stage docs by path, never `git add -A`.
 
 ## 9 · What's next — the recommendation, 2026-09-13
 
 Nothing in the file waits on Olcay. The work that remains is outward, and each step needs his hand
 or his go-ahead:
 
-1. **Push the branch** (three docs commits since `3e5c084`) — on his word; nothing else on the
-   branch changed.
+1. ~~Push the branch~~ — done 2026-09-13 on his word (`a05697b` and this follow-up).
 2. **His own pass through the file**, in this order: 📕 Cover → ④ (one row per story, every link)
    → ③ (the fourteen screens and their captions) → ⑤ (the Properties panel set, the Toolbar tile
    and Geometry toolbar sets, the overlays and menus) → ⑦ (coverage, the open rows with their
