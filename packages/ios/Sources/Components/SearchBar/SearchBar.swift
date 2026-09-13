@@ -37,7 +37,8 @@ public struct KozmosSearchBar: View {
         .background(KozmosColors.primitivesColorsBackground0)
         .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
         .kozmosElevation(KozmosShadows.semanticsElevationFloating)
-        .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
-        .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing100)
+        // No outer margins. A component that pads itself decides its caller's
+        // layout for them, and here it meant the field could never sit the same
+        // distance from the top of a sheet as it did from the sides.
     }
 }

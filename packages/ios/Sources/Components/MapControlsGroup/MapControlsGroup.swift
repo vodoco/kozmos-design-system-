@@ -1,6 +1,9 @@
 import SwiftUI
 
 public struct KozmosMapControlsGroup: View {
+    /// Minimum comfortable hit target, and the width the group reports.
+    private static let controlSize: CGFloat = 44
+
     @Environment(\.kozmosAnalytics) private var trackEvent
 
     private let compassBearing: Double
@@ -42,7 +45,12 @@ public struct KozmosMapControlsGroup: View {
                     action: onZoomIn
                 )
 
-                Divider()
+                // A `Divider` here would stretch the whole group across the
+                // map: it is horizontally greedy, and nothing else in the
+                // stack constrains the width.
+                Rectangle()
+                    .fill(KozmosColors.primitivesColorsForeground300)
+                    .frame(width: Self.controlSize, height: 1)
 
                 controlButton(
                     systemName: "minus",
@@ -108,7 +116,7 @@ public struct KozmosMapControlsGroup: View {
         } label: {
             Image(systemName: systemName)
                 .font(.system(size: 18, weight: .semibold))
-                .frame(width: 44, height: 44)
+                .frame(width: Self.controlSize, height: Self.controlSize)
                 .foregroundColor(KozmosColors.primitivesColorsForeground100)
                 .contentShape(Rectangle())
         }
