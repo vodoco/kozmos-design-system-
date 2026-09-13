@@ -22,6 +22,7 @@ I'd need if I need to make changes myself."_ Every recommended option was applie
 | `907:18638`–`907:18641` (y 2367) | **Hit areas are a developer note, not a redraw**                                                                                                                                                                                                                                                                                                       |
 | `907:18642`–`907:18645` (y 2413) | **The panel's numbers sit on the product's scales:** 9 and 9.5 → 10; 11.5 → 12 (rows, placeholders) and → 11 (chips, the dashboard's tag size); radius 3 → 4, 6 → 8, 999 → full; body top padding 14 → 16; the Kozmos Toggle keeps its own 30                                                                                                          |
 | `907:18646`–`907:18649` (y 2459) | **Closed:** the ✕ is consistent (C and all three variants: 44×44 at (340, 8) in the 60px header; the dashboard chrome on the screens has no close icon); Terminal C stays hidden in US8                                                                                                                                                                |
+| `914:2031`–`914:2034` (y 2505)   | **The geometry bar docks beside the panel; tiles are 56×48** — the bar is 456px everywhere; beside an open panel it docks under the Building-Level Selector at (430, 102); with no panel it keeps the bottom centre (§11)                                                                                                                              |
 
 By hand, a new ① row: duplicate the last row's three texts and its rule, move them down 46, edit.
 The rows are 46 apart; a WHY text may take two lines (28px) above the rule at +30.
@@ -230,16 +231,34 @@ the annotation components; the Workbench's `256:97` "stray grey rectangle — wa
 
 ---
 
-## 11 · Still open — Olcay
+## 11 · The geometry bar beside the panel — ruled and drawn (record §199)
 
-**The geometry bar beside the floating panel** (⑦ `797:993`, owner "design"): Map Content / Edit is
-512px — 7 tiles of 64 plus two 8px separators, 8px padding, 8px gaps — and beside the 400px panel a
-904px map leaves a 492px strip whose top holds the Building-Level Selector and whose bottom edge
-holds the preferences button and the zoom control. The bar does not fit the strip at any height and
-cannot hide while the panel is open (a selection opens the panel; the tools are for the selection).
-③'s panel screens leave the bar off. This row was in the record's open list but had dropped out of
-the handoff's; the first option put to Olcay ("top centre of the strip, no component change") was
-wrong by 20px and was withdrawn — the real options are in the handoff §5.
+The first option put to Olcay ("top centre of the strip, no component change") was wrong by 20px —
+Map Content / Edit is 512px with 8px padding and gaps around 64px tiles, the strip beside the open
+panel is 492px, and the bar cannot hide because a selection opens the panel. He chose, from the
+corrected options, **tiles 56×48**.
+
+| Where                         | Node(s)                                                                         | Was → now                                                                                                                                                                                                                                                                      | By hand                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| ⑤ Toolbar tile `98:160`       | variants `97:148` idle · `98:148` hover · `98:152` selected · `98:156` disabled | 64×48 → **56×48**; the `symbol` instance x 20 → 16 (24px, still centred); the centred label 64 → 56 wide                                                                                                                                                                       | select each variant → W 56; move the symbol to x 16; the label to W 56 |
+| ⑤ Geometry toolbar `101:1690` | all twelve variants (they hug)                                                  | Map Content / Edit `101:1683` 512 → **456**; Site / Edit 384 → 344; Building / Add 272 → 240; Beacon / Edit 296 → 264; Add bars 208 / 144 → 184 / 128; Wayfinding / Edit 232 → 208                                                                                             | — (follow the tile)                                                    |
+| ⑤ the ten state bars          | `102:709` … `102:1944`                                                          | 512 → 456; Point 312 → 280; Network 232 → 208                                                                                                                                                                                                                                  | —                                                                      |
+| ⑤ tile note, set description  | `104:1147`; `98:160` description                                                | "64×48" → "56×48 (64 wide until 2026-09-12 — narrowed so the bar fits beside the open panel)"; the description says the same                                                                                                                                                   | text; Dev Mode description                                             |
+| ③ US7·b `820:5094`            | NEW instance `915:14475` in `mapBody`, right after the Building-Level Selector  | `Map Content / Edit`, absolute at **(430, 102)** — centred in the 492px strip, 12 under the selector, 18 clear of the panel and of the map edge                                                                                                                                | drag an instance of the variant in, set Absolute position, x 430 y 102 |
+| ③ US7·b caption               | `821:14355`                                                                     | "The geometry bar is not drawn here — 512px beside a 400px panel does not fit…" → "The geometry bar docks beside the panel, under the level selector — 456px at 56×48 tiles in the 492px strip, 18px to spare each side; with no panel it keeps the bottom centre (screen a)." | text                                                                   |
+| ③ US1·a bar                   | `821:7780`                                                                      | (132, 766) → **(224, 764)** — centred on the 904px map (it had kept the 640px bar's centre since 2026-09-11) with the button's 16px bottom margin                                                                                                                              | move                                                                   |
+| ⑦ open row                    | `797:993` · `797:994` · `797:995`                                               | "The geometry bar beside the floating panel" · "design" · … → "✅ SETTLED — the bar docks beside the panel; tiles are 56×48" · "decided 2026-09-12" · the numbers and the rule                                                                                                 | text                                                                   |
+| ⑦ notes                       | `160:51`; `408:14`                                                              | "Tiles are 64×48" → "Tiles are 56×48 (64 until 2026-09-12)"; "7, 512px wide" → "7, 456px wide"                                                                                                                                                                                 | text                                                                   |
+| ① decision log                | NEW row `914:2031`–`914:2034` at y 2505; `864:8376`                             | "The geometry bar docks beside the panel; tiles are 56×48" with the numbers; the Combine row reads "512px wide then, 456 since the 2026-09-12 tile change"                                                                                                                     | duplicate the last row, move 46 down, edit                             |
+
+| ⑤ Toolbar tile description (2026-09-13) | `98:160` | overwritten unread on 2026-09-12 — now: geometry (56×48, symbol at 16, 4), the four states' colours, the symbol swap, the width history | Dev Mode description |
+| ⑥ Add-bars row (2026-09-13) | `159:20` | "One departure: no entity title …" → "Two departures: no entity title … and labelled 56×48 tiles where the product's own are icon-only 40×46." | text |
+| ⑦ US7 coverage cell (2026-09-13) | `160:45` | "… Screens a–d sit on the dashboard's own chrome; d shows the Saved notice …" → "… b shows the geometry bar docked beside the panel, under the level selector; d shows …" (two lines) | text |
+
+Every bar on every page follows the tile, so nothing else was moved; the state-bar frames carry no
+mark over a tile. Audited 2026-09-13: all 279 tool instances (170 of them hidden — unhidden, read,
+re-hidden in one run) are 56×48 with the symbol at (16, 4) and a one-line label. ⚠️ Widths read in the same script as the tile change still showed the old values —
+layout propagates lazily; read them in the next call.
 
 ## 12 · Records
 
