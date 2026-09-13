@@ -59,19 +59,19 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
 
 ## 3 · The system today — measured 2026-09-13
 
-| Thing            | State                                                                                                                                                                                                                                                                                                                              |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `origin/main`    | `91e61fa` — PRs #1–#18 merged (`git log -1 origin/main`). ⚠️ The local `main` in the shared checkout is 19 commits behind it (`git log origin/main..main` is empty, `main..origin/main` is 19): fetch and fast-forward before measuring anything "against main"                                                                    |
-| Open PRs         | **#19** `codex/ds-scope-audit` → main: the scope answer, the 2026-09-12 handoff, and a real fix (every overlay entrance animation was dead CSS) — all checks green, `UI Tests` pending on Chromatic's limit · **#17** `codex/wayfinding-map-panel` → main: 74 commits, of which the design system owns 8 (§4.1); `iOS Build` fails |
-| Packages         | `@kozmos/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, `publishConfig.access: public`, never published — `npm view @kozmos/react` is a 404 and `git tag` lists nothing                                                                                                                                           |
-| React components | 97 directories in `packages/react/src/components` (`STATUS.md`: Core 68 · Code-only 5 · Product/SDK 22 · Platform 2; GlassSettingsPanel excluded). iOS and Android carry the same 97 names; Vue wraps them all                                                                                                                     |
-| Figma            | `Kozmos DS - Core Library` `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, Product / SDK section `1340:6764`; **94 of 94 sets** on one plugin build (last measured 2026-09-12, `pnpm figma:verify`); the stamp reads behind the plugin by one resumability change that touched no painter — do not re-run to chase it             |
-| Tokens           | 601 light + 601 dark (`docs/figma-library-manifest.json`); 1,412 variables in the file (last measured 2026-09-03); font sizes carry floating-point noise (`11.008000373840332`, `13.008000373840332`)                                                                                                                              |
-| Gates            | last measured green 2026-09-12 (§7 has the one-liner). `tokens:raw:check` is a ratchet: 35 raw colours across 7 components, 7 raw radii across 6                                                                                                                                                                                   |
-| Chromatic        | **snapshot limit** since early September — nothing has been visually compared since, including a shadow change across 27 components and #19's animation fix; `UI Tests` shows PENDING on every PR for that reason                                                                                                                  |
-| CI on `main`     | green on 2026-09-10 (CI, Bundle Size, Visual Regression, Release ×2 — Release skips npm without a token)                                                                                                                                                                                                                           |
-| Release path     | `.changeset/` holds only `config.json`; `release.yml` runs on CI success on `main`, skips publish when `NPM_TOKEN` is missing or invalid — inferred **not configured** (the registry has nothing and the run was "success")                                                                                                        |
-| Working tree     | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`, shared with parallel sessions that switch branches and leave work uncommitted — stage by path, never `-A`; build branches in a `git worktree` under the scratchpad                                                                                                     |
+| Thing            | State                                                                                                                                                                                                                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `origin/main`    | `91e61fa` — PRs #1–#18 merged (`git log -1 origin/main`). ⚠️ The local `main` in the shared checkout is 19 commits behind it (`git log origin/main..main` is empty, `main..origin/main` is 19): fetch and fast-forward before measuring anything "against main"                                                        |
+| Open PRs         | **#17 was split on 2026-09-13** (§4.1): **#22** the iOS map-panel sheet and its Playground, with the seven failing tests fixed · **#21** the indeterminate Checkbox · the MAP-595 documentation snapshot (this PR). #19 and #20 merged the same day; #17 is closed and its branch kept for the prototype app           |
+| Packages         | `@kozmos/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, `publishConfig.access: public`, never published — `npm view @kozmos/react` is a 404 and `git tag` lists nothing                                                                                                                               |
+| React components | 97 directories in `packages/react/src/components` (`STATUS.md`: Core 68 · Code-only 5 · Product/SDK 22 · Platform 2; GlassSettingsPanel excluded). iOS and Android carry the same 97 names; Vue wraps them all                                                                                                         |
+| Figma            | `Kozmos DS - Core Library` `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, Product / SDK section `1340:6764`; **94 of 94 sets** on one plugin build (last measured 2026-09-12, `pnpm figma:verify`); the stamp reads behind the plugin by one resumability change that touched no painter — do not re-run to chase it |
+| Tokens           | 601 light + 601 dark (`docs/figma-library-manifest.json`); 1,412 variables in the file (last measured 2026-09-03); font sizes carry floating-point noise (`11.008000373840332`, `13.008000373840332`)                                                                                                                  |
+| Gates            | last measured green 2026-09-12 (§7 has the one-liner). `tokens:raw:check` is a ratchet: 35 raw colours across 7 components, 7 raw radii across 6                                                                                                                                                                       |
+| Chromatic        | **snapshot limit** since early September — nothing has been visually compared since, including a shadow change across 27 components and #19's animation fix; `UI Tests` shows PENDING on every PR for that reason                                                                                                      |
+| CI on `main`     | green on 2026-09-10 (CI, Bundle Size, Visual Regression, Release ×2 — Release skips npm without a token)                                                                                                                                                                                                               |
+| Release path     | `.changeset/` holds only `config.json`; `release.yml` runs on CI success on `main`, skips publish when `NPM_TOKEN` is missing or invalid — inferred **not configured** (the registry has nothing and the run was "success")                                                                                            |
+| Working tree     | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`, shared with parallel sessions that switch branches and leave work uncommitted — stage by path, never `-A`; build branches in a `git worktree` under the scratchpad                                                                                         |
 
 ## 4 · The five priorities, as a plan
 
@@ -81,18 +81,16 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
 
 - **Merge #19** if its scope answer is agreed (it also carries the animation fix, which is a defect
   in `main` today).
-- **Decide #17.** Against `origin/main` it holds 74 commits: 38 are MAP-595 documentation
-  (`docs/map-595-*`, `docs/archive/`, `docs/map-595-assets/`), 24 are the prototype app
-  (`apps/mapscale-review`), 8 are the iOS sheet and its Playground (`packages/ios` 11 files,
-  `apps/Playground.swiftpm` 6), 1 is a merge, and two (`d0f36cf`, `dbc5fca`) are pre-split copies
-  of #18's already-merged work whose only surviving file is `Checkbox.tsx` — the indeterminate
-  checkbox, also kept on `codex/checkbox-indeterminate`. Recommended: split it. (a) The iOS sheet
-  and Playground into their own PR, after the seven `KozmosAdaptiveMapShellTests` that fail under
-  `swift test` are fixed (`isRegularWidth` is hard-wired `true` off iOS; it wants to be an argument
-  the tests pin compact). (b) The Checkbox change as its own small PR from
-  `codex/checkbox-indeterminate`. (c) The MAP-595 docs merged as documentation of a parked
-  workstream, or left on the branch. (d) The prototype app left on the branch and not merged —
-  CI does not gate the design system on it, and it has never been prettier-formatted.
+- **#17 was split on 2026-09-13, as recommended.** Against `origin/main` it held 74 commits: 38
+  MAP-595 documentation, 24 the prototype app, 8 the iOS sheet and its Playground, one merge, and two
+  pre-split copies of #18's already-merged work whose only surviving file was `Checkbox.tsx`. Now:
+  (a) **#22** — the eight iOS and Playground commits cherry-picked in order onto `main`, plus one
+  commit that makes the package's tests pass (the width class is an argument of
+  `resolvedCollisionInsets`; `swift test`: 53 tests, 0 failures, was 52 with 7). (b) **#21** — the
+  Checkbox change from the rescued branch `codex/checkbox-indeterminate`, byte-identical to #17's.
+  (c) The MAP-595 documentation as one snapshot of the branch at `0b3acfd` — this PR. (d) The
+  prototype app stays on `codex/wayfinding-map-panel`, unmerged; #17 is closed with a comment
+  naming each part, and the branch is kept.
 - Delete the merged branches `codex/wave-2-figma-components` and `codex/elevation-audit`; delete
   `codex/checkbox-indeterminate` once its change lands.
 - Fast-forward the stale local `main`.
@@ -252,7 +250,7 @@ breaking changes are minors until `1.0`.
 
 ## 6 · Open — waiting on Olcay
 
-1. **PR #17's split** (§4.1) — recommended (a)–(d) above.
+1. ~~PR #17's split~~ — done 2026-09-13: #22, #21 and this PR; #17 closed, its branch kept (§4.1).
 2. **Which tokens the design system is canonical for.** The product implements its own four-mode
    Primitive Tokens with the opposite numbering and a different brand blue; the shipped Web SDK uses
    `--pointr-*`. Either the design system adopts the product's palette and numbering (the smaller
@@ -338,8 +336,9 @@ Memory files: `kozmos-session-handoff-pointer` · `kozmos-verify-before-assertin
 MAP-595 (Easier Content Editing — Part 2) produced a Figma file `nm6qdzaC9B1lknllbwaMTh` that is
 the team's QA and implementation reference for eight user stories, a prototype app
 (`apps/mapscale-review`), and 199 record sections. It is complete and nothing in it waits on
-anyone. Its handoff is `docs/map-595-handoff.md` on `codex/wayfinding-map-panel` (PR #17); it is
-not the design system's work and is not to be picked up without an explicit ask.
+anyone. Its handoff is `docs/map-595-handoff.md`, on `main` with the rest of its record since the
+2026-09-13 snapshot; the prototype app stays on `codex/wayfinding-map-panel` (PR #17, closed). It
+is not the design system's work and is not to be picked up without an explicit ask.
 
 What it leaves the design system, as inputs to §4.2 and §4.4: the dashboard's real tokens and
 sizes (the four-mode Primitive Tokens, opposite numbering, `#346df1`, 12px list text, a 1.27:1
