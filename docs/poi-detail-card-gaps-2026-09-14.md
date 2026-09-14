@@ -91,10 +91,11 @@ Also worth recording, though not a defect: **a story can only use classes
 and ships the packages' prebuilt CSS, so `max-w-[375px]` in a story is dead. It
 enforces §11's "no one-off class" rule by construction.
 
-## 4 · The two parts that need a ruling
+## 4 · The two parts that needed a ruling — both built, 2026-09-14
 
-Per §11 these are reported rather than approximated, and no work starts on them
-until Olcay rules.
+Ruled the same day: build both. `MetaStrip` is a Core part on all three
+platforms; opening hours is a Product / SDK example, per §5.5. What each still
+lacks is recorded under its heading.
 
 ### `poiMetaInformation` — the meta strip
 
@@ -113,6 +114,16 @@ type.
   accessibility glyph 1,213 on 7.
 - **Note:** `Rating` exists and covers the star tile's contents; what is missing
   is the strip and the tile, not the rating.
+- **Built 2026-09-14** as `MetaStrip` / `MetaStripItem` (React), `KozmosMetaStrip`
+  (SwiftUI) and `KozmosMetaStrip` (Compose). It is a description list: every tile
+  pairs a label with a value, and the label reaches the accessible name even when
+  it is not drawn, because `$$$$` and `4.5` mean nothing to a screen reader.
+  Compose needed `KozmosThemeTokens` widened with `semanticsBorderSubtle` first —
+  both palettes had carried it from the start and only the wrapper was missing,
+  the same gap the emotion colours had before #32.
+  **Still open:** it has no Figma set, so Code Connect cannot link on any
+  platform (STATUS reads 68/69). The set is one plugin run once a painter exists,
+  and §5.8 says the plugin paints it.
 
 ### `openingHours` and its `dayItem` rows
 
@@ -124,6 +135,10 @@ time) that expand behind it.
   the summary line is a status tag plus a label-and-time pair, and the row is a
   three-column time layout. Composing it means writing the part, not using it.
 - **Lane:** Product / SDK, per §5.5 an example rather than a set.
+- **Built 2026-09-14** as `apps/docs/stories/examples/OpeningHours.stories.tsx`,
+  from `Accordion`, `Tag`, `Stack` and `Text`, with the file's own days and
+  times. **Still open:** the summary's status tag is `success` green in the
+  source and reads neutral here, because `Tag` has no `emotion` axis yet.
 - **Evidence:** 275 summaries on 5 surfaces, plus 135 `dayItem` rows on 4 — the
   410 that `product-ui-coverage-2026-09-14.md` counts as one row. It is
   also on the §4.4 list twice over: "opening hours" from the revamp designs and

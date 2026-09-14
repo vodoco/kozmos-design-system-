@@ -32,6 +32,17 @@ object KozmosThemeTokens {
             KozmosColorsDark.semanticsSurface0
         )
 
+    /**
+     * The container edge and divider role. Both palettes have carried it from
+     * the start; only the theme wrapper was missing, so Compose could not read
+     * it — the same gap the emotion colours had before #32.
+     */
+    val semanticsBorderSubtle: Color
+        @Composable get() = themed(
+            KozmosDesignTokens.semanticsBorderSubtle,
+            KozmosColorsDark.semanticsBorderSubtle
+        )
+
     val semanticsOverlayScrim: Color
         @Composable get() = themed(
             KozmosDesignTokens.semanticsOverlayScrim,
