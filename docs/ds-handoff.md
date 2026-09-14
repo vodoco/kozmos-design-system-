@@ -14,7 +14,8 @@ Paste this as the first message of the new chat:
 > and `docs/style-playbook.md` (how to change how it looks). The subject is the design system only:
 > the packages under `packages/`, the Figma Core Library and its plugin, the checks, the docs.
 > MAP-595 and `apps/mapscale-review` are parked — do not work on them unless asked in so many words.
-> Start with §4.2, the product UI scan — §4.1 is done but for three items that wait on a decision.
+> Start with §4.3. §4.1 and §4.2 are done: the product UI scan is
+> `docs/product-ui-coverage-2026-09-14.md`, and what it found reshapes §6.
 
 Read order: this file → `docs/ds-scope-2026-09-12.md` → `docs/style-playbook.md` →
 `docs/gap-audit-2026-09-05.md` → the memory files in §8. `docs/session-handoff.md` is the long
@@ -154,7 +155,20 @@ Measured 2026-09-14, each correcting or adding to what this file said before:
   not swap with the set, and it renders in whatever font its text node carries. This is the Figma
   half of the `packages/icons` question in §4.4.
 
-### 4.2 · Scan the current product UI
+### 4.2 · Scan the current product UI — done 2026-09-14
+
+**The answer is `docs/product-ui-coverage-2026-09-14.md`**: 13 surfaces across the three product
+files, 763,776 nodes, read over the REST API. The headline is that the design system is not short of
+components. Of 98,597 mapped control instances, **80.0% are "partial"** — the component exists but
+cannot express an axis the product uses — against 17.8% covered and 2.2% missing. Almost all of that
+80% is three components (`Button`, `Tag`, `Counter`) missing one `Emotion` axis that the token layer
+already defines in full.
+
+It also corrected three things this file used to assert: the product runs at **11px** (45.3%), not
+12; the palettes are **one ramp with two names**, with 79.1% of product fills already Kozmos token
+values; and Readex Pro is **93.8%** of product text, so the `Brand` role should not be dropped.
+
+The original plan, kept for the record:
 
 **What to scan, with keys** (all readable over REST or `use_figma`; the dashboard and Express files
 are read-only for us, and the dashboard publishes only `listItem`):
@@ -176,7 +190,8 @@ answers: `docs/archive/figma-core-gap-audit.md` (2026-05-21, dashboard taxonomy 
 `docs/archive/web-sdk-revamp-audit.md` (2026-08-05), `ds-scope-2026-09-12.md` (the 24 SDK sets and eight missing
 parts), `sdk-module-primitives.md` (eleven ranked primitives, 1 done).
 
-**Token-level disagreements already known**, which the scan will turn into a decision (§6, 2):
+**Token-level disagreements as the scan measured them** (the paragraph below is the pre-scan
+guess, kept so the correction is visible; `product-ui-coverage-2026-09-14.md` §2 has the numbers):
 the brand blue (`#346df1` in the product and PDS Core, `#0d44c2` for Kozmos Core's primary button);
 the palette numbering runs opposite ways (the product's `foreground/900` is the ink, Kozmos Core's
 `foreground/100` is); the type scale (the product runs 12 where Kozmos has 11.008 and 13.008); input
@@ -271,13 +286,17 @@ breaking changes are minors until `1.0`.
 ## 6 · Open — waiting on Olcay
 
 1. ~~PR #17's split~~ — done 2026-09-13: #22, #21 and #23, all merged; #17 closed, its branch kept (§4.1).
-2. **Which tokens the design system is canonical for.** The product implements its own four-mode
-   Primitive Tokens with the opposite numbering and a different brand blue; the shipped Web SDK uses
-   `--pointr-*`. Either the design system adopts the product's palette and numbering (the smaller
-   change for adoption) or the product retokens. This decides what "satisfies all" means and should
-   be taken before the scan's gap list is built into anything.
-3. **The type scale** — 14 and 12 join it, or the library moves to 13 and 11; 95% of the file's text
-   sits off it today, and the product runs at 12.
+2. **Which tokens the design system is canonical for.** Measured 2026-09-14 and much smaller than
+   it looked: **79.1% of the product's opaque fills are already a Kozmos token value**, and the
+   "opposite numbering" is one ramp with two names that Kozmos already defines — `background`
+   ascending, `foreground` descending. What actually needs a ruling is (a) the **brand blue**,
+   `#346DF1` in the product against `theme.500` `#135BEC` and `theme.600` `#1051E8` in Kozmos, and
+   (b) which naming is canonical. The shipped Web SDK still uses `--pointr-*`. Take it before the
+   scan's gap list is built into anything.
+3. **The type scale** — measured 2026-09-14, and smaller than it looked. 72.9% of product text
+   already sits on a Kozmos size; adding **12 and 15** takes it to 93.4%, and the floating-point
+   noise sits on 11.008 and 13.008, which are the product's two dominant steps (45.3% and 15.3%).
+   The claim that "the product runs at 12" was wrong: 12px is 14.4%.
 4. **Chromatic** — raise the plan, wait for the period, or enable TurboSnap; a publish without a
    visual gate is a publish nobody compared.
 5. **A glass surface role** — clears 29 of the 35 raw colours.
@@ -285,10 +304,22 @@ breaking changes are minors until `1.0`.
    consumer ship React).
 7. **Naming normalisation of native enums** — once, with deprecated aliases, before the first
    publish.
-8. **The brand font** — Figma renders Inter; `Brand` (Readex Pro) is an opt-in role no surface uses
-   and has no CJK; drop it or scope it with `unicode-range`.
+8. **The brand font** — **do not drop `Brand`.** The product is 93.8% Readex Pro (measured
+   2026-09-14 across 118,529 text nodes), so the role matches what the product actually sets. The
+   real question is the CJK gap and whether to scope it with `unicode-range`. Figma still renders
+   Inter.
 9. **iOS snapshots in CI** — the harness works; it needs a pinned runner image and a simulator.
-10. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
+10. **An `Emotion` axis on `Button`, `Tag` and `Counter`** — new, from the 2026-09-14 scan and the
+    largest single gap in the system. The product drives six emotions and uses all six (Themed,
+    Neutral, Success, Danger, Informative, Alert); the components expose none of them, mapping only
+    `danger` to `destructive`. `Components.{Primary,Secondary,Tertiary} Buttons` already carry all
+    six with `idle/hover/pressed/focus`, so this is a component API change, not a retheme. It gates
+    80% of the mapped control instances in the product.
+11. **A radius role for 8px** — new, from the same scan. 52.5% of every rounded corner in the
+    product is 8px and no `Semantics.Radius.*` names it: `Marker` is 4 and `Control` is 16. Either
+    `Control` moves to 8 or a role is added between the two. Rule on it before anything is rebuilt
+    against the roles (§5.2 is otherwise decided).
+12. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
     LocationPin's `variant` and `labelPlacement` stay renderer concerns** — recorded, revisit if a
     designer asks.
 
@@ -438,7 +469,15 @@ stacked on another, then all five merged in order.
    cannot run at all** with the current token, which lacks `library_content:read`. The Code Connect
    publish dry-runs, which CI skips without a token, are valid on all three platforms.
 
-**What that leaves.** §4.1 is done except the three items gated on §6 decisions. The next piece of
+7. **§4.2, the product UI scan** — done the same day, and the largest single piece of measurement
+   this work has had: 13 surfaces across the dashboard, Express and the POI revamp, 763,776 nodes
+   over the REST API, written up as `docs/product-ui-coverage-2026-09-14.md`. The headline is that
+   the design system is not short of components. Of 98,597 mapped control instances, **80% are
+   "partial"**: the component exists but cannot express the product's `Emotion` axis, which the
+   token layer already defines in full for Primary, Secondary and Tertiary buttons. It corrected
+   three things this handoff asserted (§4.2) and added two decisions to §6.
+
+**What that leaves.** §4.1 and §4.2 are done. §4.3 is next, and it now has measured input. The next piece of
 work is §4.2, the product UI scan — the second of the five priorities and the largest remaining
 one. Three decisions block what comes after it: which tokens the system is canonical for (§6.2),
 the type scale (§6.3), and Chromatic (§6.4), which has compared nothing since early September.
