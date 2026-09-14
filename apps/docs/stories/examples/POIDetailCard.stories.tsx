@@ -50,30 +50,135 @@ const MEDIA = [
 
 /**
  * The card's attribute sections, in the order the Figma node draws them. Each
- * is a label over a wrapped row of values — 24 of them in the source node.
+ * is a label over a wrapped row of values. The source draws 22 of them,
+ * carrying 71 value tags and 3 payment brand marks; the labels and values
+ * below are the file's own, read from the node rather than invented.
  */
 const ATTRIBUTE_SECTIONS: ReadonlyArray<{
   label: string;
   values: readonly string[];
 }> = [
-  { label: "Cuisines", values: ["American", "Asian Fusion"] },
+  {
+    label: "Cuisines",
+    values: ["American", "Asian Fusion"],
+  },
   {
     label: "Dietary Options",
     values: ["Gluten-Free", "Halal", "Keto", "Dairy-Free", "Peanut-Free"],
   },
   {
     label: "Service Options",
-    values: ["Dine-in", "Takeaway", "Delivery", "Curbside pickup"],
+    values: ["Dine-in", "Takeout", "Delivery", "Drive-thru", "Curbside Pickup"],
   },
-  { label: "Product Types", values: ["Coffee", "Pastries", "Sandwiches"] },
-  { label: "Clinical Specialty", values: ["Cardiology", "Dermatology"] },
-  { label: "Sport Types", values: ["Yoga", "Pilates", "Spinning"] },
-  { label: "Service Types", values: ["Walk-in"] },
-  { label: "Amenities", values: ["Wi-Fi", "Parking", "Outdoor seating"] },
-  { label: "Dress Code", values: ["Smart casual"] },
+  {
+    label: "Product Types",
+    values: [
+      "Activewear",
+      "Adaptive Clothing",
+      "Baby and Toddler Products",
+      "Accessories",
+    ],
+  },
+  {
+    label: "Clinical Specialty",
+    values: ["Acupuncture", "Allergy and Immunology", "Audiology"],
+  },
+  {
+    label: "Sport Types",
+    values: [
+      "Aerobics",
+      "American Football",
+      "Archery",
+      "Athletics",
+      "Badminton",
+      "Baseball",
+    ],
+  },
+  {
+    label: "Service Types",
+    values: ["Barber and Hair Salon", "Beauty and Spa Services"],
+  },
+  {
+    label: "Amenities",
+    values: [
+      "WiFi",
+      "Chargers",
+      "Restrooms",
+      "Locker Room",
+      "Luggage Storage",
+      "Changing Facilities",
+      "Outdoor Seating",
+      "Play Area",
+      "Security Staff",
+      "Alcohol Service",
+    ],
+  },
+  {
+    label: "Good to Know",
+    values: ["Quiet Room", "Family Friendly", "Pet Friendly"],
+  },
+  {
+    label: "Dress Code",
+    values: ["Smart Casual"],
+  },
+  {
+    label: "Age Restriction",
+    values: ["+18"],
+  },
+  {
+    label: "Gender Designation",
+    values: ["Male", "Female", "All-Gender"],
+  },
+  {
+    label: "Capacity",
+    values: ["80"],
+  },
+  {
+    label: "Language Support",
+    values: ["English", "Spanish", "French"],
+  },
+  {
+    label: "Parking Types",
+    values: ["Self-Park", "Valet", "EV Charging"],
+  },
+  {
+    label: "Access Programs",
+    values: ["TSA PreCheck", "CLEAR", "Global Entry"],
+  },
+  {
+    label: "Access Restriction",
+    values: ["Booking Required"],
+  },
+  {
+    label: "Crowd Level",
+    values: ["Busy"],
+  },
+  {
+    label: "Wait Time",
+    values: ["10 min"],
+  },
+  {
+    label: "Occupancy Status",
+    values: ["Occupied"],
+  },
   {
     label: "Payment Methods",
-    values: ["Visa", "Mastercard", "Cash", "Apple Pay"],
+    values: [
+      "Cash",
+      "Credit/Debit",
+      "Contactless",
+      "Mobile",
+      "QR Code",
+      "Bank Transfer",
+      "Crypto",
+      "Store Card",
+      "Gift Card",
+    ],
+    // Plus 3 brand marks (applepay, googlepay, samsungpay) that are logos, not tags.
+  },
+  {
+    label: "Tags",
+    values: ["#tag", "#tag", "#tag"],
   },
 ];
 
@@ -177,7 +282,7 @@ export const Default: Story = {
                 so both survive and CSS order picks the pill. Radius `small 8` was
                 ruled on 2026-09-14 and is not built yet either. */}
             <Avatar className="h-14 w-14">
-              <AvatarImage alt="Pizzeria Napoli" src={IMAGE("Logo", 40)} />
+              <AvatarImage alt="POI Name logo" src={IMAGE("Logo", 40)} />
               <AvatarFallback>PN</AvatarFallback>
             </Avatar>
             <BottomSheetTitle className="flex-1 truncate">
@@ -204,8 +309,8 @@ export const Default: Story = {
           </Stack>
 
           <Text size="sm">
-            Wood-fired Neapolitan pizza &amp; handmade pasta, served in a room
-            built around the oven. <Link href="#read-more">Read More</Link>
+            Wood-fired Neapolitan pizza &amp; handmade pasta in a lively open
+            kitchen. <Link href="#read-more">Read More</Link>
           </Text>
 
           {/* quickButtons — the themed CTA, then the outline actions. The source
@@ -231,14 +336,13 @@ export const Default: Story = {
             A row of seven bordered tiles: travel time, distance, rating, price
             band, wheelchair access, crowd level and access restriction. Nothing
             in Kozmos expresses a tile strip like it; `MetaStrip` is named as
-            missing in `ds-handoff.md` §4.4 and this card is one of five
-            surfaces that draw it.
+            missing in `ds-handoff.md` §4.4, and it is drawn on four surfaces.
           </Gap>
 
           <Separator />
 
           <POIMediaGallery
-            label="Pizzeria Napoli photos"
+            label="POI Name photos"
             media={MEDIA}
             positionLabel={(current, total) => `Image ${current} of ${total}`}
           />
@@ -247,11 +351,19 @@ export const Default: Story = {
             <AttributeSection key={section.label} {...section} />
           ))}
 
+          <Gap title="Payment brand marks">
+            Payment Methods carries three brand marks beside its nine text tags
+            — Apple Pay, Google Pay, Samsung Pay. A brand mark is neither a
+            `Tag` nor an icon from the set: it is artwork owned by someone else,
+            at a fixed lockup, and the design system has nowhere to put one.
+          </Gap>
+
           <Gap title="openingHours — the per-day rows">
             The source draws an `openingHours` instance: a status tag, a
             &quot;Closes 12:30 pm&quot; summary, a disclosure caret, and seven
-            `dayItem` rows behind it. No Kozmos component covers it; the scan
-            counted 410 instances across five surfaces.
+            `dayItem` rows behind it. No Kozmos component covers it: the scan
+            counted 275 summaries across five surfaces and 135 day rows across
+            four.
           </Gap>
 
           <Stack gap={2}>
@@ -259,9 +371,8 @@ export const Default: Story = {
               Description
             </Text>
             <Text size="sm">
-              Pizzeria Napoli has served wood-fired Neapolitan pizza since 1998.
-              The dough proves for 48 hours and the oven runs at 485°C, which is
-              why a pizza takes 90 seconds.
+              Wood-fired Neapolitan pizza &amp; handmade pasta in a lively open
+              kitchen.
             </Text>
           </Stack>
         </Stack>

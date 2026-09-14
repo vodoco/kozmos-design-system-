@@ -7,7 +7,11 @@ The first component of the §11 loop (`ds-handoff.md`): Olcay shared
 `@kozmos/react` exports, its tokens and its roles.
 
 Measured 2026-09-14 over the Figma REST API: the node is `fullPOIDetailCard`,
-375×3183, **886 nodes**, 52 distinct component instances. Usage counts below come
+375×3183, **886 nodes**, 52 distinct component instances, **126 visible text
+nodes** and **22 attribute sections** carrying 71 value tags and 3 payment brand
+marks. Every label and value in the example is the file's own, read from the
+node; visibility is resolved through parents, so nothing hidden is counted as
+drawn. Usage counts below come
 from the 13 surfaces captured for `product-ui-coverage-2026-09-14.md`, re-counted
 for this report.
 
@@ -32,7 +36,8 @@ the example cannot be mistaken for coverage.
 | Seven quick actions               | `Button variant="outline"`         | **partial** | Icons absent (§2); no counter slot, which the source carries on every one                   |
 | `poiMetaInformation` — meta strip | none                               | **missing** | §4 below                                                                                    |
 | Image gallery                     | `POIMediaGallery`                  | covered     | Pager, position label and horizontal scroll all match                                       |
-| 24 attribute sections             | `Text` + `Tag`, composed           | **partial** | No `AttributeSection`; `Tag` is 12px semibold against the source's 13px regular             |
+| 22 attribute sections             | `Text` + `Tag`, composed           | **partial** | No `AttributeSection`; `Tag` is 12px semibold against the source's 13px regular             |
+| Three payment brand marks         | none                               | **missing** | Apple Pay, Google Pay and Samsung Pay: artwork owned by someone else, at a fixed lockup     |
 | `openingHours` + `dayItem` rows   | none                               | **missing** | §4 below                                                                                    |
 | Description section               | `Text`                             | covered     | —                                                                                           |
 
@@ -44,6 +49,10 @@ fonts rather than single glyphs and are counted separately. Of the 19:
 **14 have no Kozmos equivalent**, two exist only under a different name
 (`close` → `x-close`, `caret-down-small` → `chevron-down`), and three are
 present: `alert-circle`, `navigation-pointer-01`, `users-01`.
+
+Every one of the 13 now owned was matched to the card **by component key, not by
+name** — they are literally the components this card instantiates, not
+look-alikes that happen to share a label.
 
 Absent, all 14: `heart`, `bookmark`, `loading-01`, `eye`, `share-01`,
 `calendar-check-01`, `shopping-bag-02`, `layout-alt-02`, `phone`, `globe-02`,
@@ -115,7 +124,8 @@ time) that expand behind it.
   the summary line is a status tag plus a label-and-time pair, and the row is a
   three-column time layout. Composing it means writing the part, not using it.
 - **Lane:** Product / SDK, per §5.5 an example rather than a set.
-- **Evidence:** 275 instances on 5 surfaces, plus 135 `dayItem` rows on 4. It is
+- **Evidence:** 275 summaries on 5 surfaces, plus 135 `dayItem` rows on 4 — the
+  410 that `product-ui-coverage-2026-09-14.md` counts as one row. It is
   also on the §4.4 list twice over: "opening hours" from the revamp designs and
   "Opening Hours" among the dashboard's six field controls.
 
