@@ -516,6 +516,18 @@ So the loop is: **Olcay names an SDK component → it is checked against what Ko
 is built from Kozmos components only → anything that cannot be built that way is reported, and the
 work on it stops there until Olcay rules.**
 
+Two things were settled on 2026-09-14 before the first component:
+
+- **Olcay shares a Figma file and node ids.** So "check" means measuring, not guessing: read every
+  node over the REST API, count what the file actually draws, and compare against the Kozmos library
+  over the same API. `scan-all.mjs` in the coverage work is the shape — walk the node, count
+  instances, text styles, fills, strokes and radii, and fetch child by child when a page is too
+  large for one response.
+- **A "partial" part is built, and the deviation recorded.** Use the Kozmos component, write down
+  exactly which axis or value it could not express, and carry on. Stopping on every partial would
+  stop on most components, since 80% of the product's control instances are partial; building
+  silently would hide the gap. So the example ships and says where it differs.
+
 ### The rule that makes it useful
 
 An example may use **only** what `@kozmos/react` exports, its tokens and its roles. No hand-rolled
