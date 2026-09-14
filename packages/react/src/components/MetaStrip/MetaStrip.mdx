@@ -1,0 +1,46 @@
+import { Canvas, Controls, Meta } from "@storybook/blocks";
+import * as MetaStripStories from "./MetaStrip.stories";
+
+<Meta of={MetaStripStories} />
+
+# MetaStrip
+
+A row of small facts about one thing, each a label and a value.
+
+<Canvas of={MetaStripStories.Default} />
+
+## Where it comes from
+
+Measured from the SDK's POI detail card (`HbFSXhCPxKUy2fWa5x9TKO`, node
+`241:4772`) on 2026-09-14: a 64-tall strip of bordered tiles carrying travel
+time, distance, rating, price band, wheelchair access, crowd level and access
+restriction. The product UI scan found the strip on four surfaces, and the tiles
+it holds on more — the rating tile on four, the accessibility glyph 1,213 times
+across seven.
+
+## It is a description list
+
+Every tile pairs a label with a value, so the markup is a `dl` and each tile is
+a `dt`/`dd` pair. The `label` is required even when it is not drawn: a tile
+showing `$$$$` or `4.5` reads perfectly to someone looking at it and means
+nothing to someone listening, so the label always reaches the accessible name.
+Pass `showLabel` to draw it under the value as well.
+
+An `icon` is decorative and hidden from assistive technology — the label already
+says what the fact is.
+
+<Controls />
+
+## Overflow
+
+The strip scrolls horizontally rather than wrapping, which is what the source
+does: a fact tile that has wrapped onto a second row reads as a different kind
+of thing.
+
+<Canvas of={MetaStripStories.Overflowing} />
+
+## What it deliberately does not know
+
+Nothing about POIs. It is a Core part (§5.5 of `docs/ds-handoff.md`): what each
+tile means is the caller's business. The POI-shaped composition lives in an
+example.
