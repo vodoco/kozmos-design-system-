@@ -239,8 +239,10 @@ function AttributeSection({
         {label}
       </Text>
       <Stack direction="row" gap={2} wrap="wrap">
-        {values.map((value) => (
-          <Tag key={value} variant="outline">
+        {/* Keyed by position: the card's own "Tags" section draws "#tag" three
+            times, so a value is not a unique key here. */}
+        {values.map((value, index) => (
+          <Tag key={`${value}-${index}`} variant="outline">
             {value}
           </Tag>
         ))}
