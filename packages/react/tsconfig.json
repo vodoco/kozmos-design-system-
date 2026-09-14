@@ -22,8 +22,6 @@
   },
   "include": ["src"],
   "exclude": [
-    "src/**/*.figma.ts",
-    "src/**/*.figma.tsx",
     "src/**/*.stories.ts",
     "src/**/*.stories.tsx",
     "src/**/*.spec.ts",

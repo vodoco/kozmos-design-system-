@@ -1,8 +1,14 @@
 import figma from "@figma/code-connect";
-import { FeedbackCard } from "./FeedbackCard";
+import { FeedbackCard, type FeedbackCardProps } from "./FeedbackCard";
 
 const feedbackCardUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8382";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against them; Code Connect renders the names as written.
+declare const submitFeedback: NonNullable<
+  FeedbackCardProps["onSubmitFeedback"]
+>;
 
 figma.connect(FeedbackCard, feedbackCardUrl, {
   props: {

@@ -1,8 +1,15 @@
 import figma from "@figma/code-connect";
-import { POIDetailPanel } from "./POIDetailPanel";
+import { POIDetailPanel, type POIDetailPanelProps } from "./POIDetailPanel";
 
 const poiDetailPanelUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8103";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against them; Code Connect renders the names as written.
+declare const poi: POIDetailPanelProps["poi"];
+declare const actionLabels: POIDetailPanelProps["actionLabels"];
+declare const runAction: POIDetailPanelProps["onAction"];
+declare const dismiss: NonNullable<POIDetailPanelProps["onClose"]>;
 
 figma.connect(POIDetailPanel, poiDetailPanelUrl, {
   props: {

@@ -1,8 +1,13 @@
 import figma from "@figma/code-connect";
-import { CategoryTile } from "./CategoryTile";
+import { CategoryTile, type CategoryTileProps } from "./CategoryTile";
 
 const categoryTileUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8039";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against them; Code Connect renders the names as written.
+declare const categoryIcon: CategoryTileProps["icon"];
+declare const selectCategory: CategoryTileProps["onSelect"];
 
 figma.connect(CategoryTile, categoryTileUrl, {
   props: {

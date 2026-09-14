@@ -1,9 +1,13 @@
 import figma from "@figma/code-connect";
-import { MapOverlay } from "../MapOverlay/MapOverlay";
+import { MapOverlay, type MapOverlayProps } from "../MapOverlay/MapOverlay";
 import { MapView } from "./MapView";
 
 const mapViewUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6854";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against it; Code Connect renders the name as written.
+declare const overlayContent: MapOverlayProps["children"];
 
 figma.connect(MapView, mapViewUrl, {
   props: {

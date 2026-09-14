@@ -1,10 +1,19 @@
 import figma from "@figma/code-connect";
 import { EmptyState } from "../EmptyState/EmptyState";
 import { SearchBar } from "../SearchBar/SearchBar";
-import { BrowseCategoriesPanel } from "./BrowseCategoriesPanel";
+import {
+  BrowseCategoriesPanel,
+  type BrowseCategoriesPanelProps,
+} from "./BrowseCategoriesPanel";
 
 const browseCategoriesPanelUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8026";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against them; Code Connect renders the names as written.
+declare const categories: BrowseCategoriesPanelProps["categories"];
+declare const renderCategoryIcon: BrowseCategoriesPanelProps["renderIcon"];
+declare const selectCategory: BrowseCategoriesPanelProps["onSelect"];
 
 figma.connect(BrowseCategoriesPanel, browseCategoriesPanelUrl, {
   props: {

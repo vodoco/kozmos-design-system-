@@ -1,8 +1,13 @@
 import figma from "@figma/code-connect";
-import { FloorSelector } from "./FloorSelector";
+import { FloorSelector, type FloorSelectorProps } from "./FloorSelector";
 
 const floorSelectorUrl =
   "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6786";
+
+// What the caller supplies, typed from the component's own props so the
+// example type-checks against them; Code Connect renders the names as written.
+declare const floors: FloorSelectorProps["floors"];
+declare const setActiveFloor: FloorSelectorProps["onFloorSelect"];
 
 figma.connect(FloorSelector, floorSelectorUrl, {
   props: {
