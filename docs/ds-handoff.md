@@ -14,7 +14,9 @@ Paste this as the first message of the new chat:
 > and `docs/style-playbook.md` (how to change how it looks). The subject is the design system only:
 > the packages under `packages/`, the Figma Core Library and its plugin, the checks, the docs.
 > MAP-595 and `apps/mapscale-review` are parked — do not work on them unless asked in so many words.
-> Start with §4.2, the product UI scan — §4.1 is done but for three items that wait on a decision.
+> The work now is §11: Olcay shares the SDK's current components, and each one is rebuilt as an
+> example using Kozmos components only. Where that cannot be done, it is reported and asked about,
+> never worked around. §4.1 and §4.2 are done and §6 is all but empty; read §11 first, then §4.3.
 
 Read order: this file → `docs/ds-scope-2026-09-12.md` → `docs/style-playbook.md` →
 `docs/gap-audit-2026-09-05.md` → the memory files in §8. `docs/session-handoff.md` is the long
@@ -63,7 +65,7 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
 | Thing            | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `origin/main`    | `da0a312` — every PR through #28 merged, except #17, which was closed (`git log -1 origin/main`)                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Open PRs         | **none.** Merged 2026-09-14, in order: #24 the evening handoff (`c2c7510`), #25 the tidy-up (`196ae85`), #26 the Android dimension fix and the native token sync (`682bed3`), #27 the Code Connect typecheck (`cb97967`), #28 the regenerated manifest (`da0a312`)                                                                                                                                                                                                                                                                          |
+| Open PRs         | **two.** #31, the product UI scan and the twelve rulings it produced (docs only). #32, the `emotion` axis on `Button` across React, SwiftUI and Compose. Both green on every check but `UI Tests`, which is Chromatic's limit and pends on every PR. Merged 2026-09-14 before them: #24 to #30                                                                                                                                                                                                                                              |
 | Branches         | `origin` carries **`main` and `codex/wayfinding-map-panel` only** — the latter is MAP-595's prototype, parked (§9). The five merged branches and the two older merged-and-kept ones were deleted on 2026-09-13 and 2026-09-14                                                                                                                                                                                                                                                                                                               |
 | Packages         | `@kozmos/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, `publishConfig.access: public`, never published — `npm view @kozmos/react` is a 404 and `git tag` lists nothing                                                                                                                                                                                                                                                                                                                                                    |
 | React components | 97 directories in `packages/react/src/components` (`STATUS.md`: Core 68 · Code-only 5 · Product/SDK 22 · Platform 2; GlassSettingsPanel excluded). iOS and Android carry the same 97 names; Vue wraps them all                                                                                                                                                                                                                                                                                                                              |
@@ -122,17 +124,16 @@ build id, and a comment is not worth a re-stamp.
 - ~~`docs/figma-library-manifest.json` four weeks stale~~ — regenerated in #28, which also made the
   manifest and payload generators write Prettier-formatted output, so a regeneration is a
   content-only diff instead of 3,331 reflowed lines.
-- **Still open:** `tokens:raw:check` at 35 raw colours and 7 raw radii. Twenty-nine of the colours
-  are the same `bg-white/70` on three map cards and clear the moment a **glass** surface role exists
-  (§6.5).
-- **Still open:** the 18 floating-point values. They are noise from a Figma export, not decisions,
-  but rounding them is a visual change to every text style, so it belongs with the type-scale ruling
-  (§6.3) rather than before it. `Primitives.Typography.font.size` is read by no platform, and the
+- **Ruled, not yet built:** `tokens:raw:check` at 35 raw colours and 7 raw radii. Twenty-nine of the
+  colours are the same `bg-white/70` on three map cards and clear the moment the **glass** surface
+  role lands (§5.13).
+- **Ruled, not yet built:** the 18 floating-point values. Noise from a Figma export, not decisions.
+  The type-scale ruling (§5.11) rounds `11.008…` and `13.008…` and adds 12 and 15 in the same pass. `Primitives.Typography.font.size` is read by no platform, and the
   `letterSpacing` and `line.height` scales are unused.
-- **Still open:** native enum names inconsistently prefixed (`AlertStatus`, `BadgeVariant`,
+- **Ruled, not yet built:** native enum names inconsistently prefixed (`AlertStatus`, `BadgeVariant`,
   `ChipSize`, `CounterTone`, `SegmentedControlSize`, `StackDirection`); `AlertStatus.Error` maps to
   React's `destructive`. Cosmetic but breaking — do it once, with deprecated aliases, before a
-  publish (§6.7).
+  publish (§5.16).
 
 **Figma file hygiene** (each is one plugin run once its painter is right): Text, Heading and Label
 have never been built in Figma — `Update All Core` skips them silently, which is why they alone have
@@ -154,7 +155,20 @@ Measured 2026-09-14, each correcting or adding to what this file said before:
   not swap with the set, and it renders in whatever font its text node carries. This is the Figma
   half of the `packages/icons` question in §4.4.
 
-### 4.2 · Scan the current product UI
+### 4.2 · Scan the current product UI — done 2026-09-14
+
+**The answer is `docs/product-ui-coverage-2026-09-14.md`**: 13 surfaces across the three product
+files, 763,776 nodes, read over the REST API. The headline is that the design system is not short of
+components. Of 98,597 mapped control instances, **80.0% are "partial"** — the component exists but
+cannot express an axis the product uses — against 17.8% covered and 2.2% missing. Almost all of that
+80% is three components (`Button`, `Tag`, `Counter`) missing one `Emotion` axis that the token layer
+already defines in full.
+
+It also corrected three things this file used to assert: the product runs at **11px** (45.3%), not
+12; the palettes are **one ramp with two names**, with 79.1% of product fills already Kozmos token
+values; and Readex Pro is **93.8%** of product text, so the `Brand` role should not be dropped.
+
+The original plan, kept for the record:
 
 **What to scan, with keys** (all readable over REST or `use_figma`; the dashboard and Express files
 are read-only for us, and the dashboard publishes only `listItem`):
@@ -176,7 +190,8 @@ answers: `docs/archive/figma-core-gap-audit.md` (2026-05-21, dashboard taxonomy 
 `docs/archive/web-sdk-revamp-audit.md` (2026-08-05), `ds-scope-2026-09-12.md` (the 24 SDK sets and eight missing
 parts), `sdk-module-primitives.md` (eleven ranked primitives, 1 done).
 
-**Token-level disagreements already known**, which the scan will turn into a decision (§6, 2):
+**Token-level disagreements as the scan measured them** (the paragraph below is the pre-scan
+guess, kept so the correction is visible; `product-ui-coverage-2026-09-14.md` §2 has the numbers):
 the brand blue (`#346df1` in the product and PDS Core, `#0d44c2` for Kozmos Core's primary button);
 the palette numbering runs opposite ways (the product's `foreground/900` is the ink, Kozmos Core's
 `foreground/100` is); the type scale (the product runs 12 where Kozmos has 11.008 and 13.008); input
@@ -189,10 +204,11 @@ The scan's "missing" and "partial" rows each need a lane before code: **Core** (
 **Product / SDK** (map, POI, routing, dashboard compositions — by policy examples, not sets, and any
 existing set is deprecated in place, never deleted, because 72 Code Connect mappings pin its node
 ids), or **an example** in `apps/docs/stories/examples/` and the Figma `Examples` page (`286:1601`).
-The token disagreements need one ruling: which palette, numbering and brand blue the design system
-is canonical for — the product's tokens are what the running dashboard implements ("our current
-implementation uses these exactly", 2026-09-11), and a design system the product cannot adopt
-without a retheme satisfies nothing.
+~~The token disagreements need one ruling~~ — **taken 2026-09-14** (§5.10 to §5.14). The brand blue
+is the product's `#346DF1`, both ramp namings stay, the type scale gains 12 and 15, `Brand` stays
+scoped, and a glass role is added. What is left in this section is assigning a lane to each row of
+the scan's coverage table, and §11 is now the way that happens: an example is built, and whatever it
+cannot express becomes the gap list.
 
 ### 4.4 · Complete the missing parts
 
@@ -255,9 +271,11 @@ breaking changes are minors until `1.0`.
 
 1. **A value that depends on another value is derived, not written** (radius, border, elevation
    roles; `docs/style-playbook.md`).
-2. **The roles:** radius `none · marker 4 · control 16 · container 20 · panel 24 · pill`; border
-   `Subtle` (`#C7CAD1`, 1.6:1, container edges and dividers) and `Input` (`#747B8B`, 4.2:1, things
-   you interact with); elevation `raised · floating · overlay`, native following dark mode.
+2. **The roles:** radius `none · marker 4 · small 8 · control 16 · container 20 · panel 24 · pill`
+   — `small` added 2026-09-14 because 52.5% of the product's rounded corners are 8px and nothing
+   named it; nothing already bound to another step moved. Border `Subtle` (`#C7CAD1`, 1.6:1,
+   container edges and dividers) and `Input` (`#747B8B`, 4.2:1, things you interact with);
+   elevation `raised · floating · overlay`, native following dark mode.
 3. **Only a `SLOT` node carries a slot binding**, and a component's own property never drives a node
    inside its slot or a nested instance — bound defaults sit beside the slot.
 4. **Update, never Rebuild**, in the plugin: Rebuild mints new node ids and Code Connect pins the old.
@@ -268,29 +286,49 @@ breaking changes are minors until `1.0`.
 7. **Verify against a clean checkout, not the working tree**; measure, then report.
 8. **The Figma file is painted by the plugin**, not drawn by hand and not written by MCP.
 
+**Ruled 2026-09-14**, after the product UI scan put numbers on each. These close what §6 had been
+holding; the work each unblocks is in §4.3 and §4.5.
+
+9. **Button, Tag and Counter take an `emotion` prop** — `neutral · themed · success · danger ·
+informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`, which already
+   carry all six with `idle/hover/pressed/focus`. `variant` keeps its current meaning for shape and
+   weight. This is the single largest gap: it gates 80% of the product's mapped control instances.
+10. **The brand blue is `#346DF1`** — the design system adopts what the product ships, as
+    `theme.500`. Kozmos's current `#135BEC` and `#1051E8` shift with it. 4.56:1 on white, so it
+    passes AA for text but not 3:1 as a non-text boundary; use `theme.600` where a border must
+    carry meaning.
+11. **The type scale gains 12 and 15, and the noise is rounded off** — `11.008…` becomes 11 and
+    `13.008…` becomes 13. Coverage of product text goes from 72.9% to 93.4%. One plugin run
+    restyles every text style in Figma, so do it in a single pass.
+12. **The neutral ramp keeps both names** — `background.N` ascending for surfaces, `foreground.N`
+    descending for ink, as today. The product maps to these at its own boundary; nothing is renamed.
+13. **A glass surface role is added** — composed from the `Semantics.Effect.glass` values that
+    already exist. It clears 29 of the 35 raw colours the ratchet counts.
+14. **`Brand` (Readex Pro) stays, scoped with `unicode-range`** — the product is 93.8% Readex Pro,
+    so the role matches what it sets. A declared system stack takes CJK, which the face does not
+    cover, instead of whatever each browser picks.
+15. **`@kozmos/vue` is internal and is not published** — it mounts a React root per instance, so it
+    cannot SSR and would make every consumer ship React. It stays as proof the React components
+    mount.
+16. **Native enum names are normalised once, with deprecated aliases** — before the first publish,
+    while nothing outside the repo depends on them.
+17. **The packages are MIT** — a `LICENSE` at the root and a `license` field in all five
+    `package.json` files.
+18. **iOS snapshots run in CI**, on a pinned runner image with a fixed simulator, so an OS update
+    cannot invalidate every snapshot at once.
+
 ## 6 · Open — waiting on Olcay
 
-1. ~~PR #17's split~~ — done 2026-09-13: #22, #21 and #23, all merged; #17 closed, its branch kept (§4.1).
-2. **Which tokens the design system is canonical for.** The product implements its own four-mode
-   Primitive Tokens with the opposite numbering and a different brand blue; the shipped Web SDK uses
-   `--pointr-*`. Either the design system adopts the product's palette and numbering (the smaller
-   change for adoption) or the product retokens. This decides what "satisfies all" means and should
-   be taken before the scan's gap list is built into anything.
-3. **The type scale** — 14 and 12 join it, or the library moves to 13 and 11; 95% of the file's text
-   sits off it today, and the product runs at 12.
-4. **Chromatic** — raise the plan, wait for the period, or enable TurboSnap; a publish without a
-   visual gate is a publish nobody compared.
-5. **A glass surface role** — clears 29 of the 35 raw colours.
-6. **`@kozmos/vue`** — a shipped package or an internal convenience (it cannot SSR and makes every
-   consumer ship React).
-7. **Naming normalisation of native enums** — once, with deprecated aliases, before the first
-   publish.
-8. **The brand font** — Figma renders Inter; `Brand` (Readex Pro) is an opt-in role no surface uses
-   and has no CJK; drop it or scope it with `unicode-range`.
-9. **iOS snapshots in CI** — the harness works; it needs a pinned runner image and a simulator.
-10. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
-    LocationPin's `variant` and `labelPlacement` stay renderer concerns** — recorded, revisit if a
-    designer asks.
+Eleven of the twelve that stood here were ruled on 2026-09-14 and moved to §5. What is left needs an
+action rather than an answer, or needs a designer.
+
+1. **Chromatic — raise the plan.** Ruled: raise it. This is an account action only Olcay can take.
+   Until it happens nothing has been visually compared since early September, including a shadow
+   change across 27 components and #19's animation fix, and `UI Tests` shows PENDING on every PR. It
+   should land before the first npm publish, or that publish ships visuals nobody compared.
+2. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
+   LocationPin's `variant` and `labelPlacement` stay renderer concerns** — recorded, revisit if a
+   designer asks.
 
 ## 7 · Where everything is, and how to check it
 
@@ -438,9 +476,106 @@ stacked on another, then all five merged in order.
    cannot run at all** with the current token, which lacks `library_content:read`. The Code Connect
    publish dry-runs, which CI skips without a token, are valid on all three platforms.
 
-**What that leaves.** §4.1 is done except the three items gated on §6 decisions. The next piece of
-work is §4.2, the product UI scan — the second of the five priorities and the largest remaining
-one. Three decisions block what comes after it: which tokens the system is canonical for (§6.2),
-the type scale (§6.3), and Chromatic (§6.4), which has compared nothing since early September.
+7. **§4.2, the product UI scan** — done the same day, and the largest single piece of measurement
+   this work has had: 13 surfaces across the dashboard, Express and the POI revamp, 763,776 nodes
+   over the REST API, written up as `docs/product-ui-coverage-2026-09-14.md`. The headline is that
+   the design system is not short of components. Of 98,597 mapped control instances, **80% are
+   "partial"**: the component exists but cannot express the product's `Emotion` axis, which the
+   token layer already defines in full for Primary, Secondary and Tertiary buttons. It corrected
+   three things this handoff asserted (§4.2) and added two decisions to §6.
+
+8. **The twelve open decisions were ruled the same evening**, each as a short question with the
+   measurement beside it. Eleven moved to §5; only Chromatic's plan upgrade is still waiting, and
+   that is an account action rather than an answer.
+
+9. **The `emotion` axis built**, the first of the twelve rulings and the one gating most of the
+   product: #32 adds it to `Button` on React, SwiftUI and Compose. Compose needed
+   `KozmosThemeTokens` widened first — the generated light and dark files have carried all 48
+   tier-emotion-state colours from the start, but only three emotions were ever wrapped for the
+   theme. Nothing changes when the prop is unset, which the tokens prove rather than the commit
+   claiming it.
+10. **The subject changed** (§11): from here the work is the SDK's components, rebuilt as examples
+    from Kozmos components only, with every gap reported rather than worked around.
+
+**What that leaves.** §4.1 and §4.2 are done and §6 is all but empty. What is open now is _work_,
+not questions: the `emotion` axis on three components, the type scale, the glass role, the 8px
+radius role, the enum normalisation, the MIT licence, and iOS snapshots in CI. §4.3 assigns each a
+lane; §4.5 carries the publish list. The one thing still
+waiting on Olcay is Chromatic's plan, which is an account action and which has compared nothing
+since early September.
+
+## 11 · The work now: the SDK's components, rebuilt as examples
+
+Olcay's instruction, 2026-09-14:
+
+> "I now would like to focus purely on our design system project. I want to share with you the
+> latest components that we have on the SDK and I want you to check components and build examples
+> purely using design system components. If not possible report and ask."
+
+So the loop is: **Olcay names an SDK component → it is checked against what Kozmos has → an example
+is built from Kozmos components only → anything that cannot be built that way is reported, and the
+work on it stops there until Olcay rules.**
+
+Two things were settled on 2026-09-14 before the first component:
+
+- **Olcay shares a Figma file and node ids.** So "check" means measuring, not guessing: read every
+  node over the REST API, count what the file actually draws, and compare against the Kozmos library
+  over the same API. `scan-all.mjs` in the coverage work is the shape — walk the node, count
+  instances, text styles, fills, strokes and radii, and fetch child by child when a page is too
+  large for one response.
+- **A "partial" part is built, and the deviation recorded.** Use the Kozmos component, write down
+  exactly which axis or value it could not express, and carry on. Stopping on every partial would
+  stop on most components, since 80% of the product's control instances are partial; building
+  silently would hide the gap. So the example ships and says where it differs.
+
+### The rule that makes it useful
+
+An example may use **only** what `@kozmos/react` exports, its tokens and its roles. No hand-rolled
+markup standing in for a missing component, no raw hex, no one-off class that quietly reinvents a
+part. The point of the exercise is to find out what the design system cannot do, and every
+workaround destroys exactly the evidence being collected.
+
+When something cannot be expressed, it goes on the gap list with four things:
+
+1. the SDK component and the part of it that has no Kozmos equivalent,
+2. what was tried,
+3. the lane it belongs to — Core, Product / SDK, or an example (§5.5),
+4. the evidence: how often the product draws it, from
+   `docs/product-ui-coverage-2026-09-14.md` where the scan already counted it.
+
+Then it is reported and asked about. It is not built, not approximated, and not deferred silently.
+
+### Where an example lives
+
+`apps/docs/stories/examples/` holds them as Storybook stories; `MapSearch.stories.tsx` is the one
+that exists today and is the shape to follow. The Figma counterpart is the `Examples` page
+(`286:1601`) in the Core Library, painted by the plugin, never drawn by hand (§5.8).
+
+### What "checked" means before anything is built
+
+The scan already did most of this once. For each SDK component, read
+`docs/product-ui-coverage-2026-09-14.md` §3 first: it maps 30 control groups to their Kozmos
+component with a verdict of covered, partial or missing, and it counted 763,776 nodes to get there.
+An SDK component built from "partial" parts will come out close but not identical, and **that is a
+finding, not a failure** — record which axis was missing.
+
+The one axis known to be missing everywhere is `Emotion`, and #32 closes it for `Button`. `Tag` and
+`Counter` still cannot express it, and they need semantic emotion roles in the tokens first, because
+the existing six-emotion tokens are named for buttons and a Tag reaching into them would break the
+roles discipline (§5.1).
+
+### What is already known to be missing
+
+Straight from the scan, so an example that needs one of these will stop at the same place:
+
+| Missing                              | Lane          | Product usage                |
+| ------------------------------------ | ------------- | ---------------------------- |
+| Toolbar and ToolButton               | Core          | 10 surfaces, 1,013 instances |
+| DragHandle                           | Core          | 5 surfaces, 532              |
+| Filter                               | Core          | 3 surfaces, 139              |
+| Carousel                             | Core          | 3 surfaces, 69               |
+| Opening hours with a per-day row     | Product / SDK | 5 surfaces, 410              |
+| Countdown timer                      | Product / SDK | 5 surfaces, 9                |
+| A building-plus-level scope selector | Product / SDK | wider than `FloorSelector`   |
 
 Everything verified by running it; nothing here is recalled.
