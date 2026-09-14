@@ -17,9 +17,26 @@ public enum KozmosButtonSize {
     case icon
 }
 
+public enum KozmosButtonEmotion {
+    case themed
+    case neutral
+    case success
+    case danger
+    case informative
+    case alert
+}
+
+/// Which token tier a variant's shape belongs to. Primary is filled,
+/// Secondary is bordered or text; `glass` is an effect and takes no emotion.
+enum KozmosButtonTier {
+    case primary
+    case secondary
+}
+
 public struct KozmosButton: View {
     let label: String
     let variant: KozmosButtonVariant
+    let emotion: KozmosButtonEmotion?
     let size: KozmosButtonSize
     let isDisabled: Bool
     let isLoading: Bool
@@ -28,6 +45,7 @@ public struct KozmosButton: View {
     public init(
         _ label: String,
         variant: KozmosButtonVariant = .default,
+        emotion: KozmosButtonEmotion? = nil,
         size: KozmosButtonSize = .default,
         isDisabled: Bool = false,
         isLoading: Bool = false,
@@ -35,6 +53,7 @@ public struct KozmosButton: View {
     ) {
         self.label = label
         self.variant = variant
+        self.emotion = emotion
         self.size = size
         self.isDisabled = isDisabled
         self.isLoading = isLoading
@@ -72,6 +91,50 @@ public struct KozmosButton: View {
     
 
     
+
+    /// The tier this variant reads, or nil when the variant is an effect.
+    private var tier: KozmosButtonTier? {
+        switch variant {
+        case .default, .secondary, .destructive: return .primary
+        case .outline, .ghost, .link: return .secondary
+        case .glass: return nil
+        }
+    }
+
+    private static func emotionBackground(_ tier: KozmosButtonTier, _ emotion: KozmosButtonEmotion) -> Color {
+        switch (tier, emotion) {
+        case (.primary, .themed): return KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle
+        case (.primary, .neutral): return KozmosColors.componentsPrimaryButtonsNeutralButtonBackgroundIdle
+        case (.primary, .success): return KozmosColors.componentsPrimaryButtonsSuccessButtonBackgroundIdle
+        case (.primary, .danger): return KozmosColors.componentsPrimaryButtonsDangerButtonBackgroundIdle
+        case (.primary, .informative): return KozmosColors.componentsPrimaryButtonsInformativeButtonBackgroundIdle
+        case (.primary, .alert): return KozmosColors.componentsPrimaryButtonsAlertButtonBackgroundIdle
+        case (.secondary, .themed): return KozmosColors.componentsSecondaryButtonsThemedButtonBackgroundIdle
+        case (.secondary, .neutral): return KozmosColors.componentsSecondaryButtonsNeutralButtonBackgroundIdle
+        case (.secondary, .success): return KozmosColors.componentsSecondaryButtonsSuccessButtonBackgroundIdle
+        case (.secondary, .danger): return KozmosColors.componentsSecondaryButtonsDangerButtonBackgroundIdle
+        case (.secondary, .informative): return KozmosColors.componentsSecondaryButtonsInformativeButtonBackgroundIdle
+        case (.secondary, .alert): return KozmosColors.componentsSecondaryButtonsAlertButtonBackgroundIdle
+        }
+    }
+
+    private static func emotionForeground(_ tier: KozmosButtonTier, _ emotion: KozmosButtonEmotion) -> Color {
+        switch (tier, emotion) {
+        case (.primary, .themed): return KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
+        case (.primary, .neutral): return KozmosColors.componentsPrimaryButtonsNeutralButtonForegroundContentIdle
+        case (.primary, .success): return KozmosColors.componentsPrimaryButtonsSuccessButtonForegroundContentIdle
+        case (.primary, .danger): return KozmosColors.componentsPrimaryButtonsDangerButtonForegroundContentIdle
+        case (.primary, .informative): return KozmosColors.componentsPrimaryButtonsInformativeButtonForegroundContentIdle
+        case (.primary, .alert): return KozmosColors.componentsPrimaryButtonsAlertButtonForegroundContentIdle
+        case (.secondary, .themed): return KozmosColors.componentsSecondaryButtonsThemedButtonForegroundContentIdle
+        case (.secondary, .neutral): return KozmosColors.componentsSecondaryButtonsNeutralButtonForegroundContentIdle
+        case (.secondary, .success): return KozmosColors.componentsSecondaryButtonsSuccessButtonForegroundContentIdle
+        case (.secondary, .danger): return KozmosColors.componentsSecondaryButtonsDangerButtonForegroundContentIdle
+        case (.secondary, .informative): return KozmosColors.componentsSecondaryButtonsInformativeButtonForegroundContentIdle
+        case (.secondary, .alert): return KozmosColors.componentsSecondaryButtonsAlertButtonForegroundContentIdle
+        }
+    }
+
     private var padding: EdgeInsets {
         switch size {
         case .default: return EdgeInsets(top: 0, leading: KozmosDimensions.primitivesLayoutSpacing200, bottom: 0, trailing: KozmosDimensions.primitivesLayoutSpacing200)
@@ -82,6 +145,14 @@ public struct KozmosButton: View {
     }
     
     private var backgroundColor: Color {
+        if let emotion, let tier {
+            // A bordered or text button keeps its transparent ground; only a
+            // filled one takes the emotion's background.
+            switch variant {
+            case .outline, .ghost, .link: return Color.clear
+            default: return Self.emotionBackground(tier, emotion)
+            }
+        }
         switch variant {
         case .default: return KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle // Used specific component token
         case .destructive: return KozmosColors.componentsPrimaryButtonsDangerButtonBackgroundIdle
@@ -93,6 +164,9 @@ public struct KozmosButton: View {
     }
     
     private var foregroundColor: Color {
+        if let emotion, let tier {
+            return Self.emotionForeground(tier, emotion)
+        }
         switch variant {
         case .default: return KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle // Semantic Token
         case .destructive: return KozmosColors.componentsPrimaryButtonsDangerButtonForegroundContentIdle
@@ -103,6 +177,9 @@ public struct KozmosButton: View {
     }
     
     private var borderColor: Color {
+        if let emotion, let tier, variant == .outline {
+            return Self.emotionForeground(tier, emotion)
+        }
         switch variant {
         case .outline: return KozmosColors.primitivesColorsForeground300
         default: return Color.clear

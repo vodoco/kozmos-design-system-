@@ -1,6 +1,5 @@
-
-import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
-import * as ButtonStories from './Button.stories';
+import { Canvas, Meta, Story, Controls, Source } from "@storybook/blocks";
+import * as ButtonStories from "./Button.stories";
 
 <Meta of={ButtonStories} />
 
@@ -16,7 +15,7 @@ Buttons allow users to take actions, and make choices, with a single tap.
 
 ## Implementation
 
-import { PlatformSnippets } from '../PlatformSnippets';
+import { PlatformSnippets } from "../PlatformSnippets";
 
 <div className="subheading">Code</div>
 
@@ -39,27 +38,27 @@ import { KozmosButton } from '@kozmos/vue';
 import SwiftUI
 
 public enum KozmosButtonVariant {
-    case \`default\`
-    case destructive
-    case outline
-    case secondary
-    case ghost
-    case link
+case \`default\`
+case destructive
+case outline
+case secondary
+case ghost
+case link
 }
 
 public enum KozmosButtonSize {
-    case \`default\`
-    case sm
-    case lg
-    case icon
+case \`default\`
+case sm
+case lg
+case icon
 }
 
 public struct KozmosButton: View {
-    let label: String
-    let variant: KozmosButtonVariant
-    let size: KozmosButtonSize
-    let action: () -> Void
-    
+let label: String
+let variant: KozmosButtonVariant
+let size: KozmosButtonSize
+let action: () -> Void
+
     public init(
         _ label: String,
         variant: KozmosButtonVariant = .default,
@@ -71,7 +70,7 @@ public struct KozmosButton: View {
         self.size = size
         self.action = action
     }
-    
+
     public var body: some View {
         Button(action: action) {
             Text(label)
@@ -86,8 +85,9 @@ public struct KozmosButton: View {
                 )
         }
     }
+
 }
-    `}
+`}
     kotlin={`
 package com.kozmos.components.button
 
@@ -98,27 +98,78 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 enum class KozmosButtonVariant {
-    Default,
-    Destructive,
-    Outline,
-    Secondary,
-    Ghost,
-    Link
+Default,
+Destructive,
+Outline,
+Secondary,
+Ghost,
+Link
 }
 
 @Composable
 fun KozmosButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    variant: KozmosButtonVariant = KozmosButtonVariant.Default,
+text: String,
+onClick: () -> Unit,
+modifier: Modifier = Modifier,
+variant: KozmosButtonVariant = KozmosButtonVariant.Default,
 ) {
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-    ) {
-        Text(text)
-    }
+Button(
+onClick = onClick,
+modifier = modifier,
+) {
+Text(text)
 }
+}
+`}
+/>
+
+## Emotion
+
+`variant` says how much a button weighs and what shape it takes. `emotion` says what it
+means. They are separate axes because the product uses them separately: measured on
+2026-09-14 across thirteen product surfaces, it drives six emotions and uses all six.
+
+The token tiers already split the same way — `Components.Primary Buttons` is filled,
+`Secondary` is bordered, `Tertiary` is text — and each tier has carried all six emotions
+with `idle`, `hover`, `pressed` and `focus` since long before this prop existed. A variant
+picks the tier; the emotion picks the colour inside it.
+
+| Emotion       | Filled background | Reads                                                 |
+| ------------- | ----------------- | ----------------------------------------------------- |
+| `themed`      | `#0D44C2`         | the brand blue; the default look                      |
+| `neutral`     | `#C7CAD1`         | the same grey `variant="secondary"` has always drawn  |
+| `success`     | `#1E995B`         | a completed or confirmed action                       |
+| `danger`      | `#B01736`         | a destructive action                                  |
+| `informative` | `#2379A4`         | a neutral notice                                      |
+| `alert`       | `#CD8905`         | something that needs attention but is not destructive |
+
+Leave `emotion` unset and nothing changes: `secondary` is already `neutral` and
+`destructive` is already `danger`, by the values in the tokens. `glass` is an effect rather
+than a weight and takes no emotion.
+
+<PlatformSnippets
+    react={`
+import { Button } from '@kozmos/react';
+
+<Button emotion="success">Publish</Button>
+<Button variant="outline" emotion="danger">Delete</Button>
     `}
+    swift={`
+import SwiftUI
+
+KozmosButton("Publish", emotion: .success) {}
+KozmosButton("Delete", variant: .outline, emotion: .danger) {}
+`}
+    kotlin={`
+KozmosButton(
+onClick = {},
+emotion = KozmosButtonEmotion.Success
+) { Text("Publish") }
+
+KozmosButton(
+onClick = {},
+variant = KozmosButtonVariant.Outline,
+emotion = KozmosButtonEmotion.Danger
+) { Text("Delete") }
+`}
 />
