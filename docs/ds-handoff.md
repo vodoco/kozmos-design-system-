@@ -123,17 +123,16 @@ build id, and a comment is not worth a re-stamp.
 - ~~`docs/figma-library-manifest.json` four weeks stale~~ — regenerated in #28, which also made the
   manifest and payload generators write Prettier-formatted output, so a regeneration is a
   content-only diff instead of 3,331 reflowed lines.
-- **Still open:** `tokens:raw:check` at 35 raw colours and 7 raw radii. Twenty-nine of the colours
-  are the same `bg-white/70` on three map cards and clear the moment a **glass** surface role exists
-  (§6.5).
-- **Still open:** the 18 floating-point values. They are noise from a Figma export, not decisions,
-  but rounding them is a visual change to every text style, so it belongs with the type-scale ruling
-  (§6.3) rather than before it. `Primitives.Typography.font.size` is read by no platform, and the
+- **Ruled, not yet built:** `tokens:raw:check` at 35 raw colours and 7 raw radii. Twenty-nine of the
+  colours are the same `bg-white/70` on three map cards and clear the moment the **glass** surface
+  role lands (§5.13).
+- **Ruled, not yet built:** the 18 floating-point values. Noise from a Figma export, not decisions.
+  The type-scale ruling (§5.11) rounds `11.008…` and `13.008…` and adds 12 and 15 in the same pass. `Primitives.Typography.font.size` is read by no platform, and the
   `letterSpacing` and `line.height` scales are unused.
-- **Still open:** native enum names inconsistently prefixed (`AlertStatus`, `BadgeVariant`,
+- **Ruled, not yet built:** native enum names inconsistently prefixed (`AlertStatus`, `BadgeVariant`,
   `ChipSize`, `CounterTone`, `SegmentedControlSize`, `StackDirection`); `AlertStatus.Error` maps to
   React's `destructive`. Cosmetic but breaking — do it once, with deprecated aliases, before a
-  publish (§6.7).
+  publish (§5.16).
 
 **Figma file hygiene** (each is one plugin run once its painter is right): Text, Heading and Label
 have never been built in Figma — `Update All Core` skips them silently, which is why they alone have
@@ -270,9 +269,11 @@ breaking changes are minors until `1.0`.
 
 1. **A value that depends on another value is derived, not written** (radius, border, elevation
    roles; `docs/style-playbook.md`).
-2. **The roles:** radius `none · marker 4 · control 16 · container 20 · panel 24 · pill`; border
-   `Subtle` (`#C7CAD1`, 1.6:1, container edges and dividers) and `Input` (`#747B8B`, 4.2:1, things
-   you interact with); elevation `raised · floating · overlay`, native following dark mode.
+2. **The roles:** radius `none · marker 4 · small 8 · control 16 · container 20 · panel 24 · pill`
+   — `small` added 2026-09-14 because 52.5% of the product's rounded corners are 8px and nothing
+   named it; nothing already bound to another step moved. Border `Subtle` (`#C7CAD1`, 1.6:1,
+   container edges and dividers) and `Input` (`#747B8B`, 4.2:1, things you interact with);
+   elevation `raised · floating · overlay`, native following dark mode.
 3. **Only a `SLOT` node carries a slot binding**, and a component's own property never drives a node
    inside its slot or a nested instance — bound defaults sit beside the slot.
 4. **Update, never Rebuild**, in the plugin: Rebuild mints new node ids and Code Connect pins the old.
@@ -283,45 +284,49 @@ breaking changes are minors until `1.0`.
 7. **Verify against a clean checkout, not the working tree**; measure, then report.
 8. **The Figma file is painted by the plugin**, not drawn by hand and not written by MCP.
 
+**Ruled 2026-09-14**, after the product UI scan put numbers on each. These close what §6 had been
+holding; the work each unblocks is in §4.3 and §4.5.
+
+9. **Button, Tag and Counter take an `emotion` prop** — `neutral · themed · success · danger ·
+informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`, which already
+   carry all six with `idle/hover/pressed/focus`. `variant` keeps its current meaning for shape and
+   weight. This is the single largest gap: it gates 80% of the product's mapped control instances.
+10. **The brand blue is `#346DF1`** — the design system adopts what the product ships, as
+    `theme.500`. Kozmos's current `#135BEC` and `#1051E8` shift with it. 4.56:1 on white, so it
+    passes AA for text but not 3:1 as a non-text boundary; use `theme.600` where a border must
+    carry meaning.
+11. **The type scale gains 12 and 15, and the noise is rounded off** — `11.008…` becomes 11 and
+    `13.008…` becomes 13. Coverage of product text goes from 72.9% to 93.4%. One plugin run
+    restyles every text style in Figma, so do it in a single pass.
+12. **The neutral ramp keeps both names** — `background.N` ascending for surfaces, `foreground.N`
+    descending for ink, as today. The product maps to these at its own boundary; nothing is renamed.
+13. **A glass surface role is added** — composed from the `Semantics.Effect.glass` values that
+    already exist. It clears 29 of the 35 raw colours the ratchet counts.
+14. **`Brand` (Readex Pro) stays, scoped with `unicode-range`** — the product is 93.8% Readex Pro,
+    so the role matches what it sets. A declared system stack takes CJK, which the face does not
+    cover, instead of whatever each browser picks.
+15. **`@kozmos/vue` is internal and is not published** — it mounts a React root per instance, so it
+    cannot SSR and would make every consumer ship React. It stays as proof the React components
+    mount.
+16. **Native enum names are normalised once, with deprecated aliases** — before the first publish,
+    while nothing outside the repo depends on them.
+17. **The packages are MIT** — a `LICENSE` at the root and a `license` field in all five
+    `package.json` files.
+18. **iOS snapshots run in CI**, on a pinned runner image with a fixed simulator, so an OS update
+    cannot invalidate every snapshot at once.
+
 ## 6 · Open — waiting on Olcay
 
-1. ~~PR #17's split~~ — done 2026-09-13: #22, #21 and #23, all merged; #17 closed, its branch kept (§4.1).
-2. **Which tokens the design system is canonical for.** Measured 2026-09-14 and much smaller than
-   it looked: **79.1% of the product's opaque fills are already a Kozmos token value**, and the
-   "opposite numbering" is one ramp with two names that Kozmos already defines — `background`
-   ascending, `foreground` descending. What actually needs a ruling is (a) the **brand blue**,
-   `#346DF1` in the product against `theme.500` `#135BEC` and `theme.600` `#1051E8` in Kozmos, and
-   (b) which naming is canonical. The shipped Web SDK still uses `--pointr-*`. Take it before the
-   scan's gap list is built into anything.
-3. **The type scale** — measured 2026-09-14, and smaller than it looked. 72.9% of product text
-   already sits on a Kozmos size; adding **12 and 15** takes it to 93.4%, and the floating-point
-   noise sits on 11.008 and 13.008, which are the product's two dominant steps (45.3% and 15.3%).
-   The claim that "the product runs at 12" was wrong: 12px is 14.4%.
-4. **Chromatic** — raise the plan, wait for the period, or enable TurboSnap; a publish without a
-   visual gate is a publish nobody compared.
-5. **A glass surface role** — clears 29 of the 35 raw colours.
-6. **`@kozmos/vue`** — a shipped package or an internal convenience (it cannot SSR and makes every
-   consumer ship React).
-7. **Naming normalisation of native enums** — once, with deprecated aliases, before the first
-   publish.
-8. **The brand font** — **do not drop `Brand`.** The product is 93.8% Readex Pro (measured
-   2026-09-14 across 118,529 text nodes), so the role matches what the product actually sets. The
-   real question is the CJK gap and whether to scope it with `unicode-range`. Figma still renders
-   Inter.
-9. **iOS snapshots in CI** — the harness works; it needs a pinned runner image and a simulator.
-10. **An `Emotion` axis on `Button`, `Tag` and `Counter`** — new, from the 2026-09-14 scan and the
-    largest single gap in the system. The product drives six emotions and uses all six (Themed,
-    Neutral, Success, Danger, Informative, Alert); the components expose none of them, mapping only
-    `danger` to `destructive`. `Components.{Primary,Secondary,Tertiary} Buttons` already carry all
-    six with `idle/hover/pressed/focus`, so this is a component API change, not a retheme. It gates
-    80% of the mapped control instances in the product.
-11. **A radius role for 8px** — new, from the same scan. 52.5% of every rounded corner in the
-    product is 8px and no `Semantics.Radius.*` names it: `Marker` is 4 and `Control` is 16. Either
-    `Control` moves to 8 or a role is added between the two. Rule on it before anything is rebuilt
-    against the roles (§5.2 is otherwise decided).
-12. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
-    LocationPin's `variant` and `labelPlacement` stay renderer concerns** — recorded, revisit if a
-    designer asks.
+Eleven of the twelve that stood here were ruled on 2026-09-14 and moved to §5. What is left needs an
+action rather than an answer, or needs a designer.
+
+1. **Chromatic — raise the plan.** Ruled: raise it. This is an account action only Olcay can take.
+   Until it happens nothing has been visually compared since early September, including a shadow
+   change across 27 components and #19's animation fix, and `UI Tests` shows PENDING on every PR. It
+   should land before the first npm publish, or that publish ships visuals nobody compared.
+2. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
+   LocationPin's `variant` and `labelPlacement` stay renderer concerns** — recorded, revisit if a
+   designer asks.
 
 ## 7 · Where everything is, and how to check it
 
@@ -477,9 +482,15 @@ stacked on another, then all five merged in order.
    token layer already defines in full for Primary, Secondary and Tertiary buttons. It corrected
    three things this handoff asserted (§4.2) and added two decisions to §6.
 
-**What that leaves.** §4.1 and §4.2 are done. §4.3 is next, and it now has measured input. The next piece of
-work is §4.2, the product UI scan — the second of the five priorities and the largest remaining
-one. Three decisions block what comes after it: which tokens the system is canonical for (§6.2),
-the type scale (§6.3), and Chromatic (§6.4), which has compared nothing since early September.
+8. **The twelve open decisions were ruled the same evening**, each as a short question with the
+   measurement beside it. Eleven moved to §5; only Chromatic's plan upgrade is still waiting, and
+   that is an account action rather than an answer.
+
+**What that leaves.** §4.1 and §4.2 are done and §6 is all but empty. What is open now is _work_,
+not questions: the `emotion` axis on three components, the type scale, the glass role, the 8px
+radius role, the enum normalisation, the MIT licence, and iOS snapshots in CI. §4.3 assigns each a
+lane; §4.5 carries the publish list. The one thing still
+waiting on Olcay is Chromatic's plan, which is an account action and which has compared nothing
+since early September.
 
 Everything verified by running it; nothing here is recalled.

@@ -59,7 +59,8 @@ read at depth 6, so its counts are a floor. Every other surface was read whole.
 
 ## 2 · The tokens, measured
 
-This is what decides §6.2 and §6.3, and it is friendlier than the handoff assumed.
+This is what settled the token questions the handoff had been holding, and it is friendlier than
+that handoff assumed. Every one of them was ruled on 2026-09-14; they now sit in `ds-handoff.md` §5.
 
 ### 2.1 · Colour: the neutral ramps are already the same
 
@@ -95,9 +96,9 @@ decision, not an accessibility one.
 
 ### 2.2 · Type: the scale mostly agrees, and the handoff had the wrong number
 
-**Readex Pro is 93.8% of all product text.** That matters for §6.8, which proposes dropping the
-`Brand` role because "no surface uses it": no _Kozmos_ surface uses it, but the entire product is
-set in it.
+**Readex Pro is 93.8% of all product text.** That settled the question of the `Brand` role, which the
+handoff had proposed dropping because "no surface uses it": no _Kozmos_ surface uses it, but the
+entire product is set in it. Ruled 2026-09-14 — the role stays, scoped with `unicode-range`.
 
 | Size | Share of product text | On the Kozmos scale?          |
 | ---- | --------------------- | ----------------------------- |
@@ -220,30 +221,27 @@ axis missing from `Button`, `Tag` and `Counter`, already present in the tokens.
 
 Kept so the next reader does not re-inherit them:
 
-1. **"The product runs at 12"** (`ds-handoff.md` §4.2 and §6.3). 11px is 45.3% of product text;
+1. **"The product runs at 12"** (`ds-handoff.md` §4.2, and the decision then numbered §6.3). 11px is 45.3% of product text;
    12px is 14.4%. Kozmos's two dominant steps are the product's two dominant steps.
 2. **"The palette numbering runs opposite ways"**, implying two palettes. It is one ramp with two
    names and Kozmos defines both. 79.1% of product fills are already Kozmos token values.
-3. **`Brand` (Readex Pro) is "an opt-in role no surface uses"** (§6.8). The product is 93.8% Readex
+3. **`Brand` (Readex Pro) is "an opt-in role no surface uses"** (the decision then numbered §6.8). The product is 93.8% Readex
    Pro. Dropping the role moves the design system away from the product, not towards it.
 
-## 6 · What this hands to the open decisions
+## 6 · What this decided
 
-**§6.2, which tokens are canonical.** Much smaller than it looked. The neutral ramp is shared
-already. What needs a ruling is the brand blue — `#346DF1` in the product against `theme.500`
-`#135BEC` and `theme.600` `#1051E8` in Kozmos — and whether the canonical names are `background.N`
-or the product's `foreground.N`.
+Each of these was put to Olcay on 2026-09-14 with the measurement beside it, and ruled the same
+evening. They are recorded in `ds-handoff.md` §5; the numbers behind them are above.
 
-**§6.3, the type scale.** Add 12 and 15 and round the noise off 11.008 and 13.008. That moves Kozmos
-from 72.9% to 93.4% of product text, and it is the same edit either way.
+| Question                                                                   | Ruling                                                                                                                                                                        |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The brand blue: `#346DF1` in the product, `theme.500` `#135BEC` in Kozmos  | **Adopt `#346DF1`** as `theme.500`. Use `theme.600` where a border must carry meaning, since `#346DF1` is 4.56:1 and does not reach 3:1 as a non-text boundary at small sizes |
+| Whether `background.N` or the product's `foreground.N` naming is canonical | **Keep both**, as Kozmos ships them. The product maps at its own boundary; nothing is renamed                                                                                 |
+| The type scale                                                             | **Add 12 and 15, round `11.008…` to 11 and `13.008…` to 13.** Coverage of product text goes 72.9% to 93.4%                                                                    |
+| The `Brand` role, given Readex Pro has no CJK                              | **Keep it, scoped with `unicode-range`**, with a declared system stack for CJK                                                                                                |
+| A radius role for 8px                                                      | **Add one between `Marker` and `Control`.** Nothing already bound to another step moves                                                                                       |
+| The `Emotion` axis on `Button`, `Tag` and `Counter`                        | **Add an `emotion` prop** reading the tokens that already exist. `variant` keeps its meaning for shape and weight                                                             |
+| A glass surface role                                                       | **Add it**, composed from the `Semantics.Effect.glass` values already in the tokens                                                                                           |
 
-**§6.8, the brand font.** Do not drop `Brand`. The product is Readex Pro; the question is the CJK
-gap and `unicode-range`, not whether the role belongs.
-
-**New, not yet in §6 — a radius role for 8px.** More than half the product's corners are 8px and no
-`Semantics.Radius.*` names it. Either `Control` moves from 16 to 8, or a role is added between
-`Marker` and `Control`. Rule on it before anything is rebuilt against the roles.
-
-**New, not yet in §6 — the `Emotion` axis.** Whether `Button`, `Tag` and `Counter` grow an `emotion`
-prop reading tokens that already exist. Without it the design system cannot draw the product's three
-most-used controls as the product draws them.
+The `emotion` ruling is the one that matters most: it is a component API change, not a retheme, and
+it is what stands between the design system and 80% of the product's control instances.
