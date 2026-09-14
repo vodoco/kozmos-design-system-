@@ -9,17 +9,67 @@
  * here, with the repository's own Prettier configuration, makes a regeneration
  * a content-only diff, and lets a check compare the checked-in file with what
  * the generator produces.
+ *
+ * `volatileKeys` finishes that job for the files carrying a `generatedAt`. A
+ * timestamp that moves on every run makes the diff meaningless again — the
+ * reader cannot tell a regeneration from a change — so when the only
+ * difference from the file on disk is in those keys, the file is left alone.
+ * The timestamp then answers "when did this content last change", which is the
+ * question someone reading it actually has.
  */
 import fs from "node:fs";
 import path from "node:path";
 import prettier from "prettier";
 
-export async function writeGeneratedJson(filePath, value) {
+async function formatJson(filePath, value) {
   const config = (await prettier.resolveConfig(filePath)) || {};
-  const formatted = await prettier.format(JSON.stringify(value, null, 2), {
+  return prettier.format(JSON.stringify(value, null, 2), {
     ...config,
     filepath: filePath,
   });
+}
+
+/** True when `next` and `previous` differ only in the named top-level keys. */
+function differsOnlyInVolatileKeys(previous, next, volatileKeys) {
+  if (previous === null) return false;
+  const blank = (o) =>
+    JSON.stringify(
+      Object.fromEntries(
+        Object.entries(o).map(([k, v]) => [
+          k,
+          volatileKeys.includes(k) ? null : v,
+        ]),
+      ),
+    );
+  try {
+    return blank(previous) === blank(next);
+  } catch {
+    return false;
+  }
+}
+
+export async function writeGeneratedJson(filePath, value, options = {}) {
+  const volatileKeys = options.volatileKeys || [];
+  const formatted = await formatJson(filePath, value);
+
+  if (volatileKeys.length && fs.existsSync(filePath)) {
+    let previous = null;
+    try {
+      previous = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    } catch {
+      previous = null;
+    }
+    if (
+      previous &&
+      typeof previous === "object" &&
+      !Array.isArray(previous) &&
+      differsOnlyInVolatileKeys(previous, value, volatileKeys)
+    ) {
+      return { written: false, path: filePath };
+    }
+  }
+
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, formatted);
+  return { written: true, path: filePath };
 }

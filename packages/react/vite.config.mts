@@ -44,6 +44,12 @@ export default defineConfig(async () => {
       react(),
       dts({
         insertTypesEntry: true,
+        // The Code Connect files are type-checked (they are in tsconfig's
+        // include since 2026-09-14) but they are not part of the package: each
+        // one describes a Figma mapping, not an export. Without this the dts
+        // plugin followed tsconfig and emitted 92 `*.figma.d.ts` files of
+        // `export {}` into dist, which `files: ["dist"]` would then publish.
+        exclude: ["src/**/*.figma.ts", "src/**/*.figma.tsx"],
       }),
       visualizerPlugin,
     ].filter(Boolean),
