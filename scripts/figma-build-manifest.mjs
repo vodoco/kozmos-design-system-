@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { writeGeneratedJson } from "./write-generated-json.mjs";
 
 const ROOT_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -140,10 +141,6 @@ function recommendFigmaScope(token) {
     return ["WIDTH_HEIGHT"];
 
   return [];
-}
-
-function hasRealCodeConnectMapping(repoPath) {
-  return inspectCodeConnectMapping(repoPath).linked;
 }
 
 function inspectCodeConnectMapping(repoPath, componentName = null) {
@@ -860,7 +857,7 @@ function resolveComponentPropSource(componentFile, componentName) {
   const content = read(componentFile);
   const exportMatch = content.match(
     new RegExp(
-      `export\\s*\\{[\\s\\S]*?\\b${escapeRegExp(componentName)}\\b[\\s\\S]*?\\}\\s*from\\s*[\"']([^\"']+)[\"']`,
+      `export\\s*\\{[\\s\\S]*?\\b${escapeRegExp(componentName)}\\b[\\s\\S]*?\\}\\s*from\\s*["']([^"']+)["']`,
     ),
   );
   if (!exportMatch) return componentFile;
@@ -1039,6 +1036,5 @@ function buildManifest() {
   };
 }
 
-fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
-fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(buildManifest(), null, 2)}\n`);
+await writeGeneratedJson(OUTPUT_PATH, buildManifest());
 console.log(`Wrote ${path.relative(ROOT_DIR, OUTPUT_PATH)}`);

@@ -14,18 +14,18 @@
     "publishStatus": "ready",
     "linkedPublishCommand": "pnpm figma:publish:linked:dry",
     "linkedPublishConfig": "figma.linked.config.json",
-    "linkedPublishStatus": "ready for the current 66 Core React component-set mappings",
+    "linkedPublishStatus": "ready for the current 90 Core React component-set mappings",
     "nativeLinkedPublishCommand": "pnpm figma:publish:native:linked:dry",
     "nativeLinkedPublishConfigs": [
       "packages/ios/figma.linked.config.json",
       "packages/android/figma.linked.config.json"
     ],
-    "nativeLinkedPublishStatus": "ready for the current 67 Core SwiftUI and 67 Core Compose component-set mappings"
+    "nativeLinkedPublishStatus": "ready for the current 91 Core SwiftUI and 91 Core Compose component-set mappings"
   },
   "tokens": {
     "summary": {
-      "light": 601,
-      "dark": 601
+      "light": 623,
+      "dark": 623
     },
     "light": [
       {
@@ -1562,6 +1562,30 @@
         ]
       },
       {
+        "name": "Primitives/Colors/background/25",
+        "type": "color",
+        "value": "#F7F8FA",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Primitives/Colors/background/50",
+        "type": "color",
+        "value": "#F1F2F4",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
         "name": "Primitives/Colors/background/100",
         "type": "color",
         "value": "#E3E4E8",
@@ -2622,6 +2646,13 @@
         "recommendedFigmaScopes": ["CORNER_RADIUS"]
       },
       {
+        "name": "Primitives/Layout/radius/250",
+        "type": "number",
+        "value": 20,
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
         "name": "Primitives/Layout/radius/300",
         "type": "number",
         "value": 24,
@@ -2678,6 +2709,13 @@
         "recommendedFigmaScopes": ["CORNER_RADIUS"]
       },
       {
+        "name": "Primitives/Layout/radius/full",
+        "type": "number",
+        "value": 9999,
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
         "name": "Semantics/Surface/0",
         "type": "color",
         "value": "#FFFFFF",
@@ -2717,6 +2755,162 @@
         "name": "Semantics/Surface/300",
         "type": "color",
         "value": "#DEE2E6",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Radius/None",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.0}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Marker",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.50}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Control",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.200}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Container",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.250}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Panel",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.300}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Pill",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.full}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Border/Subtle",
+        "type": "color",
+        "value": "{Primitives.Colors.background.200}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Border/Input",
+        "type": "color",
+        "value": "{Primitives.Colors.foreground.500}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Elevation/Raised",
+        "type": "shadow",
+        "value": "{shadow.sm}",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Elevation/Floating",
+        "type": "shadow",
+        "value": "{shadow.md}",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Elevation/Overlay",
+        "type": "shadow",
+        "value": "{shadow.lg}",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Typography/Family/System",
+        "type": "fontFamilies",
+        "value": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Typography/Family/Brand",
+        "type": "fontFamilies",
+        "value": "{Primitives.Typography.font.family.primary}",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Typography/Family/Mono",
+        "type": "fontFamilies",
+        "value": "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Diff/New",
+        "type": "color",
+        "value": "#2FBF71",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Diff/Updated",
+        "type": "color",
+        "value": "#3B82F6",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Diff/Deleted",
+        "type": "color",
+        "value": "#EF4444",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Diff/Override",
+        "type": "color",
+        "value": "#9C6EFF",
         "scopes": ["ALL_SCOPES"],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -7786,6 +7980,30 @@
         ]
       },
       {
+        "name": "Primitives/Colors/background/25",
+        "type": "color",
+        "value": "#070708",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Primitives/Colors/background/50",
+        "type": "color",
+        "value": "#0C0D0E",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
         "name": "Primitives/Colors/background/100",
         "type": "color",
         "value": "#17191C",
@@ -8846,6 +9064,13 @@
         "recommendedFigmaScopes": ["CORNER_RADIUS"]
       },
       {
+        "name": "Primitives/Layout/radius/250",
+        "type": "number",
+        "value": 20,
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
         "name": "Primitives/Layout/radius/300",
         "type": "number",
         "value": 24,
@@ -8902,6 +9127,13 @@
         "recommendedFigmaScopes": ["CORNER_RADIUS"]
       },
       {
+        "name": "Primitives/Layout/radius/full",
+        "type": "number",
+        "value": 9999,
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
         "name": "Semantics/Surface/0",
         "type": "color",
         "value": "#000000",
@@ -8941,6 +9173,162 @@
         "name": "Semantics/Surface/300",
         "type": "color",
         "value": "#464A53",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Radius/None",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.0}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Marker",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.50}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Control",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.200}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Container",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.250}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Panel",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.300}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Radius/Pill",
+        "type": "dimension",
+        "value": "{Primitives.Layout.radius.full}",
+        "scopes": [],
+        "recommendedFigmaScopes": ["CORNER_RADIUS"]
+      },
+      {
+        "name": "Semantics/Border/Subtle",
+        "type": "color",
+        "value": "{Primitives.Colors.background.200}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Border/Input",
+        "type": "color",
+        "value": "{Primitives.Colors.foreground.500}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Elevation/Raised",
+        "type": "shadow",
+        "value": "{shadow.sm}",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Elevation/Floating",
+        "type": "shadow",
+        "value": "{shadow.md}",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Elevation/Overlay",
+        "type": "shadow",
+        "value": "{shadow.lg}",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Typography/Family/System",
+        "type": "fontFamilies",
+        "value": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Typography/Family/Brand",
+        "type": "fontFamilies",
+        "value": "{Primitives.Typography.font.family.primary}",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Typography/Family/Mono",
+        "type": "fontFamilies",
+        "value": "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Diff/New",
+        "type": "color",
+        "value": "#4FD98D",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Diff/Updated",
+        "type": "color",
+        "value": "#6BA5FF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Diff/Deleted",
+        "type": "color",
+        "value": "#FF6B6B",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Diff/Override",
+        "type": "color",
+        "value": "#B48CFF",
         "scopes": ["ALL_SCOPES"],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12478,16 +12866,17 @@
   },
   "components": {
     "summary": {
-      "total": 87,
-      "stories": 87,
-      "tests": 87,
-      "exported": 87,
-      "codeConnectFiles": 68,
+      "total": 97,
+      "stories": 97,
+      "tests": 97,
+      "exported": 97,
+      "codeConnectFiles": 92,
       "codeConnectScaffolds": 0,
-      "codeConnectLinked": 68
+      "codeConnectLinked": 92
     },
     "firstBatch": [
       "Accordion",
+      "AdaptiveMapShell",
       "Alert",
       "Avatar",
       "Backdrop",
@@ -12496,8 +12885,10 @@
       "BottomSheet",
       "Box",
       "Breadcrumb",
+      "BrowseCategoriesPanel",
       "Button",
       "Card",
+      "CategoryTile",
       "Checkbox",
       "Chip",
       "ColorPicker",
@@ -12507,11 +12898,15 @@
       "DatePicker",
       "DateRangePicker",
       "Dialog",
+      "DirectionStep",
       "Drawer",
+      "DynamicIsland",
       "EmptyState",
+      "FeedbackCard",
       "FieldWrapper",
       "FileUpload",
       "FloatingActionButton",
+      "FloorSelector",
       "Grid",
       "Icon",
       "IconButton",
@@ -12519,6 +12914,11 @@
       "Link",
       "List",
       "Listbox",
+      "LocationPin",
+      "MapControlButton",
+      "MapControlsGroup",
+      "MapOverlay",
+      "MapView",
       "Menu",
       "MultiSelect",
       "Navbar",
@@ -12527,10 +12927,20 @@
       "OTPInput",
       "Pagination",
       "PasswordInput",
+      "POICard",
+      "POIDetailPanel",
+      "POIMediaGallery",
+      "POIResultCard",
+      "POIResultList",
       "Popover",
       "Progress",
       "Radio",
       "Rating",
+      "RouteOptionCard",
+      "RoutePreviewPanel",
+      "RouteSummary",
+      "RoutingInputGroup",
+      "SaveLocationCard",
       "ScrollArea",
       "Search",
       "SearchBar",
@@ -12554,7 +12964,9 @@
       "Toast",
       "ToggleButton",
       "Tooltip",
-      "Tree"
+      "Tree",
+      "UserLocationMarker",
+      "WayfindingCard"
     ],
     "items": [
       {
@@ -12572,6 +12984,43 @@
           "issues": [],
           "connectedComponents": ["Accordion"],
           "mappedProps": ["collapsible", "defaultValue", "type"],
+          "unmappedProps": ["collapsible", "defaultValue", "type"]
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "AdaptiveMapShell",
+        "source": "packages/react/src/components/AdaptiveMapShell/AdaptiveMapShell.tsx",
+        "story": "packages/react/src/components/AdaptiveMapShell/AdaptiveMapShell.stories.tsx",
+        "test": "packages/react/src/components/AdaptiveMapShell/AdaptiveMapShell.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/AdaptiveMapShell/AdaptiveMapShell.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-7985",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["AdaptiveMapShell"],
+          "mappedProps": [
+            "controls",
+            "map",
+            "mapLabel",
+            "panel",
+            "panelLabel",
+            "panelPlacement",
+            "topBar"
+          ],
           "unmappedProps": []
         },
         "props": [
@@ -12579,15 +13028,20 @@
           "aria-invalid",
           "aria-label",
           "children",
-          "collapsible",
-          "defaultValue",
-          "disabled",
+          "collisionInsets",
+          "controls",
           "id",
+          "map",
+          "mapLabel",
+          "mapStatus",
+          "mapStatusContent",
+          "panel",
+          "panelLabel",
+          "panelPlacement",
           "role",
           "tabIndex",
           "title",
-          "type",
-          "value"
+          "topBar"
         ],
         "variants": {}
       },
@@ -12851,6 +13305,47 @@
         "variants": {}
       },
       {
+        "name": "BrowseCategoriesPanel",
+        "source": "packages/react/src/components/BrowseCategoriesPanel/BrowseCategoriesPanel.tsx",
+        "story": "packages/react/src/components/BrowseCategoriesPanel/BrowseCategoriesPanel.stories.tsx",
+        "test": "packages/react/src/components/BrowseCategoriesPanel/BrowseCategoriesPanel.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/BrowseCategoriesPanel/BrowseCategoriesPanel.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8026",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["BrowseCategoriesPanel"],
+          "mappedProps": [
+            "categories",
+            "emptyState",
+            "label",
+            "renderIcon",
+            "search"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "actions",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "categories",
+          "children",
+          "emptyState",
+          "id",
+          "label",
+          "renderIcon",
+          "role",
+          "search",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
         "name": "Button",
         "source": "packages/react/src/components/Button/Button.tsx",
         "story": "packages/react/src/components/Button/Button.stories.tsx",
@@ -12923,6 +13418,41 @@
           "role",
           "tabIndex",
           "title"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "CategoryTile",
+        "source": "packages/react/src/components/CategoryTile/CategoryTile.tsx",
+        "story": "packages/react/src/components/CategoryTile/CategoryTile.stories.tsx",
+        "test": "packages/react/src/components/CategoryTile/CategoryTile.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/CategoryTile/CategoryTile.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8039",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["CategoryTile"],
+          "mappedProps": ["category", "icon"],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
+          "category",
+          "children",
+          "disabled",
+          "disabledProp",
+          "icon",
+          "id",
+          "role",
+          "tabIndex",
+          "title",
+          "type"
         ],
         "variants": {}
       },
@@ -13333,14 +13863,14 @@
         "test": "packages/react/src/components/DirectionStep/DirectionStep.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/DirectionStep/DirectionStep.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6763",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["DirectionStep"],
+          "mappedProps": ["distance", "duration", "instruction", "type"],
           "unmappedProps": []
         },
         "props": [
@@ -13401,30 +13931,28 @@
         "test": "packages/react/src/components/DynamicIsland/DynamicIsland.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/DynamicIsland/DynamicIsland.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8358",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["DynamicIsland"],
+          "mappedProps": [
+            "compactLeading",
+            "compactTrailing",
+            "expandedContent",
+            "islandState",
+            "minimalContent"
+          ],
           "unmappedProps": []
         },
         "props": [
-          "aria-describedby",
-          "aria-invalid",
-          "aria-label",
-          "children",
           "compactLeading",
           "compactTrailing",
           "expandedContent",
-          "id",
           "islandState",
-          "minimalContent",
-          "role",
-          "tabIndex",
-          "title"
+          "minimalContent"
         ],
         "variants": {}
       },
@@ -13467,14 +13995,19 @@
         "test": "packages/react/src/components/FeedbackCard/FeedbackCard.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/FeedbackCard/FeedbackCard.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8382",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["FeedbackCard"],
+          "mappedProps": [
+            "description",
+            "isSubmitting",
+            "successMessage",
+            "title"
+          ],
           "unmappedProps": []
         },
         "props": [
@@ -13646,14 +14179,14 @@
         "test": "packages/react/src/components/FloorSelector/FloorSelector.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/FloorSelector/FloorSelector.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6786",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["FloorSelector"],
+          "mappedProps": ["floors", "label", "selectedFloor", "variant"],
           "unmappedProps": []
         },
         "props": [
@@ -13663,10 +14196,12 @@
           "children",
           "floors",
           "id",
+          "label",
           "role",
           "selectedFloor",
           "tabIndex",
-          "title"
+          "title",
+          "variant"
         ],
         "variants": {}
       },
@@ -13984,14 +14519,21 @@
         "test": "packages/react/src/components/LocationPin/LocationPin.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/LocationPin/LocationPin.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6847",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["LocationPin"],
+          "mappedProps": [
+            "disabled",
+            "featured",
+            "label",
+            "offFloor",
+            "selected",
+            "size"
+          ],
           "unmappedProps": []
         },
         "props": [
@@ -13999,11 +14541,55 @@
           "aria-invalid",
           "aria-label",
           "children",
+          "disabled",
+          "externalLabel",
+          "featured",
           "id",
+          "label",
+          "labelPlacement",
+          "markerContent",
+          "number",
+          "offFloor",
+          "resultId",
           "role",
+          "selected",
           "size",
           "tabIndex",
           "title",
+          "variant"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "MapControlButton",
+        "source": "packages/react/src/components/MapControlButton/MapControlButton.tsx",
+        "story": "packages/react/src/components/MapControlButton/MapControlButton.stories.tsx",
+        "test": "packages/react/src/components/MapControlButton/MapControlButton.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/MapControlButton/MapControlButton.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1785-8821",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["MapControlButton"],
+          "mappedProps": [
+            "disabled",
+            "icon",
+            "label",
+            "presentation",
+            "pressed"
+          ],
+          "unmappedProps": ["disabled"]
+        },
+        "props": [
+          "icon",
+          "label",
+          "presentation",
+          "pressed",
+          "stateLabel",
+          "type",
           "variant"
         ],
         "variants": {}
@@ -14015,14 +14601,20 @@
         "test": "packages/react/src/components/MapControlsGroup/MapControlsGroup.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/MapControlsGroup/MapControlsGroup.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8408",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["MapControlsGroup"],
+          "mappedProps": [
+            "compassBearing",
+            "label",
+            "locationLabel",
+            "locationPresentation",
+            "locationState"
+          ],
           "unmappedProps": []
         },
         "props": [
@@ -14032,6 +14624,11 @@
           "children",
           "compassBearing",
           "id",
+          "label",
+          "locationLabel",
+          "locationPresentation",
+          "locationState",
+          "locationStateLabel",
           "role",
           "tabIndex",
           "title"
@@ -14045,14 +14642,14 @@
         "test": "packages/react/src/components/MapOverlay/MapOverlay.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/MapOverlay/MapOverlay.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8429",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["MapOverlay"],
+          "mappedProps": ["position", "width"],
           "unmappedProps": []
         },
         "props": [
@@ -14060,11 +14657,13 @@
           "aria-invalid",
           "aria-label",
           "children",
+          "collisionInsets",
           "id",
           "position",
           "role",
           "tabIndex",
-          "title"
+          "title",
+          "width"
         ],
         "variants": {}
       },
@@ -14075,14 +14674,14 @@
         "test": "packages/react/src/components/MapView/MapView.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/MapView/MapView.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6854",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["MapView"],
+          "mappedProps": ["mapLabel"],
           "unmappedProps": []
         },
         "props": [
@@ -14091,6 +14690,7 @@
           "aria-label",
           "children",
           "id",
+          "mapLabel",
           "role",
           "tabIndex",
           "title"
@@ -14497,14 +15097,21 @@
         "test": "packages/react/src/components/POICard/POICard.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/POICard/POICard.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6879",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["POICard"],
+          "mappedProps": [
+            "actions",
+            "description",
+            "imageAlt",
+            "imageUrl",
+            "subtitle",
+            "title"
+          ],
           "unmappedProps": []
         },
         "props": [
@@ -14516,9 +15123,160 @@
           "children",
           "description",
           "id",
+          "imageAlt",
           "imageUrl",
           "role",
+          "selectionLabel",
           "subtitle",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "POIDetailPanel",
+        "source": "packages/react/src/components/POIDetailPanel/POIDetailPanel.tsx",
+        "story": "packages/react/src/components/POIDetailPanel/POIDetailPanel.stories.tsx",
+        "test": "packages/react/src/components/POIDetailPanel/POIDetailPanel.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/POIDetailPanel/POIDetailPanel.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8103",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["POIDetailPanel"],
+          "mappedProps": ["actionLabels", "closeLabel", "poi", "presentation"],
+          "unmappedProps": []
+        },
+        "props": [
+          "accessRestrictionsHeading",
+          "actionLabels",
+          "actionStates",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "closeLabel",
+          "id",
+          "mediaLabel",
+          "mediaPositionLabel",
+          "poi",
+          "presentation",
+          "role",
+          "servicesHeading",
+          "tabIndex",
+          "title",
+          "titleLevel"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "POIMediaGallery",
+        "source": "packages/react/src/components/POIMediaGallery/POIMediaGallery.tsx",
+        "story": "packages/react/src/components/POIMediaGallery/POIMediaGallery.stories.tsx",
+        "test": "packages/react/src/components/POIMediaGallery/POIMediaGallery.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/POIMediaGallery/POIMediaGallery.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8119",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["POIMediaGallery"],
+          "mappedProps": ["label", "media", "positionLabel"],
+          "unmappedProps": []
+        },
+        "props": [
+          "activeIndex",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "defaultActiveIndex",
+          "id",
+          "label",
+          "media",
+          "nextLabel",
+          "positionLabel",
+          "previousLabel",
+          "role",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "POIResultCard",
+        "source": "packages/react/src/components/POIResultCard/POIResultCard.tsx",
+        "story": "packages/react/src/components/POIResultCard/POIResultCard.stories.tsx",
+        "test": "packages/react/src/components/POIResultCard/POIResultCard.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/POIResultCard/POIResultCard.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8150",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["POIResultCard"],
+          "mappedProps": ["featuredLabel", "poi", "result", "selectionLabel"],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "featuredLabel",
+          "id",
+          "poi",
+          "result",
+          "role",
+          "selectionLabel",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "POIResultList",
+        "source": "packages/react/src/components/POIResultList/POIResultList.tsx",
+        "story": "packages/react/src/components/POIResultList/POIResultList.stories.tsx",
+        "test": "packages/react/src/components/POIResultList/POIResultList.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/POIResultList/POIResultList.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8171",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["POIResultList"],
+          "mappedProps": [
+            "emptyState",
+            "items",
+            "label",
+            "resultCountLabel",
+            "selectedPoiId"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "emptyState",
+          "featuredLabel",
+          "id",
+          "items",
+          "label",
+          "resultCountLabel",
+          "role",
+          "selectedPoiId",
           "tabIndex",
           "title"
         ],
@@ -14656,20 +15414,106 @@
         "variants": {}
       },
       {
+        "name": "RouteOptionCard",
+        "source": "packages/react/src/components/RouteOptionCard/RouteOptionCard.tsx",
+        "story": "packages/react/src/components/RouteOptionCard/RouteOptionCard.stories.tsx",
+        "test": "packages/react/src/components/RouteOptionCard/RouteOptionCard.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/RouteOptionCard/RouteOptionCard.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8197",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["RouteOptionCard"],
+          "mappedProps": ["icon", "option"],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
+          "children",
+          "disabled",
+          "disabledProp",
+          "icon",
+          "id",
+          "option",
+          "role",
+          "tabIndex",
+          "title",
+          "type"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "RoutePreviewPanel",
+        "source": "packages/react/src/components/RoutePreviewPanel/RoutePreviewPanel.tsx",
+        "story": "packages/react/src/components/RoutePreviewPanel/RoutePreviewPanel.stories.tsx",
+        "test": "packages/react/src/components/RoutePreviewPanel/RoutePreviewPanel.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": "packages/react/src/components/RoutePreviewPanel/RoutePreviewPanel.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8277",
+          "needsNodeId": false,
+          "status": "linked",
+          "issues": [],
+          "connectedComponents": ["RoutePreviewPanel"],
+          "mappedProps": [
+            "backLabel",
+            "continueLabel",
+            "destinationName",
+            "options",
+            "status"
+          ],
+          "unmappedProps": []
+        },
+        "props": [
+          "alert",
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "backLabel",
+          "children",
+          "continueLabel",
+          "destinationLabel",
+          "destinationName",
+          "id",
+          "options",
+          "optionsCountLabel",
+          "optionsLabel",
+          "role",
+          "selectedRouteAnnouncement",
+          "status",
+          "statusContent",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
         "name": "RouteSummary",
         "source": "packages/react/src/components/RouteSummary/RouteSummary.tsx",
         "story": "packages/react/src/components/RouteSummary/RouteSummary.stories.tsx",
         "test": "packages/react/src/components/RouteSummary/RouteSummary.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/RouteSummary/RouteSummary.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8296",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["RouteSummary"],
+          "mappedProps": [
+            "distanceText",
+            "etaText",
+            "state",
+            "transportModeIcon"
+          ],
           "unmappedProps": []
         },
         "props": [
@@ -14678,9 +15522,11 @@
           "aria-label",
           "children",
           "distanceText",
+          "endRouteLabel",
           "etaText",
           "id",
           "role",
+          "startNavigationLabel",
           "state",
           "tabIndex",
           "title",
@@ -14695,14 +15541,14 @@
         "test": "packages/react/src/components/RoutingInputGroup/RoutingInputGroup.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/RoutingInputGroup/RoutingInputGroup.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8315",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["RoutingInputGroup"],
+          "mappedProps": ["points"],
           "unmappedProps": []
         },
         "props": [
@@ -14725,14 +15571,14 @@
         "test": "packages/react/src/components/SaveLocationCard/SaveLocationCard.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/SaveLocationCard/SaveLocationCard.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8338",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["SaveLocationCard"],
+          "mappedProps": ["description", "isSaved", "title"],
           "unmappedProps": []
         },
         "props": [
@@ -14849,6 +15695,7 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "ariaLabel",
           "autoFocus",
           "children",
           "containerClassName",
@@ -14862,6 +15709,7 @@
           "role",
           "tabIndex",
           "title",
+          "type",
           "value",
           "variant"
         ],
@@ -15076,6 +15924,7 @@
           "defaultValue",
           "disabled",
           "error",
+          "formatValue",
           "id",
           "inverted",
           "label",
@@ -15084,6 +15933,7 @@
           "name",
           "orientation",
           "role",
+          "showValueTooltip",
           "step",
           "tabIndex",
           "thumbCount",
@@ -15687,14 +16537,14 @@
         "test": "packages/react/src/components/UserLocationMarker/UserLocationMarker.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/UserLocationMarker/UserLocationMarker.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1351-8346",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["UserLocationMarker"],
+          "mappedProps": ["heading", "showHeading"],
           "unmappedProps": []
         },
         "props": [
@@ -15718,14 +16568,14 @@
         "test": "packages/react/src/components/WayfindingCard/WayfindingCard.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/WayfindingCard/WayfindingCard.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6893",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["WayfindingCard"],
+          "mappedProps": ["title"],
           "unmappedProps": []
         },
         "props": [

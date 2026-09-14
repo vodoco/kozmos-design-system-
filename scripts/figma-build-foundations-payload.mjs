@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { writeGeneratedJson } from "./write-generated-json.mjs";
 
 const ROOT = process.cwd();
 const LIGHT_TOKENS = path.join(ROOT, "packages/tokens/src/tokens-light.json");
@@ -275,12 +276,11 @@ function buildPayload() {
     styleOnly,
   };
 
-  fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
-  fs.writeFileSync(OUT_FILE, `${JSON.stringify(payload, null, 2)}\n`);
   return payload;
 }
 
 const payload = buildPayload();
+await writeGeneratedJson(OUT_FILE, payload);
 console.log(`Wrote ${path.relative(ROOT, OUT_FILE)}`);
 console.log(`Variable tokens: ${payload.summary.variableTokens}`);
 console.log(`Style-only tokens: ${payload.summary.styleOnlyTokens}`);
