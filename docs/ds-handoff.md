@@ -16,7 +16,9 @@ Paste this as the first message of the new chat:
 > MAP-595 and `apps/mapscale-review` are parked — do not work on them unless asked in so many words.
 > The work now is §11: Olcay shares the SDK's current components, and each one is rebuilt as an
 > example using Kozmos components only. Where that cannot be done, it is reported and asked about,
-> never worked around. §4.1 and §4.2 are done and §6 is all but empty; read §11 first, then §4.3.
+> never worked around. The first component is done (§11.1) and the next piece of work is the two
+> parts it found missing — a Core `MetaStrip` and an opening-hours example. §4.1 and §4.2 are done
+> and §6 is all but empty; read §11 first, then §4.3.
 
 Read order: this file → `docs/ds-scope-2026-09-12.md` → `docs/style-playbook.md` →
 `docs/gap-audit-2026-09-05.md` → the memory files in §8. `docs/session-handoff.md` is the long
@@ -235,6 +237,13 @@ unblocking ones first.
   first); Link and Spinner each miss a variant axis on iOS and Android; `packages/icons` renders
   different artwork from Figma and is too small for the revamp — resolve before extending.
 - **A11y and tests:** the a11y spec is thin and coverage has no threshold (gap audit §8).
+- **Three defects that only building an example found** (2026-09-14, §11.1), none of them recorded
+  anywhere before: `ScrollArea` sets `h-full` on both of its wrappers, so a horizontal strip inside
+  an auto-height column resolves to height 0 and vanishes; a component's radius role cannot be
+  overridden from outside, because `cn`'s tailwind-merge does not know the design system's custom
+  radius names, so `rounded-pill` and `rounded-control` both survive and CSS order decides; and
+  `BottomSheetContent` leaves the sheet unlabelled unless the caller reaches for `BottomSheetTitle`,
+  which a `Heading` type-checks beside and does not satisfy.
 
 ### 4.5 · Get ready for npm publish
 
@@ -326,7 +335,18 @@ action rather than an answer, or needs a designer.
    Until it happens nothing has been visually compared since early September, including a shadow
    change across 27 components and #19's animation fix, and `UI Tests` shows PENDING on every PR. It
    should land before the first npm publish, or that publish ships visuals nobody compared.
-2. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
+2. **The other 38 icons.** 13 now carry Pointr's own outlines (§11.1) and 38 are still lucide
+   look-alikes. Migrating them changes the artwork of icons used across the library, which wants a
+   visual gate — so it waits on Chromatic. Beyond them, 70 of 98 React components import
+   `lucide-react` directly and bypass the registry entirely.
+3. **`@kozmos/icons` no longer re-exports lucide wholesale** (§11.1). It had to stop, because owning
+   one outline while re-exporting its look-alike put two different Hearts under one name. It narrows
+   the package's public surface on a package that has never been published, and nothing in the repo
+   used it — but it is a public-API decision, and one line to reverse.
+4. **The payment brand marks** — Apple Pay, Google Pay and Samsung Pay are drawn as tags in the POI
+   card. A brand mark is neither a `Tag` nor an icon from the set: it is someone else's artwork at a
+   fixed lockup, and the design system has nowhere to put one.
+5. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
    LocationPin's `variant` and `labelPlacement` stay renderer concerns** — recorded, revisit if a
    designer asks.
 
@@ -391,6 +411,19 @@ typecheck then reports errors in files nobody touched, suspect the install befor
   the Code Connect exclusion to gain a typecheck (#27) silently added 92 `*.figma.d.ts` files to
   `dist`, which `files: ["dist"]` publishes. Nothing failed; `dist` went from 204 files to 296. After
   changing what a package compiles, count what it builds (#30).
+- **`pnpm install` rewrites the lockfile in pnpm's quote style**, which diffs at ~14,000 lines
+  against the Prettier-formatted `pnpm-lock.yaml` in the repo. Run Prettier over it and the diff
+  comes back to the lines that actually changed — three, for one added dependency.
+- **`apps/docs` has no Tailwind build.** It ships the packages' prebuilt CSS, so a class a story
+  uses that `packages/react` does not already emit simply does not exist: `max-w-[375px]` was on the
+  element and computed to `none`. It enforces "no one-off class" by construction, and it means a
+  story cannot be styled its own way.
+- **`gh pr checks` exits 8 when a check is merely pending**, not failing. On this repo `UI Tests` is
+  always pending (Chromatic's limit), so that exit code is the normal state of a green PR.
+- **A render harness can carry two Reacts.** A worktree install put React 18 and 19 in one program
+  and every `renderToStaticMarkup` failed with "Objects are not valid as a React child" — including
+  for components that had not been touched. Render one known-good component through the same harness
+  before believing it broke yours.
 - **Stacked PRs:** GitHub does not retarget them; merging blind lands in the base branch.
 - **Agent fan-out:** cap the candidate list before multiplying it — a scope audit once burned 5.16M
   tokens on ~330 candidates × 3.
@@ -504,6 +537,25 @@ lane; §4.5 carries the publish list. The one thing still
 waiting on Olcay is Chromatic's plan, which is an account action and which has compared nothing
 since early September.
 
+### 2026-09-14, evening
+
+11. **#31 and #32 merged** (`15cdc3c`, `84ed387`), their branches deleted; CI green on the merged
+    `main`, which no branch had built, and the eleven gates green beside it. One thing that cost
+    time: the gates reported a failure that was `tokens:contrast:check` unable to resolve
+    `tailwindcss-animate` — declared and in the lockfile, simply not installed in the shared
+    checkout. `pnpm install --frozen-lockfile` added one package and everything passed. §8's
+    half-made `node_modules` again.
+12. **§11's loop ran for the first time** (§11.1): the POI detail card measured, rebuilt and
+    reported as **#33**, and the icon set extended as **#34**. Both green but for `UI Tests`, which
+    Chromatic's limit pins pending on every PR.
+13. **An audit after the fact caught three things**, which is why #33 and #34 each carry a second
+    commit: the example had rendered ten sections with invented values against the file's 22 real
+    ones; `@kozmos/icons` had put two different Hearts under one name; and `docs/README.md` did not
+    index the new report. All three are fixed and pushed. A fourth suspicion did not survive
+    checking — the `emotion` custom properties #32 writes do resolve, in
+    `variables-light.css`/`-dark.css`; the legacy combined `variables.css` is simply a different,
+    older naming and was the wrong file to grep.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:
@@ -563,6 +615,40 @@ The one axis known to be missing everywhere is `Emotion`, and #32 closes it for 
 `Counter` still cannot express it, and they need semantic emotion roles in the tokens first, because
 the existing six-emotion tokens are named for buttons and a Tag reaching into them would break the
 roles discipline (§5.1).
+
+### 11.1 · The first component, 2026-09-14: `fullPOIDetailCard`
+
+Olcay shared the POI Details Card Revamp card (`HbFSXhCPxKUy2fWa5x9TKO`, node `241:4772`). It was
+read over the REST API — 375×3183, **886 nodes**, 52 distinct instances, 126 visible text nodes,
+**22 attribute sections** carrying 71 value tags and 3 payment brand marks — and rebuilt as
+`apps/docs/stories/examples/POIDetailCard.stories.tsx` (**PR #33**), with
+`docs/poi-detail-card-gaps-2026-09-14.md` recording every deviation.
+
+**Two of its four top-level parts have no Kozmos equivalent** — the `poiMetaInformation` meta strip
+and `openingHours` with its day rows — so the story names them in an `Alert` and renders nothing in
+their place. Ruled the same day: build both, `MetaStrip` in Core and opening hours as a Product /
+SDK example. **That is the next piece of work.**
+
+**The largest blocker was not a component but the icon set.** `@kozmos/icons` held 38 glyphs; the
+card draws 19 and 14 had no Kozmos name. **PR #34** adds 13 of them carrying the Pointr Icon
+Library's own outlines, generated by `scripts/build-pointr-icons.mjs` (`pnpm icons:pointr:build`) —
+each verified to be the component this card instantiates, matched **by component key, not by name**.
+The 38 lucide mappings are untouched, so nothing already in the library moves while Chromatic cannot
+compare. The fourteenth, the accessibility facility glyph, is in a different library and is still
+missing; it is drawn 1,213 times across 7 surfaces, the most-used single glyph the scan found.
+
+Two things the session got wrong and corrected, both worth the next reader's attention: the example
+first rendered **ten** sections with invented values, which made it look like coverage rather than a
+measurement — every label and value is read from the node now, with visibility resolved through
+parents; and owning an outline while the package still re-exported lucide put **two different
+Hearts** under one name, which is why §6.3 exists.
+
+`figma:icons` fails for a narrower reason than this file used to say: it calls
+`/files/{key}/components`, which needs `library_content:read`. `/v1/files/{key}/nodes` and
+`/v1/images` both work on the token's `file_content:read`, which is how the outlines were exported.
+
+**Still to do for this component:** its Figma counterpart on the `Examples` page (`286:1601`), which
+§5.8 says is painted by the plugin and needs a painter for it.
 
 ### What is already known to be missing
 
