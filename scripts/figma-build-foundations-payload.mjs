@@ -280,7 +280,9 @@ function buildPayload() {
 }
 
 const payload = buildPayload();
-await writeGeneratedJson(OUT_FILE, payload);
+await writeGeneratedJson(OUT_FILE, payload, {
+  volatileKeys: ["generatedAt"],
+});
 console.log(`Wrote ${path.relative(ROOT, OUT_FILE)}`);
 console.log(`Variable tokens: ${payload.summary.variableTokens}`);
 console.log(`Style-only tokens: ${payload.summary.styleOnlyTokens}`);
