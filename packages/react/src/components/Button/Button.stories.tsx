@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import { Button } from "./Button";
+import { Button, BUTTON_EMOTIONS } from "./Button";
 
 const meta: Meta<typeof Button> = {
   title: "Components/Button",
@@ -25,6 +25,10 @@ const meta: Meta<typeof Button> = {
     size: {
       control: "select",
       options: ["default", "sm", "lg", "icon"],
+    },
+    emotion: {
+      control: "select",
+      options: [undefined, ...BUTTON_EMOTIONS],
     },
     disabled: { control: "boolean" },
     isLoading: { control: "boolean" },
@@ -96,4 +100,26 @@ export const Disabled: Story = {
     disabled: true,
     children: "Disabled",
   },
+};
+
+/**
+ * What the button means, across the weights that carry a colour. `glass` is an
+ * effect rather than a weight and takes no emotion, so it is not shown here.
+ */
+export const Emotions: Story = {
+  parameters: { layout: "padded" },
+  render: () => (
+    <div className="flex flex-col gap-4">
+      {(["default", "outline", "ghost"] as const).map((variant) => (
+        <div key={variant} className="flex flex-wrap items-center gap-2">
+          <span className="w-20 text-xs text-muted-foreground">{variant}</span>
+          {BUTTON_EMOTIONS.map((emotion) => (
+            <Button key={emotion} variant={variant} emotion={emotion}>
+              {emotion}
+            </Button>
+          ))}
+        </div>
+      ))}
+    </div>
+  ),
 };

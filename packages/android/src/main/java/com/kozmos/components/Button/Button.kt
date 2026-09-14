@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 
@@ -31,6 +32,15 @@ enum class KozmosButtonVariant {
     Glass
 }
 
+enum class KozmosButtonEmotion {
+    Themed,
+    Neutral,
+    Success,
+    Danger,
+    Informative,
+    Alert
+}
+
 enum class KozmosButtonSize {
     Default,
     Sm,
@@ -38,11 +48,45 @@ enum class KozmosButtonSize {
     Icon
 }
 
+// The emotion decides the colour where the variant has a tier: Primary is
+// filled, Secondary is bordered or text. Glass is an effect and keeps its
+// own ground.
+@Composable
+private fun emotionPrimaryBackground(e: KozmosButtonEmotion): Color = when (e) {
+    KozmosButtonEmotion.Themed -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle
+    KozmosButtonEmotion.Neutral -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonBackgroundIdle
+    KozmosButtonEmotion.Success -> KozmosThemeTokens.componentsPrimaryButtonsSuccessButtonBackgroundIdle
+    KozmosButtonEmotion.Danger -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonBackgroundIdle
+    KozmosButtonEmotion.Informative -> KozmosThemeTokens.componentsPrimaryButtonsInformativeButtonBackgroundIdle
+    KozmosButtonEmotion.Alert -> KozmosThemeTokens.componentsPrimaryButtonsAlertButtonBackgroundIdle
+}
+
+@Composable
+private fun emotionPrimaryForeground(e: KozmosButtonEmotion): Color = when (e) {
+    KozmosButtonEmotion.Themed -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle
+    KozmosButtonEmotion.Neutral -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonForegroundContentIdle
+    KozmosButtonEmotion.Success -> KozmosThemeTokens.componentsPrimaryButtonsSuccessButtonForegroundContentIdle
+    KozmosButtonEmotion.Danger -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonForegroundContentIdle
+    KozmosButtonEmotion.Informative -> KozmosThemeTokens.componentsPrimaryButtonsInformativeButtonForegroundContentIdle
+    KozmosButtonEmotion.Alert -> KozmosThemeTokens.componentsPrimaryButtonsAlertButtonForegroundContentIdle
+}
+
+@Composable
+private fun emotionSecondaryForeground(e: KozmosButtonEmotion): Color = when (e) {
+    KozmosButtonEmotion.Themed -> KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle
+    KozmosButtonEmotion.Neutral -> KozmosThemeTokens.componentsSecondaryButtonsNeutralButtonForegroundContentIdle
+    KozmosButtonEmotion.Success -> KozmosThemeTokens.componentsSecondaryButtonsSuccessButtonForegroundContentIdle
+    KozmosButtonEmotion.Danger -> KozmosThemeTokens.componentsSecondaryButtonsDangerButtonForegroundContentIdle
+    KozmosButtonEmotion.Informative -> KozmosThemeTokens.componentsSecondaryButtonsInformativeButtonForegroundContentIdle
+    KozmosButtonEmotion.Alert -> KozmosThemeTokens.componentsSecondaryButtonsAlertButtonForegroundContentIdle
+}
+
 @Composable
 fun KozmosButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     variant: KozmosButtonVariant = KozmosButtonVariant.Default,
+    emotion: KozmosButtonEmotion? = null,
     size: KozmosButtonSize = KozmosButtonSize.Default,
     enabled: Boolean = true,
     isLoading: Boolean = false,
@@ -71,40 +115,44 @@ fun KozmosButton(
 
     when (variant) {
         KozmosButtonVariant.Outline -> {
+            val outlineColor = if (emotion != null) emotionSecondaryForeground(emotion)
+                else KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle
             OutlinedButton(
                 onClick = onClick,
                 modifier = rootModifier,
                 enabled = enabled && !isLoading,
                 shape = shape,
                 contentPadding = contentPadding,
-                border = BorderStroke(1.dp, KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle)
+                border = BorderStroke(1.dp, outlineColor),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = outlineColor)
             ) {
                 ButtonContent(isLoading, content)
             }
         }
         KozmosButtonVariant.Ghost, KozmosButtonVariant.Link -> {
+            val textColor = if (emotion != null) emotionSecondaryForeground(emotion)
+                else KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle
             TextButton(
                 onClick = onClick,
                 modifier = rootModifier,
                 enabled = enabled && !isLoading,
                 shape = shape,
                 contentPadding = contentPadding,
-                colors = ButtonDefaults.textButtonColors(contentColor = KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle)
+                colors = ButtonDefaults.textButtonColors(contentColor = textColor)
             ) {
                 ButtonContent(isLoading, content)
             }
         }
         else -> {
             // Default, Destructive, Secondary, Glass
-            val containerColor = when(variant) {
+            val containerColor = if (emotion != null && variant != KozmosButtonVariant.Glass) emotionPrimaryBackground(emotion) else when(variant) {
                 KozmosButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonBackgroundIdle
                 KozmosButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonBackgroundIdle
                 KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = 0.16f)
                 else -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle
             }
             
-            val contentColor = when(variant) {
+            val contentColor = if (emotion != null && variant != KozmosButtonVariant.Glass) emotionPrimaryForeground(emotion) else when(variant) {
                  KozmosButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonForegroundContentIdle
                  KozmosButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonForegroundContentIdle
                  KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground1000
