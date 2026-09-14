@@ -22,6 +22,7 @@
     "tokens:sync": "tsx scripts/sync-figma.ts",
     "figma:foundations": "node scripts/figma-build-foundations-payload.mjs",
     "figma:icons": "node scripts/figma-build-icon-catalog.mjs",
+    "icons:pointr:build": "node scripts/build-pointr-icons.mjs",
     "figma:plugin:check": "node scripts/check-figma-plugin-compat.mjs",
     "figma:manifest": "node scripts/figma-build-manifest.mjs",
     "figma:publish": "node scripts/figma-connect-publish.mjs",

@@ -314,6 +314,9 @@ importers:
 
   packages/icons:
     devDependencies:
+      "@types/react":
+        specifier: ^18.2.66
+        version: 18.3.28
       lucide-react:
         specifier: 0.563.0
         version: 0.563.0(react@19.2.4)
