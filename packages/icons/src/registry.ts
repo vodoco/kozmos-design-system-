@@ -1,4 +1,20 @@
 import type { LucideIcon } from "lucide-react";
+import type { createPointrIcon } from "./pointr/createPointrIcon";
+import {
+  Bookmark,
+  CalendarCheck01,
+  ClockPlus,
+  Eye,
+  Feather,
+  Globe02,
+  Heart,
+  LayoutAlt02,
+  Loading01,
+  Mail01,
+  Phone,
+  Share01,
+  ShoppingBag02,
+} from "./pointr/icons.generated";
 import {
   Activity,
   AlertCircle,
@@ -79,9 +95,35 @@ export const kozmosIconNames = [
   "users-01",
   "wifi",
   "x-close",
+
+  // Owned outlines, drawn by the Pointr Icon Library rather than mapped onto
+  // the nearest lucide shape. Every one was needed by the SDK's POI detail
+  // card and had no Kozmos name at all — see docs/poi-detail-card-gaps.
+  "bookmark",
+  "calendar-check-01",
+  "clock-plus",
+  "eye",
+  "feather",
+  "globe-02",
+  "heart",
+  "layout-alt-02",
+  "loading-01",
+  "mail-01",
+  "phone",
+  "share-01",
+  "shopping-bag-02",
 ] as const;
 
 export type KozmosIconName = (typeof kozmosIconNames)[number];
+
+/**
+ * An icon is either a lucide component or an outline owned by this package.
+ * Both take the same props, so a consumer cannot tell them apart — the
+ * distinction is where the drawing came from, not how it is used.
+ */
+export type KozmosIconComponent =
+  | LucideIcon
+  | ReturnType<typeof createPointrIcon>;
 
 export interface KozmosIconDefinition {
   name: KozmosIconName;
@@ -89,7 +131,7 @@ export interface KozmosIconDefinition {
   figmaNodeId: string;
   category: string;
   description: string;
-  component: LucideIcon;
+  component: KozmosIconComponent;
 }
 
 export const kozmosIconDefinitions: readonly KozmosIconDefinition[] = [
@@ -397,11 +439,115 @@ export const kozmosIconDefinitions: readonly KozmosIconDefinition[] = [
     description: "Close or dismiss.",
     component: X,
   },
+  {
+    name: "bookmark",
+    figmaName: "bookmark",
+    figmaNodeId: "1007:9756",
+    category: "General",
+    description: "Save for later.",
+    component: Bookmark,
+  },
+  {
+    name: "calendar-check-01",
+    figmaName: "calendar-check-01",
+    figmaNodeId: "1007:11521",
+    category: "Time",
+    description: "A booked or confirmed date.",
+    component: CalendarCheck01,
+  },
+  {
+    name: "clock-plus",
+    figmaName: "clock-plus",
+    figmaNodeId: "1007:11557",
+    category: "Time",
+    description: "Added or extended time, such as a wait.",
+    component: ClockPlus,
+  },
+  {
+    name: "eye",
+    figmaName: "eye",
+    figmaNodeId: "1007:10200",
+    category: "General",
+    description: "Show or preview.",
+    component: Eye,
+  },
+  {
+    name: "feather",
+    figmaName: "feather",
+    figmaNodeId: "1007:11303",
+    category: "Editor",
+    description: "Compose or write.",
+    component: Feather,
+  },
+  {
+    name: "globe-02",
+    figmaName: "globe-02",
+    figmaNodeId: "1007:11800",
+    category: "Maps & travel",
+    description: "A website or the wider web.",
+    component: Globe02,
+  },
+  {
+    name: "heart",
+    figmaName: "heart",
+    figmaNodeId: "1007:10224",
+    category: "General",
+    description: "Favourite.",
+    component: Heart,
+  },
+  {
+    name: "layout-alt-02",
+    figmaName: "layout-alt-02",
+    figmaNodeId: "1007:8614",
+    category: "Layout",
+    description: "A menu or listing laid out in sections.",
+    component: LayoutAlt02,
+  },
+  {
+    name: "loading-01",
+    figmaName: "loading-01",
+    figmaNodeId: "1007:10035",
+    category: "General",
+    description: "Work in progress.",
+    component: Loading01,
+  },
+  {
+    name: "mail-01",
+    figmaName: "mail-01",
+    figmaNodeId: "1007:11046",
+    category: "Communication",
+    description: "Email.",
+    component: Mail01,
+  },
+  {
+    name: "phone",
+    figmaName: "phone",
+    figmaNodeId: "1007:11145",
+    category: "Communication",
+    description: "Call.",
+    component: Phone,
+  },
+  {
+    name: "share-01",
+    figmaName: "share-01",
+    figmaNodeId: "1007:10161",
+    category: "General",
+    description: "Share.",
+    component: Share01,
+  },
+  {
+    name: "shopping-bag-02",
+    figmaName: "shopping-bag-02",
+    figmaNodeId: "1007:9693",
+    category: "Finance & eCommerce",
+    description: "Order or shop.",
+    component: ShoppingBag02,
+  },
 ];
 
 export const kozmosIconRegistry = Object.fromEntries(
   kozmosIconDefinitions.map((icon) => [icon.name, icon.component]),
-) as Record<KozmosIconName, LucideIcon>;
+) as Record<KozmosIconName, KozmosIconComponent>;
 
 export const kozmosIconAliases = {
   add: "plus",
@@ -430,7 +576,9 @@ export function resolveIconName(name: KozmosIconKey): KozmosIconName {
   return kozmosIconAliases[name as KozmosIconAlias] ?? (name as KozmosIconName);
 }
 
-export function getIconComponent(name: KozmosIconKey): LucideIcon | undefined {
+export function getIconComponent(
+  name: KozmosIconKey,
+): KozmosIconComponent | undefined {
   return kozmosIconRegistry[resolveIconName(name)];
 }
 
