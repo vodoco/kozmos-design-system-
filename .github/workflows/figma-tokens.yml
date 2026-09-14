@@ -54,6 +54,8 @@ jobs:
           cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosDesignTokens.kt packages/android/src/main/java/com/kozmos/tokens/KozmosDesignTokens.kt
           cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosDimensions.kt packages/android/src/main/java/com/kozmos/tokens/KozmosDimensions.kt
           cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosShadows.kt packages/android/src/main/java/com/kozmos/tokens/KozmosShadows.kt
+          cp packages/tokens/dist/android/src/main/res/values/colors.xml packages/android/src/main/res/values/colors.xml
+          cp packages/tokens/dist/android/src/main/res/values-night/colors.xml packages/android/src/main/res/values-night/colors.xml
 
       - name: Generate Cross-Platform Semantic PR
         uses: peter-evans/create-pull-request@v6

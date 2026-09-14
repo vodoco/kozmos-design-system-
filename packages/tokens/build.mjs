@@ -48,8 +48,8 @@ function mergeDarkTokens(light, dark, darkRoot = dark) {
   for (const key in light) {
     if (dark && dark[key]) {
       if (
-        light[key].hasOwnProperty("value") ||
-        light[key].hasOwnProperty("$value")
+        Object.prototype.hasOwnProperty.call(light[key], "value") ||
+        Object.prototype.hasOwnProperty.call(light[key], "$value")
       ) {
         // A dark value written as an alias ("{Primitives.Colors.background.200}")
         // must be resolved against the dark tree, or the alias string itself
@@ -247,6 +247,44 @@ function toNumericPx(value) {
   return Number.parseFloat(value);
 }
 
+// Style Dictionary's `size/remToDp` and `size/compose/remToDp` multiply every
+// dimension-typed value by 16 without reading its unit, on the assumption that
+// a dimension is written in rem. Ours are not all rem: the screen breakpoints
+// and the icon stroke widths are px, so Android received 6000dp for a 375px
+// breakpoint and 24dp for a 1.5px stroke while the CSS, JS and Swift outputs
+// carried the real numbers. These read the unit — rem is sixteen dp, px and a
+// bare number are one — and stand in for the built-in transforms in the
+// Android platforms below. Only a literal reaches a value transform; an alias
+// is resolved afterwards and the formats read it through toNumericPx.
+function isDimensionToken(token) {
+  return (token.$type || token.type) === "dimension";
+}
+
+function dimensionToDp(token, transformName) {
+  const value = token.$value !== undefined ? token.$value : token.value;
+  const dp = toNumericPx(value);
+  if (Number.isNaN(dp)) {
+    throw new Error(
+      `${transformName}: "${value}" (${token.name}) is not a length`,
+    );
+  }
+  return dp.toFixed(2);
+}
+
+StyleDictionary.registerTransform({
+  name: "size/kozmos/dp",
+  type: "value",
+  filter: isDimensionToken,
+  transform: (token) => `${dimensionToDp(token, "size/kozmos/dp")}dp`,
+});
+
+StyleDictionary.registerTransform({
+  name: "size/kozmos/composeDp",
+  type: "value",
+  filter: isDimensionToken,
+  transform: (token) => `${dimensionToDp(token, "size/kozmos/composeDp")}.dp`,
+});
+
 function firstDefinedTokenValue(token) {
   const candidates = [
     token.value,
@@ -274,11 +312,11 @@ function firstDefinedTokenValue(token) {
  * than exported, and the generated file says so where it would have been.
  */
 const PILL_SENTINEL = 9999;
-// Keyed on the path as well as the value. Keying on the number alone also ate
-// the screen breakpoints, which arrive here at 16x their real size — 768 comes
-// out as 12288 — so they clear 9999 without being sentinels at all. That
-// inflation is a separate, older bug and is deliberately left visible rather
-// than hidden behind this filter.
+// Keyed on the path as well as the value. Keying on the number alone once ate
+// the screen breakpoints, which arrived here at 16x their real size — 768 came
+// out as 12288 — so they cleared 9999 without being sentinels at all. The
+// inflation is fixed (size/kozmos/dp above); the path check stays because a
+// breakpoint is not a radius, whatever its size.
 const isPillSentinel = (token, value) =>
   Number(value) >= PILL_SENTINEL &&
   token.path.some((part) => String(part).toLowerCase().includes("radius"));
@@ -447,38 +485,162 @@ ${dictionary.allTokens
   },
 });
 
+// The native shadow files carry the elevation roles and only the roles. The
+// `shadow.sm` / `md` / `lg` primitives they alias are not emitted: a component
+// reaching past a role for a primitive is how the native platforms drifted to
+// fifteen distinct shadows before the roles existed, and
+// `pnpm tokens:elevation:check` counts what is left. Everything the packages
+// carry — the doc comments, `none`, the SwiftUI modifier — is generated here,
+// so the token sync can copy these files over the packages without losing any
+// of it. Until 2026-09-13 the packages held a hand-enriched copy that the sync
+// would have flattened.
+const ELEVATION_ROLE_DOC = {
+  Raised:
+    "A surface lifted just off the page: cards, list rows. Barely there on purpose — the surface and its border do the work.",
+  Floating:
+    "A control floating over content it does not belong to: map chrome, a search bar over a map, a content card presented on top of the map, a status message.",
+  Overlay:
+    "Above everything, with what is behind it dimmed or ignored: dialogs, drawers, tooltips, popovers, detail panels, and the map panels that take focus.",
+};
+
+function isElevationRole(token) {
+  const isShadow =
+    token.type === "shadow" ||
+    token.$type === "shadow" ||
+    (token.attributes && token.attributes.category === "shadow");
+  return isShadow && token.path.includes("Elevation");
+}
+
+// "{shadow.sm}" → "shadow.sm": what a role aliases, for the file header.
+function aliasOf(token) {
+  const original =
+    token.original &&
+    (token.original.$value !== undefined
+      ? token.original.$value
+      : token.original.value);
+  const match = String(original === undefined ? "" : original)
+    .trim()
+    .match(/^\{(.+)\}$/);
+  return match ? match[1] : null;
+}
+
+// Word-wrap prose for a comment block.
+function wrapWords(text, width) {
+  const lines = [];
+  let line = "";
+  for (const word of text.split(/\s+/)) {
+    if (line && (line + " " + word).length > width) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = line ? line + " " + word : word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+// A shadow is a colour and a geometry, and only the colour follows the theme —
+// dark mode deepens the alpha so a surface still reads as lifted against a dark
+// page. So the geometry must agree between modes, and a token where it does not
+// is refused rather than quietly resolved to the light one. An unparseable
+// value throws for the same reason: this formatter once fell back to a default
+// and shipped one shadow under three names.
+function parseShadow(value, where) {
+  const rgba = String(value).match(
+    /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/,
+  );
+  const dims = String(value)
+    .replace(/rgba?\([^)]*\)/, "")
+    .match(/-?[\d.]+/g);
+  if (!rgba || !dims || dims.length < 3) {
+    throw new Error(`shadows: cannot parse ${where} value "${value}"`);
+  }
+  return {
+    r: parseInt(rgba[1], 10) / 255,
+    g: parseInt(rgba[2], 10) / 255,
+    b: parseInt(rgba[3], 10) / 255,
+    a: parseFloat(rgba[4] === undefined ? "1" : rgba[4]),
+    x: parseFloat(dims[0]),
+    y: parseFloat(dims[1]),
+    blur: parseFloat(dims[2]),
+  };
+}
+
+function elevationRoles(dictionary) {
+  return dictionary.allTokens.filter(isElevationRole).map((token) => {
+    const name = toCamelCase(token.path);
+    const role = token.path[token.path.length - 1];
+    const lightValue = token.value || token.$value;
+    const darkValue =
+      (token.attributes && token.attributes.darkValue) || lightValue;
+    const light = parseShadow(lightValue, `${name} light`);
+    const dark = parseShadow(darkValue, `${name} dark`);
+    if (light.x !== dark.x || light.y !== dark.y || light.blur !== dark.blur) {
+      throw new Error(
+        `shadows: ${name} changes geometry between modes (${lightValue} / ${darkValue}); a role holds one geometry`,
+      );
+    }
+    return {
+      name,
+      role,
+      alias: aliasOf(token),
+      doc: ELEVATION_ROLE_DOC[role] || `The ${role} elevation role.`,
+      light,
+      dark,
+    };
+  });
+}
+
+function aliasList(roles) {
+  return roles
+    .map((r) => r.alias)
+    .filter(Boolean)
+    .map((a) => `\`${a}\``)
+    .join(" / ");
+}
+
 StyleDictionary.registerFormat({
   name: "android-compose/shadows",
   format: ({ dictionary, options }) => {
     const className = options.className || "KozmosShadows";
+    const roles = elevationRoles(dictionary);
+    const aliases = aliasList(roles);
+    const blurs = roles.map((r) => r.light.blur).join(" / ");
+    const header = [
+      ...wrapWords(
+        `The ${roles.length === 3 ? "three " : ""}elevation roles, mirroring \`Semantics.Elevation\` in \`packages/tokens\`${aliases ? ` — which aliases ${aliases} — ` : " "}and which \`pnpm tokens:elevation:check\` holds to these values.`,
+        76,
+      ),
+      "",
+      ...wrapWords(
+        `Compose models a shadow as a single elevation in dp rather than as an offset, blur and alpha, so these carry the blur radius of each role: ${blurs}.`,
+        76,
+      ),
+    ];
+    const members = roles.map((r) => {
+      const doc = wrapWords(r.doc, 72);
+      const comment =
+        doc.length === 1
+          ? `    /** ${doc[0]} */`
+          : `    /** ${doc[0]}\n${doc
+              .slice(1)
+              .map((l) => `     * ${l}`)
+              .join("\n")} */`;
+      return `${comment}\n    val ${r.name} = ${r.light.blur}.dp`;
+    });
     return `// Do not edit directly, this file was auto-generated.
 package com.kozmos.tokens
 
 import androidx.compose.ui.unit.dp
 
+/**
+${header.map((l) => (l ? ` * ${l}` : " *")).join("\n")}
+ */
 object ${className} {
-${dictionary.allTokens
-  .filter(
-    (token) =>
-      token.type === "shadow" ||
-      token.$type === "shadow" ||
-      (token.attributes && token.attributes.category === "shadow"),
-  )
-  .map((token) => {
-    const lightVal = token.value || token.$value;
-    const varName = toCamelCase(token.path);
-
-    const parts = lightVal.split("px");
-    if (parts.length > 2) {
-      let val = parseFloat(parts[1].trim());
-      if (isNaN(val)) val = 4;
-      return "  val " + varName + " = " + val + ".dp";
-    }
-    return "";
-  })
-  .filter(Boolean)
-  .join("\n")}
-}`;
+${members.join("\n\n")}
+}
+`;
   },
 });
 
@@ -486,62 +648,37 @@ StyleDictionary.registerFormat({
   name: "ios-swift/shadows",
   format: ({ dictionary, options }) => {
     const className = options.className || "KozmosShadows";
-    // A shadow is a colour and a geometry, and only the colour follows the
-    // theme — dark mode deepens the alpha so a surface still reads as lifted
-    // against a dark page. So the geometry must agree between modes, and a token
-    // where it does not is refused rather than quietly resolved to the light
-    // one. An unparseable value throws for the same reason: this formatter once
-    // fell back to a default and shipped one shadow under three names.
-    const parse = (value, where) => {
-      const rgba = String(value).match(
-        /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/,
-      );
-      const dims = String(value)
-        .replace(/rgba?\([^)]*\)/, "")
-        .match(/-?[\d.]+/g);
-      if (!rgba || !dims || dims.length < 3) {
-        throw new Error(
-          `ios-swift/shadows: cannot parse ${where} value "${value}"`,
-        );
-      }
-      return {
-        r: parseInt(rgba[1], 10) / 255,
-        g: parseInt(rgba[2], 10) / 255,
-        b: parseInt(rgba[3], 10) / 255,
-        a: parseFloat(rgba[4] === undefined ? "1" : rgba[4]),
-        x: parseFloat(dims[0]),
-        y: parseFloat(dims[1]),
-        blur: parseFloat(dims[2]),
-      };
-    };
+    const roles = elevationRoles(dictionary);
     const tuple = (c) => `(${c.r}, ${c.g}, ${c.b}, ${c.a})`;
-    const lines = dictionary.allTokens
-      .filter(
-        (token) =>
-          token.type === "shadow" ||
-          token.$type === "shadow" ||
-          (token.attributes && token.attributes.category === "shadow"),
-      )
-      .map((token) => {
-        const name = toCamelCase(token.path);
-        const lightValue = token.value || token.$value;
-        const darkValue =
-          (token.attributes && token.attributes.darkValue) || lightValue;
-        const light = parse(lightValue, `${name} light`);
-        const dark = parse(darkValue, `${name} dark`);
-        if (
-          light.x !== dark.x ||
-          light.y !== dark.y ||
-          light.blur !== dark.blur
-        ) {
-          throw new Error(
-            `ios-swift/shadows: ${name} changes geometry between modes (${lightValue} / ${darkValue}); ShadowToken holds one geometry`,
-          );
-        }
-        return `    public static let ${name} = ShadowToken(color: kozmosShadowColor(light: ${tuple(light)}, dark: ${tuple(dark)}), radius: ${light.blur}, x: ${light.x}, y: ${light.y})`;
-      });
-    return `import Foundation
-import CoreGraphics
+    const aliases = aliasList(roles);
+    const lightAlphas = roles.map((r) => r.light.a).join(" / ");
+    const darkAlphas = roles.map((r) => r.dark.a).join(" / ");
+    const doc = (text, indent = "") =>
+      wrapWords(text, 76 - indent.length)
+        .map((l) => `${indent}/// ${l}`)
+        .join("\n");
+    const header = [
+      doc(
+        `The ${roles.length === 3 ? "three " : ""}elevation roles, mirroring \`Semantics.Elevation\` in \`packages/tokens\`${aliases ? ` — which aliases ${aliases} — ` : " "}in both themes. \`pnpm tokens:elevation:check\` holds every number in this file to \`tokens-light.json\` and \`tokens-dark.json\`.`,
+      ),
+      "///",
+      doc(
+        `Dark mode deepens the alpha — ${lightAlphas} becomes ${darkAlphas} — so a surface still reads as lifted against a dark page.`,
+      ),
+    ].join("\n");
+    const members = [
+      `${doc(
+        "Flush: casts nothing. Not a step on the scale — it is what a surface meeting an edge needs, and having it here keeps a conditional at a call site reading as a role rather than reverting to a literal.",
+        "    ",
+      )}
+    public static let none = ShadowToken(color: .clear, radius: 0, x: 0, y: 0)`,
+      ...roles.map(
+        (r) =>
+          `${doc(r.doc, "    ")}
+    public static let ${r.name} = ShadowToken(color: kozmosShadowColor(light: ${tuple(r.light)}, dark: ${tuple(r.dark)}), radius: ${r.light.blur}, x: ${r.light.x}, y: ${r.light.y})`,
+      ),
+    ];
+    return `// Do not edit directly, this file was auto-generated.
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
@@ -549,6 +686,7 @@ import UIKit
 import AppKit
 #endif
 
+${header}
 public struct ShadowToken {
     public let color: Color
     public let radius: CGFloat
@@ -563,8 +701,8 @@ public struct ShadowToken {
     }
 }
 
-/// A shadow colour that follows the appearance: dark mode deepens the alpha so
-/// a surface still reads as lifted against a dark page.
+/// A shadow colour that follows the appearance. Resolved at draw time, so a
+/// \`static let\` built from it still changes when the appearance does.
 func kozmosShadowColor(
     light: (Double, Double, Double, Double),
     dark: (Double, Double, Double, Double)
@@ -585,7 +723,16 @@ func kozmosShadowColor(
 }
 
 public struct ${className} {
-${lines.join("\n")}
+${members.join("\n\n")}
+}
+
+extension View {
+    /// Apply an elevation role. Prefer this over a bare \`.shadow(...)\`: a
+    /// literal is how the platform drifted to fifteen different shadows in the
+    /// first place, and \`pnpm tokens:elevation:check\` counts what is left.
+    public func kozmosElevation(_ token: ShadowToken) -> some View {
+        shadow(color: token.color, radius: token.radius, x: token.x, y: token.y)
+    }
 }
 `;
   },
@@ -700,7 +847,13 @@ async function build() {
       source: ["src/tokens-light.json"],
       platforms: {
         android: {
-          transformGroup: "android",
+          transforms: [
+            "attribute/cti",
+            "name/snake",
+            "color/hex8android",
+            "size/remToSp",
+            "size/kozmos/dp",
+          ],
           buildPath: "dist/android/src/main/res/values/",
           files: [
             {
@@ -719,7 +872,13 @@ async function build() {
       source: ["src/tokens-dark.json"],
       platforms: {
         android: {
-          transformGroup: "android",
+          transforms: [
+            "attribute/cti",
+            "name/snake",
+            "color/hex8android",
+            "size/remToSp",
+            "size/kozmos/dp",
+          ],
           buildPath: "dist/android/src/main/res/values-night/",
           files: [
             {
@@ -759,7 +918,14 @@ async function build() {
       source: ["src/tokens-light.json"],
       platforms: {
         androidCompose: {
-          transformGroup: "compose",
+          transforms: [
+            "attribute/cti",
+            "name/camel",
+            "color/composeColor",
+            "size/compose/em",
+            "size/compose/remToSp",
+            "size/kozmos/composeDp",
+          ],
           buildPath: "dist/android/src/main/java/com/kozmos/tokens/",
           files: [
             {
@@ -784,7 +950,14 @@ async function build() {
       source: ["src/tokens-light.json"],
       platforms: {
         androidCompose: {
-          transformGroup: "compose",
+          transforms: [
+            "attribute/cti",
+            "name/camel",
+            "color/composeColor",
+            "size/compose/em",
+            "size/compose/remToSp",
+            "size/kozmos/composeDp",
+          ],
           buildPath: "dist/android/src/main/java/com/kozmos/tokens/",
           files: [
             {
@@ -807,7 +980,14 @@ async function build() {
       source: ["src/tokens-dark.json"],
       platforms: {
         androidCompose: {
-          transformGroup: "compose",
+          transforms: [
+            "attribute/cti",
+            "name/camel",
+            "color/composeColor",
+            "size/compose/em",
+            "size/compose/remToSp",
+            "size/kozmos/composeDp",
+          ],
           buildPath: "dist/android/src/main/java/com/kozmos/tokens/",
           files: [
             {

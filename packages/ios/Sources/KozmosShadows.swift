@@ -1,3 +1,4 @@
+// Do not edit directly, this file was auto-generated.
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
@@ -6,21 +7,12 @@ import AppKit
 #endif
 
 /// The three elevation roles, mirroring `Semantics.Elevation` in
-/// `packages/tokens` — which aliases `shadow.sm` / `md` / `lg` — in both
-/// themes. `pnpm tokens:elevation:check` holds every number in this file to
-/// `tokens-light.json` and `tokens-dark.json`.
-///
-/// These existed in `packages/tokens/dist/ios/KozmosShadows.swift` from the day
-/// the roles were added, but nothing ever copied them into this package. Every
-/// component therefore hand-wrote its own `.shadow(...)`, and by 2026-09-08
-/// there were twenty-three of them spread across fifteen distinct values — the
-/// exact situation the roles were introduced to end, surviving on the one
-/// platform that could not see them.
+/// `packages/tokens` — which aliases `shadow.sm` / `shadow.md` / `shadow.lg` —
+/// in both themes. `pnpm tokens:elevation:check` holds every number in this
+/// file to `tokens-light.json` and `tokens-dark.json`.
 ///
 /// Dark mode deepens the alpha — 0.05 / 0.1 / 0.1 becomes 0.3 / 0.4 / 0.5 — so
-/// a surface still reads as lifted against a dark page. The first copy of this
-/// file carried the light values only, which left every native shadow close to
-/// invisible in dark mode while the web's followed the theme.
+/// a surface still reads as lifted against a dark page.
 public struct ShadowToken {
     public let color: Color
     public let radius: CGFloat
