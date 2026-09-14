@@ -82,7 +82,7 @@ After that batch is green, build the display/feedback primitives: **Progress**, 
 ## Product / SDK Lane
 
 The **Product / SDK** group in the Components picker builds the map, wayfinding,
-and venue compositions. These are deliberately _not_ Core: `docs/figma-core-gap-audit.md`
+and venue compositions. These are deliberately _not_ Core: `docs/archive/figma-core-gap-audit.md`
 keeps POI cards, wayfinding cards, floor selectors, map controls, and markers out
 of the domain-neutral Core library. They still need canonical Figma nodes so
 Code Connect can link React, SwiftUI, and Compose, so they live in their own

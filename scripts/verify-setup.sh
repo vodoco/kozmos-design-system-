@@ -3,7 +3,7 @@
 echo "🔍 Verifying AI-Driven Setup..."
 
 # 1. Check Root Configs
-for file in package.json turbo.json antigravity.config.yaml pnpm-workspace.yaml tsconfig.base.json; do
+for file in package.json turbo.json pnpm-workspace.yaml tsconfig.base.json; do
   if [ -f "$file" ]; then
     echo "✅ Found $file"
   else
