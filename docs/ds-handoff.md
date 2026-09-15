@@ -62,13 +62,13 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
   section Olcay had dimmed on purpose was nearly "fixed" on 2026-09-13 (§8).
 - A handoff a new chat can start from, whenever the session ends.
 
-## 3 · The system today — measured 2026-09-14
+## 3 · The system today — measured 2026-09-15
 
 | Thing            | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `origin/main`    | `833d013` — every PR through #44 merged. #45, the three defects, is the only one open (`git log -1 origin/main`)                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Open PRs         | **one.** #45, the three defects building an example found — green but for `UI Tests`. Merged 2026-09-15, in order: #37 the MetaStrip painter, #38 the variant analysis made generated, #39 its regeneration, #40 the emotional roles, #41 the icon-children build break, #42 the emotion axis on Tag and Counter, #43 the plugin dropdown, #44 MetaStrip's Code Connect                                                                                                                                                                                                    |
-| Branches         | `origin` carries `main`, `codex/ds-defects` (#45) and `codex/wayfinding-map-panel` — the last is MAP-595's prototype, parked (§9). Everything merged has been deleted                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `origin/main`    | `f08455f` — every PR through #45 merged; this handoff is #46, the only one open (`git log -1 origin/main`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Open PRs         | **one — this one.** #46, the handoff, green but for `UI Tests`. Merged 2026-09-15, in order: #37 the MetaStrip painter, #38 the variant analysis made generated, #39 its regeneration, #40 the emotional roles, #41 the icon-children build break, #42 the emotion axis on Tag and Counter, #43 the plugin dropdown, #44 MetaStrip's Code Connect, #45 the three defects                                                                                                                                                                                                   |
+| Branches         | `origin` carries `main`, `codex/handoff-2026-09-15` (#46) and `codex/wayfinding-map-panel` — the last is MAP-595's prototype, parked (§9). Everything merged has been deleted                                                                                                                                                                                                                                                                                                                                                                                              |
 | Packages         | `@kozmos/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, `publishConfig.access: public`, never published — `npm view @kozmos/react` is a 404 and `git tag` lists nothing                                                                                                                                                                                                                                                                                                                                                                                   |
 | React components | 99 directories in `packages/react/src/components` (`STATUS.md`: **Core 69** · Code-only 5 · Product/SDK 22 · Platform 2; GlassSettingsPanel and `PlatformSnippets.tsx` excluded). MetaStrip is the new one. **Every lane reads full on every platform, Code Connect included**                                                                                                                                                                                                                                                                                             |
 | Figma            | `Kozmos DS - Core Library` `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, MetaStrip `1890:8911`. `pnpm figma:verify` on 2026-09-15: **95 of 95 sets**, presence and variant drift clean, and the file matches what the importer would generate. **Build coverage 71 of 95** on the current build (`dd9f78a05cc0`) after Olcay ran Update All Core; the 24 still on `3e597100b157` are exactly the Product / SDK lane, and `Update All Product SDK` is what moves them. Two standing findings: **5 children overflow their box** and **29 icons are typed as characters** |
@@ -237,13 +237,13 @@ unblocking ones first.
   first); Link and Spinner each miss a variant axis on iOS and Android; `packages/icons` renders
   different artwork from Figma and is too small for the revamp — resolve before extending.
 - **A11y and tests:** the a11y spec is thin and coverage has no threshold (gap audit §8).
-- **Three defects that only building an example found** (2026-09-14, §11.1), none of them recorded
-  anywhere before: `ScrollArea` sets `h-full` on both of its wrappers, so a horizontal strip inside
-  an auto-height column resolves to height 0 and vanishes; a component's radius role cannot be
-  overridden from outside, because `cn`'s tailwind-merge does not know the design system's custom
-  radius names, so `rounded-pill` and `rounded-control` both survive and CSS order decides; and
-  `BottomSheetContent` leaves the sheet unlabelled unless the caller reaches for `BottomSheetTitle`,
-  which a `Heading` type-checks beside and does not satisfy.
+- ~~Three defects that only building an example found~~ (2026-09-14, §11.1) — **fixed in #45.**
+  `ScrollArea` set `h-full` on both of its wrappers, so a horizontal strip inside an auto-height
+  column resolved to height 0 and vanished; a component's radius role could not be overridden from
+  outside, because `cn`'s tailwind-merge did not know the design system's custom radius names, so
+  `rounded-pill` and `rounded-control` both survived and CSS order decided; and `BottomSheetContent`
+  left the sheet unlabelled unless the caller reached for `BottomSheetTitle`, which a `Heading`
+  type-checks beside and does not satisfy.
 
 ### 4.5 · Get ready for npm publish
 
@@ -490,7 +490,7 @@ outline button, a destructive shade, colour scopes for text, strokes and icons, 
 dashboard's v9 library publishes only `listItem`, and ~228 PDS / Pointr bindings still pointing at
 the unpublished "Primitive Tokens" collection.
 
-## 10 · The log, 2026-09-13 and 2026-09-14
+## 10 · The log, 2026-09-13 to 2026-09-15
 
 ### 2026-09-13
 
@@ -635,7 +635,7 @@ today was something that rebuild had found.
    `1890:8911`, four variants, verified against what the painter intended before anything was
    pinned to it. **Core reached 69/69 in every column.** The first attempt's dry-runs passed without
    parsing MetaStrip at all.
-8. **#45, the three defects** — open, green. `cn` could not resolve the design system's own radius
+8. **#45, the three defects** (`f08455f`). `cn` could not resolve the design system's own radius
    or elevation roles, so a caller's `rounded-control` was silently ignored; `ScrollArea` collapsed
    to zero height when it scrolled sideways; `BottomSheetContent` shipped an unnamed dialog.
 
@@ -736,7 +736,7 @@ Hearts** under one name, which is why §6.3 exists.
 **Everything it found is now built, 2026-09-15.** `MetaStrip` is a Core component on all three
 platforms with a painted Figma set (`1890:8911`) and linked Code Connect — 69/69. Opening hours is a
 Product / SDK example. The icon set carries the 13 glyphs it needed. `Tag` and `Counter` express the
-`emotion` axis, reading `Semantics.Emotion`. The three defects it exposed are #45.
+`emotion` axis, reading `Semantics.Emotion`. The three defects it exposed are #45, merged.
 
 **Still open from it:** the accessibility facility glyph (§6.5), the payment brand marks (§6.4), and
 its Figma counterpart on the `Examples` page (`286:1601`), which §5.8 says the plugin paints and
