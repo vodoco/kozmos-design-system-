@@ -22,12 +22,23 @@ const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(
     return (
       <div
         ref={ref}
-        className={cn("relative overflow-hidden w-full h-full", className)}
+        className={cn(
+          "relative w-full overflow-hidden",
+          // A vertical scroller needs a bounded height or it has nothing to
+          // scroll. A horizontal one does not, and assuming `h-full` for both
+          // meant that inside an auto-height column — a `Stack`, say — the
+          // height resolved to 0 and the content vanished. Found while
+          // rebuilding the SDK's POI detail card, whose action row scrolls
+          // sideways and disappeared entirely.
+          orientation !== "horizontal" && "h-full",
+          className,
+        )}
         {...props}
       >
         <div
           className={cn(
-            "h-full w-full rounded-[inherit] outline-none",
+            "w-full rounded-[inherit] outline-none",
+            orientation !== "horizontal" && "h-full",
             orientation === "vertical" && "overflow-y-auto overflow-x-hidden",
             orientation === "horizontal" &&
               "overflow-x-auto overflow-y-hidden text-nowrap",

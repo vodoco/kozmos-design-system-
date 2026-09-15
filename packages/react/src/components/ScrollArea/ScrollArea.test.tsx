@@ -43,4 +43,33 @@ describe("ScrollArea", () => {
       "snap-mandatory",
     );
   });
+
+  /**
+   * The defect: both wrappers carried `h-full`, so a horizontal strip inside an
+   * auto-height parent resolved to height 0 and its content disappeared.
+   */
+  it("does not claim a height when it scrolls sideways", () => {
+    const { container } = render(
+      <ScrollArea orientation="horizontal">Row</ScrollArea>,
+    );
+    const outer = container.firstElementChild as HTMLElement;
+    expect(outer).not.toHaveClass("h-full");
+    expect(outer.firstElementChild).not.toHaveClass("h-full");
+  });
+
+  it("still claims a height when it scrolls vertically", () => {
+    const { container } = render(
+      <ScrollArea orientation="vertical">Column</ScrollArea>,
+    );
+    const outer = container.firstElementChild as HTMLElement;
+    expect(outer).toHaveClass("h-full");
+    expect(outer.firstElementChild).toHaveClass("h-full");
+  });
+
+  it("claims a height when it scrolls both ways", () => {
+    const { container } = render(
+      <ScrollArea orientation="both">Grid</ScrollArea>,
+    );
+    expect(container.firstElementChild).toHaveClass("h-full");
+  });
 });
