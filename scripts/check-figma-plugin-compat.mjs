@@ -4,6 +4,7 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const PLUGIN_MAIN = path.join(ROOT, "figma/foundations-importer/code.js");
+const PLUGIN_UI = path.join(ROOT, "figma/foundations-importer/ui.html");
 
 const syntaxCheck = spawnSync(process.execPath, ["--check", PLUGIN_MAIN], {
   stdio: "inherit",
@@ -114,6 +115,41 @@ if (failures.length > 0) {
   console.error("Figma plugin compatibility check failed:");
   for (const failure of failures) {
     console.error(`- ${failure.label}: ${failure.reason}`);
+  }
+  process.exit(1);
+}
+
+/**
+ * Every component a person can pick must be one the plugin knows how to build,
+ * and every component it knows how to build must be pickable.
+ *
+ * `ui.html` says the same thing twice: a `<select>` of `<option>` values, and a
+ * registry keyed by the same names carrying each one's build, update and
+ * rebuild messages. MetaStrip's painter landed in the registry and not in the
+ * select, so it was fully wired, stamped, verified — and absent from the only
+ * menu that can start it. Nothing caught that, because everything else checks
+ * the half that was right.
+ */
+const ui = fs.readFileSync(PLUGIN_UI, "utf8");
+const optionKeys = new Set(
+  [...ui.matchAll(/<option value="([A-Za-z0-9]+)"/g)].map((match) => match[1]),
+);
+const registryKeys = new Set(
+  [...ui.matchAll(/([A-Za-z][A-Za-z0-9]*):\s*\{\s*\n\s*label:[^\n]*\n\s*build:/g)].map(
+    (match) => match[1],
+  ),
+);
+
+const notPickable = [...registryKeys].filter((key) => !optionKeys.has(key));
+const notBuildable = [...optionKeys].filter((key) => !registryKeys.has(key));
+
+if (notPickable.length > 0 || notBuildable.length > 0) {
+  console.error("Figma plugin menu check failed:");
+  for (const key of notPickable) {
+    console.error(`- ${key}: has build/update/rebuild actions but no <option>, so nobody can select it.`);
+  }
+  for (const key of notBuildable) {
+    console.error(`- ${key}: is in the dropdown but has no actions behind it.`);
   }
   process.exit(1);
 }
