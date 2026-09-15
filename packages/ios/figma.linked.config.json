@@ -61,6 +61,8 @@
       "Sources/Components/Card/Card.swift",
       "Sources/Components/List/List.figma.swift",
       "Sources/Components/List/List.swift",
+      "Sources/Components/MetaStrip/MetaStrip.figma.swift",
+      "Sources/Components/MetaStrip/MetaStrip.swift",
       "Sources/Components/Listbox/Listbox.figma.swift",
       "Sources/Components/Listbox/Listbox.swift",
       "Sources/Components/Table/Table.figma.swift",
