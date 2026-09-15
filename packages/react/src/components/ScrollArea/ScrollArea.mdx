@@ -1,5 +1,5 @@
-import { Meta, Story, Canvas, Source } from '@storybook/blocks';
-import * as ScrollAreaStories from './ScrollArea.stories';
+import { Meta, Story, Canvas, Source } from "@storybook/blocks";
+import * as ScrollAreaStories from "./ScrollArea.stories";
 
 <Meta of={ScrollAreaStories} />
 
@@ -30,7 +30,7 @@ intentional in the variant analyzer rather than treated as a parity gap.
 
 ## Implementation
 
-import { PlatformSnippets } from '../PlatformSnippets';
+import { PlatformSnippets } from "../PlatformSnippets";
 
 <div className="subheading">Platform Code</div>
 
@@ -39,10 +39,11 @@ import { PlatformSnippets } from '../PlatformSnippets';
 import { ScrollArea } from '@kozmos/react';
 
 <ScrollArea orientation="horizontal" style={{ maxWidth: 480 }}>
-  <div style={{ display: 'flex', gap: 8 }}>{categories}</div>
+  <div style={{ display: "flex", gap: 8 }}>{categories}</div>
 </ScrollArea>
 
 // Vertical pane with snapping (web only)
+
 <ScrollArea orientation="vertical" snap="y" style={{ height: 320 }}>
   {items}
 </ScrollArea>
@@ -65,17 +66,17 @@ import SwiftUI
 import Kozmos
 
 struct QuickAccess: View {
-    var body: some View {
-        KozmosScrollArea(
-            orientation: .horizontal,
-            showsIndicators: false,
-            maxWidth: 480
-        ) {
-            HStack(spacing: 8) { categories }
-        }
-    }
+var body: some View {
+KozmosScrollArea(
+orientation: .horizontal,
+showsIndicators: false,
+maxWidth: 480
+) {
+HStack(spacing: 8) { categories }
 }
-  `}
+}
+}
+`}
   kotlin={`
 package com.kozmos.example
 
@@ -85,13 +86,13 @@ import com.kozmos.components.scrollarea.KozmosScrollAreaOrientation
 
 @Composable
 fun QuickAccess() {
-    KozmosScrollArea(
-        orientation = KozmosScrollAreaOrientation.Horizontal
-    ) {
-        Categories()
-    }
+KozmosScrollArea(
+orientation = KozmosScrollAreaOrientation.Horizontal
+) {
+Categories()
 }
-  `}
+}
+`}
 />
 
 ## Accessibility
@@ -106,7 +107,9 @@ fun QuickAccess() {
 ## Stories
 
 ### Horizontal Quick Access
+
 <Canvas of={ScrollAreaStories.HorizontalQuickAccess} />
 
 ### Vertical Content
+
 <Canvas of={ScrollAreaStories.VerticalContent} />
