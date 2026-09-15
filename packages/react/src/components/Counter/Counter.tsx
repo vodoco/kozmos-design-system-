@@ -1,6 +1,11 @@
 import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../utils";
+import {
+  EMOTION_FILLED_CLASSES,
+  emotionSurfaceProperties,
+  type Emotion,
+} from "../../utils/emotion";
 
 export const counterVariants = cva(
   "inline-flex items-center justify-center rounded-pill font-semibold leading-none tabular-nums",
@@ -28,7 +33,18 @@ export const counterVariants = cva(
 export interface CounterProps
   extends
     React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof counterVariants> {}
+    VariantProps<typeof counterVariants> {
+  /**
+   * What the count means. Leave it unset and `tone` renders exactly as it
+   * always has. Set it and the emotion decides the colour — a counter is
+   * always a filled pill, so there is one treatment rather than two.
+   *
+   * The product drives this axis on 9,427 counter instances across 11
+   * surfaces. `tone` stays for the two values that are not emotions at all:
+   * `inverse`, and a `brand` that predates the axis.
+   */
+  emotion?: Emotion;
+}
 
 export function formatCounterValue(value: React.ReactNode) {
   if (typeof value !== "string" && typeof value !== "number") {
@@ -44,11 +60,19 @@ export function formatCounterValue(value: React.ReactNode) {
 }
 
 export const Counter = React.forwardRef<HTMLSpanElement, CounterProps>(
-  ({ children, className, tone, size, ...props }, ref) => (
+  ({ children, className, tone, size, emotion, style, ...props }, ref) => (
     <span
       ref={ref}
-      className={cn(counterVariants({ tone, size, className }))}
+      className={cn(
+        counterVariants({ tone, size }),
+        emotion && EMOTION_FILLED_CLASSES,
+        className,
+      )}
       data-slot="counter"
+      // The caller's own style wins over the emotion's defaults.
+      style={
+        emotion ? { ...emotionSurfaceProperties(emotion), ...style } : style
+      }
       {...props}
     >
       {formatCounterValue(children)}

@@ -2,6 +2,12 @@ import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../utils";
 import { X } from "lucide-react";
+import {
+  EMOTION_FILLED_CLASSES,
+  EMOTION_OUTLINE_CLASSES,
+  emotionSurfaceProperties,
+  type Emotion,
+} from "../../utils/emotion";
 import { useKozmosAnalytics } from "../../utils/analytics";
 
 const tagVariants = cva(
@@ -29,15 +35,39 @@ export interface TagProps
     React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof tagVariants> {
   onRemove?: () => void;
+  /**
+   * What the tag means. Leave it unset and the variant renders exactly as it
+   * always has. Set it and the emotion decides the colour: `outline` becomes
+   * the emotion as text with a matching edge, and every other variant becomes
+   * the emotion's filled pair.
+   *
+   * The product drives this axis on 33,988 tag instances across 10 surfaces
+   * and Kozmos could express none of it before now.
+   */
+  emotion?: Emotion;
 }
 
 const Tag = React.forwardRef<HTMLDivElement, TagProps>(
-  ({ className, variant, onRemove, children, ...props }, ref) => {
+  (
+    { className, variant, emotion, onRemove, children, style, ...props },
+    ref,
+  ) => {
     const { trackEvent } = useKozmosAnalytics();
+    const emotionClasses = emotion
+      ? variant === "outline"
+        ? EMOTION_OUTLINE_CLASSES
+        : EMOTION_FILLED_CLASSES
+      : undefined;
+
     return (
       <div
         ref={ref}
-        className={cn(tagVariants({ variant }), className)}
+        className={cn(tagVariants({ variant }), emotionClasses, className)}
+        // The caller's own style wins: these are a default the emotion sets,
+        // not something the component insists on.
+        style={
+          emotion ? { ...emotionSurfaceProperties(emotion), ...style } : style
+        }
         {...props}
       >
         {children}

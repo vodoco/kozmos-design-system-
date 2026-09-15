@@ -35,3 +35,21 @@ export const Destructive: Story = {
     tone: "destructive",
   },
 };
+
+/**
+ * The six emotions. A counter is always a filled pill, so there is one
+ * treatment rather than two. `tone` stays for `inverse`, which is not an
+ * emotion at all.
+ */
+export const Emotions: Story = {
+  render: () => (
+    <div className="flex items-center gap-2">
+      <Counter emotion="neutral">8</Counter>
+      <Counter emotion="themed">12</Counter>
+      <Counter emotion="success">3</Counter>
+      <Counter emotion="danger">99</Counter>
+      <Counter emotion="informative">5</Counter>
+      <Counter emotion="alert">41</Counter>
+    </div>
+  ),
+};

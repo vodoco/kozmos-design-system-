@@ -16,15 +16,21 @@ public struct KozmosCounter: View {
     let text: String
     let tone: KozmosCounterTone
     let size: KozmosCounterSize
+    /// Unset and `tone` draws as it always has; set and the emotion decides
+    /// the colour. A counter is always a filled pill, so there is one
+    /// treatment rather than two.
+    let emotion: KozmosEmotion?
 
     public init(
         _ text: String,
         tone: KozmosCounterTone = .neutral,
-        size: KozmosCounterSize = .default
+        size: KozmosCounterSize = .default,
+        emotion: KozmosEmotion? = nil
     ) {
         self.text = text
         self.tone = tone
         self.size = size
+        self.emotion = emotion
     }
 
     public var body: some View {
@@ -34,8 +40,8 @@ public struct KozmosCounter: View {
             .lineLimit(1)
             .padding(.horizontal, horizontalPadding)
             .frame(minWidth: minWidth, minHeight: height)
-            .background(backgroundColor)
-            .foregroundColor(foregroundColor)
+            .background(emotion?.surface ?? backgroundColor)
+            .foregroundColor(emotion?.onSurface ?? foregroundColor)
             .clipShape(Capsule())
     }
 
