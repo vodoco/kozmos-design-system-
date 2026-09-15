@@ -1804,6 +1804,13 @@
           rebuild: "rebuild-floating-action-button",
           hint: "Build creates FloatingActionButton with Variant, Size, and State axes plus an Icon instance-swap slot. Placement belongs to consuming layouts. Update preserves its future Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
+        metaStrip: {
+          label: "MetaStrip",
+          build: "build-meta-strip",
+          update: "update-meta-strip",
+          rebuild: "rebuild-meta-strip",
+          hint: "Build creates MetaStrip with Label and Icon axes: a row of small facts, each a label and a value, drawn as three editable tiles. Label maps to MetaStripItem.showLabel and Icon to whether a tile carries a leading glyph. Update preserves the node ID Code Connect pins; Rebuild mints a new one.",
+        },
         counter: {
           label: "Counter",
           build: "build-counter",

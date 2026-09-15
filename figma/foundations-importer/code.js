@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "6cf5b38fff51";
+const PLUGIN_BUILD = "dd9f78a05cc0";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -143,6 +143,8 @@ const TREE_ITEM_DEPTHS = ["0", "1", "2"];
 const TIMELINE_CONTENT = ["Basic", "Detailed"];
 const TIMELINE_DENSITIES = ["Default", "Compact"];
 const BREADCRUMB_CONTENT = ["Basic", "Ellipsis"];
+const META_STRIP_LABELS = ["Hidden", "Shown"];
+const META_STRIP_ICONS = ["None", "Leading"];
 const ACCORDION_STATES = ["Closed", "Open"];
 const TAG_VARIANTS = ["Default", "Secondary", "Destructive", "Outline"];
 const TAG_REMOVABLE = ["False", "True"];
@@ -827,6 +829,7 @@ const COMPONENT_PAGE_LAYOUT_SECTIONS = [
     title: "Data display",
     components: [
       "List",
+      "MetaStrip",
       "Table",
       "TreeParentItem",
       "TreeChildItem",
@@ -4256,6 +4259,20 @@ const COMPONENT_FLOAT_TOKENS = [
     alias: "Border Width/sm",
     scopes: ["STROKE_FLOAT"],
   },
+  { name: "MetaStrip/height", value: 64, scopes: ["WIDTH_HEIGHT"] },
+  { name: "MetaStrip/tile/min-width", value: 128, scopes: ["WIDTH_HEIGHT"] },
+  {
+    name: "MetaStrip/tile/padding/x",
+    value: 16,
+    alias: "Layout/spacing/200",
+    scopes: ["GAP"],
+  },
+  { name: "MetaStrip/tile/gap", value: 2, scopes: ["GAP"] },
+  { name: "MetaStrip/value/font-size", value: 16, scopes: ["FONT_SIZE"] },
+  { name: "MetaStrip/value/line-height", value: 24, scopes: ["LINE_HEIGHT"] },
+  { name: "MetaStrip/label/font-size", value: 12, scopes: ["FONT_SIZE"] },
+  { name: "MetaStrip/label/line-height", value: 16, scopes: ["LINE_HEIGHT"] },
+  { name: "MetaStrip/divider/width", value: 1, scopes: ["STROKE_FLOAT"] },
   { name: "Counter/height/small", value: 18, scopes: ["WIDTH_HEIGHT"] },
   { name: "Counter/height/default", value: 20, scopes: ["WIDTH_HEIGHT"] },
   { name: "Counter/min-width/small", value: 18, scopes: ["WIDTH_HEIGHT"] },
@@ -9395,6 +9412,7 @@ const CORE_UPDATE_SEQUENCE = [
   ["Link", updateLinkComponent],
   ["Label", updateLabelComponent],
   ["Separator", updateSeparatorComponent],
+  ["MetaStrip", updateMetaStripComponent],
   ["Skeleton", updateSkeletonComponent],
   ["Box", updateBoxComponent],
   ["Stack", updateStackComponent],
@@ -9639,6 +9657,9 @@ async function updateAllCoreComponents() {
 
 function additionalComponentActionHandlers() {
   return {
+    "build-meta-strip": buildMetaStripComponent,
+    "update-meta-strip": updateMetaStripComponent,
+    "rebuild-meta-strip": rebuildMetaStripComponent,
     "build-tag": buildTagComponent,
     "update-tag": updateTagComponent,
     "rebuild-tag": rebuildTagComponent,
@@ -16490,6 +16511,13 @@ function expectedVariantAxesForComponentSetName(name) {
     };
   }
 
+  if (canonicalName === "MetaStrip") {
+    return {
+      Label: META_STRIP_LABELS,
+      Icon: META_STRIP_ICONS,
+    };
+  }
+
   if (canonicalName === "Breadcrumb") {
     return {
       Content: BREADCRUMB_CONTENT,
@@ -22712,6 +22740,22 @@ function addComponentTextStyleSpecs(specs, fonts) {
     fonts.regular,
     14,
     20,
+  );
+  addTextStyleSpec(
+    specs,
+    "metaStripValue",
+    "MetaStrip / Value",
+    fonts.medium,
+    16,
+    24,
+  );
+  addTextStyleSpec(
+    specs,
+    "metaStripLabel",
+    "MetaStrip / Label",
+    fonts.regular,
+    12,
+    16,
   );
   addTextStyleSpec(
     specs,
@@ -36466,6 +36510,374 @@ async function rebuildTimelineComponent() {
     componentName: "Timeline",
     componentSetName: "Timeline",
     build: buildTimelineComponent,
+  });
+}
+
+/**
+ * MetaStrip: a row of small facts, each a label and a value.
+ *
+ * The axes mirror the React API rather than inventing a Figma-only one. `Label`
+ * is `MetaStripItem.showLabel` and `Icon` is its `icon` prop; the strip itself
+ * has no axis, so a variant is three tiles drawn the same way and edited in
+ * place. Measured from the SDK's POI detail card, node `241:4772`.
+ */
+const META_STRIP_SAMPLE_TILES = [
+  { value: "12 min", label: "Travel time" },
+  { value: "210 m", label: "Distance" },
+  { value: "4.5", label: "Rating" },
+];
+
+function metaStripVariantCombinations() {
+  const combinations = [];
+  for (const label of META_STRIP_LABELS) {
+    for (const icon of META_STRIP_ICONS) {
+      combinations.push({ label, icon });
+    }
+  }
+  return combinations;
+}
+
+function metaStripVariantKey(props) {
+  return `${props.label}/${props.icon}`;
+}
+
+function parseMetaStripVariantName(name) {
+  const values = parseVariantValueMap(name);
+  if (
+    META_STRIP_LABELS.indexOf(values.Label) === -1 ||
+    META_STRIP_ICONS.indexOf(values.Icon) === -1
+  ) {
+    return null;
+  }
+  return { label: values.Label, icon: values.Icon };
+}
+
+async function createMetaStripVariant({
+  props,
+  variableByName,
+  fonts,
+  stats,
+}) {
+  const component = figma.createComponent();
+  await updateMetaStripVariant(component, {
+    props,
+    variableByName,
+    fonts,
+    stats,
+  });
+  return component;
+}
+
+async function updateMetaStripVariant(
+  component,
+  { props, variableByName, fonts, stats },
+) {
+  const showLabel = props.label === "Shown";
+  const withIcon = props.icon === "Leading";
+
+  component.name = `Label=${props.label}, Icon=${props.icon}`;
+  component.layoutMode = "HORIZONTAL";
+  component.primaryAxisSizingMode = "AUTO";
+  component.counterAxisSizingMode = "FIXED";
+  component.primaryAxisAlignItems = "MIN";
+  component.counterAxisAlignItems = "CENTER";
+  component.itemSpacing = 0;
+  component.paddingLeft = 0;
+  component.paddingRight = 0;
+  component.paddingTop = 0;
+  component.paddingBottom = 0;
+  component.resizeWithoutConstraints(384, 64);
+  component.cornerRadius = 0;
+  component.clipsContent = true;
+  component.setSharedPluginData(RUN_NAMESPACE, "kind", "component-variant");
+  component.setSharedPluginData(RUN_NAMESPACE, "component", "MetaStrip");
+
+  component.fills = [
+    paintFromVariable("Surface/0", "#FFFFFF", variableByName, stats),
+  ];
+  // The edge and the dividers are the same role, which is what makes the strip
+  // read as one object rather than a row of cards.
+  component.strokes = [
+    paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
+  ];
+  component.strokeWeight = 1;
+  component.strokeTopWeight = 1;
+  component.strokeBottomWeight = 1;
+  component.strokeLeftWeight = 0;
+  component.strokeRightWeight = 0;
+
+  bindFloatVariable(
+    component,
+    "height",
+    "MetaStrip/height",
+    variableByName,
+    stats,
+  );
+
+  removeDirectChildren(component);
+
+  let index = 0;
+  for (const tile of META_STRIP_SAMPLE_TILES) {
+    if (index > 0) {
+      const divider = figma.createRectangle();
+      divider.name = "Divider";
+      divider.resizeWithoutConstraints(1, 64);
+      divider.fills = [
+        paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
+      ];
+      component.appendChild(divider);
+      // FILL throws outside an auto-layout parent, so it is set through the
+      // guarded helper and only once the divider is inside the strip.
+      setLayoutSizingVertical(divider, "FILL");
+      bindFloatVariable(
+        divider,
+        "width",
+        "MetaStrip/divider/width",
+        variableByName,
+        stats,
+      );
+    }
+
+    const tileFrame = await createMetaStripTile({
+      tile,
+      index,
+      showLabel,
+      withIcon,
+      variableByName,
+      fonts,
+      stats,
+    });
+    component.appendChild(tileFrame);
+    setLayoutSizingVertical(tileFrame, "FILL");
+    index += 1;
+  }
+}
+
+/**
+ * One tile. The value sits above the label, which is the order the source
+ * draws and the order the React component renders — there the markup is
+ * `dt` then `dd` so a screen reader pairs them, and CSS turns it round.
+ * Figma has no such obligation, so the drawing order is the reading order.
+ */
+async function createMetaStripTile({
+  tile,
+  index,
+  showLabel,
+  withIcon,
+  variableByName,
+  fonts,
+  stats,
+}) {
+  const frame = figma.createFrame();
+  frame.name = `Tile ${index + 1}`;
+  frame.layoutMode = "VERTICAL";
+  frame.primaryAxisSizingMode = "FIXED";
+  frame.counterAxisSizingMode = "AUTO";
+  frame.primaryAxisAlignItems = "CENTER";
+  frame.counterAxisAlignItems = "CENTER";
+  frame.itemSpacing = 2;
+  frame.paddingLeft = 16;
+  frame.paddingRight = 16;
+  frame.paddingTop = 0;
+  frame.paddingBottom = 0;
+  frame.resizeWithoutConstraints(128, 64);
+  // Vertical sizing is set by the caller, once the tile is inside the strip.
+  frame.fills = [];
+
+  // Counter declares a min-width token and applies it the same way: the field
+  // takes a value, not a binding, so a bound variable here would be dropped.
+  setNodePropertyIfSupported(frame, "minWidth", 128);
+  bindFloatVariable(
+    frame,
+    "itemSpacing",
+    "MetaStrip/tile/gap",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    frame,
+    "paddingLeft",
+    "MetaStrip/tile/padding/x",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    frame,
+    "paddingRight",
+    "MetaStrip/tile/padding/x",
+    variableByName,
+    stats,
+  );
+
+  const valueRow = figma.createFrame();
+  valueRow.name = "Value Row";
+  valueRow.layoutMode = "HORIZONTAL";
+  valueRow.primaryAxisSizingMode = "AUTO";
+  valueRow.counterAxisSizingMode = "AUTO";
+  valueRow.counterAxisAlignItems = "CENTER";
+  valueRow.itemSpacing = 4;
+  valueRow.fills = [];
+
+  if (withIcon) {
+    // A real instance of the library's icon component, so the tile swaps with
+    // the set rather than carrying a drawing of its own.
+    const iconComponent = await resolveDefaultIconSourceComponent(
+      variableByName,
+      stats,
+    );
+    if (iconComponent) {
+      const icon = createIconSlotInstance(
+        iconComponent,
+        "Colors/foreground/400",
+        "#5D626F",
+        variableByName,
+        stats,
+        16,
+      );
+      valueRow.appendChild(icon);
+      setHugChildSizing(icon);
+    } else {
+      stats.warnings = stats.warnings || [];
+      stats.warnings.push(
+        "MetaStrip: no icon source component in the file, so the Leading variants have no glyph.",
+      );
+    }
+  }
+
+  const value = figma.createText();
+  value.name = `Value ${index + 1}`;
+  value.fontName = fonts.medium;
+  value.fontSize = 16;
+  value.lineHeight = { unit: "PIXELS", value: 24 };
+  value.textAutoResize = "WIDTH_AND_HEIGHT";
+  value.characters = tile.value;
+  value.fills = [
+    paintFromVariable("Colors/foreground/0", "#000000", variableByName, stats),
+  ];
+  await applyTextStyleToNodeAsync(value, "metaStripValue", stats);
+  bindFloatVariable(
+    value,
+    "fontSize",
+    "MetaStrip/value/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    value,
+    "lineHeight",
+    "MetaStrip/value/line-height",
+    variableByName,
+    stats,
+  );
+  valueRow.appendChild(value);
+  frame.appendChild(valueRow);
+
+  const label = figma.createText();
+  label.name = `Label ${index + 1}`;
+  label.fontName = fonts.regular;
+  label.fontSize = 12;
+  label.lineHeight = { unit: "PIXELS", value: 16 };
+  label.textAutoResize = "WIDTH_AND_HEIGHT";
+  label.characters = tile.label;
+  label.visible = showLabel;
+  label.fills = [
+    paintFromVariable(
+      "Colors/foreground/400",
+      "#5D626F",
+      variableByName,
+      stats,
+    ),
+  ];
+  await applyTextStyleToNodeAsync(label, "metaStripLabel", stats);
+  bindFloatVariable(
+    label,
+    "fontSize",
+    "MetaStrip/label/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    label,
+    "lineHeight",
+    "MetaStrip/label/line-height",
+    variableByName,
+    stats,
+  );
+  frame.appendChild(label);
+
+  return frame;
+}
+
+function layoutMetaStripVariants(componentSet) {
+  if (!componentSet || !componentSet.children) return;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const props = parseMetaStripVariantName(child.name);
+    if (!props) continue;
+    child.x = META_STRIP_ICONS.indexOf(props.icon) * 432;
+    child.y = META_STRIP_LABELS.indexOf(props.label) * 104;
+  }
+
+  resizeComponentSetToContainChildren(componentSet);
+}
+
+function configureMetaStripProperties(componentSet, stats) {
+  for (let index = 0; index < META_STRIP_SAMPLE_TILES.length; index += 1) {
+    const tile = META_STRIP_SAMPLE_TILES[index];
+    configureNamedTextProperty(
+      componentSet,
+      `Value ${index + 1}`,
+      `Value ${index + 1}`,
+      tile.value,
+      stats,
+    );
+    configureNamedTextProperty(
+      componentSet,
+      `Label ${index + 1}`,
+      `Label ${index + 1}`,
+      tile.label,
+      stats,
+    );
+  }
+}
+
+function metaStripComponentConfig() {
+  return {
+    componentName: "MetaStrip",
+    componentSetName: "MetaStrip",
+    x: 80,
+    y: 19200,
+    combinations: metaStripVariantCombinations,
+    keyForProps: metaStripVariantKey,
+    parseVariantName: parseMetaStripVariantName,
+    createVariant: createMetaStripVariant,
+    updateVariant: updateMetaStripVariant,
+    layoutVariants: layoutMetaStripVariants,
+    configureProperties: configureMetaStripProperties,
+    description: [
+      "Kozmos MetaStrip component set generated from React MetaStrip API.",
+      "Label maps to MetaStripItem.showLabel.",
+      "Icon maps to whether a MetaStripItem carries a leading icon.",
+      "Value and Label text map to MetaStripItem children and label in Code Connect.",
+      "The strip scrolls horizontally in code; a variant shows three tiles.",
+    ],
+  };
+}
+
+function buildMetaStripComponent() {
+  return buildPlannedMatrixComponent(metaStripComponentConfig());
+}
+
+function updateMetaStripComponent() {
+  return updatePlannedMatrixComponent(metaStripComponentConfig());
+}
+
+async function rebuildMetaStripComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "MetaStrip",
+    componentSetName: "MetaStrip",
+    build: buildMetaStripComponent,
   });
 }
 
