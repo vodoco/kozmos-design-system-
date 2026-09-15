@@ -1,9 +1,9 @@
 # Kozmos design system — handoff for the next session
 
-Written 2026-09-13, refreshed 2026-09-14 after that day's five merges (§10). It carries the verified
-facts of the 2026-09-12 and 2026-09-13 versions forward; every number here was read from the repo,
-GitHub, npm or the Figma REST API on 2026-09-14 by the command shown beside it, unless marked "last
-measured".
+Written 2026-09-13, refreshed 2026-09-15 after that day's eight merges (§10). It carries the
+verified facts of the 2026-09-12 to 2026-09-14 versions forward; every number here was read from the
+repo, GitHub, npm or the Figma REST API on 2026-09-15 by the command shown beside it, unless marked
+"last measured".
 
 ## 0 · Start here
 
@@ -16,9 +16,9 @@ Paste this as the first message of the new chat:
 > MAP-595 and `apps/mapscale-review` are parked — do not work on them unless asked in so many words.
 > The work now is §11: Olcay shares the SDK's current components, and each one is rebuilt as an
 > example using Kozmos components only. Where that cannot be done, it is reported and asked about,
-> never worked around. The first component is done (§11.1) and the next piece of work is the two
-> parts it found missing — a Core `MetaStrip` and an opening-hours example. §4.1 and §4.2 are done
-> and §6 is all but empty; read §11 first, then §4.3.
+> never worked around. The first component is done and everything it found is built (§11.1). The
+> next piece of work is either the next SDK component — which needs Olcay to name one — or the
+> queue in §6.3. §4.1 and §4.2 are done; read §11 first, then §4.3.
 
 Read order: this file → `docs/ds-scope-2026-09-12.md` → `docs/style-playbook.md` →
 `docs/gap-audit-2026-09-05.md` → the memory files in §8. `docs/session-handoff.md` is the long
@@ -64,21 +64,21 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
 
 ## 3 · The system today — measured 2026-09-14
 
-| Thing            | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `origin/main`    | `da0a312` — every PR through #28 merged, except #17, which was closed (`git log -1 origin/main`)                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Open PRs         | **two.** #31, the product UI scan and the twelve rulings it produced (docs only). #32, the `emotion` axis on `Button` across React, SwiftUI and Compose. Both green on every check but `UI Tests`, which is Chromatic's limit and pends on every PR. Merged 2026-09-14 before them: #24 to #30                                                                                                                                                                                                                                              |
-| Branches         | `origin` carries **`main` and `codex/wayfinding-map-panel` only** — the latter is MAP-595's prototype, parked (§9). The five merged branches and the two older merged-and-kept ones were deleted on 2026-09-13 and 2026-09-14                                                                                                                                                                                                                                                                                                               |
-| Packages         | `@kozmos/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, `publishConfig.access: public`, never published — `npm view @kozmos/react` is a 404 and `git tag` lists nothing                                                                                                                                                                                                                                                                                                                                                    |
-| React components | 97 directories in `packages/react/src/components` (`STATUS.md`: Core 68 · Code-only 5 · Product/SDK 22 · Platform 2; GlassSettingsPanel excluded). iOS and Android carry the same 97 names; Vue wraps them all                                                                                                                                                                                                                                                                                                                              |
-| Figma            | `Kozmos DS - Core Library` `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, Product / SDK section `1340:6764`. `pnpm figma:verify` on 2026-09-14: **94 of 94 sets present**, structure matching what the importer would generate, and all 94 on one earlier build (`3e597100b157`) while the plugin now hashes to `6cf5b38fff51` — the gap is the resumability change that touched no painter. Two reported-not-enforced findings, both new to this file: **5 children overflow their box** and **29 icons are typed as characters** (§4.1) |
-| Tokens           | **623 light + 623 dark** (`docs/figma-library-manifest.json`, regenerated 2026-09-14; the 601 the last version reported was four weeks stale). 1,412 variables in the file (last measured 2026-09-03). **18** values carry floating-point noise, not the two named before — four font sizes, five letter-spacings, one line height, one paragraph spacing, and seven unitless numbers (the two motion durations and the five glass-effect values)                                                                                           |
-| Typecheck        | `pnpm --filter @kozmos/react typecheck`: **0 errors**, and since #27 it sees all 92 `*.figma.tsx` files. The package's `build` runs the same `tsc`, so CI catches a regression                                                                                                                                                                                                                                                                                                                                                              |
-| Gates            | the eleven in §7 green on 2026-09-14, plus `pnpm native:check`. `tokens:raw:check` is a ratchet: 35 raw colours across 7 components, 7 raw radii across 6 — unchanged                                                                                                                                                                                                                                                                                                                                                                       |
-| Chromatic        | **snapshot limit** since early September — nothing has been visually compared since, including a shadow change across 27 components and #19's animation fix; `UI Tests` shows PENDING on every PR for that reason                                                                                                                                                                                                                                                                                                                           |
-| CI on `main`     | **green on `da0a312`** — CI, Bundle Size, Visual Regression and Lighthouse all success, 2026-09-14. `Release Kozmos System` runs after CI and skips publish while `NPM_TOKEN` is absent                                                                                                                                                                                                                                                                                                                                                     |
-| Release path     | `.changeset/` holds only `config.json`; `release.yml` runs on CI success on `main`, skips publish when `NPM_TOKEN` is missing or invalid — inferred **not configured** (the registry has nothing and the run was "success")                                                                                                                                                                                                                                                                                                                 |
-| Working tree     | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`, shared with parallel sessions that switch branches and leave work uncommitted — stage by path, never `-A`; build branches in a `git worktree` under the scratchpad                                                                                                                                                                                                                                                                                                              |
+| Thing            | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `origin/main`    | `833d013` — every PR through #44 merged. #45, the three defects, is the only one open (`git log -1 origin/main`)                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Open PRs         | **one.** #45, the three defects building an example found — green but for `UI Tests`. Merged 2026-09-15, in order: #37 the MetaStrip painter, #38 the variant analysis made generated, #39 its regeneration, #40 the emotional roles, #41 the icon-children build break, #42 the emotion axis on Tag and Counter, #43 the plugin dropdown, #44 MetaStrip's Code Connect                                                                                                                                                                                                    |
+| Branches         | `origin` carries `main`, `codex/ds-defects` (#45) and `codex/wayfinding-map-panel` — the last is MAP-595's prototype, parked (§9). Everything merged has been deleted                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Packages         | `@kozmos/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, `publishConfig.access: public`, never published — `npm view @kozmos/react` is a 404 and `git tag` lists nothing                                                                                                                                                                                                                                                                                                                                                                                   |
+| React components | 99 directories in `packages/react/src/components` (`STATUS.md`: **Core 69** · Code-only 5 · Product/SDK 22 · Platform 2; GlassSettingsPanel and `PlatformSnippets.tsx` excluded). MetaStrip is the new one. **Every lane reads full on every platform, Code Connect included**                                                                                                                                                                                                                                                                                             |
+| Figma            | `Kozmos DS - Core Library` `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, MetaStrip `1890:8911`. `pnpm figma:verify` on 2026-09-15: **95 of 95 sets**, presence and variant drift clean, and the file matches what the importer would generate. **Build coverage 71 of 95** on the current build (`dd9f78a05cc0`) after Olcay ran Update All Core; the 24 still on `3e597100b157` are exactly the Product / SDK lane, and `Update All Product SDK` is what moves them. Two standing findings: **5 children overflow their box** and **29 icons are typed as characters** |
+| Tokens           | **641 light + 641 dark** (`docs/figma-library-manifest.json`), up 18 for `Semantics.Emotion` (#40). 1,412 variables in the file (last measured 2026-09-03). **18** values carry floating-point noise — four font sizes, five letter-spacings, one line height, one paragraph spacing, and seven unitless numbers                                                                                                                                                                                                                                                           |
+| Typecheck        | `pnpm --filter @kozmos/react typecheck`: **0 errors**, and since #27 it sees all 92 `*.figma.tsx` files. The package's `build` runs the same `tsc`, so CI catches a regression                                                                                                                                                                                                                                                                                                                                                                                             |
+| Gates            | the eleven in §7 green on 2026-09-15, plus `pnpm native:check` and the STATUS check. `tokens:raw:check` is a ratchet: 35 raw colours across 7 components, 7 raw radii across 6 — unchanged. **336 React tests across 102 files**                                                                                                                                                                                                                                                                                                                                           |
+| Chromatic        | **snapshot limit** since early September — nothing has been visually compared since, including a shadow change across 27 components and #19's animation fix; `UI Tests` shows PENDING on every PR for that reason                                                                                                                                                                                                                                                                                                                                                          |
+| CI on `main`     | green through the day's merges. `Release Kozmos System` runs after CI and skips publish while `NPM_TOKEN` is absent                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Release path     | `.changeset/` holds only `config.json`; `release.yml` runs on CI success on `main`, skips publish when `NPM_TOKEN` is missing or invalid — inferred **not configured** (the registry has nothing and the run was "success")                                                                                                                                                                                                                                                                                                                                                |
+| Working tree     | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`, shared with parallel sessions that switch branches and leave work uncommitted — stage by path, never `-A`; build branches in a `git worktree` under the scratchpad                                                                                                                                                                                                                                                                                                                                             |
 
 ## 4 · The five priorities, as a plan
 
@@ -329,16 +329,16 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
 ## 6 · Open — waiting on Olcay
 
 Eleven of the twelve that stood here were ruled on 2026-09-14 and moved to §5. What is left needs an
-action rather than an answer, or needs a designer.
+action rather than an answer, needs a designer, or is work with nobody blocked on it (§6.3).
 
 1. **Chromatic — raise the plan.** Ruled: raise it. This is an account action only Olcay can take.
    Until it happens nothing has been visually compared since early September, including a shadow
    change across 27 components and #19's animation fix, and `UI Tests` shows PENDING on every PR. It
    should land before the first npm publish, or that publish ships visuals nobody compared.
-2. **The other 38 icons.** 13 now carry Pointr's own outlines (§11.1) and 38 are still lucide
-   look-alikes. Migrating them changes the artwork of icons used across the library, which wants a
-   visual gate — so it waits on Chromatic. Beyond them, 70 of 98 React components import
-   `lucide-react` directly and bypass the registry entirely.
+2. **The other 38 icons.** The set names **51**: 13 carry Pointr's own outlines (§11.1) and 38 are
+   still lucide look-alikes. Migrating them changes the artwork of icons used across the library, which wants a
+   visual gate — so it waits on Chromatic. Beyond them, **70 of 99** React components import
+   `lucide-react` directly and bypass the registry entirely (measured 2026-09-15).
 3. **`@kozmos/icons` no longer re-exports lucide wholesale** (§11.1). It had to stop, because owning
    one outline while re-exporting its look-alike put two different Hearts under one name. It narrows
    the package's public surface on a package that has never been published, and nothing in the repo
@@ -346,27 +346,49 @@ action rather than an answer, or needs a designer.
 4. **The payment brand marks** — Apple Pay, Google Pay and Samsung Pay are drawn as tags in the POI
    card. A brand mark is neither a `Tag` nor an icon from the set: it is someone else's artwork at a
    fixed lockup, and the design system has nowhere to put one.
-5. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
+5. **The accessibility facility glyph.** The most-drawn icon the scan found — 1,213 uses across 7
+   surfaces — and still missing, because it lives in a different Figma library from the Pointr Icon
+   Library the generator reads. It needs that file's key from Olcay; everything else is one line in
+   `scripts/build-pointr-icons.mjs` and a re-run.
+6. **The Product / SDK sets are still on the older plugin build** (§3). `Update All Product SDK` in
+   the plugin moves the remaining 24. Nothing is wrong with them — the drift checks pass — so this
+   only decides which build painted them.
+7. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
    LocationPin's `variant` and `labelPlacement` stay renderer concerns** — recorded, revisit if a
    designer asks.
 
+### 6.3 · The queue, when there is no SDK component waiting
+
+Work, not questions. In the order it is worth doing:
+
+- **`Link` and `Spinner` cannot express an axis React has**, on both iOS and Android — `Link.variant`
+  (`default`, `subtle`) and `Spinner.size` (`sm`, `md`, `lg`, `xl`). These are the only two real
+  variant gaps in the system, and they only became visible when the variant analysis started being
+  regenerated (#38).
+- **The 18 floating-point token values** (§4.1), which belong with the type-scale work.
+- **The native enum naming normalisation** (§5.16), which wants doing before the first publish.
+- **§4.5, the npm publish list** — no `LICENSE`, no package READMEs, no repository or homepage
+  fields, no changesets, `NPM_TOKEN` unset. All five packages are still `0.0.1` and unpublished.
+- **The `Examples` page in Figma** (`286:1601`) has no painter, so the POI card example and the
+  opening-hours example exist in Storybook and nowhere in the file.
+
 ## 7 · Where everything is, and how to check it
 
-| Thing                         | Path or command                                                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------- |
-| What every document is        | `docs/README.md` (current · generated · parked · archived); `docs/archive/README.md` for the superseded |
-| The scope answer and gap list | `docs/ds-scope-2026-09-12.md`                                                                           |
-| How to change how it looks    | `docs/style-playbook.md` (roles, cookbook, traps, checks)                                               |
-| The long record               | `docs/session-handoff.md` (§3 reasoning; §6 risks; §7 every check)                                      |
-| The overnight gap audit       | `docs/gap-audit-2026-09-05.md`                                                                          |
-| SDK primitives, ranked        | `docs/sdk-module-primitives.md`                                                                         |
-| The Figma plugin              | `figma/foundations-importer/code.js` (+ `ui.html`, `manifest.json`); ⌘Q Figma after every change        |
-| Component number table        | the same file, search `name: "<Component>/`                                                             |
-| Figma Core Library            | `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, Product / SDK section `1340:6764`, Examples `286:1601` |
-| Code Connect                  | `figma.config.json`, `figma.linked.config.json`, `packages/{ios,android}/figma.linked.config.json`      |
-| Tokens source                 | `packages/tokens/src/tokens-{light,dark}.json`, built by `packages/tokens/build.mjs`                    |
-| Generated status              | `STATUS.md` (`pnpm exec tsx scripts/skills/check-completion.ts --check`)                                |
-| Storybook                     | `apps/docs` (React on 6006, Vue on 6007)                                                                |
+| Thing                         | Path or command                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What every document is        | `docs/README.md` (current · generated · parked · archived); `docs/archive/README.md` for the superseded                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| The scope answer and gap list | `docs/ds-scope-2026-09-12.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| How to change how it looks    | `docs/style-playbook.md` (roles, cookbook, traps, checks)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| The long record               | `docs/session-handoff.md` (§3 reasoning; §6 risks; §7 every check)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| The overnight gap audit       | `docs/gap-audit-2026-09-05.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| SDK primitives, ranked        | `docs/sdk-module-primitives.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| The Figma plugin              | `figma/foundations-importer/code.js` (+ `ui.html`, `manifest.json`); ⌘Q Figma after every change                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Component number table        | the same file, search `name: "<Component>/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Figma                         | `Kozmos DS - Core Library` `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, MetaStrip `1890:8911`. `pnpm figma:verify` on 2026-09-15: **95 of 95 sets**, presence and variant drift clean, and the file matches what the importer would generate. **Build coverage 71 of 95** on the current build (`dd9f78a05cc0`) after Olcay ran Update All Core; the 24 still on `3e597100b157` are exactly the Product / SDK lane, and `Update All Product SDK` is what moves them. Two standing findings: **5 children overflow their box** and **29 icons are typed as characters** |
+| Code Connect                  | `figma.config.json`, `figma.linked.config.json`, `packages/{ios,android}/figma.linked.config.json`                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Tokens                        | **641 light + 641 dark** (`docs/figma-library-manifest.json`), up 18 for `Semantics.Emotion` (#40). 1,412 variables in the file (last measured 2026-09-03). **18** values carry floating-point noise — four font sizes, five letter-spacings, one line height, one paragraph spacing, and seven unitless numbers                                                                                                                                                                                                                                                           |
+| Generated status              | `STATUS.md` (`pnpm exec tsx scripts/skills/check-completion.ts --check`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Storybook                     | `apps/docs` (React on 6006, Vue on 6007)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ```bash
 pnpm tokens:elevation:check && pnpm tokens:border:check && pnpm tokens:radius:check \
@@ -424,6 +446,23 @@ typecheck then reports errors in files nobody touched, suspect the install befor
   and every `renderToStaticMarkup` failed with "Objects are not valid as a React child" — including
   for components that had not been touched. Render one known-good component through the same harness
   before believing it broke yours.
+- **A green that proves nothing is worse than a failure.** Three arrived in one day. Both Code
+  Connect dry-runs said "All Code Connect files are valid" without ever parsing MetaStrip, because
+  the three `figma.linked.config.json` files are explicit file lists, not globs, and a validator
+  passes trivially when it validates nothing. The plugin's dropdown and its action registry are two
+  separate structures in `ui.html`, so a painter can be fully wired and unselectable. And
+  `components:variant:check` had never written the document it told readers to regenerate. Check
+  that a pass _mentions the thing you added_.
+- **A gate that cannot fail is not a gate.** Run a new test against the unfixed code before
+  believing it: four of the seven `cn` radius assertions fail against the old `cn`, which is the
+  only reason they are worth having.
+- **`pnpm --filter @kozmos/react build` starts with `rm -rf dist`, and Storybook serves from that
+  `dist`.** Rebuilding the package while Storybook is running breaks every story with "Failed to
+  fetch dynamically imported module", naming whichever story you happen to click. Restart Storybook
+  after a package rebuild; the error is not about that component.
+- **Merging two green PRs can leave `main` red.** #37 taught the plugin about MetaStrip and #38
+  generated the variant analysis before it; each was correct alone and the merge was stale. The
+  merged `main` is a commit no branch ever built — check it, do not infer it.
 - **Stacked PRs:** GitHub does not retarget them; merging blind lands in the base branch.
 - **Agent fan-out:** cap the candidate list before multiplying it — a scope audit once burned 5.16M
   tokens on ~330 candidates × 3.
@@ -556,6 +595,53 @@ since early September.
     `variables-light.css`/`-dark.css`; the legacy combined `variables.css` is simply a different,
     older naming and was the wrong file to grep.
 
+### 2026-09-15
+
+Eight merges. The through-line is that the POI card of §11.1 kept paying out: everything merged
+today was something that rebuild had found.
+
+1. **#37, the MetaStrip painter** (`96b386d`). Registered in all ten places a Core component needs.
+   Three bugs were caught by reading rather than running, because plugin code cannot run outside
+   Figma: `layoutSizingVertical = "FILL"` set before the node was appended (the plugin's own helper
+   says FILL throws outside an auto-layout parent), `minWidth` bound as a variable where nothing in
+   the file binds it, and a padding token aliased to `Spacing/200`, which does not exist —
+   `Layout/spacing/200` does.
+2. **#38, the variant analysis made generated** (`18f422b`), and **#39** regenerating it. The
+   document had told readers to regenerate it since 2026-08-24 and nothing ever could: the script
+   printed to stdout and had no write path. Adding MetaStrip is what exposed it. Its data blocks
+   now sit between markers written by `pnpm components:variant:write`, formatted with the
+   repository's Prettier config so the generator and the pre-commit hook cannot disagree for ever.
+   What three weeks of staleness had hidden: 98 components not 97, 29 with variant axes not 25,
+   Figma absences down from 22 to 5, and **iOS and Android no longer at zero** — `Link` and
+   `Spinner` each miss an axis.
+3. **#40, `Semantics.Emotion`** (`aeefa3c`): `surface`, `onSurface` and `text` for six emotions, in
+   both modes, every step chosen by contrast measurement. `surface`/`onSurface` is the ramp's
+   100/900 — which is exactly what the product draws — and `text` is the first step reaching 4.5:1,
+   which differs per emotion. **The product's own green fails**: its "Open" text is success/600 at
+   2.74:1, so Kozmos's status green is deliberately darker.
+4. **#41, an icons build break** (`e08ef3e`), found by #40's CI, which had no business touching
+   icons. `createPointrIcon` rendered `children` from `LucideProps`, dragging React's `ReactNode`
+   into a file where `lucide-react`'s types can resolve to a different `@types/react`. `main` had
+   passed the same job: the lockfile carries both 18 and 19 across 334 references, so it was
+   fragile rather than broken, and latent since #34.
+5. **#42, the emotion axis on `Tag` and `Counter`** (`833d013`), across all three platforms. With
+   `Button` (#32) the axis behind **80% of the product's mapped control instances** is closed. A
+   `success` tag computes `#CBF5E0` on `#14653D` in a browser — the POI card's OPEN pill, reached by
+   the role rather than copied.
+6. **#43, the plugin dropdown** (`548a559`). Olcay opened the plugin to run the painter and
+   MetaStrip was not there. `ui.html` says everything twice — a `<select>` and an action registry —
+   and #37 had added it to one. A check now asserts the two agree; it was proven to fire.
+7. **#44, MetaStrip's Code Connect** (`dcda8fb`), after Olcay ran the painter. The set is
+   `1890:8911`, four variants, verified against what the painter intended before anything was
+   pinned to it. **Core reached 69/69 in every column.** The first attempt's dry-runs passed without
+   parsing MetaStrip at all.
+8. **#45, the three defects** — open, green. `cn` could not resolve the design system's own radius
+   or elevation roles, so a caller's `rounded-control` was silently ignored; `ScrollArea` collapsed
+   to zero height when it scrolled sideways; `BottomSheetContent` shipped an unnamed dialog.
+
+Olcay also ran **Update All Core** in the plugin, taking build coverage from 0 of 94 to 71 of 95 —
+the first time painter changes have reached the file since early September.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:
@@ -647,8 +733,24 @@ Hearts** under one name, which is why §6.3 exists.
 `/files/{key}/components`, which needs `library_content:read`. `/v1/files/{key}/nodes` and
 `/v1/images` both work on the token's `file_content:read`, which is how the outlines were exported.
 
-**Still to do for this component:** its Figma counterpart on the `Examples` page (`286:1601`), which
-§5.8 says is painted by the plugin and needs a painter for it.
+**Everything it found is now built, 2026-09-15.** `MetaStrip` is a Core component on all three
+platforms with a painted Figma set (`1890:8911`) and linked Code Connect — 69/69. Opening hours is a
+Product / SDK example. The icon set carries the 13 glyphs it needed. `Tag` and `Counter` express the
+`emotion` axis, reading `Semantics.Emotion`. The three defects it exposed are #45.
+
+**Still open from it:** the accessibility facility glyph (§6.5), the payment brand marks (§6.4), and
+its Figma counterpart on the `Examples` page (`286:1601`), which §5.8 says the plugin paints and
+which has no painter.
+
+### 11.2 · What the loop has proved
+
+Two components in, the pattern is clear enough to rely on. Rebuilding one SDK component from Kozmos
+parts finds more than a scan does, because a scan counts what exists and a rebuild exercises it:
+the POI card produced a missing Core component, a missing example, fourteen missing icons, a missing
+semantic token family, three component defects, a broken plugin menu, a documentation lie, and a
+latent build break — none of which any gate had reported.
+
+So the next SDK component is worth more than the next item on a list. It needs Olcay to name one.
 
 ### What is already known to be missing
 
