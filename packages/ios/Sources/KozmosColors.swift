@@ -1733,6 +1733,240 @@ public class KozmosColors {
         return Color.clear
         #endif
     }
+    public static var semanticsEmotionNeutralSurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2E3138") : UIColor(hex: "#C7CAD1")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2E3138") : NSColor(hex: "#C7CAD1")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionNeutralOnsurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#ffffff") : UIColor(hex: "#000000")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#ffffff") : NSColor(hex: "#000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionNeutralText: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#a29d90") : UIColor(hex: "#5D626F")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#a29d90") : NSColor(hex: "#5D626F")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionThemedSurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#082975") : UIColor(hex: "#CAD9FC")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#082975") : NSColor(hex: "#CAD9FC")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionThemedOnsurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#CAD9FC") : UIColor(hex: "#082975")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#CAD9FC") : NSColor(hex: "#082975")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionThemedText: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5887F3") : UIColor(hex: "#1051E8")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#5887F3") : NSColor(hex: "#1051E8")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionSuccessSurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#14653D") : UIColor(hex: "#CBF5E0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#14653D") : NSColor(hex: "#CBF5E0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionSuccessOnsurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#CBF5E0") : UIColor(hex: "#14653D")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#CBF5E0") : NSColor(hex: "#14653D")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionSuccessText: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#A0ECC6") : UIColor(hex: "#197F4C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#A0ECC6") : NSColor(hex: "#197F4C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionDangerSurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#670E20") : UIColor(hex: "#F8C6D0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#670E20") : NSColor(hex: "#F8C6D0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionDangerOnsurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#F8C6D0") : UIColor(hex: "#670E20")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#F8C6D0") : NSColor(hex: "#670E20")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionDangerText: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E95A77") : UIColor(hex: "#D41C42")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#E95A77") : NSColor(hex: "#D41C42")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionAlertSurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#744D03") : UIColor(hex: "#FEEED0")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#744D03") : NSColor(hex: "#FEEED0")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionAlertOnsurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FEEED0") : UIColor(hex: "#744D03")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FEEED0") : NSColor(hex: "#744D03")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionAlertText: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FDE0A8") : UIColor(hex: "#A06B04")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FDE0A8") : NSColor(hex: "#A06B04")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionInformativeSurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#154761") : UIColor(hex: "#CAE6F3")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#154761") : NSColor(hex: "#CAE6F3")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionInformativeOnsurface: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#CAE6F3") : UIColor(hex: "#154761")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#CAE6F3") : NSColor(hex: "#154761")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsEmotionInformativeText: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#87C6E5") : UIColor(hex: "#2379A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#87C6E5") : NSColor(hex: "#2379A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
     public static var semanticsDiffNew: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
