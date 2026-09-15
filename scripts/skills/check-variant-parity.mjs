@@ -20,6 +20,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import prettier from "prettier";
 
 const ROOT = process.cwd();
 const REACT_DIR = path.join(ROOT, "packages/react/src/components");
@@ -367,7 +368,9 @@ function reactAxes(component) {
       /^\s+([a-zA-Z][a-zA-Z0-9]*)\??:\s*((?:["'][^"']+["']\s*\|\s*)+["'][^"']+["'])\s*;/gm,
     )) {
       const axis = match[1];
-      const values = [...match[2].matchAll(/["']([^"']+)["']/g)].map((v) => v[1]);
+      const values = [...match[2].matchAll(/["']([^"']+)["']/g)].map(
+        (v) => v[1],
+      );
       if (values.length > 1) {
         axes[axis] = [...new Set([...(axes[axis] || []), ...values])];
       }
@@ -694,7 +697,125 @@ function compareAxes(component, platform, reference, target) {
   return { missingAxes, missingValues, booleanProps, intentional, extraAxes };
 }
 
-function main() {
+/**
+ * The document this analysis writes, and the parts of it that are ours.
+ *
+ * `docs/component-variant-gap-analysis.md` told its readers to regenerate it
+ * rather than edit the counts by hand, and nothing ever did: it was written
+ * once on 2026-08-24 and still claimed 97 components after the repository had
+ * moved past it. The prose around the data is a person's judgement and stays
+ * theirs; the data blocks between these markers are this script's, and it
+ * rewrites them.
+ */
+const GAP_DOC = path.join(ROOT, "docs/component-variant-gap-analysis.md");
+
+function markerBlock(id) {
+  return {
+    open: `<!-- generated:${id} -->`,
+    close: `<!-- /generated:${id} -->`,
+  };
+}
+
+function replaceMarkedBlock(source, id, body) {
+  const { open, close } = markerBlock(id);
+  const start = source.indexOf(open);
+  const end = source.indexOf(close);
+  if (start === -1 || end === -1 || end < start) {
+    throw new Error(
+      `${path.relative(ROOT, GAP_DOC)} has no ${open} … ${close} block. ` +
+        "Add the markers around the data this script owns.",
+    );
+  }
+  return (
+    source.slice(0, start + open.length) +
+    "\n\n" +
+    body.trim() +
+    "\n\n" +
+    source.slice(end)
+  );
+}
+
+function renderHeadline(rows, withVariants, totals) {
+  const pad = (value) => String(value);
+  const lines = [
+    "| Measure                                    | Result |",
+    "| ------------------------------------------ | ------ |",
+    `| Components scanned                         | ${pad(rows.length)} |`,
+    `| Declaring at least one React variant axis  | ${pad(withVariants.length)} |`,
+    `| Variations that are compositional only     | ${pad(rows.length - withVariants.length)} |`,
+  ];
+  for (const platform of ["ios", "android", "figma", "vue"]) {
+    const label =
+      platform === "ios"
+        ? "iOS"
+        : platform === "figma"
+          ? "Figma"
+          : platform === "vue"
+            ? "Vue"
+            : "Android";
+    lines.push(
+      `| Components with variant gaps — ${label.padEnd(10)} | ${totals[platform]}/${withVariants.length} |`,
+    );
+  }
+  const absent = {
+    ios: rows.filter((row) => row.ios === "missing").length,
+    android: rows.filter((row) => row.android === "missing").length,
+    figma: rows.filter((row) => row.figma === "missing").length,
+    vue: rows.filter((row) => !row.vue).length,
+  };
+  lines.push(
+    `| Components absent entirely — iOS           | ${absent.ios}/${rows.length} |`,
+    `| Components absent entirely — Android       | ${absent.android}/${rows.length} |`,
+    `| Components absent entirely — Figma         | ${absent.figma}/${rows.length} |`,
+    `| Components absent entirely — Vue           | ${absent.vue}/${rows.length} |`,
+  );
+  return lines.join("\n");
+}
+
+function renderGaps(report) {
+  if (!report.length) return "```\nNo variant gaps.\n```";
+  const lines = ["```"];
+  for (const entry of report) {
+    lines.push(entry.component);
+    for (const problem of entry.problems) lines.push(`  - ${problem}`);
+  }
+  lines.push("```");
+  return lines.join("\n");
+}
+
+function renderAbsent(rows) {
+  const lines = [];
+  for (const [platform, label] of [
+    ["ios", "iOS"],
+    ["android", "Android"],
+    ["figma", "Figma"],
+    ["vue", "Vue"],
+  ]) {
+    const missing = rows
+      .filter((row) =>
+        platform === "vue" ? !row.vue : row[platform] === "missing",
+      )
+      .map((row) => row.component);
+    lines.push(`### ${label} — ${missing.length} of ${rows.length}`);
+    lines.push("");
+    lines.push(missing.length ? missing.join(", ") + "." : "None.");
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+function renderGeneratedDoc(source, rows, withVariants, report, totals) {
+  let next = replaceMarkedBlock(
+    source,
+    "headline",
+    renderHeadline(rows, withVariants, totals),
+  );
+  next = replaceMarkedBlock(next, "gaps", renderGaps(report));
+  next = replaceMarkedBlock(next, "absent", renderAbsent(rows));
+  return next;
+}
+
+async function main() {
   const figma = figmaAxes();
   // Vue has no per-component directories: every component is re-exported from
   // index.ts through `createVueWrapper(ReactComponent)`. Counting directories
@@ -836,6 +957,38 @@ function main() {
   console.log(`  android  ${androidMissing}/${rows.length}`);
   console.log(`  figma    ${figmaMissing}/${rows.length}`);
   console.log(`  vue      ${vueMissing}/${rows.length}`);
+
+  // The document is the point of the analysis, so it is written rather than
+  // described. `--write` regenerates the data blocks; a plain run fails when
+  // they are stale, which is how a new component gets noticed.
+  const current = fs.readFileSync(GAP_DOC, "utf8");
+  // Formatted with the repository's own Prettier configuration before it is
+  // written or compared. Without this the generator and the pre-commit hook
+  // disagree about table padding for ever, and the check calls a freshly
+  // written file stale — the same trap #28 closed for the JSON generators.
+  const prettierConfig = (await prettier.resolveConfig(GAP_DOC)) || {};
+  const regenerated = await prettier.format(
+    renderGeneratedDoc(current, rows, withVariants, report, totals),
+    { ...prettierConfig, filepath: GAP_DOC },
+  );
+  const relative = path.relative(ROOT, GAP_DOC);
+
+  if (process.argv.includes("--write")) {
+    if (regenerated === current) {
+      console.log(`\n${relative} is already current.`);
+      return;
+    }
+    fs.writeFileSync(GAP_DOC, regenerated);
+    console.log(`\n${relative} regenerated.`);
+    return;
+  }
+
+  if (regenerated !== current) {
+    console.error(
+      `\n${relative} is stale. Run \`pnpm components:variant:write\` and commit it.`,
+    );
+    process.exitCode = 1;
+  }
 }
 
-main();
+await main();

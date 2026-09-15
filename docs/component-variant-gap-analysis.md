@@ -1,37 +1,44 @@
 # Component And Variant Gap Analysis
 
-Generated from `pnpm components:variant:check`
-(`scripts/skills/check-variant-parity.mjs`). Regenerate it rather than editing
-the counts by hand.
+The data blocks between `<!-- generated:… -->` markers are written by
+`pnpm components:variant:write` (`scripts/skills/check-variant-parity.mjs`);
+`pnpm components:variant:check` fails when they are stale. Everything outside
+the markers is commentary and is edited by hand — including the build order and
+the reading of the numbers, which are judgements the script does not make.
 
 ## Why This Exists
 
-`STATUS.md` reports 97/97 on Web, iOS, and Android, but it only proves that a
+`STATUS.md` reports every component present on Web, iOS, and Android, but it only proves that a
 file exists. It says so itself: it does not grade API parity, behavioural
 completeness, or variant coverage. This document is the missing half — it looks
 _inside_ the files and compares the variant surface each platform can express.
 
-React is the reference because it is the only platform with 97/97 components,
-stories, and tests. A gap means "React can express this and the other platform
+React is the reference because it is the only platform carrying every
+component with stories and tests. A gap means "React can express this and the other platform
 cannot".
 
 ## Headline Numbers
 
-| Measure                                    | Result |
-| ------------------------------------------ | ------ |
-| Components scanned                         | 97     |
-| Declaring at least one React variant axis  | 25     |
-| Variations that are compositional only     | 72     |
-| Components with variant gaps — iOS         | 0/25   |
-| Components with variant gaps — Android     | 0/25   |
-| Components with variant gaps — Figma       | 6/25   |
-| Components with variant gaps — Vue         | 0/25   |
-| Components absent entirely — iOS / Android | 0/97   |
-| Components absent entirely — Figma         | 22/97  |
-| Components absent entirely — Vue           | 0/97   |
+<!-- generated:headline -->
 
-The important correction to the previous mental model: **only 25 of 97
-components carry variant axes in code**. The other 72 vary compositionally, and
+| Measure                                   | Result |
+| ----------------------------------------- | ------ |
+| Components scanned                        | 98     |
+| Declaring at least one React variant axis | 29     |
+| Variations that are compositional only    | 69     |
+| Components with variant gaps — iOS        | 2/29   |
+| Components with variant gaps — Android    | 2/29   |
+| Components with variant gaps — Figma      | 1/29   |
+| Components with variant gaps — Vue        | 0/29   |
+| Components absent entirely — iOS          | 0/98   |
+| Components absent entirely — Android      | 0/98   |
+| Components absent entirely — Figma        | 5/98   |
+| Components absent entirely — Vue          | 1/98   |
+
+<!-- /generated:headline -->
+
+The important correction to the previous mental model: **most components carry
+no variant axis in code at all** — the table above says how many today. The other 72 vary compositionally, and
 those variations exist _only_ as Figma axes (`Dialog Content`, `Drawer Side`,
 `Tabs Count/Active/State`). Code has no name for them, so no amount of native
 work will "complete" them — they are a Code Connect mapping question, not a
@@ -39,29 +46,29 @@ missing-variant question.
 
 ## 1. Real Variant Gaps
 
-**iOS and Android are at zero.** Everything remaining is Figma.
+Read this against the table above rather than from memory: it moves whenever a
+component gains an axis on one platform before another.
+
+<!-- generated:gaps -->
 
 ```
-AdaptiveMapShell
-  - figma: component/set absent
 Icon
   - figma: component/set absent
-MapControlButton
-  - figma: component/set absent
-MapControlsGroup
-  - figma: component/set absent
-MapOverlay
-  - figma: component/set absent
-POIDetailPanel
-  - figma: component/set absent
+Link
+  - ios missing axes -> variant (default, subtle)
+  - android missing axes -> variant (default, subtle)
+Spinner
+  - ios missing axes -> size (sm, md, lg, xl)
+  - android missing axes -> size (sm, md, lg, xl)
 ```
 
-Six of the eight are Product / SDK sets that simply do not exist in the plugin
-yet; they fold into the "remaining 18 Product / SDK Figma builders" item below
-rather than being separate work.
+<!-- /generated:gaps -->
 
-All six are "the set does not exist in the plugin yet". There are no remaining
-axis or value mismatches on any platform.
+Two kinds of thing appear here. "component/set absent" means the platform has
+no such component at all — for Figma that is usually a painter nobody has
+written yet. "missing axes" means the component exists and cannot express an
+axis React has, which is the more interesting gap: `Link` and `Spinner` are the
+standing examples, both recorded in `ds-handoff.md` §4.4.
 
 ### Corrections made while validating
 
@@ -120,47 +127,25 @@ The design-system contract here is the **spacing token**, not the container.
 
 ## 3. Components Absent Entirely
 
-### Figma — 22 of 97
+<!-- generated:absent -->
 
-Product / SDK and Platform lanes, minus the six now covered by the plugin's
-Product / SDK builders (DirectionStep, FloorSelector, LocationPin, MapView,
-POICard, WayfindingCard):
+### iOS — 0 of 98
 
-AdaptiveMapShell, BrowseCategoriesPanel, CategoryTile, DynamicIsland,
-FeedbackCard, MapControlButton, MapControlsGroup, MapOverlay, POIDetailPanel,
-POIMediaGallery, POIResultCard, POIResultList, RouteOptionCard,
-RoutePreviewPanel, RouteSummary, RoutingInputGroup, SaveLocationCard,
-UserLocationMarker.
+None.
 
-Plus four that are correctly absent: FieldWrapper, Icon, NavigationAnnouncer,
-ThemeProvider — code-only or icon-registry primitives.
+### Android — 0 of 98
 
-### Vue — 0 of 97 (closed)
+None.
 
-**Twice-corrected.** An earlier pass reported Vue at 3/97 by counting
-directories in `packages/vue/src/components`. Vue has no per-component
-directories: everything is re-exported from `packages/vue/src/index.ts` through
-`createVueWrapper(ReactComponent)`, which mounts the React component inside a
-Vue node. Real coverage was 82 of 98.
+### Figma — 5 of 98
 
-The 18 genuinely missing wrappers have now been added, taking Vue to full
-parity. (`Radio` was a false positive: that directory exports `RadioGroup` and
-`RadioGroupItem`, both already wrapped. The analyzer now carries a
-directory→export alias for it.)
+FieldWrapper, Icon, MetaStrip, NavigationAnnouncer, ThemeProvider.
 
-Eight of the additions bridge `update:modelValue`: ColorPicker, Combobox,
-DateRangePicker, Listbox, MultiSelect, NumberInput, PasswordInput.
+### Vue — 1 of 98
 
-**Adapter constraints worth knowing before treating Vue as a shipped SDK
-surface:** a React root is created per component instance; `watch(…, { deep:
-true })` re-renders the whole root on any prop change; slots are DOM-transplanted
-via `appendChild`; `createRoot` is client-only so Nuxt SSR will not work; and
-every Vue consumer ships react + react-dom (~130KB). Fine for an internal
-dashboard, not for a public SDK where bundle size and SSR matter.
+MetaStrip.
 
-### iOS and Android — 0 of 97
-
-Both platforms now have every component directory.
+<!-- /generated:absent -->
 
 ## 4. Recommended Build Order
 
