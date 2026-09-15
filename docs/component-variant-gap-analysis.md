@@ -32,7 +32,7 @@ cannot".
 | Components with variant gaps — Vue        | 0/29   |
 | Components absent entirely — iOS          | 0/98   |
 | Components absent entirely — Android      | 0/98   |
-| Components absent entirely — Figma        | 5/98   |
+| Components absent entirely — Figma        | 4/98   |
 | Components absent entirely — Vue          | 1/98   |
 
 <!-- /generated:headline -->
@@ -137,9 +137,9 @@ None.
 
 None.
 
-### Figma — 5 of 98
+### Figma — 4 of 98
 
-FieldWrapper, Icon, MetaStrip, NavigationAnnouncer, ThemeProvider.
+FieldWrapper, Icon, NavigationAnnouncer, ThemeProvider.
 
 ### Vue — 1 of 98
 
