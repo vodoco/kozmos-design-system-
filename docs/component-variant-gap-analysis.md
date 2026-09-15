@@ -28,7 +28,7 @@ cannot".
 | Variations that are compositional only    | 69     |
 | Components with variant gaps — iOS        | 2/29   |
 | Components with variant gaps — Android    | 2/29   |
-| Components with variant gaps — Figma      | 1/29   |
+| Components with variant gaps — Figma      | 2/29   |
 | Components with variant gaps — Vue        | 0/29   |
 | Components absent entirely — iOS          | 0/98   |
 | Components absent entirely — Android      | 0/98   |
@@ -57,6 +57,8 @@ Icon
 Link
   - ios missing axes -> variant (default, subtle)
   - android missing axes -> variant (default, subtle)
+MapControlButton
+  - figma missing axes -> emphasis (tinted, filled); labelPlacement (inline, stacked)
 Spinner
   - ios missing axes -> size (sm, md, lg, xl)
   - android missing axes -> size (sm, md, lg, xl)

@@ -5,6 +5,28 @@ public enum KozmosMapControlButtonPresentation {
     case labelled
 }
 
+/// How an active map control reads.
+///
+/// `tinted` keeps the map surface and colours the icon and the edge, which is
+/// what the SDK draws — a control over a map has to stay legible against the
+/// tiles behind it, and a solid fill hides the very thing it sits on.
+/// `filled` is the inverted treatment this component shipped before
+/// 2026-09-15, kept for callers that want the heavier emphasis.
+public enum KozmosMapControlButtonEmphasis {
+    case tinted
+    case filled
+}
+
+/// Where a control's state sits relative to its label.
+///
+/// `inline` runs them along one line. `stacked` sets the state under the
+/// label, which is how a map pill fits a two-word state into a control that
+/// has to stay thumb-sized.
+public enum KozmosMapControlButtonLabelPlacement {
+    case inline
+    case stacked
+}
+
 /// A single floating map control.
 ///
 /// Mirrors the React `MapControlButton`. `label` is the localized action name
@@ -15,6 +37,8 @@ public struct KozmosMapControlButton<Icon: View>: View {
     private let label: String
     private let stateLabel: String?
     private let presentation: KozmosMapControlButtonPresentation
+    private let emphasis: KozmosMapControlButtonEmphasis
+    private let labelPlacement: KozmosMapControlButtonLabelPlacement
     private let pressed: Bool
     private let isDisabled: Bool
     private let action: () -> Void
@@ -23,6 +47,8 @@ public struct KozmosMapControlButton<Icon: View>: View {
         label: String,
         stateLabel: String? = nil,
         presentation: KozmosMapControlButtonPresentation = .iconOnly,
+        emphasis: KozmosMapControlButtonEmphasis = .tinted,
+        labelPlacement: KozmosMapControlButtonLabelPlacement = .inline,
         pressed: Bool = false,
         isDisabled: Bool = false,
         action: @escaping () -> Void,
@@ -31,6 +57,8 @@ public struct KozmosMapControlButton<Icon: View>: View {
         self.label = label
         self.stateLabel = stateLabel
         self.presentation = presentation
+        self.emphasis = emphasis
+        self.labelPlacement = labelPlacement
         self.pressed = pressed
         self.isDisabled = isDisabled
         self.action = action
@@ -42,36 +70,88 @@ public struct KozmosMapControlButton<Icon: View>: View {
         return "\(label), \(stateLabel)"
     }
 
+    /// A tinted control keeps the map chrome in both states; only a filled one
+    /// inverts its surface.
+    private var isFilled: Bool {
+        pressed && emphasis == .filled
+    }
+
     private var foregroundColor: Color {
-        pressed
+        isFilled
             ? KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
             : KozmosColors.primitivesColorsForeground100
     }
 
+    /// Only the glyph carries the tint, so the label keeps its contrast
+    /// against the surface behind it.
+    private var iconColor: Color {
+        if isFilled {
+            return KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
+        }
+        return pressed
+            ? KozmosColors.primitivesColorsTheme600
+            : KozmosColors.primitivesColorsForeground100
+    }
+
     private var backgroundColor: Color {
-        pressed
+        isFilled
             ? KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle
             : KozmosColors.primitivesColorsBackground0.opacity(0.9)
+    }
+
+    private var borderColor: Color {
+        pressed && !isFilled
+            ? KozmosColors.primitivesColorsTheme600
+            : KozmosColors.primitivesColorsForeground300
+    }
+
+    @ViewBuilder
+    private var labelContent: some View {
+        if presentation == .labelled {
+            if labelPlacement == .stacked {
+                VStack(alignment: .leading, spacing: 0) {
+                    // The SDK sets these at 11pt over 13pt semibold. The type
+                    // scale has no role at either size yet, so this reaches for
+                    // the nearest roles and the deviation is recorded in the
+                    // gap list rather than hard-coded here.
+                    Text(label)
+                        .font(KozmosTypography.caption)
+                        .foregroundColor(KozmosColors.primitivesColorsForeground400)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+
+                    if let stateLabel {
+                        Text(stateLabel)
+                            .font(KozmosTypography.footnote)
+                            .fontWeight(.semibold)
+                            .lineLimit(1)
+                    }
+                }
+            } else {
+                Text(label)
+                    .font(KozmosTypography.subheadline)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                if let stateLabel {
+                    Text(stateLabel)
+                        .font(KozmosTypography.subheadline)
+                        .fontWeight(.semibold)
+                        .lineLimit(1)
+                }
+            }
+        }
     }
 
     public var body: some View {
         Button(action: action) {
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                 icon
+                    .foregroundColor(iconColor)
                     .accessibilityHidden(true)
 
-                if presentation == .labelled {
-                    Text(label)
-                        .font(.subheadline.weight(.medium))
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-
-                    if let stateLabel {
-                        Text(stateLabel)
-                            .font(.subheadline.weight(.semibold))
-                            .lineLimit(1)
-                    }
-                }
+                labelContent
             }
             .foregroundColor(foregroundColor)
             .frame(
@@ -81,10 +161,10 @@ public struct KozmosMapControlButton<Icon: View>: View {
             .frame(maxWidth: presentation == .labelled ? 256 : nil)
             .padding(.horizontal, presentation == .labelled ? KozmosDimensions.primitivesLayoutSpacing150 : 0)
             .background(backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
-                    .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
+                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
+                    .stroke(borderColor, lineWidth: 1)
             )
             .kozmosElevation(
                 pressed
@@ -95,6 +175,7 @@ public struct KozmosMapControlButton<Icon: View>: View {
         .buttonStyle(.plain)
         .disabled(isDisabled)
         .opacity(isDisabled ? 0.5 : 1)
+        .animation(.easeInOut(duration: 0.3), value: presentation == .labelled)
         .accessibilityLabel(accessibleLabel)
         .accessibilityAddTraits(pressed ? [.isButton, .isSelected] : .isButton)
     }
@@ -107,6 +188,8 @@ public extension KozmosMapControlButton where Icon == Image {
         systemImage: String,
         stateLabel: String? = nil,
         presentation: KozmosMapControlButtonPresentation = .iconOnly,
+        emphasis: KozmosMapControlButtonEmphasis = .tinted,
+        labelPlacement: KozmosMapControlButtonLabelPlacement = .inline,
         pressed: Bool = false,
         isDisabled: Bool = false,
         action: @escaping () -> Void
@@ -115,6 +198,8 @@ public extension KozmosMapControlButton where Icon == Image {
             label: label,
             stateLabel: stateLabel,
             presentation: presentation,
+            emphasis: emphasis,
+            labelPlacement: labelPlacement,
             pressed: pressed,
             isDisabled: isDisabled,
             action: action

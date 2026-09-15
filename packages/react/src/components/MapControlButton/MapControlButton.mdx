@@ -11,4 +11,41 @@ controlled state such as “Off” without relying on colour.
 
 <Canvas of={Stories.IconOnly} />
 <Canvas of={Stories.LabelledState} />
+
+## How an active control reads
+
+`emphasis` decides what "on" looks like. `tinted` is the default: the map
+surface stays and only the icon and the edge take the theme colour, because a
+control over a map has to remain legible against the tiles behind it and a
+solid fill hides the very thing it sits on. `filled` is the inverted treatment
+this component shipped before 2026-09-15, kept for callers that want the
+heavier emphasis.
+
+<Canvas of={Stories.StackedState} />
+<Canvas of={Stories.FilledEmphasis} />
+
+## Announcing a change, then getting out of the way
+
+A map mode toggle rests icon-only. When its mode changes it widens to say which
+mode it is now, holds long enough to be read, and collapses back. That is
+timing rather than appearance, so it lives in the `useRevealOnChange` hook
+instead of inside this component — two controls that each hand-roll a timer are
+how two controls end up disagreeing about how long "a while" is.
+
+```tsx
+const revealed = useRevealOnChange(mode, { duration: 2500 });
+
+<MapControlButton
+  labelPlacement="stacked"
+  presentation={revealed ? "labelled" : "icon-only"}
+  pressed={mode === "following"}
+  stateLabel={mode === "following" ? "On" : "Off"}
+/>;
+```
+
+Pass `delay` when the change takes time to settle — a route being recalculated,
+say — so the control reveals its new state once the work is done rather than
+while it is still wrong.
+
+<Canvas of={Stories.RevealsOnChange} />
 <Controls />

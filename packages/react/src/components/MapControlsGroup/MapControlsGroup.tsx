@@ -119,7 +119,7 @@ const MapControlsGroup = React.forwardRef<
               locationState === "following" || locationState === "heading"
             }
             stateLabel={locationStateLabel}
-            className="rounded-container shadow-floating"
+            className="shadow-floating"
             onClick={() => {
               trackEvent("MapControls", "my_location_triggered", {});
               onMyLocation();
