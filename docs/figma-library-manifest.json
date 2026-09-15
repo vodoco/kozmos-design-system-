@@ -24,8 +24,8 @@
   },
   "tokens": {
     "summary": {
-      "light": 623,
-      "dark": 623
+      "light": 641,
+      "dark": 641
     },
     "light": [
       {
@@ -2821,6 +2821,222 @@
         "name": "Semantics/Border/Input",
         "type": "color",
         "value": "{Primitives.Colors.foreground.500}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/neutral/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.background.200}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/neutral/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.foreground.0}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/neutral/text",
+        "type": "color",
+        "value": "{Primitives.Colors.foreground.400}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/themed/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.theme.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/themed/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.theme.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/themed/text",
+        "type": "color",
+        "value": "{Primitives.Colors.theme.600}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/success/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.success.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/success/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.success.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/success/text",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.success.800}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/danger/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.danger.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/danger/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.danger.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/danger/text",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.danger.600}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/alert/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.alert.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/alert/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.alert.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/alert/text",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.alert.800}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/informative/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.info.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/informative/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.info.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/informative/text",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.info.700}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9248,6 +9464,222 @@
         ]
       },
       {
+        "name": "Semantics/Emotion/neutral/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.background.200}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/neutral/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.foreground.0}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/neutral/text",
+        "type": "color",
+        "value": "{Primitives.Colors.foreground.400}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/themed/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.theme.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/themed/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.theme.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/themed/text",
+        "type": "color",
+        "value": "{Primitives.Colors.theme.600}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/success/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.success.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/success/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.success.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/success/text",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.success.800}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/danger/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.danger.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/danger/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.danger.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/danger/text",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.danger.600}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/alert/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.alert.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/alert/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.alert.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/alert/text",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.alert.800}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/informative/surface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.info.100}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/informative/onSurface",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.info.900}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Emotion/informative/text",
+        "type": "color",
+        "value": "{Primitives.Colors.emotional.info.700}",
+        "scopes": [],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
         "name": "Semantics/Elevation/Raised",
         "type": "shadow",
         "value": "{shadow.sm}",
@@ -12866,10 +13298,10 @@
   },
   "components": {
     "summary": {
-      "total": 97,
-      "stories": 97,
-      "tests": 97,
-      "exported": 97,
+      "total": 98,
+      "stories": 98,
+      "tests": 98,
+      "exported": 98,
       "codeConnectFiles": 92,
       "codeConnectScaffolds": 0,
       "codeConnectLinked": 92
@@ -13370,6 +13802,7 @@
           "autoFocus",
           "children",
           "disabled",
+          "emotion",
           "id",
           "isLoading",
           "role",
@@ -14722,6 +15155,35 @@
           "id",
           "role",
           "sideOffset",
+          "tabIndex",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "MetaStrip",
+        "source": "packages/react/src/components/MetaStrip/MetaStrip.tsx",
+        "story": "packages/react/src/components/MetaStrip/MetaStrip.stories.tsx",
+        "test": "packages/react/src/components/MetaStrip/MetaStrip.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": null,
+          "linked": false,
+          "figmaUrl": null,
+          "needsNodeId": false,
+          "status": "missing",
+          "issues": [],
+          "connectedComponents": [],
+          "mappedProps": [],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
           "tabIndex",
           "title"
         ],

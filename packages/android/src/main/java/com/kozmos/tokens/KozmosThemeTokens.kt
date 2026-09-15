@@ -37,6 +37,120 @@ object KozmosThemeTokens {
      * the start; only the theme wrapper was missing, so Compose could not read
      * it — the same gap the emotion colours had before #32.
      */
+    /**
+     * The emotional roles, wrapped so Compose can read them. The generated
+     * palettes have carried these since they were added; a colour that is not
+     * wrapped here is invisible to a composable, which is how `Tag` and
+     * `Counter` came to have no emotion at all.
+     */
+    val semanticsEmotionNeutralSurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionNeutralSurface,
+            KozmosColorsDark.semanticsEmotionNeutralSurface
+        )
+
+    val semanticsEmotionNeutralOnsurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionNeutralOnsurface,
+            KozmosColorsDark.semanticsEmotionNeutralOnsurface
+        )
+
+    val semanticsEmotionNeutralText: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionNeutralText,
+            KozmosColorsDark.semanticsEmotionNeutralText
+        )
+
+    val semanticsEmotionThemedSurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionThemedSurface,
+            KozmosColorsDark.semanticsEmotionThemedSurface
+        )
+
+    val semanticsEmotionThemedOnsurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionThemedOnsurface,
+            KozmosColorsDark.semanticsEmotionThemedOnsurface
+        )
+
+    val semanticsEmotionThemedText: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionThemedText,
+            KozmosColorsDark.semanticsEmotionThemedText
+        )
+
+    val semanticsEmotionSuccessSurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionSuccessSurface,
+            KozmosColorsDark.semanticsEmotionSuccessSurface
+        )
+
+    val semanticsEmotionSuccessOnsurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionSuccessOnsurface,
+            KozmosColorsDark.semanticsEmotionSuccessOnsurface
+        )
+
+    val semanticsEmotionSuccessText: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionSuccessText,
+            KozmosColorsDark.semanticsEmotionSuccessText
+        )
+
+    val semanticsEmotionDangerSurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionDangerSurface,
+            KozmosColorsDark.semanticsEmotionDangerSurface
+        )
+
+    val semanticsEmotionDangerOnsurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionDangerOnsurface,
+            KozmosColorsDark.semanticsEmotionDangerOnsurface
+        )
+
+    val semanticsEmotionDangerText: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionDangerText,
+            KozmosColorsDark.semanticsEmotionDangerText
+        )
+
+    val semanticsEmotionAlertSurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionAlertSurface,
+            KozmosColorsDark.semanticsEmotionAlertSurface
+        )
+
+    val semanticsEmotionAlertOnsurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionAlertOnsurface,
+            KozmosColorsDark.semanticsEmotionAlertOnsurface
+        )
+
+    val semanticsEmotionAlertText: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionAlertText,
+            KozmosColorsDark.semanticsEmotionAlertText
+        )
+
+    val semanticsEmotionInformativeSurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionInformativeSurface,
+            KozmosColorsDark.semanticsEmotionInformativeSurface
+        )
+
+    val semanticsEmotionInformativeOnsurface: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionInformativeOnsurface,
+            KozmosColorsDark.semanticsEmotionInformativeOnsurface
+        )
+
+    val semanticsEmotionInformativeText: Color
+        @Composable get() = themed(
+            KozmosColors.semanticsEmotionInformativeText,
+            KozmosColorsDark.semanticsEmotionInformativeText
+        )
+
     val semanticsBorderSubtle: Color
         @Composable get() = themed(
             KozmosDesignTokens.semanticsBorderSubtle,

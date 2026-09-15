@@ -1184,12 +1184,12 @@
         "25": {
           "$type": "color",
           "$value": "#070708",
-          "$description": "The dark ramp inverts — 0 is the page and higher steps lift off it — so these sit the same proportion along 0 -> 100 as their light counterparts."
+          "$description": "The dark ramp inverts \u2014 0 is the page and higher steps lift off it \u2014 so these sit the same proportion along 0 -> 100 as their light counterparts."
         },
         "50": {
           "$type": "color",
           "$value": "#0C0D0E",
-          "$description": "The dark ramp inverts — 0 is the page and higher steps lift off it — so these sit the same proportion along 0 -> 100 as their light counterparts."
+          "$description": "The dark ramp inverts \u2014 0 is the page and higher steps lift off it \u2014 so these sit the same proportion along 0 -> 100 as their light counterparts."
         },
         "100": {
           "$value": "#17191C",
@@ -2436,7 +2436,7 @@
       "Container": {
         "$value": "{Primitives.Layout.radius.250}",
         "$type": "dimension",
-        "$description": "Cards and dialogs: a surface that holds controls. Deliberately rounder than Control — the two were both 16, so a 44px field and a 400px card drew the same corner and the role distinction was cosmetic."
+        "$description": "Cards and dialogs: a surface that holds controls. Deliberately rounder than Control \u2014 the two were both 16, so a 44px field and a 400px card drew the same corner and the role distinction was cosmetic."
       },
       "Panel": {
         "$value": "{Primitives.Layout.radius.300}",
@@ -2461,11 +2461,115 @@
         "$description": "Boundaries of things you interact with: inputs, checkboxes, radios, switch, slider and progress tracks, swatches, the toast action. Held to WCAG 1.4.11's 3:1 against the page: 4.2:1 light, 5.7:1 dark. background/400 reads 2.997 and fails by three thousandths, which is why this is foreground/500. The web used background/200 here before 2026-09-03 and did not meet 3:1."
       }
     },
+    "Emotion": {
+      "neutral": {
+        "surface": {
+          "$value": "{Primitives.Colors.background.200}",
+          "$type": "color",
+          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+        },
+        "onSurface": {
+          "$value": "{Primitives.Colors.foreground.0}",
+          "$type": "color",
+          "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
+        },
+        "text": {
+          "$value": "{Primitives.Colors.foreground.400}",
+          "$type": "color",
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+        }
+      },
+      "themed": {
+        "surface": {
+          "$value": "{Primitives.Colors.theme.100}",
+          "$type": "color",
+          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+        },
+        "onSurface": {
+          "$value": "{Primitives.Colors.theme.900}",
+          "$type": "color",
+          "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
+        },
+        "text": {
+          "$value": "{Primitives.Colors.theme.600}",
+          "$type": "color",
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+        }
+      },
+      "success": {
+        "surface": {
+          "$value": "{Primitives.Colors.emotional.success.100}",
+          "$type": "color",
+          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+        },
+        "onSurface": {
+          "$value": "{Primitives.Colors.emotional.success.900}",
+          "$type": "color",
+          "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
+        },
+        "text": {
+          "$value": "{Primitives.Colors.emotional.success.800}",
+          "$type": "color",
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+        }
+      },
+      "danger": {
+        "surface": {
+          "$value": "{Primitives.Colors.emotional.danger.100}",
+          "$type": "color",
+          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+        },
+        "onSurface": {
+          "$value": "{Primitives.Colors.emotional.danger.900}",
+          "$type": "color",
+          "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
+        },
+        "text": {
+          "$value": "{Primitives.Colors.emotional.danger.600}",
+          "$type": "color",
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+        }
+      },
+      "alert": {
+        "surface": {
+          "$value": "{Primitives.Colors.emotional.alert.100}",
+          "$type": "color",
+          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+        },
+        "onSurface": {
+          "$value": "{Primitives.Colors.emotional.alert.900}",
+          "$type": "color",
+          "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
+        },
+        "text": {
+          "$value": "{Primitives.Colors.emotional.alert.800}",
+          "$type": "color",
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+        }
+      },
+      "informative": {
+        "surface": {
+          "$value": "{Primitives.Colors.emotional.info.100}",
+          "$type": "color",
+          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+        },
+        "onSurface": {
+          "$value": "{Primitives.Colors.emotional.info.900}",
+          "$type": "color",
+          "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
+        },
+        "text": {
+          "$value": "{Primitives.Colors.emotional.info.700}",
+          "$type": "color",
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+        }
+      }
+    },
     "Elevation": {
       "Raised": {
         "$value": "{shadow.sm}",
         "$type": "shadow",
-        "$description": "A surface lifted just off the page: cards, list rows, a file row. Barely there on purpose — the surface and its border do the work, and the shadow only says it is not painted on."
+        "$description": "A surface lifted just off the page: cards, list rows, a file row. Barely there on purpose \u2014 the surface and its border do the work, and the shadow only says it is not painted on."
       },
       "Floating": {
         "$value": "{shadow.md}",

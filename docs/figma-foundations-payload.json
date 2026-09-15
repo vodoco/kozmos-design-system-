@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-07T15:52:17.792Z",
+  "generatedAt": "2026-09-15T09:42:33.726Z",
   "target": {
-    "fileKey": "Yj4O8p6Y9h2Sa9zJVoAiVY",
+    "fileKey": null,
     "fileName": "Kozmos DS - Core Library",
     "modes": ["Light", "Dark"]
   },
@@ -36,8 +36,8 @@
     "Archive / Legacy Reference"
   ],
   "summary": {
-    "totalTokens": 623,
-    "variableTokens": 579,
+    "totalTokens": 641,
+    "variableTokens": 597,
     "styleOnlyTokens": 44,
     "bySourceType": {
       "borderRadius": 8,
@@ -46,7 +46,7 @@
       "opacity": 7,
       "number": 60,
       "spacing": 4,
-      "color": 411,
+      "color": 429,
       "fontSizes": 30,
       "letterSpacing": 5,
       "lineHeights": 14,
@@ -6705,6 +6705,438 @@
         "dark": {
           "kind": "alias",
           "path": "Primitives/Colors/foreground/500"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/neutral/surface",
+      "figmaName": "Emotion/neutral/surface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-neutral-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-neutral-surface)",
+        "ios": "semanticsEmotionNeutralSurface",
+        "android": "semanticsEmotionNeutralSurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/background/200"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/background/200"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/neutral/onSurface",
+      "figmaName": "Emotion/neutral/onSurface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-neutral-on-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-neutral-on-surface)",
+        "ios": "semanticsEmotionNeutralOnsurface",
+        "android": "semanticsEmotionNeutralOnsurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/foreground/0"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/foreground/0"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/neutral/text",
+      "figmaName": "Emotion/neutral/text",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-neutral-text",
+      "syntax": {
+        "web": "var(--semantics-emotion-neutral-text)",
+        "ios": "semanticsEmotionNeutralText",
+        "android": "semanticsEmotionNeutralText"
+      },
+      "suggestedScopes": ["TEXT_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/foreground/400"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/foreground/400"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/themed/surface",
+      "figmaName": "Emotion/themed/surface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-themed-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-themed-surface)",
+        "ios": "semanticsEmotionThemedSurface",
+        "android": "semanticsEmotionThemedSurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/theme/100"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/theme/100"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/themed/onSurface",
+      "figmaName": "Emotion/themed/onSurface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-themed-on-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-themed-on-surface)",
+        "ios": "semanticsEmotionThemedOnsurface",
+        "android": "semanticsEmotionThemedOnsurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/theme/900"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/theme/900"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/themed/text",
+      "figmaName": "Emotion/themed/text",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-themed-text",
+      "syntax": {
+        "web": "var(--semantics-emotion-themed-text)",
+        "ios": "semanticsEmotionThemedText",
+        "android": "semanticsEmotionThemedText"
+      },
+      "suggestedScopes": ["TEXT_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/theme/600"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/theme/600"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/success/surface",
+      "figmaName": "Emotion/success/surface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-success-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-success-surface)",
+        "ios": "semanticsEmotionSuccessSurface",
+        "android": "semanticsEmotionSuccessSurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/success/100"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/success/100"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/success/onSurface",
+      "figmaName": "Emotion/success/onSurface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-success-on-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-success-on-surface)",
+        "ios": "semanticsEmotionSuccessOnsurface",
+        "android": "semanticsEmotionSuccessOnsurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/success/900"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/success/900"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/success/text",
+      "figmaName": "Emotion/success/text",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-success-text",
+      "syntax": {
+        "web": "var(--semantics-emotion-success-text)",
+        "ios": "semanticsEmotionSuccessText",
+        "android": "semanticsEmotionSuccessText"
+      },
+      "suggestedScopes": ["TEXT_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/success/800"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/success/800"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/danger/surface",
+      "figmaName": "Emotion/danger/surface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-danger-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-danger-surface)",
+        "ios": "semanticsEmotionDangerSurface",
+        "android": "semanticsEmotionDangerSurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/danger/100"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/danger/100"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/danger/onSurface",
+      "figmaName": "Emotion/danger/onSurface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-danger-on-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-danger-on-surface)",
+        "ios": "semanticsEmotionDangerOnsurface",
+        "android": "semanticsEmotionDangerOnsurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/danger/900"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/danger/900"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/danger/text",
+      "figmaName": "Emotion/danger/text",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-danger-text",
+      "syntax": {
+        "web": "var(--semantics-emotion-danger-text)",
+        "ios": "semanticsEmotionDangerText",
+        "android": "semanticsEmotionDangerText"
+      },
+      "suggestedScopes": ["TEXT_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/danger/600"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/danger/600"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/alert/surface",
+      "figmaName": "Emotion/alert/surface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-alert-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-alert-surface)",
+        "ios": "semanticsEmotionAlertSurface",
+        "android": "semanticsEmotionAlertSurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/alert/100"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/alert/100"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/alert/onSurface",
+      "figmaName": "Emotion/alert/onSurface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-alert-on-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-alert-on-surface)",
+        "ios": "semanticsEmotionAlertOnsurface",
+        "android": "semanticsEmotionAlertOnsurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/alert/900"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/alert/900"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/alert/text",
+      "figmaName": "Emotion/alert/text",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-alert-text",
+      "syntax": {
+        "web": "var(--semantics-emotion-alert-text)",
+        "ios": "semanticsEmotionAlertText",
+        "android": "semanticsEmotionAlertText"
+      },
+      "suggestedScopes": ["TEXT_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/alert/800"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/alert/800"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/informative/surface",
+      "figmaName": "Emotion/informative/surface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-informative-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-informative-surface)",
+        "ios": "semanticsEmotionInformativeSurface",
+        "android": "semanticsEmotionInformativeSurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/info/100"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/info/100"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/informative/onSurface",
+      "figmaName": "Emotion/informative/onSurface",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-informative-on-surface",
+      "syntax": {
+        "web": "var(--semantics-emotion-informative-on-surface)",
+        "ios": "semanticsEmotionInformativeOnsurface",
+        "android": "semanticsEmotionInformativeOnsurface"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/info/900"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/info/900"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Emotion/informative/text",
+      "figmaName": "Emotion/informative/text",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-emotion-informative-text",
+      "syntax": {
+        "web": "var(--semantics-emotion-informative-text)",
+        "ios": "semanticsEmotionInformativeText",
+        "android": "semanticsEmotionInformativeText"
+      },
+      "suggestedScopes": ["TEXT_FILL"],
+      "values": {
+        "light": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/info/700"
+        },
+        "dark": {
+          "kind": "alias",
+          "path": "Primitives/Colors/emotional/info/700"
         }
       }
     },
