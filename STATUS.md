@@ -20,7 +20,7 @@ This report does **not** prove visual fidelity, accessibility conformance, behav
 
 | Lane                   | Components | Web   | Web Tests | Web CCL | iOS   | iOS CCL | Android | Android CCL |
 | ---------------------- | ---------- | ----- | --------- | ------- | ----- | ------- | ------- | ----------- |
-| Core                   | 69         | 69/69 | 69/69     | 68/69   | 69/69 | 68/69   | 69/69   | 68/69       |
+| Core                   | 69         | 69/69 | 69/69     | 69/69   | 69/69 | 69/69   | 69/69   | 69/69       |
 | Code-Only / Utility    | 5          | 5/5   | 5/5       | —       | 5/5   | —       | 5/5     | —           |
 | Product / SDK          | 22         | 22/22 | 22/22     | 22/22   | 22/22 | 22/22   | 22/22   | 22/22       |
 | Platform / Form-Factor | 2          | 2/2   | 2/2       | 2/2     | 2/2   | 2/2     | 2/2     | 2/2         |
@@ -64,7 +64,7 @@ Domain-neutral design-system components expected to reach Figma, Code Connect, a
 | List                 | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | Listbox              | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | Menu                 | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
-| MetaStrip            | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ✅         | ❌                      | ❌                        | ✅             | ❌                          | ❌                            |
+| MetaStrip            | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | MultiSelect          | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | Navbar               | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | NavigationItem       | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
@@ -164,15 +164,15 @@ Dynamic Island, watch, kiosk, spatial, landscape, and other device-specific surf
 - Web components: 98/98
 - Web stories: 98/98
 - Web tests: 98/98
-- Web Code Connect files: 92/93
+- Web Code Connect files: 93/93
 - Web Code Connect scaffolds: 0/93
-- Web Code Connect linked: 92/93
+- Web Code Connect linked: 93/93
 - iOS components: 98/98
-- iOS Code Connect files: 92/93
+- iOS Code Connect files: 93/93
 - iOS Code Connect scaffolds: 0/93
-- iOS Code Connect linked: 92/93
+- iOS Code Connect linked: 93/93
 - Android components: 98/98
-- Android Code Connect files: 92/93
+- Android Code Connect files: 93/93
 - Android Code Connect scaffolds: 0/93
-- Android Code Connect linked: 92/93
+- Android Code Connect linked: 93/93
 - Code Connect not applicable: 5/98
