@@ -28,14 +28,17 @@ export function createPointrIcon(
   iconName: string,
   paths: readonly PointrIconPath[],
 ) {
-  const Component = React.forwardRef<SVGSVGElement, LucideProps>(
+  // `children` is omitted deliberately. An icon has no children, and taking
+  // them from `LucideProps` dragged React's `ReactNode` into this file —
+  // which broke the build wherever `lucide-react`'s types resolve to a
+  // different `@types/react` than this package's, as CI's does.
+  const Component = React.forwardRef<SVGSVGElement, Omit<LucideProps, "children">>(
     (
       {
         color = "currentColor",
         size = 24,
         strokeWidth = 2,
         absoluteStrokeWidth,
-        children,
         ...rest
       },
       ref,
@@ -65,7 +68,6 @@ export function createPointrIcon(
             key={index}
           />
         ))}
-        {children}
       </svg>
     ),
   );
