@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kozmos.components.KozmosEmotion
 import com.kozmos.tokens.KozmosColors
 
 enum class KozmosTagVariant {
@@ -35,10 +36,18 @@ enum class KozmosTagVariant {
 fun KozmosTag(
     text: String,
     variant: KozmosTagVariant = KozmosTagVariant.Default,
+    /**
+     * Unset and the variant draws as it always has; set and the emotion
+     * decides the colour, whatever the variant.
+     */
+    emotion: KozmosEmotion? = null,
     onRemove: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer)
+    val emotionSurface = emotion?.surface
+    val emotionOnSurface = emotion?.onSurface
+    val emotionText = emotion?.text
     val backgroundColor = when (variant) {
         KozmosTagVariant.Default -> KozmosColors.primitivesColorsTheme500
         KozmosTagVariant.Secondary -> KozmosColors.primitivesColorsBackground100
@@ -51,10 +60,20 @@ fun KozmosTag(
         KozmosTagVariant.Secondary,
         KozmosTagVariant.Outline -> KozmosColors.primitivesColorsForeground900
     }
+    val resolvedBackground = when {
+        emotion == null -> backgroundColor
+        variant == KozmosTagVariant.Outline -> Color.Transparent
+        else -> emotionSurface!!
+    }
+    val resolvedForeground = when {
+        emotion == null -> foregroundColor
+        variant == KozmosTagVariant.Outline -> emotionText!!
+        else -> emotionOnSurface!!
+    }
     val borderedModifier = if (variant == KozmosTagVariant.Outline) {
         Modifier.border(
             width = 1.dp,
-            color = KozmosColors.primitivesColorsBackground200,
+            color = emotionText ?: KozmosColors.primitivesColorsBackground200,
             shape = shape
         )
     } else {
@@ -63,14 +82,14 @@ fun KozmosTag(
 
     Row(
         modifier = modifier
-            .background(backgroundColor, shape)
+            .background(resolvedBackground, shape)
             .then(borderedModifier)
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing100, vertical = KozmosDimensions.primitivesLayoutSpacing50),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = text,
-            color = foregroundColor,
+            color = resolvedForeground,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold
         )

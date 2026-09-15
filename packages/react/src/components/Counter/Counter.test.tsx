@@ -28,4 +28,31 @@ describe("Counter", () => {
     const child = <span data-testid="custom-counter">99+</span>;
     expect(formatCounterValue(child)).toBe(child);
   });
+
+  describe("emotion", () => {
+    it("leaves the tone untouched when it is not set", () => {
+      render(<Counter tone="brand">7</Counter>);
+      const counter = screen.getByText("7");
+      expect(counter.style.getPropertyValue("--kz-emotion-surface")).toBe("");
+      expect(counter).toHaveClass("bg-primary");
+    });
+
+    it("fills with the emotion's own pair", () => {
+      render(<Counter emotion="informative">12</Counter>);
+      const counter = screen.getByText("12");
+      expect(counter.style.getPropertyValue("--kz-emotion-surface")).toBe(
+        "var(--semantics-emotion-informative-surface)",
+      );
+      expect(counter).toHaveClass("text-[var(--kz-emotion-on-surface)]");
+    });
+
+    it("keeps its own className alongside the emotion", () => {
+      render(
+        <Counter className="ml-2" emotion="danger">
+          3
+        </Counter>,
+      );
+      expect(screen.getByText("3")).toHaveClass("ml-2");
+    });
+  });
 });

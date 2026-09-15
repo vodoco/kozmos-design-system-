@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.components.KozmosEmotion
 import com.kozmos.tokens.KozmosThemeTokens
 
 enum class CounterTone {
@@ -33,7 +34,12 @@ fun KozmosCounter(
     text: String,
     modifier: Modifier = Modifier,
     tone: CounterTone = CounterTone.Neutral,
-    size: CounterSize = CounterSize.Default
+    size: CounterSize = CounterSize.Default,
+    /**
+     * Unset and `tone` draws as it always has; set and the emotion decides the
+     * colour. A counter is always a filled pill, so there is one treatment.
+     */
+    emotion: KozmosEmotion? = null
 ) {
     val height = if (size == CounterSize.Sm) 18.dp else 20.dp
     val minWidth = if (size == CounterSize.Sm) 18.dp else 20.dp
@@ -54,17 +60,20 @@ fun KozmosCounter(
         CounterTone.Inverse -> KozmosThemeTokens.primitivesColorsForeground100
     }
 
+    val resolvedContainer = emotion?.surface ?: containerColor
+    val resolvedContent = emotion?.onSurface ?: contentColor
+
     Box(
         modifier = modifier
             .height(height)
             .widthIn(min = minWidth)
-            .background(containerColor, CircleShape)
+            .background(resolvedContainer, CircleShape)
             .padding(horizontal = horizontalPadding),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = normalizeCounterText(text),
-            color = contentColor,
+            color = resolvedContent,
             fontSize = fontSize,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1
