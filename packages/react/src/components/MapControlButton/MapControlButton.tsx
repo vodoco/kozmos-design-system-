@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "../../utils";
 import { Button, type ButtonProps } from "../Button";
+import { useRevealOnChange } from "../../hooks/useRevealOnChange";
 
 export interface MapControlButtonProps extends Omit<
   ButtonProps,
@@ -29,6 +30,25 @@ export interface MapControlButtonProps extends Omit<
    * a control that has to stay thumb-sized.
    */
   labelPlacement?: "inline" | "stacked";
+  /**
+   * Let the control resolve its own presentation: icon-only at rest, widening
+   * to `labelled` for a moment whenever `pressed` or `stateLabel` changes, then
+   * collapsing so it stops covering the map.
+   *
+   * This is the behaviour the SDK's map toggles have, and it is a prop rather
+   * than only a documented recipe so that a developer reading the props — or
+   * the Storybook controls — finds it without being told. `useRevealOnChange`
+   * is the same timing as a hook, for anything that is not this component.
+   */
+  revealOnChange?: boolean;
+  /** With `revealOnChange`, how long the label stays. Default 2500ms. */
+  revealDuration?: number;
+  /**
+   * With `revealOnChange`, how long to wait before revealing. Default 0.
+   * A change that takes time to settle — a route being recalculated — reveals
+   * its new state when the work is done rather than while it is still wrong.
+   */
+  revealDelay?: number;
   pressed?: boolean;
 }
 
@@ -45,6 +65,9 @@ const MapControlButton = React.forwardRef<
       presentation = "icon-only",
       emphasis = "tinted",
       labelPlacement = "inline",
+      revealOnChange = false,
+      revealDuration,
+      revealDelay,
       pressed,
       type = "button",
       variant,
@@ -53,7 +76,19 @@ const MapControlButton = React.forwardRef<
     ref,
   ) => {
     const accessibleLabel = stateLabel ? `${label}, ${stateLabel}` : label;
-    const isLabelled = presentation === "labelled";
+    // Either half of the state can be what changed: a toggle flips `pressed`,
+    // while a control that cycles through modes only changes its stateLabel.
+    const revealed = useRevealOnChange(`${pressed}\u0000${stateLabel}`, {
+      duration: revealDuration,
+      delay: revealDelay,
+      enabled: revealOnChange,
+    });
+    const resolvedPresentation = revealOnChange
+      ? revealed
+        ? "labelled"
+        : "icon-only"
+      : presentation;
+    const isLabelled = resolvedPresentation === "labelled";
     // A filled control inverts its surface, so it needs the Button's primary
     // tier. A tinted one keeps the map chrome and recolours only its icon and
     // ring, so it stays on the ghost tier in both states.
@@ -73,7 +108,7 @@ const MapControlButton = React.forwardRef<
           // control was transparent over the map. The opaque role is what the
           // SDK draws for Focus anyway; the 31 other token-role alpha classes
           // in the library are recorded in the gap list, not fixed here.
-          "min-h-11 min-w-11 justify-center rounded-control bg-background text-foreground shadow-floating ring-1 ring-border backdrop-blur-xl hover:bg-secondary",
+          "min-h-11 min-w-11 justify-center rounded-control bg-background text-foreground shadow-floating ring-1 ring-border backdrop-blur-xl hover:bg-muted",
           // The label reveals and collapses rather than snapping, because the
           // control announces a state change and then gets out of the way.
           "gap-0 transition-[max-width,padding] duration-300 ease-in-out motion-reduce:transition-none",
@@ -82,7 +117,7 @@ const MapControlButton = React.forwardRef<
           pressed && !isFilled && "ring-primary",
           className,
         )}
-        data-presentation={presentation}
+        data-presentation={resolvedPresentation}
         type={type}
         variant={resolvedVariant}
         {...props}

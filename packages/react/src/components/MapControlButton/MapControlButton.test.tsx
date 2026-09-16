@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Focus } from "lucide-react";
 import { describe, expect, it, vi } from "vitest";
 import { MapControlButton } from "./MapControlButton";
@@ -138,5 +138,68 @@ describe("MapControlButton", () => {
       "data-presentation",
       "icon-only",
     );
+  });
+  it("hovers to the muted step, not the border grey", () => {
+    render(
+      <MapControlButton
+        icon={<Focus />}
+        label="Zoom in"
+        onClick={() => undefined}
+      />,
+    );
+
+    // `secondary` is background-200 (#C7CAD1) — the same value as Border/Subtle,
+    // which is far too heavy a step for chrome sitting on a map.
+    const button = screen.getByRole("button", { name: "Zoom in" });
+    expect(button).toHaveClass("hover:bg-muted");
+    expect(button.className).not.toContain("hover:bg-secondary");
+  });
+
+  it("resolves its own presentation when asked to reveal on change", () => {
+    vi.useFakeTimers();
+    try {
+      const { rerender } = render(
+        <MapControlButton
+          icon={<Focus />}
+          label="Focus"
+          revealOnChange
+          stateLabel="Off"
+          onClick={() => undefined}
+        />,
+      );
+
+      // At rest it is icon-only, and mounting is not a change.
+      expect(
+        screen.getByRole("button", { name: "Focus, Off" }),
+      ).toHaveAttribute("data-presentation", "icon-only");
+
+      rerender(
+        <MapControlButton
+          icon={<Focus />}
+          label="Focus"
+          pressed
+          revealOnChange
+          stateLabel="On"
+          onClick={() => undefined}
+        />,
+      );
+      act(() => {
+        vi.advanceTimersByTime(10);
+      });
+      expect(screen.getByRole("button", { name: "Focus, On" })).toHaveAttribute(
+        "data-presentation",
+        "labelled",
+      );
+
+      act(() => {
+        vi.advanceTimersByTime(2600);
+      });
+      // Collapsed again, but the mode it announced is still on.
+      const settled = screen.getByRole("button", { name: "Focus, On" });
+      expect(settled).toHaveAttribute("data-presentation", "icon-only");
+      expect(settled).toHaveAttribute("aria-pressed", "true");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
