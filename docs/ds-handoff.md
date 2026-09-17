@@ -1,6 +1,6 @@
 # Kozmos design system — handoff for the next session
 
-Written 2026-09-13, refreshed 2026-09-17 after #45 to #47 merged and #48 and #49 opened (§10). It
+Written 2026-09-13, refreshed 2026-09-17 after #45 to #49 merged (§10). It
 carries the verified facts of the 2026-09-12 to 2026-09-15 versions forward; every number here was
 read from the repo, GitHub, npm, the Figma REST API or a rendered build on 2026-09-17 by the command
 shown beside it, unless marked "last measured".
