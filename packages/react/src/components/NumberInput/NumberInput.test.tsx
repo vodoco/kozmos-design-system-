@@ -15,7 +15,7 @@ describe("NumberInput", () => {
   it("uses the 44px field and stepper target size", () => {
     render(<NumberInput defaultValue={1} />);
 
-    expect(screen.getByRole("spinbutton")).toHaveClass("h-11");
+    expect(screen.getByRole("spinbutton")).toHaveClass("kozmos-input");
     expect(screen.getByRole("button", { name: /decrease value/i })).toHaveClass(
       "h-11",
       "w-11",

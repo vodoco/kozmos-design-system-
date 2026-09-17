@@ -24,11 +24,23 @@ It holds the token variables for both themes and the styles the components
 use, so there is no Tailwind configuration to add. `@kozmos/react/dist/style.css`
 resolves to the same file, for code that already imports that path.
 
-Tokens, utilities and the component reset are scoped to provider boundaries.
-Unrelated host content is not reset. This build requires native CSS `@scope`,
-including nested scopes with `:scope`; the production browser/WebView support
-matrix must be approved and tested before release. Unsupported browsers receive
-no component styles, not a legacy fallback.
+Token definitions belong to provider boundaries. Input, Textarea, Button, Popover,
+FieldWrapper and Label use precompiled component-owned styles and local resets;
+the remaining utility-based components still require native CSS `@scope`.
+This is an unfinished compatibility migration, **not a broadly compatible release**.
+The production browser/WebView support matrix must be approved and tested before
+release. Unsupported engines will render the unmigrated parts incorrectly.
+
+`inputVariants` and `buttonVariants` retain their arguments but return opaque,
+namespaced recipe classes. Do not depend on the individual class strings.
+For migrated components, ordinary custom CSS loaded after the package can override
+base styles through `className`; state overrides follow normal CSS specificity.
+Provider `tokens` are the preferred theme-wide customization and follow portals.
+Input/Textarea merge caller `aria-describedby` with their error/helper IDs; a
+component error keeps `aria-invalid` true even if a caller supplies false.
+
+Known pre-release API defect: Button's declared `asChild` prop is not implemented.
+Do not use it; this is separate from Radix's working `PopoverTrigger asChild`.
 
 For an application that deliberately wants Tailwind's **global** reset, optionally
 import `@kozmos/react/reset.css` before its own host styles. It is never imported

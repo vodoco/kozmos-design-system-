@@ -29,8 +29,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
+import { createRequire } from "node:module";
 
 const ROOT = process.cwd();
+const postcss = createRequire(path.join(ROOT, "packages/react/package.json"))(
+  "postcss",
+);
 const SRC = "packages/react/src";
 const CSS = "packages/react/dist/style.css";
 const problems = [];
@@ -43,7 +47,9 @@ const fail = (m) => {
 // Counts as they stood on 2026-09-17 on main at f89b734, after #47 fixed
 // MapControlButton and MapControlsGroup (66/41/29 before it). Lower these as
 // they are fixed.
-const BASELINE = { occurrences: 62, classes: 40, files: 27 };
+// Three inert references were removed by the owned-CSS migration (not
+// activated/fixed visually): Button secondary/ghost and Textarea placeholder.
+const BASELINE = { occurrences: 59, classes: 39, files: 25 };
 
 const FIXTURE = /\.(?:test|stories|figma)\.[jt]sx?$|[\\/]__tests__[\\/]/;
 
@@ -58,7 +64,7 @@ function walk(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) walk(full, files);
-    else if (/\.[jt]sx?$/.test(entry.name)) files.push(full);
+    else if (/\.(?:[jt]sx?|css)$/.test(entry.name)) files.push(full);
   }
   return files;
 }
@@ -95,6 +101,17 @@ function tokens(text, openStart, openEnd) {
 
 function authoredSlashClasses(file) {
   const text = fs.readFileSync(file, "utf8");
+  if (file.endsWith(".css")) {
+    const classes = [];
+    postcss.parse(text, { from: file }).walkAtRules("apply", (rule) => {
+      classes.push(
+        ...tokens(rule.params, false, false).filter((token) =>
+          SLASH_CLASS.test(token),
+        ),
+      );
+    });
+    return classes;
+  }
   const kind = file.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const source = ts.createSourceFile(
     file,

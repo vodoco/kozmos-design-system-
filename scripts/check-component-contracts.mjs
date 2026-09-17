@@ -741,21 +741,35 @@ assertNotContains(
 assertContains(
   files.reactButton,
   source.reactButton,
-  /default:\s*["']h-11 px-4 py-2["']/,
-  "44px default Button class",
+  /default:\s*["']kozmos-button-size-default["']/,
+  "owned default Button recipe",
 );
 assertContains(
   files.reactButton,
   source.reactButton,
-  /sm:\s*["']h-11 rounded-control px-3["']/,
-  "44px small Button class",
+  /sm:\s*["']kozmos-button-size-sm["']/,
+  "owned small Button recipe",
 );
 assertContains(
   files.reactButton,
   source.reactButton,
-  /icon:\s*["']h-11 w-11["']/,
-  "44px icon Button class",
+  /icon:\s*["']kozmos-button-size-icon["']/,
+  "owned icon Button recipe",
 );
+const ownedCssPath = "packages/react/src/styles/owned-components.css";
+const ownedCss = read(ownedCssPath);
+for (const [size, classes] of [
+  ["default", "h-11 px-4 py-2"],
+  ["sm", "h-11 rounded-control px-3"],
+  ["icon", "h-11 w-11"],
+]) {
+  assertContains(
+    ownedCssPath,
+    ownedCss,
+    new RegExp(`\\.kozmos-button-size-${size}\\s*\\{\\s*@apply ${classes};`),
+    `44px ${size} Button recipe`,
+  );
+}
 assertContains(
   files.reactIconButton,
   source.reactIconButton,
@@ -903,18 +917,25 @@ assertContains(
 assertContains(
   files.reactInput,
   source.reactInput,
+  "kozmos-reset kozmos-input",
+  "React Input owned recipe",
+);
+const ownedInput = ownedCss.match(/\.kozmos-input\s*\{([^}]*)\}/)?.[1] ?? "";
+assertContains(
+  ownedCssPath,
+  ownedInput,
   "h-11",
   "React Input 44px field height",
 );
 assertContains(
-  files.reactInput,
-  source.reactInput,
+  ownedCssPath,
+  ownedInput,
   "rounded-control",
   "React Input radius class uses the Control role",
 );
 assertContains(
-  files.reactInput,
-  source.reactInput,
+  ownedCssPath,
+  ownedInput,
   "--primitives-colors-foreground-500",
   "React Input neutral border token",
 );
@@ -3031,6 +3052,12 @@ assertContains(
 assertContains(
   files.reactLabel,
   source.reactLabel,
+  "kozmos-reset kozmos-label",
+  "React Label owned recipe",
+);
+assertContains(
+  ownedCssPath,
+  ownedCss.match(/\.kozmos-label\s*\{([^}]*)\}/)?.[1] ?? "",
   "text-sm font-medium",
   "React Label typography",
 );
@@ -10279,7 +10306,7 @@ assertContains(
     if (fn) handlers.add(fn[1]);
   }
   for (const m of plugin.matchAll(
-    /^    "update-[a-z-]+": ([A-Za-z0-9_]+),$/gm,
+    /^ {4}"update-[a-z-]+": ([A-Za-z0-9_]+),$/gm,
   )) {
     handlers.add(m[1]);
   }

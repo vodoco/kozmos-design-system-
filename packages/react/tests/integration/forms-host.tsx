@@ -13,7 +13,10 @@ import {
 function Fields({ id }: { id: string }) {
   return (
     <section data-testid={id} style={{ width: 220 }}>
-      <div data-testid={`${id}-surface`} className="bg-background">
+      <div
+        data-testid={`${id}-surface`}
+        style={{ background: "var(--primitives-colors-background-0)" }}
+      >
         Reference surface
       </div>
       <Input label={`${id} name`} data-testid={`${id}-input`} />

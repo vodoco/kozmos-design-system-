@@ -56,16 +56,13 @@ const VARIANT_TOKENS: Record<
 
 /**
  * One indirection, set as a custom property, rather than a class per
- * tier-and-emotion pair. Tailwind only ever sees these four literals, so the
- * JIT has nothing to miss, and `cn` is tailwind-merge, so these win over the
- * colour utilities the variant already carries.
+ * tier-and-emotion pair. The owned CSS recipes are emitted after the base
+ * variants so explicit emotions win without runtime CSS generation.
  */
 const TREATMENT_CLASSES = {
-  filled:
-    "bg-[var(--kz-button-bg)] text-[var(--kz-button-fg)] hover:bg-[var(--kz-button-bg-hover)]",
-  outline:
-    "border-[var(--kz-button-fg)] text-[var(--kz-button-fg)] hover:border-[var(--kz-button-fg-hover)] hover:text-[var(--kz-button-fg-hover)]",
-  text: "text-[var(--kz-button-fg)] hover:text-[var(--kz-button-fg-hover)]",
+  filled: "kozmos-button-emotion-filled",
+  outline: "kozmos-button-emotion-outline",
+  text: "kozmos-button-emotion-text",
 } as const;
 
 function emotionCustomProperties(
@@ -81,38 +78,29 @@ function emotionCustomProperties(
   } as React.CSSProperties;
 }
 
-export const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-control text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
-  {
-    variants: {
-      variant: {
-        default:
-          "bg-[var(--components-primary-buttons-themed-button-background-idle)] text-[var(--components-primary-buttons-themed-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-themed-button-background-hover)]",
-        destructive:
-          "bg-[var(--components-primary-buttons-danger-button-background-idle)] text-[var(--components-primary-buttons-danger-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-danger-button-background-hover)]",
-        outline:
-          "border border-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] bg-background text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:border-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)]",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost:
-          "text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:bg-accent/10 hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)]",
-        link: "text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] underline-offset-4 hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:underline",
-        glass:
-          "glass glass-spotlight glass-bevel text-foreground hover:bg-white/10 active:scale-[0.98]",
-      },
-      size: {
-        default: "h-11 px-4 py-2",
-        sm: "h-11 rounded-control px-3",
-        lg: "h-11 rounded-control px-8",
-        icon: "h-11 w-11",
-      },
+export const buttonVariants = cva("kozmos-reset kozmos-button", {
+  variants: {
+    variant: {
+      default: "kozmos-button-default",
+      destructive: "kozmos-button-destructive",
+      outline: "kozmos-button-outline",
+      secondary: "kozmos-button-secondary",
+      ghost: "kozmos-button-ghost",
+      link: "kozmos-button-link",
+      glass: "kozmos-button-glass",
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
+    size: {
+      default: "kozmos-button-size-default",
+      sm: "kozmos-button-size-sm",
+      lg: "kozmos-button-size-lg",
+      icon: "kozmos-button-size-icon",
     },
   },
-);
+  defaultVariants: {
+    variant: "default",
+    size: "default",
+  },
+});
 
 export interface ButtonProps
   extends
@@ -182,7 +170,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading && (
-          <Loader2 aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2
+            aria-hidden="true"
+            className="kozmos-reset kozmos-button-loader"
+          />
         )}
         {children}
       </button>

@@ -18,7 +18,7 @@ describe("PasswordInput", () => {
     render(<PasswordInput />);
 
     expect(screen.getByLabelText(/show password/i)).toHaveClass("h-11", "w-11");
-    expect(document.querySelector("input")).toHaveClass("h-11");
+    expect(document.querySelector("input")).toHaveClass("kozmos-input");
   });
 
   it("toggles password visibility", () => {

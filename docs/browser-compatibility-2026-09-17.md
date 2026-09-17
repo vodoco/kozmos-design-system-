@@ -1,5 +1,11 @@
 # Browser compatibility: measured release blocker
 
+**Continuation:** `component-owned-css-2026-09-17.md` records the approved first
+migration slice after `f8eb957`. The original form checks are now expected to pass,
+including WebKit, without skipping them. The evidence below describes the unfixed
+baseline; it is retained to explain the architectural change. The whole-library
+migration and minimum-engine/device certification remain release blockers.
+
 2026-09-17 · `astra/browser-compatibility`, based on merged foundations `040f53d`.
 This is an investigative branch, **not release-ready**. The new form-control check
 is deliberately blocking in CI; no skip, expected-failure allowance or fallback

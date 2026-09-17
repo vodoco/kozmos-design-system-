@@ -7,15 +7,25 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
-**Browser compatibility investigation, 2026-09-17:** release safeguards were pushed
+**Component-owned CSS continuation, 2026-09-17:** Olcay approved the recommendation
+to replace mandatory native scope (ruling 26). The first slice migrates Input,
+Textarea, Button, Popover, FieldWrapper and Label; token definitions/keyframes are
+outside scope. Read `component-owned-css-2026-09-17.md` for the source map, migration,
+verification and outstanding work. The original form gate is retained, not waived.
+Only the first slice is migrated; the whole library is not ready for npm. A separate
+audit also reproduced Button's declared-but-unimplemented `asChild` API, still open.
+Input/Textarea accessibility descriptions and invalid-state merging are fixed.
+
+**Earlier browser compatibility investigation, 2026-09-17:** release safeguards were pushed
 in PR #54 (not merged). The separate local `astra/browser-compatibility` branch is
 based on merged foundations `040f53d`, worktree `/private/tmp/kozmos-browser-compat.uqPMBD`.
 Read `browser-compatibility-2026-09-17.md`: actual packaged Input/Textarea controls
 fail scoped styling on the installed WebKit 26.0. Earlier geometry/theme tests did
-not cover them. The added gate deliberately fails; this branch is not merge-ready.
+not cover them. At investigation commit `f8eb957` the added gate deliberately failed;
+the implementation continuation above addresses that failure.
 Chromium 145 and Firefox 146 pass the form fixture; the launcher now really selects
 Firefox and rejects unknown names. Browser minimums and the CSS architecture choice
-remain pending; no production styles were changed to conceal this finding.
+remain release work; the baseline investigation itself changed no production styles.
 
 **Agent switch, 2026-09-17.** Development moved from Claude Code to ChatGPT Astra at `a02a008`.
 Whoever picks the work up next reads `docs/agent-switch-2026-09-17.md` first: its §1 to §5 hand the
@@ -400,6 +410,20 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
     and representative POI/routing flows before beta. See `prepublish-architecture-review-2026-09-17.md`.
     This authorizes implementation, not publication, credentials, pushes or merges. The numerical
     React thresholds are implementation choices for validation, not a universal native policy.
+
+25. **Proceed with release safeguards first**, then browser/WebView compatibility,
+    native adaptive parity and a real Pointr consumer proof before a prerelease
+    (2026-09-17). This authorizes local implementation, not credentials, account-plan
+    changes, repository visibility changes or publication. The browser minimums have
+    not been chosen by this ruling; Olcay has been asked for the Pointr support range.
+
+26. **Proceed with the component-owned CSS recommendation**, after another extensive
+    audit: precompiled namespaced recipes, provider-owned tokens and local resets,
+    without mandatory native scope. Prove a representative slice before migrating
+    the remaining components. Preserve customer compatibility rather than silently
+    raising browser minimums; exact minimums and device certification remain open.
+    Leave source/migration/verification instructions for independent maintenance.
+    This authorizes implementation, not a new push, merge or npm publication.
 
 ## 6 · Open — waiting on Olcay
 
@@ -961,6 +985,30 @@ Next: native adaptive parity and real installed POI/routing consumer validation,
 native CSS `@scope` browser/WebView policy remains an unresolved release gate. Publishing
 safeguards, CSS/type debt and motion/a11y policy must still be closed before production.
 No shared-main change, remote push, release change, credential use or publication occurred.
+
+### 2026-09-17 · Component-owned CSS first slice (Astra)
+
+Ruling 26 approved the recommended architecture after the `f8eb957` investigation.
+`astra/browser-compatibility` now migrates Input, Textarea, Button, Popover,
+FieldWrapper and Label to owned recipes and moves theme token definitions and
+namespaced animations outside native scope. Remaining components are not migrated.
+`component-owned-css-2026-09-17.md` is the maintenance/migration guide and evidence log.
+
+The original ten WebKit failures now pass. The first slice is also tested after
+removing all native scope rules. The audit reproduced and fixed description-ID/
+invalid-state accessibility merging and empty-error/helper linkage. It recorded
+Button's unsupported `asChild` API as a separate pre-release defect, not silently
+implemented with an incomplete polymorphic contract. Raw-value checks now read CSS
+recipes: moving styles must not hide debt. Inert references are 59/39/25; raw colours
+remain 35/7 and raw radii 7/6. Three dead references were removed without claiming
+their previously missing hover/placeholder visuals had been implemented.
+
+Local verification: all package builds; 387 React tests/106 files; six build tests;
+two browser-selection tests; 46 original + 13 form + two owned-CSS modes per engine
+in Chromium, Firefox and WebKit; React 18/19 packed installs and README samples;
+Storybook build and the contract/token/debt/snippet/variant checks. The guide states
+limits and exact commands. PR #54's safeguards CI is green except the plan-blocked
+Chromatic UI comparison; it is still open. This work is local, not pushed or published.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

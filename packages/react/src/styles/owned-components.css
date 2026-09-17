@@ -1,0 +1,160 @@
+/* Build-time component CSS. Tailwind expands @apply; consumers need neither
+   Tailwind nor native @scope. Every target is explicitly component-owned. */
+@kozmos-owned {
+  .kozmos-reset,
+  .kozmos-reset::before,
+  .kozmos-reset::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: var(--semantics-border-subtle);
+  }
+  .kozmos-reset {
+    margin: 0;
+    padding: 0;
+    font-family: inherit;
+    font-size: 100%;
+    font-weight: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
+  .kozmos-input::placeholder,
+  .kozmos-textarea::placeholder {
+    opacity: 1;
+  }
+  .kozmos-input::file-selector-button {
+    font: inherit;
+    -webkit-appearance: button;
+  }
+  .kozmos-input:where([type="search"]) {
+    -webkit-appearance: textfield;
+    outline-offset: -2px;
+  }
+  .kozmos-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+  .kozmos-input {
+    @apply flex h-11 w-full rounded-control border border-[color:var(--primitives-colors-foreground-500)] bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[color:var(--primitives-colors-foreground-400)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:placeholder:text-muted-foreground disabled:opacity-100;
+  }
+  .kozmos-input-error {
+    @apply border-destructive text-destructive focus-visible:ring-destructive;
+  }
+  .kozmos-input-warning {
+    @apply border-warning text-warning focus-visible:ring-warning;
+  }
+  .kozmos-input-success {
+    @apply border-success text-success focus-visible:ring-success;
+  }
+  .kozmos-textarea {
+    @apply flex min-h-20 w-full rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    resize: vertical;
+  }
+  /* The old placeholder:text-destructive/60 compiled to nothing. Do not invent
+     a replacement colour during this behavior-preserving migration. */
+  .kozmos-textarea-error {
+    @apply border-destructive text-destructive focus-visible:ring-destructive;
+  }
+  .kozmos-label {
+    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50;
+  }
+  .kozmos-field {
+    @apply relative flex w-full flex-col gap-1.5;
+  }
+  .kozmos-field-heading {
+    @apply flex items-baseline justify-between gap-3;
+  }
+  .kozmos-field-label {
+    @apply text-sm font-semibold text-foreground;
+  }
+  .kozmos-field-hidden {
+    @apply sr-only;
+  }
+  .kozmos-field-required {
+    @apply ml-0.5 text-destructive;
+  }
+  .kozmos-field-optional {
+    @apply shrink-0 text-xs leading-5 text-muted-foreground;
+  }
+  .kozmos-field-message {
+    @apply text-sm leading-5;
+  }
+  .kozmos-field-default {
+    @apply text-muted-foreground;
+  }
+  .kozmos-field-error {
+    @apply text-destructive;
+  }
+  .kozmos-field-warning {
+    @apply text-warning;
+  }
+  .kozmos-field-success {
+    @apply text-success;
+  }
+  .kozmos-button {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-control bg-transparent text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98];
+    cursor: pointer;
+    text-transform: none;
+    -webkit-appearance: button;
+    background-image: none;
+  }
+  .kozmos-button-default {
+    @apply bg-[var(--components-primary-buttons-themed-button-background-idle)] text-[var(--components-primary-buttons-themed-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-themed-button-background-hover)];
+  }
+  .kozmos-button:disabled {
+    cursor: default;
+  }
+  .kozmos-button-destructive {
+    @apply bg-[var(--components-primary-buttons-danger-button-background-idle)] text-[var(--components-primary-buttons-danger-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-danger-button-background-hover)];
+  }
+  .kozmos-button-outline {
+    @apply border border-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] bg-background text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:border-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)];
+  }
+  /* secondary/80 and accent/10 were inert token-alpha utilities. Their repair
+     remains the existing visual debt, not an unreviewed style change here. */
+  .kozmos-button-secondary {
+    @apply bg-secondary text-secondary-foreground;
+  }
+  .kozmos-button-ghost {
+    @apply text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)];
+  }
+  .kozmos-button-link {
+    @apply text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] underline-offset-4 hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:underline;
+  }
+  .kozmos-button-glass {
+    @apply glass glass-spotlight glass-bevel text-foreground hover:bg-white/10 active:scale-[0.98];
+  }
+  .kozmos-button-size-default {
+    @apply h-11 px-4 py-2;
+  }
+  .kozmos-button-size-sm {
+    @apply h-11 rounded-control px-3;
+  }
+  .kozmos-button-size-lg {
+    @apply h-11 rounded-control px-8;
+  }
+  .kozmos-button-size-icon {
+    @apply h-11 w-11;
+  }
+  .kozmos-button-emotion-filled {
+    @apply bg-[var(--kz-button-bg)] text-[var(--kz-button-fg)] hover:bg-[var(--kz-button-bg-hover)];
+  }
+  .kozmos-button-emotion-outline {
+    @apply border-[var(--kz-button-fg)] text-[var(--kz-button-fg)] hover:border-[var(--kz-button-fg-hover)] hover:text-[var(--kz-button-fg-hover)];
+  }
+  .kozmos-button-emotion-text {
+    @apply text-[var(--kz-button-fg)] hover:text-[var(--kz-button-fg-hover)];
+  }
+  .kozmos-button-loader {
+    @apply mr-2 h-4 w-4 animate-spin;
+  }
+  .kozmos-popover {
+    @apply z-50 w-72 rounded-control border bg-popover p-4 text-popover-foreground shadow-overlay outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2;
+  }
+  .kozmos-popover-arrow {
+    @apply fill-popover;
+    display: block;
+  }
+}

@@ -37,9 +37,7 @@ describe("Button", () => {
       render(<Button>Plain</Button>);
       const button = screen.getByRole("button");
       expect(button.style.getPropertyValue("--kz-button-bg")).toBe("");
-      expect(button.className).toContain(
-        "bg-[var(--components-primary-buttons-themed-button-background-idle)]",
-      );
+      expect(button.className).toContain("kozmos-button-default");
     });
 
     it.each(BUTTON_EMOTIONS)("points the filled tier at %s", (emotion) => {
@@ -51,7 +49,7 @@ describe("Button", () => {
       expect(button.style.getPropertyValue("--kz-button-fg")).toBe(
         `var(--components-primary-buttons-${emotion}-button-foreground-content-idle)`,
       );
-      expect(button.className).toContain("bg-[var(--kz-button-bg)]");
+      expect(button.className).toContain("kozmos-button-emotion-filled");
     });
 
     it("reads the secondary tier for a bordered variant", () => {
@@ -64,7 +62,7 @@ describe("Button", () => {
       expect(button.style.getPropertyValue("--kz-button-fg")).toBe(
         "var(--components-secondary-buttons-success-button-foreground-content-idle)",
       );
-      expect(button.className).toContain("border-[var(--kz-button-fg)]");
+      expect(button.className).toContain("kozmos-button-emotion-outline");
     });
 
     it("reads the secondary tier for a text variant", () => {
@@ -77,7 +75,7 @@ describe("Button", () => {
       expect(button.style.getPropertyValue("--kz-button-fg")).toBe(
         "var(--components-secondary-buttons-alert-button-foreground-content-idle)",
       );
-      expect(button.className).toContain("text-[var(--kz-button-fg)]");
+      expect(button.className).toContain("kozmos-button-emotion-text");
     });
 
     it("leaves glass alone, because it is an effect and not a weight", () => {

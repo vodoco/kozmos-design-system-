@@ -23,11 +23,11 @@ export interface FieldWrapperProps extends React.HTMLAttributes<HTMLDivElement> 
 
 function fieldMessageClass(status: FieldStatus) {
   return cn(
-    "text-sm leading-5",
-    status === "error" && "text-destructive",
-    status === "warning" && "text-warning",
-    status === "success" && "text-success",
-    status === "default" && "text-muted-foreground",
+    "kozmos-reset kozmos-field-message",
+    status === "error" && "kozmos-field-error",
+    status === "warning" && "kozmos-field-warning",
+    status === "success" && "kozmos-field-success",
+    status === "default" && "kozmos-field-default",
   );
 }
 
@@ -53,7 +53,7 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
     },
     ref,
   ) => {
-    const isStringError = typeof error === "string";
+    const isStringError = typeof error === "string" && error.length > 0;
     const message = isStringError ? error : helperText;
     const messageId = isStringError ? errorId : helperId;
     const messageStatus = isStringError ? "error" : status;
@@ -65,24 +65,24 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
     return (
       <div
         ref={ref}
-        className={cn("relative flex w-full flex-col gap-1.5", className)}
+        className={cn("kozmos-reset kozmos-field", className)}
         data-status={messageStatus}
         {...props}
       >
         {label && (
-          <div className={cn("flex items-baseline justify-between gap-3")}>
+          <div className="kozmos-reset kozmos-field-heading">
             <Label
               htmlFor={inputId}
               className={cn(
-                "text-sm font-semibold text-foreground",
-                hideLabel && "sr-only",
+                "kozmos-field-label",
+                hideLabel && "kozmos-field-hidden",
               )}
             >
               {label}
               {showRequiredMark && (
                 <span
                   aria-hidden="true"
-                  className="ml-0.5 text-destructive"
+                  className="kozmos-reset kozmos-field-required"
                   data-slot="required-mark"
                 >
                   *
@@ -90,7 +90,7 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
               )}
             </Label>
             {(showOptionalText || labelAction) && (
-              <span className="shrink-0 text-xs leading-5 text-muted-foreground">
+              <span className="kozmos-reset kozmos-field-optional">
                 {labelAction || optionalText}
               </span>
             )}
@@ -99,7 +99,7 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
         {description && (
           <p
             id={descriptionId}
-            className="text-sm leading-5 text-muted-foreground"
+            className="kozmos-reset kozmos-field-message kozmos-field-default"
           >
             {description}
           </p>

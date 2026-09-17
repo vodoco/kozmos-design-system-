@@ -15,8 +15,12 @@ these files honest are listed in its §7.
 
 ## Current
 
+- `component-owned-css-2026-09-17.md`: approved compatibility migration's first slice,
+  source map, customization/migration guide, reproduced failures, verification commands
+  and remaining release gates. Start here for the current CSS implementation.
+
 - `browser-compatibility-2026-09-17.md`: reproduced WebKit form-styling blocker,
-  real Firefox coverage and the browser/WebView policy needed before a CSS decision.
+  real Firefox coverage and the unfixed baseline that motivated the CSS migration.
 
 - `embedding-isolation.md`: scoped ThemeProvider and CSS, automatic portal ownership,
   migration, compatibility decision gate and remaining legacy configuration work.

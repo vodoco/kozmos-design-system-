@@ -18,8 +18,12 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
 
 const ROOT = process.cwd();
+const postcss = createRequire(path.join(ROOT, "packages/react/package.json"))(
+  "postcss",
+);
 const DIR = "packages/react/src/components";
 const problems = [];
 const ok = (m) => console.log(`  ok    ${m}`);
@@ -57,6 +61,26 @@ const entries = fs.existsSync(path.join(ROOT, DIR))
   ? fs.readdirSync(path.join(ROOT, DIR), { withFileTypes: true })
   : [];
 
+// CSS recipes are product source too. Count @apply tokens, not comments, so
+// moving a literal out of JSX cannot make the debt disappear from this gate.
+function cssSources(dir, result = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) cssSources(full, result);
+    else if (entry.name.endsWith(".css")) result.push(full);
+  }
+  return result;
+}
+const recipes = cssSources(path.join(ROOT, "packages/react/src")).map(
+  (file) => {
+    const classes = [];
+    postcss
+      .parse(fs.readFileSync(file, "utf8"), { from: file })
+      .walkAtRules("apply", (rule) => classes.push(rule.params));
+    return [path.relative(ROOT, file), classes.join(" ")];
+  },
+);
+
 for (const [kind, pattern] of Object.entries(PATTERNS)) {
   const byComponent = new Map();
   let total = 0;
@@ -70,6 +94,13 @@ for (const [kind, pattern] of Object.entries(PATTERNS)) {
     if (hits === 0) continue;
     byComponent.set(entry.name, hits);
     total += hits;
+  }
+  for (const [file, text] of recipes) {
+    const hits = (text.match(pattern) || []).length;
+    if (hits) {
+      byComponent.set(file, hits);
+      total += hits;
+    }
   }
 
   const base = BASELINE[kind];

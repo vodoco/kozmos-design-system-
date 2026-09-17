@@ -3,7 +3,9 @@
 const plugin = require("tailwindcss/plugin");
 
 module.exports = {
-  content: ["./src/**/*.{js,ts,jsx,tsx}"],
+  // Keep utility overrides available during migration, including utilities
+  // now consumed by @apply recipes instead of JSX class strings.
+  content: ["./src/**/*.{js,ts,jsx,tsx,css}"],
   darkMode: [
     "variant",
     '@scope (:scope[data-theme="dark"]) to ([data-kozmos-root]) { & }',
@@ -231,7 +233,8 @@ module.exports = {
           position: "relative", // Ensure pseudo-elements align
           "backdrop-filter": "var(--glass-filter)",
           "-webkit-backdrop-filter": "var(--glass-filter)",
-          "background-color": "rgba(255, 255, 255, var(--glass-opacity))", // Fallback/Light
+          "background-color":
+            "rgba(var(--kozmos-glass-rgb), var(--glass-opacity))",
           "background-image": "var(--glass-noise-image, none)",
           border: "1px solid rgba(255, 255, 255, var(--glass-bevel-opacity))",
           "will-change": "backdrop-filter, transform",
@@ -255,11 +258,6 @@ module.exports = {
         ".glass > *": {
           position: "relative",
           "z-index": "2", // Ensure content is above surface texture
-        },
-        '@scope (:scope[data-theme="dark"]) to ([data-kozmos-root])': {
-          ".glass": {
-            "background-color": "rgba(0, 0, 0, var(--glass-opacity))",
-          },
         },
         ".glass-spotlight": {
           position: "relative",

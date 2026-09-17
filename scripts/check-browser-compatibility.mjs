@@ -1,13 +1,21 @@
 // Real distributed Input/Textarea CSS, not a CSSScopeRule feature-presence check.
 // This is an investigative release gate: pinned WebKit 26.0 currently fails it.
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import {
   buildReactFixture,
   launchFixtureBrowser,
   settleLayout,
 } from "./lib/built-react-fixture.mjs";
 
-const { code, css } = await buildReactFixture("forms-host.tsx");
+const { code, css: builtCss } = await buildReactFixture("forms-host.tsx");
+const require = createRequire(`${process.cwd()}/packages/react/package.json`);
+const stylesheet = require("postcss").parse(builtCss);
+if (process.env.KOZMOS_TEST_WITHOUT_SCOPE === "1") {
+  stylesheet.walkAtRules("scope", (rule) => rule.remove());
+  console.log("Testing with all native @scope rules removed");
+}
+const css = stylesheet.toString();
 const browser = await launchFixtureBrowser();
 const failures = [];
 const check = async (name, test) => {
@@ -73,6 +81,11 @@ try {
     const surface = await page
       .getByTestId(`${id}-surface`)
       .evaluate((node) => getComputedStyle(node).backgroundColor);
+    assert.notEqual(
+      surface,
+      "rgba(0, 0, 0, 0)",
+      "reference tokens must resolve without @scope",
+    );
     for (const kind of ["input", "textarea"]) {
       await check(
         `${id} ${kind} uses actual scoped background, radius, border and sizing`,

@@ -137,7 +137,9 @@ jobs:
         run: pnpm --filter @kozmos/react exec playwright install --with-deps chromium firefox webkit
 
       - name: Verify Browser Selection
-        run: pnpm test:browser-selection
+        run: |
+          pnpm test:browser-selection
+          pnpm test:css-build
 
       - name: Verify Built Adaptive Layout Geometry
         run: |
@@ -163,13 +165,14 @@ jobs:
           ADAPTIVE_BROWSER=webkit pnpm test:config
           ADAPTIVE_BROWSER=firefox pnpm test:config
 
-      # Deliberately fails for the pinned WebKit 26.0 until the compatibility
-      # architecture/support decision is resolved. Do not skip or xfail it.
+      # Keep the original WebKit form regression and independently test the
+      # migrated slice with every native @scope rule removed.
       - name: Verify Built Form Control Compatibility
         run: |
           result=0
           for browser in chromium firefox webkit; do
             ADAPTIVE_BROWSER="$browser" pnpm test:browser-compatibility || result=1
+            ADAPTIVE_BROWSER="$browser" pnpm test:owned-css || result=1
           done
           exit "$result"
 
