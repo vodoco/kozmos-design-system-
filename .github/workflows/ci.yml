@@ -152,6 +152,9 @@ jobs:
           pnpm test:overlays
           ADAPTIVE_BROWSER=webkit pnpm test:overlays
           ADAPTIVE_BROWSER=firefox pnpm test:overlays
+          pnpm test:select-accessibility
+          ADAPTIVE_BROWSER=webkit pnpm test:select-accessibility
+          ADAPTIVE_BROWSER=firefox pnpm test:select-accessibility
 
       - name: Verify Module Theme and Stylesheet Isolation
         run: |
