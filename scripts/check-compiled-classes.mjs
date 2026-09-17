@@ -40,9 +40,10 @@ const fail = (m) => {
   console.log(`  FAIL  ${m}`);
 };
 
-// Counts as they stood on 2026-09-17, on main at 1dd30f0. Lower these as they
-// are fixed.
-const BASELINE = { occurrences: 66, classes: 41, files: 29 };
+// Counts as they stood on 2026-09-17 on main at f89b734, after #47 fixed
+// MapControlButton and MapControlsGroup (66/41/29 before it). Lower these as
+// they are fixed.
+const BASELINE = { occurrences: 62, classes: 40, files: 27 };
 
 const FIXTURE = /\.(?:test|stories|figma)\.[jt]sx?$|[\\/]__tests__[\\/]/;
 
