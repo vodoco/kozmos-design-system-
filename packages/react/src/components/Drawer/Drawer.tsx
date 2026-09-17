@@ -13,6 +13,9 @@ export type DrawerProps = React.ComponentPropsWithoutRef<
 export type DrawerContentProps = React.ComponentPropsWithoutRef<
   typeof DialogPrimitive.Content
 > & {
+  portalContainer?: React.ComponentPropsWithoutRef<
+    typeof DialogPrimitive.Portal
+  >["container"];
   showClose?: boolean;
   side?: DrawerSide;
 };
@@ -65,10 +68,17 @@ const DrawerContent = React.forwardRef<
   DrawerContentProps
 >(
   (
-    { children, className, showClose = true, side = "right", ...props },
+    {
+      children,
+      className,
+      showClose = true,
+      side = "right",
+      portalContainer,
+      ...props
+    },
     ref,
   ) => (
-    <DrawerPortal>
+    <DrawerPortal container={portalContainer}>
       <DrawerOverlay />
       <DialogPrimitive.Content
         ref={ref}

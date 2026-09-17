@@ -14,6 +14,8 @@ export interface AdaptiveMapLayoutInput {
   panelPlacement?: "start" | "end";
   panelPresentation?: MapPanelPresentation;
   panelFraction?: number;
+  /** Space required by measured map chrome before allocating bottom-panel height. */
+  minimumMapHeight?: number;
   safeAreaInsets?: Partial<LayoutInsets>;
   /** Host supplies hinge-free regions, already converted to shell-local units. */
   usableRegions?: readonly LayoutRect[];
@@ -135,7 +137,11 @@ export function resolveAdaptiveMapLayout(
   const fraction = Number.isFinite(input.panelFraction)
     ? Math.min(0.88, Math.max(0.12, input.panelFraction!))
     : 0.48;
-  const panelHeight = mapBounds.height * fraction;
+  const panelHeight = Math.min(
+    mapBounds.height * fraction,
+    Math.max(0, mapBounds.height - positive(input.minimumMapHeight)),
+  );
+  if (!panelHeight) return { mapBounds, presentation, panelBounds: null };
   return {
     mapBounds,
     presentation,

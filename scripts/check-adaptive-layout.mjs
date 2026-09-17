@@ -2,48 +2,13 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
-import { pathToFileURL } from "node:url";
-import { chromium, webkit } from "playwright";
+import {
+  buildReactFixture,
+  launchFixtureBrowser,
+} from "./lib/built-react-fixture.mjs";
 
-const root = process.cwd();
-const packageDir = path.join(root, "packages/react");
-const require = createRequire(path.join(packageDir, "package.json"));
-const { build } = await import(
-  pathToFileURL(
-    require.resolve("vite").replace(/index\.cjs$/, "dist/node/index.js"),
-  ).href
-);
-const result = await build({
-  configFile: false,
-  root: packageDir,
-  logLevel: "error",
-  esbuild: { jsx: "automatic" },
-  define: { "process.env.NODE_ENV": JSON.stringify("production") },
-  build: {
-    write: false,
-    minify: false,
-    rollupOptions: {
-      onwarn(warning, warn) {
-        if (warning.code !== "MODULE_LEVEL_DIRECTIVE") warn(warning);
-      },
-    },
-    lib: {
-      entry: path.join(packageDir, "tests/integration/adaptive-host.tsx"),
-      formats: ["iife"],
-      name: "AdaptiveHost",
-    },
-  },
-});
-const code = (Array.isArray(result) ? result[0] : result).output.find(
-  (output) => output.type === "chunk",
-).code;
-const css = fs.readFileSync(path.join(packageDir, "dist/style.css"), "utf8");
-const browserType =
-  process.env.ADAPTIVE_BROWSER === "webkit" ? webkit : chromium;
-const browser = await browserType.launch({
-  channel: process.env.ADAPTIVE_BROWSER === "chrome" ? "chrome" : undefined,
-});
+const { code, css } = await buildReactFixture("adaptive-host.tsx");
+const browser = await launchFixtureBrowser();
 let failures = 0;
 try {
   for (const scenario of [

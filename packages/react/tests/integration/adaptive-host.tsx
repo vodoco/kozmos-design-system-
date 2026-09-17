@@ -84,6 +84,7 @@ function Host() {
       onLayoutChange={(layout) => {
         window.adaptiveSnapshot = layout;
         window.adaptiveNotifications = (window.adaptiveNotifications ?? 0) + 1;
+        options.onLayoutChange?.(layout);
       }}
     />
   );

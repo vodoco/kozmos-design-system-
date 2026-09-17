@@ -73,10 +73,18 @@ otherwise it uses a docked bottom panel. Width is capped at 416px and 42% of the
 These are implementation thresholds, not names for device models or universal native breakpoints.
 The host can request `"side"` or `"bottom"` explicitly.
 
-The bottom panel defaults to 48% of available height. `panelFraction` controls it, clamped to
-12–88%; it does not add gestures, a drag handle or a modal focus trap. Those are separate
+The bottom panel requests 48% of available height by default. `panelFraction` requests another
+fraction, clamped to 12–88%. The shell reserves the measured natural height of top-bar/controls
+and their gutters first; the actual panel can be smaller than requested. If no room remains,
+`panelBounds` is null and panel content is hidden, still mounted. Hosts must use the resolved
+snapshot, not reconstruct camera padding from the requested fraction. This corrects the first
+implementation's 88% panel, which left controls clipped to zero height.
+
+The shell does not add gestures, a drag handle or a modal focus trap. Those are separate
 interaction decisions. Very small hosts or very tall custom chrome can still require compact
-host content; scrolling a constrained slot is not proof of a usable touch target.
+host content; scrolling a constrained slot is not proof of a usable touch target. If a focused
+region becomes unavailable/hidden, focus continuity is a host workflow decision, not a promise
+that the browser will keep focus on an invisible control.
 
 When auto mode receives two disjoint usable regions, each at least 240×120px, map and panel occupy
 separate regions. A horizontal separator puts the map above the panel. A vertical separator
@@ -109,6 +117,12 @@ eight host configurations: narrow container, short landscape, RTL, vertical hing
 tabletop, keyboard exclusion and a 200px-high wide host. Each also checks POI/input state,
 focus, mount count, resized bounds, live direction changes and stable layout notifications.
 The initial three regressions were reproduced against the old shell before implementation.
+
+The follow-up audit adds six browser checks: callback payload independence in both directions,
+invalid host values versus CSS safe areas (including live changes), zero-width hosts, large-panel
+control reachability, and enlarged text. Five assertions failed before their fixes; enlarged-text
+coverage passed already. The geometry unit test for measured chrome reservation also failed first.
+`pnpm test:adaptive` runs all fourteen checks per engine. See `foundation-audit-2026-09-17.md`.
 
 ## Before beta
 

@@ -8,6 +8,10 @@ layout failures and adds a typed region/occlusion contract and browser regressio
 Native parity, theme/portal/CSS isolation, export cleanup and release safeguards remain work,
 not completed features. Nothing has been pushed or published; account settings are unchanged.
 
+The follow-up audit of that first implementation found and fixed four adaptive defect classes
+and added explicit overlay destination support. See `foundation-audit-2026-09-17.md`; this is
+an incremental foundation, not completion of the broader scoped-theme/CSS recommendation.
+
 ## Scope and evidence
 
 Olcay wants to continue development across Claude and Codex, support landscape and foldable devices, eventually publish to npm, and rebuild Pointr product modules using the design system.

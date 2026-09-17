@@ -5,6 +5,17 @@ import {
 } from "./adaptive-map-layout";
 
 describe("adaptive map geometry", () => {
+  it("reserves required chrome height before expanding a bottom panel", () => {
+    const layout = resolveAdaptiveMapLayout({
+      width: 390,
+      height: 600,
+      hasPanel: true,
+      panelFraction: 0.88,
+      minimumMapHeight: 136,
+    });
+    expect(layout.panelBounds?.height).toBe(464);
+    expect(layout.panelBounds?.y).toBe(136);
+  });
   it("uses local dimensions and short-height policy", () => {
     expect(
       resolveAdaptiveMapLayout({ width: 360, height: 600, hasPanel: true })

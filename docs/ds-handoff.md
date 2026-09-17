@@ -16,7 +16,9 @@ return.
 (ruling 24). Local branch `astra/prepublish-foundations`, based on the switch handoff at `c274b06`,
 contains the first React adaptive-layout batch. Read `docs/adaptive-map-layout.md` and the new
 §10 entry before continuing. This is not on shared `main`; nothing has been pushed or published.
-The next foundation is theme/portal/CSS isolation, followed by native adaptive parity and real
+The follow-up audit fixed four adaptive defect classes and added explicit `portalContainer`
+support to the overlay primitives; see `foundation-audit-2026-09-17.md`. Full theme/portal/CSS
+isolation remains next, followed by native adaptive parity and real
 map-adapter proof. The SDK composition loop remains part of validation, not replaced by counts.
 
 Paste this as the first message of the new chat:
@@ -79,9 +81,11 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
 ## 3 · The system today — measured 2026-09-17
 
 The table below is the **Claude handover baseline**, not the state of Astra's local feature branch.
-For the latter, React now has 359 passing tests in 104 files, and eight adaptive host scenarios pass
+For the latter, React now has 360 passing tests in 104 files, and fourteen adaptive checks pass
 in each of Chromium and WebKit (`pnpm --filter @kozmos/react test`, `pnpm test:adaptive`,
-`ADAPTIVE_BROWSER=webkit pnpm test:adaptive`). Native/Figma numbers below were not re-measured in
+`ADAPTIVE_BROWSER=webkit pnpm test:adaptive`). Fourteen overlay checks (seven components, default
+and explicit containers) also pass per engine (`pnpm test:overlays`, with the same browser selector).
+Native/Figma numbers below were not re-measured in
 this implementation batch. The worktree is `/private/tmp/kozmos-astra-review.hwXbrb`; shared
 `main` at `/Volumes/4TB Depo/development/K/kozmos-design-system-dev` remains clean at `a02a008`.
 
@@ -838,6 +842,35 @@ This is the first foundation only. Theme/portal/CSS isolation, native adaptive p
 and map-engine validation, API stability work and release controls remain before beta. The
 existing full POI-detail-card Storybook example was not migrated; the browser regression fixture
 uses the exported POIDetailPanel as a consumer, not a completed product flow.
+
+### 2026-09-17 · Adversarial audit and overlay ownership (Astra)
+
+Olcay asked again for an extensive audit and further recommended work. Auditing `b13f4d9` found
+four adaptive defect classes: zero-width hosts left invisible controls exposed; a large requested
+bottom panel could clip map controls to zero height; callback payload mutation leaked in both
+directions; and a non-finite host inset could cancel a CSS safe area. Each was reproduced in the
+built browser fixture before fixing it. The new minimum-chrome unit test failed first too.
+`panelFraction` is now explicitly a request subject to measured content space, not unconditional.
+See `foundation-audit-2026-09-17.md` for the evidence, API consequences and unfinished work.
+
+Continued with a bounded prerequisite for scoped theming: the overlay content primitives accept
+an explicit `portalContainer`. Dialog, Drawer, Popover, Menu and Select preserve their body default;
+Tooltip preserves its inline default and portals when explicitly asked. BottomSheet inherits the
+Drawer prop. Browser checks verify real containment, inherited tokens, Escape and focus restoration
+for both defaults and explicit targets. The initial six primitive ownership tests failed before
+implementation; the expanded matrix also covers BottomSheet and default-behavior preservation.
+
+Checks: React 360 tests/104 files; 14 adaptive and 14 overlay checks in each of Chromium and WebKit;
+React and new harness lint; component/snippet/variant/completion checks; unchanged raw-value and
+compiled-class ratchets; tarball install/readme checks with React 18 and 19. The shared browser
+fixture helper bundles built public exports, not source aliases; it is not itself an installed
+React-peer browser matrix. Remote CI, full Storybook/a11y, native and live Figma checks were not run.
+Shared main and Claude's worktrees remain untouched; no push/publication is authorized or performed.
+
+Full provider/CSS isolation is **not done**: global theme mutation, storage/system-theme handling,
+nested light/dark token/utility behavior, global reset/selectors and automatic portal propagation
+through product compositions remain. Explicit container ownership also does not change Radix's
+document-level modal semantics. Do not present this as scoped modal isolation or production readiness.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

@@ -69,7 +69,8 @@ import { ThemeProvider } from "@kozmos/react";
 placement, and accepts host-supplied hinge-free `usableRegions`. Give it a definite
 height, or a bounded parent for its default `height: 100%`; it no longer enforces
 a 448px minimum. `panelPresentation` overrides the automatic side/bottom layout,
-and `panelFraction` controls bottom-panel height.
+and `panelFraction` requests bottom-panel height. The resolved height can be reduced
+to reserve space for measured map controls; read the actual bounds from the callback.
 
 `onLayoutChange` receives shell-local renderer/panel bounds and occlusion rectangles,
 plus physical camera padding relative to the renderer bounds. The shell does not own
@@ -105,6 +106,39 @@ export function MapHost({
   );
 }
 ```
+
+## Overlay ownership
+
+`PopoverContent`, `DialogContent`, `DrawerContent`, `BottomSheetContent`,
+`MenuContent`, `SelectContent` and `TooltipContent` accept `portalContainer`.
+Content inherits CSS tokens from that destination. Keep the destination stable
+while an overlay is open, and avoid a clipped/transformed host layer unless intended.
+
+```tsx
+import { Button, Popover, PopoverTrigger, PopoverContent } from "@kozmos/react";
+
+export function HelpPopover({ overlayLayer }: { overlayLayer: HTMLElement }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button>Help</Button>
+      </PopoverTrigger>
+      <PopoverContent portalContainer={overlayLayer}>
+        Help content
+      </PopoverContent>
+    </Popover>
+  );
+}
+```
+
+Omitting this prop preserves existing placement: document body for the portalled
+components, inline for Tooltip. Passing a container opts Tooltip into portalling;
+passing `null` explicitly uses the body. Wait for your container to exist before
+opening the overlay. Configure Radix's supported Root `dir` separately when needed.
+
+This does **not** scope document-level modal focus/scroll behavior, replace
+ThemeProvider's global behavior, or isolate the global stylesheet. Those remain
+pre-publication work.
 
 ## Analytics
 

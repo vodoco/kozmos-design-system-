@@ -29,7 +29,7 @@ export interface AdaptiveMapShellProps extends React.HTMLAttributes<HTMLDivEleme
   panelLabel?: string;
   panelPlacement?: "start" | "end";
   panelPresentation?: MapPanelPresentation;
-  /** Controlled bottom-panel height fraction, clamped to 0.12–0.88; default 0.48. */
+  /** Requested bottom-panel height fraction (0.12–0.88); reduced if map chrome needs space. */
   panelFraction?: number;
   /** Minimum renderer padding. Combined with measured chrome using max, not addition. */
   collisionInsets?: Partial<MapCollisionInsets>;
@@ -44,6 +44,8 @@ export interface AdaptiveMapShellProps extends React.HTMLAttributes<HTMLDivEleme
 const useLayoutEffect =
   typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
 const zero = { x: 0, y: 0, width: 0, height: 0 };
+const mergeSafeInset = (css: number, supplied = 0) =>
+  Math.max(css, Number.isFinite(supplied) ? supplied : 0);
 const position = (rect: MapLayoutRect): React.CSSProperties => ({
   position: "absolute",
   left: rect.x,
@@ -85,6 +87,7 @@ const AdaptiveMapShell = React.forwardRef<
     const bar = React.useRef<HTMLDivElement>(null);
     const buttons = React.useRef<HTMLDivElement>(null);
     const [measured, setMeasured] = React.useState({
+      ready: false,
       width: 0,
       height: 0,
       direction: "ltr" as "ltr" | "rtl",
@@ -100,15 +103,22 @@ const AdaptiveMapShell = React.forwardRef<
       const measure = () => {
         const safeStyle = getComputedStyle(safeArea.current!);
         const next = {
+          ready: true,
           width: element.clientWidth,
           height: element.clientHeight,
           direction:
             getComputedStyle(element).direction === "rtl"
               ? ("rtl" as const)
               : ("ltr" as const),
-          barHeight: bar.current?.offsetHeight ?? 0,
+          barHeight: Math.max(
+            bar.current?.offsetHeight ?? 0,
+            bar.current?.scrollHeight ?? 0,
+          ),
           controlsWidth: buttons.current?.offsetWidth ?? 0,
-          controlsHeight: buttons.current?.offsetHeight ?? 0,
+          controlsHeight: Math.max(
+            buttons.current?.offsetHeight ?? 0,
+            buttons.current?.scrollHeight ?? 0,
+          ),
           safe: {
             top: parseFloat(safeStyle.paddingTop) || 0,
             right: parseFloat(safeStyle.paddingRight) || 0,
@@ -125,6 +135,7 @@ const AdaptiveMapShell = React.forwardRef<
       [element, bar.current, buttons.current].forEach((node) => {
         if (node) observer.observe(node);
       });
+      observer.observe(safeArea.current!, { box: "border-box" });
       // Inherited direction can change without a resize (including a host locale switch).
       const directionObserver = new MutationObserver(measure);
       for (
@@ -146,10 +157,10 @@ const AdaptiveMapShell = React.forwardRef<
     }, [Boolean(topBar), Boolean(controls)]);
 
     const safe = {
-      top: Math.max(measured.safe.top, safeAreaInsets?.top ?? 0),
-      right: Math.max(measured.safe.right, safeAreaInsets?.right ?? 0),
-      bottom: Math.max(measured.safe.bottom, safeAreaInsets?.bottom ?? 0),
-      left: Math.max(measured.safe.left, safeAreaInsets?.left ?? 0),
+      top: mergeSafeInset(measured.safe.top, safeAreaInsets?.top),
+      right: mergeSafeInset(measured.safe.right, safeAreaInsets?.right),
+      bottom: mergeSafeInset(measured.safe.bottom, safeAreaInsets?.bottom),
+      left: mergeSafeInset(measured.safe.left, safeAreaInsets?.left),
     };
     const layout = resolveAdaptiveMapLayout({
       ...measured,
@@ -157,12 +168,15 @@ const AdaptiveMapShell = React.forwardRef<
       panelPlacement,
       panelPresentation,
       panelFraction,
+      minimumMapHeight:
+        (topBar ? measured.barHeight : 0) +
+        (controls ? measured.controlsHeight : 0) +
+        (topBar && controls ? 48 : topBar || controls ? 32 : 0),
       safeAreaInsets: safe,
       usableRegions,
     });
     const unavailable =
-      measured.width > 0 &&
-      (!layout.mapBounds.width || !layout.mapBounds.height);
+      measured.ready && (!layout.mapBounds.width || !layout.mapBounds.height);
     const onRight =
       (panelPlacement === "end") === (measured.direction !== "rtl");
     const available = { ...layout.mapBounds };
@@ -238,11 +252,12 @@ const AdaptiveMapShell = React.forwardRef<
     const previousInsets = React.useRef("");
     React.useEffect(() => {
       const value: AdaptiveMapLayoutSnapshot = JSON.parse(snapshot);
+      const insetValue = { ...value.collisionInsets };
+      const serializedInsets = JSON.stringify(insetValue);
       callbacks.current.onLayoutChange?.(value);
-      const serializedInsets = JSON.stringify(value.collisionInsets);
       if (previousInsets.current !== serializedInsets) {
         previousInsets.current = serializedInsets;
-        callbacks.current.onCollisionInsetsChange?.(value.collisionInsets);
+        callbacks.current.onCollisionInsetsChange?.(insetValue);
       }
     }, [snapshot]);
 
@@ -340,7 +355,7 @@ const AdaptiveMapShell = React.forwardRef<
         {panel && (
           <aside
             aria-label={panelLabel}
-            hidden={unavailable}
+            hidden={unavailable || (measured.ready && !layout.panelBounds)}
             style={position(layout.panelBounds ?? zero)}
             className={cn(
               "z-40 overflow-hidden bg-background shadow-overlay",

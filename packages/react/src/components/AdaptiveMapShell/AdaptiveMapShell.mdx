@@ -11,7 +11,8 @@ The old 448px minimum has been removed so a short landscape host can constrain i
 
 Auto presentation uses a side panel in a local region at least 720×160px, otherwise
 a bottom panel. Override with `panelPresentation`; `panelFraction` controls bottom
-height. `panelPlacement` is logical and follows inherited RTL direction.
+height, subject to space reserved for measured map controls. Read the resolved
+panel bounds from `onLayoutChange`. `panelPlacement` is logical and follows inherited RTL direction.
 
 `usableRegions` accepts host-provided hinge-free rectangles in shell-local CSS pixels.
 Auto mode can separate map and panel across those regions without remounting either.

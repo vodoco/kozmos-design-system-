@@ -15,6 +15,9 @@ these files honest are listed in its §7.
 
 ## Current
 
+- `foundation-audit-2026-09-17.md`: the adversarial audit of the first Astra batch,
+  reproduced corrections, explicit overlay ownership, verification and remaining release blockers.
+
 - `prepublish-architecture-review-2026-09-17.md`: baseline audit, approved architecture direction,
   publication risks and the phased pre-beta plan.
 - `adaptive-map-layout.md`: the first implementation, its coordinate/API contract, migration,
