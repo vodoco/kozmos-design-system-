@@ -95,7 +95,7 @@ export const WithoutSteppers: Story = {
 
 export const RightToLeft: Story = {
   render: () => (
-    <ThemeProvider dir="rtl">
+    <ThemeProvider dir="rtl" theme="light">
       <div style={{ width: 220 }}>
         <NumberInput
           label="Floors"

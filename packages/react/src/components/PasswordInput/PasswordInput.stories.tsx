@@ -39,7 +39,7 @@ export const WithoutToggle: Story = {
 
 export const RightToLeft: Story = {
   render: (args) => (
-    <ThemeProvider dir="rtl">
+    <ThemeProvider dir="rtl" theme="light">
       <div style={{ width: 220 }}>
         <PasswordInput {...args} />
       </div>

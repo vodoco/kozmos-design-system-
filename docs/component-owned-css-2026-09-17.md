@@ -260,6 +260,9 @@ production Storybook build passes. Toolchain cleanup remains separate work.
 Useful story IDs: `components-button--emotions`, `components-passwordinput--right-to-left`,
 `components-numberinput--right-to-left`, and `components-numberinput--read-only`.
 Open `/?path=/story/<id>` on that server. New RTL stories use a 220px host.
+Visual preview caught a story setup mistake: a nested provider defaulted to the
+system's dark theme on Storybook's white canvas. Both new RTL examples now explicitly
+select light, matching the canvas; component tokens and theme behavior are unchanged.
 
 To run your own preview, build first, then run in that checkout:
 
