@@ -105,4 +105,44 @@ describe("useRevealOnChange", () => {
     });
     expect(result.current).toBe(false);
   });
+  it("closes even when its timing changes while it is open", () => {
+    // A caller may compute the timing — revealDelay={isRouting ? 1400 : 0} —
+    // so it can change mid-reveal. That used to re-run the effect, whose
+    // cleanup cleared the close timer, and whose body then returned early
+    // because the value had not changed: nothing re-armed it, and the label
+    // stayed open for ever.
+    const { result, rerender } = renderHook(
+      ({ mode, duration, delay }) =>
+        useRevealOnChange(mode, { duration, delay }),
+      { initialProps: { mode: "off", duration: 2000, delay: 0 } },
+    );
+
+    rerender({ mode: "on", duration: 2000, delay: 0 });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(result.current).toBe(true);
+
+    rerender({ mode: "on", duration: 5000, delay: 300 });
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    // The window that was already open keeps the timing it opened with.
+    expect(result.current).toBe(false);
+
+    // And the new timing applies to the next change.
+    rerender({ mode: "off", duration: 5000, delay: 300 });
+    act(() => {
+      vi.advanceTimersByTime(299);
+    });
+    expect(result.current).toBe(false);
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(result.current).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(result.current).toBe(false);
+  });
 });

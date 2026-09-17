@@ -66,7 +66,7 @@ describe("MapControlButton", () => {
     );
   });
 
-  it("still fills when a caller asks for the heavier emphasis", () => {
+  it("actually fills when a caller asks for the heavier emphasis", () => {
     render(
       <MapControlButton
         emphasis="filled"
@@ -78,6 +78,19 @@ describe("MapControlButton", () => {
     );
 
     const button = screen.getByRole("button", { name: "Focus" });
+    // The fill and its ink come from the Button's primary tier. Asserting that
+    // a tint is absent is not enough — this passed for as long as the control
+    // was white with black text, because the map surface and ink classes were
+    // still on the root and tailwind-merge let them beat the tier's own.
+    expect(button.className).toContain(
+      "bg-[var(--components-primary-buttons-themed-button-background-idle)]",
+    );
+    expect(button.className).toContain(
+      "text-[var(--components-primary-buttons-themed-button-foreground-content-idle)]",
+    );
+    expect(button).not.toHaveClass("bg-background");
+    expect(button).not.toHaveClass("text-foreground");
+    expect(button).not.toHaveClass("hover:bg-muted");
     expect(button.className).not.toContain("ring-primary");
     expect(screen.getByTestId("glyph").parentElement).not.toHaveClass(
       "text-primary",
@@ -201,5 +214,75 @@ describe("MapControlButton", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+  it("does not announce a change when `pressed` only goes from unset to false", () => {
+    // A caller loading its state often renders `pressed={undefined}` first and
+    // `false` once it knows. Nothing the user can see or do has changed, so
+    // nothing should widen over the map.
+    vi.useFakeTimers();
+    try {
+      const { rerender } = render(
+        <MapControlButton
+          icon={<Focus />}
+          label="Focus"
+          revealOnChange
+          stateLabel="Off"
+          onClick={() => undefined}
+        />,
+      );
+      rerender(
+        <MapControlButton
+          icon={<Focus />}
+          label="Focus"
+          pressed={false}
+          revealOnChange
+          stateLabel="Off"
+          onClick={() => undefined}
+        />,
+      );
+      act(() => {
+        vi.advanceTimersByTime(10);
+      });
+      expect(
+        screen.getByRole("button", { name: "Focus, Off" }),
+      ).toHaveAttribute("data-presentation", "icon-only");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it("keeps a stacked caption legible on a filled surface", () => {
+    render(
+      <MapControlButton
+        emphasis="filled"
+        icon={<Focus />}
+        label="Focus"
+        labelPlacement="stacked"
+        presentation="labelled"
+        pressed
+        stateLabel="On"
+        onClick={() => undefined}
+      />,
+    );
+
+    // Muted grey on the theme fill is about 1.9:1. On a filled surface the
+    // caption inherits the on-fill colour, as the state line under it does.
+    expect(screen.getByText("Focus")).not.toHaveClass("text-muted-foreground");
+    expect(screen.getByText("On")).not.toHaveClass("text-muted-foreground");
+  });
+
+  it("keeps the caption muted on the map's own surface", () => {
+    render(
+      <MapControlButton
+        icon={<Focus />}
+        label="Focus"
+        labelPlacement="stacked"
+        presentation="labelled"
+        pressed
+        stateLabel="On"
+        onClick={() => undefined}
+      />,
+    );
+
+    expect(screen.getByText("Focus")).toHaveClass("text-muted-foreground");
   });
 });

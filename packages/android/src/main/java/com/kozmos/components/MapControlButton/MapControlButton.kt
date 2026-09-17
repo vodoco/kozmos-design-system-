@@ -61,6 +61,49 @@ enum class KozmosMapControlButtonLabelPlacement {
 }
 
 /**
+ * What a map control's state resolves to, before any colour is chosen.
+ *
+ * Kept apart from the composable because this decision is the part a design
+ * ruling changes — tinted became the default on 2026-09-15 — and it can be
+ * tested without rendering anything.
+ */
+internal data class KozmosMapControlButtonAppearance(
+    val surface: Surface,
+    val icon: Tone,
+    val label: Tone,
+    /** The small line above a stacked state; muted only on the map's surface. */
+    val caption: Tone,
+    val edge: Edge
+) {
+    enum class Surface { Chrome, Filled }
+    enum class Tone { Ink, Muted, Theme, OnFill }
+    enum class Edge { Subtle, Theme }
+
+    companion object {
+        fun resolve(
+            pressed: Boolean,
+            emphasis: KozmosMapControlButtonEmphasis
+        ): KozmosMapControlButtonAppearance = when {
+            pressed && emphasis == KozmosMapControlButtonEmphasis.Filled ->
+                KozmosMapControlButtonAppearance(Surface.Filled, Tone.OnFill, Tone.OnFill, Tone.OnFill, Edge.Subtle)
+            // Only the glyph and the edge take the theme, so the label keeps its
+            // contrast against a surface that stays the map's.
+            pressed ->
+                KozmosMapControlButtonAppearance(Surface.Chrome, Tone.Theme, Tone.Ink, Tone.Muted, Edge.Theme)
+            else ->
+                KozmosMapControlButtonAppearance(Surface.Chrome, Tone.Ink, Tone.Ink, Tone.Muted, Edge.Subtle)
+        }
+    }
+}
+
+private fun KozmosMapControlButtonAppearance.Tone.color() = when (this) {
+    KozmosMapControlButtonAppearance.Tone.Ink -> KozmosColors.primitivesColorsForeground100
+    KozmosMapControlButtonAppearance.Tone.Muted -> KozmosColors.primitivesColorsForeground400
+    KozmosMapControlButtonAppearance.Tone.Theme -> KozmosColors.primitivesColorsTheme600
+    KozmosMapControlButtonAppearance.Tone.OnFill -> KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
+}
+
+/**
  * A single floating map control.
  *
  * Mirrors the React `MapControlButton`. [label] is the localized action name
@@ -81,24 +124,9 @@ fun KozmosMapControlButton(
     enabled: Boolean = true
 ) {
     val accessibleLabel = if (stateLabel != null) "$label, $stateLabel" else label
-    // A tinted control keeps the map chrome in both states; only a filled one
-    // inverts its surface.
-    val isFilled = pressed && emphasis == KozmosMapControlButtonEmphasis.Filled
-
-    val contentColor = if (isFilled) {
-        KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
-    } else {
-        KozmosColors.primitivesColorsForeground100
-    }
-    // Only the glyph carries the tint, so the label keeps its contrast against
-    // the surface behind it.
-    val iconColor = when {
-        isFilled -> KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
-        pressed -> KozmosColors.primitivesColorsTheme600
-        else -> KozmosColors.primitivesColorsForeground100
-    }
+    val appearance = KozmosMapControlButtonAppearance.resolve(pressed, emphasis)
     val borderColor by animateColorAsState(
-        targetValue = if (pressed && !isFilled) {
+        targetValue = if (appearance.edge == KozmosMapControlButtonAppearance.Edge.Theme) {
             KozmosColors.primitivesColorsTheme600
         } else {
             KozmosColors.primitivesColorsForeground300
@@ -123,12 +151,12 @@ fun KozmosMapControlButton(
             },
         enabled = enabled,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
-        color = if (isFilled) {
+        color = if (appearance.surface == KozmosMapControlButtonAppearance.Surface.Filled) {
             KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle
         } else {
             KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f)
         },
-        contentColor = contentColor,
+        contentColor = appearance.label.color(),
         border = BorderStroke(1.dp, borderColor),
         shadowElevation = if (pressed) 2.dp else 8.dp
     ) {
@@ -147,7 +175,7 @@ fun KozmosMapControlButton(
             )
         ) {
             if (icon != null) {
-                CompositionLocalProvider(LocalContentColor provides iconColor) {
+                CompositionLocalProvider(LocalContentColor provides appearance.icon.color()) {
                     icon()
                 }
             }
@@ -162,7 +190,7 @@ fun KozmosMapControlButton(
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelSmall,
-                            color = KozmosColors.primitivesColorsForeground400,
+                            color = appearance.caption.color(),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )

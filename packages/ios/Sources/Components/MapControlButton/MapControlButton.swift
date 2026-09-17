@@ -27,6 +27,50 @@ public enum KozmosMapControlButtonLabelPlacement {
     case stacked
 }
 
+/// What a map control's state resolves to, before any colour is chosen.
+///
+/// Kept apart from the view because this decision is the part a design ruling
+/// changes — tinted became the default on 2026-09-15 — and it can be tested
+/// without rendering anything.
+struct KozmosMapControlButtonAppearance: Equatable {
+    enum Surface: Equatable { case chrome, filled }
+    enum Tone: Equatable { case ink, muted, theme, onFill }
+    enum Edge: Equatable { case subtle, theme }
+
+    let surface: Surface
+    let icon: Tone
+    let label: Tone
+    /// The small line above a stacked state. Muted on the map's surface, but on
+    /// a filled one a muted grey would sit at about 1.9:1 against the theme.
+    let caption: Tone
+    let edge: Edge
+
+    init(pressed: Bool, emphasis: KozmosMapControlButtonEmphasis) {
+        switch (pressed, emphasis) {
+        case (true, .filled):
+            surface = .filled
+            icon = .onFill
+            label = .onFill
+            caption = .onFill
+            edge = .subtle
+        case (true, .tinted):
+            // Only the glyph and the edge take the theme, so the label keeps
+            // its contrast against a surface that stays the map's.
+            surface = .chrome
+            icon = .theme
+            label = .ink
+            caption = .muted
+            edge = .theme
+        case (false, _):
+            surface = .chrome
+            icon = .ink
+            label = .ink
+            caption = .muted
+            edge = .subtle
+        }
+    }
+}
+
 /// A single floating map control.
 ///
 /// Mirrors the React `MapControlButton`. `label` is the localized action name
@@ -42,6 +86,10 @@ public struct KozmosMapControlButton<Icon: View>: View {
     private let pressed: Bool
     private let isDisabled: Bool
     private let action: () -> Void
+
+    /// Someone who has asked iOS to reduce motion still needs to read the new
+    /// state; they just should not watch the control grow to show it.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(
         label: String,
@@ -70,37 +118,31 @@ public struct KozmosMapControlButton<Icon: View>: View {
         return "\(label), \(stateLabel)"
     }
 
-    /// A tinted control keeps the map chrome in both states; only a filled one
-    /// inverts its surface.
-    private var isFilled: Bool {
-        pressed && emphasis == .filled
+    var appearance: KozmosMapControlButtonAppearance {
+        KozmosMapControlButtonAppearance(pressed: pressed, emphasis: emphasis)
     }
 
-    private var foregroundColor: Color {
-        isFilled
-            ? KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
-            : KozmosColors.primitivesColorsForeground100
-    }
-
-    /// Only the glyph carries the tint, so the label keeps its contrast
-    /// against the surface behind it.
-    private var iconColor: Color {
-        if isFilled {
+    private func color(_ tone: KozmosMapControlButtonAppearance.Tone) -> Color {
+        switch tone {
+        case .ink:
+            return KozmosColors.primitivesColorsForeground100
+        case .muted:
+            return KozmosColors.primitivesColorsForeground400
+        case .theme:
+            return KozmosColors.primitivesColorsTheme600
+        case .onFill:
             return KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
         }
-        return pressed
-            ? KozmosColors.primitivesColorsTheme600
-            : KozmosColors.primitivesColorsForeground100
     }
 
     private var backgroundColor: Color {
-        isFilled
+        appearance.surface == .filled
             ? KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle
             : KozmosColors.primitivesColorsBackground0.opacity(0.9)
     }
 
     private var borderColor: Color {
-        pressed && !isFilled
+        appearance.edge == .theme
             ? KozmosColors.primitivesColorsTheme600
             : KozmosColors.primitivesColorsForeground300
     }
@@ -116,7 +158,7 @@ public struct KozmosMapControlButton<Icon: View>: View {
                     // gap list rather than hard-coded here.
                     Text(label)
                         .font(KozmosTypography.caption)
-                        .foregroundColor(KozmosColors.primitivesColorsForeground400)
+                        .foregroundColor(color(appearance.caption))
                         .lineLimit(1)
                         .truncationMode(.tail)
 
@@ -148,12 +190,12 @@ public struct KozmosMapControlButton<Icon: View>: View {
         Button(action: action) {
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                 icon
-                    .foregroundColor(iconColor)
+                    .foregroundColor(color(appearance.icon))
                     .accessibilityHidden(true)
 
                 labelContent
             }
-            .foregroundColor(foregroundColor)
+            .foregroundColor(color(appearance.label))
             .frame(
                 width: presentation == .iconOnly ? 44 : nil,
                 height: 44
@@ -175,7 +217,7 @@ public struct KozmosMapControlButton<Icon: View>: View {
         .buttonStyle(.plain)
         .disabled(isDisabled)
         .opacity(isDisabled ? 0.5 : 1)
-        .animation(.easeInOut(duration: 0.3), value: presentation == .labelled)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: presentation == .labelled)
         .accessibilityLabel(accessibleLabel)
         .accessibilityAddTraits(pressed ? [.isButton, .isSelected] : .isButton)
     }

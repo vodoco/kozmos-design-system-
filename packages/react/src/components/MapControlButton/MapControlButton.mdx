@@ -17,9 +17,8 @@ controlled state such as “Off” without relying on colour.
 `emphasis` decides what "on" looks like. `tinted` is the default: the map
 surface stays and only the icon and the edge take the theme colour, because a
 control over a map has to remain legible against the tiles behind it and a
-solid fill hides the very thing it sits on. `filled` is the inverted treatment
-this component shipped before 2026-09-15, kept for callers that want the
-heavier emphasis.
+solid fill hides the very thing it sits on. `filled` inverts the surface to the
+Button's primary tier, for callers that want the heavier emphasis.
 
 <Canvas of={Stories.StackedState} />
 <Canvas of={Stories.FilledEmphasis} />

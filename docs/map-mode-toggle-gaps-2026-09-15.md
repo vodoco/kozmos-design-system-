@@ -76,9 +76,9 @@ Asked as a decision with the measurements beside it, and answered 2026-09-15:
 ## 3 · What was built
 
 - **`emphasis`: `tinted` (default) | `filled`.** Tinted keeps the surface and
-  colours the icon and the ring; filled is the pre-2026-09-15 inverted
-  treatment, kept for callers wanting the heavier emphasis. React, SwiftUI and
-  Compose.
+  colours the icon and the ring; filled inverts the surface to the Button's
+  primary tier. React, SwiftUI and Compose. On iOS and Android a pressed control
+  really was filled before; **in React it never was** — see §3.1.
 - **`labelPlacement`: `inline` (default) | `stacked`.** Stacked sets the state
   under the label, as the map pill does.
 - **`revealOnChange`, with `revealDelay` and `revealDuration`** — the control
@@ -126,6 +126,42 @@ Asked as a decision with the measurements beside it, and answered 2026-09-15:
   nothing for the two pre-existing `.font(.subheadline.weight(.medium))` lines
   beside it — the check's pattern only matches the bare form. Both were moved
   anyway.
+
+### 3.1 · What an audit on 2026-09-17 caught
+
+Asked for another adversarial pass, it found five defects that tests had passed
+over, and one wrong claim. Each fix came with a test first run against the
+unfixed code.
+
+- **The reveal could stick open for ever.** `useRevealOnChange` listed its
+  timing as effect dependencies, so a caller computing `revealDelay` or
+  `revealDuration` could change one mid-reveal: the cleanup cleared the close
+  timer and the body returned early because the value had not changed. A test
+  held it open a full minute. The timing now lives in a ref, synced in an effect
+  declared before the reveal effect rather than written during render.
+- **`filled` never rendered a fill in React.** The map surface and ink classes
+  (`bg-background`, `text-foreground`, `hover:bg-muted`) were unconditional, and
+  tailwind-merge let them beat the primary tier's own: a filled control was
+  white with black text. The report's earlier statement that React "mapped
+  pressed to the primary tier" described the code, not what it drew — the
+  claim was read, never rendered. Found by rendering the built component in
+  Chrome and reading computed colours; the old test passed because it asserted
+  a tint was absent rather than that a fill was present. Now measured: `#0D44C2`
+  with white text and icon, about 8.3:1.
+- **A stacked caption was hard-coded muted** on every platform, so on a filled
+  surface it sat at about 1.9:1. It is muted only on the map's surface now.
+- **`pressed` going from unset to `false`** — a caller loading its state — counted
+  as a change and widened the control. It is read as a boolean.
+- **iOS ignored Reduce Motion** for the reveal animation this change added.
+- **Native had no tests of any of this.** The state → appearance decision is now
+  a pure type on both platforms (`KozmosMapControlButtonAppearance`), used by the
+  view and held by XCTest and JUnit to the same table as the React tests; both
+  were shown to fail with the caption bug put back.
+
+One cross-platform difference was found and left: React's `foreground` role is
+`foreground/0` (`#000000`), while the native controls read `foreground/100`
+(`#17191C`), which is the ink the SDK draws. It is how the Tailwind config maps
+the role for the whole library, not something this component chose.
 
 ## 4 · The defect this found: a whole class of Tailwind opacity modifiers paints nothing
 
