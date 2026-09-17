@@ -2,6 +2,15 @@
   "name": "@kozmos/product-contracts",
   "version": "0.0.1",
   "description": "Platform-neutral presentation contracts for Kozmos map, POI, floor, and routing components.",
+  "keywords": [
+    "kozmos",
+    "design-system",
+    "types",
+    "maps",
+    "poi",
+    "wayfinding"
+  ],
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
@@ -12,7 +21,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"

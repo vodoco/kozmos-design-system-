@@ -1,6 +1,17 @@
 {
   "name": "@kozmos/react",
   "version": "0.0.1",
+  "description": "React components for the Kozmos design system: core controls and map, POI and wayfinding compositions, styled from Kozmos tokens.",
+  "keywords": [
+    "kozmos",
+    "design-system",
+    "react",
+    "components",
+    "maps",
+    "wayfinding",
+    "accessibility"
+  ],
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
@@ -16,7 +27,9 @@
       "import": "./dist/kozmos-react.mjs",
       "require": "./dist/kozmos-react.umd.cjs"
     },
-    "./dist/style.css": "./dist/style.css"
+    "./style.css": "./dist/style.css",
+    "./dist/style.css": "./dist/style.css",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
