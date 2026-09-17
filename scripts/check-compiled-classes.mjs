@@ -5,7 +5,7 @@
  * from the stylesheet without a word, the element renders as if it were never
  * written, and a test asserting `toHaveClass(...)` still passes because the
  * string is on the element. `bg-background/90` sat on MapControlButton like that
- * for months: the control was transparent over the map, and its story centred
+ * for three weeks: the control was transparent over the map, and its story centred
  * it on a white canvas, where transparent and white are the same picture.
  *
  * The cause is structural. Every colour role in packages/react/tailwind.config.js
