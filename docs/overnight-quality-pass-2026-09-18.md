@@ -186,13 +186,18 @@ retains axe `incomplete` results for manual review; these are not proven passes.
 CI now runs every initial story in Chromium and the new focused interaction matrix
 in all three engines. No axe rules are disabled.
 
-The first zero-violation all-story report still contains **70 cases needing manual
+The first zero-violation all-story report contained **70 cases needing manual
 review**, across 21 stories: 44 uncertain contrast nodes, 28 multiple-label nodes,
 20 ARIA-value nodes and 8 hidden-focus nodes. These are not 70 confirmed defects,
 but neither are they verified accessible. The report retains targets and subsequent
 runs also include axe's explanations. Review these before accessibility sign-off;
 image/transparent surfaces, date ranges and closed overlay states feature in this
-list. Do not remove the incomplete results to make a report look cleaner.
+list. Batch 4 reduced this to **48 cases across 15 stories**, with 38 contrast,
+16 ARIA-value and 8 hidden-focus node flags. The final clean-checkout report is
+`test-results/storybook-release-review-final.json` in the preview checkout.
+Read [the committed manual-review queue](storybook-manual-review-2026-09-18.md)
+for every remaining story and the exact explanation. Do not remove incomplete
+results to make a report look cleaner.
 
 For preview development use `pnpm --filter @kozmos/docs storybook:react --ci
 --host 127.0.0.1`. The user-facing port 6006 is owned by the separate clean preview
@@ -203,11 +208,36 @@ not a second product preview.
 
 ### Verification record
 
-At the repair stage: 424 React tests across 110 files; React lint and docs types;
-194 token contrast checks; component contracts; tarball installs and README/native
-Button types against React 18 and 19; iOS and Android compilation passed. Final
-clean-checkout browser results and preview revision are recorded below after the
-last verification run.
+Final clean production Storybook at `bbeddcf`: **944/944 initial cases pass**;
+236 stories / 102 groups, light/dark at 320×568 and 1280×800, Chromium 145.0.7632.6.
+This includes zero axe violations, page errors and document horizontal-overflow
+failures; the 48 incomplete/manual-review cases above remain explicitly outstanding.
+The final interaction matrix also passes **102 audits per engine (306 total)** in
+Chromium 145.0.7632.6, Firefox 146.0.1 and WebKit 26.0: both themes, portrait 320×568,
+landscape 568×320 and desktop 1280×800, plus all 18 emotional Button hover treatments
+in each theme. These are the installed test-engine versions, not a browser-support
+minimum. Earlier built-package Select (15 cases), overlay (63 cases), form and
+owned-CSS/no-scope fixtures also passed across the three engines during this pass.
+
+Clean checkout at `bbeddcf`: **425 React tests across 110 files**, React lint,
+docs types, component contracts, compiled-class ratchet and documentation snippets
+passed. The full 194 token-contrast checks passed earlier in this pass; no tokens
+changed afterward. React 18/19 tarball installs and README/native Button API types
+were rerun after the final component changes and passed with the three explicitly
+recorded declaration problems still outstanding. iOS and Android compilation
+passed after the canonical token update; no native sources changed afterward.
+
+The live 6006 screenshot-regression matrix passes 36 Chromium cases. The strict
+five-story accessibility smoke passes after awaiting fonts and finite opening
+animations, as the stateful matrix already does. Before that wait, the now-correctly
+styled Select could be sampled midway through its fade and fail at 4.21:1. No
+accessibility rule was removed or disabled. This verifies settled states, not a
+complete reduced-motion or animation accessibility assessment.
+
+The user-facing preview is `http://127.0.0.1:6006`, bound to loopback, serving
+component/source revision `bbeddcf` from the separate clean checkout. Subsequent
+documentation/test-harness-only commits do not change the rendered components.
+Do not assume main contains these changes just because the preview shows them.
 
 ## Still required before release
 
@@ -234,3 +264,35 @@ implied by this overnight work.
 - **Release/design operations:** Figma import and visual review are pending;
   Chromatic's account/plan gate is not bypassed. No package published, no push or
   merge. No new design ruling or browser support minimum was invented.
+
+## Recommended next work, in order
+
+1. Finish component-owned CSS family by family. Extend the existing no-`@scope`
+   built-package fixtures to each migrated family; lower the inert-class/raw-value
+   ratchets only when the compiled styles and rendered states prove the repair.
+   Do not trade this for a newer browser minimum without product approval.
+2. Resolve the three recorded declaration-format problems, then require a zero
+   problem package report. Keep both React 18/19, ESM/CJS and real tarball checks.
+3. Work through the accompanying manual-review queue, then screen-reader/keyboard,
+   zoom/reflow, forced-colours, reduced-motion and physical foldable/landscape
+   acceptance. A resized desktop viewport is not a physical-foldable test.
+4. Rebuild one actual Pointr module with only installed Kozmos packages. Record
+   missing APIs instead of recreating design-system controls in product code.
+5. Align the Figma payload/visual approval, address Storybook dependency warnings
+   in a separately tested tooling batch, obtain release approvals and run the
+   established release safeguards. Do not use this guide as publishing authority.
+
+### Commit map and safe continuation
+
+- `598b0b8`: Select modal lifecycle and cross-engine regressions.
+- `10cbfb8`: canonical emotional Button contrast, generated native/Figma payloads.
+- `dcdc143`: library-wide accessibility, narrow-layout and interaction repairs.
+- `a2cefbe`: coherent Storybook source/provider/portal contexts.
+- `bbeddcf`: date-range group naming, visible warning/demo content and POI description.
+
+All are on `astra/browser-compatibility`; none was pushed in this pass. The branch
+also contains earlier unmerged work, so review its complete diff before integrating
+it. The shared main checkout remains at `a02a008`, clean and unchanged. The `/tmp`
+paths above are working directories, not durable backups; commits live in the
+repository's Git object store. Use `git worktree list` to locate them later. Do not
+delete either worktree while its preview or verification process is running.

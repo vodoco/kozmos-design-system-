@@ -13,7 +13,9 @@ and local commits while away. Select's previously exposed modal accessibility
 blocker is fixed with explicit inert-state ownership (`598b0b8`); emotional button
 contrast is repaired in canonical tokens and native copies (`10cbfb8`). The wider
 continuation covers accessibility, keyboard scrolling, responsive layouts and
-all 236 React stories. The guide records the final verification state and exact
+all 236 React stories. Storybook's source/built-provider context split is corrected
+(`a2cefbe`); manual-review findings led to range-label, warning-contrast and POI
+description fixes (`bbeddcf`). React now has 425 passing tests. The guide records the final verification state and exact
 maintenance commands. Older continuation notes below are historical, not the
 current release verdict. Shared main is untouched; no overnight push/merge/npm.
 

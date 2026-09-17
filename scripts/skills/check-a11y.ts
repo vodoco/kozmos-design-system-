@@ -35,6 +35,20 @@ async function runAudit() {
           await control.click();
           await page.locator(popup).waitFor();
         }
+        // Visibility does not mean a fading/zooming popup has finished painting.
+        // Measure its settled colours, without arbitrary sleeps or rule waivers.
+        await page.evaluate(async () => {
+          await document.fonts.ready;
+          await Promise.all(
+            document
+              .getAnimations()
+              .filter(
+                (animation) =>
+                  animation.effect?.getTiming().iterations !== Infinity,
+              )
+              .map((animation) => animation.finished.catch(() => {})),
+          );
+        });
         const result = await new AxeBuilder({ page })
           .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
           .analyze();
