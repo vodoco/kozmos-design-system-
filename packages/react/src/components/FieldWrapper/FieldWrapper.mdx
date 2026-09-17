@@ -27,6 +27,12 @@ look right while screen readers announce an unlabelled field.
 `error` accepts `true` for the error styling alone, or a string to also render
 the message.
 
+For several individually labelled controls, React's `group` prop makes the wrapper
+a named ARIA group and renders its heading as text rather than a second input
+label. Give each child its own label; do not pass `inputId` for the group.
+`DateRangePicker` uses this mode for the range heading and keeps separate start/end
+labels. This additive React prop does not imply equivalent native or Vue support.
+
 ## Implementation
 
 import { PlatformSnippets } from '../PlatformSnippets';

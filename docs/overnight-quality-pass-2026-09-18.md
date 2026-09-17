@@ -116,6 +116,22 @@ the separate built fixtures and React 18/19 tarball tests remain required.
 background styling, plus owned Dialog/Popover portals, in both themes and three
 viewport sizes. The new Select assertions failed all six cases before the fix.
 
+### Batch 4: investigate the manual-review findings
+
+Do not equate axe `incomplete` with harmless noise. Inspecting its explanations
+found duplicate DateRangePicker start labels, invisible nested-theme demo text,
+invisible RoutePreviewPanel warning text (an inert `bg-warning/15` class paired
+with white ink), and a missing description target in the POI detail example.
+
+DateRangePicker now uses FieldWrapper's additive React `group` mode: the range
+heading names the group, while each input has exactly one label. Its new unit
+regression failed before the fix. The theme demo paints a paired surface/text
+role; the route warning uses the existing `Semantics.Emotion.alert` filled pair,
+not borrowed Button tokens or a new palette. Its inert-class ratchet drops to
+58 uses / 38 classes / 25 files. The POI sheet now supplies an actual description.
+The interaction gate also rejects uncertain contrast for RoutePreviewPanel and
+the ThemeProvider demo, guarding against invisible text reported as incomplete.
+
 ### How to change and verify this work yourself
 
 Work from `/private/tmp/kozmos-browser-compat.uqPMBD` on
@@ -178,7 +194,7 @@ runs also include axe's explanations. Review these before accessibility sign-off
 image/transparent surfaces, date ranges and closed overlay states feature in this
 list. Do not remove the incomplete results to make a report look cleaner.
 
-For preview development use `pnpm --filter @kozmos/docs storybook:react -- --ci
+For preview development use `pnpm --filter @kozmos/docs storybook:react --ci
 --host 127.0.0.1`. The user-facing port 6006 is owned by the separate clean preview
 checkout `/private/tmp/kozmos-owned-css-verify.dV1etM`. Stop its exact process before
 advancing that checkout or rebuilding its package outputs. Never rebuild `dist`
@@ -202,7 +218,7 @@ implied by this overnight work.
 
 - **CSS architecture:** only the previously documented slices are component-owned.
   Much of the library still depends on native `@scope`. This pass does not claim a
-  full migration. 59 inert utility uses / 39 classes / 25 files remain. Fix the
+  full migration. 58 inert utility uses / 38 classes / 25 files remain. Fix the
   token/opacity authoring contract and migrate component families; do not add
   browser sniffing, fake fallbacks or raise the ratchet.
 - **Raw values:** reduced from 35 to **32** colours across 7 components; 7 raw radii

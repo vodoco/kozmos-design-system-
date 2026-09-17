@@ -49,7 +49,8 @@ const fail = (m) => {
 // they are fixed.
 // Three inert references were removed by the owned-CSS migration (not
 // activated/fixed visually): Button secondary/ghost and Textarea placeholder.
-const BASELINE = { occurrences: 59, classes: 39, files: 25 };
+// RoutePreviewPanel's invisible warning now uses the existing filled emotion pair.
+const BASELINE = { occurrences: 58, classes: 38, files: 25 };
 
 const FIXTURE = /\.(?:test|stories|figma)\.[jt]sx?$|[\\/]__tests__[\\/]/;
 

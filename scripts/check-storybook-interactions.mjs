@@ -39,7 +39,7 @@ try {
           ),
           "page overflows horizontally",
         );
-        const { violations } = await new AxeBuilder({ page })
+        const { violations, incomplete } = await new AxeBuilder({ page })
           .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
           .analyze();
         assert.deepEqual(
@@ -50,6 +50,7 @@ try {
           [],
         );
         assert.deepEqual(pageErrors, []);
+        return incomplete;
       }
       try {
         await visit("components-select--default");
@@ -161,6 +162,22 @@ try {
           null,
         );
         console.log(`PASS expanded ColorPicker ${theme} ${viewport.width}`);
+        for (const id of [
+          "product-sdk-routepreviewpanel--ready",
+          "system-themeprovider--default",
+        ]) {
+          await visit(id);
+          assert.deepEqual(
+            (await audit()).filter(
+              (finding) => finding.id === "color-contrast",
+            ),
+            [],
+            `${id}: no unmeasurable/invisible text may hide in axe incomplete results`,
+          );
+          console.log(
+            `PASS explicit contrast completeness ${id} ${theme} ${viewport.width}`,
+          );
+        }
         if (viewport.width === 1280) {
           await visit("components-button--emotions");
           const buttons = page.getByRole("button");

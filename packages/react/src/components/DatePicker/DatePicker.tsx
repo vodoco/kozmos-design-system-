@@ -238,7 +238,7 @@ const DateRangePicker = React.forwardRef<HTMLDivElement, DateRangePickerProps>(
         errorId={errorId}
         helperId={helperId}
         helperText={helperText}
-        inputId={startId}
+        group
         label={label}
         required={required}
         status={resolvedStatus}

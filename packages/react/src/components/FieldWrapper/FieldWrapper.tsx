@@ -15,6 +15,8 @@ export interface FieldWrapperProps extends React.HTMLAttributes<HTMLDivElement> 
   label?: string;
   labelAction?: React.ReactNode;
   inputId?: string;
+  /** Name a group of individually labelled controls, not one input. */
+  group?: boolean;
   optionalText?: string;
   required?: boolean;
   status?: FieldStatus;
@@ -45,6 +47,7 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
       label,
       labelAction,
       inputId,
+      group = false,
       optionalText,
       required,
       status = "default",
@@ -53,6 +56,8 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
     },
     ref,
   ) => {
+    const groupLabelId = React.useId();
+    const LabelElement = group ? "span" : Label;
     const isStringError = typeof error === "string" && error.length > 0;
     const message = isStringError ? error : helperText;
     const messageId = isStringError ? errorId : helperId;
@@ -67,12 +72,14 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
         ref={ref}
         className={cn("kozmos-reset kozmos-field", className)}
         data-status={messageStatus}
+        role={group ? "group" : undefined}
+        aria-labelledby={group && label ? groupLabelId : undefined}
         {...props}
       >
         {label && (
           <div className="kozmos-reset kozmos-field-heading">
-            <Label
-              htmlFor={inputId}
+            <LabelElement
+              {...(group ? { id: groupLabelId } : { htmlFor: inputId })}
               className={cn(
                 "kozmos-field-label",
                 hideLabel && "kozmos-field-hidden",
@@ -88,7 +95,7 @@ export const FieldWrapper = React.forwardRef<HTMLDivElement, FieldWrapperProps>(
                   *
                 </span>
               )}
-            </Label>
+            </LabelElement>
             {(showOptionalText || labelAction) && (
               <span className="kozmos-reset kozmos-field-optional">
                 {labelAction || optionalText}

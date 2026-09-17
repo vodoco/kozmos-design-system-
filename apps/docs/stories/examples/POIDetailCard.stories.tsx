@@ -8,6 +8,7 @@ import {
   AvatarImage,
   BottomSheet,
   BottomSheetContent,
+  BottomSheetDescription,
   BottomSheetTitle,
   Button,
   Icon,
@@ -275,6 +276,9 @@ export const Default: Story = {
   render: () => (
     <BottomSheet open onOpenChange={() => undefined}>
       <BottomSheetContent showClose={false}>
+        <BottomSheetDescription className="sr-only">
+          Location details, photos, amenities and available actions.
+        </BottomSheetDescription>
         <Stack className="overflow-y-auto" gap={4}>
           {/* cardHeader — logo, name, and the top quick buttons */}
           <Stack direction="row" align="center" gap={2}>
