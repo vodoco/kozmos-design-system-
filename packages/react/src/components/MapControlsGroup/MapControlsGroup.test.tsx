@@ -60,4 +60,39 @@ describe("MapControlsGroup", () => {
       screen.getByRole("group", { name: "Map controls" }),
     ).toBeEmptyDOMElement();
   });
+  it("lets every control keep the surface, hover and lift MapControlButton gives it", () => {
+    render(
+      <MapControlsGroup
+        onCompassReset={() => undefined}
+        onMyLocation={() => undefined}
+        onZoomIn={() => undefined}
+        onZoomOut={() => undefined}
+        locationLabel="Focus"
+        locationState="following"
+        locationStateLabel="On"
+      />,
+    );
+
+    const buttons = [
+      screen.getByRole("button", { name: "Zoom in" }),
+      screen.getByRole("button", { name: "Zoom out" }),
+      screen.getByRole("button", { name: "Reset bearing" }),
+      screen.getByRole("button", { name: "Focus, On" }),
+    ];
+
+    for (const button of buttons) {
+      // A caller class beats the component through tailwind-merge. The group
+      // used to restate `bg-background/90` — which compiles to nothing, so the
+      // compass stayed see-through between two white controls — and
+      // `hover:bg-secondary`, the border grey.
+      expect(button.className).not.toContain("bg-background/");
+      expect(button.className).not.toContain("hover:bg-secondary");
+      expect(button).toHaveClass("bg-background", "hover:bg-muted");
+    }
+
+    // `shadow-floating` passed from here used to win over the component's
+    // `shadow-raised`, so a following location control never lifted.
+    expect(buttons[3]).toHaveClass("shadow-raised");
+    expect(buttons[3]).not.toHaveClass("shadow-floating");
+  });
 });
