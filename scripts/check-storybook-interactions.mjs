@@ -52,6 +52,47 @@ try {
         assert.deepEqual(pageErrors, []);
       }
       try {
+        await visit("components-select--default");
+        await page.getByRole("combobox", { name: "Fruit" }).click();
+        const popup = page.getByRole("listbox");
+        await popup.waitFor();
+        assert.deepEqual(
+          await popup.evaluate((node) => ({
+            owned: !!node.closest("[data-kozmos-portal]"),
+            theme: node.closest("[data-theme]")?.getAttribute("data-theme"),
+            styled: !["rgba(0, 0, 0, 0)", "transparent"].includes(
+              getComputedStyle(node).backgroundColor,
+            ),
+          })),
+          { owned: true, theme, styled: true },
+          "source stories and public-import decorators must share a themed portal context",
+        );
+        await audit();
+        await page.keyboard.press("Escape");
+        console.log(
+          `PASS owned themed Select portal ${theme} ${viewport.width}`,
+        );
+        for (const [id, trigger, role] of [
+          ["components-dialog--default", "Edit Profile", "dialog"],
+          ["overlay-popover--default", "Open popover", "dialog"],
+        ]) {
+          await visit(id);
+          await page
+            .getByRole("button", { name: trigger, exact: true })
+            .click();
+          const content = page.getByRole(role);
+          await content.waitFor();
+          assert.equal(
+            await content.evaluate((n) =>
+              n.closest("[data-kozmos-portal]")?.getAttribute("data-theme"),
+            ),
+            theme,
+            `${id}: shared themed portal`,
+          );
+          await audit();
+          await page.keyboard.press("Escape");
+          console.log(`PASS owned themed ${id} ${theme} ${viewport.width}`);
+        }
         for (const [id, selector] of [
           [
             "components-scrollarea--horizontal-quick-access",

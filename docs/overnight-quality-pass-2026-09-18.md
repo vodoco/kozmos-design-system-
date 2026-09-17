@@ -101,6 +101,21 @@ colour copies and `docs/figma-foundations-payload.json` were refreshed. The Figm
 file itself was **not** mutated: import/review the payload through the established
 plugin workflow before declaring design/code parity.
 
+### Batch 3: one Storybook module graph
+
+The final preview audit reproduced another structural defect: source-file stories
+and the built-package global provider instantiated different React contexts.
+Select's popup escaped the owned theme portal and had a transparent background,
+even with the dark toolbar selected. An accessibility-only check could miss this.
+
+`.storybook/main.ts` now resolves the exact `@kozmos/react` JS import to the source
+entry, matching relative component imports. CSS subpaths still use generated CSS.
+This makes Storybook a coherent **source workbench**, not installed-package proof;
+the separate built fixtures and React 18/19 tarball tests remain required.
+`check-storybook-interactions.mjs` asserts Select portal ownership, theme and actual
+background styling, plus owned Dialog/Popover portals, in both themes and three
+viewport sizes. The new Select assertions failed all six cases before the fix.
+
 ### How to change and verify this work yourself
 
 Work from `/private/tmp/kozmos-browser-compat.uqPMBD` on
