@@ -395,6 +395,7 @@ pnpm tokens:elevation:check && pnpm tokens:border:check && pnpm tokens:radius:ch
   && pnpm tokens:typography:check && pnpm tokens:contrast:check && pnpm tokens:raw:check \
   && pnpm figma:plugin:check && pnpm components:contract:check && pnpm figma:stamp:check \
   && pnpm docs:snippets:check && pnpm components:variant:check
+pnpm --filter "@kozmos/react..." build && pnpm components:classes:check   # reads dist/style.css, so build first
 pnpm native:check                 # Swift + Kotlin compile, ~6s (Android needs packages/android/local.properties)
 pnpm figma:verify                 # the live file against the plugin; needs FIGMA_ACCESS_TOKEN in .env (expires 2026-11-24)
 pnpm figma:icons                  # refused by the current token: wants library_content:read, which it does not carry

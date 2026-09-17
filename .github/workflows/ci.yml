@@ -82,6 +82,13 @@ jobs:
       - name: Verify No New Raw Values
         run: pnpm tokens:raw:check
 
+      # A Tailwind class the build cannot generate is dropped without a word, and
+      # a toHaveClass assertion still passes. bg-background/90 left
+      # MapControlButton transparent over the map that way. This reads the
+      # stylesheet the build step above produced, so it must stay after it.
+      - name: Verify No New Classes That Compile To Nothing
+        run: pnpm components:classes:check
+
       # A stale stamp means the plugin source changed without the build id
       # following, and the id is the only way to tell which build produced what
       # is in the Figma file.
