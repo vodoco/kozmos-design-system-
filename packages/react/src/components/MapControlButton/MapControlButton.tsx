@@ -39,6 +39,8 @@ export interface MapControlButtonProps extends Omit<
    * than only a documented recipe so that a developer reading the props — or
    * the Storybook controls — finds it without being told. `useRevealOnChange`
    * is the same timing as a hook, for anything that is not this component.
+   *
+   * While this is set, `presentation` is ignored: the control decides.
    */
   revealOnChange?: boolean;
   /** With `revealOnChange`, how long the label stays. Default 2500ms. */

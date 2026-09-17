@@ -81,18 +81,46 @@ Asked as a decision with the measurements beside it, and answered 2026-09-15:
   Compose.
 - **`labelPlacement`: `inline` (default) | `stacked`.** Stacked sets the state
   under the label, as the map pill does.
-- **`useRevealOnChange(value, { duration, delay, enabled })`** — a headless
-  hook returning whether the label should be showing. The first render never
-  reveals; a change restarts the window rather than stacking timers; `delay`
-  covers the case where the change takes time to settle, which is exactly the
-  step-free control's 1.4s recalculation.
+- **`revealOnChange`, with `revealDelay` and `revealDuration`** — the control
+  resolves its own presentation: icon-only at rest, widening to `labelled` when
+  `pressed` or `stateLabel` changes, collapsing after the duration. The first
+  version shipped only the hook, and Olcay's question on seeing it running was
+  the right one: _how do developers know?_ They could not. A developer reading
+  the props, or the Storybook controls, would set `presentation` statically and
+  never learn the intended behaviour existed, because the timing lived in
+  another module and only the MDX mentioned it. A boolean rather than a third
+  `presentation` value, because `presentation` is an axis iOS, Android and
+  Figma share, and adding a value to it in React alone would open a
+  cross-platform gap for a behaviour none of them has.
+- **`useRevealOnChange(value, { duration, delay, enabled })`** — the same timing
+  as a headless hook, which the prop uses and which stays exported for anything
+  that is not this component. The first render never reveals; a change restarts
+  the window rather than stacking timers; `delay` covers a change that takes
+  time to settle, which is exactly the step-free control's 1.4s recalculation.
+- **The hover step lightened.** `hover:bg-secondary` resolved to
+  background-200, `#C7CAD1` — the same value as `Border/Subtle`, and far too
+  heavy a step from white for chrome over a map. It is `hover:bg-muted`
+  (`#E3E4E8`) now, which is also the library's habit: 14 uses against
+  secondary's 4.
 - **The radius role corrected**, and it was wrong three different ways: React
   reached for `rounded-container` (20), iOS and Android for
   `semanticsRadiusPanel` (24), and the product draws **16** — which is the
   `control` role the vocabulary already had. All three now read
-  `control`. `MapControlsGroup`'s `rounded-container` caller override went with
-  it; that override only started winning at all after #45 taught `cn` to
-  resolve the design system's own radius names.
+  `control`.
+- **`MapControlsGroup` stopped overriding its own child.** It passed caller
+  classes into three of its `MapControlButton`s, and since #45 taught `cn` the
+  design system's radius and elevation names, a caller class always wins. So the
+  first version of this change left the group internally inconsistent: the
+  **compass re-applied `bg-background/90`** and stayed see-through between two
+  controls that were now white; **zoom in and out re-applied
+  `hover:bg-secondary`**, keeping the dark hover; and **location passed
+  `shadow-floating`**, which beat the component's `shadow-raised`, so a
+  following control never lifted. Found by an audit pass, not by a gate. Every
+  override that restated or undid a component default is gone, and the zoom
+  divider reads the real `border-border` role instead of the inert
+  `border-border/50`. A test now asserts all four controls keep the surface,
+  hover and lift the component gives them — and that `shadow-floating` is
+  actually removed, not merely outranked.
 - **iOS text styles moved onto `KozmosTypography`**, which
   `tokens:typography:check` demanded for the new `.font(.caption)` and caught
   nothing for the two pre-existing `.font(.subheadline.weight(.medium))` lines
@@ -139,6 +167,12 @@ computed, which means channel triples rather than whole colours) and it is
 reported rather than swept in.
 
 ## 5 · What could not be expressed, and stops here
+
+**`revealOnChange` is React only.** SwiftUI and Compose have `emphasis` and
+`labelPlacement` but no self-revealing presentation; a native caller still
+drives `presentation` itself. It is a behaviour prop rather than an axis, so
+`components:variant:check` does not report it — which is exactly why it is
+written down here.
 
 **Figma cannot draw the tinted state.** The `MapControlButton` set composes a
 Button instance, and `BUTTON_VARIANTS` is
