@@ -1,9 +1,9 @@
 # Kozmos design system — handoff for the next session
 
-Written 2026-09-13, refreshed 2026-09-15 after that day's eight merges (§10). It carries the
-verified facts of the 2026-09-12 to 2026-09-14 versions forward; every number here was read from the
-repo, GitHub, npm or the Figma REST API on 2026-09-15 by the command shown beside it, unless marked
-"last measured".
+Written 2026-09-13, refreshed 2026-09-17 after #45 to #47 merged and #48 and #49 opened (§10). It
+carries the verified facts of the 2026-09-12 to 2026-09-15 versions forward; every number here was
+read from the repo, GitHub, npm, the Figma REST API or a rendered build on 2026-09-17 by the command
+shown beside it, unless marked "last measured".
 
 ## 0 · Start here
 
@@ -16,9 +16,10 @@ Paste this as the first message of the new chat:
 > MAP-595 and `apps/mapscale-review` are parked — do not work on them unless asked in so many words.
 > The work now is §11: Olcay shares the SDK's current components, and each one is rebuilt as an
 > example using Kozmos components only. Where that cannot be done, it is reported and asked about,
-> never worked around. The first component is done and everything it found is built (§11.1). The
-> next piece of work is either the next SDK component — which needs Olcay to name one — or the
-> queue in §6.3. §4.1 and §4.2 are done; read §11 first, then §4.3.
+> never worked around. Two components are done: the POI card (§11.1) and the map mode toggle
+> (§11.3). #47, #48 and #49 have all merged. The next piece of work
+> is the next SDK component, which needs Olcay to name one, or the queue in §6.3. §4.1 and §4.2 are
+> done; read §11 first, then §4.3.
 
 Read order: this file → `docs/ds-scope-2026-09-12.md` → `docs/style-playbook.md` →
 `docs/gap-audit-2026-09-05.md` → the memory files in §8. `docs/session-handoff.md` is the long
@@ -62,23 +63,23 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
   section Olcay had dimmed on purpose was nearly "fixed" on 2026-09-13 (§8).
 - A handoff a new chat can start from, whenever the session ends.
 
-## 3 · The system today — measured 2026-09-15
+## 3 · The system today — measured 2026-09-17
 
-| Thing            | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `origin/main`    | `f08455f` — every PR through #45 merged; this handoff is #46, the only one open (`git log -1 origin/main`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Open PRs         | **one — this one.** #46, the handoff, green but for `UI Tests`. Merged 2026-09-15, in order: #37 the MetaStrip painter, #38 the variant analysis made generated, #39 its regeneration, #40 the emotional roles, #41 the icon-children build break, #42 the emotion axis on Tag and Counter, #43 the plugin dropdown, #44 MetaStrip's Code Connect, #45 the three defects                                                                                                                                                                                                   |
-| Branches         | `origin` carries `main`, `codex/handoff-2026-09-15` (#46) and `codex/wayfinding-map-panel` — the last is MAP-595's prototype, parked (§9). Everything merged has been deleted                                                                                                                                                                                                                                                                                                                                                                                              |
-| Packages         | `@kozmos/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, `publishConfig.access: public`, never published — `npm view @kozmos/react` is a 404 and `git tag` lists nothing                                                                                                                                                                                                                                                                                                                                                                                   |
-| React components | 99 directories in `packages/react/src/components` (`STATUS.md`: **Core 69** · Code-only 5 · Product/SDK 22 · Platform 2; GlassSettingsPanel and `PlatformSnippets.tsx` excluded). MetaStrip is the new one. **Every lane reads full on every platform, Code Connect included**                                                                                                                                                                                                                                                                                             |
-| Figma            | `Kozmos DS - Core Library` `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, MetaStrip `1890:8911`. `pnpm figma:verify` on 2026-09-15: **95 of 95 sets**, presence and variant drift clean, and the file matches what the importer would generate. **Build coverage 71 of 95** on the current build (`dd9f78a05cc0`) after Olcay ran Update All Core; the 24 still on `3e597100b157` are exactly the Product / SDK lane, and `Update All Product SDK` is what moves them. Two standing findings: **5 children overflow their box** and **29 icons are typed as characters** |
-| Tokens           | **641 light + 641 dark** (`docs/figma-library-manifest.json`), up 18 for `Semantics.Emotion` (#40). 1,412 variables in the file (last measured 2026-09-03). **18** values carry floating-point noise — four font sizes, five letter-spacings, one line height, one paragraph spacing, and seven unitless numbers                                                                                                                                                                                                                                                           |
-| Typecheck        | `pnpm --filter @kozmos/react typecheck`: **0 errors**, and since #27 it sees all 92 `*.figma.tsx` files. The package's `build` runs the same `tsc`, so CI catches a regression                                                                                                                                                                                                                                                                                                                                                                                             |
-| Gates            | the eleven in §7 green on 2026-09-15, plus `pnpm native:check` and the STATUS check. `tokens:raw:check` is a ratchet: 35 raw colours across 7 components, 7 raw radii across 6 — unchanged. **336 React tests across 102 files**                                                                                                                                                                                                                                                                                                                                           |
-| Chromatic        | **snapshot limit** since early September — nothing has been visually compared since, including a shadow change across 27 components and #19's animation fix; `UI Tests` shows PENDING on every PR for that reason                                                                                                                                                                                                                                                                                                                                                          |
-| CI on `main`     | green through the day's merges. `Release Kozmos System` runs after CI and skips publish while `NPM_TOKEN` is absent                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Release path     | `.changeset/` holds only `config.json`; `release.yml` runs on CI success on `main`, skips publish when `NPM_TOKEN` is missing or invalid — inferred **not configured** (the registry has nothing and the run was "success")                                                                                                                                                                                                                                                                                                                                                |
-| Working tree     | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`, shared with parallel sessions that switch branches and leave work uncommitted — stage by path, never `-A`; build branches in a `git worktree` under the scratchpad                                                                                                                                                                                                                                                                                                                                             |
+| Thing            | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `origin/main`    | `e9f5069` — every PR through #49 merged (`git log -1 origin/main`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Open PRs         | **one — this one.** #50, the handoff. Merged 2026-09-17, in order: #47 the map mode toggle, #48 `components:classes:check`, #49 npm publish readiness and `packages:install:check` — #49 after its textual conflict with #48 was resolved by keeping both lines, and both checks were verified together locally and in CI                                                                                                                                                                                                                                                                                                                                    |
+| Branches         | `origin` carries `main`, `codex/handoff-2026-09-17` (#50) and `codex/wayfinding-map-panel` — the last is MAP-595's prototype, parked (§9). Everything merged has been deleted                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Packages         | `@kozmos/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, never published — `npm view @kozmos/react` is a 404 and `git tag` lists nothing. Since #49, `vue` is private, all five carry `license: MIT`, and the four public ones a LICENSE file and README (§4.5)                                                                                                                                                                                                                                                                                                                                                                              |
+| React components | 99 directories in `packages/react/src/components` (`STATUS.md`: **Core 69** · Code-only 5 · Product/SDK 22 · Platform 2). **353 React tests**; iOS **57** (`swift test`); Android **25** unit tests plus `verifyPaparazziDebug`                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Figma            | `Kozmos DS - Core Library` `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, MetaStrip `1890:8911`. `pnpm figma:verify` on 2026-09-17: **95 of 95 sets**, presence and variant drift clean. **Build coverage 71 of 95** on `dd9f78a05cc0`; the 24 on `3e597100b157` are the Product / SDK lane. Two standing findings: **5 children overflow their box** and **29 icons are typed as characters**. **`MapControlButton`'s `State=Pressed` still paints filled** while code renders tinted — `figma:verify` compares structure, not paint (§6)                                                                                                                 |
+| Tokens           | **641 light + 641 dark** (`docs/figma-library-manifest.json`), up 18 for `Semantics.Emotion` (#40). 1,412 variables in the file (last measured 2026-09-03). **18** values carry floating-point noise — four font sizes, five letter-spacings, one line height, one paragraph spacing, and seven unitless numbers                                                                                                                                                                                                                                                                                                                                             |
+| Typecheck        | `pnpm --filter @kozmos/react typecheck`: **0 errors**, and since #27 it sees all 92 `*.figma.tsx` files. The package's `build` runs the same `tsc`, so CI catches a regression                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Gates            | the eleven in §7 green on 2026-09-17, plus `pnpm native:check` and the STATUS check. Since #48 and #49, CI also runs `components:classes:check` — a ratchet at **62/40/27** — and `packages:install:check`. `tokens:raw:check` is a ratchet: 35 raw colours across 7 components, 7 raw radii across 6 — unchanged                                                                                                                                                                                                                                                                                                                                            |
+| Chromatic        | **snapshot limit** since early September — nothing has been visually compared since, including a shadow change across 27 components and #19's animation fix; `UI Tests` shows PENDING on every PR for that reason                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| CI on `main`     | green on `e9f5069` — CI (web, iOS and Android), Visual Regression, Bundle Size, Lighthouse and Release all succeeded, and the release job ran `packages:install:check` before skipping publish. `Release Kozmos System` runs after CI and skips publish while `NPM_TOKEN` is absent. **GitHub Actions refused every job on 2026-09-16 and 2026-09-17** — "recent account payments have failed or your spending limit needs to be increased", no steps run — until Olcay unblocked it on 2026-09-17. Runs now warn that `actions/checkout@v4`, `actions/setup-node@v4` and `pnpm/action-setup@v3` target Node 20, which is deprecated and forced onto Node 24 |
+| Release path     | `.changeset/` holds only `config.json`; `release.yml` runs on CI success on `main`, skips publish when `NPM_TOKEN` is missing or invalid — inferred **not configured** (the registry has nothing and the run was "success")                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Working tree     | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`, shared with parallel sessions that switch branches and leave work uncommitted — stage by path, never `-A`; build branches in a `git worktree` under the scratchpad                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## 4 · The five priorities, as a plan
 
@@ -225,7 +226,7 @@ unblocking ones first.
   Tooltip on a disabled trigger.
 - **From the revamp designs** (`gap-audit-2026-09-05.md` §3): POI attribute section, meta strip,
   opening hours, bookmark/favourite pair, quick-button clusters, Filter, Carousel, quick-access
-  grid, a horizontal paged level selector, map tracking mode, a no-results card, error and
+  grid, a horizontal paged level selector, ~~map tracking mode~~ (#47, §11.3), a no-results card, error and
   notification overlay placement, a directions card composing DirectionStep, journey progress and
   checkpoints, the lift/escalator/stairs icons (33 uses, absent from the set).
 - **From the dashboard's Map Content editor** (§9): six field controls the taxonomy needs and the
@@ -237,6 +238,16 @@ unblocking ones first.
   first); Link and Spinner each miss a variant axis on iOS and Android; `packages/icons` renders
   different artwork from Figma and is too small for the revamp — resolve before extending.
 - **A11y and tests:** the a11y spec is thin and coverage has no threshold (gap audit §8).
+- **Classes that compile to nothing: 62 uses of 40 classes across 27 files on `main`.** Every colour
+  role in `packages/react/tailwind.config.js` is a plain `var(...)`, so an opacity modifier on one —
+  `bg-muted/40`, `ring-primary/20`, `hover:bg-accent/10` — is dropped from the stylesheet without a
+  word, and `toHaveClass` still passes. It removed `MapControlButton`'s whole surface and ghost
+  Button's background hover. The fix is in how the roles are declared, it switches on styles nobody
+  has seen, so it wants Chromatic; `components:classes:check` (#48) counts them and proves the fix
+  when it lands. `docs/map-mode-toggle-gaps-2026-09-15.md` §4 has the table.
+- **An in-surface status message** — the map toggle's "Calculating…" pill has nowhere to live:
+  `Toast` needs a document-level viewport at 420×92 and `Alert` is block-level. It is the first of
+  the eight parts above, now with a second consumer waiting.
 - ~~Three defects that only building an example found~~ (2026-09-14, §11.1) — **fixed in #45.**
   `ScrollArea` set `h-full` on both of its wrappers, so a horizontal strip inside an auto-height
   column resolved to height 0 and vanished; a component's radius role could not be overridden from
@@ -247,34 +258,29 @@ unblocking ones first.
 
 ### 4.5 · Get ready for npm publish
 
-What exists: five public packages with `files: ["dist"]`, `main`/`module`/`types`, an `exports`
-map on four of them (`@kozmos/tokens` has none), `sideEffects` on react, peer ranges for React 18/19,
-a changesets config (`access: public`, `baseBranch: main`), `release.yml` (build → verify
-`NPM_TOKEN` → `changesets/action`: a version PR, or publish), a Storybook publish workflow. The
-names are free on npm today (`npm view @kozmos/react` → 404).
+**#49 closed most of this list.** What it did, and what stays open, measured on 2026-09-17:
 
-What is missing, measured on 2026-09-13:
+| Item                                         | State                                                                                                                                                                                                                                                                                          |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LICENSE` and `license` fields               | #49: MIT, copyright **Vodoco** (§5.22). A LICENSE file at the root and in each of the four public packages — npm copies one only from a package's own directory, never the monorepo root — and a `license` field in all five                                                                   |
+| `@kozmos/vue` not published                  | #49 marks it `private` (§5.15) — before it, the first publish would have shipped it                                                                                                                                                                                                            |
+| README per package                           | #49: all four public packages, every claim checked against the built package, every code sample type-checked by the install check                                                                                                                                                              |
+| `repository`, `homepage`, `bugs`             | **ruled out** while the repository is private (§5.21) — they would 404. `description` and `keywords` added                                                                                                                                                                                     |
+| `@kozmos/tokens` exports                     | #49: `.` with separate ESM and CommonJS declarations (`tokens.d.mts` / `tokens.d.ts`), `./css/light.css`, `./css/dark.css`, `./dist/*` so every old deep import still resolves                                                                                                                 |
+| CSS entry                                    | #49: `@kozmos/react/style.css`, beside `./dist/style.css`                                                                                                                                                                                                                                      |
+| A pack-and-install smoke test                | #49: `pnpm packages:install:check` — §7                                                                                                                                                                                                                                                        |
+| Type declarations                            | `@arethetypeswrong/cli`: tokens clean after #49; **FalseCJS on react and icons** (declarations use extensionless relative imports an ES-module declaration cannot resolve) and **CJSResolvesToESM on the types-only product-contracts** — pre-existing, held as a ratchet by the install check |
+| Provenance                                   | **not possible** while the repository is private: npm requires "a public `repository` that matches … where you are publishing with provenance from"                                                                                                                                            |
+| The stylesheet's global reset                | `@kozmos/react/style.css` includes Tailwind's preflight — body margin, heading sizes, block images and SVGs. The README says so; scoping or splitting it is open (§6)                                                                                                                          |
+| `ThemeProvider`'s storage key                | `vite-ui-theme`, a scaffold default that would land in every consumer's localStorage — cheap to rename before a publish (§6)                                                                                                                                                                   |
+| Declaration maps                             | `icons` and `product-contracts` ship `.d.ts.map` files pointing at a `src/` the tarball does not include                                                                                                                                                                                       |
+| Changesets, `NPM_TOKEN`, the `@kozmos` scope | not done — the first release is an account action plus a changeset                                                                                                                                                                                                                             |
+| Chromatic                                    | still on its limit: a publish would ship visuals nobody has compared since early September                                                                                                                                                                                                     |
 
-| Gap                                                                                                                                                                                                                                                            | Check                                                                                                         |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| No `LICENSE` at the root or in any package; no `license` field in any `package.json`                                                                                                                                                                           | `ls LICENSE*`; `node -e 'console.log(require("./packages/react/package.json").license)'`                      |
-| No `README.md` in any package (npm shows the package README)                                                                                                                                                                                                   | `ls packages/*/README.md`                                                                                     |
-| No `repository`, `homepage`, `bugs`, `keywords`; `description` only on contracts                                                                                                                                                                               | the same one-liner per field                                                                                  |
-| No changesets, so `changeset version` has nothing to bump; `0.0.1` everywhere                                                                                                                                                                                  | `ls .changeset`                                                                                               |
-| `NPM_TOKEN` not configured; the `@kozmos` scope not claimed on npm                                                                                                                                                                                             | the Release run says "success" while the registry has nothing; `npm org ls kozmos` once logged in             |
-| `@kozmos/tokens` has no `exports`: consumers deep-import `dist/css/…` by path                                                                                                                                                                                  | decide subpaths: `./css`, `./scss`, `./js`, `./ios`, `./android`                                              |
-| `@kozmos/vue` depends on `@kozmos/react` and ships a React root per instance                                                                                                                                                                                   | the §6 decision: shipped package or internal convenience                                                      |
-| `@kozmos/icons` peer-depends on `lucide-react` and renders artwork that differs from Figma                                                                                                                                                                     | `docs/gap-audit-2026-09-05.md` §4                                                                             |
-| No `npm pack` smoke test: install each tarball in a fresh project and import it. Not theoretical — #27 put 92 `*.figma.d.ts` files into `dist`, which `files: ["dist"]` would have published; found by counting `dist` against the pre-#27 build, fixed in #30 | `pnpm -r exec npm pack --dry-run`, then a scratch project; `find packages/react/dist -type f \| wc -l` is 204 |
-| The CSS entry is `@kozmos/react/dist/style.css` — document it, or expose `./style.css`                                                                                                                                                                         | `packages/react/package.json` `exports`                                                                       |
-| No CHANGELOG (changesets writes them on the first version PR)                                                                                                                                                                                                  | —                                                                                                             |
-| Chromatic on its limit: a publish would ship visuals nobody has compared since early September                                                                                                                                                                 | §3                                                                                                            |
-| Provenance and the Node engine                                                                                                                                                                                                                                 | `--provenance` needs `id-token: write` in `release.yml`; `engines.node >= 20` is set at the root only         |
-
-The mechanics, once the gaps are closed: a changeset per package (`pnpm changeset`, "minor" for a
-first `0.1.0`), merge → CI green → `release.yml` opens the version PR → merge it → the same workflow
-publishes with `NPM_TOKEN` (an automation token for the `kozmos` org). Semver from `0.1.0`:
-breaking changes are minors until `1.0`.
+The mechanics, now that #49 has merged: a changeset per package (`pnpm changeset`, "minor" for a first
+`0.1.0`), merge → CI green → `release.yml` runs the install check, then opens the version PR → merge
+it → the same workflow publishes with `NPM_TOKEN` (an automation token for the `kozmos` org). Semver
+from `0.1.0`: breaking changes are minors until `1.0`. `emphasis` defaulting to tinted is one.
 
 ## 5 · Decided — do not reopen
 
@@ -326,6 +332,22 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
 18. **iOS snapshots run in CI**, on a pinned runner image with a fixed simulator, so an OS update
     cannot invalidate every snapshot at once.
 
+**Ruled 2026-09-15 to 2026-09-17**, while rebuilding the map mode toggle and readying the packages:
+
+19. **A map mode toggle is `MapControlButton`, not a new component** — `emphasis`, `labelPlacement`
+    and `revealOnChange` on the existing component, which already carried icon, label, state and
+    pressed on three platforms with Code Connect pinned to it. **Tinted is the default**: the SDK is
+    right that a control over a map keeps its surface and colours only its glyph and edge.
+20. **`revealOnChange` is a boolean prop, not a third `presentation` value** — `presentation` is an
+    axis iOS, Android and Figma share, and a React-only value would open a cross-platform gap. The
+    timing is also exported as `useRevealOnChange`. It is React-only today.
+21. **The packages publish publicly on npm while the repository stays private** — so no
+    `repository`, `homepage` or `bugs` links, the READMEs carry the documentation, and provenance is
+    not possible.
+22. **The MIT copyright holder is Vodoco.**
+23. **A PR whose CI could not run waits for CI before merging**, however complete the local
+    verification (#47, 2026-09-17).
+
 ## 6 · Open — waiting on Olcay
 
 Eleven of the twelve that stood here were ruled on 2026-09-14 and moved to §5. What is left needs an
@@ -356,6 +378,19 @@ action rather than an answer, needs a designer, or is work with nobody blocked o
 7. **RoutePreviewPanel's five states look like two; MapOverlay's `position` is not a Figma axis;
    LocationPin's `variant` and `labelPlacement` stay renderer concerns** — recorded, revisit if a
    designer asks.
+8. **How Figma draws `MapControlButton`'s tinted state.** Its set composes a Button instance, and
+   the Figma Button set has no themed outline and **no `Emotion` axis at all** (#32 and #42 added
+   `emotion` to code only), while the painter keeps paint off the root on purpose. Either the painter
+   overrides the nested Button's stroke and icon at build time, or the Figma Button set gains a tone
+   axis — larger, and it would carry #42's `emotion` too. Until then `State=Pressed` paints filled
+   and no check can see it. The regenerated variant analysis lists `emphasis` and `labelPlacement`
+   as Figma's missing axes.
+9. **The React stylesheet ships Tailwind's global reset** (§4.5) — keep and document it, scope it
+   under a Kozmos root, or ship it as a separate file.
+10. **`ThemeProvider` stores the theme under `vite-ui-theme`** — rename before a first publish.
+11. **React's ink is `#000000`, native's `#17191C`.** The Tailwind config maps `foreground` to
+    `foreground/0`; the native controls read `foreground/100`, which is the ink the SDK draws. It is
+    a library-wide role mapping, so it was recorded rather than changed inside #47.
 
 ### 6.3 · The queue, when there is no SDK component waiting
 
@@ -367,8 +402,14 @@ Work, not questions. In the order it is worth doing:
   regenerated (#38).
 - **The 18 floating-point token values** (§4.1), which belong with the type-scale work.
 - **The native enum naming normalisation** (§5.16), which wants doing before the first publish.
-- **§4.5, the npm publish list** — no `LICENSE`, no package READMEs, no repository or homepage
-  fields, no changesets, `NPM_TOKEN` unset. All five packages are still `0.0.1` and unpublished.
+- **GitHub Actions on Node 24** — `actions/checkout@v4`, `actions/setup-node@v4` and
+  `pnpm/action-setup@v3` target the deprecated Node 20 runtime; every run warns.
+- **ES-module declarations for react and icons**, which would clear the two FalseCJS problems the
+  install check keeps as a ratchet — it fails until their lines are deleted, so the fix locks in.
+- **`components:classes:check` does not read `apps/docs`**, where the examples live and where there
+  is no Tailwind build at all: any class `packages/react` does not already emit is inert there.
+- **Native tests.** `MapControlButton` has them on both platforms now (§11.3); most native
+  components have none, and `native:check` only compiles.
 - **The `Examples` page in Figma** (`286:1601`) has no painter, so the POI card example and the
   opening-hours example exist in Storybook and nowhere in the file.
 
@@ -396,6 +437,7 @@ pnpm tokens:elevation:check && pnpm tokens:border:check && pnpm tokens:radius:ch
   && pnpm figma:plugin:check && pnpm components:contract:check && pnpm figma:stamp:check \
   && pnpm docs:snippets:check && pnpm components:variant:check
 pnpm --filter "@kozmos/react..." build && pnpm components:classes:check   # reads dist/style.css, so build first
+pnpm packages:install:check      # packs, installs against React 18 and 19, type-checks READMEs; needs a build and the network
 pnpm native:check                 # Swift + Kotlin compile, ~6s (Android needs packages/android/local.properties)
 pnpm figma:verify                 # the live file against the plugin; needs FIGMA_ACCESS_TOKEN in .env (expires 2026-11-24)
 pnpm figma:icons                  # refused by the current token: wants library_content:read, which it does not carry
@@ -403,6 +445,14 @@ pnpm tokens:radius:nesting        # concentric radii; --strict is what CI runs
 pnpm figma:publish:linked:dry && pnpm figma:publish:native:linked:dry
 git worktree add --detach /tmp/verify HEAD && cd /tmp/verify   # measure a clean checkout, not the tree
 ```
+
+Two more, from #48 and #49, both read a build, so build first:
+`pnpm components:classes:check` (#48) — every slash-modified Tailwind class in `packages/react/src`
+must exist in `dist/style.css`, a ratchet at 62/40/27 — and `pnpm packages:install:check` (#49) —
+packs every non-private package, installs the tarballs into empty projects against React 18 and 19,
+resolves every export and README import, renders a component, type-checks every README sample, and
+holds `@arethetypeswrong/cli`'s findings as a ratchet. It needs the network and takes about fourteen
+seconds with a warm npm cache.
 
 A fresh worktree has no built workspace packages: run `pnpm --filter "@kozmos/react..." build`
 before `pnpm --filter @kozmos/react test`, or the failure is the worktree, not the code. If a
@@ -464,6 +514,25 @@ typecheck then reports errors in files nobody touched, suspect the install befor
 - **Merging two green PRs can leave `main` red.** #37 taught the plugin about MetaStrip and #38
   generated the variant analysis before it; each was correct alone and the merge was stale. The
   merged `main` is a commit no branch ever built — check it, do not infer it.
+- **A class on an element is not a style.** `toHaveClass` passes for a class that compiled to
+  nothing (`bg-background/90` left `MapControlButton` transparent over the map for three weeks) and for a
+  class tailwind-merge let a caller override (`emphasis="filled"` rendered white with black text,
+  under a test that asserted a tint was absent). Render the built component and read computed
+  colours: Playwright's `chromium.launch({ channel: "chrome" })` drives the Chrome already installed,
+  with no browser download.
+- **Since #45, a caller's `className` always beats a component's default.** A composition that
+  restates its child's classes can undo the child: `MapControlsGroup` kept the compass see-through,
+  the zoom hover dark and the location control unlifted.
+- **`preview_start` always serves the original checkout**, never a worktree, even after the session
+  moves — `preview_list` shows the real `cwd`. Olcay reviewed `main`'s component believing it was the
+  PR's. Render the built package, or publish a bundle as an Artifact.
+- **`gh pr edit --body-file` silently changes nothing on this repository** (a Projects-classic
+  GraphQL error that reads like a warning). PATCH through `gh api` and read the body back.
+- **A tool's output read through a pipe can stop at 65,536 bytes** when the tool exits before the
+  pipe drains — `@arethetypeswrong/cli`'s report for react did. It was first misread as Node's 1 MB
+  buffer; write the report to a file.
+- **An effect that lists its timing as dependencies can orphan its own timers.** `useRevealOnChange`
+  stuck open for ever when a caller changed the delay mid-reveal; timing belongs in a ref.
 - **Stacked PRs:** GitHub does not retarget them; merging blind lands in the base branch.
 - **Agent fan-out:** cap the candidate list before multiplying it — a scope audit once burned 5.16M
   tokens on ~330 candidates × 3.
@@ -473,7 +542,9 @@ Memory files: `kozmos-session-handoff-pointer` · `kozmos-verify-before-assertin
 `bash-tool-set-e-does-not-gate` · `kozmos-never-rebuild-in-plugin` · `kozmos-plugin-may-run-stale-code`
 · `kozmos-bound-property-beats-painter` · `kozmos-frame-is-not-a-slot` ·
 `figma-pages-read-empty-until-loaded` · `figma-hidden-instances-read-layerless` ·
-`figma-ask-before-replacing-a-node` · `kozmos-stacked-pr-runs-only-ci` · `kozmos-token-roles`.
+`figma-ask-before-replacing-a-node` · `kozmos-stacked-pr-runs-only-ci` · `kozmos-token-roles` ·
+`preview-start-pins-project-root` · `kozmos-tailwind-alpha-on-token-roles-is-inert` ·
+`gh-pr-edit-fails-silently-here`.
 
 ## 9 · MAP-595 — parked
 
@@ -491,7 +562,7 @@ outline button, a destructive shade, colour scopes for text, strokes and icons, 
 dashboard's v9 library publishes only `listItem`, and ~228 PDS / Pointr bindings still pointing at
 the unpublished "Primitive Tokens" collection.
 
-## 10 · The log, 2026-09-13 to 2026-09-15
+## 10 · The log, 2026-09-13 to 2026-09-17
 
 ### 2026-09-13
 
@@ -643,6 +714,41 @@ today was something that rebuild had found.
 Olcay also ran **Update All Core** in the plugin, taking build coverage from 0 of 94 to 71 of 95 —
 the first time painter changes have reached the file since early September.
 
+### 2026-09-15, evening, to 2026-09-17
+
+1. **#45 and #46 merged** (`f08455f`, `1dd30f0`), the handoff corrected before it landed. CI green on
+   the merged `main`, which no branch had built, and the eleven gates, `figma:verify` and the variant
+   generator's idempotency checked beside it.
+2. **§11's second component: the map mode toggle** (§11.3). Olcay shared the SDK prototype's
+   tracking and step-free controls; they were measured out of the running page, ruled onto
+   `MapControlButton` with tinted as the default, and built as **#47**. Looking at it running, Olcay
+   caught a hover too dark and asked how a developer would know the reveal existed — which became
+   `revealOnChange`.
+3. **The inert-class family.** `MapControlButton`'s `bg-background/90` was not in the stylesheet at
+   all. **#48** adds a check for every such class: 41 on `main` then, 40 now. A first count of 31
+   came from a grep that missed `fill-`, `placeholder:` and `group-[…]:`; it was corrected wherever
+   it had been written.
+4. **npm readiness, #49.** Rulings 21 and 22; the install check; the stylesheet's global reset found
+   and documented. The copyright holder was first written as "Vodo" and corrected to Vodoco before
+   anything was committed.
+5. **GitHub Actions refused every job** on 2026-09-16 and 2026-09-17 until Olcay unblocked the
+   account. Per ruling 23, nothing merged on local verification alone.
+6. **An audit on 2026-09-17**, asked for again, found more than any earlier pass. In #47: the reveal
+   could stick open for ever; `filled` had never rendered a fill in React — which also made one of my
+   earlier reports to Olcay wrong, since it described React's pressed state from the code without
+   rendering it; a stacked caption at 1.9:1 on a fill on all three platforms; a spurious reveal on
+   unset-to-false; iOS ignoring Reduce Motion; and no native tests. In #49: a types regression the PR
+   itself had introduced in `@kozmos/tokens`, which none of its checks could see, so the install
+   check gained a types ratchet, a file-type allowlist and React 18. In #48: an ordinary `"step/3"`
+   string would have counted as a class. Every fix came with a test first run against the unfixed
+   code, and the demo Artifact was republished with the fixes.
+7. **#47 merged** (`f89b734`) once CI was green, and #48 took `main` and lowered its baseline to
+   62/40/27.
+8. **#48 merged** (`9bcb4cf`), then **#49** (`e9f5069`) after its textual conflict with #48 — both had
+   added a script after `tokens:raw:check` and a CI step after _Verify No New Raw Values_ — was
+   resolved by keeping both. The two checks were run together on a forced build of the merged tree
+   first, then in CI, where the install check passed every stage; `main` was green after each merge.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:
@@ -745,26 +851,59 @@ which has no painter.
 
 ### 11.2 · What the loop has proved
 
-Two components in, the pattern is clear enough to rely on. Rebuilding one SDK component from Kozmos
+The pattern is clear enough to rely on. Rebuilding one SDK component from Kozmos
 parts finds more than a scan does, because a scan counts what exists and a rebuild exercises it:
 the POI card produced a missing Core component, a missing example, fourteen missing icons, a missing
 semantic token family, three component defects, a broken plugin menu, a documentation lie, and a
 latent build break — none of which any gate had reported.
 
+The second component, the map mode toggle (§11.3), confirmed it: a control that had been transparent
+over the map for three weeks, a filled state that never rendered, a timer that could stick open, a
+contrast failure on all three platforms, native code with no tests, and a class of Tailwind usage no
+gate had ever read.
+
 So the next SDK component is worth more than the next item on a list. It needs Olcay to name one.
+
+### 11.3 · The second component, 2026-09-15: the map mode toggle
+
+Olcay shared the tracking (`Focus`) and step-free controls from the SDK prototype at
+`https://agentic-search-zeta.vercel.app/` and asked whether they wanted a new component or a change
+to an existing one. They were measured out of the running page — computed styles, bounding boxes,
+timed samples — and `docs/map-mode-toggle-gaps-2026-09-15.md` records all of it.
+
+**The prototype draws one pattern twice, disagreeing with itself on six things**: whether "on"
+colours the border, icon size (16 or 20), surface opacity, dwell time (2.5s, or 1.4s then 3s),
+whether the state reaches assistive technology at all, and whether the accessible name says the
+state. Both controls are `div role="button"` that cannot be reached by keyboard, and the
+recalculation is silent — reported back to the SDK, not reproduced.
+
+**Built in #47** (rulings 19 and 20): `emphasis` (tinted default, filled kept), `labelPlacement`,
+`revealOnChange` with `revealDelay` and `revealDuration`, and `useRevealOnChange`; the radius
+corrected from three different wrong roles to `control`; the surface that never compiled; the hover
+lightened from the border grey to `muted`; `MapControlsGroup` stopped overriding its own child; and,
+from the audit, the five fixes in §10 and a pure appearance type with tests on iOS and Android.
+Rendered in Chrome and measured: tinted keeps white with a `#1051E8` glyph and edge; filled is
+`#0D44C2` with white text and icon.
+
+**Stops here:** Figma's tinted state (§6.8); the in-surface status message (§4.4); and
+`revealOnChange` on native, which is React-only.
+
+An interactive demo that bundles the real component is at
+`https://claude.ai/artifact/AF8zyKTohcUrpcC2pnMb5Z`.
 
 ### What is already known to be missing
 
 Straight from the scan, so an example that needs one of these will stop at the same place:
 
-| Missing                              | Lane          | Product usage                |
-| ------------------------------------ | ------------- | ---------------------------- |
-| Toolbar and ToolButton               | Core          | 10 surfaces, 1,013 instances |
-| DragHandle                           | Core          | 5 surfaces, 532              |
-| Filter                               | Core          | 3 surfaces, 139              |
-| Carousel                             | Core          | 3 surfaces, 69               |
-| Opening hours with a per-day row     | Product / SDK | 5 surfaces, 410              |
-| Countdown timer                      | Product / SDK | 5 surfaces, 9                |
-| A building-plus-level scope selector | Product / SDK | wider than `FloorSelector`   |
+| Missing                              | Lane          | Product usage                                    |
+| ------------------------------------ | ------------- | ------------------------------------------------ |
+| Toolbar and ToolButton               | Core          | 10 surfaces, 1,013 instances                     |
+| DragHandle                           | Core          | 5 surfaces, 532                                  |
+| Filter                               | Core          | 3 surfaces, 139                                  |
+| Carousel                             | Core          | 3 surfaces, 69                                   |
+| Opening hours with a per-day row     | Product / SDK | 5 surfaces, 410                                  |
+| Countdown timer                      | Product / SDK | 5 surfaces, 9                                    |
+| A building-plus-level scope selector | Product / SDK | wider than `FloorSelector`                       |
+| An in-surface status message         | Core          | the eight parts; the map toggle's "Calculating…" |
 
 Everything verified by running it; nothing here is recalled.
