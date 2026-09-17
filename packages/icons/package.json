@@ -1,6 +1,14 @@
 {
   "name": "@kozmos/icons",
   "version": "0.0.1",
+  "description": "Icon components and the name registry for the Kozmos design system.",
+  "keywords": [
+    "kozmos",
+    "design-system",
+    "icons",
+    "react"
+  ],
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
@@ -12,7 +20,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"

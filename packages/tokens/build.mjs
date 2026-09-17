@@ -835,6 +835,14 @@ async function build() {
               destination: "tokens.d.ts",
               format: "typescript/es6-declarations",
             },
+            // The same declarations as an ES module. Without them, an ESM
+            // consumer resolving with node16 got tokens.d.ts — CommonJS types,
+            // as the package has no "type" field — for the ESM tokens.mjs:
+            // "masquerading as CJS" to @arethetypeswrong/cli.
+            {
+              destination: "tokens.d.mts",
+              format: "typescript/es6-declarations",
+            },
           ],
         },
       },

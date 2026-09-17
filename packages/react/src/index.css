@@ -1,6 +1,6 @@
 /* Import Design Tokens */
-@import '@kozmos/tokens/dist/css/variables-light.css';
-@import '@kozmos/tokens/dist/css/variables-dark.css';
+@import '@kozmos/tokens/css/light.css';
+@import '@kozmos/tokens/css/dark.css';
 
 @tailwind base;
 @tailwind components;
