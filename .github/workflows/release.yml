@@ -1,94 +1,102 @@
 name: Release Kozmos System
 
+# Successful CI never publishes. Dispatch from main, then approve npm-release.
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Full main HEAD commit SHA to publish
+        type: string
+        required: true
+      ci_run_id:
+        description: Successful main-push CI run ID for that exact SHA
+        type: string
+        required: true
+      confirmation:
+        description: Type publish followed by a space and the full SHA
+        type: string
+        required: true
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: kozmos-npm-release
+  cancel-in-progress: false
+
+env:
+  RELEASE_SHA: ${{ inputs.sha }}
+  CI_RUN_ID: ${{ inputs.ci_run_id }}
+  RELEASE_CONFIRMATION: ${{ inputs.confirmation }}
+  NPM_RELEASE_ENABLED: ${{ vars.NPM_RELEASE_ENABLED }}
 
 jobs:
-  release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    name: Release Packages
+  prepare:
+    if: github.ref == 'refs/heads/main' && inputs.sha == github.sha
     runs-on: ubuntu-latest
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-    permissions:
-      contents: write
-      pull-requests: write
-      packages: write
+    timeout-minutes: 30
+    outputs:
+      artifact_id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 0
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
         with:
           version: 9
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build Packages
-        run: pnpm turbo run build
-
-      # Never publish a tarball nobody has installed. This runs whether or not a
-      # token exists, so a broken package is reported before a release is tried.
-      - name: Verify Packages Install From Their Tarballs
-        run: pnpm packages:install:check
-
-      - name: Verify NPM publish token
-        id: npm-auth
+          node-version: 20
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Validate request, CI, release plan and approval protection
+        run: node scripts/release/verify-request.mjs
         env:
-          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
-        run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "can_publish=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Skipping npm release because NPM_TOKEN is not configured."
-            exit 0
-          fi
-
-          if npm whoami --registry=https://registry.npmjs.org >/dev/null 2>&1; then
-            echo "can_publish=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "can_publish=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Skipping npm release because NPM_TOKEN is invalid or lacks npm registry access."
-          fi
-
-      - name: Create Release Pull Request or Publish to NPM
-        if: steps.npm-auth.outputs.can_publish == 'true'
-        id: changesets
-        uses: changesets/action@v1
+          GH_TOKEN: ${{ github.token }}
+      - run: pnpm test:release
+      - name: Build public packages without npm credentials
+        run: pnpm --filter './packages/*' build
+      - name: Test and retain the exact candidate tarballs
+        run: pnpm packages:install:check --release-output "$RUNNER_TEMP/kozmos-release" --release-sha "$RELEASE_SHA"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: artifact
         with:
-          publish: pnpm release
-          commit: "ci(changesets): version packages"
-          title: "ci(changesets): version packages"
+          name: npm-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/kozmos-release
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: prepare
+    if: github.ref == 'refs/heads/main' && inputs.sha == github.sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm-release
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 9
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Revalidate after the approval wait
+        run: node scripts/release/verify-request.mjs
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ env.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.prepare.outputs.artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/kozmos-release
+      - name: Publish only the tested and approved tarballs
+        run: node scripts/release/publish.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

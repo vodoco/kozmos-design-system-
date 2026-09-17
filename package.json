@@ -59,7 +59,9 @@
     "new-component": "tsx scripts/skills/generate-component.ts",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build && changeset publish",
+    "release": "node scripts/release/local-release.mjs",
+    "test:release": "node --test scripts/release/*.test.mjs",
+    "test:release:packages": "node scripts/release/export-smoke.mjs",
     "prepare": "husky",
     "figma:stamp": "node scripts/stamp-figma-plugin.mjs",
     "figma:stamp:check": "node scripts/stamp-figma-plugin.mjs --check",
@@ -88,11 +90,13 @@
     "lint-staged": "^15.2.0",
     "playwright": "1.58.2",
     "prettier": "^3.2.0",
+    "semver": "7.8.5",
     "tsx": "^4.7.0",
     "turbo": "^2.0.0",
     "typescript": "^5.3.0",
     "typescript-eslint": "^8.57.0",
-    "vitest": "^1.2.0"
+    "vitest": "^1.2.0",
+    "yaml": "2.9.1"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

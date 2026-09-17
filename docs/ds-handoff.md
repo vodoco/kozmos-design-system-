@@ -7,6 +7,16 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**Current Astra continuation, 2026-09-17:** handoff PR #52 and foundations PR #53
+are merged; remote main is `040f53d`. Post-merge CI passed. The shared local main
+checkout remains untouched at `a02a008`. The next local batch is on
+`astra/release-safeguards`, worktree `/private/tmp/kozmos-release-guards.u1qkLA`:
+read `release-process.md` for the new manual, SHA-confirmed, approval-gated release
+path. It is not pushed or active remotely. No release plan, credentials or remote
+settings were enabled. The browser/WebView policy remains unresolved; native adaptive
+parity and a real Pointr consumer remain next. Earlier “nothing pushed” entries below
+describe their implementation batches, not the subsequent authorized merges.
+
 **Agent switch, 2026-09-17.** Development moved from Claude Code to ChatGPT Astra at `a02a008`.
 Whoever picks the work up next reads `docs/agent-switch-2026-09-17.md` first: its §1 to §5 hand the
 work to Astra, §6 is the handback Astra leaves before switching back, and §7 is what Claude checks on
@@ -287,6 +297,15 @@ unblocking ones first.
 
 ### 4.5 · Get ready for npm publish
 
+**Superseding local release mechanics:** `release-process.md` replaces the automatic
+publish instructions below when the safeguards branch is merged. Until then, the old
+remote workflow remains unsafe to enable with an npm token. Its new replacement has
+no automatic publication or version PR: Changesets versioning is reviewed separately,
+and publication requires a committed package/version plan, main-push CI for the exact
+SHA, manual confirmation and a protected environment. No release is authorized.
+The historical reset/storage findings below were addressed by merged #53; see
+`embedding-isolation.md` for their actual migration and compatibility limitations.
+
 **#49 closed most of this list.** What it did, and what stays open, measured on 2026-09-17:
 
 | Item                                         | State                                                                                                                                                                                                                                                                                          |
@@ -390,6 +409,12 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
     and representative POI/routing flows before beta. See `prepublish-architecture-review-2026-09-17.md`.
     This authorizes implementation, not publication, credentials, pushes or merges. The numerical
     React thresholds are implementation choices for validation, not a universal native policy.
+
+25. **Proceed with release safeguards first**, then browser/WebView compatibility,
+    native adaptive parity and a real Pointr consumer proof before a prerelease
+    (2026-09-17). This authorizes local implementation, not credentials, account-plan
+    changes, repository visibility changes or publication. The browser minimums have
+    not been chosen by this ruling; Olcay has been asked for the Pointr support range.
 
 ## 6 · Open — waiting on Olcay
 
@@ -951,6 +976,38 @@ Next: native adaptive parity and real installed POI/routing consumer validation,
 native CSS `@scope` browser/WebView policy remains an unresolved release gate. Publishing
 safeguards, CSS/type debt and motion/a11y policy must still be closed before production.
 No shared-main change, remote push, release change, credential use or publication occurred.
+
+### 2026-09-17 · Release safeguards (Astra, local continuation)
+
+After Olcay authorized pushes and merges, #52 and #53 merged, leaving remote main
+at `040f53d`; its post-merge CI passed. Shared local main and Claude's worktrees
+remain untouched. Olcay then approved release safeguards as the next implementation
+batch (§5.25), before compatibility/native/product-consumer work.
+
+`astra/release-safeguards` replaces automatic `workflow_run` publication with a
+manual, SHA-confirmed dispatch, reviewed package/version plan and protected
+environment. CI identity and all jobs are checked against the exact main commit;
+the post-approval check repeats that validation. Publication consumes the same
+integrity-checked tarballs that passed the React 18/19 install tests, with npm
+credentials restricted to the final step. Empty plans, failed/skipped/mismatched
+CI, unprotected environments, altered artifacts, unpublished internal dependencies
+and conflicting registry versions/tags fail closed. The local release alias no
+longer publishes. Changesets versioning remains manual and reviewed.
+
+Four tests failed on the old workflow before replacement. A later stale npm-tag
+retry test failed before its preflight fix. **35 release tests now pass**; the
+real four-package export/install/readback smoke test, all package builds, ESLint,
+Actionlint and frozen-lockfile installation pass. Existing declaration ratchets
+did not move. Two direct dev dependencies were added; existing transitive versions
+were preserved. No component/native/Figma code was changed.
+
+Read `release-process.md` for operation, evidence and failure recovery. The actual
+repository has no release environment; required-reviewer availability on this
+private repository needs owner confirmation. Administrator bypass must be disabled
+in the UI, not claimed from an API field GitHub does not expose. No remote settings,
+tokens, versions, tags, pushes or publications occurred in this batch. The new
+workflow has not been dispatched live. The old remote release workflow remains
+active until this branch is reviewed and merged, so do not add npm credentials.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

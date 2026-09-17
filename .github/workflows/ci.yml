@@ -39,6 +39,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify Release Safeguards
+        run: pnpm test:release
+
       # The design system gates on its own lint. apps/mapscale-review is a
       # consumer of the library — a place to use the components for real — and
       # its in-flight work should not block a packages/ change. It is still
@@ -93,7 +96,7 @@ jobs:
       # project with npm, resolves every export and README import, renders a
       # component and type-checks every README sample. It reads the build above.
       - name: Verify Packages Install From Their Tarballs
-        run: pnpm packages:install:check
+        run: pnpm test:release:packages
 
       # A stale stamp means the plugin source changed without the build id
       # following, and the id is the only way to tell which build produced what
