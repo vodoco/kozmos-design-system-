@@ -7,6 +7,16 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**Browser compatibility investigation, 2026-09-17:** release safeguards were pushed
+in PR #54 (not merged). The separate local `astra/browser-compatibility` branch is
+based on merged foundations `040f53d`, worktree `/private/tmp/kozmos-browser-compat.uqPMBD`.
+Read `browser-compatibility-2026-09-17.md`: actual packaged Input/Textarea controls
+fail scoped styling on the installed WebKit 26.0. Earlier geometry/theme tests did
+not cover them. The added gate deliberately fails; this branch is not merge-ready.
+Chromium 145 and Firefox 146 pass the form fixture; the launcher now really selects
+Firefox and rejects unknown names. Browser minimums and the CSS architecture choice
+remain pending; no production styles were changed to conceal this finding.
+
 **Agent switch, 2026-09-17.** Development moved from Claude Code to ChatGPT Astra at `a02a008`.
 Whoever picks the work up next reads `docs/agent-switch-2026-09-17.md` first: its §1 to §5 hand the
 work to Astra, §6 is the handback Astra leaves before switching back, and §7 is what Claude checks on

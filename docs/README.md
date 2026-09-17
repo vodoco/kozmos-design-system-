@@ -15,6 +15,9 @@ these files honest are listed in its §7.
 
 ## Current
 
+- `browser-compatibility-2026-09-17.md`: reproduced WebKit form-styling blocker,
+  real Firefox coverage and the browser/WebView policy needed before a CSS decision.
+
 - `embedding-isolation.md`: scoped ThemeProvider and CSS, automatic portal ownership,
   migration, compatibility decision gate and remaining legacy configuration work.
 - `foundation-audit-2026-09-17.md`: the adversarial audit of the first Astra batch,

@@ -134,27 +134,44 @@ jobs:
           pnpm figma:publish:linked:dry
 
       - name: Install Playwright
-        run: pnpm --filter @kozmos/react exec playwright install --with-deps chromium webkit
+        run: pnpm --filter @kozmos/react exec playwright install --with-deps chromium firefox webkit
+
+      - name: Verify Browser Selection
+        run: pnpm test:browser-selection
 
       - name: Verify Built Adaptive Layout Geometry
         run: |
           pnpm test:adaptive
           ADAPTIVE_BROWSER=webkit pnpm test:adaptive
+          ADAPTIVE_BROWSER=firefox pnpm test:adaptive
 
       - name: Verify Built Overlay Ownership
         run: |
           pnpm test:overlays
           ADAPTIVE_BROWSER=webkit pnpm test:overlays
+          ADAPTIVE_BROWSER=firefox pnpm test:overlays
 
       - name: Verify Module Theme and Stylesheet Isolation
         run: |
           pnpm test:themes
           ADAPTIVE_BROWSER=webkit pnpm test:themes
+          ADAPTIVE_BROWSER=firefox pnpm test:themes
 
       - name: Verify Scoped Runtime Configuration
         run: |
           pnpm test:config
           ADAPTIVE_BROWSER=webkit pnpm test:config
+          ADAPTIVE_BROWSER=firefox pnpm test:config
+
+      # Deliberately fails for the pinned WebKit 26.0 until the compatibility
+      # architecture/support decision is resolved. Do not skip or xfail it.
+      - name: Verify Built Form Control Compatibility
+        run: |
+          result=0
+          for browser in chromium firefox webkit; do
+            ADAPTIVE_BROWSER="$browser" pnpm test:browser-compatibility || result=1
+          done
+          exit "$result"
 
       - name: Core Pipeline - Storybook E2E & A11y Verification
         run: |

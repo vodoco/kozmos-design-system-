@@ -18,6 +18,8 @@
     "test:config": "node scripts/check-config-isolation.mjs",
     "test:visual": "playwright test visual-regression.spec.ts",
     "test:visual:update": "playwright test visual-regression.spec.ts --update-snapshots",
+    "test:browser-selection": "node --test scripts/lib/built-react-fixture.test.mjs",
+    "test:browser-compatibility": "node scripts/check-browser-compatibility.mjs",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "typecheck": "turbo run typecheck",
