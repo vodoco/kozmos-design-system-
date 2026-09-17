@@ -57,6 +57,11 @@ jobs:
       - name: Build Packages
         run: pnpm turbo run build
 
+      # Never publish a tarball nobody has installed. This runs whether or not a
+      # token exists, so a broken package is reported before a release is tried.
+      - name: Verify Packages Install From Their Tarballs
+        run: pnpm packages:install:check
+
       - name: Verify NPM publish token
         id: npm-auth
         env:

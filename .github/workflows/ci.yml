@@ -82,6 +82,12 @@ jobs:
       - name: Verify No New Raw Values
         run: pnpm tokens:raw:check
 
+      # Packs every non-private package, installs the tarballs into an empty
+      # project with npm, resolves every export and README import, renders a
+      # component and type-checks every README sample. It reads the build above.
+      - name: Verify Packages Install From Their Tarballs
+        run: pnpm packages:install:check
+
       # A stale stamp means the plugin source changed without the build id
       # following, and the id is the only way to tell which build produced what
       # is in the Figma file.

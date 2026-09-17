@@ -1,24 +1,48 @@
 {
-    "name": "@kozmos/tokens",
-    "version": "0.0.1",
-    "publishConfig": {
-        "access": "public"
+  "name": "@kozmos/tokens",
+  "version": "0.0.1",
+  "description": "Kozmos design tokens: CSS custom properties for light and dark themes, a JavaScript module, and generated Swift and Kotlin sources.",
+  "keywords": [
+    "kozmos",
+    "design-system",
+    "design-tokens",
+    "css-variables",
+    "swift",
+    "kotlin"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/js/tokens.js",
+  "module": "dist/js/tokens.mjs",
+  "types": "dist/js/tokens.d.ts",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/js/tokens.d.ts",
+      "import": "./dist/js/tokens.mjs",
+      "require": "./dist/js/tokens.js"
     },
-    "main": "dist/js/tokens.js",
-    "module": "dist/js/tokens.mjs",
-    "types": "dist/js/tokens.d.ts",
-    "files": [
-        "dist"
-    ],
-    "scripts": {
-        "build": "node build.mjs",
-        "build:light": "style-dictionary build --config config.json --platform css-light",
-        "build:dark": "style-dictionary build --config config.json --platform css-dark",
-        "build:js": "style-dictionary build --config config.json --platform js",
-        "test": "echo 'No tests yet'"
-    },
-    "devDependencies": {
-        "@tokens-studio/sd-transforms": "2.0.3",
-        "style-dictionary": "5.2.0"
-    }
+    "./css/light.css": "./dist/css/variables-light.css",
+    "./css/dark.css": "./dist/css/variables-dark.css",
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "build:light": "style-dictionary build --config config.json --platform css-light",
+    "build:dark": "style-dictionary build --config config.json --platform css-dark",
+    "build:js": "style-dictionary build --config config.json --platform js",
+    "test": "echo 'No tests yet'"
+  },
+  "devDependencies": {
+    "@tokens-studio/sd-transforms": "2.0.3",
+    "style-dictionary": "5.2.0"
+  }
 }
