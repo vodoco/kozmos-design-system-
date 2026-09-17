@@ -6,11 +6,12 @@ these files honest are listed in its §7.
 
 ## Start here
 
-| File                     | What it is                                                                                                                                         |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ds-handoff.md`          | The handoff for the next session: the scope, the priorities in order, the measured state, what is decided, what is open, and the traps.            |
-| `ds-scope-2026-09-12.md` | What the design system is missing and where the SDK components belong: the 24 Product / SDK sets and the eight missing parts.                      |
-| `style-playbook.md`      | How to change how Kozmos looks without breaking the agreement between Figma, the web and the two native platforms: roles, cookbook, traps, checks. |
+| File                         | What it is                                                                                                                                                                        |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ds-handoff.md`              | The handoff for the next session: the scope, the priorities in order, the measured state, what is decided, what is open, and the traps.                                           |
+| `agent-switch-2026-09-17.md` | The switch from Claude Code to ChatGPT Astra at `a02a008`: how to pick the work up, the working agreement that made it reliable, and the handback to leave before switching back. |
+| `ds-scope-2026-09-12.md`     | What the design system is missing and where the SDK components belong: the 24 Product / SDK sets and the eight missing parts.                                                     |
+| `style-playbook.md`          | How to change how Kozmos looks without breaking the agreement between Figma, the web and the two native platforms: roles, cookbook, traps, checks.                                |
 
 ## Current
 
