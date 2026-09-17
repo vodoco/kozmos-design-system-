@@ -15,6 +15,8 @@ these files honest are listed in its §7.
 
 ## Current
 
+- `embedding-isolation.md`: scoped ThemeProvider and CSS, automatic portal ownership,
+  migration, compatibility decision gate and remaining legacy configuration work.
 - `foundation-audit-2026-09-17.md`: the adversarial audit of the first Astra batch,
   reproduced corrections, explicit overlay ownership, verification and remaining release blockers.
 

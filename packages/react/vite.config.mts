@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import dts from "vite-plugin-dts";
 import path from "path";
 import { createRequire } from "node:module";
+import { readFile } from "node:fs/promises";
 
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
@@ -42,6 +43,20 @@ export default defineConfig(async () => {
   return {
     plugins: [
       react(),
+      {
+        name: "kozmos-opt-in-reset",
+        async generateBundle() {
+          // A separate, deliberate host-page reset. The default CSS is scoped.
+          this.emitFile({
+            type: "asset",
+            fileName: "reset.css",
+            source: await readFile(
+              require.resolve("tailwindcss/lib/css/preflight.css"),
+              "utf8",
+            ),
+          });
+        },
+      },
       dts({
         insertTypesEntry: true,
         // The Code Connect files are type-checked (they are in tsconfig's
@@ -60,6 +75,8 @@ export default defineConfig(async () => {
           require("tailwindcss"),
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           require("autoprefixer"),
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          require("./postcss/scoped-css.cjs")(),
         ],
       },
     },

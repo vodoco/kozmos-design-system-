@@ -1,3 +1,4 @@
+import { createThemePortal } from "../../theme/ThemePortal";
 import React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { cn } from "../../utils";
@@ -7,7 +8,7 @@ import { useKozmosAnalytics } from "../../utils/analytics";
 const Menu = DropdownMenuPrimitive.Root;
 const MenuTrigger = DropdownMenuPrimitive.Trigger;
 const MenuGroup = DropdownMenuPrimitive.Group;
-const MenuPortal = DropdownMenuPrimitive.Portal;
+const MenuPortal = createThemePortal(DropdownMenuPrimitive.Portal);
 const MenuSub = DropdownMenuPrimitive.Sub;
 const MenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
@@ -55,7 +56,7 @@ const MenuContent = React.forwardRef<
     >["container"];
   }
 >(({ className, sideOffset = 4, portalContainer, ...props }, ref) => (
-  <DropdownMenuPrimitive.Portal container={portalContainer}>
+  <MenuPortal container={portalContainer}>
     <DropdownMenuPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
@@ -65,7 +66,7 @@ const MenuContent = React.forwardRef<
       )}
       {...props}
     />
-  </DropdownMenuPrimitive.Portal>
+  </MenuPortal>
 ));
 MenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
 

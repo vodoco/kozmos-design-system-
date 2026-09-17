@@ -17,9 +17,12 @@ return.
 contains the first React adaptive-layout batch. Read `docs/adaptive-map-layout.md` and the new
 §10 entry before continuing. This is not on shared `main`; nothing has been pushed or published.
 The follow-up audit fixed four adaptive defect classes and added explicit `portalContainer`
-support to the overlay primitives; see `foundation-audit-2026-09-17.md`. Full theme/portal/CSS
-isolation remains next, followed by native adaptive parity and real
-map-adapter proof. The SDK composition loop remains part of validation, not replaced by counts.
+support to the overlay primitives; see `foundation-audit-2026-09-17.md`. The next batch implements
+module-owned ThemeProvider state, automatic overlay ownership and scoped CSS with an opt-in
+global reset; see `embedding-isolation.md`. Its native CSS `@scope` browser/WebView support floor
+is **not yet approved**. Legacy KozmosTheme/DesignConfigProvider consolidation remains, then
+native adaptive parity and real map-adapter proof. The SDK composition loop remains part of
+validation, not replaced by counts. Nothing in this local work authorizes an npm release.
 
 Paste this as the first message of the new chat:
 
@@ -871,6 +874,46 @@ Full provider/CSS isolation is **not done**: global theme mutation, storage/syst
 nested light/dark token/utility behavior, global reset/selectors and automatic portal propagation
 through product compositions remain. Explicit container ownership also does not change Radix's
 document-level modal semantics. Do not present this as scoped modal isolation or production readiness.
+
+### 2026-09-17 · Module theme, portal and stylesheet foundation (Astra)
+
+Olcay approved proceeding with the embedding-isolation foundation. ThemeProvider now owns a
+layout-transparent DOM boundary rather than mutating `<html>`. It supports controlled state,
+live system preferences, deterministic SSR/hydration and safe opt-in storage. A provider-owned
+body-level portal root carries its resolved theme, explicit token overrides and direction;
+all seven overlay types use it automatically unless an explicit destination overrides it.
+Radix direction is provided through a direct `@radix-ui/react-direction` dependency, not merely
+an inherited CSS attribute. Existing document-level modal semantics are retained.
+
+The React stylesheet is bounded by native `@scope`, including nearest-root dark utilities.
+Its preflight and generic utilities no longer style unrelated host content; `:scope` precedence
+also prevents ordinary host reset/utility rules leaking inward. Keyframes are namespaced.
+`@kozmos/react/reset.css` is a separate optional global reset. This is a breaking pre-publication
+integration change: styled content needs a provider/scope. See `embedding-isolation.md` and the
+React README for migration and the exact limits, including `rem` sizing and host `!important`.
+
+**Decision pending, not a new ruling:** Olcay was asked whether the npm release may require
+native CSS `@scope`. The implementation is local and provisional for that browser policy;
+no minimum browser/WebView matrix has been approved or certified. Do not infer approval from
+green current-engine checks. The older KozmosTheme/DesignConfigProvider surface still needs
+consolidation/retirement: implicit persistence, duplicated effect IDs, global effects/fallbacks
+and runtime variables outside automatic portal ownership remain. Neither provider consolidation
+nor independently modal sibling widgets is claimed complete.
+
+Evidence: five initial provider tests, seven automatic overlay ownership cases and the host
+CSS probe failed before their fixes. A further host-border leak was reproduced and corrected.
+The full React suite passes **368 tests in 105 files**. Chromium and WebKit each pass 14 adaptive,
+21 overlay and 6 named theme/reset browser checks. React and harness lint, component contracts,
+snippet/completion checks and unchanged raw-value/compiled-class ratchets pass. Regenerated
+variant analysis honestly adds ThemeProvider's React `dir` axis as unmatched natively; the report
+is current, not a claim that all platforms now have equivalent APIs. Tarball checks pass with
+React 18/19, all 14 package exports and 10 README samples; the three known declaration issues
+remain. React Storybook builds successfully; this is not a full visual/a11y audit.
+
+No native/Figma source, shared main, parked product app, release workflow, credential, remote
+branch or npm publication was changed. Next: resolve browser policy and legacy provider surface,
+then native adaptive parity, real installed POI/routing consumer proof, remaining CSS/type debt
+and release safeguards. Production readiness is still not established.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

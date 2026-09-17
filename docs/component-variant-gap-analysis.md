@@ -24,12 +24,12 @@ cannot".
 | Measure                                   | Result |
 | ----------------------------------------- | ------ |
 | Components scanned                        | 98     |
-| Declaring at least one React variant axis | 29     |
-| Variations that are compositional only    | 69     |
-| Components with variant gaps — iOS        | 2/29   |
-| Components with variant gaps — Android    | 2/29   |
-| Components with variant gaps — Figma      | 2/29   |
-| Components with variant gaps — Vue        | 0/29   |
+| Declaring at least one React variant axis | 30     |
+| Variations that are compositional only    | 68     |
+| Components with variant gaps — iOS        | 3/30   |
+| Components with variant gaps — Android    | 3/30   |
+| Components with variant gaps — Figma      | 3/30   |
+| Components with variant gaps — Vue        | 0/30   |
 | Components absent entirely — iOS          | 0/98   |
 | Components absent entirely — Android      | 0/98   |
 | Components absent entirely — Figma        | 4/98   |
@@ -62,6 +62,10 @@ MapControlButton
 Spinner
   - ios missing axes -> size (sm, md, lg, xl)
   - android missing axes -> size (sm, md, lg, xl)
+ThemeProvider
+  - ios missing axes -> dir (ltr, rtl)
+  - android missing axes -> dir (ltr, rtl)
+  - figma: component/set absent
 ```
 
 <!-- /generated:gaps -->

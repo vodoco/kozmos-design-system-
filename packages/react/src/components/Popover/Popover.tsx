@@ -1,6 +1,9 @@
+import { createThemePortal } from "../../theme/ThemePortal";
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { cn } from "../../utils";
+
+const PopoverPortal = createThemePortal(PopoverPrimitive.Portal);
 
 const Popover = PopoverPrimitive.Root;
 
@@ -18,7 +21,7 @@ const PopoverContent = React.forwardRef<
     { className, align = "center", sideOffset = 4, portalContainer, ...props },
     ref,
   ) => (
-    <PopoverPrimitive.Portal container={portalContainer}>
+    <PopoverPortal container={portalContainer}>
       <PopoverPrimitive.Content
         ref={ref}
         align={align}
@@ -29,7 +32,7 @@ const PopoverContent = React.forwardRef<
         )}
         {...props}
       />
-    </PopoverPrimitive.Portal>
+    </PopoverPortal>
   ),
 );
 PopoverContent.displayName = PopoverPrimitive.Content.displayName;

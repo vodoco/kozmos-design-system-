@@ -150,7 +150,7 @@ try {
     });
     try {
       await page.setContent(
-        `<html><head><style>${css}</style></head><body><div id="fixture" style="width:390px;height:600px"></div></body></html>`,
+        `<html><head><style>${css}</style></head><body data-kozmos-root data-theme="light"><div id="fixture" style="width:390px;height:600px"></div></body></html>`,
       );
       await page.addScriptTag({ content: code });
       await page.waitForFunction(

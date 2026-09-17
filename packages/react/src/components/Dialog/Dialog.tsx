@@ -1,3 +1,4 @@
+import { createThemePortal } from "../../theme/ThemePortal";
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -23,7 +24,7 @@ Dialog.displayName = "Dialog";
 
 const DialogTrigger = DialogPrimitive.Trigger;
 
-const DialogPortal = DialogPrimitive.Portal;
+const DialogPortal = createThemePortal(DialogPrimitive.Portal);
 
 const DialogClose = DialogPrimitive.Close;
 

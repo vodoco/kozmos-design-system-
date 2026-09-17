@@ -1,3 +1,4 @@
+import { createThemePortal } from "../../theme/ThemePortal";
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -46,7 +47,7 @@ Drawer.displayName = "Drawer";
 
 const DrawerTrigger = DialogPrimitive.Trigger;
 const DrawerClose = DialogPrimitive.Close;
-const DrawerPortal = DialogPrimitive.Portal;
+const DrawerPortal = createThemePortal(DialogPrimitive.Portal);
 
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,

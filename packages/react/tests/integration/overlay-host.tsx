@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import {
   Button,
+  ThemeProvider,
   Dialog,
   DialogTrigger,
   DialogContent,
@@ -36,12 +37,13 @@ import {
 declare global {
   interface Window {
     overlayUseDefault?: boolean;
+    overlayUseProvider?: boolean;
   }
 }
 const portalContainer = window.overlayUseDefault
   ? undefined
   : document.getElementById("owned-portal")!;
-createRoot(document.getElementById("fixture")!).render(
+const examples = (
   <>
     <Popover>
       <PopoverTrigger asChild>
@@ -107,5 +109,18 @@ createRoot(document.getElementById("fixture")!).render(
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  </>,
+  </>
+);
+createRoot(document.getElementById("fixture")!).render(
+  window.overlayUseProvider ? (
+    <ThemeProvider
+      defaultTheme="dark"
+      dir="rtl"
+      tokens={{ "--primitives-colors-background-0": "rgb(12, 34, 56)" }}
+    >
+      {examples}
+    </ThemeProvider>
+  ) : (
+    examples
+  ),
 );

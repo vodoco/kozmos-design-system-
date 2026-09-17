@@ -1,10 +1,14 @@
+import { createThemePortal } from "../../theme/ThemePortal";
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "../../utils";
+
 import { FieldWrapper } from "../FieldWrapper";
 import { useKozmosAnalytics } from "../../utils/analytics";
+
+const SelectPortal = createThemePortal(SelectPrimitive.Portal);
 
 const Select: React.FC<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>
@@ -108,7 +112,7 @@ const SelectContent = React.forwardRef<
     { className, children, position = "popper", portalContainer, ...props },
     ref,
   ) => (
-    <SelectPrimitive.Portal container={portalContainer}>
+    <SelectPortal container={portalContainer}>
       <SelectPrimitive.Content
         ref={ref}
         className={cn(
@@ -132,7 +136,7 @@ const SelectContent = React.forwardRef<
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
       </SelectPrimitive.Content>
-    </SelectPrimitive.Portal>
+    </SelectPortal>
   ),
 );
 SelectContent.displayName = SelectPrimitive.Content.displayName;

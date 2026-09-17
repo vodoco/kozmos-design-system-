@@ -362,6 +362,9 @@ importers:
       "@radix-ui/react-dialog":
         specifier: 1.1.15
         version: 1.1.15(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      "@radix-ui/react-direction":
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@18.3.28)(react@19.2.4)
       "@radix-ui/react-dropdown-menu":
         specifier: 2.1.16
         version: 2.1.16(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -483,6 +486,9 @@ importers:
       postcss:
         specifier: ^8.4.38
         version: 8.5.6
+      postcss-value-parser:
+        specifier: 4.2.0
+        version: 4.2.0
       rollup-plugin-visualizer:
         specifier: 7.0.1
         version: 7.0.1(rolldown@1.0.0-rc.11)(rollup@4.57.1)

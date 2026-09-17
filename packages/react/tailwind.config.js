@@ -4,7 +4,10 @@ const plugin = require("tailwindcss/plugin");
 
 module.exports = {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
-  darkMode: ["class", '[data-theme="dark"]'],
+  darkMode: [
+    "variant",
+    '@scope (:scope[data-theme="dark"]) to ([data-kozmos-root]) { & }',
+  ],
   theme: {
     extend: {
       colors: {

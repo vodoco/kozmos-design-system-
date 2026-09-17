@@ -12,6 +12,11 @@ The follow-up audit of that first implementation found and fixed four adaptive d
 and added explicit overlay destination support. See `foundation-audit-2026-09-17.md`; this is
 an incremental foundation, not completion of the broader scoped-theme/CSS recommendation.
 
+The subsequent local implementation supplies scoped ThemeProvider state, automatic owned
+portals and scoped CSS with an opt-in reset. `embedding-isolation.md` is its current contract
+and migration guide. Browser/WebView support approval and legacy configuration consolidation
+remain gates; the baseline findings below should not be mistaken for its current implementation.
+
 ## Scope and evidence
 
 Olcay wants to continue development across Claude and Codex, support landscape and foldable devices, eventually publish to npm, and rebuild Pointr product modules using the design system.

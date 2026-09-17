@@ -2,6 +2,12 @@
 
 2026-09-17 · baseline `b13f4d9`, local branch `astra/prepublish-foundations`.
 
+**Subsequent continuation:** `embedding-isolation.md` records the next batch's scoped
+ThemeProvider, automatic portals and CSS/reset separation. The findings and defaults below
+describe this audit's earlier baseline; they are not a claim that the new provider still mutates
+the document. Browser/WebView support approval and legacy configuration consolidation remain
+open; full production embedding readiness is still not established.
+
 Olcay requested another extensive audit and continuation. The prior batch was useful but not
 complete. This audit found four defect classes in its adaptive implementation, fixed them, and
 added explicit overlay-container ownership as the next foundation step. No publication, remote

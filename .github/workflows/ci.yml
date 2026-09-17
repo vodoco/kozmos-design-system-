@@ -146,6 +146,11 @@ jobs:
           pnpm test:overlays
           ADAPTIVE_BROWSER=webkit pnpm test:overlays
 
+      - name: Verify Module Theme and Stylesheet Isolation
+        run: |
+          pnpm test:themes
+          ADAPTIVE_BROWSER=webkit pnpm test:themes
+
       - name: Core Pipeline - Storybook E2E & A11y Verification
         run: |
           # Chromatic is the required visual-regression gate. Keep local screenshot baselines manual until repaired.

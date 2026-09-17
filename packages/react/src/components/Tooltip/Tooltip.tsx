@@ -1,6 +1,10 @@
 import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cn } from "../../utils";
+import { createThemePortal } from "../../theme/ThemePortal";
+import { ThemeProviderContext } from "../../theme/theme-context";
+
+const TooltipPortal = createThemePortal(TooltipPrimitive.Portal);
 
 const TooltipProvider = TooltipPrimitive.Provider;
 
@@ -52,12 +56,13 @@ TooltipTrigger.displayName = TooltipPrimitive.Trigger.displayName;
 const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content> & {
-    /** Omit to retain inline rendering; supply a container (or null for body) to portal. */
+    /** Defaults to the owning ThemeProvider; without a provider, remains inline. */
     portalContainer?: React.ComponentPropsWithoutRef<
       typeof TooltipPrimitive.Portal
     >["container"];
   }
 >(({ className, sideOffset = 4, children, portalContainer, ...props }, ref) => {
+  const theme = React.useContext(ThemeProviderContext);
   const content = (
     <TooltipPrimitive.Content
       ref={ref}
@@ -72,12 +77,10 @@ const TooltipContent = React.forwardRef<
       <TooltipPrimitive.Arrow width={8} height={4} className="fill-popover" />
     </TooltipPrimitive.Content>
   );
-  return portalContainer === undefined ? (
+  return portalContainer === undefined && !theme ? (
     content
   ) : (
-    <TooltipPrimitive.Portal container={portalContainer}>
-      {content}
-    </TooltipPrimitive.Portal>
+    <TooltipPortal container={portalContainer}>{content}</TooltipPortal>
   );
 });
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;

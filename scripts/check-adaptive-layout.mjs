@@ -96,7 +96,7 @@ try {
     page.on("pageerror", (error) => errors.push(error.message));
     try {
       await page.setContent(
-        `<html dir="${scenario.direction}"><head><style>${css}</style></head><body><div id="fixture" style="width:${scenario.width}px;height:${scenario.height}px"></div></body></html>`,
+        `<html dir="${scenario.direction}"><head><style>${css}</style></head><body data-kozmos-root data-theme="light"><div id="fixture" style="width:${scenario.width}px;height:${scenario.height}px"></div></body></html>`,
       );
       await page.addScriptTag({
         content: `window.adaptiveOptions = ${JSON.stringify(scenario.options ?? {})};`,
