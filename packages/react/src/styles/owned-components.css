@@ -144,10 +144,10 @@
     @apply bg-[var(--kz-button-bg)] text-[var(--kz-button-fg)] hover:bg-[var(--kz-button-bg-hover)];
   }
   .kozmos-button-emotion-outline {
-    @apply border-[var(--kz-button-fg)] text-[var(--kz-button-fg)] hover:border-[var(--kz-button-fg-hover)] hover:text-[var(--kz-button-fg-hover)];
+    @apply border-[var(--kz-button-fg)] text-[var(--kz-button-fg)] hover:bg-muted hover:border-[var(--kz-button-fg-hover)] hover:text-[var(--kz-button-fg-hover)];
   }
   .kozmos-button-emotion-text {
-    @apply text-[var(--kz-button-fg)] hover:text-[var(--kz-button-fg-hover)];
+    @apply text-[var(--kz-button-fg)] hover:bg-muted hover:text-[var(--kz-button-fg-hover)];
   }
   .kozmos-button-loader {
     @apply mr-2 h-4 w-4 animate-spin;

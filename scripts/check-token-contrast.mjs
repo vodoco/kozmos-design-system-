@@ -10,6 +10,32 @@ const contractPath = path.join(
 );
 const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
 const modes = ["light", "dark"];
+// Exercise every enabled button emotion/state, not only the default themed pair.
+// Outline/text treatments use the page surface, and the muted surface on hover.
+for (const emotion of [
+  "themed",
+  "neutral",
+  "success",
+  "danger",
+  "informative",
+  "alert",
+]) {
+  for (const state of ["idle", "hover", "pressed", "focus"]) {
+    contract.pairs.push({
+      name: `primary button ${emotion} ${state}`,
+      background: `components-primary-buttons-${emotion}-button-background-${state}`,
+      foreground: `components-primary-buttons-${emotion}-button-foreground-content-${state}`,
+      minimum: 4.5,
+    });
+    for (const surface of [0, 100])
+      contract.pairs.push({
+        name: `secondary button ${emotion} ${state} on surface ${surface}`,
+        background: `primitives-colors-background-${surface}`,
+        foreground: `components-secondary-buttons-${emotion}-button-foreground-content-${state}`,
+        minimum: 4.5,
+      });
+  }
+}
 
 function readCssVariables(mode) {
   const filePath = path.join(
