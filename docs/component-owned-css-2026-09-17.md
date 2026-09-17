@@ -134,6 +134,11 @@ requires simultaneous independently versioned SDK modules before promising it.
 8. **Test-only mistakes corrected:** the new fixture initially used an unsupported
    glass `opacity` config property, and tested MapControlButton's filled appearance
    without setting `pressed`. The fixture is now typechecked and tests the active state.
+9. **Final helper audit:** `inputVariants({ status: "warning", error: true })`
+   initially painted a warning because recipe order beat the error flag. A computed
+   border-colour assertion reproduced it; error rules now follow other validation
+   recipes, consistent with Input's own error precedence. This is covered with and
+   without scope in all three engines.
 
 ### Separate public-API defect still open
 
@@ -157,6 +162,13 @@ as expected failures. React 18/19 tarball installs, 14 export resolutions, three
 entries and 11 README samples passed; three known declaration issues remain unchanged.
 Storybook builds. Token parity/contrast, updated contract/debt checks and snippet/variant
 checks passed. Native/device/Figma/complete visual certification were not rerun here.
+
+An independent checkout at `/private/tmp/kozmos-owned-css-verify.dV1etM` rebuilt
+implementation `7e2001d` with a frozen install: all package builds, 387 React tests,
+six CSS-build tests and the owned/form/configuration browser suites passed again.
+Its CSS and ESM bundle were byte-identical to the implementation worktree (`cmp`).
+The final helper-precedence follow-up also passed a rebuild and all six owned-CSS
+engine/mode combinations, plus the debt checks, before handoff.
 
 Run from the worktree above, not the shared checkout, which remains on its old main.
 Build before any check that consumes `dist`, and never rebuild while those checks run.

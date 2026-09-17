@@ -73,6 +73,11 @@ function Controls({ id }: { id: string }) {
         data-testid={`${id}-helper-input`}
         aria-label={`${id} helper input`}
       />
+      <input
+        className={inputVariants({ status: "warning", error: true })}
+        data-testid={`${id}-helper-error`}
+        aria-label={`${id} helper error`}
+      />
       <PasswordInput label={`${id} password`} data-testid={`${id}-password`} />
       <NumberInput label={`${id} number`} data-testid={`${id}-number`} />
       <MapControlButton

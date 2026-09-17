@@ -24,8 +24,9 @@ fail scoped styling on the installed WebKit 26.0. Earlier geometry/theme tests d
 not cover them. At investigation commit `f8eb957` the added gate deliberately failed;
 the implementation continuation above addresses that failure.
 Chromium 145 and Firefox 146 pass the form fixture; the launcher now really selects
-Firefox and rejects unknown names. Browser minimums and the CSS architecture choice
-remain release work; the baseline investigation itself changed no production styles.
+Firefox and rejects unknown names. Minimum-engine certification remains release
+work; ruling 26 supersedes the earlier pending architecture choice. The baseline
+investigation itself changed no production styles.
 
 **Agent switch, 2026-09-17.** Development moved from Claude Code to ChatGPT Astra at `a02a008`.
 Whoever picks the work up next reads `docs/agent-switch-2026-09-17.md` first: its §1 to §5 hand the

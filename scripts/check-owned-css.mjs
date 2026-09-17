@@ -131,6 +131,14 @@ try {
         (await measure(page.getByTestId(`${id}-helper-input`))).height,
         "44px",
       );
+      assert.equal(
+        (await measure(page.getByTestId(`${id}-helper-error`))).borderTopColor,
+        await value(
+          `${id}-helper-error`,
+          "--primitives-colors-emotional-danger-600",
+        ),
+        "the exported helper's error flag must override its warning status",
+      );
       if (mode === "full") {
         // Shared exported helpers reach existing compositions too. These are
         // regression checks, not claims that those whole components migrated.
