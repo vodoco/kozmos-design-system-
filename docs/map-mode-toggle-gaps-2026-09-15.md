@@ -141,24 +141,34 @@ It survives review because `MapControlButton.stories.tsx` is `layout:
 the same picture.
 
 The mechanism is confirmed both ways in `packages/react/dist/style.css`:
-literal colours do compile their alpha variants (`bg-black/5`, `bg-black/50`,
-`bg-green-900/30` are all present), while every token role compiles **zero**
+literal colours do compile their alpha variants (`bg-black/5` and
+`ring-black/5` are both present), while every token role compiles **none**
 (`bg-background`, `bg-foreground`, `bg-primary`, `bg-secondary`, `bg-muted`,
 `bg-accent`, `bg-card`, `bg-popover` — none has an alpha rule).
 
-The library authors **31 distinct such classes, ~70 occurrences**, all inert.
-The heaviest:
+**Measured by `pnpm components:classes:check` (#48) on `main` at `1dd30f0`: 66
+uses of 41 classes across 29 files**, stories, tests and Code Connect files
+aside. Every one is a colour role with an opacity modifier. This report first
+said 31 classes and ~70 uses; that came from a grep which covered only
+`bg`/`text`/`border`/`ring` prefixes and counted fixtures, and it missed `fill-`,
+`placeholder:` and `group-[…]:` variants and the `warning`, `info` and `success`
+roles. The heaviest, as the check counts them:
 
-| Class               | Uses | Where it matters                                                                        |
-| ------------------- | ---- | --------------------------------------------------------------------------------------- |
-| `bg-muted/50`       | 6    | muted surfaces                                                                          |
-| `bg-muted/40`       | 6    | muted surfaces                                                                          |
-| `bg-background/90`  | 6    | map chrome — `MapControlsGroup` ×2, `FloorSelector`, `RouteSummary`, `MapControlButton` |
-| `bg-secondary/80`   | 4    | secondary hovers                                                                        |
-| `ring-primary/20`   | 3    | focus rings                                                                             |
-| `bg-primary/5`      | 3    | tinted rows                                                                             |
-| `bg-primary/90`     | 2    | the primary Button's hover                                                              |
-| `bg-destructive/90` | 2    | the destructive Button's hover                                                          |
+| Class                     | Uses | Where it matters                                                                                                     |
+| ------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------- |
+| `bg-background/90`        | 5    | map chrome — `MapControlsGroup` ×2, `FloorSelector`, `RouteSummary`, `MapControlButton`                              |
+| `bg-muted/40`             | 4    | muted surfaces                                                                                                       |
+| `hover:bg-secondary/80`   | 4    | secondary hovers                                                                                                     |
+| `bg-muted/50`             | 3    | muted surfaces                                                                                                       |
+| `bg-primary/5`            | 3    | tinted rows                                                                                                          |
+| `hover:bg-muted/50`       | 3    | muted hovers                                                                                                         |
+| `ring-primary/20`         | 3    | focus rings                                                                                                          |
+| `hover:bg-primary/90`     | 2    | the primary Button's hover                                                                                           |
+| `hover:bg-destructive/90` | 2    | the destructive Button's hover                                                                                       |
+| `hover:bg-accent/10`      | 2    | ghost `Button` and ghost `Badge` — neither tints on hover; a ghost Button only shifts its text `#0D44C2` → `#1051E8` |
+
+`Chip` alone carries 10 of the 66. This change removes 4 uses, 1 class and 2
+files; the same check run against this branch measures 62/40/27.
 
 **Only `MapControlButton` was fixed here** — it is the component this work
 changes, and the opaque role is what the SDK draws for Focus anyway. The rest

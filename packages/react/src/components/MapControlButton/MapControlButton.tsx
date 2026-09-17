@@ -108,8 +108,8 @@ const MapControlButton = React.forwardRef<
           // cannot be computed and the class is dropped from the stylesheet
           // entirely. A ghost Button sets no surface of its own, so this
           // control was transparent over the map. The opaque role is what the
-          // SDK draws for Focus anyway; the 31 other token-role alpha classes
-          // in the library are recorded in the gap list, not fixed here.
+          // SDK draws for Focus anyway; the library's other inert opacity
+          // classes are recorded in the gap list, not fixed here.
           "min-h-11 min-w-11 justify-center rounded-control bg-background text-foreground shadow-floating ring-1 ring-border backdrop-blur-xl hover:bg-muted",
           // The label reveals and collapses rather than snapping, because the
           // control announces a state change and then gets out of the way.
