@@ -37,6 +37,31 @@ type Story = StoryObj<typeof meta>;
 
 export const PanelAtEnd: Story = {};
 
+export const NarrowHost: Story = {
+  args: {
+    className: undefined,
+    style: { width: 360, height: 600, maxWidth: "100%" },
+  },
+};
+
+export const LandscapeHost: Story = {
+  args: {
+    className: undefined,
+    style: { width: 844, height: 390, maxWidth: "100%" },
+  },
+};
+
+export const SeparatedRegions: Story = {
+  args: {
+    className: undefined,
+    style: { width: 800, height: 700, maxWidth: "100%" },
+    usableRegions: [
+      { x: 0, y: 0, width: 390, height: 700 },
+      { x: 410, y: 0, width: 390, height: 700 },
+    ],
+  },
+};
+
 export const Error: Story = {
   args: {
     mapStatus: "error",

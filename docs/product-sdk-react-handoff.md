@@ -79,7 +79,8 @@ If the POI is on another floor, announce that change before switching floors.
 
 ```tsx
 <AdaptiveMapShell
-  collisionInsets={mapAdapter.collisionInsets}
+  style={{ height: "100dvh" }}
+  collisionInsets={hostMinimumInsets}
   controls={
     <MapControlsGroup
       locationLabel={copy.focus}
@@ -98,10 +99,19 @@ If the POI is on another floor, announce that change before switching floors.
 />
 ```
 
-`AdaptiveMapShell` exposes supplied collision values as
-`--kozmos-map-inset-*`. A renderer adapter must consume them when setting map
-camera padding; CSS alone cannot move SDK labels, routes, attribution, or marker
-collision boxes.
+The host must be explicitly sized: the shell now fills its parent without a 448px
+minimum. The example above owns the viewport; an embedded module should fill its
+bounded container instead. `onLayoutChange` reports shell-local renderer/panel bounds,
+occlusions and map-local camera padding. An adapter must consume this output for
+renderer resizing and camera padding; CSS alone cannot move SDK labels, routes,
+attribution or marker collision boxes.
+
+`collisionInsets` is the host's independent minimum padding, not feedback from the
+shell's previous resolved output (feeding that back would retain old panel coverage
+after a panel shrinks). Measured coverage is combined with the minimum and exposed via
+the callback and `--kozmos-map-inset-*`. See `adaptive-map-layout.md` for usable-region,
+safe-area and keyboard semantics. The native implementations have not yet adopted this
+new React contract.
 
 ## Floors
 

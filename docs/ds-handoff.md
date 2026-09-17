@@ -12,6 +12,13 @@ Whoever picks the work up next reads `docs/agent-switch-2026-09-17.md` first: it
 work to Astra, §6 is the handback Astra leaves before switching back, and §7 is what Claude checks on
 return.
 
+**Astra continuation, 2026-09-17:** Olcay approved the pre-publication architecture recommendations
+(ruling 24). Local branch `astra/prepublish-foundations`, based on the switch handoff at `c274b06`,
+contains the first React adaptive-layout batch. Read `docs/adaptive-map-layout.md` and the new
+§10 entry before continuing. This is not on shared `main`; nothing has been pushed or published.
+The next foundation is theme/portal/CSS isolation, followed by native adaptive parity and real
+map-adapter proof. The SDK composition loop remains part of validation, not replaced by counts.
+
 Paste this as the first message of the new chat:
 
 > Continue the Kozmos design system work. Read `docs/ds-handoff.md` first — it holds the scope, the
@@ -70,6 +77,13 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
 - A handoff a new chat can start from, whenever the session ends.
 
 ## 3 · The system today — measured 2026-09-17
+
+The table below is the **Claude handover baseline**, not the state of Astra's local feature branch.
+For the latter, React now has 359 passing tests in 104 files, and eight adaptive host scenarios pass
+in each of Chromium and WebKit (`pnpm --filter @kozmos/react test`, `pnpm test:adaptive`,
+`ADAPTIVE_BROWSER=webkit pnpm test:adaptive`). Native/Figma numbers below were not re-measured in
+this implementation batch. The worktree is `/private/tmp/kozmos-astra-review.hwXbrb`; shared
+`main` at `/Volumes/4TB Depo/development/K/kozmos-design-system-dev` remains clean at `a02a008`.
 
 | Thing            | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -359,6 +373,15 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
 23. **A PR whose CI could not run waits for CI before merging**, however complete the local
     verification (#47, 2026-09-17).
 
+**Ruled 2026-09-17, during the Astra continuation:**
+
+24. **Proceed with the pre-publication architecture pass**, before treating npm or module rebuilds
+    as ready. The approved direction is local available-space and region/occlusion contracts,
+    state-preserving adaptive layout, scoped theme/portal/CSS ownership, a deliberate public API,
+    and representative POI/routing flows before beta. See `prepublish-architecture-review-2026-09-17.md`.
+    This authorizes implementation, not publication, credentials, pushes or merges. The numerical
+    React thresholds are implementation choices for validation, not a universal native policy.
+
 ## 6 · Open — waiting on Olcay
 
 Eleven of the twelve that stood here were ruled on 2026-09-14 and moved to §5. What is left needs an
@@ -408,6 +431,12 @@ action rather than an answer, needs a designer, or is work with nobody blocked o
 ### 6.3 · The queue, when there is no SDK component waiting
 
 Work, not questions. In the order it is worth doing:
+
+- **Approved pre-publication foundations (ruling 24).** The first React layout batch is on
+  `astra/prepublish-foundations`. Next: theme/portal/CSS isolation; native local-space/region
+  parity while retaining iOS detents; an actual Pointr map adapter and POI/routing consumer proof;
+  public export/type/token cleanup and release safeguards. Do not mistake the existing variant
+  scanner's green result for native adaptive parity: it does not track these new geometry inputs.
 
 - **`Link` and `Spinner` cannot express an axis React has**, on both iOS and Android — `Link.variant`
   (`default`, `subtle`) and `Spinner.size` (`sm`, `md`, `lg`, `xl`). These are the only two real
@@ -770,6 +799,45 @@ the first time painter changes have reached the file since early September.
     before #50 merged — its commit, an open PR and a deleted branch; 99 React components where there
     are 98, because a file had been counted; a lucide count in §6 that no method reproduces; and §4.5
     missing that a valid `NPM_TOKEN` publishes all four packages on its own.
+
+### 2026-09-17 · Pre-publication foundations (Astra)
+
+Olcay asked for the Claude work to be audited for deployment/npm readiness, landscape/foldables
+and foundational changes before rebuilding Pointr modules. `prepublish-architecture-review-2026-09-17.md`
+records the audit. A previous Astra statement that a missing changeset prevented first publication
+was wrong and corrected: with a valid token, the current release path can publish all four
+unpublished 0.0.1 packages without a version PR. No token or release setting was changed.
+
+After “let's proceed with your recommendation”, the isolated review worktree was fast-forwarded
+to the documentation-only `c274b06` handoff and renamed to `astra/prepublish-foundations`.
+Shared `main`, Claude's worktrees, MAP-595 and Figma were not changed.
+
+The first batch replaces React AdaptiveMapShell's viewport breakpoints and 448px minimum with
+measured local geometry; adds typed usable-region, safe-area, panel-presentation and layout-output
+contracts; measures top-bar/control coverage; resolves logical RTL; and preserves map/panel tree
+positions across layout changes. It requires an explicitly bounded host height. No native shell,
+gesture/detent implementation, automatic device detection or real map camera adapter is included.
+See `adaptive-map-layout.md` for the API, coordinates, migration and next work.
+
+Verification: the three initial browser regressions failed on the old build (360px host clipped a
+416px side panel at x=-72; 390px landscape host grew to 448px; RTL end panel stayed right).
+The expanded eight-scenario check was also run against the old shell and failed all eight, then
+passed against the new build in Chromium and WebKit. It renders the shipped exports/CSS, including
+POIDetailPanel and core controls, and checks geometry, padding, state/focus, mount count and live
+direction changes. An additional empty-region accessibility assertion caught clipped-but-still-
+exposed content; the slots now become hidden without unmounting. The CI web job runs both engines.
+
+Local checks: package builds; React 359 tests/104 files; React lint; component contracts;
+variant/completion/snippet checks; raw-value and compiled-class ratchets; packed-package install
+checks for React 18 and 19 (three pre-existing declaration issues remain). Browser checks use
+Playwright 1.58.2's Chromium/WebKit and installed Chrome. One intermediate class check raced a
+concurrent build's dist cleanup and failed on missing CSS; rerunning after the build passed.
+Native, live Figma, full Storybook/a11y and remote CI have not been run for this branch.
+
+This is the first foundation only. Theme/portal/CSS isolation, native adaptive parity, real-device
+and map-engine validation, API stability work and release controls remain before beta. The
+existing full POI-detail-card Storybook example was not migrated; the browser regression fixture
+uses the exported POIDetailPanel as a consumer, not a completed product flow.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

@@ -12,6 +12,7 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:adaptive": "node scripts/check-adaptive-layout.mjs",
     "test:visual": "playwright test visual-regression.spec.ts",
     "test:visual:update": "playwright test visual-regression.spec.ts --update-snapshots",
     "lint": "turbo run lint",

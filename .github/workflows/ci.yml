@@ -136,6 +136,11 @@ jobs:
       - name: Install Playwright
         run: pnpm --filter @kozmos/react exec playwright install --with-deps chromium webkit
 
+      - name: Verify Built Adaptive Layout Geometry
+        run: |
+          pnpm test:adaptive
+          ADAPTIVE_BROWSER=webkit pnpm test:adaptive
+
       - name: Core Pipeline - Storybook E2E & A11y Verification
         run: |
           # Chromatic is the required visual-regression gate. Keep local screenshot baselines manual until repaired.
