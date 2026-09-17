@@ -27,8 +27,7 @@ theme.
 }
 ```
 
-Radius values are unitless numbers, so that the web, iOS and Android read one
-scale — hence the `calc`. The files are also reachable by their built paths,
+The semantic radius roles are unitless numbers, so that the web, iOS and Android read one scale — hence the `calc`. The primitive radii, such as `--primitives-radius-sm`, carry units. The files are also reachable by their built paths,
 such as `@kozmos/tokens/dist/css/variables-light.css`.
 
 ## JavaScript
@@ -49,8 +48,7 @@ where the theme can change.
 
 ## Swift and Kotlin
 
-Generated sources ship under `dist/ios` and `dist/android`. The Kozmos iOS and
-Android packages are built from these same files.
+Generated sources ship under `dist/ios` and `dist/android`. The Kozmos iOS and Android packages carry copies of these same files.
 
 ## Licence
 

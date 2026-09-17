@@ -47,6 +47,29 @@ const FORBIDDEN = [
   [/(^|\/)tsconfig[^/]*\.json$/, "a tsconfig"],
 ];
 
+// What a package may contain at all, by kind. FORBIDDEN names the leaks we know
+// about; this catches the ones nobody thought to name — a stats.html from a
+// bundle analyser, a stray .ts source, an image.
+const ALLOWED =
+  /^package\/(package\.json|README\.md|LICENSE)$|\.(d\.ts|d\.mts|d\.cts|mjs|cjs|js|map|css|swift|kt|xml)$/;
+
+// Type-resolution problems @arethetypeswrong/cli reports today, kept as a
+// ratchet: a new one fails, and so does one that goes away, so a fix is locked
+// in by deleting its line. The two FalseCJS entries need declarations emitted
+// as ES modules with explicit relative extensions, which is a change to how
+// those packages build. product-contracts is types only, so it has no runtime
+// entry for a CommonJS require to break. @kozmos/tokens had FalseCJS too, from
+// the exports map this check arrived with, and was fixed before it merged.
+const ATTW = "@arethetypeswrong/cli@0.18.5";
+const KNOWN_TYPE_PROBLEMS = new Set([
+  "@kozmos/icons FalseCJS",
+  "@kozmos/product-contracts CJSResolvesToESM",
+  "@kozmos/react FalseCJS",
+]);
+
+// Every React major the packages' peer ranges accept.
+const REACT_MAJORS = [18, 19];
+
 function run(cmd, args, cwd) {
   return execFileSync(cmd, args, {
     cwd,
@@ -168,6 +191,12 @@ for (const { dir, manifest } of publishable) {
       `${manifest.name}'s tarball carries ${leaked.length} file(s) that should not ship, e.g. ${leaked.slice(0, 3).join(", ")}`,
     );
   }
+  const unexpected = files.filter((entry) => !ALLOWED.test(entry));
+  if (unexpected.length > 0) {
+    fail(
+      `${manifest.name}'s tarball carries ${unexpected.length} file(s) of a kind no package ships, e.g. ${unexpected.slice(0, 3).join(", ")}`,
+    );
+  }
   const packedManifest = run(
     "tar",
     ["-xzOf", tarball, "package/package.json"],
@@ -188,56 +217,76 @@ for (const { dir, manifest } of publishable) {
 
 if (problems.length > 0) finish();
 
-// ---- install into a project that has never seen the repo ----
+// ---- types: each entry's declarations match the code it resolves to ----
 
-const app = path.join(work, "app");
-fs.mkdirSync(app);
-fs.writeFileSync(
-  path.join(app, "package.json"),
-  JSON.stringify(
-    { name: "kozmos-install-check", private: true, type: "module" },
-    null,
-    2,
-  ),
+const typeProblems = new Set();
+const unreported = new Set();
+for (const { manifest, tarball } of packed) {
+  // Written to a file, not read through a pipe: the tool exits before a large
+  // report has drained, which cut @kozmos/react's off at exactly 65,536 bytes
+  // and left JSON that would not parse.
+  const reportPath = path.join(work, `${path.basename(tarball)}.types.json`);
+  const reportFile = fs.openSync(reportPath, "w");
+  try {
+    execFileSync("npx", ["--yes", ATTW, tarball, "--format", "json"], {
+      cwd: work,
+      stdio: ["ignore", reportFile, "pipe"],
+      env: { ...process.env, npm_config_update_notifier: "false" },
+    });
+  } catch {
+    // It exits non-zero when it finds a problem; the report is in the file.
+  } finally {
+    fs.closeSync(reportFile);
+  }
+  const report = fs.readFileSync(reportPath, "utf8");
+  let analysis;
+  try {
+    ({ analysis } = JSON.parse(report));
+  } catch {
+    fail(`${ATTW} produced no report for ${manifest.name}`);
+    unreported.add(manifest.name);
+    continue;
+  }
+  for (const problem of analysis.problems ?? []) {
+    // A stylesheet has neither types nor JavaScript, so "no resolution" for a
+    // CSS subpath is the tool's blind spot rather than a defect. Node resolves
+    // those files for real in the install stage below.
+    const target = manifest.exports?.[problem.entrypoint];
+    if (
+      problem.kind === "NoResolution" &&
+      typeof target === "string" &&
+      target.endsWith(".css")
+    ) {
+      continue;
+    }
+    typeProblems.add(`${manifest.name} ${problem.kind}`);
+  }
+}
+const newTypeProblems = [...typeProblems].filter(
+  (problem) => !KNOWN_TYPE_PROBLEMS.has(problem),
 );
-
-const react = JSON.parse(
-  fs.readFileSync(path.join(PACKAGES, "react", "package.json"), "utf8"),
+// A package with no report has not fixed anything; silence is not a pass.
+const fixedTypeProblems = [...KNOWN_TYPE_PROBLEMS].filter(
+  (problem) =>
+    !typeProblems.has(problem) && !unreported.has(problem.split(" ")[0]),
 );
-const lucide = react.dependencies["lucide-react"];
-
-try {
-  run(
-    "npm",
-    [
-      "install",
-      "--no-audit",
-      "--no-fund",
-      "--ignore-scripts",
-      "--loglevel=error",
-      ...packed.map(({ tarball }) => tarball),
-      "react@19",
-      "react-dom@19",
-      `lucide-react@${lucide}`,
-      "typescript@5",
-      "@types/react@19",
-      "@types/react-dom@19",
-    ],
-    app,
-  );
-  ok("all packages install together with npm into an empty project");
-} catch (error) {
+if (newTypeProblems.length > 0) {
   fail(
-    `npm install failed: ${String(error.stderr || error)
-      .trim()
-      .split("\n")
-      .slice(-3)
-      .join(" / ")}`,
+    `types resolve wrongly in a way they did not before: ${newTypeProblems.join(", ")}. Run npx ${ATTW} --pack packages/<name> for the table.`,
   );
-  finish();
+}
+if (fixedTypeProblems.length > 0) {
+  fail(
+    `fixed since the baseline — delete from KNOWN_TYPE_PROBLEMS to lock it in: ${fixedTypeProblems.join(", ")}`,
+  );
+}
+if (newTypeProblems.length === 0 && fixedTypeProblems.length === 0) {
+  ok(
+    `types resolve as recorded: ${KNOWN_TYPE_PROBLEMS.size} known problem(s), none new, none fixed`,
+  );
 }
 
-// ---- use it: every export resolves, every require works, a component renders ----
+// ---- what a consumer's code will ask for ----
 
 const specifiers = [];
 for (const { manifest, files } of packed) {
@@ -257,19 +306,28 @@ for (const { manifest, files } of packed) {
     }
   }
 }
-// And whatever a README tells people to import, which the map must also reach:
-// a README promising `@kozmos/react/style.css` after the map dropped it would
+
+// Whatever a README tells people to import, which the map must also reach: a
+// README promising `@kozmos/react/style.css` after the map dropped it would
 // otherwise pass, because a `*.css` declaration types any CSS import at all.
+const samples = [];
 for (const { manifest } of packed) {
+  const short = manifest.name.split("/")[1];
   const readme = fs.readFileSync(
-    path.join(PACKAGES, manifest.name.split("/")[1], "README.md"),
+    path.join(PACKAGES, short, "README.md"),
     "utf8",
   );
-  for (const block of readme.matchAll(/```(?:tsx?|css)\n([\s\S]*?)```/g)) {
-    for (const found of block[1].matchAll(
+  for (const block of readme.matchAll(/```(tsx|ts|css)\n([\s\S]*?)```/g)) {
+    for (const found of block[2].matchAll(
       /(?:from\s+|import\s+|@import\s+)["'](@kozmos\/[^"']+)["']/g,
     )) {
       if (!specifiers.includes(found[1])) specifiers.push(found[1]);
+    }
+    if (block[1] !== "css") {
+      samples.push({
+        file: `${short}-${samples.length + 1}.${block[1]}`,
+        body: block[2],
+      });
     }
   }
 }
@@ -278,9 +336,7 @@ const requirable = packed
   .filter(({ manifest }) => manifest.exports?.["."]?.require)
   .map(({ manifest }) => manifest.name);
 
-fs.writeFileSync(
-  path.join(app, "probe.mjs"),
-  `import fs from "node:fs";
+const probe = `import fs from "node:fs";
 import { createRequire } from "node:module";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -288,19 +344,21 @@ import { renderToStaticMarkup } from "react-dom/server";
 const require = createRequire(import.meta.url);
 const results = [];
 
-for (const spec of ${JSON.stringify(specifiers)}) {
-  try {
-    const url = import.meta.resolve(spec);
-    results.push([fs.existsSync(new URL(url)), "resolves " + spec]);
-  } catch (error) {
-    results.push([false, "resolves " + spec + " — " + error.message]);
+if (typeof import.meta.resolve !== "function") {
+  results.push([false, "this Node cannot resolve package exports from a script (needs 20.6 or later)"]);
+} else {
+  for (const spec of ${JSON.stringify(specifiers)}) {
+    try {
+      results.push([fs.existsSync(new URL(import.meta.resolve(spec))), "resolves " + spec]);
+    } catch (error) {
+      results.push([false, "resolves " + spec + " — " + error.message]);
+    }
   }
 }
 
 for (const name of ${JSON.stringify(requirable)}) {
   try {
-    const mod = require(name);
-    results.push([Object.keys(mod).length > 0, "require(" + name + ") returns its exports"]);
+    results.push([Object.keys(require(name)).length > 0, "require(" + name + ") returns its exports"]);
   } catch (error) {
     results.push([false, "require(" + name + ") — " + error.message]);
   }
@@ -314,94 +372,134 @@ const html = renderToStaticMarkup(
 results.push([html.includes("<button") && html.includes("Save") && html.includes("<svg"), "renders a Button with an Icon on the server"]);
 
 process.stdout.write(JSON.stringify(results));
-`,
+`;
+
+const react = JSON.parse(
+  fs.readFileSync(path.join(PACKAGES, "react", "package.json"), "utf8"),
 );
+const lucide = react.dependencies["lucide-react"];
 
-try {
-  const results = JSON.parse(run("node", ["probe.mjs"], app));
-  const failed = results.filter(([passed]) => !passed);
-  for (const [, what] of failed) fail(what);
-  if (failed.length === 0) {
-    ok(
-      `${specifiers.length} export(s) resolve, ${requirable.length} CommonJS entr(y/ies) load, and a Button renders on the server`,
-    );
-  }
-} catch (error) {
-  fail(
-    `the probe crashed: ${String(error.stderr || error)
-      .trim()
-      .split("\n")
-      .slice(0, 3)
-      .join(" / ")}`,
+// ---- install, use and type-check, once per React major ----
+
+for (const major of REACT_MAJORS) {
+  const app = path.join(work, `react-${major}`);
+  fs.mkdirSync(app);
+  fs.writeFileSync(
+    path.join(app, "package.json"),
+    JSON.stringify(
+      {
+        name: `kozmos-install-check-react-${major}`,
+        private: true,
+        type: "module",
+      },
+      null,
+      2,
+    ),
   );
-}
 
-// ---- every README sample type-checks against what was installed ----
+  try {
+    run(
+      "npm",
+      [
+        "install",
+        "--no-audit",
+        "--no-fund",
+        "--ignore-scripts",
+        "--loglevel=error",
+        ...packed.map(({ tarball }) => tarball),
+        `react@${major}`,
+        `react-dom@${major}`,
+        `lucide-react@${lucide}`,
+        "typescript@5",
+        `@types/react@${major}`,
+        `@types/react-dom@${major}`,
+      ],
+      app,
+    );
+  } catch (error) {
+    fail(
+      `React ${major}: npm install failed: ${String(error.stderr || error)
+        .trim()
+        .split("\n")
+        .slice(-3)
+        .join(" / ")}`,
+    );
+    continue;
+  }
 
-const samples = path.join(app, "readme");
-fs.mkdirSync(samples);
-let count = 0;
-for (const { manifest } of packed) {
-  const readme = path.join(PACKAGES, manifest.name.split("/")[1], "README.md");
-  const text = fs.readFileSync(readme, "utf8");
-  for (const match of text.matchAll(/```(tsx?|ts)\n([\s\S]*?)```/g)) {
-    count += 1;
-    const ext = match[1] === "tsx" ? "tsx" : "ts";
-    const body = match[2];
-    // Every sample is its own module, as it would be in an app.
-    fs.writeFileSync(
-      path.join(samples, `${manifest.name.split("/")[1]}-${count}.${ext}`),
-      `${body}\nexport {};\n`,
+  fs.writeFileSync(path.join(app, "probe.mjs"), probe);
+  try {
+    const results = JSON.parse(run("node", ["probe.mjs"], app));
+    const failed = results.filter(([passed]) => !passed);
+    for (const [, what] of failed) fail(`React ${major}: ${what}`);
+    if (failed.length === 0) {
+      ok(
+        `React ${major}: installs, ${specifiers.length} export(s) resolve, ${requirable.length} CommonJS entr(y/ies) load, a Button renders on the server`,
+      );
+    }
+  } catch (error) {
+    fail(
+      `React ${major}: the probe crashed: ${String(error.stderr || error)
+        .trim()
+        .split("\n")
+        .slice(0, 3)
+        .join(" / ")}`,
     );
   }
-}
-// What a README sample leaves to the reader: the app it wraps, and where
-// analytics events go. And what a bundler provides: a type for CSS imports.
-fs.writeFileSync(
-  path.join(samples, "reader.d.ts"),
-  `declare const app: import("react").ReactNode;
+
+  const readmeDir = path.join(app, "readme");
+  fs.mkdirSync(readmeDir);
+  for (const { file, body } of samples) {
+    // Every sample is its own module, as it would be in an app.
+    fs.writeFileSync(path.join(readmeDir, file), `${body}\nexport {};\n`);
+  }
+  // What a README sample leaves to the reader — the app it wraps, where
+  // analytics events go — and what a bundler provides: a type for CSS imports.
+  fs.writeFileSync(
+    path.join(readmeDir, "reader.d.ts"),
+    `declare const app: import("react").ReactNode;
 declare function send(events: unknown[]): void;
 declare module "*.css";
 `,
-);
-fs.writeFileSync(
-  path.join(app, "tsconfig.json"),
-  JSON.stringify(
-    {
-      compilerOptions: {
-        strict: true,
-        noEmit: true,
-        jsx: "react-jsx",
-        module: "esnext",
-        moduleResolution: "bundler",
-        target: "es2022",
-        skipLibCheck: true,
-        allowUnusedLabels: false,
+  );
+  fs.writeFileSync(
+    path.join(app, "tsconfig.json"),
+    JSON.stringify(
+      {
+        compilerOptions: {
+          strict: true,
+          noEmit: true,
+          jsx: "react-jsx",
+          module: "esnext",
+          moduleResolution: "bundler",
+          target: "es2022",
+          skipLibCheck: true,
+        },
+        include: ["readme"],
       },
-      include: ["readme"],
-    },
-    null,
-    2,
-  ),
-);
-try {
-  run(
-    path.join(app, "node_modules", ".bin", "tsc"),
-    ["-p", "tsconfig.json"],
-    app,
+      null,
+      2,
+    ),
   );
-  ok(
-    `${count} README code sample(s) type-check against the installed packages`,
-  );
-} catch (error) {
-  const lines = String(error.stdout || error.stderr || error)
-    .trim()
-    .split("\n")
-    .filter((line) => line.includes("error TS"))
-    .slice(0, 5);
-  fail(
-    `README samples do not type-check:\n          ${lines.join("\n          ")}`,
-  );
+  try {
+    run(
+      path.join(app, "node_modules", ".bin", "tsc"),
+      ["-p", "tsconfig.json"],
+      app,
+    );
+    ok(
+      `React ${major}: ${samples.length} README code sample(s) type-check against the installed packages`,
+    );
+  } catch (error) {
+    const lines = String(error.stdout || error.stderr || error)
+      .trim()
+      .split("\n")
+      .filter((line) => line.includes("error TS"))
+      .slice(0, 5);
+    fail(
+      `React ${major}: README samples do not type-check:\n          ${lines.join("\n          ")}`,
+    );
+  }
 }
 
 if (problems.length === 0) {

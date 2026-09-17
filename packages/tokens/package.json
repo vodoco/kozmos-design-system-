@@ -22,9 +22,14 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/js/tokens.d.ts",
-      "import": "./dist/js/tokens.mjs",
-      "require": "./dist/js/tokens.js"
+      "import": {
+        "types": "./dist/js/tokens.d.mts",
+        "default": "./dist/js/tokens.mjs"
+      },
+      "require": {
+        "types": "./dist/js/tokens.d.ts",
+        "default": "./dist/js/tokens.js"
+      }
     },
     "./css/light.css": "./dist/css/variables-light.css",
     "./css/dark.css": "./dist/css/variables-dark.css",
