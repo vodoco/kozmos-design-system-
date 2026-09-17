@@ -12,17 +12,17 @@ describe("NumberInput", () => {
     expect(screen.getByRole("spinbutton", { name: "Level" })).toHaveValue(2);
   });
 
-  it("uses the 44px field and stepper target size", () => {
+  it("selects the owned field and stepper recipes", () => {
     render(<NumberInput defaultValue={1} />);
 
     expect(screen.getByRole("spinbutton")).toHaveClass("kozmos-input");
     expect(screen.getByRole("button", { name: /decrease value/i })).toHaveClass(
-      "h-11",
-      "w-11",
+      "kozmos-field-action",
+      "kozmos-number-decrement",
     );
     expect(screen.getByRole("button", { name: /increase value/i })).toHaveClass(
-      "h-11",
-      "w-11",
+      "kozmos-field-action",
+      "kozmos-number-increment",
     );
   });
 
@@ -49,6 +49,18 @@ describe("NumberInput", () => {
     });
 
     expect(onValueChange).toHaveBeenCalledWith(null);
+  });
+
+  it("does not change a controlled value until the parent accepts the step", () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(
+      <NumberInput value={2} onValueChange={onValueChange} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /increase value/i }));
+    expect(onValueChange).toHaveBeenCalledWith(3);
+    expect(screen.getByRole("spinbutton")).toHaveValue(2);
+    rerender(<NumberInput value={3} onValueChange={onValueChange} />);
+    expect(screen.getByRole("spinbutton")).toHaveValue(3);
   });
 
   it("renders helper and error text with aria-describedby", () => {
@@ -88,7 +100,9 @@ describe("NumberInput", () => {
     render(<NumberInput defaultValue={12} status="warning" />);
 
     const spinbutton = screen.getByRole("spinbutton");
-    expect(spinbutton).toHaveClass("border-warning", "text-foreground");
-    expect(spinbutton).not.toHaveClass("text-warning");
+    expect(spinbutton).toHaveClass(
+      "kozmos-input-warning",
+      "kozmos-number-input",
+    );
   });
 });

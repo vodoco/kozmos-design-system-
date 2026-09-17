@@ -25,7 +25,7 @@ use, so there is no Tailwind configuration to add. `@kozmos/react/dist/style.css
 resolves to the same file, for code that already imports that path.
 
 Token definitions belong to provider boundaries. Input, Textarea, Button, Popover,
-FieldWrapper and Label use precompiled component-owned styles and local resets;
+FieldWrapper, Label, PasswordInput and NumberInput use precompiled component-owned styles and local resets;
 the remaining utility-based components still require native CSS `@scope`.
 This is an unfinished compatibility migration, **not a broadly compatible release**.
 The production browser/WebView support matrix must be approved and tested before
@@ -36,11 +36,25 @@ namespaced recipe classes. Do not depend on the individual class strings.
 For migrated components, ordinary custom CSS loaded after the package can override
 base styles through `className`; state overrides follow normal CSS specificity.
 Provider `tokens` are the preferred theme-wide customization and follow portals.
-Input/Textarea merge caller `aria-describedby` with their error/helper IDs; a
+Input/Textarea/PasswordInput/NumberInput merge caller `aria-describedby` with their error/helper IDs; a
 component error keeps `aria-invalid` true even if a caller supplies false.
 
-Known pre-release API defect: Button's declared `asChild` prop is not implemented.
-Do not use it; this is separate from Radix's working `PopoverTrigger asChild`.
+Button always renders a native `<button>` and forwards an `HTMLButtonElement` ref.
+The previously declared but non-functional `asChild` prop has been removed before
+publication, including from Button-based wrappers. Do not nest links inside Button.
+Use Link for navigation, or apply `buttonVariants` to your own anchor/router link
+when it needs button styling. `variant="link"` changes appearance, not semantics.
+Native `disabled`, `isLoading`, form props and keyboard activation remain button-only;
+the styling helper does not implement disabled/loading behavior for an anchor.
+This is separate from Radix's working `PopoverTrigger asChild`.
+
+```tsx
+import { buttonVariants } from "@kozmos/react";
+
+<a href="/locations" className={buttonVariants({ variant: "link" })}>
+  Browse locations
+</a>;
+```
 
 For an application that deliberately wants Tailwind's **global** reset, optionally
 import `@kozmos/react/reset.css` before its own host styles. It is never imported

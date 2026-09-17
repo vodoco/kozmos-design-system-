@@ -14,10 +14,13 @@ describe("PasswordInput", () => {
     expect(input).toHaveAttribute("placeholder", "Enter password");
   });
 
-  it("uses the shared 44px input height", () => {
+  it("selects the owned field and toggle recipes", () => {
     render(<PasswordInput />);
 
-    expect(screen.getByLabelText(/show password/i)).toHaveClass("h-11", "w-11");
+    expect(screen.getByLabelText(/show password/i)).toHaveClass(
+      "kozmos-field-action",
+      "kozmos-password-toggle",
+    );
     expect(document.querySelector("input")).toHaveClass("kozmos-input");
   });
 

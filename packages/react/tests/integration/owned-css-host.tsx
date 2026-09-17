@@ -80,6 +80,36 @@ function Controls({ id }: { id: string }) {
       />
       <PasswordInput label={`${id} password`} data-testid={`${id}-password`} />
       <NumberInput label={`${id} number`} data-testid={`${id}-number`} />
+      <PasswordInput
+        label={`${id} disabled password`}
+        disabled
+        data-testid={`${id}-password-disabled`}
+      />
+      <NumberInput
+        label={`${id} plain number`}
+        showSteppers={false}
+        data-testid={`${id}-number-plain`}
+      />
+      <NumberInput
+        label={`${id} readonly number`}
+        readOnly
+        defaultValue={2}
+        data-testid={`${id}-number-readonly`}
+      />
+      <NumberInput
+        label={`${id} disabled number`}
+        disabled
+        defaultValue={2}
+        data-testid={`${id}-number-disabled`}
+      />
+      {(["error", "warning", "success"] as const).map((status) => (
+        <NumberInput
+          key={status}
+          label={`${id} ${status} number`}
+          status={status}
+          data-testid={`${id}-number-${status}`}
+        />
+      ))}
       <MapControlButton
         icon={<span aria-hidden="true">+</span>}
         label={`${id} map control`}

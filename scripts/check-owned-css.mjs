@@ -139,6 +139,103 @@ try {
         ),
         "the exported helper's error flag must override its warning status",
       );
+      const password = page.getByTestId(`${id}-password`);
+      const toggle = password.locator("..").getByRole("button");
+      assert.equal(
+        (await measure(toggle)).width,
+        "44px",
+        "password toggle owns its target size",
+      );
+      assert.equal((await measure(toggle.locator("svg"))).width, "16px");
+      const passwordBox = await password.boundingBox();
+      const toggleBox = await toggle.boundingBox();
+      assert.equal(
+        toggleBox.x,
+        passwordBox.x,
+        "RTL password toggle sits at inline end",
+      );
+      await toggle.click();
+      assert.equal(await password.getAttribute("type"), "text");
+      await toggle.click();
+      assert.equal(await password.getAttribute("type"), "password");
+      const number = page.getByTestId(`${id}-number`);
+      const stepper = number
+        .locator("..")
+        .getByRole("button", { name: "Increase value" });
+      assert.equal(
+        (await measure(stepper)).width,
+        "44px",
+        "number stepper owns its target size",
+      );
+      assert.equal((await measure(stepper.locator("svg"))).width, "16px");
+      assert.equal((await measure(number)).borderRadius, "0px");
+      assert.equal(
+        await number.evaluate((node) => getComputedStyle(node).appearance),
+        "textfield",
+      );
+      await number.fill("2");
+      await stepper.click();
+      assert.equal(await number.inputValue(), "3");
+      const stepperBox = await stepper.boundingBox();
+      const numberBox = await number.boundingBox();
+      assert.equal(
+        stepperBox.x + stepperBox.width,
+        numberBox.x,
+        "RTL increment is adjacent to the field",
+      );
+      for (const field of [password, number])
+        assert.equal((await measure(field)).height, "44px");
+      assert.equal(
+        await password.evaluate(
+          (node) => getComputedStyle(node).paddingInlineEnd,
+        ),
+        "48px",
+      );
+      assert.equal(
+        (await measure(page.getByTestId(`${id}-number-plain`))).borderRadius,
+        "16px",
+      );
+      for (const state of ["readonly", "disabled"]) {
+        const unavailable = page.getByTestId(`${id}-number-${state}`);
+        for (const action of await unavailable
+          .locator("..")
+          .getByRole("button")
+          .all()) {
+          assert.equal(await action.isDisabled(), true);
+          assert.equal((await measure(action)).height, "44px");
+          await action.evaluate((node) => node.click());
+        }
+        assert.equal(await unavailable.inputValue(), "2");
+      }
+      const disabledToggle = page
+        .getByTestId(`${id}-password-disabled`)
+        .locator("..")
+        .getByRole("button");
+      assert.equal(await disabledToggle.isDisabled(), true);
+      for (const [status, token] of [
+        ["error", "danger-600"],
+        ["warning", "alert-800"],
+        ["success", "success-800"],
+      ]) {
+        const control = page.getByTestId(`${id}-number-${status}`);
+        const tone = await value(
+          `${id}-number-${status}`,
+          `--primitives-colors-emotional-${token}`,
+        );
+        assert.equal((await measure(control)).borderTopColor, tone);
+        assert.equal(
+          (await measure(control)).color,
+          await value(
+            `${id}-number-${status}`,
+            "--primitives-colors-foreground-0",
+          ),
+        );
+        const action = control.locator("..").getByRole("button").first();
+        assert.equal((await measure(action)).borderTopColor, tone);
+        assert.equal((await measure(action)).color, tone);
+        await control.focus();
+        assert.notEqual((await measure(control)).boxShadow, "none");
+      }
       if (mode === "full") {
         // Shared exported helpers reach existing compositions too. These are
         // regression checks, not claims that those whole components migrated.
@@ -243,6 +340,39 @@ try {
       (await measure(page.getByTestId("outer-glass"))).backgroundColor,
       (await measure(page.getByTestId("nested-glass"))).backgroundColor,
     );
+    // Rotate/reflow a narrow host and switch direction without remounting. This
+    // checks composition geometry, not certification of physical foldable devices.
+    const outer = page.getByTestId("outer");
+    await outer.evaluate((node) => {
+      node.dir = "ltr";
+      node.style.width = "220px";
+    });
+    const narrowPassword = page.getByTestId("outer-password");
+    const narrowToggle = narrowPassword.locator("..").getByRole("button");
+    const narrowPasswordBox = await narrowPassword.boundingBox();
+    const narrowToggleBox = await narrowToggle.boundingBox();
+    assert.equal(
+      narrowToggleBox.x + narrowToggleBox.width,
+      narrowPasswordBox.x + narrowPasswordBox.width,
+    );
+    const narrowNumber = page.getByTestId("outer-number");
+    assert.equal(
+      await narrowNumber
+        .locator("..")
+        .evaluate((node) => node.scrollWidth <= node.clientWidth),
+      true,
+    );
+    const narrowIncrement = narrowNumber
+      .locator("..")
+      .getByRole("button", { name: "Increase value" });
+    const narrowNumberBox = await narrowNumber.boundingBox();
+    assert.equal(
+      (await narrowIncrement.boundingBox()).x,
+      narrowNumberBox.x + narrowNumberBox.width,
+    );
+    await narrowNumber.focus();
+    await page.keyboard.press("ArrowUp");
+    assert.equal(await narrowNumber.inputValue(), "4");
     if (mode === "without-scope") {
       const slot = await measure(
         page.getByTestId("outer").locator(".host-slot-button"),

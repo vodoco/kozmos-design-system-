@@ -102,11 +102,12 @@ export const buttonVariants = cva("kozmos-reset kozmos-button", {
   },
 });
 
+/** Native button props and ref. For navigation use Link or buttonVariants on an
+ * anchor/router link; Button does not reparent children or emulate disabled links. */
 export interface ButtonProps
   extends
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
   isLoading?: boolean;
   /**
    * What the button means. Leave it unset and the variant renders exactly as

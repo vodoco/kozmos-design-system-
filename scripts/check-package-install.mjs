@@ -453,6 +453,12 @@ for (const major of REACT_MAJORS) {
     // Every sample is its own module, as it would be in an app.
     fs.writeFileSync(path.join(readmeDir, file), `${body}\nexport {};\n`);
   }
+  // Positive AND negative public API assertions against the actual installed
+  // declarations, under each supported React major (not source aliases).
+  fs.copyFileSync(
+    path.join(PACKAGES, "react/tests/types/native-button.tsx"),
+    path.join(readmeDir, "native-button-contract.tsx"),
+  );
   // What a README sample leaves to the reader — the app it wraps, where
   // analytics events go — and what a bundler provides: a type for CSS imports.
   fs.writeFileSync(
@@ -488,7 +494,7 @@ declare module "*.css";
       app,
     );
     ok(
-      `React ${major}: ${samples.length} README code sample(s) type-check against the installed packages`,
+      `React ${major}: ${samples.length} README code sample(s) and the native Button API contract type-check against the installed packages`,
     );
   } catch (error) {
     const lines = String(error.stdout || error.stderr || error)
@@ -497,7 +503,7 @@ declare module "*.css";
       .filter((line) => line.includes("error TS"))
       .slice(0, 5);
     fail(
-      `React ${major}: README samples do not type-check:\n          ${lines.join("\n          ")}`,
+      `React ${major}: README samples or native Button API contract do not type-check:\n          ${lines.join("\n          ")}`,
     );
   }
 }

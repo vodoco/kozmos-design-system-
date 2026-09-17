@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { PasswordInput } from "./PasswordInput";
+import { ThemeProvider } from "../ThemeProvider";
 
 const meta = {
   title: "Components/PasswordInput",
@@ -34,4 +35,14 @@ export const WithoutToggle: Story = {
   args: {
     showToggle: false,
   },
+};
+
+export const RightToLeft: Story = {
+  render: (args) => (
+    <ThemeProvider dir="rtl">
+      <div style={{ width: 220 }}>
+        <PasswordInput {...args} />
+      </div>
+    </ThemeProvider>
+  ),
 };

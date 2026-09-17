@@ -2,6 +2,7 @@
 @import "@kozmos/tokens/css/light.css";
 @import "@kozmos/tokens/css/dark.css";
 @import "./styles/owned-components.css";
+@import "./styles/owned-native-fields.css";
 
 @tailwind base;
 @tailwind components;

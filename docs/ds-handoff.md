@@ -9,12 +9,15 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 **Component-owned CSS continuation, 2026-09-17:** Olcay approved the recommendation
 to replace mandatory native scope (ruling 26). The first slice migrates Input,
-Textarea, Button, Popover, FieldWrapper and Label; token definitions/keyframes are
+Textarea, Button, Popover, FieldWrapper, Label, PasswordInput and NumberInput;
+token definitions/keyframes are
 outside scope. Read `component-owned-css-2026-09-17.md` for the source map, migration,
 verification and outstanding work. The original form gate is retained, not waived.
-Only the first slice is migrated; the whole library is not ready for npm. A separate
-audit also reproduced Button's declared-but-unimplemented `asChild` API, still open.
-Input/Textarea accessibility descriptions and invalid-state merging are fixed.
+Only these slices are migrated; the whole library is not ready for npm. Button's
+non-functional `asChild` declaration is now removed: use native buttons for actions
+and links for navigation. Input/Textarea/PasswordInput/NumberInput accessibility
+descriptions and invalid-state merging are fixed. React Storybook is served from
+the separate verification worktree on port 6006; the guide explains safe rebuilds.
 
 **Earlier browser compatibility investigation, 2026-09-17:** release safeguards were pushed
 in PR #54 (not merged). The separate local `astra/browser-compatibility` branch is
@@ -1010,6 +1013,35 @@ in Chromium, Firefox and WebKit; React 18/19 packed installs and README samples;
 Storybook build and the contract/token/debt/snippet/variant checks. The guide states
 limits and exact commands. PR #54's safeguards CI is green except the plan-blocked
 Chromatic UI comparison; it is still open. This work is local, not pushed or published.
+
+### 2026-09-17 · Composed fields and honest Button contract (Astra)
+
+Olcay requested proceeding rather than another general pass, and a running Storybook.
+Continued ruling 26 with PasswordInput/NumberInput's complete owned-CSS migration.
+The RTL password-toggle defect and eight accessibility merge failures were reproduced
+first, then fixed. A controlled NumberInput stepping test also failed (display changed
+before parent acceptance); native stepping now proposes a value and restores the
+controlled display before notifying the parent. Uncontrolled behavior is retained.
+
+Implementation choice under the delegated recommendation: remove Button's unsupported
+`asChild` declaration rather than promise a partly implemented polymorphic API. Native
+Button props/ref/form semantics are unchanged; navigation uses Link or `buttonVariants`
+on an anchor/router link. No repository consumer used the removed prop. Three negative
+declaration assertions failed before removal and now pass against packed installs on
+React 18 and 19. Radix trigger `asChild` is unchanged. See the React README for migration.
+
+Verified: React build and lint; 400 tests / 107 files; six CSS-build tests; full and
+scope-stripped owned styles, original form regression and all 46 prior browser checks
+in Chromium/Firefox/WebKit; tarball install/type checks; Storybook production build;
+contract, debt, snippet and variant checks. Existing declaration/variant/visual debts
+are not waived. Native/device, live Figma and remote CI were not run for this batch.
+Storybook's separate preview checkout is `/private/tmp/kozmos-owned-css-verify.dV1etM`
+on port 6006; stop that server before rebuilding it. The guide contains exact commands,
+source files and new RTL story IDs. No push, merge or publication, and no shared-main change.
+
+Next: continue remaining field/overlay families, then remove legacy native scope entirely.
+Real browser floors, physical adaptive devices, native parity, map-adapter consumer proof,
+full accessibility/visual review and package/release gates still precede production.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

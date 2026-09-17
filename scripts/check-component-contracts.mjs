@@ -6157,9 +6157,18 @@ assertContains(
   "showSteppers = true",
   "React NumberInput exposes optional steppers",
 );
+const ownedNativeFieldsPath =
+  "packages/react/src/styles/owned-native-fields.css";
+const ownedNativeFields = read(ownedNativeFieldsPath);
 assertContains(
   files.reactNumberInput,
   source.reactNumberInput,
+  '"kozmos-number-input"',
+  "React NumberInput selects its owned field recipe",
+);
+assertContains(
+  ownedNativeFieldsPath,
+  ownedNativeFields.match(/\.kozmos-number-input\s*\{([^}]*)\}/)?.[1] ?? "",
   "min-w-0 flex-1",
   "React NumberInput center field flexes between fixed steppers",
 );
@@ -6178,6 +6187,12 @@ assertContains(
 assertContains(
   files.reactPasswordInput,
   source.reactPasswordInput,
+  "kozmos-field-action kozmos-password-toggle",
+  "React PasswordInput selects its owned toggle recipe",
+);
+assertContains(
+  ownedNativeFieldsPath,
+  ownedNativeFields.match(/\.kozmos-field-action\s*\{([^}]*)\}/)?.[1] ?? "",
   "h-11 w-11",
   "React PasswordInput visibility toggle keeps 44px target",
 );
@@ -6286,14 +6301,14 @@ assertContains(
 assertContains(
   files.reactNumberInput,
   source.reactNumberInput,
-  "const fieldToneClass = cn(",
-  "React NumberInput separates validation field tone from readable value text",
-);
-assertNotContains(
-  files.reactNumberInput,
-  source.reactNumberInput,
   "inputVariants({ status: resolvedStatus })",
-  "React NumberInput value text inheriting validation text colors",
+  "React NumberInput selects validation border/focus recipes",
+);
+assertContains(
+  ownedNativeFieldsPath,
+  ownedNativeFields.match(/\.kozmos-number-input\s*\{([^}]*)\}/)?.[1] ?? "",
+  "text-foreground",
+  "React NumberInput preserves readable value text separately from validation tone",
 );
 assertNotContains(
   files.iosNumberInput,

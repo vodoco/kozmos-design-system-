@@ -1,0 +1,55 @@
+/* Composed native fields. Logical edges follow the provider's direction; only
+   elements carrying these classes are reset or styled. */
+@kozmos-owned {
+  .kozmos-field-action {
+    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed;
+    cursor: pointer;
+    text-transform: none;
+    -webkit-appearance: button;
+    background-image: none;
+  }
+  .kozmos-field-action-icon {
+    @apply block h-4 w-4;
+  }
+  .kozmos-password-field {
+    @apply relative flex items-center;
+  }
+  .kozmos-password-with-toggle {
+    @apply pe-12;
+  }
+  .kozmos-password-toggle {
+    @apply absolute end-0 rounded-e-control bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground disabled:text-muted-foreground;
+  }
+  .kozmos-number-field {
+    @apply flex w-full items-stretch;
+  }
+  .kozmos-number-input {
+    @apply min-w-0 flex-1 text-foreground text-start;
+    appearance: textfield;
+  }
+  .kozmos-number-input::-webkit-inner-spin-button,
+  .kozmos-number-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+  .kozmos-number-with-steppers {
+    @apply rounded-none text-center;
+  }
+  .kozmos-number-step {
+    @apply border border-[color:var(--primitives-colors-foreground-500)] bg-background text-foreground hover:bg-muted disabled:bg-muted disabled:text-muted-foreground;
+  }
+  .kozmos-number-decrement {
+    @apply rounded-s-control border-e-0;
+  }
+  .kozmos-number-increment {
+    @apply rounded-e-control border-s-0;
+  }
+  .kozmos-number-step-error {
+    @apply border-destructive text-destructive focus-visible:ring-destructive;
+  }
+  .kozmos-number-step-warning {
+    @apply border-warning text-warning focus-visible:ring-warning;
+  }
+  .kozmos-number-step-success {
+    @apply border-success text-success focus-visible:ring-success;
+  }
+}

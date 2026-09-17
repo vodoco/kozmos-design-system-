@@ -1,4 +1,4 @@
-# Component-owned CSS: first migration slice
+# Component-owned CSS: incremental migration
 
 2026-09-17 · `astra/browser-compatibility` · worktree
 `/private/tmp/kozmos-browser-compat.uqPMBD` · starts after investigation `f8eb957`.
@@ -10,7 +10,7 @@ another extensive audit. The direction is precompiled, namespaced component CSS,
 provider-owned semantic tokens and component-local resets, without mandatory native
 `@scope`. No browser minimums, npm publication, push or merge were approved here.
 
-This is the **first slice, not a completed library migration or release certification**.
+This is an **incremental migration, not a completed library migration or release certification**.
 The original WebKit Input/Textarea failure is fixed by moving the entire component
 recipe—not adding an input-only override or sniffing Safari. Every engine receives
 the same stylesheet. The rest of the library still has bounded legacy utilities and
@@ -19,22 +19,25 @@ feature. Do not publish this intermediate state as broadly compatible.
 
 ## What migrated
 
-| Part                   | Implementation                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------------- |
-| Input / Textarea       | Namespaced recipes, native states, focus rings, placeholders and file-input normalization.        |
-| Button                 | All existing variants/sizes/emotions, loading icon and glass treatment use owned recipes.         |
-| PopoverContent / Arrow | Owned surface, animation/state rules and arrow; existing Radix ownership/focus behavior retained. |
-| FieldWrapper / Label   | Supporting layout, typography, messages, required/optional text and visually hidden labels.       |
-| Foundations            | Theme token definitions and namespaced keyframes no longer depend on native scope.                |
+| Part                        | Implementation                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------- |
+| Input / Textarea            | Namespaced recipes, native states, focus rings, placeholders and file-input normalization.        |
+| Button                      | All existing variants/sizes/emotions, loading icon and glass treatment use owned recipes.         |
+| PasswordInput / NumberInput | Entire field, toggle/steppers and icons use owned recipes; logical edges support RTL.             |
+| PopoverContent / Arrow      | Owned surface, animation/state rules and arrow; existing Radix ownership/focus behavior retained. |
+| FieldWrapper / Label        | Supporting layout, typography, messages, required/optional text and visually hidden labels.       |
+| Foundations                 | Theme token definitions and namespaced keyframes no longer depend on native scope.                |
 
 `inputVariants` and `buttonVariants` keep their argument/type contracts but now
 return namespaced recipe classes. Their output is opaque: do not parse it or assume
 Tailwind class names. Existing consumers of `inputVariants` include PasswordInput,
 NumberInput, DatePicker, TimePicker, OTPInput, Combobox, ColorPicker, Search and
-WayfindingCard; Pagination uses `buttonVariants`. These consumers gain the new base
-recipe, **not complete migration of their additional styling**.
+WayfindingCard; Pagination uses `buttonVariants`. PasswordInput and NumberInput are
+now fully migrated. The other consumers gain the new base recipe, **not complete
+migration of their additional styling**.
 
-React props and package entry points are otherwise retained. No token values,
+Except for removing Button's non-functional `asChild` declaration (below), React
+props and package entry points are retained. No token values,
 native controls, Figma assets, device breakpoints or product modules were redesigned.
 
 ## Source map: where to make changes
@@ -44,6 +47,7 @@ Paths below are relative to the repository root.
 | File                                                                                | Responsibility                                                                                                     |
 | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `packages/react/src/styles/owned-components.css`                                    | First-slice recipes; edit semantic styles here, not in built `dist`.                                               |
+| `packages/react/src/styles/owned-native-fields.css`                                 | PasswordInput/NumberInput composition styles, logical edges, action targets and icons.                             |
 | `packages/react/src/components/{Button,Input,Textarea,Popover,FieldWrapper,Label}/` | Props, behavior, markup, recipe selection and unit tests.                                                          |
 | `packages/react/src/utils.ts`                                                       | Existing class merging and the new accessibility ID-list merger.                                                   |
 | `packages/react/postcss/scoped-css.cjs`                                             | Transitional build partition: owned rules, root tokens, local Tailwind defaults, legacy scope and animation names. |
@@ -140,21 +144,69 @@ requires simultaneous independently versioned SDK modules before promising it.
    recipes, consistent with Input's own error precedence. This is covered with and
    without scope in all three engines.
 
-### Separate public-API defect still open
+### Button contract: resolved before publication
 
-`ButtonProps` declares `asChild`, but Button does not implement it: built SSR of
+The old `ButtonProps` declared `asChild`, but Button did not implement it: built SSR of
 `<Button asChild><a href="#destination">Go</a></Button>` emits a button containing an
 anchor and React warns about the unrecognized `asChild` DOM prop. This predates the
-migration. Do not use it. `PopoverTrigger asChild` is Radix's separate, working API.
+migration. The continuation removes that unsupported declaration, including from
+wrappers inheriting ButtonProps. No repository consumer was using `Button asChild`.
 
-Before npm publication, implement and test a deliberate polymorphic Button contract
-(element-specific props/ref typing, a single child, loading content, event composition,
-disabled anchors and keyboard behavior), or explicitly remove the unsupported prop.
-Do not hide the warning or substitute a Slot while leaving those contracts undefined.
+Button deliberately remains a native button with native props and an HTMLButtonElement
+ref. Use Link for navigation or `buttonVariants` on an anchor/router link for button
+appearance. `variant="link"` alone does not change semantics. The helper only styles:
+it provides no disabled-link behavior, loading content or analytics. Do not put an
+interactive link inside Button. `PopoverTrigger asChild` remains Radix's separate,
+working API. Existing native form behavior (including an unspecified type's default)
+is unchanged. A future polymorphic component needs a separate reviewed contract,
+not an untyped Slot workaround.
+
+`packages/react/tests/types/native-button.tsx` tests valid native events/refs/form
+props and rejects asChild, anchor refs and href on Button. Three negative assertions
+failed against the old declarations. The tarball install gate runs this fixture
+against both supported React majors. Unit tests now exercise click/ref forwarding
+and disabled/loading activation instead of asserting only that a button is enabled.
+
+### Composed native fields continuation
+
+The next bounded slice migrates PasswordInput and NumberInput. Eight accessibility
+regressions failed first: external description IDs were discarded or replaced the
+owned helper/error ID, and invalid semantics were lost or could hide an error.
+They now use the same ID merger and error precedence as Input/Textarea.
+
+Computed geometry reproduced the password toggle on the wrong edge in RTL (x269
+instead of x13). Logical padding/insets/corners now follow the provider direction;
+NumberInput's outside stepper corners and unstepped text alignment do too. This is
+an intentional RTL correction; tokens, sizes and LTR appearance are unchanged.
+NumberInput preserves normal foreground value text while applying validation tone
+to borders, focus rings and stepper glyphs.
+
+A further failing test showed native stepUp/stepDown changing a controlled field
+from 2 to 3 before its parent accepted the update. The control now computes the
+proposed native step, restores the displayed controlled value, then notifies the
+parent. Uncontrolled stepping is unchanged. Consumer callback exceptions are no
+longer caught as native stepping errors and invoked a second time. As before,
+stepper changes notify `onValueChange`; typing also invokes native `onChange`.
+
+The owned-CSS fixture now checks both complete compositions in both stylesheet modes,
+including 44px targets/16px icons, validation colours, disabled/read-only behavior,
+visibility toggling, keyboard stepping, RTL/LTR geometry and a 220px host reflow.
+This is not physical foldable/landscape-device certification. A test initially
+used foreground-900 as its expectation; the existing foreground role actually
+maps to foreground-0. The test was corrected to the declared token, not the product
+changed to satisfy an invented colour expectation.
 
 ## Verification and reproducibility
 
-Measured on this implementation: all five package builds; **387 React tests in
+**Latest continuation:** React build; **400 tests in 107 files**; six CSS-build tests;
+owned CSS in both modes plus the original form, adaptive, overlay, theme and runtime
+configuration suites in all three engines; React 18/19 tarball installs with 12
+README samples and the new Button API type fixture; Storybook build; lint, contract,
+raw/class ratchets, snippet and variant checks all passed. The three known declaration
+issues and existing variant gaps remain; those ratchets passing does not close them.
+No native/device/Figma/remote CI or full visual/accessibility certification was run.
+
+Original slice evidence: all five package builds; **387 React tests in
 106 files**; six CSS-build tests; two browser-selection tests; 46 existing browser
 checks plus 13 form checks and two owned-CSS modes in each of Chromium 145.0.7632.6,
 Firefox 146.0.1 and WebKit 26.0. All passed. The form checks were not skipped or marked
@@ -195,6 +247,30 @@ pnpm packages:install:check
 pnpm --filter @kozmos/docs build-storybook
 ```
 
+### Preview and edit safely
+
+React Storybook runs at `http://127.0.0.1:6006` from the separate, verified checkout
+`/private/tmp/kozmos-owned-css-verify.dV1etM`, advanced to the same continuation commit.
+This keeps implementation builds from deleting `dist` underneath your preview.
+The private Vue proof runs separately on 6007 and is not started; its unavailable
+Storybook reference is not a React component error. The development server reports
+existing addon-version/manager-api warnings; the React stories do render and the
+production Storybook build passes. Toolchain cleanup remains separate work.
+
+Useful story IDs: `components-button--emotions`, `components-passwordinput--right-to-left`,
+`components-numberinput--right-to-left`, and `components-numberinput--read-only`.
+Open `/?path=/story/<id>` on that server. New RTL stories use a 220px host.
+
+To run your own preview, build first, then run in that checkout:
+
+```sh
+pnpm --filter @kozmos/docs exec storybook dev -p 6006 --host 127.0.0.1 --ci
+```
+
+Stop that specific preview before rebuilding its packages. Do not kill every Node
+process or rebuild while it is serving. Source edits in a different worktree do
+not appear here until that preview checkout is explicitly advanced and rebuilt.
+
 The owned-CSS suite checks real computed styles in both modes: local resets,
 host preservation, late host CSS, theme tokens, nested light-in-dark, RTL,
 focus/validation/disabled states, ordinary consumer CSS, exported helper output,
@@ -213,8 +289,9 @@ the resulting tree; do not suppress the restored failing compatibility gate.
 
 1. Migrate remaining controls and composition styles, eliminate native scope entirely,
    then repeat the host/nested-theme/portal/consumer-override tests library-wide.
-2. Resolve Button's unsupported `asChild` API and audit other field primitives for
-   the same description/invalid-state merge problem; this fix covers Input/Textarea only.
+2. Audit other field primitives for the same description/invalid-state merge problem;
+   the fix now covers Input, Textarea, PasswordInput and NumberInput. Button's unsupported
+   `asChild` declaration is removed; do not reintroduce it without a deliberate API.
 3. Establish Pointr's actual minimum browsers/WebViews, evergreen update guarantees
    and multi-version embedding requirements; test those exact engines and real devices.
 4. Complete motion/forced-colours/accessibility and visual review. The suite is not
