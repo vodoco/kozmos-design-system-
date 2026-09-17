@@ -94,18 +94,23 @@ export const WithoutSteppers: Story = {
 };
 
 export const RightToLeft: Story = {
-  render: () => (
-    <ThemeProvider dir="rtl" theme="light">
-      <div style={{ width: 220 }}>
-        <NumberInput
-          label="Floors"
-          defaultValue={3}
-          status="warning"
-          helperText="Narrow RTL field"
-        />
-      </div>
-    </ThemeProvider>
-  ),
+  render: function RightToLeftStory(_args, { globals }) {
+    return (
+      <ThemeProvider
+        dir="rtl"
+        theme={globals.theme === "dark" ? "dark" : "light"}
+      >
+        <div style={{ width: 220 }}>
+          <NumberInput
+            label="Floors"
+            defaultValue={3}
+            status="warning"
+            helperText="Narrow RTL field"
+          />
+        </div>
+      </ThemeProvider>
+    );
+  },
 };
 
 export const ReadOnly: Story = {

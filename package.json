@@ -23,6 +23,8 @@
     "test:browser-compatibility": "node scripts/check-browser-compatibility.mjs",
     "test:owned-css": "node scripts/check-owned-css.mjs",
     "test:storybook-regressions": "node scripts/check-storybook-regressions.mjs",
+    "test:storybook-audit": "node scripts/audit-storybook.mjs",
+    "test:storybook-interactions": "node scripts/check-storybook-interactions.mjs",
     "test:css-build": "node --test packages/react/postcss/scoped-css.test.cjs",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",

@@ -6,7 +6,9 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 # Progress
 
-Displays the Progress interface topology natively.
+Communicates progress with an accessible name. React's `value` is measured against
+`max` (100 by default), and the visual fill and announced value use the same scale.
+Use `null` or omit `value` when progress is indeterminate.
 
 <Canvas>
   <Story of={ProgressStories.Default} />
@@ -22,7 +24,7 @@ Displays the Progress interface topology natively.
     react={`
 import { Progress } from "@kozmos/react"
 
-<Progress />
+<Progress value={25} max={50} aria-label="Upload progress" />
     `}
     vue={`
 <script setup>

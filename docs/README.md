@@ -6,6 +6,10 @@ these files honest are listed in its §7.
 
 ## Start here
 
+Latest local continuation: [Overnight quality pass — 2026-09-18](overnight-quality-pass-2026-09-18.md).
+Read it before the older measured-state sections: it records repairs, reproducible
+checks, source locations, preview ownership and remaining pre-publication gates.
+
 | File                         | What it is                                                                                                                                                                        |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ds-handoff.md`              | The handoff for the next session: the scope, the priorities in order, the measured state, what is decided, what is open, and the traps.                                           |

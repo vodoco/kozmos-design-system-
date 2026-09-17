@@ -1,11 +1,16 @@
 import React from "react";
 import { cn } from "../../utils";
+import { scrollHorizontalWithKeyboard } from "../../utils/keyboard-scroll";
 
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
+  <div
+    tabIndex={0}
+    onKeyDown={scrollHorizontalWithKeyboard}
+    className="relative w-full overflow-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+  >
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}

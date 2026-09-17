@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 import { FieldWrapper } from "../FieldWrapper";
 import { inputVariants, type InputStatus } from "../Input/Input";
@@ -224,6 +224,8 @@ export const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
       status = "default",
       value,
       wrapperClassName,
+      "aria-describedby": ariaDescribedBy,
+      "aria-invalid": ariaInvalid,
       ...props
     },
     ref,
@@ -370,10 +372,8 @@ export const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
               autoCapitalize="characters"
               spellCheck={false}
               value={textValue}
-              aria-describedby={describedBy || undefined}
-              aria-invalid={isInvalid || undefined}
-              aria-controls={showPickerPanel ? panelId : undefined}
-              aria-expanded={showPickerPanel ? isOpen : undefined}
+              aria-describedby={mergeAriaIds(ariaDescribedBy, describedBy)}
+              aria-invalid={isInvalid || ariaInvalid}
               className={cn(
                 inputVariants({ status: resolvedStatus }),
                 "min-w-0 font-mono uppercase pl-12 pr-12",

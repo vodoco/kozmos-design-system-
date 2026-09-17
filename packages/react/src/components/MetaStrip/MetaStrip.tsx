@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../../utils";
+import { scrollHorizontalWithKeyboard } from "../../utils/keyboard-scroll";
 
 /**
  * A row of small facts about one thing, each a label and a value.
@@ -23,14 +24,19 @@ import { cn } from "../../utils";
 const MetaStrip = React.forwardRef<
   HTMLDListElement,
   React.HTMLAttributes<HTMLDListElement>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, onKeyDown, ...props }, ref) => (
   <dl
     ref={ref}
+    tabIndex={0}
+    onKeyDown={(event) => {
+      onKeyDown?.(event);
+      scrollHorizontalWithKeyboard(event);
+    }}
     className={cn(
       // The source strip is wider than the card that holds it, so it scrolls
       // rather than wraps: a fact tile that has wrapped to a second row reads
       // as a different kind of thing.
-      "m-0 flex h-16 items-stretch overflow-x-auto overscroll-x-contain border-y border-border bg-background p-0",
+      "relative m-0 flex h-16 max-w-full items-stretch overflow-x-auto overscroll-x-contain border-y border-border bg-background p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
       "divide-x divide-border",
       className,
     )}

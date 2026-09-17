@@ -38,11 +38,16 @@ export const WithoutToggle: Story = {
 };
 
 export const RightToLeft: Story = {
-  render: (args) => (
-    <ThemeProvider dir="rtl" theme="light">
-      <div style={{ width: 220 }}>
-        <PasswordInput {...args} />
-      </div>
-    </ThemeProvider>
-  ),
+  render: function RightToLeftStory(args, { globals }) {
+    return (
+      <ThemeProvider
+        dir="rtl"
+        theme={globals.theme === "dark" ? "dark" : "light"}
+      >
+        <div style={{ width: 220 }}>
+          <PasswordInput {...args} />
+        </div>
+      </ThemeProvider>
+    );
+  },
 };

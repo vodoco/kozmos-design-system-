@@ -6,7 +6,10 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 # Slider
 
-Displays the Slider interface topology natively.
+Adjusts a numeric value or range. In React, provide `label`, `aria-label` or
+`aria-labelledby` for a single thumb. For ranges, provide distinct, localized
+`thumbLabels` (for example, minimum and maximum price). Helper/error descriptions
+are associated with the interactive thumbs.
 
 <Canvas>
   <Story of={SliderStories.Default} />
@@ -22,7 +25,7 @@ Displays the Slider interface topology natively.
     react={`
 import { Slider } from "@kozmos/react"
 
-<Slider />
+<Slider label="Volume" defaultValue={[50]} max={100} />
     `}
     vue={`
 <script setup>

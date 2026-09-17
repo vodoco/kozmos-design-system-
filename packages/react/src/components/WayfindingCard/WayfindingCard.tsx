@@ -9,11 +9,22 @@ import { useKozmosAnalytics } from "../../utils/analytics";
 export interface WayfindingCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   onClose?: () => void;
+  closeLabel?: string;
   children: React.ReactNode;
 }
 
 const WayfindingCard = React.forwardRef<HTMLDivElement, WayfindingCardProps>(
-  ({ className, title = "Navigation", onClose, children, ...props }, ref) => {
+  (
+    {
+      className,
+      title = "Navigation",
+      closeLabel = "Close navigation",
+      onClose,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
     const { trackEvent } = useKozmosAnalytics();
 
     const handleClose = () => {
@@ -34,6 +45,8 @@ const WayfindingCard = React.forwardRef<HTMLDivElement, WayfindingCardProps>(
               variant="ghost"
               size="icon"
               onClick={handleClose}
+              type="button"
+              aria-label={closeLabel}
               className="h-8 w-8"
             >
               <X className="h-4 w-4" />
@@ -57,6 +70,9 @@ export interface WayfindingInputRowProps extends React.HTMLAttributes<HTMLDivEle
   onSwap?: () => void;
   originPlaceholder?: string;
   destinationPlaceholder?: string;
+  originLabel?: string;
+  destinationLabel?: string;
+  swapLabel?: string;
 }
 
 export const WayfindingInputRow = React.forwardRef<
@@ -73,6 +89,9 @@ export const WayfindingInputRow = React.forwardRef<
       onSwap,
       originPlaceholder = "Choose starting point...",
       destinationPlaceholder = "Choose destination...",
+      originLabel = "Origin",
+      destinationLabel = "Destination",
+      swapLabel = "Swap origin and destination",
       ...props
     },
     ref,
@@ -91,30 +110,33 @@ export const WayfindingInputRow = React.forwardRef<
           <MapPin className="w-4 h-4 text-primary" />
         </div>
 
-        <div className="flex-1 flex flex-col gap-2 relative">
+        <div className="min-w-0 flex-1 flex flex-col gap-2 relative">
           <input
+            aria-label={originLabel}
             value={originValue}
             onChange={(e) => onOriginChange?.(e.target.value)}
             placeholder={originPlaceholder}
             className={cn(
               inputVariants(),
-              "h-10 border-none shadow-raised bg-muted/50 focus-visible:ring-1",
+              "h-10 pe-12 border-none shadow-raised bg-muted/50 focus-visible:ring-1",
             )}
           />
           <input
+            aria-label={destinationLabel}
             value={destinationValue}
             onChange={(e) => onDestinationChange?.(e.target.value)}
             placeholder={destinationPlaceholder}
             className={cn(
               inputVariants(),
-              "h-10 border-none shadow-raised bg-muted/50 focus-visible:ring-1",
+              "h-10 pe-12 border-none shadow-raised bg-muted/50 focus-visible:ring-1",
             )}
           />
 
           <Button
+            aria-label={swapLabel}
             size="icon"
             variant="secondary"
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-pill shadow-raised z-10"
+            className="absolute end-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-pill shadow-raised z-10"
             onClick={() => {
               trackEvent("WayfindingInputRow", "wayfinding_route_swapped", {
                 origin: originValue,

@@ -3,7 +3,7 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 
 import { FieldWrapper } from "../FieldWrapper";
 import { useKozmosAnalytics } from "../../utils/analytics";
@@ -37,33 +37,53 @@ const SelectTrigger = React.forwardRef<
     error?: boolean | string;
     wrapperClassName?: string;
   }
->(({ className, children, error, wrapperClassName, ...props }, ref) => {
-  const errorId = React.useId();
-  const hasError = !!error;
-  const isStringError = typeof error === "string";
+>(
+  (
+    {
+      className,
+      children,
+      error,
+      wrapperClassName,
+      "aria-describedby": ariaDescribedBy,
+      "aria-invalid": ariaInvalid,
+      ...props
+    },
+    ref,
+  ) => {
+    const errorId = React.useId();
+    const hasError = !!error;
+    const isStringError = typeof error === "string";
 
-  return (
-    <FieldWrapper error={error} errorId={errorId} className={wrapperClassName}>
-      <SelectPrimitive.Trigger
-        ref={ref}
-        aria-invalid={hasError}
-        aria-describedby={hasError && isStringError ? errorId : undefined}
-        className={cn(
-          "flex h-11 w-full items-center justify-between rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-          hasError &&
-            "border-destructive text-destructive focus:ring-destructive",
-          className,
-        )}
-        {...props}
+    return (
+      <FieldWrapper
+        error={error}
+        errorId={errorId}
+        className={wrapperClassName}
       >
-        {children}
-        <SelectPrimitive.Icon asChild>
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </SelectPrimitive.Icon>
-      </SelectPrimitive.Trigger>
-    </FieldWrapper>
-  );
-});
+        <SelectPrimitive.Trigger
+          ref={ref}
+          aria-invalid={hasError || ariaInvalid}
+          aria-describedby={mergeAriaIds(
+            ariaDescribedBy,
+            hasError && isStringError ? errorId : undefined,
+          )}
+          className={cn(
+            "flex h-11 w-full items-center justify-between rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+            hasError &&
+              "border-destructive text-destructive focus:ring-destructive",
+            className,
+          )}
+          {...props}
+        >
+          {children}
+          <SelectPrimitive.Icon asChild>
+            <ChevronDown className="h-4 w-4 opacity-50" />
+          </SelectPrimitive.Icon>
+        </SelectPrimitive.Trigger>
+      </FieldWrapper>
+    );
+  },
+);
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 
 const SelectScrollUpButton = React.forwardRef<

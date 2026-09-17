@@ -58,9 +58,148 @@ Commands: `pnpm test:select-accessibility` and the same command with
 `ADAPTIVE_BROWSER=firefox` / `webkit`; unit file
 `packages/react/src/utils/modal-inert.test.ts`. CI runs all three engines.
 
+## Batch 2: library-wide discovery and repairs
+
+The scan was widened to **all 236 indexed React stories**: 944 initial-render
+cases (light/dark, 320×568 and 1280×800, Chromium). This exposed additional
+variant-only failures beyond the original 15 groups. The first all-story run
+after the initial repairs still had 23 failing cases; the generated reports are
+retained locally under `test-results/`. These are observations, not waivers.
+
+Repairs and their source locations (relative to this worktree):
+
+| Area                | What changed / where to edit                                                                                                                                                                                                                                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Progress            | `components/Progress/Progress.tsx`: pass the value to Radix and normalize the visual fill against `max`. Determinate semantics now agree with the picture.                                                                                                                                                                              |
+| Input accessibility | `components/{Slider,Select,ColorPicker}/`: merge caller descriptions with errors, preserve invalid state, send Slider names/descriptions to thumbs, and keep popup state on ColorPicker's actual toggle.                                                                                                                                |
+| Icon-only controls  | Badge icon size has image semantics; WayfindingCard/WayfindingInputRow have localizable `closeLabel`, `originLabel`, `destinationLabel`, `swapLabel`. Story authors supply meaningful names for Select, Slider, Progress and POICard actions.                                                                                           |
+| Scrollable content  | `components/{ScrollArea,MetaStrip,Table,POIMediaGallery}/`: keyboard entry points. `ScrollArea.viewportProps` names/customizes the actual viewport while the existing ref stays on its wrapper. `utils/keyboard-scroll.ts` handles horizontal keys on focused semantic lists, including RTL, without consuming descendant-control keys. |
+| Narrow layouts      | Pagination wraps; SegmentedControl scrolls within its host and reveals the focused segment; disabled segments remain inspectable by keyboard. MetaStrip contains its visually hidden labels. Wayfinding fields shrink correctly and reserve room for their swap action. SaveLocationCard actions wrap.                                  |
+| Examples/themes     | RTL examples follow the toolbar; map placeholders and Stack use paired theme roles; DynamicIsland inherits its inverse foreground; POICard's open status uses Tag's existing success emotion.                                                                                                                                           |
+
+All component paths above are under `packages/react/src/`. Story-only layout
+changes remain in `.stories.tsx`; they are not global consumer resets. Existing
+background/surface choices have not been hidden with `overflow: hidden` on the
+page. Scrollable content stays reachable.
+
+### Button contrast is a token repair, not a CSS patch over a bad palette
+
+The old gate covered 50 checks but missed emotional button states. It now checks
+**194** pairs/aliases, including every enabled emotion in idle/hover/pressed/focus.
+The new assertions failed before the repairs. Existing palette aliases replace
+34 problematic component-token values (30 light, 4 dark), preserving token names
+and Figma variable IDs. Light success/alert fills become darker; neutral, success,
+danger and informative text treatments use readable steps. Secondary emotion
+hover surfaces use the muted role rather than inheriting a themed blue background
+under unrelated coloured text. All 18 showcased emotion treatments are also
+measured in real-browser hover states in both themes.
+
+Edit canonical values in `packages/tokens/src/tokens-{light,dark}.json`, never in
+`dist`. `scripts/check-token-contrast.mjs` is the expanded guard; the React hover
+recipe is in `packages/react/src/styles/owned-components.css`. Generated native
+colour copies and `docs/figma-foundations-payload.json` were refreshed. The Figma
+file itself was **not** mutated: import/review the payload through the established
+plugin workflow before declaring design/code parity.
+
+### How to change and verify this work yourself
+
+Work from `/private/tmp/kozmos-browser-compat.uqPMBD` on
+`astra/browser-compatibility`, **not shared main**. First check `git status` and
+`git log -5 --oneline`. Do not overwrite someone else's edits or run the release
+command merely to test a build.
+
+```sh
+pnpm install --frozen-lockfile
+pnpm tokens:build
+pnpm --filter @kozmos/react build
+pnpm --filter @kozmos/react test
+pnpm --filter @kozmos/react lint
+pnpm --filter @kozmos/docs typecheck
+pnpm tokens:contrast:check
+pnpm tokens:raw:check
+pnpm components:classes:check
+pnpm components:contract:check
+pnpm packages:install:check
+pnpm --filter @kozmos/docs build-storybook
+```
+
+Build dependencies first in a completely fresh checkout using
+`pnpm turbo run build --filter="./packages/*"`. Tarball checks require network
+access. The native check uses Xcode/Swift and an Android SDK; point `ANDROID_HOME`
+at your installed SDK, then run `pnpm native:check`. A successful compile does not
+certify mobile layout, screenshots, screen readers or real foldables.
+
+Serve the **completed** production Storybook in a separate terminal:
+
+```sh
+python3 -m http.server 6008 --bind 127.0.0.1 --directory apps/docs/storybook-static
+```
+
+Then run the browser evidence (install the three Playwright engines if absent):
+
+```sh
+STORY_SCOPE=all STORYBOOK_URL=http://127.0.0.1:6008 pnpm test:storybook-audit
+STORYBOOK_URL=http://127.0.0.1:6008 pnpm test:storybook-interactions
+STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=firefox pnpm test:storybook-interactions
+STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=webkit pnpm test:storybook-interactions
+STORYBOOK_URL=http://127.0.0.1:6008 pnpm test:storybook-regressions
+STORYBOOK_URL=http://127.0.0.1:6008 pnpm exec tsx scripts/skills/check-a11y.ts
+pnpm test:select-accessibility
+```
+
+Repeat the last Select command with `ADAPTIVE_BROWSER=firefox` and `webkit`.
+`STORY_FILTER='components-colorpicker|components-select'` narrows discovery; omit
+`STORY_SCOPE=all` for one representative per group. `AUDIT_OUTPUT` changes the JSON
+report path. Do not confuse a filtered pass with a whole-library pass. The audit
+retains axe `incomplete` results for manual review; these are not proven passes.
+CI now runs every initial story in Chromium and the new focused interaction matrix
+in all three engines. No axe rules are disabled.
+
+The first zero-violation all-story report still contains **70 cases needing manual
+review**, across 21 stories: 44 uncertain contrast nodes, 28 multiple-label nodes,
+20 ARIA-value nodes and 8 hidden-focus nodes. These are not 70 confirmed defects,
+but neither are they verified accessible. The report retains targets and subsequent
+runs also include axe's explanations. Review these before accessibility sign-off;
+image/transparent surfaces, date ranges and closed overlay states feature in this
+list. Do not remove the incomplete results to make a report look cleaner.
+
+For preview development use `pnpm --filter @kozmos/docs storybook:react -- --ci
+--host 127.0.0.1`. The user-facing port 6006 is owned by the separate clean preview
+checkout `/private/tmp/kozmos-owned-css-verify.dV1etM`. Stop its exact process before
+advancing that checkout or rebuilding its package outputs. Never rebuild `dist`
+under a running browser verification suite. Port 6008 is a disposable audit server,
+not a second product preview.
+
+### Verification record
+
+At the repair stage: 424 React tests across 110 files; React lint and docs types;
+194 token contrast checks; component contracts; tarball installs and README/native
+Button types against React 18 and 19; iOS and Android compilation passed. Final
+clean-checkout browser results and preview revision are recorded below after the
+last verification run.
+
 ## Still required before release
 
 See the screenshot audit and owned-CSS guide. Complete the remaining CSS migration,
 package types, library-wide interaction/manual accessibility/visual review, browser
 floor/device/native checks and genuine product integration. No npm approval is
 implied by this overnight work.
+
+- **CSS architecture:** only the previously documented slices are component-owned.
+  Much of the library still depends on native `@scope`. This pass does not claim a
+  full migration. 59 inert utility uses / 39 classes / 25 files remain. Fix the
+  token/opacity authoring contract and migrate component families; do not add
+  browser sniffing, fake fallbacks or raise the ratchet.
+- **Raw values:** reduced from 35 to **32** colours across 7 components; 7 raw radii
+  across 6 remain. SaveLocationCard's green action now uses the actual success
+  emotion. The missing glass-surface role remains a design decision.
+- **Package declarations:** the three previously recorded `FalseCJS` / types-only
+  ESM-resolution problems remain. Passing installed React samples is not equivalent
+  to resolving those problems. Fix dual-format declaration graphs before npm.
+- **Manual/product acceptance:** no screen-reader, switch-control, zoom/reflow,
+  forced-colours, reduced-motion, physical-foldable or browser-floor certification
+  is claimed. Initial-story scanning does not exercise every possible interaction.
+  Verify one real product module using only the packaged system, then expand.
+- **Release/design operations:** Figma import and visual review are pending;
+  Chromatic's account/plan gate is not bypassed. No package published, no push or
+  merge. No new design ruling or browser support minimum was invented.

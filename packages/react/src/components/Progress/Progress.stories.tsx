@@ -17,6 +17,12 @@ export const Default: Story = {
       const timer = setTimeout(() => setProgress(66), 500);
       return () => clearTimeout(timer);
     }, []);
-    return <Progress value={progress} className="w-3/5" />;
+    return (
+      <Progress
+        aria-label="Download progress"
+        value={progress}
+        className="w-3/5"
+      />
+    );
   },
 };

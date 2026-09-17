@@ -3,6 +3,7 @@ import type { POIMediaPresentation } from "@kozmos/product-contracts";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../utils";
 import { IconButton } from "../IconButton";
+import { scrollHorizontalWithKeyboard } from "../../utils/keyboard-scroll";
 
 export interface POIMediaGalleryProps extends Omit<
   React.HTMLAttributes<HTMLElement>,
@@ -98,8 +99,10 @@ const POIMediaGallery = React.forwardRef<HTMLElement, POIMediaGalleryProps>(
           )}
         </div>
         <ul
+          tabIndex={0}
+          onKeyDown={scrollHorizontalWithKeyboard}
           ref={listRef}
-          className="m-0 grid snap-x snap-mandatory auto-cols-[85%] grid-flow-col gap-3 overflow-x-auto overscroll-x-contain p-0 pb-2"
+          className="m-0 grid snap-x snap-mandatory auto-cols-[85%] grid-flow-col gap-3 overflow-x-auto overscroll-x-contain p-0 pb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
           id={galleryId}
         >
           {media.map((item, index) => (

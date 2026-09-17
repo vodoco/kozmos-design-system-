@@ -3,6 +3,25 @@ import { describe, expect, it, vi } from "vitest";
 import { SaveLocationCard } from "./SaveLocationCard";
 
 describe("SaveLocationCard", () => {
+  it("does not submit an enclosing form when using card actions", () => {
+    const submit = vi.fn();
+    render(
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          submit();
+        }}
+      >
+        <SaveLocationCard
+          isSaved
+          onRouteToLocation={() => {}}
+          onEditNote={() => {}}
+        />
+      </form>,
+    );
+    for (const button of screen.getAllByRole("button")) fireEvent.click(button);
+    expect(submit).not.toHaveBeenCalled();
+  });
   it("renders unsaved state and toggles save", () => {
     const onSaveToggle = vi.fn();
 

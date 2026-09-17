@@ -186,6 +186,21 @@ jobs:
             "pnpm --filter @kozmos/docs storybook:react -- --ci --host 127.0.0.1" \
             "bash -lc 'until curl -sf http://127.0.0.1:6006 >/dev/null; do sleep 2; done; pnpm --filter @kozmos/react exec playwright test && pnpm -w exec tsx scripts/skills/check-a11y.ts && pnpm -w test:storybook-regressions && ADAPTIVE_BROWSER=firefox pnpm -w test:storybook-regressions && ADAPTIVE_BROWSER=webkit pnpm -w test:storybook-regressions'"
 
+      - name: Audit Every React Story and Keyboard Scroll Interaction
+        run: |
+          pnpm --filter @kozmos/docs exec concurrently -k -s first -n "STATIC,TEST" \
+            "python3 -m http.server 6008 --bind 127.0.0.1 --directory storybook-static" \
+            "bash -lc 'until curl -sf http://127.0.0.1:6008/index.json >/dev/null; do sleep 2; done; STORY_SCOPE=all STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:storybook-audit && STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:storybook-interactions && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=firefox pnpm -w test:storybook-interactions && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=webkit pnpm -w test:storybook-interactions'"
+
+      - name: Preserve Storybook Audit Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-audit
+          path: test-results/storybook-*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Enforce SDK Assembly & Accessibility Governance
         run: |
           pnpm exec tsx scripts/skills/check-completion.ts --check

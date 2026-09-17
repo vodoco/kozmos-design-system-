@@ -23,10 +23,8 @@ export const Expanded: Story = {
   args: {
     islandState: "expanded",
     expandedContent: (
-      <div className="flex h-full flex-col justify-center gap-2 text-white">
-        <span className="text-xs font-semibold uppercase text-green-400">
-          Next turn
-        </span>
+      <div className="flex h-full flex-col justify-center gap-2">
+        <span className="text-xs font-semibold uppercase">Next turn</span>
         <span className="text-xl font-semibold">Turn right on Main St</span>
       </div>
     ),

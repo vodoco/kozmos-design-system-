@@ -1,6 +1,6 @@
 import React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 import { FieldWrapper } from "../FieldWrapper";
 import { useKozmosAnalytics } from "../../utils/analytics";
 
@@ -39,6 +39,10 @@ const Slider = React.forwardRef<
       wrapperClassName,
       showValueTooltip = false,
       formatValue,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      "aria-describedby": ariaDescribedBy,
+      "aria-invalid": ariaInvalid,
       ...props
     },
     ref,
@@ -148,6 +152,14 @@ const Slider = React.forwardRef<
           {thumbs.map((_, index) => (
             <SliderPrimitive.Thumb
               key={index}
+              aria-labelledby={
+                thumbLabels?.[index] ? undefined : ariaLabelledBy
+              }
+              aria-describedby={mergeAriaIds(
+                ariaDescribedBy,
+                hasError && isStringError ? errorId : undefined,
+              )}
+              aria-invalid={hasError || ariaInvalid}
               aria-label={
                 thumbLabels?.[index] ??
                 (inferredThumbCount > 1
@@ -156,7 +168,7 @@ const Slider = React.forwardRef<
                     : index === inferredThumbCount - 1
                       ? "Maximum value"
                       : `Value ${index + 1}`
-                  : label)
+                  : (ariaLabel ?? label))
               }
               className={cn(
                 "relative block h-5 w-5 rounded-pill border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",

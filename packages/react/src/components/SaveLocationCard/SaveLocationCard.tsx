@@ -53,7 +53,7 @@ const SaveLocationCard = React.forwardRef<
           >
             <Car className="w-6 h-6" />
           </div>
-          <div className="flex flex-col flex-1">
+          <div className="min-w-0 flex flex-col flex-1">
             <span className="font-semibold text-base text-foreground tracking-tight">
               {title}
             </span>
@@ -64,6 +64,7 @@ const SaveLocationCard = React.forwardRef<
               variant="ghost"
               size="icon"
               onClick={onEditNote}
+              type="button"
               className="shrink-0 text-muted-foreground"
               aria-label="Edit location note"
             >
@@ -73,8 +74,9 @@ const SaveLocationCard = React.forwardRef<
         </div>
 
         {/* Primary Actions */}
-        <div className="flex items-center gap-3 w-full mt-2">
+        <div className="flex flex-wrap items-center gap-3 w-full mt-2">
           <Button
+            type="button"
             variant={isSaved ? "outline" : "default"}
             className="flex-1 font-medium"
             onClick={() => {
@@ -90,8 +92,10 @@ const SaveLocationCard = React.forwardRef<
 
           {isSaved && onRouteToLocation && (
             <Button
+              type="button"
               variant="default"
-              className="flex-1 font-medium bg-green-600 hover:bg-green-700 text-white"
+              emotion="success"
+              className="flex-1 font-medium"
               onClick={() => {
                 trackEvent("SaveLocationCard", "route_requested", {});
                 onRouteToLocation();

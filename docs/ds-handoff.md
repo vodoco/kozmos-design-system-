@@ -7,6 +7,16 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**Overnight quality pass, 2026-09-18:** read
+`overnight-quality-pass-2026-09-18.md` first. Olcay asked for another extensive pass
+and local commits while away. Select's previously exposed modal accessibility
+blocker is fixed with explicit inert-state ownership (`598b0b8`); emotional button
+contrast is repaired in canonical tokens and native copies (`10cbfb8`). The wider
+continuation covers accessibility, keyboard scrolling, responsive layouts and
+all 236 React stories. The guide records the final verification state and exact
+maintenance commands. Older continuation notes below are historical, not the
+current release verdict. Shared main is untouched; no overnight push/merge/npm.
+
 **Screenshot audit continuation, 2026-09-17:** read
 `storybook-screenshot-audit-2026-09-17.md` first for the newest local batch on
 `astra/browser-compatibility`. Fixes cover active option contrast, selection ARIA

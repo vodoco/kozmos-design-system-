@@ -16,8 +16,12 @@ page:
 - A long option list inside a panel
 - Any pane with its own independent scroll
 
-Give it a bounded size. A `ScrollArea` with no height constraint grows to fit
-its content and never scrolls, which looks like the component is broken.
+Give vertical scrolling a bounded height and horizontal scrolling a bounded
+width. Otherwise it grows to fit its content instead of scrolling.
+
+`viewportProps` addresses the inner, keyboard-focusable viewport. Use it for a
+meaningful region name, keyboard handlers or viewport-specific styling. The
+forwarded ref and ordinary HTML props still address the outer wrapper.
 
 `hideScrollbar` hides the bar but keeps the region scrollable. Reach for it only
 where another affordance makes scrolling obvious — a peeking next item, for
@@ -38,7 +42,7 @@ import { PlatformSnippets } from "../PlatformSnippets";
   react={`
 import { ScrollArea } from '@kozmos/react';
 
-<ScrollArea orientation="horizontal" style={{ maxWidth: 480 }}>
+<ScrollArea orientation="horizontal" style={{ maxWidth: 480 }} viewportProps={{ role: "region", "aria-label": "Nearby categories" }}>
   <div style={{ display: "flex", gap: 8 }}>{categories}</div>
 </ScrollArea>
 

@@ -79,6 +79,7 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
     return (
       <div
         ref={ref}
+        role={isIconOnly ? "img" : undefined}
         className={cn(badgeVariants({ variant, size, className }))}
         {...props}
       >
