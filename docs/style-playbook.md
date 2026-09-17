@@ -254,6 +254,7 @@ under a minute apart from the two that call Figma.
 | `pnpm tokens:border:check`       | Every consumer reads `Semantics.Border`, and the contrast bands          |
 | `pnpm tokens:elevation:check`    | Every platform reads `Semantics.Elevation`; native values in both themes |
 | `pnpm tokens:raw:check`          | No new value bypasses a role — a ratchet over a recorded backlog         |
+| `pnpm components:classes:check`  | No new class compiles to nothing — reads the built CSS; a ratchet        |
 | `pnpm tokens:contrast:check`     | 50 text pairs clear WCAG AA in both themes                               |
 | `pnpm tokens:typography:check`   | Type scale parity                                                        |
 | `pnpm components:contract:check` | Variant axes, props, and the bulk sequences' completeness                |

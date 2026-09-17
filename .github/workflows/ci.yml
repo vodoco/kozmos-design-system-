@@ -82,6 +82,13 @@ jobs:
       - name: Verify No New Raw Values
         run: pnpm tokens:raw:check
 
+      # A Tailwind class the build cannot generate is dropped without a word, and
+      # a toHaveClass assertion still passes. bg-background/90 left
+      # MapControlButton transparent over the map that way. This reads the
+      # stylesheet the build step above produced, so it must stay after it.
+      - name: Verify No New Classes That Compile To Nothing
+        run: pnpm components:classes:check
+
       # Packs every non-private package, installs the tarballs into an empty
       # project with npm, resolves every export and README import, renders a
       # component and type-checks every README sample. It reads the build above.

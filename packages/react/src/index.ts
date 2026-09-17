@@ -100,6 +100,7 @@ export * from "./components/SaveLocationCard";
 export * from "./components/FeedbackCard";
 export * from "./components/NavigationAnnouncer/NavigationAnnouncer";
 export * from "./hooks/useKozmosMapSync";
+export * from "./hooks/useRevealOnChange";
 export * from "./context/DesignConfigContext";
 export * from "./theme/KozmosTheme";
 export * from "./utils/analytics";
