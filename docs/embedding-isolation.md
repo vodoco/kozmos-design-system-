@@ -86,7 +86,7 @@ Do not release or declare this support policy approved until that decision and d
 matrix are resolved. If older engines are required, select a different isolation
 architecture before npm publication, not an untested selector/polyfill workaround.
 
-## Migration and remaining provider work
+## Migration
 
 1. Wrap module roots in ThemeProvider; remove document-level theme mutations.
 2. Opt into a product-owned storage key if desired; migrate old stored values explicitly.
@@ -95,13 +95,58 @@ architecture before npm publication, not an untested selector/polyfill workaroun
 5. Remove reliance on global preflight, or deliberately import the optional reset.
 6. Audit standalone entry points, including the private Vue bridge, before adoption.
 
-`KozmosTheme` and `DesignConfigProvider` are still legacy experimental configuration
-APIs. They retain implicit storage, fixed effect IDs, global effect/document fallbacks
-and runtime variables that do not automatically follow these portals. They are **not**
-production-safe alternatives to ThemeProvider and have not been silently rewritten.
-Consolidating or retiring that surface is the next provider task before publication.
-The React Storybook decorator now supplies the new provider around its existing demo
-configuration; this does not certify legacy configuration isolation.
+## Runtime configuration continuation
+
+The subsequent batch consolidates `KozmosTheme` into `DesignConfigProvider`, which
+composes the same ThemeProvider boundary instead of mutating CSSOM/document fallbacks.
+It inherits a surrounding theme preference by default; explicit `theme`, `defaultTheme`
+or theme `storageKey` starts an independent preference. Direction continues to inherit.
+
+`initialConfig` seeds uncontrolled state. `config`/`onConfigChange` supplies controlled
+state; omitted fields resolve to defaults, not stale previous props. This changes the
+old `KozmosTheme config` one-shot initialization behavior: migrate to `initialConfig`
+when descendants should own updates. Nested `glass` and `accessibility` updates merge
+deeply. Untrusted persisted JSON is validated by a whitelist: booleans and enums must
+match, roundness is clamped to 0–2 and glass numeric controls to 0–100; non-finite or
+invalid inputs retain valid fallback values. Computed opacity is capped at 1.
+
+Persistence has no default key. An explicit `persistKey` restores after hydration;
+saved values override initial defaults only where valid. Persistence never writes
+before restoration and failures are nonfatal. Controlled configuration ignores it.
+Keep controlled/uncontrolled mode and keys stable over a mounted provider's lifetime.
+`resetConfig` restores library defaults, not the initial overrides; it does not clear
+the independent runtime token overrides. Storage changes in other tabs are not synced.
+
+Declarative `tokens` replace the current override set and follow owned portals,
+including when keys are removed. Primitive shorthand remains compatible; prefer
+full `--…` names. The deprecated `injectRuntimeTokens` merges its own override set;
+an empty string removes a key. Declarative values take precedence. The internal
+`--kozmos-design-id` is reserved for event ownership, not caller customization.
+
+The old fixed noise layer and window-level pointer listener are gone. Noise is a
+deterministic, low-alpha SVG background on glass surfaces only (a CSP must permit
+its data image, or set `noise: false`). Each configuration instance owns its surface
+filter ID; unused displacement-filter definitions were removed. React `useId` is
+preserved without lossy sanitization; independently hydrated roots need distinct
+React `identifierPrefix` values, matching server/client. Filter reference existence
+and prefixed IDs are exercised in real-browser tests.
+
+Pointer events are delegated through the React owner, including portals, and checked
+against the destination's configuration identity. Coordinates are relative to the
+actual surface, compensating for ordinary scaling; arbitrary rotated/3D transforms
+are not supported by this pointer-effect calculation. No document style or global
+pointer state is written. The old dark glass selector now uses the actual nearest
+theme scope. Depth and bevel compose rather than one hiding the other. Disabling
+glass/reducing transparency removes its texture, noise, bevel and spotlight; reduced
+motion removes its magnification/spotlight and scales token-based transitions.
+
+Do not overstate the result: experimental effects are **not** semantic design tokens
+or native/Figma visual parity. `preset`/`splay` remain deprecated, non-rendering legacy
+fields. `roundness` and `shadow` are deprecated legacy aliases, not controls over
+semantic radius/elevation roles. Use token overrides for those roles. This provider
+does not automatically subscribe to OS reduced-motion preferences or control every
+Framer Motion animation in the component library; a full motion/a11y policy remains
+release work. The private Vue bridge still needs a separate adoption audit.
 
 ## Evidence
 
@@ -119,6 +164,8 @@ pnpm --filter @kozmos/react build
 pnpm --filter @kozmos/react test
 pnpm test:themes
 ADAPTIVE_BROWSER=webkit pnpm test:themes
+pnpm test:config
+ADAPTIVE_BROWSER=webkit pnpm test:config
 pnpm test:overlays
 ADAPTIVE_BROWSER=webkit pnpm test:overlays
 pnpm test:adaptive
@@ -132,9 +179,22 @@ Separate tarball checks cover React 18/19 installation, exports, server renderin
 README type-checking; those are not browser interaction tests under both React majors.
 The optional reset is checked both as a package export and for its actual global effect.
 
-Measured this batch: 368 React tests in 105 files; 14 adaptive, 21 overlay and 6 named
+Measured for the initial scoped-theme batch: 368 React tests in 105 files; 14 adaptive, 21 overlay and 6 named
 theme/reset browser checks per engine (Chromium and WebKit); React Storybook build;
 React 18/19 tarball installation and 10 README samples. The three known declaration
 issues and 62 inert class uses / 40 classes / 27 files remain unchanged. Remote CI,
 minimum-version/device certification, full visual/a11y audit and native/live Figma
 verification were not run for this batch.
+
+The runtime-configuration continuation adds 11 tests, bringing React to **379 tests
+in 106 files**. Six initial regression tests failed on the original provider; a later
+test caught an observer callback suppressing inherited theme updates and was fixed.
+The dark glass surface browser assertion also failed before its scoped-selector fix.
+Five named configuration checks per engine extend the complete browser matrix to
+**92 named checks** across Chromium and WebKit. They cover computed surfaces, live
+portal updates without remounting, filter references, local pointer coordinates,
+disabled effects, token removal and cleanup. React 18/19 tarball checks now type-check
+11 README samples. Component contracts, snippets, radius/elevation checks, variant
+report freshness, lint and the existing raw/class ratchets pass; React Storybook builds.
+Those results do not remove the compatibility, native/device, full accessibility,
+product-adapter or release-workflow gates above.

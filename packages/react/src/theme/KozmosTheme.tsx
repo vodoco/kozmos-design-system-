@@ -1,44 +1,14 @@
-import React, { useEffect } from "react";
 import {
   DesignConfigProvider,
-  useDesignConfig,
+  type DesignConfigProviderProps,
 } from "../context/DesignConfigContext";
-import type { DesignConfig } from "../context/DesignConfigContext";
 
-export interface KozmosThemeProps {
-  children: React.ReactNode;
-  config?: Partial<DesignConfig>;
-  tokens?: Record<string, string>;
-}
+export type KozmosThemeProps = DesignConfigProviderProps;
 
 /**
- * Internal hook to parse and apply token strings onto the root CSSOM context.
+ * Compatibility name for the unified scoped configuration provider.
+ * Use config/onConfigChange for controlled values, or initialConfig for defaults.
  */
-function ThemeInjector({ tokens }: { tokens?: Record<string, string> }) {
-  const { injectRuntimeTokens } = useDesignConfig();
-
-  useEffect(() => {
-    if (tokens && Object.keys(tokens).length > 0) {
-      injectRuntimeTokens(tokens);
-    }
-  }, [tokens, injectRuntimeTokens]);
-
-  return null;
+export function KozmosTheme(props: KozmosThemeProps) {
+  return <DesignConfigProvider {...props} />;
 }
-
-/**
- * Enterprise white-label Root Provider for Kozmos Applications.
- * Dynamically binds raw CSS variables into the active DOM bypassing compile constraints.
- */
-export const KozmosTheme: React.FC<KozmosThemeProps> = ({
-  children,
-  config,
-  tokens,
-}) => {
-  return (
-    <DesignConfigProvider initialConfig={config}>
-      {tokens && <ThemeInjector tokens={tokens} />}
-      {children}
-    </DesignConfigProvider>
-  );
-};

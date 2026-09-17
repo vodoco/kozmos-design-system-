@@ -20,8 +20,10 @@ The follow-up audit fixed four adaptive defect classes and added explicit `porta
 support to the overlay primitives; see `foundation-audit-2026-09-17.md`. The next batch implements
 module-owned ThemeProvider state, automatic overlay ownership and scoped CSS with an opt-in
 global reset; see `embedding-isolation.md`. Its native CSS `@scope` browser/WebView support floor
-is **not yet approved**. Legacy KozmosTheme/DesignConfigProvider consolidation remains, then
-native adaptive parity and real map-adapter proof. The SDK composition loop remains part of
+is **not yet approved**. KozmosTheme/DesignConfigProvider now share the scoped provider machinery;
+see the runtime-configuration continuation in `embedding-isolation.md`, including migration and
+deprecated experimental controls. Next are native adaptive parity and real map-adapter proof.
+The SDK composition loop remains part of
 validation, not replaced by counts. Nothing in this local work authorizes an npm release.
 
 Paste this as the first message of the new chat:
@@ -914,6 +916,41 @@ No native/Figma source, shared main, parked product app, release workflow, crede
 branch or npm publication was changed. Next: resolve browser policy and legacy provider surface,
 then native adaptive parity, real installed POI/routing consumer proof, remaining CSS/type debt
 and release safeguards. Production readiness is still not established.
+
+### 2026-09-17 · Scoped runtime configuration consolidation (Astra)
+
+Olcay asked whether another pass was necessary and otherwise to proceed. Continued with
+the next bounded foundation rather than another broad review. KozmosTheme is now a thin
+compatibility name for DesignConfigProvider; that provider composes ThemeProvider and its
+owned portals. It no longer injects into document fallbacks, paints page-wide noise, uses
+fixed filter IDs or listens to global pointer movement. Initial/controlled configuration,
+validated deep updates, safe explicit persistence, SSR hydration and declarative token
+replacement are covered. An inherited theme observer must not suppress the parent's update;
+that defect was reproduced while verifying the consolidation and corrected.
+
+Breaking pre-publication migration: `KozmosTheme config` is now controlled; use `initialConfig`
+for editable defaults. Configuration storage has no implicit key. Noise is limited to glass
+backgrounds. The old dark glass selector now follows nearest scoped theme; depth and bevel
+compose and disabled effects no longer leave visible bevel/spotlight styling. See
+`embedding-isolation.md` and the React README for exact precedence and compatibility behavior.
+
+Do not invent functionality for legacy fields: `preset` and `splay` never rendered an effect;
+they are deprecated. `roundness`/`shadow` only drive legacy aliases, not semantic radius/elevation
+roles, and are deprecated in favor of token customization. Experimental effects are not
+cross-platform visual parity or a complete motion-accessibility policy. The existing 62 inert
+class uses / 40 classes / 27 files and three declaration issues are unchanged.
+
+Verification: six initial provider regression tests failed before fixes; the dark glass
+browser assertion failed before its fix. React passes 379 tests / 106 files. Chromium and
+WebKit each pass 14 adaptive + 21 overlay + 6 theme/reset + 5 runtime-configuration checks.
+React and harness lint, contracts, snippet checks, radius/elevation checks, variant freshness,
+raw/class ratchets, React 18/19 tarball installs with 11 README samples and React Storybook
+build pass. Full visual/a11y, native/device, live Figma and remote CI were not run for this batch.
+
+Next: native adaptive parity and real installed POI/routing consumer validation, while the
+native CSS `@scope` browser/WebView policy remains an unresolved release gate. Publishing
+safeguards, CSS/type debt and motion/a11y policy must still be closed before production.
+No shared-main change, remote push, release change, credential use or publication occurred.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

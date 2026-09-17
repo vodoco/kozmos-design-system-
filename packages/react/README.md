@@ -80,8 +80,53 @@ Set `dir="rtl"` on the provider to configure CSS and Radix keyboard navigation.
 Nested providers inherit direction; an outer provider defaults to LTR. Supply
 CSS-variable overrides through `tokens={{ "--your-variable": "value" }}` so they
 follow overlays too. Unrelated ancestor inline styles/fonts are not copied into
-portals. Legacy `KozmosTheme`/`DesignConfigProvider` are not substitutes for this
-provider; their experimental effect configuration is not yet portal-safe.
+portals.
+
+## Runtime design configuration
+
+For the experimental glass controls, use `DesignConfigProvider`. It includes the
+same scoped ThemeProvider and owned portals; `KozmosTheme` is now a compatibility
+name for this implementation, not a separate token injector.
+
+```tsx
+import type { ReactNode } from "react";
+import { DesignConfigProvider } from "@kozmos/react";
+
+export function GlassModule({ children }: { children: ReactNode }) {
+  return (
+    <DesignConfigProvider
+      defaultTheme="light"
+      initialConfig={{ glass: { frost: 20 }, noise: false }}
+    >
+      {children}
+    </DesignConfigProvider>
+  );
+}
+```
+
+Use `initialConfig` for uncontrolled defaults or `config`/`onConfigChange` for
+controlled values. Partial `glass` and `accessibility` inputs are deeply merged and
+validated. Persistence is opt-in through `persistKey` and ignored for controlled
+configuration. A surrounding ThemeProvider's preference is inherited unless this
+provider explicitly sets `theme`, `defaultTheme` or a theme `storageKey`.
+
+`tokens` are declarative: updates and removed keys apply to content and owned
+overlays. Legacy primitive shorthand (`colors-background-0`) still expands to
+`--primitives-colors-background-0`; full CSS-variable names are preferred.
+`injectRuntimeTokens` is deprecated; it merges overrides, with an empty value
+removing a key. Declarative tokens take precedence.
+
+Noise is confined to glass backgrounds, never a fixed page overlay. SVG effect IDs
+are instance-owned; pointer effects use the hovered surface, including in portals.
+For multiple independently hydrated React roots, supply distinct React
+`identifierPrefix` values consistently on server and client.
+
+Migration: old `KozmosTheme config={...}` now means **controlled** configuration;
+use `initialConfig` if descendants should change it without a callback. The implicit
+`kozmos-design-config` storage key is no longer used. `preset` and `splay` have no
+rendered effect and are deprecated. `roundness`/`shadow` affect legacy aliases only,
+not semantic radius/elevation roles; customize those tokens directly. These effects
+are not a cross-platform styling contract or a complete reduced-motion policy.
 
 ## Adaptive map hosts
 

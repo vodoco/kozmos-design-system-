@@ -232,6 +232,7 @@ module.exports = {
           "backdrop-filter": "var(--glass-filter)",
           "-webkit-backdrop-filter": "var(--glass-filter)",
           "background-color": "rgba(255, 255, 255, var(--glass-opacity))", // Fallback/Light
+          "background-image": "var(--glass-noise-image, none)",
           border: "1px solid rgba(255, 255, 255, var(--glass-bevel-opacity))",
           "will-change": "backdrop-filter, transform",
           overflow: "hidden", // Contain the surface texture
@@ -239,7 +240,7 @@ module.exports = {
           "box-shadow": "var(--glass-inner-shadow)",
           transform: "scale(var(--glass-scale, 1))",
           transition:
-            "transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease",
+            "transform calc(300ms * var(--semantics-motion-duration-scale, 1)) cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow calc(300ms * var(--semantics-motion-duration-scale, 1)) ease",
         },
         ".glass::before": {
           content: '""',
@@ -255,9 +256,10 @@ module.exports = {
           position: "relative",
           "z-index": "2", // Ensure content is above surface texture
         },
-        ".dark .glass": {
-          "background-color": "rgba(0, 0, 0, var(--glass-opacity))",
-          border: "1px solid rgba(255, 255, 255, var(--glass-bevel-opacity))",
+        '@scope (:scope[data-theme="dark"]) to ([data-kozmos-root])': {
+          ".glass": {
+            "background-color": "rgba(0, 0, 0, var(--glass-opacity))",
+          },
         },
         ".glass-spotlight": {
           position: "relative",
@@ -271,16 +273,12 @@ module.exports = {
             "radial-gradient(800px circle at var(--spotlight-x) var(--spotlight-y), rgba(255, 255, 255, 0.06), transparent 40%)",
           "z-index": "10",
           "pointer-events": "none",
+          opacity: "var(--glass-spotlight-opacity, 0)",
         },
         ".glass-bevel": {
           // Bevel with optional Dispersion (Chromatic Aberration) simulation
           // Mixes standard bevel shadows with Red/Blue color shifts based on dispersion opacity
-          "box-shadow": `
-                        inset 1px 1px 0 0 rgba(255, 255, 255, 0.3), 
-                        inset -1px -1px 0 0 rgba(0, 0, 0, 0.1),
-                        inset 2px 0 4px rgba(255, 0, 0, var(--glass-dispersion-opacity, 0)), 
-                        inset -2px 0 4px rgba(0, 255, 255, var(--glass-dispersion-opacity, 0))
-                    `,
+          "box-shadow": "var(--glass-composite-shadow)",
         },
         ".glass-edge-spotlight": {
           position: "relative",
@@ -298,7 +296,7 @@ module.exports = {
             "radial-gradient(200px circle at var(--spotlight-x) var(--spotlight-y), black, transparent)",
           "-webkit-mask-image":
             "radial-gradient(200px circle at var(--spotlight-x) var(--spotlight-y), black, transparent)",
-          opacity: "1",
+          opacity: "var(--glass-spotlight-opacity, 0)",
         },
       });
     }),

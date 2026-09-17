@@ -151,6 +151,11 @@ jobs:
           pnpm test:themes
           ADAPTIVE_BROWSER=webkit pnpm test:themes
 
+      - name: Verify Scoped Runtime Configuration
+        run: |
+          pnpm test:config
+          ADAPTIVE_BROWSER=webkit pnpm test:config
+
       - name: Core Pipeline - Storybook E2E & A11y Verification
         run: |
           # Chromatic is the required visual-regression gate. Keep local screenshot baselines manual until repaired.
