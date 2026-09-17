@@ -1,3 +1,4 @@
+import { createThemePortal } from "../../theme/ThemePortal";
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -13,6 +14,9 @@ export type DrawerProps = React.ComponentPropsWithoutRef<
 export type DrawerContentProps = React.ComponentPropsWithoutRef<
   typeof DialogPrimitive.Content
 > & {
+  portalContainer?: React.ComponentPropsWithoutRef<
+    typeof DialogPrimitive.Portal
+  >["container"];
   showClose?: boolean;
   side?: DrawerSide;
 };
@@ -43,7 +47,7 @@ Drawer.displayName = "Drawer";
 
 const DrawerTrigger = DialogPrimitive.Trigger;
 const DrawerClose = DialogPrimitive.Close;
-const DrawerPortal = DialogPrimitive.Portal;
+const DrawerPortal = createThemePortal(DialogPrimitive.Portal);
 
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
@@ -65,10 +69,17 @@ const DrawerContent = React.forwardRef<
   DrawerContentProps
 >(
   (
-    { children, className, showClose = true, side = "right", ...props },
+    {
+      children,
+      className,
+      showClose = true,
+      side = "right",
+      portalContainer,
+      ...props
+    },
     ref,
   ) => (
-    <DrawerPortal>
+    <DrawerPortal container={portalContainer}>
       <DrawerOverlay />
       <DialogPrimitive.Content
         ref={ref}

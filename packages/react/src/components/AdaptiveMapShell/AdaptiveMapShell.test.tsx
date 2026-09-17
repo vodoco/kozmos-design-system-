@@ -1,8 +1,13 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdaptiveMapShell } from "./AdaptiveMapShell";
 
 describe("AdaptiveMapShell", () => {
+  beforeEach(() => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(390);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(600);
+  });
+  afterEach(() => vi.restoreAllMocks());
   it("labels renderer and panel regions without impersonating a map", () => {
     render(
       <AdaptiveMapShell

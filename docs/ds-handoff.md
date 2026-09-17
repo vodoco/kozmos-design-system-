@@ -12,6 +12,20 @@ Whoever picks the work up next reads `docs/agent-switch-2026-09-17.md` first: it
 work to Astra, §6 is the handback Astra leaves before switching back, and §7 is what Claude checks on
 return.
 
+**Astra continuation, 2026-09-17:** Olcay approved the pre-publication architecture recommendations
+(ruling 24). Local branch `astra/prepublish-foundations`, based on the switch handoff at `c274b06`,
+contains the first React adaptive-layout batch. Read `docs/adaptive-map-layout.md` and the new
+§10 entry before continuing. This is not on shared `main`; nothing has been pushed or published.
+The follow-up audit fixed four adaptive defect classes and added explicit `portalContainer`
+support to the overlay primitives; see `foundation-audit-2026-09-17.md`. The next batch implements
+module-owned ThemeProvider state, automatic overlay ownership and scoped CSS with an opt-in
+global reset; see `embedding-isolation.md`. Its native CSS `@scope` browser/WebView support floor
+is **not yet approved**. KozmosTheme/DesignConfigProvider now share the scoped provider machinery;
+see the runtime-configuration continuation in `embedding-isolation.md`, including migration and
+deprecated experimental controls. Next are native adaptive parity and real map-adapter proof.
+The SDK composition loop remains part of
+validation, not replaced by counts. Nothing in this local work authorizes an npm release.
+
 Paste this as the first message of the new chat:
 
 > Continue the Kozmos design system work. Read `docs/ds-handoff.md` first — it holds the scope, the
@@ -70,6 +84,15 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
 - A handoff a new chat can start from, whenever the session ends.
 
 ## 3 · The system today — measured 2026-09-17
+
+The table below is the **Claude handover baseline**, not the state of Astra's local feature branch.
+For the latter, React now has 360 passing tests in 104 files, and fourteen adaptive checks pass
+in each of Chromium and WebKit (`pnpm --filter @kozmos/react test`, `pnpm test:adaptive`,
+`ADAPTIVE_BROWSER=webkit pnpm test:adaptive`). Fourteen overlay checks (seven components, default
+and explicit containers) also pass per engine (`pnpm test:overlays`, with the same browser selector).
+Native/Figma numbers below were not re-measured in
+this implementation batch. The worktree is `/private/tmp/kozmos-astra-review.hwXbrb`; shared
+`main` at `/Volumes/4TB Depo/development/K/kozmos-design-system-dev` remains clean at `a02a008`.
 
 | Thing            | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -359,6 +382,15 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
 23. **A PR whose CI could not run waits for CI before merging**, however complete the local
     verification (#47, 2026-09-17).
 
+**Ruled 2026-09-17, during the Astra continuation:**
+
+24. **Proceed with the pre-publication architecture pass**, before treating npm or module rebuilds
+    as ready. The approved direction is local available-space and region/occlusion contracts,
+    state-preserving adaptive layout, scoped theme/portal/CSS ownership, a deliberate public API,
+    and representative POI/routing flows before beta. See `prepublish-architecture-review-2026-09-17.md`.
+    This authorizes implementation, not publication, credentials, pushes or merges. The numerical
+    React thresholds are implementation choices for validation, not a universal native policy.
+
 ## 6 · Open — waiting on Olcay
 
 Eleven of the twelve that stood here were ruled on 2026-09-14 and moved to §5. What is left needs an
@@ -408,6 +440,12 @@ action rather than an answer, needs a designer, or is work with nobody blocked o
 ### 6.3 · The queue, when there is no SDK component waiting
 
 Work, not questions. In the order it is worth doing:
+
+- **Approved pre-publication foundations (ruling 24).** The first React layout batch is on
+  `astra/prepublish-foundations`. Next: theme/portal/CSS isolation; native local-space/region
+  parity while retaining iOS detents; an actual Pointr map adapter and POI/routing consumer proof;
+  public export/type/token cleanup and release safeguards. Do not mistake the existing variant
+  scanner's green result for native adaptive parity: it does not track these new geometry inputs.
 
 - **`Link` and `Spinner` cannot express an axis React has**, on both iOS and Android — `Link.variant`
   (`default`, `subtle`) and `Spinner.size` (`sm`, `md`, `lg`, `xl`). These are the only two real
@@ -770,6 +808,149 @@ the first time painter changes have reached the file since early September.
     before #50 merged — its commit, an open PR and a deleted branch; 99 React components where there
     are 98, because a file had been counted; a lucide count in §6 that no method reproduces; and §4.5
     missing that a valid `NPM_TOKEN` publishes all four packages on its own.
+
+### 2026-09-17 · Pre-publication foundations (Astra)
+
+Olcay asked for the Claude work to be audited for deployment/npm readiness, landscape/foldables
+and foundational changes before rebuilding Pointr modules. `prepublish-architecture-review-2026-09-17.md`
+records the audit. A previous Astra statement that a missing changeset prevented first publication
+was wrong and corrected: with a valid token, the current release path can publish all four
+unpublished 0.0.1 packages without a version PR. No token or release setting was changed.
+
+After “let's proceed with your recommendation”, the isolated review worktree was fast-forwarded
+to the documentation-only `c274b06` handoff and renamed to `astra/prepublish-foundations`.
+Shared `main`, Claude's worktrees, MAP-595 and Figma were not changed.
+
+The first batch replaces React AdaptiveMapShell's viewport breakpoints and 448px minimum with
+measured local geometry; adds typed usable-region, safe-area, panel-presentation and layout-output
+contracts; measures top-bar/control coverage; resolves logical RTL; and preserves map/panel tree
+positions across layout changes. It requires an explicitly bounded host height. No native shell,
+gesture/detent implementation, automatic device detection or real map camera adapter is included.
+See `adaptive-map-layout.md` for the API, coordinates, migration and next work.
+
+Verification: the three initial browser regressions failed on the old build (360px host clipped a
+416px side panel at x=-72; 390px landscape host grew to 448px; RTL end panel stayed right).
+The expanded eight-scenario check was also run against the old shell and failed all eight, then
+passed against the new build in Chromium and WebKit. It renders the shipped exports/CSS, including
+POIDetailPanel and core controls, and checks geometry, padding, state/focus, mount count and live
+direction changes. An additional empty-region accessibility assertion caught clipped-but-still-
+exposed content; the slots now become hidden without unmounting. The CI web job runs both engines.
+
+Local checks: package builds; React 359 tests/104 files; React lint; component contracts;
+variant/completion/snippet checks; raw-value and compiled-class ratchets; packed-package install
+checks for React 18 and 19 (three pre-existing declaration issues remain). Browser checks use
+Playwright 1.58.2's Chromium/WebKit and installed Chrome. One intermediate class check raced a
+concurrent build's dist cleanup and failed on missing CSS; rerunning after the build passed.
+Native, live Figma, full Storybook/a11y and remote CI have not been run for this branch.
+
+This is the first foundation only. Theme/portal/CSS isolation, native adaptive parity, real-device
+and map-engine validation, API stability work and release controls remain before beta. The
+existing full POI-detail-card Storybook example was not migrated; the browser regression fixture
+uses the exported POIDetailPanel as a consumer, not a completed product flow.
+
+### 2026-09-17 · Adversarial audit and overlay ownership (Astra)
+
+Olcay asked again for an extensive audit and further recommended work. Auditing `b13f4d9` found
+four adaptive defect classes: zero-width hosts left invisible controls exposed; a large requested
+bottom panel could clip map controls to zero height; callback payload mutation leaked in both
+directions; and a non-finite host inset could cancel a CSS safe area. Each was reproduced in the
+built browser fixture before fixing it. The new minimum-chrome unit test failed first too.
+`panelFraction` is now explicitly a request subject to measured content space, not unconditional.
+See `foundation-audit-2026-09-17.md` for the evidence, API consequences and unfinished work.
+
+Continued with a bounded prerequisite for scoped theming: the overlay content primitives accept
+an explicit `portalContainer`. Dialog, Drawer, Popover, Menu and Select preserve their body default;
+Tooltip preserves its inline default and portals when explicitly asked. BottomSheet inherits the
+Drawer prop. Browser checks verify real containment, inherited tokens, Escape and focus restoration
+for both defaults and explicit targets. The initial six primitive ownership tests failed before
+implementation; the expanded matrix also covers BottomSheet and default-behavior preservation.
+
+Checks: React 360 tests/104 files; 14 adaptive and 14 overlay checks in each of Chromium and WebKit;
+React and new harness lint; component/snippet/variant/completion checks; unchanged raw-value and
+compiled-class ratchets; tarball install/readme checks with React 18 and 19. The shared browser
+fixture helper bundles built public exports, not source aliases; it is not itself an installed
+React-peer browser matrix. Remote CI, full Storybook/a11y, native and live Figma checks were not run.
+Shared main and Claude's worktrees remain untouched; no push/publication is authorized or performed.
+
+Full provider/CSS isolation is **not done**: global theme mutation, storage/system-theme handling,
+nested light/dark token/utility behavior, global reset/selectors and automatic portal propagation
+through product compositions remain. Explicit container ownership also does not change Radix's
+document-level modal semantics. Do not present this as scoped modal isolation or production readiness.
+
+### 2026-09-17 · Module theme, portal and stylesheet foundation (Astra)
+
+Olcay approved proceeding with the embedding-isolation foundation. ThemeProvider now owns a
+layout-transparent DOM boundary rather than mutating `<html>`. It supports controlled state,
+live system preferences, deterministic SSR/hydration and safe opt-in storage. A provider-owned
+body-level portal root carries its resolved theme, explicit token overrides and direction;
+all seven overlay types use it automatically unless an explicit destination overrides it.
+Radix direction is provided through a direct `@radix-ui/react-direction` dependency, not merely
+an inherited CSS attribute. Existing document-level modal semantics are retained.
+
+The React stylesheet is bounded by native `@scope`, including nearest-root dark utilities.
+Its preflight and generic utilities no longer style unrelated host content; `:scope` precedence
+also prevents ordinary host reset/utility rules leaking inward. Keyframes are namespaced.
+`@kozmos/react/reset.css` is a separate optional global reset. This is a breaking pre-publication
+integration change: styled content needs a provider/scope. See `embedding-isolation.md` and the
+React README for migration and the exact limits, including `rem` sizing and host `!important`.
+
+**Decision pending, not a new ruling:** Olcay was asked whether the npm release may require
+native CSS `@scope`. The implementation is local and provisional for that browser policy;
+no minimum browser/WebView matrix has been approved or certified. Do not infer approval from
+green current-engine checks. The older KozmosTheme/DesignConfigProvider surface still needs
+consolidation/retirement: implicit persistence, duplicated effect IDs, global effects/fallbacks
+and runtime variables outside automatic portal ownership remain. Neither provider consolidation
+nor independently modal sibling widgets is claimed complete.
+
+Evidence: five initial provider tests, seven automatic overlay ownership cases and the host
+CSS probe failed before their fixes. A further host-border leak was reproduced and corrected.
+The full React suite passes **368 tests in 105 files**. Chromium and WebKit each pass 14 adaptive,
+21 overlay and 6 named theme/reset browser checks. React and harness lint, component contracts,
+snippet/completion checks and unchanged raw-value/compiled-class ratchets pass. Regenerated
+variant analysis honestly adds ThemeProvider's React `dir` axis as unmatched natively; the report
+is current, not a claim that all platforms now have equivalent APIs. Tarball checks pass with
+React 18/19, all 14 package exports and 10 README samples; the three known declaration issues
+remain. React Storybook builds successfully; this is not a full visual/a11y audit.
+
+No native/Figma source, shared main, parked product app, release workflow, credential, remote
+branch or npm publication was changed. Next: resolve browser policy and legacy provider surface,
+then native adaptive parity, real installed POI/routing consumer proof, remaining CSS/type debt
+and release safeguards. Production readiness is still not established.
+
+### 2026-09-17 · Scoped runtime configuration consolidation (Astra)
+
+Olcay asked whether another pass was necessary and otherwise to proceed. Continued with
+the next bounded foundation rather than another broad review. KozmosTheme is now a thin
+compatibility name for DesignConfigProvider; that provider composes ThemeProvider and its
+owned portals. It no longer injects into document fallbacks, paints page-wide noise, uses
+fixed filter IDs or listens to global pointer movement. Initial/controlled configuration,
+validated deep updates, safe explicit persistence, SSR hydration and declarative token
+replacement are covered. An inherited theme observer must not suppress the parent's update;
+that defect was reproduced while verifying the consolidation and corrected.
+
+Breaking pre-publication migration: `KozmosTheme config` is now controlled; use `initialConfig`
+for editable defaults. Configuration storage has no implicit key. Noise is limited to glass
+backgrounds. The old dark glass selector now follows nearest scoped theme; depth and bevel
+compose and disabled effects no longer leave visible bevel/spotlight styling. See
+`embedding-isolation.md` and the React README for exact precedence and compatibility behavior.
+
+Do not invent functionality for legacy fields: `preset` and `splay` never rendered an effect;
+they are deprecated. `roundness`/`shadow` only drive legacy aliases, not semantic radius/elevation
+roles, and are deprecated in favor of token customization. Experimental effects are not
+cross-platform visual parity or a complete motion-accessibility policy. The existing 62 inert
+class uses / 40 classes / 27 files and three declaration issues are unchanged.
+
+Verification: six initial provider regression tests failed before fixes; the dark glass
+browser assertion failed before its fix. React passes 379 tests / 106 files. Chromium and
+WebKit each pass 14 adaptive + 21 overlay + 6 theme/reset + 5 runtime-configuration checks.
+React and harness lint, contracts, snippet checks, radius/elevation checks, variant freshness,
+raw/class ratchets, React 18/19 tarball installs with 11 README samples and React Storybook
+build pass. Full visual/a11y, native/device, live Figma and remote CI were not run for this batch.
+
+Next: native adaptive parity and real installed POI/routing consumer validation, while the
+native CSS `@scope` browser/WebView policy remains an unresolved release gate. Publishing
+safeguards, CSS/type debt and motion/a11y policy must still be closed before production.
+No shared-main change, remote push, release change, credential use or publication occurred.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

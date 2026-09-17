@@ -133,3 +133,33 @@ export interface MapCollisionInsets {
   bottom: number;
   left: number;
 }
+
+/** Physical rectangle in the shell's local units (CSS px, points or dp). */
+export interface MapLayoutRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export type MapPanelPresentation = "auto" | "bottom" | "side";
+
+/** Presentation geometry only: selection, camera and route state belong to the host. */
+export interface AdaptiveMapLayout {
+  /** Renderer bounds relative to the shell, not the screen. */
+  mapBounds: MapLayoutRect;
+  panelBounds: MapLayoutRect | null;
+  presentation: "bottom" | "side" | "separated";
+}
+
+export interface MapOcclusion {
+  kind: "panel" | "top-bar" | "controls";
+  /** Shell-local bounds; intersect with mapBounds before sending to a renderer. */
+  bounds: MapLayoutRect;
+}
+
+export interface AdaptiveMapLayoutSnapshot extends AdaptiveMapLayout {
+  occlusions: readonly MapOcclusion[];
+  /** Physical edge padding relative to mapBounds, NOT relative to the shell. */
+  collisionInsets: MapCollisionInsets;
+}

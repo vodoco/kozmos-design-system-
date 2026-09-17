@@ -15,6 +15,16 @@ these files honest are listed in its §7.
 
 ## Current
 
+- `embedding-isolation.md`: scoped ThemeProvider and CSS, automatic portal ownership,
+  migration, compatibility decision gate and remaining legacy configuration work.
+- `foundation-audit-2026-09-17.md`: the adversarial audit of the first Astra batch,
+  reproduced corrections, explicit overlay ownership, verification and remaining release blockers.
+
+- `prepublish-architecture-review-2026-09-17.md`: baseline audit, approved architecture direction,
+  publication risks and the phased pre-beta plan.
+- `adaptive-map-layout.md`: the first implementation, its coordinate/API contract, migration,
+  browser reproduction commands and explicitly unfinished native/device/map-adapter work.
+
 | File                                 | What it is                                                                                                                                                                                                                         |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `product-ui-coverage-2026-09-14.md`  | What the running product draws and how much the design system covers: 13 surfaces, 763,776 nodes, measured over the Figma REST API. The answer to §4.2.                                                                            |

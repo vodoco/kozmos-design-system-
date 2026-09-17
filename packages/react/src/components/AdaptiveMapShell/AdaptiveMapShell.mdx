@@ -5,12 +5,31 @@ import * as Stories from "./AdaptiveMapShell.stories";
 
 # AdaptiveMapShell
 
-Map-engine-neutral responsive layout. It places mobile content as a safe-area
-aware bottom panel and desktop content as a side panel. The `map` slot must be a
-real supported renderer; this component never draws substitute map geometry.
-Collision insets are exposed as `--kozmos-map-inset-*` CSS properties for an SDK
-adapter to consume deliberately.
+Map-engine-neutral layout driven by its **container**, not the browser viewport.
+Give the shell a definite height (or a bounded parent for its default `height: 100%`).
+The old 448px minimum has been removed so a short landscape host can constrain it.
+
+Auto presentation uses a side panel in a local region at least 720×160px, otherwise
+a bottom panel. Override with `panelPresentation`; `panelFraction` controls bottom
+height, subject to space reserved for measured map controls. Read the resolved
+panel bounds from `onLayoutChange`. `panelPlacement` is logical and follows inherited RTL direction.
+
+`usableRegions` accepts host-provided hinge-free rectangles in shell-local CSS pixels.
+Auto mode can separate map and panel across those regions without remounting either.
+This is a geometry input, not automatic foldable-device detection.
+
+The `map` slot must be a real supported renderer; this component never draws substitute
+map geometry. `onLayoutChange` reports shell-local renderer/panel bounds and occlusions.
+Resolved padding is **map-local**, exposed through `onCollisionInsetsChange` and
+`--kozmos-map-inset-*`. The SDK adapter applies it to the camera deliberately.
+
+`safeAreaInsets` reserves edge space (including keyboard overlap supplied by the host);
+do not subtract a keyboard again if it already resized the host. See
+`docs/adaptive-map-layout.md` for the full coordinate and fallback contract.
 
 <Canvas of={Stories.PanelAtEnd} />
+<Canvas of={Stories.NarrowHost} />
+<Canvas of={Stories.LandscapeHost} />
+<Canvas of={Stories.SeparatedRegions} />
 <Canvas of={Stories.Error} />
 <Controls />
