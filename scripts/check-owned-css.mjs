@@ -78,6 +78,21 @@ try {
         return result;
       }, token);
     for (const id of ["outer", "nested"]) {
+      const listbox = page.getByTestId(`${id}-listbox`);
+      await listbox.focus();
+      await page.keyboard.press("End");
+      assert.equal(
+        await listbox.evaluate((node) => {
+          const active = node.ownerDocument.getElementById(
+            node.getAttribute("aria-activedescendant"),
+          );
+          const row = active.getBoundingClientRect();
+          const bounds = node.getBoundingClientRect();
+          return row.top >= bounds.top && row.bottom <= bounds.bottom;
+        }),
+        true,
+        "keyboard active option must scroll into view",
+      );
       const field = page.getByTestId(`${id}-input`);
       const s = await measure(field);
       assert.equal(s.height, "44px");

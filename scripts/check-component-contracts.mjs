@@ -10145,7 +10145,6 @@ assertContains(
 // it as a padding class, and for a day it said 4 while Figma said 12. These
 // assertions are the only thing that ties the two spellings together.
 for (const [key, needle, label] of [
-  ["reactListbox", "bg-popover p-3", "Listbox"],
   ["reactCombobox", "bg-popover p-3", "Combobox"],
   ["reactMultiSelect", "bg-popover p-3", "MultiSelect"],
   ["reactMenu", "bg-popover p-3", "Menu"],
@@ -10158,6 +10157,19 @@ for (const [key, needle, label] of [
     `${label} pads its popover to the concentric inset (12)`,
   );
 }
+const ownedSelectionPath = "packages/react/src/styles/owned-selection.css";
+assertContains(
+  files.reactListbox,
+  source.reactListbox,
+  "kozmos-listbox",
+  "Listbox selects its owned recipe",
+);
+assertContains(
+  ownedSelectionPath,
+  read(ownedSelectionPath).match(/\.kozmos-listbox\s*\{([^}]*)\}/)?.[1] ?? "",
+  "bg-popover p-3",
+  "Listbox preserves its concentric inset (12)",
+);
 for (const token of [
   "Menu/padding",
   "Combobox/listbox/padding",
@@ -10186,7 +10198,7 @@ assertContains(
 assertContains(
   files.reactFileUpload,
   source.reactFileUpload,
-  "mt-3 grid gap-2",
+  "mt-3 grid min-w-0 grid-cols-1 gap-2",
   "FileUpload list sits 12 under the dropzone on the web",
 );
 assertContains(

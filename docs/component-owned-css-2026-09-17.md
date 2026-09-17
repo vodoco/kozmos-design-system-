@@ -290,6 +290,14 @@ the resulting tree; do not suppress the restored failing compatibility gate.
 
 ## Remaining release gates and next work
 
+**Latest continuation:** `storybook-screenshot-audit-2026-09-17.md` adds owned
+Listbox/option-row styles and the MultiSelect input, plus screenshot/focus/ARIA
+corrections and a real Storybook Theme toolbar. These are partial migrations, not
+complete Combobox/MultiSelect/FileUpload ownership. The hardened accessibility smoke
+exposes a previously suppressed Select failure; resolve it before release. The
+earlier light-only RTL story note above is historical; deliberately themed stories
+remain explicit while the global canvas now supports Light/Dark.
+
 1. Migrate remaining controls and composition styles, eliminate native scope entirely,
    then repeat the host/nested-theme/portal/consumer-override tests library-wide.
 2. Audit other field primitives for the same description/invalid-state merge problem;

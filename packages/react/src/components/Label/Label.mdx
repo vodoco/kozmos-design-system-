@@ -6,7 +6,9 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 # Label
 
-Displays the Label interface topology natively.
+Names a form control. Set `htmlFor` to the control's `id`, and provide meaningful
+text. Label has no Outline variant; the old story was a mislabeled duplicate.
+Use FieldWrapper when you need required marks, helper text or error messages.
 
 <Canvas>
   <Story of={LabelStories.Default} />
@@ -20,9 +22,12 @@ Displays the Label interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Label } from "@kozmos/react"
+import { Label, Input } from "@kozmos/react"
 
-<Label />
+<>
+  <Label htmlFor="email">Email</Label>
+  <Input id="email" type="email" />
+</>
     `}
     vue={`
 <script setup>

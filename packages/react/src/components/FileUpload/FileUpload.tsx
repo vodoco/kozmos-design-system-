@@ -1,6 +1,6 @@
 import React from "react";
 import { File as FileIcon, Upload, X } from "lucide-react";
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 import { Button } from "../Button";
 import { FieldWrapper, type FieldStatus } from "../FieldWrapper";
@@ -71,6 +71,9 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       status = "default",
       value,
       wrapperClassName,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      "aria-describedby": callerDescribedBy,
       ...props
     },
     ref,
@@ -177,7 +180,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       if (!disabled) inputRef.current?.click();
     };
 
-    const handleDrag = (event: React.DragEvent<HTMLDivElement>) => {
+    const handleDrag = (event: React.DragEvent<HTMLButtonElement>) => {
       event.preventDefault();
       event.stopPropagation();
       if (disabled) return;
@@ -185,17 +188,11 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       setDragActive(event.type === "dragenter" || event.type === "dragover");
     };
 
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    const handleDrop = (event: React.DragEvent<HTMLButtonElement>) => {
       event.preventDefault();
       event.stopPropagation();
       setDragActive(false);
       handleFiles(event.dataTransfer.files);
-    };
-
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      openPicker();
     };
 
     return (
@@ -214,9 +211,9 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
         <div ref={ref} className={cn("w-full", className)} {...props}>
           <input
             ref={inputRef}
-            id={inputId}
+            id={`${inputId}-file`}
             type="file"
-            className="sr-only"
+            hidden
             accept={accept}
             multiple={canSelectMultiple}
             disabled={disabled}
@@ -224,11 +221,16 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
             aria-invalid={resolvedStatus === "error" || undefined}
             onChange={(event) => handleFiles(event.target.files)}
           />
-          <div
-            role="button"
-            tabIndex={disabled ? -1 : 0}
-            aria-controls={inputId}
-            aria-disabled={disabled || undefined}
+          <button
+            type="button"
+            id={inputId}
+            disabled={disabled}
+            aria-label={
+              ariaLabel ?? (label ? `${browseLabel}: ${label}` : browseLabel)
+            }
+            aria-labelledby={ariaLabelledBy}
+            aria-describedby={mergeAriaIds(callerDescribedBy, describedBy)}
+            aria-invalid={resolvedStatus === "error" || undefined}
             className={cn(
               "flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-container border border-dashed bg-background px-4 py-6 text-center ring-offset-background transition-colors",
               "border-[color:var(--primitives-colors-foreground-500)] hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
@@ -247,33 +249,35 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            onKeyDown={handleKeyDown}
           >
             <Upload
               aria-hidden="true"
               className="mb-3 h-7 w-7 text-muted-foreground"
             />
-            <p className="text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">
                 {browseLabel}
               </span>{" "}
               {dropLabel}
-            </p>
+            </span>
             {(emptyDescription || accept || maxSize) && (
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              <span className="mt-1 text-xs leading-5 text-muted-foreground">
                 {emptyDescription ||
                   [accept, maxSize ? `Max ${formatBytes(maxSize)}` : null]
                     .filter(Boolean)
                     .join(" · ")}
-              </p>
+              </span>
             )}
-          </div>
+          </button>
           {files.length > 0 && (
-            <ul className="mt-3 grid gap-2" aria-label="Selected files">
+            <ul
+              className="mt-3 grid min-w-0 grid-cols-1 gap-2"
+              aria-label="Selected files"
+            >
               {files.map((file) => (
                 <li
                   key={`${file.name}-${file.size}-${file.lastModified}`}
-                  className="flex min-h-11 items-center gap-3 rounded-container border bg-card px-3 py-2"
+                  className="flex min-h-11 min-w-0 items-center gap-3 rounded-container border bg-card px-3 py-2"
                 >
                   <FileIcon
                     aria-hidden="true"

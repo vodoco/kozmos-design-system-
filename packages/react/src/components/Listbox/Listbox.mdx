@@ -1,5 +1,5 @@
-import { Meta, Story, Canvas, Source } from '@storybook/blocks';
-import * as ListboxStories from './Listbox.stories';
+import { Meta, Story, Canvas, Source } from "@storybook/blocks";
+import * as ListboxStories from "./Listbox.stories";
 
 <Meta of={ListboxStories} />
 
@@ -26,7 +26,7 @@ array of one is ambiguous otherwise.
 
 ## Implementation
 
-import { PlatformSnippets } from '../PlatformSnippets';
+import { PlatformSnippets } from "../PlatformSnippets";
 
 <div className="subheading">Platform Code</div>
 
@@ -35,13 +35,16 @@ import { PlatformSnippets } from '../PlatformSnippets';
 import { Listbox } from '@kozmos/react';
 
 <Listbox
+  aria-label="Floors"
   options={floors}
   value={floor}
   onValueChange={(value) => setFloor(value as string)}
 />
 
 // Multiple selection
+
 <Listbox
+  aria-label="Amenities"
   options={amenities}
   multiple
   value={selected}
@@ -55,9 +58,10 @@ import { ref } from "vue"
 
 const floor = ref("l1")
 const floors = [
-  { value: "l1", label: "Level 1" },
-  { value: "l2", label: "Level 2" },
+{ value: "l1", label: "Level 1" },
+{ value: "l2", label: "Level 2" },
 ]
+
 </script>
 
 <template>
@@ -73,7 +77,7 @@ import SwiftUI
 import Kozmos
 
 struct FloorList: View {
-    @State private var selected: [String] = ["l1"]
+@State private var selected: [String] = ["l1"]
 
     var body: some View {
         KozmosListbox(
@@ -83,8 +87,9 @@ struct FloorList: View {
             maxHeight: 280
         )
     }
+
 }
-  `}
+`}
   kotlin={`
 package com.kozmos.example
 
@@ -95,7 +100,7 @@ import com.kozmos.components.listbox.KozmosListboxOption
 
 @Composable
 fun FloorList(options: List<KozmosListboxOption>) {
-    var selected by remember { mutableStateOf(listOf("l1")) }
+var selected by remember { mutableStateOf(listOf("l1")) }
 
     KozmosListbox(
         options = options,
@@ -104,23 +109,28 @@ fun FloorList(options: List<KozmosListboxOption>) {
         multiple = false,
         maxHeight = 280.dp
     )
+
 }
-  `}
+`}
 />
 
 ## Accessibility
 
 - Renders as a listbox with `option` children, so selection state is announced
   rather than inferred from styling.
-- Arrow keys move the active option and Home / End jump to the ends; selection
-  in single mode follows focus.
-- `maxHeight` scrolls the list rather than clipping it, keeping every option
-  reachable by keyboard.
+- Always supply a meaningful `aria-label` or `aria-labelledby`; an option's name
+  does not name the listbox itself.
+- Arrow keys move the active option and Home / End jump to the ends. Enter / Space
+  commit selection; selection does **not** automatically follow focus.
+- The default maximum height is 16rem; React has no `maxHeight` prop. Use `style`
+  or your own CSS class to customize it.
 
 ## Stories
 
 ### Single
+
 <Canvas of={ListboxStories.Single} />
 
 ### Multiple
+
 <Canvas of={ListboxStories.Multiple} />

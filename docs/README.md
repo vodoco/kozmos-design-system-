@@ -15,6 +15,10 @@ these files honest are listed in its §7.
 
 ## Current
 
+- `storybook-screenshot-audit-2026-09-17.md`: latest screenshot-driven fixes,
+  cross-engine regression matrix, exposed Select accessibility blocker, maintenance
+  commands and remaining pre-publication gates. Start here for the newest batch.
+
 - `component-owned-css-2026-09-17.md`: approved compatibility migration's first slice,
   source map, customization/migration guide, reproduced failures, verification commands
   and remaining release gates. Start here for the current CSS implementation.

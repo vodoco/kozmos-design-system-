@@ -5,6 +5,26 @@ import { FileUpload } from "./FileUpload";
 import { describe, expect, it, vi } from "vitest";
 
 describe("FileUpload", () => {
+  it("exposes one named native picker button with the owned helper description", async () => {
+    const user = userEvent.setup();
+    render(
+      <FileUpload
+        label="Documents"
+        helperText="Three files maximum"
+        aria-describedby="external"
+      />,
+    );
+    const button = screen.getByRole("button", {
+      name: "Click to upload: Documents",
+    });
+    expect(button.tagName).toBe("BUTTON");
+    expect(button).toHaveAttribute(
+      "aria-describedby",
+      `external ${screen.getByText("Three files maximum").id}`,
+    );
+    await user.tab();
+    expect(button).toHaveFocus();
+  });
   it("renders upload area", () => {
     render(<FileUpload />);
     expect(screen.getByText(/Click to upload/i)).toBeInTheDocument();

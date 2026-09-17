@@ -21,6 +21,7 @@
     "test:browser-selection": "node --test scripts/lib/built-react-fixture.test.mjs",
     "test:browser-compatibility": "node scripts/check-browser-compatibility.mjs",
     "test:owned-css": "node scripts/check-owned-css.mjs",
+    "test:storybook-regressions": "node scripts/check-storybook-regressions.mjs",
     "test:css-build": "node --test packages/react/postcss/scoped-css.test.cjs",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",

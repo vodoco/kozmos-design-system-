@@ -15,11 +15,21 @@ import {
   PasswordInput,
   NumberInput,
   MapControlButton,
+  Listbox,
 } from "@kozmos/react";
 
 function Controls({ id }: { id: string }) {
   return (
     <section data-testid={id} style={{ width: 300 }}>
+      <Listbox
+        aria-label={`${id} long list`}
+        data-testid={`${id}-listbox`}
+        options={Array.from({ length: 30 }, (_, index) => ({
+          value: String(index),
+          label: `Place ${index}`,
+          description: `Description ${index}`,
+        }))}
+      />
       <Input
         label={`${id} name`}
         helperText="Helper text"

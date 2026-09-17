@@ -7,6 +7,17 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**Screenshot audit continuation, 2026-09-17:** read
+`storybook-screenshot-audit-2026-09-17.md` first for the newest local batch on
+`astra/browser-compatibility`. Fixes cover active option contrast, selection ARIA
+and read-only/focus behavior, empty-result semantics, Listbox scrolling, native
+upload activation/long filenames, truthful Label examples and responsive/themed
+Storybook. React: 409 tests/108 files; screenshot matrix: 108 cases across three
+engines. The hardened accessibility smoke now FAILS for Select's
+`aria-hidden-focus` condition, previously suppressed. **Not release-ready; do not
+waive this gate.** The guide records source paths, exact commands, migration notes,
+unfixed debt and the next implementation order. No push, merge or npm publication.
+
 **Component-owned CSS continuation, 2026-09-17:** Olcay approved the recommendation
 to replace mandatory native scope (ruling 26). The first slice migrates Input,
 Textarea, Button, Popover, FieldWrapper, Label, PasswordInput and NumberInput;

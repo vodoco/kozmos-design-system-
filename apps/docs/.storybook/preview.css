@@ -1,0 +1,31 @@
+/* Storybook-only host layout, never exported in the component package. */
+body.sb-show-main.sb-main-padded {
+  padding: 0;
+}
+body.sb-show-main.sb-main-centered #storybook-root {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+.kozmos-story-surface {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 100vh;
+  padding: clamp(12px, 3vw, 32px);
+  color: var(--primitives-colors-foreground-0);
+  background: var(--primitives-colors-background-0);
+}
+.kozmos-story-surface[data-layout="centered"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.kozmos-story-surface[data-layout="fullscreen"] {
+  padding: 0;
+}
+.kozmos-story-surface > * {
+  min-width: 0;
+  max-width: 100%;
+}
