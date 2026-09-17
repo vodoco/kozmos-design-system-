@@ -47,9 +47,11 @@ const BASELINE = { occurrences: 66, classes: 41, files: 29 };
 const FIXTURE = /\.(?:test|stories|figma)\.[jt]sx?$|[\\/]__tests__[\\/]/;
 
 // A class carrying a slash modifier, behind any variants: `bg-muted/50`,
-// `hover:ring-primary/20`, `data-[state=open]:bg-accent/10`, `w-1/2`.
+// `hover:ring-primary/20`, `data-[state=open]:bg-accent/10`, `w-1/2`. The
+// utility must contain a hyphen — every opacity and fraction utility does — so
+// an ordinary string such as "step/3" or "page/12" is never read as a class.
 const SLASH_CLASS =
-  /^!?(?:[^\s:]+:)*-?[a-z][a-z0-9-]*(?:\[[^\]\s]+\])?\/(?:\d+(?:\.\d+)?|\[[^\]\s]+\])$/;
+  /^!?(?:[^\s:]+:)*-?[a-z][a-z0-9]*-[a-z0-9-]*(?:\[[^\]\s]+\])?\/(?:\d+(?:\.\d+)?|\[[^\]\s]+\])$/;
 
 function walk(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
