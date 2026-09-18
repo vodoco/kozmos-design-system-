@@ -65,7 +65,9 @@ export const Default: Story = {
               {/* The source tag is green on a pale green field — `Tag` has no
                   `emotion` axis yet (ruled §5.9, built for `Button` only), so
                   this reads as a neutral outline instead. */}
-              <Tag variant="outline">Open</Tag>
+              <Tag variant="outline" emotion="success">
+                Open
+              </Tag>
               <Text size="sm">
                 Closes <strong className="font-medium">12:30 pm</strong>
               </Text>
@@ -99,12 +101,11 @@ export const Default: Story = {
       </Accordion>
 
       <Alert className="mt-4" variant="warning">
-        <AlertTitle>What this could not express</AlertTitle>
+        <AlertTitle>Composition note</AlertTitle>
         <AlertDescription>
-          The source&apos;s status tag is `success` green; `Tag` has no
-          `emotion` axis, so it reads neutral here. The day row itself has no
-          Kozmos part — it is composed from `Stack` and `Text`, which is the
-          finding this example exists to record.
+          The status uses Tag&apos;s success emotion. Day rows are composed from
+          Stack and Text; the example does not calculate live opening status
+          from business hours or time zones.
         </AlertDescription>
       </Alert>
     </div>

@@ -10,6 +10,7 @@ const UserLocationMarker = React.forwardRef<
   HTMLDivElement,
   UserLocationMarkerProps
 >(({ className, heading = 0, showHeading = true, ...props }, ref) => {
+  const gradientId = `kozmos-location-cone-${React.useId().replace(/:/g, "")}`;
   return (
     <div
       ref={ref}
@@ -22,8 +23,8 @@ const UserLocationMarker = React.forwardRef<
       {...props}
     >
       {/* Pulsing ring background */}
-      <div className="absolute h-10 w-10 rounded-pill bg-data-blue opacity-30 animate-pulse outline-none pointer-events-none" />
-      <div className="absolute h-14 w-14 rounded-pill bg-data-blue opacity-10 animate-ping outline-none pointer-events-none" />
+      <div className="absolute h-10 w-10 rounded-pill bg-data-blue opacity-30 animate-pulse motion-reduce:animate-none outline-none pointer-events-none" />
+      <div className="absolute h-14 w-14 rounded-pill bg-data-blue opacity-10 animate-ping motion-reduce:animate-none outline-none pointer-events-none" />
 
       {/* Heading Cone (if active) */}
       {showHeading && (
@@ -38,11 +39,11 @@ const UserLocationMarker = React.forwardRef<
           <svg viewBox="0 0 100 100" className="h-full w-full">
             <path
               d="M50 50 L85 10 A 50 50 0 0 0 15 10 Z"
-              fill="url(#coneGradient)"
+              fill={`url(#${gradientId})`}
               opacity="0.4"
             />
             <defs>
-              <radialGradient id="coneGradient" cx="50%" cy="50%" r="50%">
+              <radialGradient id={gradientId} cx="50%" cy="50%" r="50%">
                 <stop
                   offset="0%"
                   stopColor="var(--semantics-data-blue)"

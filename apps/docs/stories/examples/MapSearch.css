@@ -1,0 +1,29 @@
+/* Story-owned layout: no dependency on the library scanning app utility classes. */
+.kozmos-map-search {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  min-inline-size: 0;
+  max-inline-size: 72rem;
+  margin-inline: auto;
+}
+.kozmos-map-search .kozmos-map-search-heading h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.kozmos-map-search .kozmos-map-search-heading p {
+  color: var(--primitives-colors-foreground-400);
+}
+.kozmos-map-search .kozmos-map-search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+.kozmos-map-search .kozmos-map-search-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  align-items: start;
+  gap: 1rem;
+  min-inline-size: 0;
+}

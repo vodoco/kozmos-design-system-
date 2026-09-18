@@ -81,3 +81,22 @@ body.sb-show-main.sb-main-centered #storybook-root {
   max-width: 100cqi;
   overflow-wrap: anywhere;
 }
+.kozmos-docs-properties {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+.kozmos-docs-properties:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.sbdocs-content :not(pre) > code {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.sbdocs-content h1,
+.sbdocs-content h2,
+.sbdocs-content h3 {
+  overflow-wrap: anywhere;
+}

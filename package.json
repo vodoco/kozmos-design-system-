@@ -26,6 +26,7 @@
     "test:temporal-css": "node scripts/check-temporal-css.mjs",
     "test:storybook-regressions": "node scripts/check-storybook-regressions.mjs",
     "test:storybook-docs": "node scripts/check-storybook-docs.mjs",
+    "test:storybook-audit-fixes": "node scripts/check-storybook-audit-fixes.mjs",
     "test:storybook-vue-smoke": "node scripts/check-storybook-vue-smoke.mjs",
     "test:storybook-audit": "node scripts/audit-storybook.mjs",
     "test:storybook-interactions": "node scripts/check-storybook-interactions.mjs",

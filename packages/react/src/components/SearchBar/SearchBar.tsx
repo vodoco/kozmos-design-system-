@@ -60,7 +60,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
         <input
           ref={ref}
           className={cn(
-            "flex-1 bg-transparent border-none outline-none text-base placeholder:text-muted-foreground",
+            "min-w-0 flex-1 bg-transparent border-none outline-none text-base placeholder:text-muted-foreground",
             className,
           )}
           aria-label={ariaLabel ?? placeholder}

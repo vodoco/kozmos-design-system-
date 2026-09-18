@@ -21,7 +21,7 @@ export const Default: Story = {
   args: {
     title: "Starbucks Coffee",
     subtitle: "Floor 1 • Terminal A",
-    className: "w-[380px]",
+    className: "w-[380px] max-w-full",
     description:
       "Cozy Seattle-based coffeehouse chain known for its signature roasts, light bites, and free WiFi availability.",
     badges: (
@@ -56,15 +56,24 @@ export const WithHeroImage: Story = {
 
 export const InsideMapOverlay: Story = {
   render: (args) => (
-    <div className="relative w-full min-w-0 md:min-w-[800px] h-[500px] bg-muted rounded-panel overflow-hidden border">
+    <div
+      className="relative w-full min-w-0 h-[500px] bg-muted rounded-panel overflow-hidden border"
+      style={{ width: 800, maxWidth: "100%" }}
+    >
       <span className="absolute inset-0 flex items-center justify-center text-muted-foreground font-mono">
         Simulated Map Environment
       </span>
-      <MapOverlay position="bottom-left">
-        <POICard {...args} />
-      </MapOverlay>
-      <MapOverlay position="top-right">
-        <POICard {...args} title="Secondary Overlay" className="w-[300px]" />
+      <MapOverlay
+        position="top-left"
+        width="md"
+        style={{ maxHeight: "calc(100% - 2rem)" }}
+      >
+        <POICard {...args} className="w-full shrink-0" />
+        <POICard
+          {...args}
+          title="Secondary result"
+          className="w-full shrink-0"
+        />
       </MapOverlay>
     </div>
   ),

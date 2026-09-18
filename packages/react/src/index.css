@@ -5,6 +5,7 @@
 @import "./styles/owned-native-fields.css";
 @import "./styles/owned-temporal-fields.css";
 @import "./styles/owned-selection.css";
+@import "./styles/owned-navbar.css";
 
 @tailwind base;
 @tailwind components;

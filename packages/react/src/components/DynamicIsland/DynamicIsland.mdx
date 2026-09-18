@@ -1,31 +1,40 @@
-import { Meta, Story } from '@storybook/blocks';
+import { Meta, Canvas } from "@storybook/blocks";
+import * as DynamicIslandStories from "./DynamicIsland.stories";
 
-<Meta title="Components/DynamicIsland" />
+<Meta of={DynamicIslandStories} />
 
 # Dynamic Island
 
-The `DynamicIsland` component is primarily intended to be mapped into an iOS `ActivityKit` Swift execution for native applications. The React fallback provided mirrors this physical layout and animation timeline specifically for progressive web applications running in pseudo-fullscreen modes.
+This React component is a visual activity capsule. It does not integrate with
+ActivityKit, read device status, or start location services. The examples contain
+simulated navigation content; native system integration is a separate concern.
+
+<Canvas of={DynamicIslandStories.Minimal} />
 
 ## React Validation
 
 ```tsx
-import { DynamicIsland } from '@kozmos/react';
-import { ArrowRight, Navigation } from 'lucide-react';
+import { DynamicIsland } from "@kozmos/react";
+import { ArrowRight, Navigation } from "lucide-react";
 
 <DynamicIsland
-    islandState="expanded"
-    compactLeading={<Navigation className="w-4 h-4 text-green-400" />}
-    compactTrailing={<span className="text-sm font-semibold">1.2m</span>}
-    expandedContent={
-        <div className="flex flex-col gap-2 p-2">
-            <span className="text-xs text-green-400 font-bold uppercase">In 300ft</span>
-            <div className="flex items-center gap-4">
-                <ArrowRight className="w-8 h-8 text-white" />
-                <span className="text-xl font-medium tracking-tight">Turn Right on Main St</span>
-            </div>
-        </div>
-    }
-/>
+  islandState="expanded"
+  compactLeading={<Navigation className="w-4 h-4 text-green-400" />}
+  compactTrailing={<span className="text-sm font-semibold">1.2m</span>}
+  expandedContent={
+    <div className="flex flex-col gap-2 p-2">
+      <span className="text-xs text-green-400 font-bold uppercase">
+        In 300ft
+      </span>
+      <div className="flex items-center gap-4">
+        <ArrowRight className="w-8 h-8 text-white" />
+        <span className="text-xl font-medium tracking-tight">
+          Turn Right on Main St
+        </span>
+      </div>
+    </div>
+  }
+/>;
 ```
 
 ## Native Apple SwiftUI

@@ -1,8 +1,11 @@
-import { Meta, Story } from '@storybook/blocks';
+import { Meta, Canvas } from '@storybook/blocks';
+import * as RouteSummaryStories from './RouteSummary.stories';
 
-<Meta title="Components/RouteSummary" />
+<Meta of={RouteSummaryStories} />
 
 # Route Summary
+
+<Canvas of={RouteSummaryStories.Active} />
 
 The `RouteSummary` serves as the primary bottom-anchored modal sheet during active turn-by-turn Wayfinding sessions. It safely structures ETAs, unit distances, and core routing logic into a distinct hardware-independent layer.
 

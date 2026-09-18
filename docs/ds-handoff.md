@@ -7,6 +7,19 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**Responsive/Docs recheck, 2026-09-18:** read
+`production-readiness-recheck-2026-09-18.md` first, then
+`public-catalogue-guide-2026-09-18.md`. This supersedes older preview/test counts
+below. The public catalogue no longer depends on the private Vue harness; code
+tabs are styled and support limitations explicit. The recheck repairs narrow
+Navbar action loss, the blank MapSearch example, POI overlap, Docs overflow/live
+preview gaps, marker IDs/reduced motion, and the audit gate's async coverage gap.
+Navbar now grows beyond its 64px minimum instead of hiding essential actions.
+React has 436 passing tests; all 99 Docs pages fit 320/1280px and all 164 snippet
+section/viewport checks are required. Publishing remains blocked on the explicit
+manual, product, platform and release gates in the new report. Shared main stays
+untouched; no push/merge/npm publication is part of this work.
+
 **npm foundations continuation, 2026-09-18:** read `npm-foundations-2026-09-18.md`
 first. The three package declaration-format problems are resolved (`44712b0`); the tarball
 gate now enforces zero and checks strict ESM/CJS Node consumers on React 18/19.

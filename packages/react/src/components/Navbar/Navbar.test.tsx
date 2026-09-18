@@ -3,6 +3,19 @@ import { Navbar } from "./Navbar";
 import { describe, it, expect } from "vitest";
 
 describe("Navbar", () => {
+  it("names the navigation landmark and keeps stateful slots mounted once", () => {
+    render(
+      <Navbar
+        navigationLabel="Workspace navigation"
+        navigation={<a href="/settings">Settings</a>}
+        primaryAction={<button>Publish</button>}
+      />,
+    );
+    expect(
+      screen.getByRole("navigation", { name: "Workspace navigation" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Publish" })).toHaveLength(1);
+  });
   it("renders logo and content", () => {
     render(
       <Navbar logo={<span>Logo</span>}>

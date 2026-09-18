@@ -75,3 +75,14 @@ export const Contextual: Story = {
     />
   ),
 };
+
+export const NarrowContainer: Story = {
+  ...Contextual,
+  decorators: [
+    (Story) => (
+      <div style={{ width: 280, maxWidth: "100%" }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
