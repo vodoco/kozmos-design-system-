@@ -62,7 +62,7 @@ try {
     // Tailwind compiler. State-specific overrides follow normal CSS specificity.
     await page.addStyleTag({
       content:
-        ".consumer-control {border-radius:7px;padding-left:19px;background:rgb(10,20,30)}",
+        ".consumer-control {border-radius:7px;padding-left:19px;background:rgb(10,20,30)} .consumer-heading {font-size:48px;font-weight:700;margin:9px} .consumer-copy {font-size:11.5px;color:rgb(10,20,30)}",
     });
     await page.addScriptTag({ content: code });
     await page.getByTestId("outer-input").waitFor();
@@ -78,6 +78,35 @@ try {
         return result;
       }, token);
     for (const id of ["outer", "nested"]) {
+      assert.equal(
+        (await measure(page.getByTestId(`${id}-host-heading`))).fontSize,
+        "48px",
+        "Preflight must not override a product heading class",
+      );
+      assert.equal(
+        (await measure(page.getByTestId(`${id}-heading`))).fontSize,
+        "30px",
+      );
+      assert.equal(
+        (await measure(page.getByTestId(`${id}-heading`))).fontWeight,
+        "700",
+      );
+      assert.equal(
+        (await measure(page.getByTestId(`${id}-text`))).fontSize,
+        "14px",
+      );
+      assert.equal(
+        (await measure(page.getByTestId(`${id}-text`))).fontWeight,
+        "600",
+      );
+      assert.equal(
+        (await measure(page.getByTestId(`${id}-host-copy`))).fontSize,
+        "11.5px",
+      );
+      assert.equal(
+        (await measure(page.getByTestId(`${id}-host-copy`))).color,
+        "rgb(10, 20, 30)",
+      );
       const listbox = page.getByTestId(`${id}-listbox`);
       await listbox.focus();
       await page.keyboard.press("End");

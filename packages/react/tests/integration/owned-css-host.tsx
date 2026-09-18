@@ -16,11 +16,25 @@ import {
   NumberInput,
   MapControlButton,
   Listbox,
+  Text,
+  Heading,
 } from "@kozmos/react";
 
 function Controls({ id }: { id: string }) {
   return (
     <section data-testid={id} style={{ width: 300 }}>
+      <h1 className="consumer-heading" data-testid={`${id}-host-heading`}>
+        Host heading
+      </h1>
+      <Heading level={2} data-testid={`${id}-heading`}>
+        Library heading
+      </Heading>
+      <Text size="sm" weight="semibold" data-testid={`${id}-text`}>
+        Library text
+      </Text>
+      <Text className="consumer-copy" data-testid={`${id}-host-copy`}>
+        Product copy
+      </Text>
       <Listbox
         aria-label={`${id} long list`}
         data-testid={`${id}-listbox`}

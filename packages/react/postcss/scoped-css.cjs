@@ -68,6 +68,10 @@ module.exports = () => ({
           const pseudo = selector.indexOf("::");
           const at = pseudo < 0 ? selector.length : pseudo;
           selector = `${selector.slice(0, at)}:not(:where(.kozmos-reset))${selector.slice(at)}`;
+          // A reset is a fallback, not a component style. Giving preflight
+          // :scope specificity made it override product heading/spacing classes.
+          // Keep its boundary and exclusions, but contribute zero specificity.
+          if (!compilerDefaults) return `:where(:scope ${selector})`;
         }
         return `:scope ${selector}`;
       });

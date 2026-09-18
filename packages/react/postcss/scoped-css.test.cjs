@@ -96,4 +96,8 @@ test("legacy preflight excludes owned targets, including pseudo-elements, but ut
   assert.match(result, /input:not\(:where\(\.kozmos-reset\)\)/);
   assert.match(result, /textarea:not\(:where\(\.kozmos-reset\)\)::placeholder/);
   assert.match(result, /:scope \.p-4 \{padding:1rem\}/);
+  assert.match(
+    result,
+    /:where\(:scope input:not\(:where\(\.kozmos-reset\)\)\)/,
+  );
 });
