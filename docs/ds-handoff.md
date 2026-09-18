@@ -14,6 +14,9 @@ Token opacity now compiles (zero inert slash-class uses), and DatePicker,
 DateRangePicker and TimePicker are complete owned-CSS compositions. React has
 430 passing tests across 111 files; the 944-case story scan and 336 cross-engine
 interaction audits pass. The unchanged 48-case manual-review queue is not a pass.
+The CSS batches are `3d577e5` and `767b3be`; the latter fixes a legacy initializer
+overwriting owned transforms, caught by final visual inspection. The independent
+6006 preview runs `767b3be`. The current guide includes restart/build precautions.
 This supersedes older statements that those three problems remain. CSS migration
 and manual/product acceptance are still release work; nothing published or pushed.
 

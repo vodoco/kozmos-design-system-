@@ -7,7 +7,7 @@ the independently running 6006 preview are not implementation directories.
 Local commits only; no push, merge, publication or new browser-support promise.
 
 Implementation commits: `44712b0` (package declarations), `3d577e5` (token opacity,
-Chip contrast and owned temporal compositions).
+Chip contrast and owned temporal compositions), `767b3be` (compiler-default isolation).
 
 ## Package declarations: resolved
 
@@ -167,12 +167,54 @@ as `storybook-manual-review-2026-09-18.md`, not 48 additional failures and not
 automated passes. Transparency/overlays still need contextual human review.
 The ignored machine report is `test-results/storybook-foundations-final.json`.
 
+### Preview and independent checkout
+
+The separate preview checkout is `/private/tmp/kozmos-owned-css-verify.dV1etM`,
+at implementation `767b3be`; shared main is still clean at `a02a008`. It rebuilt
+the four publishable packages with a frozen install and the final React/Storybook
+follow-up. Its React ESM/CSS match the implementation artifacts byte-for-byte.
+The nine compiler/six emitter tests and zero-inert-class gate pass there too.
+The final checkout repeated all 430 unit tests, the full 944-case story scan,
+336 cross-engine interaction audits, all three engines' token-alpha/temporal/owned
+CSS suites, React 18/19 installed-tarball checks, lint and docs typecheck. Original
+form-compatibility, adaptive-layout, overlay, theme-isolation and runtime-config
+suites also passed in all three engines after the compiler-boundary repair. The live
+6006 preview passed the five-story strict accessibility smoke and 36 screenshot-derived
+interaction/layout regression scenarios; 320px date-range and landscape Chip views were visually
+inspected. The final broad report retains the same 48 incomplete cases described
+above. The disposable static audit server on 6008 was stopped afterward.
+
+Storybook runs on **http://127.0.0.1:6006/** from that checkout, bound to loopback.
+If it has stopped, start it from that directory with:
+
+```sh
+pnpm --filter @kozmos/docs storybook:react --ci --host 127.0.0.1
+```
+
+Do **not** insert another `--` before `--ci`: pnpm forwards it to Storybook,
+preventing the following flags from being parsed. CI's launch command now uses
+the same verified form. Check `lsof -nP -iTCP:6006 -sTCP:LISTEN` and the process's
+working directory before stopping/replacing any preview. Never rebuild this
+checkout while its preview or built-package tests are running. Edit and commit in
+the implementation checkout, stop this preview, advance this clean detached
+checkout to the intended commit, rebuild, then restart.
+
 ## Release status
 
 This closes the declaration and inert-class blockers, not the whole release. CSS migration, the
 manual-review queue, physical-device/browser-floor acceptance, Figma/visual approval
 and a real packaged Pointr-module integration remain. Read the overnight guide and
 `storybook-manual-review-2026-09-18.md` for the earlier verified baseline and limits.
+
+The raw-value backlog is unchanged: 32 colour occurrences across seven components/
+recipes and seven radius occurrences across six components. Passing the ratchet
+means no increase, not zero debt. Glass-panel semantic roles remain a foundational
+follow-up. Build tooling also still reports the existing API Extractor/TypeScript
+version gap, Storybook package/addon compatibility warnings, stale Browserslist data
+and large documentation chunks. These were not silently resolved or waived here;
+handle dependency alignment separately and rerun the gates. Installed local browser
+engines and automated accessibility checks are not remote CI, physical devices,
+screen-reader testing or visual approval.
 
 Next recommended implementation: finish the selection-field family (Combobox,
 MultiSelect, Select and Listbox), including their portalled content and keyboard
