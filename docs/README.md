@@ -6,7 +6,9 @@ these files honest are listed in its §7.
 
 ## Start here
 
-Latest local continuation: [Overnight quality pass — 2026-09-18](overnight-quality-pass-2026-09-18.md).
+Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
+It closes declaration-format and inert-opacity debt and migrates the temporal fields.
+Earlier baseline: [Overnight quality pass — 2026-09-18](overnight-quality-pass-2026-09-18.md).
 Read it before the older measured-state sections: it records repairs, reproducible
 checks, source locations, preview ownership and remaining pre-publication gates.
 

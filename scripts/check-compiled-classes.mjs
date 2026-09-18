@@ -49,8 +49,8 @@ const fail = (m) => {
 // they are fixed.
 // Three inert references were removed by the owned-CSS migration (not
 // activated/fixed visually): Button secondary/ghost and Textarea placeholder.
-// RoutePreviewPanel's invisible warning now uses the existing filled emotion pair.
-const BASELINE = { occurrences: 58, classes: 38, files: 25 };
+// Token-alpha colour callbacks close the remaining 58/38/25 baseline. Keep zero.
+const BASELINE = { occurrences: 0, classes: 0, files: 0 };
 
 const FIXTURE = /\.(?:test|stories|figma)\.[jt]sx?$|[\\/]__tests__[\\/]/;
 
@@ -222,11 +222,8 @@ if (worse) {
   );
 }
 
-console.log(
-  `
-  Most of these are a colour role with an opacity modifier. The roles in
-  tailwind.config.js are plain var() colours, which Tailwind cannot take apart,
-  so the fix is in how the roles are declared rather than in each component.`,
+if (current.occurrences > 0) console.log(
+  "  Check token-alpha.cjs and the authoring contract before adding per-component workarounds.",
 );
 
 console.log(

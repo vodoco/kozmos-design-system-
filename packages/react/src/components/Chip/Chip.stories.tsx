@@ -78,6 +78,9 @@ export const Variants: Story = {
       <Chip variant="brand">Brand</Chip>
       <Chip variant="destructive">Destructive</Chip>
       <Chip selected>Selected</Chip>
+      <Chip variant="destructive" selected>
+        Selected destructive
+      </Chip>
       <Chip disabled>Disabled</Chip>
     </ChipGroup>
   ),

@@ -179,6 +179,16 @@ try {
           );
         }
         if (viewport.width === 1280) {
+          await visit("data-display-chip--variants");
+          const chips = page.locator(
+            '[data-slot="chip"]:not([aria-disabled="true"])',
+          );
+          assert.equal(await chips.count(), 5);
+          for (const chip of await chips.all()) {
+            await chip.hover();
+            await audit();
+          }
+          console.log(`PASS all five enabled Chip hover treatments ${theme}`);
           await visit("components-button--emotions");
           const buttons = page.getByRole("button");
           assert.equal(await buttons.count(), 18);

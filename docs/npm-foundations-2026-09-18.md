@@ -57,9 +57,106 @@ Build config: `packages/{react,icons,product-contracts}/vite.config.mts`; export
 their `package.json`; format emission: `scripts/emit-format-declarations.mjs`;
 consumer type assertions: `packages/react/tests/types/package-modes.ts`.
 
+## Token opacity: the shared authoring defect is resolved
+
+`postcss/token-alpha.cjs` wraps Tailwind's token-colour mappings in colour callbacks.
+Unmodified roles keep their original `var()` values. Slash opacity uses
+`color-mix(in srgb, var(--role) calc(alpha * 100%), transparent)`, retaining live
+theme values and consumer overrides, including alpha already present in an RGBA
+token. This applies opacity to the colour, not to children or the whole control.
+Legacy separate `bg-opacity-*` utilities were not supported by the old token mapping
+and are not the new authoring contract; use `/alpha`.
+
+The compiler regression failed before the fix. All **110 scanned slash-modified
+class uses now compile** (116 before temporal layout utilities moved into recipes);
+the inert-use ratchet drops from **58 uses / 38 classes /
+25 files to zero**. This is a build-level repair, not 58 per-component overrides.
+The rule scanner still guards future regressions. Colour aliases/contrast checks
+evaluate the callbacks' unmodified result rather than disabling alias checks.
+
+Activating the old styles exposed a real destructive-Chip contrast failure at
+4.41:1 idle / 4.07:1 hover. Its ink now uses the existing danger `onSurface` role
+on the tinted surface; no new token, raw colour or borrowed Button token was added.
+The Chip story now includes selected destructive state and the interaction matrix
+checks all five enabled variants on hover in both themes.
+
+`test:token-alpha` renders 24 colour comparisons per browser using the built package:
+base/background/text/border, light/dark, nested providers, RGBA/hex overrides and an
+owned portal. Chromium, Firefox and WebKit pass. `test:css-build` includes actual
+Tailwind compilation tests. CI runs both. Existing owned-CSS/no-scope tests still
+pass in all three engines.
+
+The alpha treatment requires CSS `color-mix`; no old-browser fallback is pretended.
+Unmodified colours do not acquire that dependency. Confirm this feature against
+Pointr's agreed browser matrix before publishing; installed-engine checks do not
+invent a product support floor. See [MDN's colour-mix reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/color_value/color-mix).
+The remaining native `@scope` dependency elsewhere is separate, unresolved work.
+
+## Date / DateRange / Time: complete owned-CSS composition
+
+These three components now use `src/styles/owned-temporal-fields.css` for every
+supporting layout, label, native input and decorative icon. Their base input and
+FieldWrapper recipes were already owned. Native picker behavior is retained.
+
+- Logical icon placement/reserved input padding follows the provider direction.
+  The initial browser regression measured the icon 392px from the required edge.
+- DateRange columns depend on available container width, not viewport width: a
+  420px module has two columns and a 220px module stacks even on a desktop viewport.
+- WebKit's native date segments can hold keyboard focus while not matching
+  `:focus-visible`. These native fields deliberately expose the same focus ring
+  on `:focus` in every engine, preserving validation-ring colours.
+- DatePicker and TimePicker merge external guidance with owned helper/error IDs;
+  a caller cannot conceal an explicit component error with `aria-invalid=false`.
+- DateRange constrains the sibling bound **and** caller min/max, rather than
+  letting an already-out-of-range value relax the caller's constraint.
+
+Five new unit regressions failed first and pass after repair. `test:temporal-css`
+uses built public exports and compares full CSS with all native scopes removed,
+in all three engines. It covers geometry, host SVG resets, nested themes/directions,
+focus, disabled/read-only states and narrow-container reflow. CI runs this suite.
+This is three completed compositions, not completion of every component's CSS.
+
+### Run the added browser checks
+
+```sh
+pnpm test:css-build
+for browser in chromium firefox webkit; do
+  ADAPTIVE_BROWSER="$browser" pnpm test:token-alpha || exit 1
+  ADAPTIVE_BROWSER="$browser" pnpm test:temporal-css || exit 1
+  ADAPTIVE_BROWSER="$browser" pnpm test:owned-css || exit 1
+done
+pnpm components:classes:check
+pnpm tokens:contrast:check
+```
+
+The public package fixture sources are in `packages/react/tests/integration/`;
+assertions are in `scripts/check-{token-alpha,temporal-css}.mjs`. Build first and
+do not rebuild `dist` while any browser suite is reading it.
+
+## Verification of this batch
+
+- React: 430 tests in 111 files; five new temporal regressions.
+- Build tests: eight CSS compiler tests and six declaration-emitter tests.
+- Production Storybook: 944 initial-state cases across all 236 stories / 102 groups,
+  light/dark and 320/1280 widths, with zero violations, runtime errors or unintended
+  overflow reported by the Chromium audit.
+- Interaction matrix: 112 accessibility audits per engine, 336 across Chromium
+  145.0.7632.6, Firefox 146.0.1 and WebKit 26.0, plus layout/keyboard assertions.
+- Built-package token-alpha, temporal and existing owned-CSS suites pass in all
+  three engines; temporal/owned suites also run with native scopes removed.
+- React lint, docs typecheck, 324 documentation snippets, 194 token-contrast pairs,
+  component contracts, border parity and zero-inert-class checks pass.
+- The installed-tarball gate passes with zero declaration-format problems.
+
+The broad audit still returns **48 incomplete cases in 15 stories / 62 nodes**:
+38 contrast, 16 ARIA-value and eight hidden-focus nodes. These are the same entries
+as `storybook-manual-review-2026-09-18.md`, not 48 additional failures and not
+automated passes. Transparency/overlays still need contextual human review.
+The ignored machine report is `test-results/storybook-foundations-final.json`.
+
 ## Release status
 
-This closes the declaration blocker, not the whole release. CSS migration, the
+This closes the declaration and inert-class blockers, not the whole release. CSS migration, the
 manual-review queue, physical-device/browser-floor acceptance, Figma/visual approval
 and a real packaged Pointr-module integration remain. Read the overnight guide and
 `storybook-manual-review-2026-09-18.md` for the earlier verified baseline and limits.

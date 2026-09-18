@@ -3,6 +3,7 @@
 @import "@kozmos/tokens/css/dark.css";
 @import "./styles/owned-components.css";
 @import "./styles/owned-native-fields.css";
+@import "./styles/owned-temporal-fields.css";
 @import "./styles/owned-selection.css";
 
 @tailwind base;

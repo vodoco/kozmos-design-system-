@@ -1,6 +1,6 @@
 import React from "react";
 import { Calendar, CalendarRange } from "lucide-react";
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 import { FieldWrapper } from "../FieldWrapper";
 import { inputVariants, type InputStatus } from "../Input/Input";
@@ -88,6 +88,8 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       required,
       status = "default",
       wrapperClassName,
+      "aria-describedby": ariaDescribedBy,
+      "aria-invalid": ariaInvalid,
       ...props
     },
     ref,
@@ -123,20 +125,20 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
         required={required}
         status={resolvedStatus}
       >
-        <div className="relative">
+        <div className="kozmos-reset kozmos-temporal-field">
           <Calendar
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            className="kozmos-reset kozmos-temporal-icon"
           />
           <input
             ref={ref}
             id={inputId}
             type="date"
-            aria-describedby={describedBy || undefined}
-            aria-invalid={resolvedStatus === "error" || undefined}
+            aria-describedby={mergeAriaIds(ariaDescribedBy, describedBy)}
+            aria-invalid={resolvedStatus === "error" ? true : ariaInvalid}
             className={cn(
               inputVariants({ status: resolvedStatus }),
-              "block w-full pl-9",
+              "kozmos-temporal-input",
               className,
             )}
             disabled={disabled}
@@ -246,15 +248,18 @@ const DateRangePicker = React.forwardRef<HTMLDivElement, DateRangePickerProps>(
         <div
           ref={ref}
           id={fieldId}
-          className={cn("grid gap-3 sm:grid-cols-2", className)}
+          className={cn("kozmos-reset kozmos-date-range", className)}
           {...props}
         >
-          <label className="grid gap-1.5 text-sm font-medium" htmlFor={startId}>
-            <span>{startLabel}</span>
-            <div className="relative">
+          <label
+            className="kozmos-reset kozmos-date-range-label"
+            htmlFor={startId}
+          >
+            <span className="kozmos-reset">{startLabel}</span>
+            <div className="kozmos-reset kozmos-temporal-field">
               <CalendarRange
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                className="kozmos-reset kozmos-temporal-icon"
               />
               <input
                 id={startId}
@@ -263,10 +268,16 @@ const DateRangePicker = React.forwardRef<HTMLDivElement, DateRangePickerProps>(
                 aria-invalid={resolvedStatus === "error" || undefined}
                 className={cn(
                   inputVariants({ status: resolvedStatus }),
-                  "pl-9",
+                  "kozmos-temporal-input",
                 )}
                 disabled={disabled}
-                max={range.end || max}
+                max={
+                  range.end && max
+                    ? range.end < max
+                      ? range.end
+                      : max
+                    : range.end || max
+                }
                 min={min}
                 name={startName}
                 placeholder={startPlaceholder}
@@ -280,12 +291,15 @@ const DateRangePicker = React.forwardRef<HTMLDivElement, DateRangePickerProps>(
               />
             </div>
           </label>
-          <label className="grid gap-1.5 text-sm font-medium" htmlFor={endId}>
-            <span>{endLabel}</span>
-            <div className="relative">
+          <label
+            className="kozmos-reset kozmos-date-range-label"
+            htmlFor={endId}
+          >
+            <span className="kozmos-reset">{endLabel}</span>
+            <div className="kozmos-reset kozmos-temporal-field">
               <CalendarRange
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                className="kozmos-reset kozmos-temporal-icon"
               />
               <input
                 id={endId}
@@ -294,11 +308,17 @@ const DateRangePicker = React.forwardRef<HTMLDivElement, DateRangePickerProps>(
                 aria-invalid={resolvedStatus === "error" || undefined}
                 className={cn(
                   inputVariants({ status: resolvedStatus }),
-                  "pl-9",
+                  "kozmos-temporal-input",
                 )}
                 disabled={disabled}
                 max={max}
-                min={range.start || min}
+                min={
+                  range.start && min
+                    ? range.start > min
+                      ? range.start
+                      : min
+                    : range.start || min
+                }
                 name={endName}
                 placeholder={endPlaceholder}
                 readOnly={readOnly}

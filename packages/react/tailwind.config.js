@@ -1,6 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const plugin = require("tailwindcss/plugin");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { withTokenAlpha } = require("./postcss/token-alpha.cjs");
 
 module.exports = {
   // Keep utility overrides available during migration, including utilities
@@ -12,7 +14,7 @@ module.exports = {
   ],
   theme: {
     extend: {
-      colors: {
+      colors: withTokenAlpha({
         // Primitive / Brand Colors
         brand: {
           500: "var(--primitives-colors-theme-500)",
@@ -89,7 +91,7 @@ module.exports = {
         border: "var(--semantics-border-subtle)",
         input: "var(--semantics-border-input)",
         ring: "var(--primitives-colors-theme-600)",
-      },
+      }),
       borderRadius: {
         sm: "var(--primitives-radius-sm)",
         md: "var(--primitives-radius-md)", // Alias for Base in new system, or strictly md

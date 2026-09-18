@@ -140,6 +140,9 @@ jobs:
         run: |
           pnpm test:browser-selection
           pnpm test:css-build
+          pnpm test:token-alpha
+          ADAPTIVE_BROWSER=firefox pnpm test:token-alpha
+          ADAPTIVE_BROWSER=webkit pnpm test:token-alpha
 
       - name: Verify Built Adaptive Layout Geometry
         run: |
@@ -176,6 +179,7 @@ jobs:
           for browser in chromium firefox webkit; do
             ADAPTIVE_BROWSER="$browser" pnpm test:browser-compatibility || result=1
             ADAPTIVE_BROWSER="$browser" pnpm test:owned-css || result=1
+            ADAPTIVE_BROWSER="$browser" pnpm test:temporal-css || result=1
           done
           exit "$result"
 

@@ -105,7 +105,10 @@ function getPath(value, segments) {
 for (const alias of contract.runtimeAliases ?? []) {
   const absolutePath = path.join(root, alias.file);
   const config = require(absolutePath);
-  const actual = getPath(config, alias.path);
+  const configured = getPath(config, alias.path);
+  // Tailwind token colours now accept /alpha through a colour callback. The
+  // unmodified role must still resolve to exactly the canonical alias.
+  const actual = typeof configured === "function" ? configured({}) : configured;
   checked += 1;
 
   if (actual !== alias.value) {

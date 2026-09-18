@@ -8,8 +8,12 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 ## 0 · Start here
 
 **npm foundations continuation, 2026-09-18:** read `npm-foundations-2026-09-18.md`
-first. The three package declaration-format problems are resolved; the tarball
+first. The three package declaration-format problems are resolved (`44712b0`); the tarball
 gate now enforces zero and checks strict ESM/CJS Node consumers on React 18/19.
+Token opacity now compiles (zero inert slash-class uses), and DatePicker,
+DateRangePicker and TimePicker are complete owned-CSS compositions. React has
+430 passing tests across 111 files; the 944-case story scan and 336 cross-engine
+interaction audits pass. The unchanged 48-case manual-review queue is not a pass.
 This supersedes older statements that those three problems remain. CSS migration
 and manual/product acceptance are still release work; nothing published or pushed.
 
