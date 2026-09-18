@@ -7,6 +7,12 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**npm foundations continuation, 2026-09-18:** read `npm-foundations-2026-09-18.md`
+first. The three package declaration-format problems are resolved; the tarball
+gate now enforces zero and checks strict ESM/CJS Node consumers on React 18/19.
+This supersedes older statements that those three problems remain. CSS migration
+and manual/product acceptance are still release work; nothing published or pushed.
+
 **Overnight quality pass, 2026-09-18:** read
 `overnight-quality-pass-2026-09-18.md` first. Olcay asked for another extensive pass
 and local commits while away. Select's previously exposed modal accessibility

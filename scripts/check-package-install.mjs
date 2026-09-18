@@ -53,19 +53,10 @@ const FORBIDDEN = [
 const ALLOWED =
   /^package\/(package\.json|README\.md|LICENSE)$|\.(d\.ts|d\.mts|d\.cts|mjs|cjs|js|map|css|swift|kt|xml)$/;
 
-// Type-resolution problems @arethetypeswrong/cli reports today, kept as a
-// ratchet: a new one fails, and so does one that goes away, so a fix is locked
-// in by deleting its line. The two FalseCJS entries need declarations emitted
-// as ES modules with explicit relative extensions, which is a change to how
-// those packages build. product-contracts is types only, so it has no runtime
-// entry for a CommonJS require to break. @kozmos/tokens had FalseCJS too, from
-// the exports map this check arrived with, and was fixed before it merged.
+// All package declarations now match their ESM/CJS runtime format. Keep this
+// zero baseline: any new resolver problem fails publication checks.
 const ATTW = "@arethetypeswrong/cli@0.18.5";
-const KNOWN_TYPE_PROBLEMS = new Set([
-  "@kozmos/icons FalseCJS",
-  "@kozmos/product-contracts CJSResolvesToESM",
-  "@kozmos/react FalseCJS",
-]);
+const KNOWN_TYPE_PROBLEMS = new Set();
 
 // Every React major the packages' peer ranges accept.
 const REACT_MAJORS = [18, 19];
@@ -358,7 +349,8 @@ if (typeof import.meta.resolve !== "function") {
 
 for (const name of ${JSON.stringify(requirable)}) {
   try {
-    results.push([Object.keys(require(name)).length > 0, "require(" + name + ") returns its exports"]);
+    const exports = require(name);
+    results.push([name === "@kozmos/product-contracts" ? Object.keys(exports).length === 0 : Object.keys(exports).length > 0, "require(" + name + ") returns its exports (contracts intentionally has no runtime API)"]);
   } catch (error) {
     results.push([false, "require(" + name + ") — " + error.message]);
   }
@@ -448,6 +440,46 @@ for (const major of REACT_MAJORS) {
   }
 
   const readmeDir = path.join(app, "readme");
+  const modesDir = path.join(app, "module-modes");
+  fs.mkdirSync(modesDir);
+  const modesFixture = fs.readFileSync(
+    path.join(PACKAGES, "react/tests/types/package-modes.ts"),
+    "utf8",
+  );
+  for (const extension of ["mts", "cts"]) {
+    fs.writeFileSync(
+      path.join(modesDir, `consumer.${extension}`),
+      modesFixture,
+    );
+  }
+  for (const moduleMode of ["node16", "nodenext"]) {
+    try {
+      run(
+        path.join(app, "node_modules/.bin/tsc"),
+        [
+          "--noEmit",
+          "--strict",
+          "--esModuleInterop",
+          "--target",
+          "es2022",
+          "--module",
+          moduleMode,
+          "--moduleResolution",
+          moduleMode,
+          "module-modes/consumer.mts",
+          "module-modes/consumer.cts",
+        ],
+        app,
+      );
+      ok(
+        `React ${major}: strict ${moduleMode} ESM and CJS consumers (library checking enabled)`,
+      );
+    } catch (error) {
+      fail(
+        `React ${major}: ${moduleMode} declarations fail:\n${String(error.stdout || error.stderr || error).trim()}`,
+      );
+    }
+  }
   fs.mkdirSync(readmeDir);
   for (const { file, body } of samples) {
     // Every sample is its own module, as it would be in an app.

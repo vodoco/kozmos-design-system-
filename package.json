@@ -26,6 +26,7 @@
     "test:storybook-audit": "node scripts/audit-storybook.mjs",
     "test:storybook-interactions": "node scripts/check-storybook-interactions.mjs",
     "test:css-build": "node --test packages/react/postcss/scoped-css.test.cjs",
+    "test:declarations": "node --test scripts/emit-format-declarations.test.mjs",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "typecheck": "turbo run typecheck",
