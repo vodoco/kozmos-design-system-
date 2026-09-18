@@ -47,6 +47,8 @@ try {
             iconHeight: iconRect.height,
             left: iconRect.left - r.left,
             right: r.right - iconRect.right,
+            centerOffset:
+              iconRect.top + iconRect.height / 2 - (r.top + r.height / 2),
           };
         }, rtl);
         assert.equal(styles.height, 44, `${mode}/${id}/${label} height`);
@@ -62,6 +64,11 @@ try {
           "owned icon width overrides host SVG reset",
         );
         assert.equal(styles.iconHeight, 16);
+        assert.equal(
+          styles.centerOffset,
+          0,
+          `${mode}/${id}/${label} vertical icon center`,
+        );
         assert.equal(
           rtl ? styles.right : styles.left,
           12,

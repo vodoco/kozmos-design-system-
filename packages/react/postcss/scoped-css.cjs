@@ -50,6 +50,11 @@ module.exports = () => ({
     root.walkRules((rule) => {
       if (rule.parent.type === "atrule" && /keyframes$/.test(rule.parent.name))
         return;
+      // Tailwind's compiler-variable initializer is not tagged as base-layer
+      // preflight. Its scoped specificity/proximity would otherwise overwrite
+      // owned --tw-* values (transforms, ring widths, etc.) with defaults.
+      const compilerDefaults =
+        rule.selector.replace(/\s/g, "") === "*,::before,::after";
       rule.selectors = rule.selectors.map((selector) => {
         if (selector === ":root" || selector === "html" || selector === ":host")
           return ":scope";
@@ -57,7 +62,7 @@ module.exports = () => ({
           return ':scope[data-theme="dark"]';
         // @scope supplies the boundary; :scope supplies predictable precedence
         // over generic host reset/utility rules without using !important.
-        if (rule.raws.tailwind?.layer === "base") {
+        if (rule.raws.tailwind?.layer === "base" || compilerDefaults) {
           // The legacy preflight must not reset a migrated component. Keep
           // utilities active so existing consumer overrides still work.
           const pseudo = selector.indexOf("::");

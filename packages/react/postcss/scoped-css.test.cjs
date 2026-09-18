@@ -65,6 +65,20 @@ test("Tailwind defaults are initialized only on owned elements outside scope", a
   assert.doesNotMatch(root.toString(), /box-sizing/);
 });
 
+test("legacy compiler defaults cannot reset owned transform and ring variables", async () => {
+  const root = await compile(
+    "*,::before,::after {--tw-translate-y:0;--tw-ring-offset-width:0px}",
+  );
+  const scope = root.nodes.find(
+    (n) => n.type === "atrule" && n.name === "scope",
+  );
+  assert.deepEqual(scope.first.selectors, [
+    ":scope *:not(:where(.kozmos-reset))",
+    ":scope :not(:where(.kozmos-reset))::before",
+    ":scope :not(:where(.kozmos-reset))::after",
+  ]);
+});
+
 test("owned CSS rejects a native scope dependency", async () => {
   await assert.rejects(
     compile("@kozmos-owned {@scope (.root) {.kozmos-input {color:red}}}"),

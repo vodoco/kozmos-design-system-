@@ -6,6 +6,9 @@ the overnight audit. Implementation: `astra/browser-compatibility` in
 the independently running 6006 preview are not implementation directories.
 Local commits only; no push, merge, publication or new browser-support promise.
 
+Implementation commits: `44712b0` (package declarations), `3d577e5` (token opacity,
+Chip contrast and owned temporal compositions).
+
 ## Package declarations: resolved
 
 React and icons previously attached a CommonJS-interpreted `.d.ts` graph to both
@@ -116,6 +119,16 @@ in all three engines. It covers geometry, host SVG resets, nested themes/directi
 focus, disabled/read-only states and narrow-container reflow. CI runs this suite.
 This is three completed compositions, not completion of every component's CSS.
 
+The final 320px visual inspection exposed an additional build-boundary defect:
+Tailwind's compiler-variable initializer is not tagged as base-layer preflight, so
+it still matched migrated elements and reset the icon translation to zero (8px
+below center). The scoper now excludes owned targets from that initializer too,
+including pseudo-elements. Local owned defaults remain, legacy components keep
+their defaults, and consumer utility overrides remain enabled. A compiler test and
+explicit vertical-center browser assertion failed against the previous build and
+pass after repair. Owned focus-ring offsets and pressed Button transforms are also
+checked in both stylesheet modes. No per-icon offset compensation was added.
+
 ### Run the added browser checks
 
 ```sh
@@ -136,7 +149,7 @@ do not rebuild `dist` while any browser suite is reading it.
 ## Verification of this batch
 
 - React: 430 tests in 111 files; five new temporal regressions.
-- Build tests: eight CSS compiler tests and six declaration-emitter tests.
+- Build tests: nine CSS compiler tests and six declaration-emitter tests.
 - Production Storybook: 944 initial-state cases across all 236 stories / 102 groups,
   light/dark and 320/1280 widths, with zero violations, runtime errors or unintended
   overflow reported by the Chromium audit.
@@ -160,3 +173,11 @@ This closes the declaration and inert-class blockers, not the whole release. CSS
 manual-review queue, physical-device/browser-floor acceptance, Figma/visual approval
 and a real packaged Pointr-module integration remain. Read the overnight guide and
 `storybook-manual-review-2026-09-18.md` for the earlier verified baseline and limits.
+
+Next recommended implementation: finish the selection-field family (Combobox,
+MultiSelect, Select and Listbox), including their portalled content and keyboard
+states, using the same complete-composition/no-scope gates. Then migrate the
+remaining overlays, collections and product compositions. Do not remove legacy
+scope/preflight until every remaining consumer has been migrated and host-page
+isolation has been verified. Keep canonical token edits separate from CSS ownership
+changes so native/Figma synchronization remains traceable.

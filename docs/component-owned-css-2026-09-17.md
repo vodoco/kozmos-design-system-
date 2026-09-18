@@ -3,6 +3,12 @@
 2026-09-17 · `astra/browser-compatibility` · worktree
 `/private/tmp/kozmos-browser-compat.uqPMBD` · starts after investigation `f8eb957`.
 
+**2026-09-18 continuation:** `npm-foundations-2026-09-18.md` supersedes the
+test/declaration-debt counts below. DatePicker, DateRangePicker and TimePicker are
+now complete compositions too (`src/styles/owned-temporal-fields.css`,
+`scripts/check-temporal-css.mjs`). Token-opacity utilities compile with zero inert
+uses. The migration remains incomplete; the historical evidence below is retained.
+
 ## Decision and limits
 
 Olcay approved proceeding with the recommended compatibility architecture after

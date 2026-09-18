@@ -111,6 +111,13 @@ try {
       assert.equal(override.backgroundColor, "rgb(10, 20, 30)");
       await field.focus();
       assert.notEqual((await measure(field)).boxShadow, "none");
+      assert.equal(
+        await field.evaluate((n) =>
+          getComputedStyle(n).getPropertyValue("--tw-ring-offset-width"),
+        ),
+        "2px",
+        "legacy compiler defaults must not erase the owned focus-ring offset",
+      );
       const disabled = await measure(page.getByTestId(`${id}-disabled`));
       assert.equal(
         disabled.backgroundColor,
@@ -279,6 +286,14 @@ try {
       assert.match(loader.animationName, /^kozmos-/);
       assert.notEqual(loader.animationDuration, "0s");
       const button = page.getByTestId(`${id}-button`);
+      await button.hover();
+      await page.mouse.down();
+      assert.equal(
+        await button.evaluate((n) => getComputedStyle(n).transform),
+        "matrix(0.98, 0, 0, 0.98, 0, 0)",
+        "owned pressed transform works with and without legacy CSS",
+      );
+      await page.mouse.up();
       assert.equal(
         (await measure(button)).backgroundColor,
         await value(
