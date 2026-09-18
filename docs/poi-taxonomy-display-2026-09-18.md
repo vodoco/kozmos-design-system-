@@ -27,7 +27,9 @@ Cuisine and dietary chips remain text-only. WiFi and other true amenities use th
 
 Null, undefined, empty strings and empty arrays are absent. Zero is valid for wait time and capacity. Boolean false is displayed when the dictionary names it (wheelchair accessibility); other unnamed false amenities are omitted. Duplicated array values are removed, invalid types/enum values and unsupported object schemas produce diagnostic issues, and inherited object keys are never treated as dictionary entries.
 
-The supplied product references additionally specify rating, price, crowd, wait and occupancy as highlight-only. This is an explicit product policy: the taxonomy also gives order to crowd/wait/occupancy, so it does not encode that restriction by itself. Crowd and wait combine only when both exist; wait-only and zero-minute cases remain visible. The strip scrolls horizontally rather than wrapping to a second row.
+The supplied product references additionally specify rating, price, crowd, wait and occupancy as highlight-only. This is an explicit product policy: the taxonomy also gives order to crowd/wait/occupancy, so it does not encode that restriction by itself. Crowd and wait combine only when both exist; wait-only and zero-minute cases remain eligible.
+
+**22:29 clarification:** POI highlights have a maximum of three items. Combine crowd/wait first, sort by taxonomy highlight priority, then take the first three. The component also enforces the cap for non-taxonomy callers; their array order supplies priority. Lower-priority highlights are not placed in a hidden scroll area. One, two or three cells share the full width equally. Values and secondary details flow onto one line where they fit; narrow cells and enlarged text wrap without truncation, with icons stacked above text when space is tight. The strip itself never wraps or scrolls. The standalone generic MetaStrip remains scrollable and uncapped.
 
 ## Differences requiring upstream decisions
 

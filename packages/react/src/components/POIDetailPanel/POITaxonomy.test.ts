@@ -2,6 +2,23 @@ import { describe, expect, it } from "vitest";
 import { presentTaxonomyProperties } from "./POITaxonomy.fixtures";
 
 describe("taxonomy 10.12.0 presentation adapter example", () => {
+  it("caps highlights after priority sorting and merging crowd/wait", () => {
+    const { summary } = presentTaxonomyProperties({
+      accessRestrictions: ["booking-required"],
+      occupancyStatus: "occupied",
+      dietaryOptions: ["Vegan"],
+      crowdLevel: "packed",
+      waitTime: 0,
+      isWheelchairAccessible: true,
+      priceRange: 3,
+    });
+    expect(summary.map((item) => item.id)).toEqual([
+      "priceRange",
+      "isWheelchairAccessible",
+      "crowdLevel",
+    ]);
+    expect(summary[2].detail).toBe("0 min wait");
+  });
   it("uses value icons without borrowing the property icon for text-only enum values", () => {
     const { groups, issues } = presentTaxonomyProperties({
       cuisines: ["Italian"],

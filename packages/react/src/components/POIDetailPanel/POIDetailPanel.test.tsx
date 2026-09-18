@@ -33,6 +33,35 @@ const poi: POIPresentation = {
 };
 
 describe("POIDetailPanel", () => {
+  it.each([0, 1, 2, 3, 4])(
+    "renders at most three metadata items from %i supplied",
+    (count) => {
+      const { container } = render(
+        <POIDetailPanel
+          poi={poi}
+          actionLabels={labels}
+          onAction={vi.fn()}
+          details={{
+            summary: Array.from({ length: count }, (_, i) => ({
+              id: String(i),
+              kind: "property",
+              label: `Label ${i}`,
+              value: `Value ${i}`,
+            })),
+          }}
+        />,
+      );
+      expect(
+        container.querySelectorAll("[data-slot=meta-strip-item]"),
+      ).toHaveLength(Math.min(count, 3));
+      expect(
+        container
+          .querySelector(".kozmos-poi-summary")
+          ?.getAttribute("tabindex"),
+      ).toBeFalsy();
+      expect(screen.queryByText("Value 3")).not.toBeInTheDocument();
+    },
+  );
   it("keeps external icons decorative, rejects unsafe URLs and retries changed assets", () => {
     const { container, rerender } = render(
       <POIDetailAssetIcon src="https://example.test/icon.png" />,
@@ -144,7 +173,7 @@ describe("POIDetailPanel", () => {
       "kozmos-button-outline",
     );
   });
-  it("uses the shared keyboard-scrollable metadata strip", () => {
+  it("retains shared metadata semantics without a redundant scroll tab stop", () => {
     const { container } = render(
       <POIDetailPanel
         poi={poi}
@@ -161,9 +190,8 @@ describe("POIDetailPanel", () => {
       "data-slot",
       "meta-strip",
     );
-    expect(container.querySelector(".kozmos-poi-summary")).toHaveAttribute(
+    expect(container.querySelector(".kozmos-poi-summary")).not.toHaveAttribute(
       "tabindex",
-      "0",
     );
     expect(screen.getByText("Rating").tagName).toBe("DT");
   });

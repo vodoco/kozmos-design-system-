@@ -81,10 +81,13 @@ try {
       const poi = page.getByTestId(`${id}-poi`);
       const metadata = poi.locator("[data-slot=meta-strip]");
       assert.equal(
-        await metadata.evaluate((e) => getComputedStyle(e).flexWrap),
-        "nowrap",
+        await metadata.evaluate((e) => getComputedStyle(e).display),
+        "grid",
       );
-      assert.equal(await metadata.getAttribute("tabindex"), "0");
+      assert.equal(await metadata.getAttribute("tabindex"), null);
+      assert(
+        await metadata.evaluate((e) => e.scrollWidth <= e.clientWidth + 1),
+      );
       const rowTops = await metadata
         .locator("[data-slot=meta-strip-item]")
         .evaluateAll((items) =>

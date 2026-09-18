@@ -95,8 +95,8 @@ export function POIDetailSummaryStrip({
 }) {
   if (!details.summary?.length) return null;
   return (
-    <MetaStrip className="kozmos-poi-summary">
-      {details.summary.map((item) => {
+    <MetaStrip className="kozmos-poi-summary" tabIndex={undefined}>
+      {details.summary.slice(0, 3).map((item) => {
         const Icon = summaryIcons[item.kind];
         return (
           <MetaStripItem
@@ -117,17 +117,21 @@ export function POIDetailSummaryStrip({
             }
           >
             <span className="kozmos-poi-summary-text">
-              {item.priceLevel ? (
-                <>
-                  <span className="kozmos-poi-price" aria-hidden="true">
-                    {"$".repeat(item.priceLevel)}
-                    <span>{"$".repeat(4 - item.priceLevel)}</span>
-                  </span>
-                  <span className="kozmos-meta-label-hidden">{item.value}</span>
-                </>
-              ) : (
-                item.value
-              )}
+              <span className="kozmos-poi-summary-value">
+                {item.priceLevel ? (
+                  <>
+                    <span className="kozmos-poi-price" aria-hidden="true">
+                      {"$".repeat(item.priceLevel)}
+                      <span>{"$".repeat(4 - item.priceLevel)}</span>
+                    </span>
+                    <span className="kozmos-meta-label-hidden">
+                      {item.value}
+                    </span>
+                  </>
+                ) : (
+                  item.value
+                )}
+              </span>
               {item.detail && <small>{item.detail}</small>}
             </span>
           </MetaStripItem>

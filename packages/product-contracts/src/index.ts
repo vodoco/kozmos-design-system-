@@ -91,6 +91,7 @@ export type POISupplementaryAction = "book" | "call";
 
 export interface POIDetailsPresentation {
   travelEstimate?: TravelEstimatePresentation;
+  /** Highest-priority first. POI detail panels display at most the first three. */
   summary?: readonly POIDetailSummary[];
   groups?: readonly POIDetailAttributeGroup[];
   openingHours?: POIOpeningHoursPresentation;

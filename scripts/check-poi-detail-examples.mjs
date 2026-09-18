@@ -69,20 +69,21 @@ try {
               ),
               "metadata always occupies one row",
             );
-            assert.equal(await strip.getAttribute("tabindex"), "0");
-            if (
-              await strip.evaluate((e) => e.scrollWidth > e.clientWidth + 1)
-            ) {
-              await strip.focus();
-              await page.keyboard.press("End");
-              await page.waitForFunction(() => {
-                const strip = document.querySelector(".kozmos-poi-summary");
-                const bounds = strip.getBoundingClientRect();
-                const last = strip.lastElementChild.getBoundingClientRect();
-                return last.right <= bounds.right + 1;
-              });
-              await page.keyboard.press("Home");
-            }
+            assert(rows.length <= 3, "POI metadata has a three-item cap");
+            assert.equal(await strip.getAttribute("tabindex"), null);
+            assert(
+              await strip.evaluate((e) => e.scrollWidth <= e.clientWidth + 1),
+              "POI metadata fits without scrolling",
+            );
+            const widths = await strip
+              .locator("[data-slot=meta-strip-item]")
+              .evaluateAll((items) =>
+                items.map((item) => item.getBoundingClientRect().width),
+              );
+            assert(
+              widths.every((width) => Math.abs(width - widths[0]) <= 1),
+              "available items share the full width equally",
+            );
           }
           const corners = await panel.evaluate((element) => {
             const style = getComputedStyle(element);
@@ -242,6 +243,23 @@ try {
               0,
             );
           }
+          if (
+            (story === "entrance" || story === "parking") &&
+            viewport.width === 1280
+          ) {
+            assert(
+              await panel
+                .locator(".kozmos-poi-summary-text")
+                .evaluateAll((items) =>
+                  items.every(
+                    (item) =>
+                      item.getBoundingClientRect().height <=
+                      parseFloat(getComputedStyle(item).lineHeight) + 1,
+                  ),
+                ),
+              "one/two metadata items use one text line when space permits",
+            );
+          }
           if (story === "missing-data")
             assert.equal(
               await panel.getByRole("heading", { name: "Amenities" }).count(),
@@ -267,7 +285,7 @@ try {
                   }),
                 ),
               true,
-              "summary scrolls instead of fragmenting ordinary words",
+              "ordinary words fit within the metadata cells",
             );
             assert.equal(
               await panel

@@ -1,5 +1,22 @@
 # POI reference implementation: follow-up review
 
+## Latest clarification — three-item metadata cap
+
+The 22:29 user clarification supersedes this report's earlier horizontal-scroll
+recommendation **for POI detail highlights**. At most three priority-ordered items
+now share the panel width equally. Values/details reflow naturally; one or two
+items use a single text line when they fit. Narrow and enlarged-text cells can
+stack their icon above text. No hidden fourth item or scrolling metadata strip.
+The generic MetaStrip keeps its existing behavior. See
+`poi-taxonomy-display-2026-09-18.md` for selection policy and edit locations.
+
+Verification of this correction: 491 React tests; all 198 POI examples across
+Chromium, Firefox and WebKit with zero axe violations/incomplete results;
+owned-CSS checks with and without legacy scope in all three engines; React
+build/lint, Docs build/typecheck and component/compiled-class contracts.
+Browser assertions cover the three-item cap, equal cell widths, no overflow,
+one-line text for the spacious one/two-item examples, and 200% text reflow.
+
 ## Verdict and scope
 
 This pass found functional defects and a narrow-layout readability problem, not

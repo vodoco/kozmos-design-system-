@@ -194,6 +194,7 @@ export function presentTaxonomyProperties(
     summary: highlights
       .filter((entry) => !(crowd && entry === wait))
       .sort((a, b) => a.order - b.order)
+      .slice(0, 3)
       .map(({ item }) => item),
     issues,
   };
