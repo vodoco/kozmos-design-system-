@@ -79,6 +79,21 @@ try {
       }, token);
     for (const id of ["outer", "nested"]) {
       const poi = page.getByTestId(`${id}-poi`);
+      const metadata = poi.locator("[data-slot=meta-strip]");
+      assert.equal(
+        await metadata.evaluate((e) => getComputedStyle(e).flexWrap),
+        "nowrap",
+      );
+      assert.equal(await metadata.getAttribute("tabindex"), "0");
+      const rowTops = await metadata
+        .locator("[data-slot=meta-strip-item]")
+        .evaluateAll((items) =>
+          items.map((item) => item.getBoundingClientRect().top),
+        );
+      assert(
+        rowTops.every((top) => Math.abs(top - rowTops[0]) < 1),
+        "single metadata row without scope",
+      );
       assert.equal((await measure(poi)).borderRadius, "16px");
       for (const selector of [
         ".kozmos-poi-header-actions button",

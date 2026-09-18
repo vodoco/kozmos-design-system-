@@ -32,6 +32,29 @@ const poi: POIPresentation = {
 };
 
 describe("POIDetailPanel", () => {
+  it("uses the shared keyboard-scrollable metadata strip", () => {
+    const { container } = render(
+      <POIDetailPanel
+        poi={poi}
+        actionLabels={labels}
+        onAction={vi.fn()}
+        details={{
+          summary: [
+            { id: "rating", kind: "rating", label: "Rating", value: "4.7 / 5" },
+          ],
+        }}
+      />,
+    );
+    expect(container.querySelector(".kozmos-poi-summary")).toHaveAttribute(
+      "data-slot",
+      "meta-strip",
+    );
+    expect(container.querySelector(".kozmos-poi-summary")).toHaveAttribute(
+      "tabindex",
+      "0",
+    );
+    expect(screen.getByText("Rating").tagName).toBe("DT");
+  });
   it("resets scroll only when selecting a different place and forwards its ref", () => {
     let node: HTMLElement | null = null;
     const props = {

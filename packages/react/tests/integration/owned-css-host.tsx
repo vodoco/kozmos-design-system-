@@ -179,10 +179,24 @@ function Controls({ id }: { id: string }) {
         details={{
           summary: [
             {
+              id: "rating",
+              kind: "rating",
+              label: "Rating",
+              value: "4.7 / 5",
+              detail: "32 reviews",
+            },
+            {
               id: "access",
               kind: "accessibility",
               label: "Accessibility",
               value: "Step-free",
+            },
+            {
+              id: "crowd",
+              kind: "crowd",
+              label: "Crowd",
+              value: "Packed",
+              detail: "25 min wait",
             },
           ],
           groups: [

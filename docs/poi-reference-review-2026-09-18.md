@@ -34,6 +34,33 @@ reflow over clipping, tiny targets or invented media.
 
 ## What is implemented
 
+### User-directed single-row metadata correction
+
+The requested interaction is one row of metadata cells, never a wrapped second
+row. This supersedes the earlier wrapping-cell repair: that avoided fragmented
+words but did not meet the product's layout requirement. POI summary facts now
+compose the existing MetaStrip/MetaStripItem primitives rather than maintaining a
+separate layout. At constrained widths or enlarged text the strip scrolls locally
+with touch/trackpad or keyboard (arrows, Home/End); it does not hide facts, shrink
+type, or expand the document width. Labels may occupy multiple text lines within
+a single cell, as in the source reference, but cells never form a second row.
+
+MetaStrip's styles are now component-owned, including its description-list
+labels, separators and focus treatment. Its 64px minimum height can grow for
+readable text. Cells center the icon/text group; text within the group uses
+logical start alignment. The POI header vertically aligns title and controls;
+Go/estimate text shares a starting edge. Palette and 16px corners are unchanged.
+The frontend-design skill guided the rendered alignment check against the brief.
+
+The POI browser gate checks one-row geometry and keyboard access to overflow;
+the owned-CSS gate checks the same composition with and without scope, in nested
+themes and RTL. Unit coverage verifies that the POI uses the shared primitive.
+The follow-up passes 473 unit tests, 198 POI browser cases, the three-engine
+owned-CSS gate, Chromium Storybook interactions, React/Docs builds and type/lint
+checks. Installed React 18/19 consumers also pass. The earlier whole-Docs and
+gallery-specific results below belong to the preceding review, not a new claim
+that every catalogue state was re-audited for this small alignment correction.
+
 ### User-directed corner correction
 
 The follow-up screenshot exposed a missed shape requirement: the panel used

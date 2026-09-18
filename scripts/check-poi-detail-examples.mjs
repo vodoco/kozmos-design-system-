@@ -51,6 +51,39 @@ try {
           );
           const panel = page.locator(".kozmos-poi-detail");
           await panel.waitFor({ timeout: 60000 });
+          const strip = panel.locator("[data-slot=meta-strip]");
+          if (await strip.count()) {
+            const rows = await strip
+              .locator("[data-slot=meta-strip-item]")
+              .evaluateAll((items) =>
+                items.map((item) => ({
+                  top: item.getBoundingClientRect().top,
+                  bottom: item.getBoundingClientRect().bottom,
+                })),
+              );
+            assert(
+              rows.every(
+                (row) =>
+                  Math.abs(row.top - rows[0].top) < 1 &&
+                  Math.abs(row.bottom - rows[0].bottom) < 1,
+              ),
+              "metadata always occupies one row",
+            );
+            assert.equal(await strip.getAttribute("tabindex"), "0");
+            if (
+              await strip.evaluate((e) => e.scrollWidth > e.clientWidth + 1)
+            ) {
+              await strip.focus();
+              await page.keyboard.press("End");
+              await page.waitForFunction(() => {
+                const strip = document.querySelector(".kozmos-poi-summary");
+                const bounds = strip.getBoundingClientRect();
+                const last = strip.lastElementChild.getBoundingClientRect();
+                return last.right <= bounds.right + 1;
+              });
+              await page.keyboard.press("Home");
+            }
+          }
           const corners = await panel.evaluate((element) => {
             const style = getComputedStyle(element);
             return [
@@ -172,7 +205,7 @@ try {
           if (story === "retail") {
             assert.equal(
               await panel
-                .locator(".kozmos-poi-summary-value > span")
+                .locator(".kozmos-poi-summary-text")
                 .filter({ hasText: "Wheelchair accessible" })
                 .evaluateAll((values) =>
                   values.every((value) => {
@@ -189,7 +222,7 @@ try {
                   }),
                 ),
               true,
-              "summary reflows before ordinary words fragment",
+              "summary scrolls instead of fragmenting ordinary words",
             );
             assert.equal(
               await panel

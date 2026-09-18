@@ -35,6 +35,12 @@ capabilities use `details.supplementaryActions`, `onSupplementaryAction` and
 `supplementaryActionStates`; without a callback those actions are disabled.
 Favourite/bookmark are controlled toggle buttons in the header.
 
+Summary facts use the shared `MetaStrip`: exactly one row of cells, with local
+horizontal scrolling when the host is too narrow. Facts never move to a second
+row. Labels may wrap within a cell without splitting ordinary words; icon/text
+groups remain centered and their text is start-aligned. The two primary-action
+text lines share the same starting edge. No font shrinking or hidden facts.
+
 Changing `poi.id` resets panel scroll and description expansion; refreshing the
 same POI preserves its scroll position. A failed logo is omitted, retaining the
 text title; changing its source retries loading. The host still owns selection

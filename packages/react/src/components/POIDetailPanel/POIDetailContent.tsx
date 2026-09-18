@@ -2,6 +2,7 @@ import React from "react";
 import type { POIDetailsPresentation } from "@kozmos/product-contracts";
 import { Accessibility, Clock, Leaf, Star } from "lucide-react";
 import { Button } from "../Button";
+import { MetaStrip, MetaStripItem } from "../MetaStrip";
 
 const summaryIcons = {
   rating: Star,
@@ -18,23 +19,24 @@ export function POIDetailSummaryStrip({
 }) {
   if (!details.summary?.length) return null;
   return (
-    <dl className="kozmos-reset kozmos-poi-summary">
+    <MetaStrip className="kozmos-poi-summary">
       {details.summary.map((item) => {
         const Icon = summaryIcons[item.kind];
         return (
-          <div className="kozmos-reset kozmos-poi-summary-item" key={item.id}>
-            <dt className="kozmos-poi-visually-hidden">{item.label}</dt>
-            <dd className="kozmos-poi-summary-value">
-              {Icon && <Icon aria-hidden="true" size={20} />}
-              <span>
-                {item.value}
-                {item.detail && <small>{item.detail}</small>}
-              </span>
-            </dd>
-          </div>
+          <MetaStripItem
+            className="kozmos-poi-summary-item"
+            key={item.id}
+            label={item.label}
+            icon={Icon ? <Icon size={20} /> : undefined}
+          >
+            <span className="kozmos-poi-summary-text">
+              {item.value}
+              {item.detail && <small>{item.detail}</small>}
+            </span>
+          </MetaStripItem>
         );
       })}
-    </dl>
+    </MetaStrip>
   );
 }
 
