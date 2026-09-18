@@ -3163,21 +3163,35 @@ assertNotContains(
 assertContains(
   files.reactHeading,
   source.reactHeading,
-  "level: {",
-  "React Heading level variants",
+  'size={level === null ? "base" : sizes[level]}',
+  "React Heading level scale selection",
 );
 assertContains(
   files.reactHeading,
   source.reactHeading,
-  "cva('font-bold'",
-  "React Heading uses bold base typography",
+  'weight="bold"',
+  "React Heading uses owned bold typography",
 );
 assertContains(
   files.reactHeading,
   source.reactHeading,
-  "1: 'text-4xl'",
+  "1: '4xl'",
   "React Heading H1 maps to 4xl",
 );
+for (const [level, size] of [
+  [2, "3xl"],
+  [3, "2xl"],
+  [4, "xl"],
+  [5, "lg"],
+  [6, "base"],
+]) {
+  assertContains(
+    files.reactHeading,
+    source.reactHeading,
+    `${level}: "${size}"`,
+    `React Heading H${level} maps to ${size}`,
+  );
+}
 for (const tokenName of [
   "Text/font-size/xs",
   "Text/line-height/xs",
@@ -3226,13 +3240,13 @@ assertNotContains(
 assertContains(
   files.reactText,
   source.reactText,
-  "'4xl': 'text-4xl'",
+  "'4xl': 'kozmos-text-4xl'",
   "React Text 4xl size",
 );
 assertContains(
   files.reactText,
   source.reactText,
-  "destructive: 'text-destructive'",
+  "destructive: 'kozmos-text-destructive'",
   "React Text destructive tone",
 );
 assertContains(

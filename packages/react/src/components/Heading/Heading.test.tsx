@@ -3,6 +3,28 @@ import { describe, it, expect } from "vitest";
 import { Heading } from "./Heading";
 
 describe("Heading", () => {
+  it.each([
+    [1, "4xl"],
+    [2, "3xl"],
+    [3, "2xl"],
+    [4, "xl"],
+    [5, "lg"],
+    [6, "base"],
+  ] as const)("preserves level %s typography and semantics", (level, size) => {
+    render(<Heading level={level}>Scale</Heading>);
+    expect(screen.getByRole("heading", { level })).toHaveClass(
+      `kozmos-text-${size}`,
+      "kozmos-text-bold",
+    );
+  });
+
+  it("preserves the null-level base size and h1 fallback", () => {
+    render(<Heading level={null}>Base heading</Heading>);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
+      "kozmos-text-base",
+      "kozmos-text-bold",
+    );
+  });
   it("renders correctly", () => {
     render(<Heading level={1}>Title</Heading>);
     expect(screen.getByText("Title")).toBeInTheDocument();
