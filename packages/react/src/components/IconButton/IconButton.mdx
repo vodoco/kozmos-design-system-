@@ -1,13 +1,16 @@
-
 import { Canvas, Meta, Story, Source } from "@storybook/blocks";
 import { Controls } from "../DocumentationControls";
-import * as IconButtonStories from './IconButton.stories';
+import * as IconButtonStories from "./IconButton.stories";
 
 <Meta of={IconButtonStories} />
 
 # IconButton
 
 IconButtons are used for actions that don't require a label, such as "flaging" or "liking" an item.
+
+The React component uses the shared Button control radius (16px), not a circular
+pill override. Its minimum hit target remains 44×44px. Always provide an
+accessible label for the action.
 
 <Canvas>
   <Story of={IconButtonStories.Default} />
@@ -19,7 +22,7 @@ IconButtons are used for actions that don't require a label, such as "flaging" o
 
 <div className="subheading">Code</div>
 
-import { PlatformSnippets } from '../PlatformSnippets';
+import { PlatformSnippets } from "../PlatformSnippets";
 
 <PlatformSnippets
     react={`
@@ -50,9 +53,9 @@ import { Home } from 'lucide-vue-next';
 import SwiftUI
 
 public struct KozmosIconButton: View {
-    let iconName: String
-    let action: () -> Void
-    
+let iconName: String
+let action: () -> Void
+
     public init(
         iconName: String,
         action: @escaping () -> Void
@@ -60,7 +63,7 @@ public struct KozmosIconButton: View {
         self.iconName = iconName
         self.action = action
     }
-    
+
     public var body: some View {
         Button(action: action) {
             Image(systemName: iconName)
@@ -71,8 +74,9 @@ public struct KozmosIconButton: View {
                 .clipShape(Circle())
         }
     }
+
 }
-    `}
+`}
     kotlin={`
 package com.kozmos.components.iconbutton
 
@@ -83,16 +87,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun KozmosIconButton(
-    icon: ImageVector,
-    onClick: () -> Unit,
-    contentDescription: String? = null
+icon: ImageVector,
+onClick: () -> Unit,
+contentDescription: String? = null
 ) {
-    IconButton(onClick = onClick) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription
-        )
-    }
+IconButton(onClick = onClick) {
+Icon(
+imageVector = icon,
+contentDescription = contentDescription
+)
 }
-    `}
+}
+`}
 />

@@ -34,6 +34,29 @@ reflow over clipping, tiny targets or invented media.
 
 ## What is implemented
 
+### User-directed corner correction
+
+The follow-up screenshot exposed a missed shape requirement: the panel used
+20px container corners, while icon buttons and information chips used the pill
+token. POI surfaces, chips, gallery media and controls now use the existing
+16px control-radius token. Shared React IconButton no longer overrides Button
+with a pill radius; its hit area remains 44×44px. Edge-attached sheet bottoms
+remain square. This is component styling, not a Storybook decorator override.
+
+The POI browser gate now asserts all four rendered corners of relevant elements;
+the installed-build owned-CSS gate checks the panel, header button, chips and
+hours in both themes, with and without scope. Visual inspection confirmed the
+header controls are rounded squares. The frontend-design skill guided this
+correction to the user's explicit shape direction, without changing the palette.
+
+Scope: POI detail/gallery compositions and shared React IconButton. The global
+Container (20px), Panel (24px) and Pill roles are not rewritten by this correction.
+Extending a uniform 16px policy across the entire catalogue is a separate design
+decision, including genuine-circle exceptions and native/Figma parity. Existing
+native reference snippets are not proof of that cross-platform change.
+
+### Reference compositions
+
 One reusable `POIDetailPanel`, not separate restaurant/retail/parking components.
 Eleven Storybook acceptance stories: Restaurant, Entrance, Retail, Fitness,
 Parking, Full Field Catalogue, On Map, Missing Data, Failed Media, Action States

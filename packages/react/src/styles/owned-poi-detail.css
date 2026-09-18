@@ -1,7 +1,7 @@
 /* Component-owned layout; palette, radii and type scale remain Kozmos tokens. */
 @kozmos-owned {
   .kozmos-poi-detail {
-    @apply bg-background text-foreground rounded-container border border-border text-sm;
+    @apply bg-background text-foreground rounded-control border border-border text-sm;
     display: flex;
     flex-direction: column;
     min-inline-size: 0;
@@ -11,7 +11,7 @@
     overflow-wrap: anywhere;
   }
   .kozmos-poi-detail[data-presentation="sheet"] {
-    @apply rounded-t-container;
+    @apply rounded-t-control;
     border-inline: 0;
     border-block-end: 0;
     border-end-start-radius: 0;
@@ -155,7 +155,7 @@
     padding: 0;
   }
   .kozmos-poi-chips li {
-    @apply rounded-pill border border-border;
+    @apply rounded-control border border-border;
     max-inline-size: 100%;
     padding: 0.375rem 0.75rem;
   }

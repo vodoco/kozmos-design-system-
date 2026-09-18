@@ -79,6 +79,18 @@ try {
       }, token);
     for (const id of ["outer", "nested"]) {
       const poi = page.getByTestId(`${id}-poi`);
+      assert.equal((await measure(poi)).borderRadius, "16px");
+      for (const selector of [
+        ".kozmos-poi-header-actions button",
+        ".kozmos-poi-chips li",
+        ".kozmos-poi-hours",
+      ]) {
+        assert.equal(
+          (await measure(poi.locator(selector))).borderRadius,
+          "16px",
+          `${mode}: ${selector} radius`,
+        );
+      }
       for (const selector of [
         ".kozmos-poi-summary",
         ".kozmos-poi-hours",

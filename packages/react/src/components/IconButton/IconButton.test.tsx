@@ -24,5 +24,7 @@ describe("IconButton", () => {
     expect(button).toHaveClass("h-11");
     expect(button).toHaveClass("w-11");
     expect(button).toHaveClass("px-0");
+    expect(button).not.toHaveClass("rounded-pill");
+    expect(button).toHaveClass("kozmos-button");
   });
 });

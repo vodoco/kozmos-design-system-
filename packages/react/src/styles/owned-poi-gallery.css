@@ -43,7 +43,7 @@
   }
   .kozmos-poi-gallery-image,
   .kozmos-poi-gallery-unavailable {
-    @apply rounded-container bg-muted;
+    @apply rounded-control bg-muted;
     display: block;
     aspect-ratio: 4 / 3;
     inline-size: 100%;

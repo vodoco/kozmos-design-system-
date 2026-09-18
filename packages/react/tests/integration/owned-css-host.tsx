@@ -175,6 +175,7 @@ function Controls({ id }: { id: string }) {
           order: "Order",
         }}
         onAction={() => undefined}
+        onClose={() => undefined}
         details={{
           summary: [
             {

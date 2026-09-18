@@ -51,6 +51,43 @@ try {
           );
           const panel = page.locator(".kozmos-poi-detail");
           await panel.waitFor({ timeout: 60000 });
+          const corners = await panel.evaluate((element) => {
+            const style = getComputedStyle(element);
+            return [
+              style.borderTopLeftRadius,
+              style.borderTopRightRadius,
+              style.borderBottomLeftRadius,
+              style.borderBottomRightRadius,
+            ];
+          });
+          const sheet =
+            (await panel.getAttribute("data-presentation")) === "sheet";
+          assert.deepEqual(
+            corners,
+            ["16px", "16px", sheet ? "0px" : "16px", sheet ? "0px" : "16px"],
+            "POI surface radius",
+          );
+          for (const radius of await panel
+            .locator(
+              ".kozmos-poi-logo, .kozmos-poi-action, .kozmos-poi-header-actions button, .kozmos-poi-chips li, .kozmos-poi-hours, .kozmos-poi-gallery-image, .kozmos-poi-gallery-unavailable, .kozmos-poi-gallery-controls button",
+            )
+            .evaluateAll((elements) =>
+              elements.map((element) => {
+                const style = getComputedStyle(element);
+                return [
+                  style.borderTopLeftRadius,
+                  style.borderTopRightRadius,
+                  style.borderBottomLeftRadius,
+                  style.borderBottomRightRadius,
+                ];
+              }),
+            )) {
+            assert.deepEqual(
+              radius,
+              ["16px", "16px", "16px", "16px"],
+              "POI components use 16px corners, not pills/circles",
+            );
+          }
           assert.equal(
             await page.evaluate(
               () => document.documentElement.scrollWidth <= innerWidth,
