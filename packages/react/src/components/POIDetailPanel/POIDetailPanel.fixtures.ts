@@ -4,6 +4,8 @@ import type {
   POIPresentation,
 } from "@kozmos/product-contracts";
 
+import { presentTaxonomyProperties } from "./POITaxonomy.fixtures";
+
 export const poiActionLabels: Record<POIAction, string> = {
   navigate: "Go",
   favourite: "Favourite",
@@ -11,25 +13,6 @@ export const poiActionLabels: Record<POIAction, string> = {
   share: "Share",
   order: "Order",
 };
-const group = (
-  id: string,
-  heading: string,
-  labels: (string | { label: string; iconName: string })[],
-) => ({
-  id,
-  heading,
-  items: labels.map((value, index) => ({
-    id: `${id}-${index}`,
-    ...(typeof value === "string" ? { label: value } : value),
-  })),
-});
-const accessibility = group("accessibility", "Accessibility", [
-  "Wheelchair accessible",
-  "Hearing loop",
-  "Visual aids",
-  "Autism friendly",
-  "Assistance available",
-]);
 const openingHours = {
   label: "Opening hours",
   summary: "Open · Closes 12:30 pm",
@@ -63,45 +46,47 @@ export const restaurantDetails: POIDetailsPresentation = {
     distanceLabel: "120 m",
   },
   supplementaryActions: [{ action: "book", label: "Book" }],
-  summary: [
+  ...presentTaxonomyProperties(
     {
-      id: "rating",
-      kind: "rating",
-      label: "Rating",
-      value: "4.7 / 5",
-      detail: "32 reviews",
+      rating: { demoScore: 4.7, demoCount: 32 },
+      cuisines: ["Italian", "Pizza", "Mediterranean"],
+      dietaryOptions: ["Vegetarian", "Vegan", "Gluten-Free"],
+      serviceOptions: "Dine-in",
+      isWheelchairAccessible: true,
+      hasHearingLoop: true,
+      hasVisualAids: true,
+      isAutismFriendly: true,
+      hasAssistance: true,
+      hasWifi: true,
+      hasPlayArea: true,
+      hasRestrooms: true,
+      hasAlcoholService: true,
+      hasOutdoorSeating: true,
+      isFamilyFriendly: true,
+      isPetFriendly: true,
+      paymentMethods: [
+        "Cash",
+        "Credit",
+        "Google Pay",
+        "Apple Pay",
+        "Contactless",
+      ],
+      dressCodes: ["smart-casual"],
+      ageRestriction: "18+",
+      priceRange: 3,
     },
-    { id: "price", kind: "price", label: "Price level", value: "3 of 4" },
     {
-      id: "dietary",
-      kind: "dietary",
-      label: "Dietary options",
-      value: "Dietary options",
+      customHighlights: {
+        rating: {
+          id: "rating",
+          kind: "rating",
+          label: "Rating",
+          value: "4.7 / 5",
+          detail: "32 reviews",
+        },
+      },
     },
-  ],
-  groups: [
-    group("cuisines", "Cuisines", ["Italian", "Pizza", "Mediterranean"]),
-    group("dietary", "Dietary options", ["Vegetarian", "Vegan", "Gluten-free"]),
-    group("services", "Service options", ["Dine-in", "Takeout", "Delivery"]),
-    accessibility,
-    group("amenities", "Amenities", [
-      { label: "WiFi", iconName: "wifi" },
-      "Play area",
-      "Restrooms",
-      "Alcohol service",
-      "Outdoor seating",
-    ]),
-    group("good-to-know", "Good to know", ["Family friendly", "Pet friendly"]),
-    group("payment", "Payment methods", [
-      "Cash",
-      "Credit/debit",
-      "Google Pay",
-      "Apple Pay",
-      "Contactless",
-    ]),
-    group("dress", "Dress code", ["Smart casual"]),
-    group("age", "Age restriction", ["18+"]),
-  ],
+  ),
   openingHours,
   description: {
     preview:
@@ -127,30 +112,20 @@ export const entrancePOI: POIPresentation = {
 };
 export const entranceDetails: POIDetailsPresentation = {
   travelEstimate: restaurantDetails.travelEstimate,
-  summary: [
-    {
-      id: "accessible",
-      kind: "accessibility",
-      label: "Accessibility",
-      value: "Wheelchair accessible",
-    },
-  ],
-  groups: [
-    accessibility,
-    group("amenities", "Amenities", [
-      { label: "WiFi", iconName: "wifi" },
-      "Chargers",
-      "Restrooms",
-      "Luggage storage",
-      "Security staff",
-    ]),
-    group("languages", "Language support", ["English", "Spanish", "French"]),
-    group("programs", "Access programs", [
-      "TSA PreCheck",
-      "CLEAR",
-      "Global Entry",
-    ]),
-  ],
+  ...presentTaxonomyProperties({
+    isWheelchairAccessible: true,
+    hasHearingLoop: true,
+    hasVisualAids: true,
+    isAutismFriendly: true,
+    hasAssistance: true,
+    hasWifi: true,
+    hasChargingAvailable: true,
+    hasRestrooms: true,
+    hasLuggageStorage: true,
+    hasSecurityStaff: true,
+    languageSupport: ["English", "Spanish", "French"],
+    accessPrograms: ["tsa-precheck", "clear", "global-entry"],
+  }),
   openingHours,
 };
 
@@ -164,43 +139,47 @@ export const retailPOI: POIPresentation = {
 export const retailDetails: POIDetailsPresentation = {
   travelEstimate: restaurantDetails.travelEstimate,
   supplementaryActions: [{ action: "call", label: "Call" }],
-  summary: [
-    restaurantDetails.summary![0],
-    entranceDetails.summary![0],
+  ...presentTaxonomyProperties(
     {
-      id: "crowd",
-      kind: "crowd",
-      label: "Crowd and wait",
-      value: "Packed",
-      detail: "25 min wait",
+      rating: { demoScore: 4.7, demoCount: 32 },
+      productTypes: [
+        "Womens Clothing",
+        "Mens Clothing",
+        "Accessories",
+        "Beauty and Cosmetics",
+        "Footwear",
+        "Home Decor",
+      ],
+      isWheelchairAccessible: true,
+      hasAssistance: true,
+      hasChangingFacilities: true,
+      hasRestrooms: true,
+      paymentMethods: [
+        "Cash",
+        "Credit",
+        "Mobile",
+        "Contactless",
+        "Apple Pay",
+        "Google Pay",
+        "Samsung Pay",
+        "Store Card",
+        "Gift Card",
+      ],
+      crowdLevel: "packed",
+      waitTime: 25,
     },
-  ],
-  groups: [
-    group("products", "Product types", [
-      "Womenswear",
-      "Menswear",
-      "Accessories",
-      "Beauty & cosmetics",
-      "Footwear",
-      "Homeware",
-    ]),
-    group("accessibility", "Accessibility", [
-      "Wheelchair accessible",
-      "Assistance available",
-    ]),
-    group("amenities", "Amenities", ["Changing facilities", "Restrooms"]),
-    group("payment", "Payment methods", [
-      "Cash",
-      "Credit/debit",
-      "Mobile",
-      "Contactless",
-      "Apple Pay",
-      "Google Pay",
-      "Samsung Pay",
-      "Store card",
-      "Gift card",
-    ]),
-  ],
+    {
+      customHighlights: {
+        rating: {
+          id: "rating",
+          kind: "rating",
+          label: "Rating",
+          value: "4.7 / 5",
+          detail: "32 reviews",
+        },
+      },
+    },
+  ),
   openingHours,
   description: {
     preview:
@@ -222,36 +201,46 @@ export const fitnessPOI: POIPresentation = {
 export const fitnessDetails: POIDetailsPresentation = {
   travelEstimate: restaurantDetails.travelEstimate,
   supplementaryActions: [{ action: "book", label: "Book" }],
-  summary: restaurantDetails.summary!.filter((item) => item.kind !== "dietary"),
-  groups: [
-    group("sports", "Sport types", ["Aerobics", "Athletics"]),
-    group("accessibility", "Accessibility", [
-      "Wheelchair accessible",
-      "Assistance available",
-    ]),
-    group("amenities", "Amenities", [
-      { label: "WiFi", iconName: "wifi" },
-      "Chargers",
-      "Restrooms",
-      "Locker room",
-      "Changing facilities",
-    ]),
-    group("good-to-know", "Good to know", ["Family friendly"]),
-    group("payment", "Payment methods", [
-      "Cash",
-      "Credit/debit",
-      "Mobile",
-      "Contactless",
-      "Apple Pay",
-      "Google Pay",
-      "Samsung Pay",
-    ]),
-    group("dress", "Dress code", ["Smart casual"]),
-    group("age", "Age restriction", ["18+"]),
-    group("languages", "Language support", ["English", "Spanish", "French"]),
-    group("gender", "Gender designation", ["Male", "Female", "All-gender"]),
-    group("restriction", "Access restriction", ["Booking required"]),
-  ],
+  ...presentTaxonomyProperties(
+    {
+      rating: { demoScore: 4.7, demoCount: 32 },
+      sportTypes: ["Aerobics", "Athletics"],
+      isWheelchairAccessible: true,
+      hasAssistance: true,
+      hasWifi: true,
+      hasChargingAvailable: true,
+      hasRestrooms: true,
+      hasLockers: true,
+      hasChangingFacilities: true,
+      isFamilyFriendly: true,
+      paymentMethods: [
+        "Cash",
+        "Credit",
+        "Mobile",
+        "Contactless",
+        "Apple Pay",
+        "Google Pay",
+        "Samsung Pay",
+      ],
+      dressCodes: ["smart-casual"],
+      ageRestriction: "18+",
+      languageSupport: ["English", "Spanish", "French"],
+      genderDesignation: "all-gender",
+      accessRestrictions: ["booking-required"],
+      priceRange: 3,
+    },
+    {
+      customHighlights: {
+        rating: {
+          id: "rating",
+          kind: "rating",
+          label: "Rating",
+          value: "4.7 / 5",
+          detail: "32 reviews",
+        },
+      },
+    },
+  ),
   openingHours,
   description: {
     preview:
@@ -270,46 +259,75 @@ export const parkingPOI: POIPresentation = {
 };
 export const parkingDetails: POIDetailsPresentation = {
   travelEstimate: restaurantDetails.travelEstimate,
-  summary: [entranceDetails.summary![0], retailDetails.summary![2]],
-  groups: [
-    group("accessibility", "Accessibility", ["Wheelchair accessible"]),
-    group("payment", "Payment methods", [
-      "Credit/debit",
+  ...presentTaxonomyProperties({
+    isWheelchairAccessible: true,
+    paymentMethods: [
+      "Credit",
       "Contactless",
       "Apple Pay",
       "Google Pay",
       "Samsung Pay",
-    ]),
-    group("parking", "Parking types", ["Self-park", "Valet", "EV charging"]),
-  ],
+    ],
+    parkingTypes: ["Self-Park", "Valet", "EV Charging"],
+    crowdLevel: "packed",
+    waitTime: 25,
+  }),
   openingHours,
 };
 
 /** A synthetic field catalogue, never a claim that one venue offers everything. */
 export const fullFieldDetails: POIDetailsPresentation = {
   ...restaurantDetails,
-  groups: [
-    ...new Map(
-      [
-        ...restaurantDetails.groups!,
-        ...retailDetails.groups!,
-        ...fitnessDetails.groups!,
-        ...entranceDetails.groups!,
-        ...parkingDetails.groups!,
-        group("clinical", "Clinical specialty", [
-          "Acupuncture",
-          "Allergy and immunology",
-          "Audiology",
-        ]),
-        group("service-types", "Service types", [
-          "Barber and hair salon",
-          "Beauty and spa services",
-        ]),
-        group("capacity", "Capacity", ["80"]),
-        group("crowd", "Crowd level", ["Busy"]),
-        group("wait", "Wait time", ["10 min"]),
-        group("occupancy", "Occupancy status", ["Occupied"]),
-      ].map((item) => [item.id, item]),
-    ).values(),
-  ],
+  ...presentTaxonomyProperties({
+    cuisines: ["Italian", "Pizza", "Mediterranean"],
+    dietaryOptions: ["Vegetarian", "Vegan", "Gluten-Free"],
+    serviceOptions: "Dine-in",
+    isWheelchairAccessible: true,
+    hasHearingLoop: true,
+    hasVisualAids: true,
+    isAutismFriendly: true,
+    hasAssistance: true,
+    hasWifi: true,
+    hasPlayArea: true,
+    hasRestrooms: true,
+    hasAlcoholService: true,
+    hasOutdoorSeating: true,
+    isFamilyFriendly: true,
+    isPetFriendly: true,
+    paymentMethods: [
+      "Credit",
+      "Contactless",
+      "Apple Pay",
+      "Google Pay",
+      "Samsung Pay",
+    ],
+    dressCodes: ["smart-casual"],
+    ageRestriction: "18+",
+    priceRange: 3,
+    hasChargingAvailable: true,
+    hasLuggageStorage: true,
+    hasSecurityStaff: true,
+    languageSupport: ["English", "Spanish", "French"],
+    accessPrograms: ["tsa-precheck", "clear", "global-entry"],
+    productTypes: [
+      "Womens Clothing",
+      "Mens Clothing",
+      "Accessories",
+      "Beauty and Cosmetics",
+      "Footwear",
+      "Home Decor",
+    ],
+    hasChangingFacilities: true,
+    crowdLevel: "packed",
+    waitTime: 25,
+    sportTypes: ["Aerobics", "Athletics"],
+    hasLockers: true,
+    genderDesignation: "all-gender",
+    accessRestrictions: ["booking-required"],
+    parkingTypes: ["Self-Park", "Valet", "EV Charging"],
+    clinicalSpecialty: ["Acupuncture", "Allergy and Immunology", "Audiology"],
+    serviceTypes: ["Barber and Hair Salon", "Beauty and Spa Services"],
+    capacity: 80,
+    occupancyStatus: "occupied",
+  }),
 };

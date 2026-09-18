@@ -368,6 +368,19 @@ try {
         "owned pressed transform works with and without legacy CSS",
       );
       await page.mouse.up();
+      // End hover explicitly and wait for the real transition, rather than
+      // sampling an intermediate color immediately after releasing the press.
+      await page.mouse.move(0, 0);
+      const idleColor = await value(
+        `${id}-button`,
+        "--components-primary-buttons-themed-button-background-idle",
+      );
+      await page.waitForFunction(
+        ({ testId, color }) =>
+          getComputedStyle(document.querySelector(`[data-testid="${testId}"]`))
+            .backgroundColor === color,
+        { testId: `${id}-button`, color: idleColor },
+      );
       assert.equal(
         (await measure(button)).backgroundColor,
         await value(

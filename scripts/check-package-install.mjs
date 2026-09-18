@@ -337,8 +337,9 @@ samples.push({
 import type { POIDetailsPresentation, POIPresentation } from "@kozmos/product-contracts";
 const poi: POIPresentation = { id: "entry", name: "Entrance", floorId: "1", floorLabel: "Floor 1", media: [], actions: ["navigate"] };
 const details: POIDetailsPresentation = {
-  summary: [{ id: "access", kind: "accessibility", label: "Accessibility", value: "Step-free" }],
-  groups: [{ id: "amenities", heading: "Amenities", items: [{ id: "wifi", label: "WiFi", iconName: "wifi" }] }],
+  summary: [{ id: "access", kind: "property", label: "Accessibility", value: "Step-free", tone: "success", iconUrl: "/access.png", iconMonochrome: true }, { id: "price", kind: "price", label: "Price", value: "3 of 4", priceLevel: 3 }],
+  groups: [{ id: "amenities", heading: "Amenities", items: [{ id: "wifi", label: "WiFi", iconName: "wifi", iconUrl: "/wifi.png", iconMonochrome: true }] }],
+  tags: [{ id: "pay", label: "Payment", iconUrl: "/payment.png" }],
   supplementaryActions: [{ action: "call", label: "Call" }],
 };
 export function Example() {

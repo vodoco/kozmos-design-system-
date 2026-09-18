@@ -162,7 +162,7 @@ try {
               height: element.getBoundingClientRect().height,
               font: parseFloat(getComputedStyle(element).fontSize),
               line: getComputedStyle(element).lineHeight,
-              icon: element.querySelector("svg")?.getBoundingClientRect().width,
+              icon: element.querySelector("img")?.getBoundingClientRect().width,
             }));
             assert.equal(tag.height, 32);
             assert(Math.abs(tag.font - 13) < 0.05);
@@ -231,7 +231,10 @@ try {
             );
           }
           if (story === "entrance" || story === "missing-data") {
-            assert.equal(await panel.locator("img").count(), 0);
+            assert.equal(
+              await panel.locator("img:not(.kozmos-poi-property-icon)").count(),
+              0,
+            );
             assert.equal(
               await panel
                 .getByRole("button", { name: "Book", exact: true })
@@ -248,7 +251,7 @@ try {
             assert.equal(
               await panel
                 .locator(".kozmos-poi-summary-text")
-                .filter({ hasText: "Wheelchair accessible" })
+                .filter({ hasText: "Wheelchair Friendly" })
                 .evaluateAll((values) =>
                   values.every((value) => {
                     const measure = document.createElement("span");
@@ -282,7 +285,7 @@ try {
           }
           if (story === "fitness") {
             await panel
-              .getByRole("heading", { name: "Sport types", exact: true })
+              .getByRole("heading", { name: "Sport Types", exact: true })
               .waitFor();
             assert.equal(
               await panel
@@ -300,7 +303,7 @@ try {
             );
             assert.equal(await panel.locator(".kozmos-poi-gallery").count(), 0);
             await panel
-              .getByRole("heading", { name: "Parking types", exact: true })
+              .getByRole("heading", { name: "Parking Types", exact: true })
               .waitFor();
           }
           if (story === "failed-media")

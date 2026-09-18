@@ -19,7 +19,54 @@ const summaryIcons = {
   dietary: Feather,
   crowd: ClockPlus,
   price: null,
+  property: null,
 };
+
+/** Images are decorative and never replace the readable label. Do not inline remote SVG. */
+export function POIDetailAssetIcon({
+  src,
+  size = 16,
+  monochrome = false,
+}: {
+  src: string;
+  size?: number;
+  monochrome?: boolean;
+}) {
+  const [failed, setFailed] = React.useState<string>();
+  const safe =
+    !src.includes("\\") && (/^https:\/\//i.test(src) || /^\/(?!\/)/.test(src));
+  if (!safe || failed === src) return null;
+  const image = (
+    <img
+      className="kozmos-poi-property-icon"
+      src={src}
+      alt=""
+      aria-hidden="true"
+      width={size}
+      height={size}
+      referrerPolicy="no-referrer"
+      crossOrigin={monochrome ? "anonymous" : undefined}
+      onError={() => setFailed(src)}
+    />
+  );
+  if (!monochrome) return image;
+  // Escape the quoted CSS URL; never interpolate an unquoted URL as CSS.
+  const mask = `url(${JSON.stringify(src)})`;
+  return (
+    <span
+      className="kozmos-poi-property-mask"
+      aria-hidden="true"
+      style={{
+        width: size,
+        height: size,
+        maskImage: mask,
+        WebkitMaskImage: mask,
+      }}
+    >
+      {image}
+    </span>
+  );
+}
 
 export function POIDetailAttribute({ item }: { item: POIServicePresentation }) {
   const Icon =
@@ -28,7 +75,14 @@ export function POIDetailAttribute({ item }: { item: POIServicePresentation }) {
       : undefined;
   return (
     <>
-      {Icon && <Icon aria-hidden="true" size={16} />}
+      {item.iconUrl ? (
+        <POIDetailAssetIcon
+          src={item.iconUrl}
+          monochrome={item.iconMonochrome}
+        />
+      ) : (
+        Icon && <Icon aria-hidden="true" size={16} />
+      )}
       <span>{item.label}</span>
     </>
   );
@@ -49,10 +103,31 @@ export function POIDetailSummaryStrip({
             className="kozmos-poi-summary-item"
             key={item.id}
             label={item.label}
-            icon={Icon ? <Icon size={20} /> : undefined}
+            data-tone={item.tone}
+            icon={
+              item.iconUrl ? (
+                <POIDetailAssetIcon
+                  src={item.iconUrl}
+                  size={20}
+                  monochrome={item.iconMonochrome}
+                />
+              ) : Icon ? (
+                <Icon size={20} />
+              ) : undefined
+            }
           >
             <span className="kozmos-poi-summary-text">
-              {item.value}
+              {item.priceLevel ? (
+                <>
+                  <span className="kozmos-poi-price" aria-hidden="true">
+                    {"$".repeat(item.priceLevel)}
+                    <span>{"$".repeat(4 - item.priceLevel)}</span>
+                  </span>
+                  <span className="kozmos-meta-label-hidden">{item.value}</span>
+                </>
+              ) : (
+                item.value
+              )}
               {item.detail && <small>{item.detail}</small>}
             </span>
           </MetaStripItem>
@@ -148,7 +223,7 @@ export function POIDetailContent({
         <ul className="kozmos-poi-chips" aria-label={tagsLabel}>
           {details.tags!.map((tag) => (
             <li className="kozmos-reset" key={tag.id}>
-              {tag.label}
+              <POIDetailAttribute item={tag} />
             </li>
           ))}
         </ul>

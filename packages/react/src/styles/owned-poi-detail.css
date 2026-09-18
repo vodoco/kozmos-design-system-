@@ -126,6 +126,45 @@
   .kozmos-poi-summary-text {
     text-align: start;
   }
+  .kozmos-poi-summary-item[data-tone] .kozmos-meta-icon {
+    color: inherit;
+  }
+  .kozmos-poi-summary-item[data-tone="success"] {
+    @apply text-success;
+  }
+  .kozmos-poi-summary-item[data-tone="warning"] {
+    @apply text-warning;
+  }
+  .kozmos-poi-summary-item[data-tone="danger"] {
+    @apply text-destructive;
+  }
+  .kozmos-poi-summary-item[data-tone="brand"] {
+    @apply text-primary;
+  }
+  .kozmos-poi-price {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .kozmos-poi-price > span {
+    @apply text-muted-foreground;
+  }
+  .kozmos-poi-property-icon {
+    display: inline-block;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+  .kozmos-poi-property-mask {
+    display: inline-block;
+    flex-shrink: 0;
+    background-color: currentColor;
+    mask-mode: alpha;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+  }
+  .kozmos-poi-property-mask > img {
+    opacity: 0;
+  }
   .kozmos-poi-summary-text small {
     @apply text-xs text-muted-foreground;
     display: block;

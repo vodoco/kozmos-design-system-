@@ -19,6 +19,9 @@ describe("SDK reference data", () => {
       fullFieldDetails,
     }),
   )("%s has stable unique keys for every optional collection", (_, details) => {
+    expect((details as typeof details & { issues: string[] }).issues).toEqual(
+      [],
+    );
     for (const collection of [
       details.groups,
       details.summary,

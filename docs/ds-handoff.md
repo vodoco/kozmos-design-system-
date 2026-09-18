@@ -7,6 +7,12 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**Taxonomy integration, 2026-09-18:** read `poi-taxonomy-display-2026-09-18.md`
+for the pinned 10.12.0 property/value icon adapter, ordering, null/false/zero rules,
+dark-mode asset handling, and upstream schema/color conflicts. The adapter is an
+example, not a validated live SDK parser. Rating and opening-hours object schemas
+remain undefined by that taxonomy. No push/merge/npm.
+
 **POI follow-up review, 2026-09-18:** read
 `poi-reference-review-2026-09-18.md` for fixes, verification and self-service
 editing instructions. Eleven examples now include retail, fitness, parking and

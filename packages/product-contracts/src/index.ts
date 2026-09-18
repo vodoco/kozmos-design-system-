@@ -27,6 +27,10 @@ export interface POIServicePresentation {
   id: string;
   label: string;
   iconName?: string;
+  /** Optional decorative asset; label remains visible. Web accepts HTTPS or root-relative URLs. */
+  iconUrl?: string;
+  /** Use the asset alpha as a current-color mask (monochrome assets only). */
+  iconMonochrome?: boolean;
 }
 
 export interface POIPresentation {
@@ -65,10 +69,15 @@ export interface POIDetailAttributeGroup {
 /** Kind describes meaning without coupling the contract to a platform icon. */
 export interface POIDetailSummary {
   id: string;
-  kind: "rating" | "price" | "accessibility" | "dietary" | "crowd";
+  kind: "rating" | "price" | "accessibility" | "dietary" | "crowd" | "property";
   label: string;
   value: string;
   detail?: string;
+  iconUrl?: string;
+  iconMonochrome?: boolean;
+  tone?: "neutral" | "success" | "warning" | "danger" | "brand";
+  /** Optional visual scale. The localized value remains the accessible text. */
+  priceLevel?: 1 | 2 | 3 | 4;
 }
 
 export interface POIOpeningHoursPresentation {
@@ -87,7 +96,7 @@ export interface POIDetailsPresentation {
   openingHours?: POIOpeningHoursPresentation;
   /** Plain text only. Products must adapt/sanitize rich API content separately. */
   description?: { preview: string; full?: string };
-  tags?: readonly { id: string; label: string }[];
+  tags?: readonly POIServicePresentation[];
   supplementaryActions?: readonly {
     action: POISupplementaryAction;
     label: string;

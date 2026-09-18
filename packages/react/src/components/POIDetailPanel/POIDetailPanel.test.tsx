@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import type { POIAction, POIPresentation } from "@kozmos/product-contracts";
 import { describe, expect, it, vi } from "vitest";
 import { POIDetailPanel } from "./POIDetailPanel";
+import { POIDetailAssetIcon } from "./POIDetailContent";
 import {
   restaurantDetails,
   restaurantPOI,
@@ -32,6 +33,63 @@ const poi: POIPresentation = {
 };
 
 describe("POIDetailPanel", () => {
+  it("keeps external icons decorative, rejects unsafe URLs and retries changed assets", () => {
+    const { container, rerender } = render(
+      <POIDetailAssetIcon src="https://example.test/icon.png" />,
+    );
+    const image = container.querySelector("img")!;
+    expect(image).toHaveAttribute("alt", "");
+    expect(image).toHaveAttribute("aria-hidden", "true");
+    fireEvent.error(image);
+    expect(container.querySelector("img")).toBeNull();
+    rerender(<POIDetailAssetIcon src="/new-icon.png" />);
+    expect(container.querySelector("img")).not.toBeNull();
+    for (const src of [
+      "javascript:alert(1)",
+      "data:image/svg+xml,hi",
+      "//evil.test/icon",
+      "/\\evil.test/icon",
+    ]) {
+      rerender(<POIDetailAssetIcon src={src} />);
+      expect(container.querySelector("img")).toBeNull();
+    }
+  });
+  it("preserves tag text when the decorative asset fails", () => {
+    const { container } = render(
+      <POIDetailPanel
+        poi={poi}
+        actionLabels={labels}
+        onAction={vi.fn()}
+        details={{
+          tags: [
+            {
+              id: "pay",
+              label: "Apple Pay",
+              iconUrl: "https://example.test/apple.png",
+            },
+          ],
+        }}
+      />,
+    );
+    fireEvent.error(container.querySelector(".kozmos-poi-property-icon")!);
+    expect(screen.getByText("Apple Pay")).toBeVisible();
+    expect(container.querySelector(".kozmos-poi-property-icon")).toBeNull();
+  });
+  it("masks only explicitly monochrome assets and removes a failed mask", () => {
+    const { container, rerender } = render(
+      <POIDetailAssetIcon src="https://example.test/icon.png" monochrome />,
+    );
+    expect(container.querySelector(".kozmos-poi-property-mask")).not.toBeNull();
+    expect(container.querySelector("img")).toHaveAttribute(
+      "crossorigin",
+      "anonymous",
+    );
+    fireEvent.error(container.querySelector("img")!);
+    expect(container.querySelector(".kozmos-poi-property-mask")).toBeNull();
+    rerender(<POIDetailAssetIcon src="https://example.test/color.png" />);
+    expect(container.querySelector("img")).not.toBeNull();
+    expect(container.querySelector(".kozmos-poi-property-mask")).toBeNull();
+  });
   it("renders optional decorative attribute icons and preserves unknown-icon text", () => {
     render(
       <POIDetailPanel
@@ -257,7 +315,7 @@ describe("POIDetailPanel", () => {
       screen.queryByRole("button", { name: "Read more" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("region", { name: "Access programs" }),
+      screen.getByRole("region", { name: "Access Programs" }),
     ).toHaveTextContent("TSA PreCheck");
   });
 
