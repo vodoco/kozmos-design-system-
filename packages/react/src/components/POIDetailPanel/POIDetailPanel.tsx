@@ -15,6 +15,7 @@ import {
   ShoppingBag02,
 } from "@kozmos/icons";
 import { cn } from "../../utils";
+import { scrollHorizontalWithKeyboard } from "../../utils/keyboard-scroll";
 import { Button } from "../Button";
 import { IconButton } from "../IconButton";
 import { Heading } from "../Heading";
@@ -41,6 +42,8 @@ export interface POIDetailPanelProps extends Omit<
   /** Additive details; basic POI consumers do not need category-specific fields. */
   details?: POIDetailsPresentation;
   actionLabels: Readonly<Record<POIAction, string>>;
+  /** Accessible name for the horizontally scrollable action group. */
+  actionsLabel?: string;
   actionStates?: Partial<Record<POIAction, POIActionState>>;
   onAction: (action: POIAction, poiId: string) => void;
   /** Supplementary capabilities do not widen the required action label record. */
@@ -114,6 +117,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
       poi,
       details,
       actionLabels,
+      actionsLabel = "Place actions",
       actionStates = {},
       onAction,
       onSupplementaryAction,
@@ -232,7 +236,29 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
         )}
         {(actions.length > 0 ||
           Boolean(details?.supplementaryActions?.length)) && (
-          <div className="kozmos-poi-actions">
+          <div
+            key={poi.id}
+            className="kozmos-poi-actions"
+            role="group"
+            aria-label={actionsLabel}
+            tabIndex={0}
+            onKeyDown={scrollHorizontalWithKeyboard}
+            onFocusCapture={(event) => {
+              if (event.target === event.currentTarget) return;
+              const target = event.target.getBoundingClientRect();
+              const viewport = event.currentTarget.getBoundingClientRect();
+              // Reveal the focused control and its ring within this strip only.
+              // scrollIntoView would also move the panel/page ancestors.
+              const delta =
+                target.left < viewport.left
+                  ? target.left - viewport.left - 4
+                  : target.right > viewport.right
+                    ? target.right - viewport.right + 4
+                    : 0;
+              if (delta)
+                event.currentTarget.scrollBy({ left: delta, behavior: "auto" });
+            }}
+          >
             {actions.map((action) => {
               const Icon = actionIcons[action];
               const state = actionStates[action];

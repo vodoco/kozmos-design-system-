@@ -78,12 +78,22 @@
   }
   .kozmos-poi-actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 1rem;
     align-items: center;
     gap: 0.5rem;
     padding: 1rem;
   }
+  .kozmos-poi-actions:focus-visible {
+    @apply outline outline-2 outline-ring;
+    outline-offset: -2px;
+  }
   .kozmos-poi-action {
+    flex: 0 0 auto;
     block-size: auto;
     min-block-size: 2.75rem;
     max-inline-size: 100%;

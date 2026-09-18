@@ -33,6 +33,72 @@ const poi: POIPresentation = {
 };
 
 describe("POIDetailPanel", () => {
+  it("reveals focused buttons by scrolling only their action strip", () => {
+    render(
+      <POIDetailPanel poi={poi} actionLabels={labels} onAction={vi.fn()} />,
+    );
+    const strip = screen.getByRole("group", { name: "Place actions" });
+    const share = screen.getByRole("button", { name: "Share" });
+    const scrollBy = vi.fn();
+    strip.scrollBy = scrollBy;
+    vi.spyOn(strip, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      right: 100,
+    } as DOMRect);
+    vi.spyOn(share, "getBoundingClientRect").mockReturnValue({
+      left: 80,
+      right: 140,
+    } as DOMRect);
+    fireEvent.focus(share);
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 44, behavior: "auto" });
+    vi.mocked(share.getBoundingClientRect).mockReturnValue({
+      left: -20,
+      right: 40,
+    } as DOMRect);
+    fireEvent.focus(share);
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: -24, behavior: "auto" });
+  });
+  it("names the scrollable action group and handles viewport keys without stealing button keys", () => {
+    render(
+      <POIDetailPanel
+        poi={poi}
+        actionLabels={labels}
+        actionsLabel="Venue actions"
+        onAction={vi.fn()}
+      />,
+    );
+    const strip = screen.getByRole("group", { name: "Venue actions" });
+    expect(strip).toHaveAttribute("tabindex", "0");
+    Object.defineProperties(strip, {
+      scrollWidth: { value: 600 },
+      clientWidth: { value: 300 },
+    });
+    const scrollTo = vi.fn();
+    strip.scrollTo = scrollTo;
+    fireEvent.keyDown(strip, { key: "End" });
+    expect(scrollTo).toHaveBeenCalledWith({ left: 300, behavior: "auto" });
+    scrollTo.mockClear();
+    fireEvent.keyDown(screen.getByRole("button", { name: "Go" }), {
+      key: "End",
+    });
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+  it("resets action scrolling on a different POI but preserves it on refresh", () => {
+    const props = { actionLabels: labels, onAction: vi.fn() };
+    const { rerender } = render(<POIDetailPanel {...props} poi={poi} />);
+    const strip = screen.getByRole("group", { name: "Place actions" });
+    strip.scrollLeft = 90;
+    rerender(<POIDetailPanel {...props} poi={{ ...poi, name: "Updated" }} />);
+    expect(screen.getByRole("group", { name: "Place actions" })).toBe(strip);
+    expect(strip.scrollLeft).toBe(90);
+    rerender(<POIDetailPanel {...props} poi={{ ...poi, id: "different" }} />);
+    expect(screen.getByRole("group", { name: "Place actions" })).not.toBe(
+      strip,
+    );
+    expect(
+      screen.getByRole("group", { name: "Place actions" }).scrollLeft,
+    ).toBe(0);
+  });
   it.each([0, 1, 2, 3, 4])(
     "renders at most three metadata items from %i supplied",
     (count) => {

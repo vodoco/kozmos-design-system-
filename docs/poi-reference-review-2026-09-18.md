@@ -1,5 +1,31 @@
 # POI reference implementation: follow-up review
 
+## Action-strip clarification
+
+The Go/Share/Book/Call/Order strip is now one horizontally scrollable row,
+not a wrapping button group. Buttons do not shrink; unusually long labels can
+still wrap inside their own button at narrow widths or large text sizes.
+Native touch/trackpad scrolling and the platform's scrollbar behavior are retained. The group
+has a visible focus indicator, supports horizontal arrow/Home/End keys while
+the group owns focus, and leaves button keys alone. Tab reveals off-screen
+buttons by adjusting only the action strip's scroll offset, not the enclosing
+panel/page. `actionsLabel` localizes its accessible name (default
+“Place actions”). A different POI resets the strip; refreshing the same POI
+preserves its scroll. This does not change the three-item, non-scrolling
+metadata strip or the separate favourite/bookmark/close controls.
+
+Edit `POIDetailPanel.tsx` and `styles/owned-poi-detail.css`. Unit coverage lives
+in `POIDetailPanel.test.tsx`; the POI browser gate checks one-row geometry,
+End/Home scrolling and off-screen keyboard focus in overflowing examples.
+
+Verification: 494 React tests and 198 POI browser cases pass; React build/lint,
+Docs build/typecheck, component/class contracts and all three engines' owned-CSS
+checks pass. Initial axe scans report zero violations and two incomplete contrast
+checks per engine (320px on-map, light/dark): `elmPartiallyObscured` on the POI
+heading after keyboard focus scrolls the panel. Those original results are
+retained. Six additional audits with the heading scrolled fully into view pass
+with zero violations/incomplete checks. No contrast rule was disabled.
+
 ## Latest clarification — three-item metadata cap
 
 The 22:29 user clarification supersedes this report's earlier horizontal-scroll

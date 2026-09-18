@@ -51,6 +51,88 @@ try {
           );
           const panel = page.locator(".kozmos-poi-detail");
           await panel.waitFor({ timeout: 60000 });
+          const actionStrip = panel.locator(".kozmos-poi-actions");
+          if (await actionStrip.count()) {
+            const buttons = actionStrip.getByRole("button");
+            const centers = await buttons.evaluateAll((items) =>
+              items.map((item) => {
+                const rect = item.getBoundingClientRect();
+                return rect.top + rect.height / 2;
+              }),
+            );
+            assert(
+              centers.every((center) => Math.abs(center - centers[0]) < 1),
+              "action buttons stay on one row",
+            );
+            if (
+              await actionStrip.evaluate(
+                (e) => e.scrollWidth > e.clientWidth + 1,
+              )
+            ) {
+              await actionStrip.focus();
+              await page.keyboard.press("End");
+              await page.waitForFunction(() => {
+                const strip = document.querySelector(".kozmos-poi-actions");
+                return (
+                  strip.lastElementChild.getBoundingClientRect().right <=
+                  strip.getBoundingClientRect().right + 1
+                );
+              });
+              await page.keyboard.press("Home");
+              assert(
+                await actionStrip.evaluate((e) => Math.abs(e.scrollLeft) < 1),
+              );
+              if (
+                story === "restaurant" &&
+                viewport.width === 320 &&
+                theme === "light"
+              ) {
+                await panel.evaluate((e) => e.setAttribute("dir", "rtl"));
+                await actionStrip.focus();
+                await page.keyboard.press("End");
+                assert(
+                  await actionStrip.evaluate((e) => {
+                    const last = e.lastElementChild.getBoundingClientRect(),
+                      view = e.getBoundingClientRect();
+                    return (
+                      last.left >= view.left - 1 && last.right <= view.right + 1
+                    );
+                  }),
+                  "RTL End reveals the final action",
+                );
+                await page.keyboard.press("Home");
+                assert(
+                  await actionStrip.evaluate((e) => Math.abs(e.scrollLeft) < 1),
+                  "RTL Home returns to the first action",
+                );
+                await panel.evaluate((e) => e.removeAttribute("dir"));
+              }
+              const enabled = actionStrip.locator("button:not(:disabled)");
+              if (await enabled.count()) {
+                await enabled.first().focus();
+                for (let i = 1; i < (await enabled.count()); i++)
+                  await page.keyboard.press("Tab");
+                assert(
+                  await enabled
+                    .last()
+                    .evaluate((e) => e === document.activeElement),
+                );
+                assert(
+                  await enabled.last().evaluate((e) => {
+                    const rect = e.getBoundingClientRect(),
+                      view = e.parentElement.getBoundingClientRect();
+                    return (
+                      rect.left >= view.left - 1 && rect.right <= view.right + 1
+                    );
+                  }),
+                  "tabbing reveals off-screen action buttons",
+                );
+                await actionStrip.evaluate((e) => {
+                  e.scrollLeft = 0;
+                });
+              }
+            }
+          }
           const strip = panel.locator("[data-slot=meta-strip]");
           if (await strip.count()) {
             const rows = await strip
