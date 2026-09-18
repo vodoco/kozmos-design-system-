@@ -27,6 +27,7 @@ const preview: Preview = {
         <main
           className="kozmos-story-surface"
           data-layout={context.parameters.layout ?? "padded"}
+          data-view-mode={context.viewMode}
         >
           <Story />
         </main>

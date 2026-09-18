@@ -25,6 +25,8 @@
     "test:token-alpha": "node scripts/check-token-alpha.mjs",
     "test:temporal-css": "node scripts/check-temporal-css.mjs",
     "test:storybook-regressions": "node scripts/check-storybook-regressions.mjs",
+    "test:storybook-docs": "node scripts/check-storybook-docs.mjs",
+    "test:storybook-vue-smoke": "node scripts/check-storybook-vue-smoke.mjs",
     "test:storybook-audit": "node scripts/audit-storybook.mjs",
     "test:storybook-interactions": "node scripts/check-storybook-interactions.mjs",
     "test:css-build": "node --test packages/react/postcss/*.test.cjs",

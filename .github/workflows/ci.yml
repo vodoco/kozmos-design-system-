@@ -196,6 +196,19 @@ jobs:
             "python3 -m http.server 6008 --bind 127.0.0.1 --directory storybook-static" \
             "bash -lc 'until curl -sf http://127.0.0.1:6008/index.json >/dev/null; do sleep 2; done; STORY_SCOPE=all STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:storybook-audit && STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:storybook-interactions && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=firefox pnpm -w test:storybook-interactions && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=webkit pnpm -w test:storybook-interactions'"
 
+      - name: Verify Public Documentation
+        run: |
+          pnpm --filter @kozmos/docs exec concurrently -k -s first -n "DOCS,TEST" \
+            "python3 -m http.server 6008 --bind 127.0.0.1 --directory storybook-static" \
+            "bash -lc 'until curl -sf http://127.0.0.1:6008/index.json >/dev/null; do sleep 2; done; STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:storybook-docs'"
+
+      - name: Build and Smoke Test Internal Vue Harness
+        run: |
+          pnpm --filter @kozmos/docs build-storybook:vue
+          pnpm --filter @kozmos/docs exec concurrently -k -s first -n "VUE,TEST" \
+            "python3 -m http.server 6009 --bind 127.0.0.1 --directory storybook-internal/vue" \
+            "bash -lc 'until curl -sf http://127.0.0.1:6009/index.json >/dev/null; do sleep 2; done; VUE_STORYBOOK_URL=http://127.0.0.1:6009 pnpm -w test:storybook-vue-smoke'"
+
       - name: Preserve Storybook Audit Evidence
         if: always()
         uses: actions/upload-artifact@v4

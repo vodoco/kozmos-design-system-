@@ -501,6 +501,9 @@ importers:
       rollup-plugin-visualizer:
         specifier: 7.0.1
         version: 7.0.1(rolldown@1.0.0-rc.11)(rollup@4.57.1)
+      storybook:
+        specifier: 8.6.15
+        version: 8.6.15(prettier@3.8.1)
       tailwindcss:
         specifier: ^3.4.3
         version: 3.4.19(tsx@4.21.0)(yaml@2.8.2)

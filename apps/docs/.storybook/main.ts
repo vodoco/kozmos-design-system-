@@ -37,15 +37,7 @@ const config: StorybookConfig = {
       propFilter: () => true,
     },
   },
-  refs: {
-    vue: {
-      title: "Kozmos Vue Components",
-      url:
-        process.env.NODE_ENV === "production"
-          ? "/vue/"
-          : "http://localhost:6007",
-    },
-  },
+  // One public catalogue; Vue remains an opt-in internal verification harness.
   async viteFinal(config) {
     // Component stories import source files directly. Public imports in the
     // decorator and composed examples must share those same React contexts.

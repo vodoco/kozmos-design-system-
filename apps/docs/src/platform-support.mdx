@@ -1,0 +1,48 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Guides/Platform support" />
+
+# Platform support and validation
+
+Kozmos has one public component catalogue. Its live examples render React.
+Implementation tabs document platform-specific code; they do not imply equivalent
+APIs, complete coverage, passing tests, or production readiness.
+
+## React
+
+The live catalogue exercises `@kozmos/react`. Release readiness also requires
+package-install checks, supported-browser testing, accessibility review, and real
+product integration. A passing story does not certify every state or consumer.
+
+## Vue — internal only
+
+`@kozmos/vue` is private and is not published to npm. Its adapters mount a React
+root inside each Vue wrapper. Consumers therefore need React and React DOM as
+well as Vue. These wrappers do not support server rendering.
+
+Vue snippets are internal reference examples, not instructions to install a
+released native Vue library. Only three component groups currently have stories;
+that is test coverage, not the total number of exported wrappers. Nested context,
+slots, events, two-way binding and teardown require separate adapter testing.
+
+Maintainers can run `pnpm --filter @kozmos/docs storybook:vue` to open the internal
+Vue harness on port 6007. It is intentionally absent from the public sidebar.
+
+## Swift and Kotlin — native references
+
+The native packages have separate implementations and build pipelines. Their
+snippets are not executed by this web catalogue. Some existing examples are
+implementation excerpts, not complete applications. Check the actual package API
+and native build/test results before using them. Native package delivery is
+separate from npm publication.
+
+## What is checked today
+
+`pnpm docs:snippets:check` checks Kozmos-prefixed identifiers against each
+platform's source tree. It does **not** compile examples, validate all imports or
+props, or establish behavioural equivalence. Native builds and adapter tests do
+not automatically compile the strings displayed in these documentation tabs.
+
+Missing example text means **not documented**, not automatically unsupported.
+Until executable snippet fixtures and a per-component platform support matrix
+exist, unverified reference examples must not be described as validated recipes.
