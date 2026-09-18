@@ -83,6 +83,7 @@
     "tokens:raw:check": "node scripts/check-raw-values.mjs",
     "components:classes:check": "node scripts/check-compiled-classes.mjs",
     "packages:install:check": "node scripts/check-package-install.mjs",
+    "product:consumer:check": "node scripts/check-product-consumer.mjs",
     "native:check": "node scripts/check-native-builds.mjs",
     "native:check:ios": "node scripts/check-native-builds.mjs ios",
     "native:check:android": "node scripts/check-native-builds.mjs android"

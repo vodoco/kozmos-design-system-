@@ -136,6 +136,9 @@ jobs:
       - name: Install Playwright
         run: pnpm --filter @kozmos/react exec playwright install --with-deps chromium firefox webkit
 
+      - name: Verify Installed Product Consumer (offline, no authentication)
+        run: pnpm product:consumer:check --browser
+
       - name: Verify Browser Selection
         run: |
           pnpm test:browser-selection

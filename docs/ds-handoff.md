@@ -7,6 +7,17 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**Installed-product continuation, 2026-09-18:** read
+`installed-product-pilot-2026-09-18.md`. The existing MapScale Review app is now
+checked from isolated installed tarballs, with strict library checks, its 680
+geometry checks and offline signed-out browser coverage. This found an obsolete
+`Button asChild` use, incompatible Lucide/React types, and typography being
+overridden by scoped CSS. Links use `buttonVariants`, the product's Lucide pin
+matches Kozmos, preflight has zero specificity and Text/Heading use owned CSS.
+No product-specific CSS patch. This is **not authenticated product acceptance**;
+the end-user search-to-routing module is not in this checkout and still needs an
+identified repository/adapter and controlled test environment. No push/merge/npm.
+
 **Executable React recipes, 2026-09-18:** read
 `snippet-validation-2026-09-18.md` for the next release-gate slice. All 82 displayed
 React recipes now compile unchanged against installed tarballs on React 18 and 19,
