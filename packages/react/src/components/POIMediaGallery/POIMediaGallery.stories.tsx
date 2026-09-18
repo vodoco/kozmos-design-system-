@@ -4,7 +4,7 @@ import { POIMediaGallery } from "./POIMediaGallery";
 
 const image = (label: string, color: string) =>
   `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><rect width="640" height="480" fill="${color}"/><text x="320" y="240" text-anchor="middle" dominant-baseline="middle" font-family="system-ui" font-size="28" fill="%2317191c">${label}</text></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><rect width="640" height="480" fill="${color}"/><text x="320" y="240" text-anchor="middle" dominant-baseline="middle" font-family="system-ui" font-size="28" fill="#17191c">${label}</text></svg>`,
   )}`;
 
 const meta = {

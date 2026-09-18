@@ -11,6 +11,10 @@ fs.mkdirSync(output, { recursive: true });
 const stories = [
   "restaurant",
   "entrance",
+  "retail",
+  "fitness",
+  "parking",
+  "full-field-catalogue",
   "missing-data",
   "failed-media",
   "action-states",
@@ -128,6 +132,65 @@ try {
               await panel.getByRole("heading", { name: "Amenities" }).count(),
               0,
             );
+          if (story === "retail") {
+            assert.equal(
+              await panel
+                .locator(".kozmos-poi-summary-value > span")
+                .filter({ hasText: "Wheelchair accessible" })
+                .evaluateAll((values) =>
+                  values.every((value) => {
+                    const measure = document.createElement("span");
+                    measure.textContent = "Wheelchair";
+                    measure.style.font = getComputedStyle(value).font;
+                    measure.style.whiteSpace = "nowrap";
+                    document.body.append(measure);
+                    const fits =
+                      value.getBoundingClientRect().width >=
+                      measure.getBoundingClientRect().width;
+                    measure.remove();
+                    return fits;
+                  }),
+                ),
+              true,
+              "summary reflows before ordinary words fragment",
+            );
+            assert.equal(
+              await panel
+                .getByRole("region", { name: "Cuisines", exact: true })
+                .count(),
+              0,
+            );
+            await panel
+              .getByRole("button", { name: "Call", exact: true })
+              .click();
+            await page
+              .getByRole("status")
+              .filter({ hasText: "Demo call requested" })
+              .waitFor();
+          }
+          if (story === "fitness") {
+            await panel
+              .getByRole("heading", { name: "Sport types", exact: true })
+              .waitFor();
+            assert.equal(
+              await panel
+                .getByRole("button", { name: "Call", exact: true })
+                .count(),
+              0,
+            );
+          }
+          if (story === "parking") {
+            assert.equal(
+              await panel
+                .getByRole("button", { name: "Book", exact: true })
+                .count(),
+              0,
+            );
+            assert.equal(await panel.locator(".kozmos-poi-gallery").count(), 0);
+            await panel
+              .getByRole("heading", { name: "Parking types", exact: true })
+              .waitFor();
+          }
           if (story === "failed-media")
             await panel
               .getByRole("img", {

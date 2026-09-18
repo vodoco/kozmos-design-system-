@@ -146,3 +146,163 @@ export const entranceDetails: POIDetailsPresentation = {
   ],
   openingHours,
 };
+
+export const retailPOI: POIPresentation = {
+  ...restaurantPOI,
+  id: "aria-and-co",
+  name: "Aria & Co.",
+  description:
+    "Flagship fashion & lifestyle department store across three floors.",
+};
+export const retailDetails: POIDetailsPresentation = {
+  travelEstimate: restaurantDetails.travelEstimate,
+  supplementaryActions: [{ action: "call", label: "Call" }],
+  summary: [
+    restaurantDetails.summary![0],
+    entranceDetails.summary![0],
+    {
+      id: "crowd",
+      kind: "crowd",
+      label: "Crowd and wait",
+      value: "Packed",
+      detail: "25 min wait",
+    },
+  ],
+  groups: [
+    group("products", "Product types", [
+      "Womenswear",
+      "Menswear",
+      "Accessories",
+      "Beauty & cosmetics",
+      "Footwear",
+      "Homeware",
+    ]),
+    group("accessibility", "Accessibility", [
+      "Wheelchair accessible",
+      "Assistance available",
+    ]),
+    group("amenities", "Amenities", ["Changing facilities", "Restrooms"]),
+    group("payment", "Payment methods", [
+      "Cash",
+      "Credit/debit",
+      "Mobile",
+      "Contactless",
+      "Apple Pay",
+      "Google Pay",
+      "Samsung Pay",
+      "Store card",
+      "Gift card",
+    ]),
+  ],
+  openingHours,
+  description: {
+    preview:
+      "Three floors of curated fashion, beauty and homeware, with a rooftop café and a dedicated personal-shopping suite on Level 3.",
+    full: "Three floors of curated fashion, beauty and homeware, with a rooftop café and a dedicated personal-shopping suite on Level 3. Seasonal collections rotate monthly and members get early access to sale previews.",
+  },
+  tags: [
+    { id: "fashion", label: "#fashion" },
+    { id: "lifestyle", label: "#lifestyle" },
+  ],
+};
+export const fitnessPOI: POIPresentation = {
+  ...restaurantPOI,
+  id: "peak-performance",
+  name: "Peak Performance",
+  description:
+    "A high-intensity fitness studio offering group classes and open gym access.",
+};
+export const fitnessDetails: POIDetailsPresentation = {
+  travelEstimate: restaurantDetails.travelEstimate,
+  supplementaryActions: [{ action: "book", label: "Book" }],
+  summary: restaurantDetails.summary!.filter((item) => item.kind !== "dietary"),
+  groups: [
+    group("sports", "Sport types", ["Aerobics", "Athletics"]),
+    group("accessibility", "Accessibility", [
+      "Wheelchair accessible",
+      "Assistance available",
+    ]),
+    group("amenities", "Amenities", [
+      "WiFi",
+      "Chargers",
+      "Restrooms",
+      "Locker room",
+      "Changing facilities",
+    ]),
+    group("good-to-know", "Good to know", ["Family friendly"]),
+    group("payment", "Payment methods", [
+      "Cash",
+      "Credit/debit",
+      "Mobile",
+      "Contactless",
+      "Apple Pay",
+      "Google Pay",
+      "Samsung Pay",
+    ]),
+    group("dress", "Dress code", ["Smart casual"]),
+    group("age", "Age restriction", ["18+"]),
+    group("languages", "Language support", ["English", "Spanish", "French"]),
+    group("gender", "Gender designation", ["Male", "Female", "All-gender"]),
+    group("restriction", "Access restriction", ["Booking required"]),
+  ],
+  openingHours,
+  description: {
+    preview:
+      "Peak Performance Studio provides cardio and weightlifting equipment alongside daily instructor-led aerobics and athletics classes.",
+    full: "Peak Performance Studio provides cardio and weightlifting equipment alongside daily instructor-led aerobics and athletics classes. Lockers and showers are available on-site for all members.",
+  },
+  tags: [
+    { id: "fitness", label: "#fitness" },
+    { id: "gym", label: "#gym" },
+  ],
+};
+export const parkingPOI: POIPresentation = {
+  ...entrancePOI,
+  id: "north-deck",
+  name: "North Deck Parking",
+};
+export const parkingDetails: POIDetailsPresentation = {
+  travelEstimate: restaurantDetails.travelEstimate,
+  summary: [entranceDetails.summary![0], retailDetails.summary![2]],
+  groups: [
+    group("accessibility", "Accessibility", ["Wheelchair accessible"]),
+    group("payment", "Payment methods", [
+      "Credit/debit",
+      "Contactless",
+      "Apple Pay",
+      "Google Pay",
+      "Samsung Pay",
+    ]),
+    group("parking", "Parking types", ["Self-park", "Valet", "EV charging"]),
+  ],
+  openingHours,
+};
+
+/** A synthetic field catalogue, never a claim that one venue offers everything. */
+export const fullFieldDetails: POIDetailsPresentation = {
+  ...restaurantDetails,
+  groups: [
+    ...new Map(
+      [
+        ...restaurantDetails.groups!,
+        ...retailDetails.groups!,
+        ...fitnessDetails.groups!,
+        ...entranceDetails.groups!,
+        ...parkingDetails.groups!,
+        group("clinical", "Clinical specialty", [
+          "Acupuncture",
+          "Allergy and immunology",
+          "Audiology",
+        ]),
+        group("service-types", "Service types", [
+          "Barber and hair salon",
+          "Beauty and spa services",
+        ]),
+        group("capacity", "Capacity", ["80"]),
+        group("crowd", "Crowd level", ["Busy"]),
+        group("wait", "Wait time", ["10 min"]),
+        group("occupancy", "Occupancy status", ["Occupied"]),
+      ].map((item) => [item.id, item]),
+    ).values(),
+  ],
+};

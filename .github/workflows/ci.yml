@@ -206,6 +206,13 @@ jobs:
             "bash -lc 'until curl -sf http://127.0.0.1:6008/index.json >/dev/null; do sleep 2; done; STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:storybook-docs && STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:storybook-audit-fixes && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=firefox pnpm -w test:storybook-audit-fixes && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=webkit pnpm -w test:storybook-audit-fixes'"
 
       - name: Verify SDK POI Reference Examples
+        # Package-built gallery checks are separate from source-backed Storybook.
+        run: |
+          pnpm test:poi-gallery
+          ADAPTIVE_BROWSER=firefox pnpm test:poi-gallery
+          ADAPTIVE_BROWSER=webkit pnpm test:poi-gallery
+
+      - name: Verify SDK POI Reference Screens
         run: |
           pnpm --filter @kozmos/docs exec concurrently -k -s first -n "POI,TEST" \
             "python3 -m http.server 6008 --bind 127.0.0.1 --directory storybook-static" \
@@ -216,7 +223,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: poi-detail-examples
-          path: test-results/poi-detail-examples
+          path: |
+            test-results/poi-detail-examples
+            test-results/poi-gallery
           if-no-files-found: ignore
           retention-days: 7
 

@@ -32,6 +32,49 @@ const poi: POIPresentation = {
 };
 
 describe("POIDetailPanel", () => {
+  it("resets scroll only when selecting a different place and forwards its ref", () => {
+    let node: HTMLElement | null = null;
+    const props = {
+      actionLabels: labels,
+      onAction: vi.fn(),
+      ref: (element: HTMLElement | null) => {
+        node = element;
+      },
+    };
+    const { rerender } = render(<POIDetailPanel {...props} poi={poi} />);
+    const article = screen.getByRole("article");
+    expect(node).toBe(article);
+    article.scrollTop = 300;
+    rerender(
+      <POIDetailPanel {...props} poi={{ ...poi, name: "Updated name" }} />,
+    );
+    expect(article.scrollTop).toBe(300);
+    rerender(<POIDetailPanel {...props} poi={{ ...poi, id: "another" }} />);
+    expect(article.scrollTop).toBe(0);
+  });
+
+  it("omits a broken logo and retries when its source changes", () => {
+    const props = { actionLabels: labels, onAction: vi.fn() };
+    const { rerender } = render(
+      <POIDetailPanel
+        {...props}
+        poi={{ ...poi, logo: { src: "/bad-logo.png", alt: "Venue logo" } }}
+      />,
+    );
+    fireEvent.error(screen.getByAltText("Venue logo"));
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: poi.name })).toBeVisible();
+    rerender(
+      <POIDetailPanel
+        {...props}
+        poi={{ ...poi, logo: { src: "/replacement.png", alt: "Venue logo" } }}
+      />,
+    );
+    expect(screen.getByAltText("Venue logo")).toHaveAttribute(
+      "src",
+      "/replacement.png",
+    );
+  });
   it("renders the restaurant's optional anatomy as semantic information", () => {
     render(
       <POIDetailPanel

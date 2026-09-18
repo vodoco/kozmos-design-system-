@@ -15,6 +15,13 @@ import {
   poiActionLabels,
   restaurantDetails,
   restaurantPOI,
+  retailPOI,
+  retailDetails,
+  fitnessPOI,
+  fitnessDetails,
+  parkingPOI,
+  parkingDetails,
+  fullFieldDetails,
 } from "./POIDetailPanel.fixtures";
 
 function Example({
@@ -174,7 +181,7 @@ const meta = {
     details: restaurantDetails,
     actionLabels: poiActionLabels,
   },
-  render: (args) => <Example {...args} />,
+  render: (args) => <Example key={args.poi.id} {...args} />,
 } satisfies Meta<typeof POIDetailPanel>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -182,7 +189,29 @@ export const Restaurant: Story = {};
 export const Entrance: Story = {
   args: { poi: entrancePOI, details: entranceDetails },
 };
-export const OnMap: Story = { render: (args) => <Example {...args} map /> };
+export const Retail: Story = {
+  args: { poi: retailPOI, details: retailDetails },
+};
+export const Fitness: Story = {
+  args: { poi: fitnessPOI, details: fitnessDetails },
+};
+export const Parking: Story = {
+  args: { poi: parkingPOI, details: parkingDetails },
+};
+export const FullFieldCatalogue: Story = {
+  args: {
+    poi: {
+      ...restaurantPOI,
+      id: "catalogue",
+      name: "POI field catalogue",
+      description: "Synthetic all-fields stress test. Not a real venue.",
+    },
+    details: fullFieldDetails,
+  },
+};
+export const OnMap: Story = {
+  render: (args) => <Example key={args.poi.id} {...args} map />,
+};
 export const MissingData: Story = {
   args: {
     poi: {

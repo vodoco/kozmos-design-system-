@@ -8,6 +8,7 @@
 @import "./styles/owned-navbar.css";
 @import "./styles/owned-typography.css";
 @import "./styles/owned-poi-detail.css";
+@import "./styles/owned-poi-gallery.css";
 
 @tailwind base;
 @tailwind components;

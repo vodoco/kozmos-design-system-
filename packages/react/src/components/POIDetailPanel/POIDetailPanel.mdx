@@ -17,10 +17,11 @@ presentations.
 
 ## SDK reference examples
 
-The **Product SDK / POI Detail Examples** stories rebuild the supplied restaurant
-and entrance references with Kozmos tokens. Restaurant, Entrance, On Map,
-Missing Data, Failed Media, Action States and Long Content are separate acceptance
-cases. Fixture actions never call a booking service, share API or routing engine.
+The **Product SDK / POI Detail Examples** stories rebuild the supplied restaurant,
+entrance, retail, fitness and parking references with Kozmos tokens. These five
+venue examples, Full Field Catalogue, On Map, Missing Data, Failed Media,
+Action States and Long Content are separate acceptance cases. Fixture actions
+never call a booking service, share API or routing engine.
 
 The optional `details: POIDetailsPresentation` model adds typed summary items,
 ordered information groups, venue-local opening-hours rows, plain-text description
@@ -33,6 +34,14 @@ Existing `onAction` and `actionLabels` remain unchanged. Optional book/call
 capabilities use `details.supplementaryActions`, `onSupplementaryAction` and
 `supplementaryActionStates`; without a callback those actions are disabled.
 Favourite/bookmark are controlled toggle buttons in the header.
+
+Changing `poi.id` resets panel scroll and description expansion; refreshing the
+same POI preserves its scroll position. A failed logo is omitted, retaining the
+text title; changing its source retries loading. The host still owns selection
+state and focus. Localize `mediaControlsLabel` along with the gallery's previous,
+next, position and unavailable labels. Gallery state follows native scrolling,
+keyboard steps and accepted controlled values; its alignment does not scroll
+the containing panel.
 
 The example uses `AdaptiveMapShell`, not a modal drawer. On narrow hosts an
 explicit button requests more detail space; wider hosts use a side panel.

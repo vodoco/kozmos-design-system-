@@ -6,9 +6,25 @@ import * as Stories from "./POIMediaGallery.stories";
 
 # POIMediaGallery
 
-Accessible POI media sequence with explicit position, 44px controls, semantic
-alternative text, and no placeholder fallback. If real media is unavailable the
-component renders nothing.
+POI media sequence with explicit position, 44px controls and alternative text.
+An empty array renders nothing. A failed image displays a localized failure
+label; changing its source retries it. This story uses synthetic labelled tiles,
+not venue photographs.
+
+Previous/next, Home/End, direction-aware arrow keys and native scrolling keep the
+visible image and position announcement synchronized. A controlled activeIndex
+moves the scrollport; requests through onActiveIndexChange remain controlled by
+the host. If the host rejects a scroll request, the previous selection is restored.
+Alignment scrolls only this gallery, not its enclosing panel or the document.
+
+Resizing and inherited text-direction changes retain the active item. Uncontrolled
+indices are clamped when media shrinks; clearing the list resets that state to zero.
+Indices are positions, not persistent media IDs. A host that reorders media and
+wants to keep a particular image selected must map its ID to the new index.
+
+All labels, including the controls group, can be localized. No timed autoplay or
+forced smooth scrolling is used. Gallery CSS is component-owned and tested with
+legacy CSS scope removed. Real-device touch gestures still need manual acceptance.
 
 <Canvas of={Stories.Default} />
 <Controls />

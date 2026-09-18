@@ -2,11 +2,13 @@
 
 ## Scope and source
 
-This slice implements the restaurant (Il Forno) and sparse entrance (Terminal 1)
-references from the seven screenshots supplied in this task. Figma required
+This slice implements the restaurant (Il Forno), sparse entrance (Terminal 1),
+retail (Aria & Co.), fitness (Peak Performance) and parking (North Deck Parking)
+references, plus the synthetic all-fields catalogue, from the screenshots supplied
+in this task. Figma required
 authentication, so these are screenshot-informed examples, not a claim of exact
-Figma-token/asset parity. The retail, fitness, parking and all-fields catalogue
-remain follow-up fixtures, not completed screens.
+Figma-token/asset parity. The full-field catalogue is deliberately a schema stress
+example, not a plausible venue carrying every capability.
 
 The result is one shared POIDetailPanel with optional rich detail data, not a
 separate component for each venue type. Basic POI/action contracts remain usable.
@@ -21,6 +23,10 @@ Storybook: **Product SDK / POI Detail Examples**.
 
 - Restaurant: rich information and controlled favourite/bookmark actions.
 - Entrance: no rating, image, description or booking capability fabricated.
+- Retail: product categories, crowd information and a call action, no booking.
+- Fitness: sports/facilities, language and access information, booking capability.
+- Parking: no logo/gallery/description; parking types and limited actions.
+- Full Field Catalogue: every supplied attribute category, with stable unique IDs.
 - On Map: AdaptiveMapShell with a clearly labelled renderer placeholder,
   non-modal bottom/side presentation and explicit expand/collapse controls.
 - Missing Data: unknown hours, empty groups omitted.
@@ -52,9 +58,12 @@ estimates and accessibility claims are fixture data, not live venue facts.
   using existing Kozmos colors, type scale and radii. No global selectors,
   hidden horizontal overflow or !important overrides.
 - packages/react/src/components/POIMediaGallery/POIMediaGallery.tsx: labelled
-  failed-image fallback; a changed source retries naturally. Gallery buttons no
-  longer force smooth movement. Full gallery gesture/index synchronization is
-  outside this slice's acceptance coverage.
+  failed-image fallback; a changed source retries naturally. Native scroll,
+  keyboard, controlled indices, resize and RTL synchronize the visible image and
+  counter. Alignment only moves the gallery, not its enclosing panel. Owned
+  styling is in packages/react/src/styles/owned-poi-gallery.css.
+- scripts/check-poi-gallery.mjs: built-package geometry/state checks with and
+  without CSS scope, in LTR/RTL. Synthetic images are labelled test illustrations.
 - scripts/check-poi-detail-examples.mjs: responsive, interaction, focus,
   accessibility and screenshot acceptance. CI runs it in all three engines and
   uploads its evidence.
@@ -97,6 +106,9 @@ pnpm components:contract:check
 pnpm components:classes:check
 pnpm test:css-build
 pnpm test:owned-css
+pnpm test:poi-gallery
+ADAPTIVE_BROWSER=firefox pnpm test:poi-gallery
+ADAPTIVE_BROWSER=webkit pnpm test:poi-gallery
 ADAPTIVE_BROWSER=firefox pnpm test:owned-css
 ADAPTIVE_BROWSER=webkit pnpm test:owned-css
 pnpm packages:install:check
@@ -126,7 +138,7 @@ nested themes. A pre-existing source-contract assertion still expected the old
 Heading/Text utility implementation; it now checks the owned scale and all six
 heading levels, backed by runtime unit tests, rather than requiring old cva text.
 
-## Verification result
+## Initial-slice verification (before the follow-up review)
 
 - 453 React unit tests across 112 files; React build and Docs typecheck passed.
 - 42 POI cases per engine, 126 total: seven stories, two themes and three host
@@ -145,3 +157,10 @@ Visual review covered the restaurant, sparse entrance and map layout. The checks
 found and fixed reset-erased detail borders, an obscured example opener,
 low-contrast error text and enlarged-text header overflow. No tests were disabled
 to obtain a pass. There is no npm publication, push or merge in this slice.
+
+## Follow-up review and editing guide
+
+Read poi-reference-review-2026-09-18.md for the additional findings, expanded
+acceptance results and remaining release gates. That report supersedes the
+initial-slice counts above. Do not interpret example acceptance as production
+SDK certification.

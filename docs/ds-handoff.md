@@ -7,13 +7,21 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**POI follow-up review, 2026-09-18:** read
+`poi-reference-review-2026-09-18.md` for fixes, verification and self-service
+editing instructions. Eleven examples now include retail, fitness, parking and
+the full-field catalogue. Gallery state/geometry, failed logos and selection
+scroll have dedicated regression coverage. Use the current report's evidence,
+not historical counts below. Real assets, SDK adapter and device acceptance
+remain separate requirements. No push/merge/npm.
+
 **SDK screenshot examples, 2026-09-18:** read
 poi-reference-examples-2026-09-18.md. Restaurant/entrance references now use
 one richer POIDetailPanel, additive detail contracts and explicit optional
-book/call capabilities. Seven stories cover normal, sparse, map-shell and failure
+book/call capabilities. The initial seven stories cover normal, sparse, map-shell and failure
 states. The screenshots do not provide real media or gesture specifications;
 no real map, routing or external actions are claimed. Remaining venue fixtures
-and real SDK integration are next. No push/merge/npm.
+were completed in the follow-up above; real SDK integration is still next. No push/merge/npm.
 
 **Installed-product continuation, 2026-09-18:** read
 `installed-product-pilot-2026-09-18.md`. The existing MapScale Review app is now

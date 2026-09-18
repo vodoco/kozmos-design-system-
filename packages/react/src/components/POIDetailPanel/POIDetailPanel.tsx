@@ -55,6 +55,7 @@ export interface POIDetailPanelProps extends Omit<
   mediaPreviousLabel?: string;
   mediaNextLabel?: string;
   mediaUnavailableLabel?: string;
+  mediaControlsLabel?: string;
   accessRestrictionsHeading?: string;
   servicesHeading?: string;
   readMoreLabel?: string;
@@ -87,6 +88,22 @@ function ActionMessage({ state }: { state?: POIActionState }) {
   );
 }
 
+function POILogo({ logo }: { logo: NonNullable<POIPresentation["logo"]> }) {
+  const [failed, setFailed] = React.useState(false);
+  if (failed) return null;
+  return (
+    <img
+      alt={logo.alt}
+      className="kozmos-reset kozmos-poi-logo"
+      src={logo.src}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+const useLayoutEffect =
+  typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
+
 const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
   (
     {
@@ -105,6 +122,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
       mediaPreviousLabel = "Previous image",
       mediaNextLabel = "Next image",
       mediaUnavailableLabel = "Image unavailable",
+      mediaControlsLabel,
       accessRestrictionsHeading = "Access restrictions",
       servicesHeading = "Service options",
       readMoreLabel = "Read more",
@@ -117,6 +135,13 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
     ref,
   ) => {
     const titleId = React.useId();
+    const root = React.useRef<HTMLElement>(null);
+    React.useImperativeHandle(ref, () => root.current!, []);
+    useLayoutEffect(() => {
+      // Preserve scroll through resize/content refresh, but a different place
+      // starts at its identity. Focus remains the responsibility of the host.
+      if (root.current) root.current.scrollTop = 0;
+    }, [poi.id]);
     const locationLabel = [poi.floorLabel, poi.buildingLabel]
       .filter(Boolean)
       .join(" / ");
@@ -138,7 +163,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
       );
     return (
       <article
-        ref={ref}
+        ref={root}
         aria-labelledby={titleId}
         className={cn("kozmos-reset kozmos-poi-detail", className)}
         data-presentation={presentation}
@@ -146,13 +171,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
       >
         <header className="kozmos-poi-header">
           <div className="kozmos-poi-identity">
-            {poi.logo && (
-              <img
-                alt={poi.logo.alt}
-                className="kozmos-reset kozmos-poi-logo"
-                src={poi.logo.src}
-              />
-            )}
+            {poi.logo && <POILogo key={poi.logo.src} logo={poi.logo} />}
             <Heading
               level={titleLevel}
               className="kozmos-poi-title"
@@ -308,6 +327,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
               previousLabel={mediaPreviousLabel}
               nextLabel={mediaNextLabel}
               unavailableLabel={mediaUnavailableLabel}
+              controlsLabel={mediaControlsLabel}
             />
             {Boolean(poi.services?.length) && (
               <section aria-label={servicesHeading}>
