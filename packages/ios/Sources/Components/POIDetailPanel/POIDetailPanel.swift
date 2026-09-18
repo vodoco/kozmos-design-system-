@@ -28,43 +28,32 @@ public struct KozmosPOIActionState: Sendable, Hashable {
     }
 }
 
-/// Full POI detail surface with media, actions, restrictions, and services.
-///
-/// Mirrors the React `POIDetailPanel`. Only the actions listed by
-/// `poi.actions` are rendered, and every label is supplied already localized.
+/// Native POI card. Presentation is controlled by the product; no SDK objects or
+/// taxonomy lookups are embedded in this view. Existing basic callers still work.
 public struct KozmosPOIDetailPanel: View {
-    public enum Presentation {
-        case inline
-        case sheet
-        case panel
-    }
-
-    /// Heading rank of the POI name, mirroring the web `titleLevel` prop.
-    /// Nesting the panel inside another titled surface should demote it to
-    /// `.h3` so assistive technology reads a coherent outline.
+    public enum Presentation { case inline, sheet, panel }
     public enum TitleLevel {
-        case h2
-        case h3
-
-        var accessibilityHeadingLevel: AccessibilityHeadingLevel {
-            switch self {
-            case .h2: return .h2
-            case .h3: return .h3
-            }
-        }
+        case h2, h3
+        var accessibilityHeadingLevel: AccessibilityHeadingLevel { self == .h2 ? .h2 : .h3 }
     }
 
     private let poi: KozmosPOIPresentation
+    private let details: KozmosPOIDetailsPresentation
     private let actionLabels: [KozmosPOIAction: String]
     private let actionStates: [KozmosPOIAction: KozmosPOIActionState]
+    private let supplementaryActionStates: [String: KozmosPOIActionState]
     private let closeLabel: String
     private let mediaLabel: String
     private let mediaPositionLabel: (Int, Int) -> String
     private let accessRestrictionsHeading: String
     private let servicesHeading: String
+    private let readMoreLabel: String
+    private let readLessLabel: String
+    private let tagsLabel: String
     private let presentation: Presentation
     private let titleLevel: TitleLevel
     private let onAction: (KozmosPOIAction, String) -> Void
+    private let onSupplementaryAction: ((String, String) -> Void)?
     private let onClose: (() -> Void)?
 
     public init(
@@ -75,31 +64,39 @@ public struct KozmosPOIDetailPanel: View {
         onClose: (() -> Void)? = nil,
         closeLabel: String = "Close details",
         mediaLabel: String? = nil,
-        mediaPositionLabel: @escaping (Int, Int) -> String = { current, total in
-            "Image \(current) of \(total)"
-        },
+        mediaPositionLabel: @escaping (Int, Int) -> String = { "Image \($0) of \($1)" },
         accessRestrictionsHeading: String = "Access restrictions",
         servicesHeading: String = "Service options",
         presentation: Presentation = .inline,
-        titleLevel: TitleLevel = .h2
+        titleLevel: TitleLevel = .h2,
+        details: KozmosPOIDetailsPresentation = .init(),
+        supplementaryActionStates: [String: KozmosPOIActionState] = [:],
+        onSupplementaryAction: ((String, String) -> Void)? = nil,
+        readMoreLabel: String = "Read more",
+        readLessLabel: String = "Read less",
+        tagsLabel: String = "Tags"
     ) {
-        self.poi = poi
-        self.actionLabels = actionLabels
-        self.onAction = onAction
-        self.actionStates = actionStates
-        self.onClose = onClose
-        self.closeLabel = closeLabel
-        self.mediaLabel = mediaLabel ?? "\(poi.name) photos"
+        self.poi = poi; self.details = details; self.actionLabels = actionLabels
+        self.onAction = onAction; self.actionStates = actionStates; self.onClose = onClose
+        self.closeLabel = closeLabel; self.mediaLabel = mediaLabel ?? "\(poi.name) photos"
         self.mediaPositionLabel = mediaPositionLabel
-        self.accessRestrictionsHeading = accessRestrictionsHeading
-        self.servicesHeading = servicesHeading
-        self.presentation = presentation
-        self.titleLevel = titleLevel
+        self.accessRestrictionsHeading = accessRestrictionsHeading; self.servicesHeading = servicesHeading
+        self.presentation = presentation; self.titleLevel = titleLevel
+        self.supplementaryActionStates = supplementaryActionStates
+        self.onSupplementaryAction = onSupplementaryAction
+        self.readMoreLabel = readMoreLabel; self.readLessLabel = readLessLabel; self.tagsLabel = tagsLabel
+    }
+
+    private var quickActions: [KozmosPOIAction] {
+        poi.actions.filter { $0 == .favourite || $0 == .bookmark }
+    }
+    private var stripActions: [KozmosPOIAction] {
+        poi.actions.filter { $0 != .favourite && $0 != .bookmark }
     }
 
     private static func systemImage(for action: KozmosPOIAction) -> String {
         switch action {
-        case .navigate: return "location.north.fill"
+        case .navigate: return "location"
         case .favourite: return "heart"
         case .bookmark: return "bookmark"
         case .share: return "square.and.arrow.up"
@@ -107,241 +104,231 @@ public struct KozmosPOIDetailPanel: View {
         }
     }
 
-    private var showsAccessRestrictions: Bool {
-        guard let accessRestrictions = poi.accessRestrictions else { return false }
-        return accessRestrictions != KozmosPOIAccessRestrictions.none
-            && poi.accessRestrictionsLabel != nil
-    }
-
     public var body: some View {
-        VStack(spacing: 0) {
-            header
-
-            Divider().overlay(KozmosColors.primitivesColorsForeground300)
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing200) {
-                    if let description = poi.description {
-                        Text(description)
-                            .font(KozmosTypography.subheadline)
-                            .foregroundColor(KozmosColors.primitivesColorsForeground500)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    if !poi.actions.isEmpty {
-                        actionButtons
-                    }
-
-                    actionMessages
-
-                    if showsAccessRestrictions, let accessRestrictionsLabel = poi.accessRestrictionsLabel {
-                        Text(accessRestrictionsLabel)
-                            .font(KozmosTypography.subheadline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(KozmosDimensions.primitivesLayoutSpacing150)
-                            .background(KozmosColors.primitivesColorsBackground100.opacity(0.4))
-                            .clipShape(
-                                RoundedRectangle(
-                                    cornerRadius: KozmosDimensions.semanticsRadiusControl,
-                                    style: .continuous
-                                )
-                            )
-                            .overlay(
-                                RoundedRectangle(
-                                    cornerRadius: KozmosDimensions.semanticsRadiusControl,
-                                    style: .continuous
-                                )
-                                .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
-                            )
-                            .accessibilityElement(children: .combine)
-                            .accessibilityLabel("\(accessRestrictionsHeading), \(accessRestrictionsLabel)")
-                    }
-
-                    KozmosPOIMediaGallery(
-                        media: poi.media,
-                        label: mediaLabel,
-                        positionLabel: mediaPositionLabel
-                    )
-
-                    if let services = poi.services, !services.isEmpty {
-                        services_(services)
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                header.padding(16)
+                if let description = poi.description, !description.isEmpty {
+                    Text(description)
+                        .font(KozmosTypography.subheadline)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16).padding(.bottom, 16)
                 }
-                .padding(KozmosDimensions.primitivesLayoutSpacing200)
+                if !stripActions.isEmpty || !details.supplementaryActions.isEmpty {
+                    actionButtons.padding(.bottom, 16)
+                }
+                messages
+                if !details.visibleSummary.isEmpty {
+                    POIDetailSummary(items: details.visibleSummary)
+                }
+                VStack(alignment: .leading, spacing: 20) {
+                    if let restriction = poi.accessRestrictions,
+                       restriction != KozmosPOIAccessRestrictions.none,
+                       let label = poi.accessRestrictionsLabel {
+                        Text(label).font(KozmosTypography.subheadline)
+                            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                            .background(KozmosColors.primitivesColorsBackground100)
+                            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
+                            .accessibilityLabel("\(accessRestrictionsHeading), \(label)")
+                    }
+                    KozmosPOIMediaGallery(media: poi.media, label: mediaLabel, positionLabel: mediaPositionLabel)
+                    if let services = poi.services, !services.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(servicesHeading).font(KozmosTypography.footnote)
+                                .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                                .accessibilityAddTraits(.isHeader)
+                            POIDetailTags(items: services.map {
+                                .init(id: $0.id, label: $0.label, systemImage: $0.iconName)
+                            })
+                        }
+                    }
+                    POIDetailExtendedContent(details: details, readMoreLabel: readMoreLabel,
+                                             readLessLabel: readLessLabel, tagsLabel: tagsLabel)
+                }
+                .padding(16)
             }
         }
-        .frame(maxWidth: .infinity)
+        // Reset scroll/disclosure state only when selecting a different place.
+        .id(poi.id)
+        .foregroundColor(KozmosColors.primitivesColorsForeground100)
         .background(KozmosColors.primitivesColorsBackground0)
         .clipShape(panelShape)
-        .overlay(
-            panelShape.stroke(
-                presentation == .sheet ? Color.clear : KozmosColors.primitivesColorsForeground300,
-                lineWidth: 1
-            )
-        )
-        .kozmosElevation(
-            // A sheet is flush to the screen edge and casts nothing; a panel or
-            // a card sits above the map.
-            presentation == .sheet
-                ? KozmosShadows.none
-                : KozmosShadows.semanticsElevationOverlay
-        )
+        .overlay(panelShape.stroke(presentation == .sheet ? Color.clear : KozmosColors.semanticsBorderSubtle, lineWidth: 1))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(poi.name)
     }
 
     private var panelShape: KozmosPanelShape {
-        KozmosPanelShape(
-            radius: KozmosDimensions.semanticsRadiusPanel,
-            roundsBottom: presentation != .sheet
-        )
+        KozmosPanelShape(radius: KozmosDimensions.semanticsRadiusControl, roundsBottom: presentation != .sheet)
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
-            logo
-
-            VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing50) {
-                Text(poi.name)
-                    .font(.title3.weight(.semibold))
-                    .foregroundColor(KozmosColors.primitivesColorsForeground100)
-                    .lineLimit(1)
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityHeading(titleLevel.accessibilityHeadingLevel)
-
-                HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
-                    Image(systemName: "mappin.and.ellipse")
-                        .font(KozmosTypography.footnote)
-                        .accessibilityHidden(true)
-                    Text(poi.locationLabel)
-                        .font(KozmosTypography.subheadline)
-                        .lineLimit(1)
-                }
-                .foregroundColor(KozmosColors.primitivesColorsForeground500)
-
-                if let availabilityLabel = poi.availabilityLabel {
-                    Text(availabilityLabel)
-                        .font(.caption.weight(.semibold))
-                        .foregroundColor(
-                            poi.availability == .open
-                                ? KozmosColors.componentsPrimaryButtonsSuccessButtonBackgroundIdle
-                                : KozmosColors.primitivesColorsForeground500
-                        )
-                        .accessibilityLabel("Availability: \(availabilityLabel)")
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 8) { identity; quickButtons }
+                VStack(alignment: .leading, spacing: 8) { identity; quickButtons }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            if let onClose {
-                KozmosIconButton(iconName: "xmark", action: onClose)
-                    .accessibilityLabel(closeLabel)
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    location; Spacer(minLength: 4); availability
+                }
+                VStack(alignment: .leading, spacing: 4) { location; availability }
             }
         }
-        .padding(KozmosDimensions.primitivesLayoutSpacing200)
+    }
+
+    private var identity: some View {
+        HStack(alignment: .top, spacing: 8) {
+            if let logo = poi.logo {
+                AsyncImage(url: POIDetailIcon.remoteURL(logo.src)) { phase in
+                    if let image = phase.image {
+                        image.resizable().scaledToFit()
+                    } else {
+                        Text(poi.logoFallbackInitial).font(KozmosTypography.headline)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(KozmosColors.primitivesColorsBackground100)
+                    }
+                }
+                .frame(width: 48, height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
+                .accessibilityLabel(logo.alt)
+            }
+            Text(poi.name).font(KozmosTypography.title3.weight(.semibold))
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityHeading(titleLevel.accessibilityHeadingLevel)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var location: some View {
+        Text(poi.locationLabel).font(KozmosTypography.subheadline)
+            .foregroundColor(KozmosColors.primitivesColorsForeground500)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    @ViewBuilder private var availability: some View {
+        if let label = poi.availabilityLabel {
+            Text(label).font(KozmosTypography.caption.weight(.semibold))
+                .foregroundColor(poi.availability == .open
+                    ? KozmosColors.componentsPrimaryButtonsSuccessButtonBackgroundIdle
+                    : KozmosColors.primitivesColorsForeground500)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var quickButtons: some View {
+        HStack(spacing: 6) {
+            ForEach(quickActions, id: \.self) { action in
+                POIDetailActionButton(label: actionLabels[action] ?? action.rawValue,
+                                     systemImage: Self.systemImage(for: action), iconOnly: true,
+                                     state: actionStates[action] ?? .init()) { onAction(action, poi.id) }
+                    .accessibilityIdentifier("poi-action-\(action.rawValue)")
+            }
+            if let onClose {
+                POIDetailActionButton(label: closeLabel, systemImage: "xmark", iconOnly: true, action: onClose)
+                    .accessibilityIdentifier("poi-close")
+            }
+        }
     }
 
     private var actionButtons: some View {
-        // A wrapping row keeps long localized action names readable at large text sizes.
-        FlowLayout(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
-            ForEach(poi.actions, id: \.self) { action in
-                let state = actionStates[action]
-                let isToggle = action == .favourite || action == .bookmark
-
-                KozmosButton(
-                    actionLabels[action] ?? action.rawValue,
-                    variant: action == .navigate ? .default : .outline,
-                    isDisabled: state?.disabled ?? false,
-                    isLoading: state?.loading ?? false
-                ) {
-                    onAction(action, poi.id)
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                ForEach(stripActions, id: \.self) { action in
+                    POIDetailActionButton(
+                        label: actionLabels[action] ?? action.rawValue,
+                        systemImage: Self.systemImage(for: action),
+                        estimate: action == .navigate ? details.travelEstimate.map {
+                            [$0.durationLabel, $0.distanceLabel].compactMap { $0 }.joined(separator: " · ")
+                        } : nil,
+                        primary: action == .navigate,
+                        state: actionStates[action] ?? .init()
+                    ) { onAction(action, poi.id) }
+                    .accessibilityIdentifier("poi-action-\(action.rawValue)")
                 }
-                .accessibilityLabel(actionLabels[action] ?? action.rawValue)
-                .accessibilityAddTraits(
-                    isToggle && (state?.pressed ?? false) ? [.isButton, .isSelected] : .isButton
-                )
+                ForEach(details.supplementaryActions) { item in
+                    POIDetailActionButton(label: item.label, systemImage: item.systemImage,
+                                         state: supplementaryActionStates[item.action] ?? .init(disabled: onSupplementaryAction == nil)) {
+                        onSupplementaryAction?(item.action, poi.id)
+                    }
+                    .disabled(onSupplementaryAction == nil)
+                    .accessibilityIdentifier("poi-action-\(item.action)")
+                }
             }
+            .padding(.horizontal, 16).padding(.vertical, 2)
         }
+        .accessibilityIdentifier("poi-actions")
     }
 
-    @ViewBuilder
-    private var actionMessages: some View {
-        ForEach(poi.actions.filter { actionStates[$0]?.message != nil }, id: \.self) { action in
-            if let state = actionStates[action], let message = state.message {
-                Text(message)
-                    .font(KozmosTypography.subheadline)
-                    .foregroundColor(
-                        state.messageTone == .error
-                            ? KozmosColors.primitivesColorsEmotionalDanger600
-                            : KozmosColors.primitivesColorsForeground100
-                    )
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
-                    .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing100)
+    private var allMessages: [(String, KozmosPOIActionState)] {
+        poi.actions.compactMap { action in actionStates[action].map { (action.rawValue, $0) } }
+        + details.supplementaryActions.compactMap { item in supplementaryActionStates[item.action].map { (item.action, $0) } }
+    }
+
+    private var messages: some View {
+        ForEach(allMessages.filter { $0.1.message != nil }, id: \.0) { _, state in
+            if let message = state.message {
+                Text(message).font(KozmosTypography.subheadline)
+                    .foregroundColor(state.messageTone == .error
+                        ? KozmosColors.primitivesColorsEmotionalDanger600
+                        : KozmosColors.primitivesColorsForeground100)
+                    .padding(12).frame(maxWidth: .infinity, alignment: .leading)
                     .background(KozmosColors.primitivesColorsBackground100)
-                    .clipShape(
-                        RoundedRectangle(
-                            cornerRadius: KozmosDimensions.semanticsRadiusControl,
-                            style: .continuous
-                        )
-                    )
+                    .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
+                    .padding(.horizontal, 16).padding(.bottom, 12)
                     .accessibilityAddTraits(.updatesFrequently)
             }
         }
     }
+}
 
-    private func services_(_ services: [KozmosPOIServicePresentation]) -> some View {
-        VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing100) {
-            Text(servicesHeading)
-                .font(.subheadline.weight(.semibold))
-                .accessibilityAddTraits(.isHeader)
+struct POIDetailActionButton: View {
+    let label: String
+    let systemImage: String?
+    var estimate: String? = nil
+    var primary = false
+    var iconOnly = false
+    var state = KozmosPOIActionState()
+    let action: () -> Void
 
-            FlowLayout(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
-                ForEach(services) { service in
-                    Text(service.label)
-                        .font(KozmosTypography.subheadline)
-                        .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
-                        .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing100)
-                        .background(KozmosColors.primitivesColorsBackground0)
-                        .clipShape(Capsule())
-                        .overlay(
-                            Capsule().stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
-                        )
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(servicesHeading)
+    private var filled: Bool { primary || state.pressed }
+    private var foreground: Color {
+        filled ? KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
+               : KozmosColors.primitivesColorsForeground100
     }
 
-    @ViewBuilder
-    private var logo: some View {
-        if let logo = poi.logo, let url = URL(string: logo.src) {
-            AsyncImage(url: url) { image in
-                image.resizable().aspectRatio(contentMode: .fit)
-            } placeholder: {
-                KozmosColors.primitivesColorsBackground100
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if state.loading {
+                    ProgressView().controlSize(.small).tint(foreground)
+                } else if let systemImage {
+                    Image(systemName: systemImage)
+                        .font(primary ? .title3 : .body)
+                        .accessibilityHidden(true)
+                }
+                if !iconOnly {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(label).font(primary ? KozmosTypography.font(.callout).weight(.semibold) : KozmosTypography.subheadline)
+                        if let estimate { Text(estimate).font(KozmosTypography.caption2) }
+                    }
+                }
             }
-            .frame(width: 48, height: 48)
-            .clipShape(
-                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
-                    .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
-            )
-            .accessibilityLabel(logo.alt)
-        } else {
-            Text(poi.logoFallbackInitial)
-                .font(.body.weight(.bold))
-                .foregroundColor(KozmosColors.primitivesColorsForeground500)
-                .frame(width: 48, height: 48)
-                .background(KozmosColors.primitivesColorsBackground100)
-                .clipShape(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
-                )
-                .accessibilityHidden(true)
+            .foregroundColor(foreground)
+            .padding(.horizontal, iconOnly ? 0 : 16).padding(.vertical, 8)
+            .frame(minWidth: 44, minHeight: primary && estimate != nil ? 56 : 44)
+            .background(filled ? KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
+            .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
+                .stroke(filled ? Color.clear : KozmosColors.semanticsBorderSubtle, lineWidth: 1))
         }
+        .buttonStyle(.plain)
+        .disabled(state.disabled || state.loading)
+        .opacity(state.disabled ? 0.5 : 1)
+        .accessibilityLabel(label)
+        .accessibilityValue(state.loading ? Text("Loading") : Text(estimate ?? ""))
+        .accessibilityAddTraits(state.pressed ? [.isSelected] : [])
     }
 }
 
@@ -403,15 +390,17 @@ struct KozmosPanelShape: Shape {
     }
 }
 
-/// Minimal wrapping layout used for action and service chips.
+/// Wrapping layout for property/service chips (actions scroll horizontally).
 ///
 /// SwiftUI has no built-in flow container, and these rows must wrap rather than
 /// clip when localized labels or Dynamic Type make them wide.
 struct FlowLayout: Layout {
     var spacing: CGFloat
+    var layoutDirection: LayoutDirection
 
-    init(spacing: CGFloat = 8) {
+    init(spacing: CGFloat = 8, layoutDirection: LayoutDirection = .leftToRight) {
         self.spacing = spacing
+        self.layoutDirection = layoutDirection
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -431,9 +420,11 @@ struct FlowLayout: Layout {
         for row in rows {
             var x = bounds.minX
             for index in row.indices {
-                let size = subviews[index].sizeThatFits(.unspecified)
+                let size = subviews[index].sizeThatFits(.init(width: bounds.width, height: nil))
+                let physicalX = layoutDirection == .rightToLeft
+                    ? bounds.maxX - (x - bounds.minX) - size.width : x
                 subviews[index].place(
-                    at: CGPoint(x: x, y: y),
+                    at: CGPoint(x: physicalX, y: y),
                     proposal: ProposedViewSize(size)
                 )
                 x += size.width + spacing
@@ -453,7 +444,7 @@ struct FlowLayout: Layout {
         var current = Row()
 
         for index in subviews.indices {
-            let size = subviews[index].sizeThatFits(.unspecified)
+            let size = subviews[index].sizeThatFits(.init(width: maxWidth.isFinite ? maxWidth : nil, height: nil))
             let projected = current.indices.isEmpty ? size.width : current.width + spacing + size.width
 
             if projected > maxWidth, !current.indices.isEmpty {

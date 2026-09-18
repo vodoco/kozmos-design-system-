@@ -6,7 +6,12 @@ struct PlaygroundApp: App {
     var body: some Scene {
         WindowGroup {
             KozmosThemeProvider {
-                WayfindingScreen()
+                TabView {
+                    WayfindingScreen()
+                        .tabItem { Label("Map", systemImage: "map") }
+                    POIExamplesScreen()
+                        .tabItem { Label("POI examples", systemImage: "rectangle.stack") }
+                }
             }
         }
     }

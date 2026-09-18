@@ -314,7 +314,8 @@ struct WayfindingScreen: View {
                 // Docked to the sheet's edge on a phone, floating beside the
                 // map on a wide layout.
                 presentation: isRegularWidth ? .panel : .sheet,
-                titleLevel: .h2
+                titleLevel: .h2,
+                details: store.selectedDetails
             )
         }
     }
