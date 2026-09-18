@@ -23,16 +23,21 @@ content regions.
 
 <PlatformSnippets
   react={`
-import { SegmentedControl } from "@kozmos/react"
-
-<SegmentedControl
-  defaultValue="overview"
-  items={[
-    { value: "overview", label: "Overview" },
-    { value: "details", label: "Details" },
-    { value: "activity", label: "Activity" },
-  ]}
-/>
+import { SegmentedControl } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <SegmentedControl
+        defaultValue="overview"
+        items={[
+          { value: "overview", label: "Overview" },
+          { value: "details", label: "Details" },
+          { value: "activity", label: "Activity" },
+        ]}
+      />
+    </>
+  );
+}
   `}
   vue={`
 <script setup>

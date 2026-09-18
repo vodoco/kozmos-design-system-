@@ -21,9 +21,23 @@ Displays the Tabs interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Tabs } from "@kozmos/react"
-
-<Tabs />
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@kozmos/react";
+export function Example() {
+  return (
+    <Tabs defaultValue="overview">
+      <TabsList aria-label="Place details">
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="access">Access</TabsTrigger>
+      </TabsList>
+      <TabsContent value="overview">
+        Reception is on the ground floor.
+      </TabsContent>
+      <TabsContent value="access">
+        Step-free access through the main entrance.
+      </TabsContent>
+    </Tabs>
+  );
+}
     `}
     vue={`
 <script setup>

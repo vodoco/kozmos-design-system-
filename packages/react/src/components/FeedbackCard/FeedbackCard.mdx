@@ -34,15 +34,23 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { FeedbackCard } from '@kozmos/react';
-
-<FeedbackCard
-  title="How was your visit?"
-  description="Rate your wayfinding experience and add a comment."
-  isSubmitting={isSubmitting}
-  successMessage={submitted ? "Thanks for your feedback." : undefined}
-  onSubmitFeedback={(rating, comment) => submit(rating, comment)}
-/>
+import { FeedbackCard } from "@kozmos/react";
+// The product owns submission; this recipe demonstrates the synchronous callback.
+// For asynchronous persistence, handle pending/error states in the product.
+export function Example({
+  onSubmitFeedback,
+}: {
+  onSubmitFeedback: (rating: number, comment: string) => void;
+}) {
+  return (
+    <FeedbackCard
+      title="How was your visit?"
+      description="Rate your wayfinding experience and add a comment."
+      successMessage="Thanks for your feedback."
+      onSubmitFeedback={onSubmitFeedback}
+    />
+  );
+}
   `}
   vue={`
 <script setup>

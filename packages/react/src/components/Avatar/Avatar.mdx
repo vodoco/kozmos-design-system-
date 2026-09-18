@@ -22,16 +22,17 @@ An image element with a fallback for representing the user.
 
 <PlatformSnippets
     react={`
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@kozmos/react"
-
-<Avatar>
-  <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-  <AvatarFallback>CN</AvatarFallback>
-</Avatar>
+import { Avatar, AvatarFallback, AvatarImage } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Avatar>
+        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+        <AvatarFallback>CN</AvatarFallback>
+      </Avatar>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

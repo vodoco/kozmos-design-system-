@@ -28,23 +28,28 @@ names the navigation landmark (default: “Main navigation”).
 
 <PlatformSnippets
     react={`
-import { Navbar } from "@kozmos/react"
-import { NavigationItem } from "@kozmos/react"
-
-<Navbar
-  logo={<strong>Kozmos</strong>}
-  navigation={
-    <div className="flex items-center gap-2">
-      <NavigationItem href="/overview" placement="top" selected>
-        Overview
-      </NavigationItem>
-      <NavigationItem href="/explore" placement="top">
-        Explore
-      </NavigationItem>
-    </div>
-  }
-  account={<button type="button">Account</button>}
-/>
+import { Navbar } from "@kozmos/react";
+import { NavigationItem } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Navbar
+        logo={<strong>Kozmos</strong>}
+        navigation={
+          <div className="flex items-center gap-2">
+            <NavigationItem href="/overview" placement="top" selected>
+              Overview
+            </NavigationItem>
+            <NavigationItem href="/explore" placement="top">
+              Explore
+            </NavigationItem>
+          </div>
+        }
+        account={<button type="button">Account</button>}
+      />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -21,9 +21,29 @@ Displays the BottomSheet interface topology natively.
 
 <PlatformSnippets
     react={`
-import { BottomSheet } from "@kozmos/react"
-
-<BottomSheet />
+import {
+  BottomSheet,
+  BottomSheetContent,
+  BottomSheetDescription,
+  BottomSheetTitle,
+  BottomSheetTrigger,
+  Button,
+} from "@kozmos/react";
+export function Example() {
+  return (
+    <BottomSheet>
+      <BottomSheetTrigger asChild>
+        <Button>Show details</Button>
+      </BottomSheetTrigger>
+      <BottomSheetContent>
+        <BottomSheetTitle>Location details</BottomSheetTitle>
+        <BottomSheetDescription>
+          Reception is on the ground floor.
+        </BottomSheetDescription>
+      </BottomSheetContent>
+    </BottomSheet>
+  );
+}
     `}
     vue={`
 <script setup>

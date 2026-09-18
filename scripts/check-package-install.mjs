@@ -26,8 +26,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import {
+  collectSnippets,
+  writeReactSnippetFixtures,
+  writeSnippetNegativeControl,
+} from "./lib/doc-snippets.mjs";
 
 const ROOT = process.cwd();
+const docSnippets = collectSnippets(ROOT);
 const PACKAGES = path.join(ROOT, "packages");
 const problems = [];
 const ok = (m) => console.log(`  ok    ${m}`);
@@ -436,6 +442,46 @@ for (const major of REACT_MAJORS) {
         .split("\n")
         .slice(0, 3)
         .join(" / ")}`,
+    );
+  }
+
+  const snippetMapping = writeReactSnippetFixtures(app, docSnippets);
+  writeSnippetNegativeControl(app);
+  let negativeOutput = "";
+  try {
+    run(
+      path.join(app, "node_modules/.bin/tsc"),
+      ["-p", "tsconfig.doc-snippets-negative.json"],
+      app,
+    );
+  } catch (error) {
+    negativeOutput = String(error.stdout || error.stderr || error);
+  }
+  if (
+    ["TS2305", "TS2322", "TS2304"].every((code) =>
+      negativeOutput.includes(code),
+    )
+  ) {
+    ok(
+      `React ${major}: negative control rejects missing exports, invalid props and undeclared application state`,
+    );
+  } else {
+    fail(
+      `React ${major}: snippet compiler negative control did not reject all expected errors:\n${negativeOutput}`,
+    );
+  }
+  try {
+    run(
+      path.join(app, "node_modules/.bin/tsc"),
+      ["-p", "tsconfig.doc-snippets.json"],
+      app,
+    );
+    ok(
+      `React ${major}: all ${Object.keys(snippetMapping).length} exact Docs recipes compile against installed tarballs (strict NodeNext; library checking enabled)`,
+    );
+  } catch (error) {
+    fail(
+      `React ${major}: Docs recipes fail:\n${String(error.stdout || error.stderr || error).trim()}\nSource mapping: ${path.join(app, "doc-snippets-map.json")}`,
     );
   }
 

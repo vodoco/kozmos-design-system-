@@ -31,16 +31,28 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { SaveLocationCard } from '@kozmos/react';
-
-<SaveLocationCard
-  title="Save this location"
-  description="Keep it in your saved places for quick routing later."
-  isSaved={isSaved}
-  onSaveToggle={toggleSaved}
-  onRouteToLocation={route}
-  onEditNote={editNote}
-/>
+import { useState } from "react";
+import { SaveLocationCard } from "@kozmos/react";
+// Persist the saved location in the product; this example keeps local state only.
+export function Example({
+  onRoute,
+  onEditNote,
+}: {
+  onRoute: () => void;
+  onEditNote: () => void;
+}) {
+  const [isSaved, setSaved] = useState(false);
+  return (
+    <SaveLocationCard
+      title="Save this location"
+      description="Keep it in your saved places for quick routing later."
+      isSaved={isSaved}
+      onSaveToggle={() => setSaved((saved) => !saved)}
+      onRouteToLocation={onRoute}
+      onEditNote={onEditNote}
+    />
+  );
+}
   `}
   vue={`
 <script setup>

@@ -21,9 +21,14 @@ Displays the Search interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Search } from "@kozmos/react"
-
-<Search />
+import { Search } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Search aria-label="Search places" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

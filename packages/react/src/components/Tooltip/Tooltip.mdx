@@ -27,16 +27,21 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@kozmos/react"
-
-<TooltipProvider>
-  <Tooltip>
-    <TooltipTrigger>Hover</TooltipTrigger>
-    <TooltipContent>
-      <p>Add to library</p>
-    </TooltipContent>
-  </Tooltip>
-</TooltipProvider>
+} from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>Hover</TooltipTrigger>
+          <TooltipContent>
+            <p>Add to library</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

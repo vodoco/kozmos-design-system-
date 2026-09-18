@@ -17,7 +17,7 @@ const platforms = [
     value: "react",
     label: "React",
     language: "tsx",
-    note: "The live preview uses React. This reference snippet is not independently compiled by Storybook.",
+    note: "The live preview uses React. Docs recipes are type-checked against installed package tarballs under React 18 and 19 by docs:snippets:compile. This is not runtime or accessibility certification. Follow the package README for CSS and provider setup.",
   },
   {
     value: "vue",

@@ -21,9 +21,27 @@ Displays the SplitButton interface topology natively.
 
 <PlatformSnippets
     react={`
-import { SplitButton } from "@kozmos/react"
-
-<SplitButton />
+import { useState } from "react";
+import { SplitButton } from "@kozmos/react";
+export function Example() {
+  const [action, setAction] = useState("None");
+  return (
+    <>
+      <SplitButton
+        onMainClick={() => setAction("Publish requested")}
+        menuItems={[
+          {
+            label: "Save draft",
+            onClick: () => setAction("Save draft requested"),
+          },
+        ]}
+      >
+        Publish
+      </SplitButton>
+      <output>Demo action: {action}</output>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

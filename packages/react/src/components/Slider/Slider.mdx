@@ -24,9 +24,14 @@ are associated with the interactive thumbs.
 
 <PlatformSnippets
     react={`
-import { Slider } from "@kozmos/react"
-
-<Slider label="Volume" defaultValue={[50]} max={100} />
+import { Slider } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Slider label="Volume" defaultValue={[50]} max={100} />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

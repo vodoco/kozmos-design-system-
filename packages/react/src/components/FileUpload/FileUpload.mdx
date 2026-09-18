@@ -21,9 +21,14 @@ Displays the FileUpload interface topology natively.
 
 <PlatformSnippets
     react={`
-import { FileUpload } from "@kozmos/react"
-
-<FileUpload />
+import { FileUpload } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <FileUpload label="Documents" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

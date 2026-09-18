@@ -21,9 +21,14 @@ Displays the Icon interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Icon } from "@kozmos/react"
-
-<Icon />
+import { Icon } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Icon name="check" aria-label="Complete" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

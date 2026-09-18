@@ -59,6 +59,8 @@
     "figma:publish:native:linked:dry": "pnpm figma:publish:ios:linked:dry && pnpm figma:publish:android:linked:dry",
     "components:contract:check": "node scripts/check-component-contracts.mjs",
     "docs:snippets:check": "node scripts/check-doc-snippets.mjs",
+    "docs:snippets:compile": "node scripts/check-package-install.mjs",
+    "test:doc-snippets": "node --test scripts/lib/doc-snippets.test.mjs",
     "figma:verify": "node scripts/verify-figma-library.mjs",
     "components:variant:check": "node scripts/skills/check-variant-parity.mjs",
     "components:variant:write": "node scripts/skills/check-variant-parity.mjs --write",

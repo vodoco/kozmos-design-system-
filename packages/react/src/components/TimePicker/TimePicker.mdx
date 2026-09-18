@@ -26,9 +26,14 @@ Displays the TimePicker interface topology natively.
 
 <PlatformSnippets
     react={`
-import { TimePicker } from "@kozmos/react"
-
-<TimePicker />
+import { TimePicker } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <TimePicker label="Arrival time" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

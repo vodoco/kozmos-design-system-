@@ -21,9 +21,14 @@ Displays the Heading interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Heading } from "@kozmos/react"
-
-<Heading />
+import { Heading } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Heading>Venue overview</Heading>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

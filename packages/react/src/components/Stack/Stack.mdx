@@ -21,9 +21,17 @@ Displays the Stack interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Stack } from "@kozmos/react"
-
-<Stack />
+import { Stack } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Stack>
+        <p>Reception</p>
+        <p>Ground floor</p>
+      </Stack>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

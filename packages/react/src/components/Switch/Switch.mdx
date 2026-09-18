@@ -22,13 +22,18 @@ A control that allows the user to toggle between checked and not checked.
 
 <PlatformSnippets
     react={`
-import { Switch } from "@kozmos/react"
-import { Label } from "@kozmos/react"
-
-<div className="flex items-center space-x-2">
-  <Switch id="airplane-mode" />
-  <Label htmlFor="airplane-mode">Airplane Mode</Label>
-</div>
+import { Switch } from "@kozmos/react";
+import { Label } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <div className="flex items-center space-x-2">
+        <Switch id="airplane-mode" />
+        <Label htmlFor="airplane-mode">Airplane Mode</Label>
+      </div>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -21,9 +21,19 @@ Displays the Popover interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Popover } from "@kozmos/react"
-
-<Popover />
+import { Popover, PopoverTrigger, PopoverContent, Button } from "@kozmos/react";
+export function Example() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button>Opening hours</Button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <p>Monday–Friday, 09:00–18:00</p>
+      </PopoverContent>
+    </Popover>
+  );
+}
     `}
     vue={`
 <script setup>

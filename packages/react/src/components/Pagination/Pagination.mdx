@@ -21,9 +21,32 @@ Displays the Pagination interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Pagination } from "@kozmos/react"
-
-<Pagination />
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+} from "@kozmos/react";
+export function Example() {
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationLink href="?page=1" isActive>
+            1
+          </PaginationLink>
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationLink href="?page=2">2</PaginationLink>
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationNext href="?page=2" />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
     `}
     vue={`
 <script setup>

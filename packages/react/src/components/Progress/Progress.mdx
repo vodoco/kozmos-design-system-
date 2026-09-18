@@ -23,9 +23,14 @@ Use `null` or omit `value` when progress is indeterminate.
 
 <PlatformSnippets
     react={`
-import { Progress } from "@kozmos/react"
-
-<Progress value={25} max={50} aria-label="Upload progress" />
+import { Progress } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Progress value={25} max={50} aria-label="Upload progress" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

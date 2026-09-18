@@ -21,9 +21,14 @@ Displays the SearchBar interface topology natively.
 
 <PlatformSnippets
     react={`
-import { SearchBar } from "@kozmos/react"
-
-<SearchBar />
+import { SearchBar } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <SearchBar aria-label="Search places" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

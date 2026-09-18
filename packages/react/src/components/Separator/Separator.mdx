@@ -21,9 +21,14 @@ Displays the Separator interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Separator } from "@kozmos/react"
-
-<Separator />
+import { Separator } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Separator />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

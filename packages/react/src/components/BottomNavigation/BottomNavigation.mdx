@@ -21,9 +21,22 @@ Displays the BottomNavigation interface topology natively.
 
 <PlatformSnippets
     react={`
-import { BottomNavigation } from "@kozmos/react"
-
-<BottomNavigation />
+import { BottomNavigation, Icon } from "@kozmos/react";
+export function Example() {
+  return (
+    <BottomNavigation
+      items={[
+        {
+          label: "Explore",
+          href: "/explore",
+          icon: <Icon name="search" />,
+          active: true,
+        },
+        { label: "Saved", href: "/saved", icon: <Icon name="bookmark" /> },
+      ]}
+    />
+  );
+}
     `}
     vue={`
 <script setup>

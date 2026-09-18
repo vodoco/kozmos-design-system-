@@ -40,17 +40,45 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 <PlatformSnippets
   react={`
-import { ScrollArea } from '@kozmos/react';
-
-<ScrollArea orientation="horizontal" style={{ maxWidth: 480 }} viewportProps={{ role: "region", "aria-label": "Nearby categories" }}>
-  <div style={{ display: "flex", gap: 8 }}>{categories}</div>
-</ScrollArea>
-
-// Vertical pane with snapping (web only)
-
-<ScrollArea orientation="vertical" snap="y" style={{ height: 320 }}>
-  {items}
-</ScrollArea>
+import { ScrollArea, Tag } from "@kozmos/react";
+const categories = ["Food", "Shops", "Services", "Transport"];
+export function Example() {
+  return (
+    <>
+      <ScrollArea
+        orientation="horizontal"
+        style={{ maxWidth: 480 }}
+        viewportProps={{
+          role: "region",
+          "aria-label": "Nearby categories",
+          tabIndex: 0,
+        }}
+      >
+        <div style={{ display: "flex", gap: 8 }}>
+          {categories.map((category) => (
+            <Tag key={category}>{category}</Tag>
+          ))}
+        </div>
+      </ScrollArea>
+      <ScrollArea
+        orientation="vertical"
+        snap="y"
+        style={{ height: 320 }}
+        viewportProps={{
+          role: "region",
+          "aria-label": "Nearby places",
+          tabIndex: 0,
+        }}
+      >
+        {Array.from({ length: 12 }, (_, i) => (
+          <p key={i} style={{ scrollSnapAlign: "start" }}>
+            Place {i + 1}
+          </p>
+        ))}
+      </ScrollArea>
+    </>
+  );
+}
   `}
   vue={`
 <script setup>

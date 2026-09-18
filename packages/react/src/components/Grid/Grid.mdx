@@ -21,9 +21,17 @@ Displays the Grid interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Grid } from "@kozmos/react"
-
-<Grid />
+import { Grid } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Grid>
+        <div>Reception</div>
+        <div>Meeting rooms</div>
+      </Grid>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

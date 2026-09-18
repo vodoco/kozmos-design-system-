@@ -21,9 +21,18 @@ Displays the FloorSelector interface topology natively.
 
 <PlatformSnippets
     react={`
-import { FloorSelector } from "@kozmos/react"
-
-<FloorSelector />
+import { useState } from "react";
+import { FloorSelector } from "@kozmos/react";
+export function Example() {
+  const [floor, setFloor] = useState("G");
+  return (
+    <FloorSelector
+      floors={["G", "1", "2"]}
+      selectedFloor={floor}
+      onFloorSelect={setFloor}
+    />
+  );
+}
     `}
     vue={`
 <script setup>

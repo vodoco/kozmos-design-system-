@@ -21,9 +21,16 @@ Displays the DirectionStep interface topology natively.
 
 <PlatformSnippets
     react={`
-import { DirectionStep } from "@kozmos/react"
-
-<DirectionStep />
+import { DirectionStep } from "@kozmos/react";
+export function Example() {
+  return (
+    <DirectionStep
+      type="right"
+      instruction="Turn right towards reception"
+      distance="20 m"
+    />
+  );
+}
     `}
     vue={`
 <script setup>

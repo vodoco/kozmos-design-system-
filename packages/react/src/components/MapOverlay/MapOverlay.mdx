@@ -34,15 +34,39 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { MapOverlay } from '@kozmos/react';
-
-<MapOverlay position="top-left" width="md" collisionInsets={insets}>
-  <SearchBar />
-</MapOverlay>
-
-<MapOverlay position="bottom-center" width="full">
-  <RouteSummary etaText="6 min" distanceText="320 m" onEndRoute={end} />
-</MapOverlay>
+import {
+  MapOverlay,
+  MapView,
+  SearchBar,
+  RouteSummary,
+  type MapOverlayProps,
+} from "@kozmos/react";
+export function Example({
+  insets,
+  onEndRoute,
+}: {
+  insets?: MapOverlayProps["collisionInsets"];
+  onEndRoute: () => void;
+}) {
+  return (
+    <MapView style={{ height: 480 }}>
+      <MapOverlay position="top-left" width="md" collisionInsets={insets}>
+        <SearchBar aria-label="Search places" />
+      </MapOverlay>
+      <MapOverlay
+        position="bottom-center"
+        width="full"
+        collisionInsets={insets}
+      >
+        <RouteSummary
+          etaText="6 min"
+          distanceText="320 m"
+          onEndRoute={onEndRoute}
+        />
+      </MapOverlay>
+    </MapView>
+  );
+}
   `}
   vue={`
 <script setup>

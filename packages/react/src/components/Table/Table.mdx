@@ -21,9 +21,34 @@ Displays the Table interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Table } from "@kozmos/react"
-
-<Table />
+import {
+  Table,
+  TableCaption,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@kozmos/react";
+export function Example() {
+  return (
+    <Table>
+      <TableCaption>Places in this venue</TableCaption>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Floor</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+          <TableCell>Reception</TableCell>
+          <TableCell>Ground</TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -21,9 +21,14 @@ Displays the Rating interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Rating } from "@kozmos/react"
-
-<Rating />
+import { useState } from "react";
+import { Rating } from "@kozmos/react";
+export function Example() {
+  const [rating, setRating] = useState(0);
+  return (
+    <Rating aria-label="Rate your visit" value={rating} onChange={setRating} />
+  );
+}
     `}
     vue={`
 <script setup>

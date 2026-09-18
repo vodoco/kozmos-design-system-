@@ -21,9 +21,14 @@ Displays the Spinner interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Spinner } from "@kozmos/react"
-
-<Spinner />
+import { Spinner } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Spinner />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

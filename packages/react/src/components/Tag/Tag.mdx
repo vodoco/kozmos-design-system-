@@ -21,9 +21,14 @@ Displays the Tag interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Tag } from "@kozmos/react"
-
-<Tag />
+import { Tag } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Tag>Open now</Tag>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

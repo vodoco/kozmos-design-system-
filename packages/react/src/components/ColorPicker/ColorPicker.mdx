@@ -35,25 +35,33 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { ColorPicker } from '@kozmos/react';
-
-<ColorPicker
-  label="Brand colour"
-  defaultValue="#135BEC"
-  presets={["#135BEC", "#0B357F", "#1E7F4F", "#9A6700"]}
-  paletteLabel="Brand palette"
-  onValueChange={setBrandColor}
-/>
-
-// Controlled, with alpha and an explicit format
-<ColorPicker
-  label="Overlay"
-  value={color}
-  onValueChange={setColor}
-  alpha={alpha}
-  onAlphaChange={setAlpha}
-  format="rgb"
-/>
+import { useState } from "react";
+import { ColorPicker } from "@kozmos/react";
+export function Example() {
+  const [brandColor, setBrandColor] = useState("#135BEC");
+  const [color, setColor] = useState("#0B357F");
+  const [alpha, setAlpha] = useState(0.5);
+  return (
+    <>
+      <ColorPicker
+        label="Brand colour"
+        defaultValue="#135BEC"
+        presets={["#135BEC", "#0B357F", "#1E7F4F", "#9A6700"]}
+        paletteLabel="Brand palette"
+        onValueChange={setBrandColor}
+      />
+      <output>Brand colour: {brandColor}</output>
+      <ColorPicker
+        label="Overlay"
+        value={color}
+        onValueChange={setColor}
+        alpha={alpha}
+        onAlphaChange={setAlpha}
+        format="rgb"
+      />
+    </>
+  );
+}
   `}
   vue={`
 <script setup>

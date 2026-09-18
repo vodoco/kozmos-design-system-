@@ -14,6 +14,18 @@ The live catalogue exercises `@kozmos/react`. Release readiness also requires
 package-install checks, supported-browser testing, accessibility review, and real
 product integration. A passing story does not certify every state or consumer.
 
+All 82 React implementation recipes are complete exported components: their
+imports, state and required callback props are included. Follow the package README
+for stylesheet and provider setup. Product-owned callbacks (such as routing and
+persistence) must still be supplied by your application.
+
+`pnpm docs:snippets:compile` extracts the exact displayed text, packs the local
+publishable packages, installs them into isolated consumer projects, and compiles
+the recipes with React 18 and 19. It uses strict TypeScript/NodeNext with library
+checking enabled, without source aliases or injected application variables. The
+same check runs inside `pnpm packages:install:check` in CI. Compilation does not
+execute the recipe or prove accessibility, visual fidelity, or product behaviour.
+
 ## Vue — internal only
 
 `@kozmos/vue` is private and is not published to npm. Its adapters mount a React
@@ -44,5 +56,7 @@ props, or establish behavioural equivalence. Native builds and adapter tests do
 not automatically compile the strings displayed in these documentation tabs.
 
 Missing example text means **not documented**, not automatically unsupported.
-Until executable snippet fixtures and a per-component platform support matrix
-exist, unverified reference examples must not be described as validated recipes.
+Vue, Swift and Kotlin still have no equivalent compiler gate for their Docs text.
+Their reference examples must not be described as validated recipes. The
+per-component platform inventory and remaining work are recorded in
+`docs/snippet-validation-2026-09-18.md` in the repository.

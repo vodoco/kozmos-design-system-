@@ -21,9 +21,14 @@ Displays the Text interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Text } from "@kozmos/react"
-
-<Text />
+import { Text } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Text>Find your way to reception.</Text>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

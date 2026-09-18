@@ -23,12 +23,16 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
     react={`
-import { IconButton } from '@kozmos/react';
-import { Home } from 'lucide-react';
-
-<IconButton>
-    <Home className="h-4 w-4" />
-</IconButton>
+import { IconButton, Icon } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <IconButton aria-label="Home">
+        <Icon name="home-line" size="sm" />
+      </IconButton>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

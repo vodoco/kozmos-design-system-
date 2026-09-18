@@ -22,7 +22,9 @@ committing to a dashboard, map, or CMS-specific layout.
 
 <PlatformSnippets
   react={`
+import { useState } from "react";
 import {
+  Button,
   Drawer,
   DrawerContent,
   DrawerDescription,
@@ -30,22 +32,43 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@kozmos/react"
-
-<Drawer>
-  <DrawerTrigger>Open drawer</DrawerTrigger>
-  <DrawerContent side="right">
-    <DrawerHeader>
-      <DrawerTitle>Manage layers</DrawerTitle>
-      <DrawerDescription>Update map display settings.</DrawerDescription>
-    </DrawerHeader>
-    <p>Drawer body content</p>
-    <DrawerFooter>
-      <Button variant="outline">Cancel</Button>
-      <Button>Save changes</Button>
-    </DrawerFooter>
-  </DrawerContent>
-</Drawer>
+  Input,
+} from "@kozmos/react";
+export function Example({ onSave }: { onSave: (name: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("Ground floor");
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <Button>Manage layer</Button>
+      </DrawerTrigger>
+      <DrawerContent side="right">
+        <DrawerHeader>
+          <DrawerTitle>Manage layer</DrawerTitle>
+          <DrawerDescription>Update the layer name.</DrawerDescription>
+        </DrawerHeader>
+        <Input
+          label="Layer name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+        <DrawerFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              onSave(name);
+              setOpen(false);
+            }}
+          >
+            Save changes
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  );
+}
   `}
   vue={`
 <script setup>

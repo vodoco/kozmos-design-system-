@@ -7,6 +7,18 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**Executable React recipes, 2026-09-18:** read
+`snippet-validation-2026-09-18.md` for the next release-gate slice. All 82 displayed
+React recipes now compile unchanged against installed tarballs on React 18 and 19,
+with strict NodeNext and library checking enabled. The gate is part of
+`packages:install:check` in CI; `docs:snippets:compile` runs the same gate locally.
+Negative controls verify missing exports, invalid props and undeclared state fail.
+This supersedes earlier claims that no Docs snippets compile, **only for React**.
+The 80 Vue and 162 native snippets remain uncompiled references; 17 component Docs
+pages have no PlatformSnippets recipe. Neither compilation nor this inventory
+establishes platform parity, runtime correctness or production readiness. No push,
+merge or npm publish.
+
 **Responsive/Docs recheck, 2026-09-18:** read
 `production-readiness-recheck-2026-09-18.md` first, then
 `public-catalogue-guide-2026-09-18.md`. This supersedes older preview/test counts

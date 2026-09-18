@@ -21,9 +21,17 @@ Displays the Textarea interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Textarea } from "@kozmos/react"
-
-<Textarea />
+import { Textarea } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Textarea
+        aria-label="Visit feedback"
+        placeholder="Tell us about your visit"
+      />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

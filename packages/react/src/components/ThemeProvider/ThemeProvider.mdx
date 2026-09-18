@@ -21,9 +21,14 @@ Displays the ThemeProvider interface topology natively.
 
 <PlatformSnippets
     react={`
-import { ThemeProvider } from "@kozmos/react"
-
-<ThemeProvider />
+import { ThemeProvider, Button } from "@kozmos/react";
+export function Example() {
+  return (
+    <ThemeProvider defaultTheme="system" defaultSystemTheme="light">
+      <Button>Continue</Button>
+    </ThemeProvider>
+  );
+}
     `}
     vue={`
 <script setup>

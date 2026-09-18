@@ -21,9 +21,16 @@ Displays the Box interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Box } from "@kozmos/react"
-
-<Box />
+import { Box } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Box>
+        <p>Venue overview</p>
+      </Box>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

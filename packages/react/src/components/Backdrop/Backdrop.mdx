@@ -21,9 +21,14 @@ Displays the Backdrop interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Backdrop } from "@kozmos/react"
-
-<Backdrop />
+import { Backdrop } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Backdrop />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -25,11 +25,16 @@ surrounding form.
 
 <PlatformSnippets
     react={`
-import { WayfindingCard } from "@kozmos/react"
-
-<WayfindingCard title="Route">
-  <p>Select a destination to begin.</p>
-</WayfindingCard>
+import { WayfindingCard } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <WayfindingCard title="Route">
+        <p>Select a destination to begin.</p>
+      </WayfindingCard>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -41,21 +41,40 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { FieldWrapper } from '@kozmos/react';
-
-<FieldWrapper
-  label="Venue"
-  inputId="venue"
-  helperText="Search by name or category"
-  required
->
-  <MyCustomControl id="venue" />
-</FieldWrapper>
-
-// Error state
-<FieldWrapper label="Email" inputId="email" error="Enter a valid address">
-  <input id="email" type="email" />
-</FieldWrapper>
+import { useId } from "react";
+import { FieldWrapper } from "@kozmos/react";
+export function Example() {
+  const venueId = useId();
+  const emailId = useId();
+  const hintId = useId();
+  const errorId = useId();
+  return (
+    <>
+      <FieldWrapper
+        label="Venue"
+        inputId={venueId}
+        helperText="Search by name or category"
+        helperId={hintId}
+        required
+      >
+        <input id={venueId} required aria-describedby={hintId} />
+      </FieldWrapper>
+      <FieldWrapper
+        label="Email"
+        inputId={emailId}
+        error="Enter a valid address"
+        errorId={errorId}
+      >
+        <input
+          id={emailId}
+          type="email"
+          aria-invalid="true"
+          aria-describedby={errorId}
+        />
+      </FieldWrapper>
+    </>
+  );
+}
   `}
   vue={`
 <script setup>

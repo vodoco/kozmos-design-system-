@@ -21,9 +21,14 @@ Displays the ToggleButton interface topology natively.
 
 <PlatformSnippets
     react={`
-import { ToggleButton } from "@kozmos/react"
-
-<ToggleButton />
+import { ToggleButton } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <ToggleButton aria-label="Show labels">Labels</ToggleButton>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

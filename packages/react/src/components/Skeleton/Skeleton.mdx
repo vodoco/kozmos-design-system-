@@ -21,9 +21,14 @@ Displays the Skeleton interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Skeleton } from "@kozmos/react"
-
-<Skeleton />
+import { Skeleton } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Skeleton style={{ width: 160, height: 24 }} />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

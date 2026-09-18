@@ -21,9 +21,14 @@ Displays the LocationPin interface topology natively.
 
 <PlatformSnippets
     react={`
-import { LocationPin } from "@kozmos/react"
-
-<LocationPin />
+import { LocationPin } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <LocationPin />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

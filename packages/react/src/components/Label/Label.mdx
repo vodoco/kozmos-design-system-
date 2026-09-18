@@ -23,12 +23,17 @@ Use FieldWrapper when you need required marks, helper text or error messages.
 
 <PlatformSnippets
     react={`
-import { Label, Input } from "@kozmos/react"
-
-<>
-  <Label htmlFor="email">Email</Label>
-  <Input id="email" type="email" />
-</>
+import { Label, Input } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <>
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" type="email" />
+      </>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

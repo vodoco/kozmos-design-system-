@@ -21,9 +21,17 @@ Displays the List interface topology natively.
 
 <PlatformSnippets
     react={`
-import { List } from "@kozmos/react"
-
-<List />
+import { List } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <List>
+        <li>Reception</li>
+        <li>Atrium Café</li>
+      </List>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -22,23 +22,31 @@ A succinct message that is displayed temporarily.
 
 <PlatformSnippets
     react={`
-import { useToast } from "@kozmos/react"
-
-export const ToastDemo = () => {
-  const { toast } = useToast()
-
+import { useState } from "react";
+import {
+  Button,
+  Toast,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
+} from "@kozmos/react";
+export function Example() {
+  const [open, setOpen] = useState(false);
   return (
-    <Button
-      onClick={() => {
-        toast({
-          title: "Scheduled: Catch up",
-          description: "Friday, February 10, 2023 at 5:57 PM",
-        })
-      }}
-    >
-      Show Toast
-    </Button>
-  )
+    <ToastProvider>
+      <Button onClick={() => setOpen(true)}>Show toast</Button>
+      <Toast open={open} onOpenChange={setOpen}>
+        <div>
+          <ToastTitle>Location saved</ToastTitle>
+          <ToastDescription>Find it in your saved places.</ToastDescription>
+        </div>
+        <ToastClose aria-label="Dismiss notification" />
+      </Toast>
+      <ToastViewport />
+    </ToastProvider>
+  );
 }
     `}
     vue={`

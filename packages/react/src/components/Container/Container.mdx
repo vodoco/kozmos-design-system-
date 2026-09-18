@@ -21,9 +21,16 @@ Displays the Container interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Container } from "@kozmos/react"
-
-<Container />
+import { Container } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Container>
+        <p>Venue overview</p>
+      </Container>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

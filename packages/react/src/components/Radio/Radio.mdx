@@ -22,19 +22,24 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
     react={`
-import { Label } from "@kozmos/react"
-import { RadioGroup, RadioGroupItem } from "@kozmos/react"
-
-<RadioGroup defaultValue="option-one">
-  <div className="flex items-center space-x-2">
-    <RadioGroupItem value="option-one" id="r1" />
-    <Label htmlFor="r1">Option One</Label>
-  </div>
-  <div className="flex items-center space-x-2">
-    <RadioGroupItem value="option-two" id="r2" />
-    <Label htmlFor="r2">Option Two</Label>
-  </div>
-</RadioGroup>
+import { Label } from "@kozmos/react";
+import { RadioGroup, RadioGroupItem } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <RadioGroup aria-label="Choose an option" defaultValue="option-one">
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="option-one" id="r1" />
+          <Label htmlFor="r1">Option One</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="option-two" id="r2" />
+          <Label htmlFor="r2">Option Two</Label>
+        </div>
+      </RadioGroup>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

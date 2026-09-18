@@ -38,22 +38,27 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { MapControlsGroup } from '@kozmos/react';
-
-<MapControlsGroup
-  label="Map controls"
-  onZoomIn={zoomIn}
-  onZoomOut={zoomOut}
-  onCompassReset={resetBearing}
-  onMyLocation={recenter}
-  compassBearing={bearing}
-  locationState={locationState}
-  locationLabel="My location"
-  locationStateLabel="Following your location"
-/>
-
-// Zoom only — omitted handlers drop their buttons
-<MapControlsGroup onZoomIn={zoomIn} onZoomOut={zoomOut} />
+import { MapControlsGroup, type MapControlsGroupProps } from "@kozmos/react";
+// Wire these callbacks and state to your map adapter; no map engine is bundled.
+export function Example(
+  props: Pick<
+    MapControlsGroupProps,
+    | "onZoomIn"
+    | "onZoomOut"
+    | "onCompassReset"
+    | "onMyLocation"
+    | "compassBearing"
+    | "locationState"
+  >,
+) {
+  return (
+    <MapControlsGroup
+      {...props}
+      label="Map controls"
+      locationLabel="My location"
+    />
+  );
+}
   `}
   vue={`
 <script setup>

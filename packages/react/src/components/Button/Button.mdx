@@ -22,9 +22,14 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 <PlatformSnippets
     react={`
-import { Button } from '@kozmos/react';
-
-<Button variant="default">Button</Button>
+import { Button } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Button variant="default">Button</Button>
+    </>
+  );
+}
     `}
     vue={`
 <script setup lang="ts">
@@ -122,10 +127,17 @@ than a weight and takes no emotion.
 
 <PlatformSnippets
     react={`
-import { Button } from '@kozmos/react';
-
-<Button emotion="success">Publish</Button>
-<Button variant="outline" emotion="danger">Delete</Button>
+import { Button } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Button emotion="success">Publish</Button>
+      <Button variant="outline" emotion="danger">
+        Delete
+      </Button>
+    </>
+  );
+}
     `}
     swift={`
 import SwiftUI

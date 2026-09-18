@@ -25,9 +25,14 @@ Displays the DatePicker interface topology natively.
 
 <PlatformSnippets
     react={`
-import { DatePicker } from "@kozmos/react"
-
-<DatePicker />
+import { DatePicker } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <DatePicker label="Visit date" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

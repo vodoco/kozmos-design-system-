@@ -21,9 +21,15 @@ Displays the Stepper interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Stepper } from "@kozmos/react"
-
-<Stepper />
+import { Stepper } from "@kozmos/react";
+export function Example() {
+  return (
+    <Stepper
+      steps={["Choose destination", "Review route", "Navigate"]}
+      currentStep={1}
+    />
+  );
+}
     `}
     vue={`
 <script setup>

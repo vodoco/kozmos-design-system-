@@ -29,10 +29,15 @@ Displays a compact count for badges, filters, unread items, and status summaries
 
 <PlatformSnippets
     react={`
-import { Counter } from "@kozmos/react"
-
-<Counter>2</Counter>
-<Counter tone="brand">12</Counter>
+import { Counter } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Counter>2</Counter>
+      <Counter tone="brand">12</Counter>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>
