@@ -329,6 +329,25 @@ for (const { manifest } of packed) {
   }
 }
 
+// Rich POI details must also typecheck as a real installed-package consumer,
+// without widening legacy action labels or importing workspace source.
+samples.push({
+  file: "poi-details.tsx",
+  body: `import { POIDetailPanel } from "@kozmos/react";
+import type { POIDetailsPresentation, POIPresentation } from "@kozmos/product-contracts";
+const poi: POIPresentation = { id: "entry", name: "Entrance", floorId: "1", floorLabel: "Floor 1", media: [], actions: ["navigate"] };
+const details: POIDetailsPresentation = {
+  summary: [{ id: "access", kind: "accessibility", label: "Accessibility", value: "Step-free" }],
+  groups: [{ id: "language", heading: "Languages", items: [{ id: "en", label: "English" }] }],
+  supplementaryActions: [{ action: "call", label: "Call" }],
+};
+export function Example() {
+  return <POIDetailPanel poi={poi} details={details}
+    actionLabels={{ navigate: "Go", favourite: "Favourite", bookmark: "Bookmark", share: "Share", order: "Order" }}
+    onAction={() => undefined} onSupplementaryAction={(action, id) => { console.log(action, id); }} />;
+}`,
+});
+
 const requirable = packed
   .filter(({ manifest }) => manifest.exports?.["."]?.require)
   .map(({ manifest }) => manifest.name);

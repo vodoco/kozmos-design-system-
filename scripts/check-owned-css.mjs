@@ -78,6 +78,24 @@ try {
         return result;
       }, token);
     for (const id of ["outer", "nested"]) {
+      const poi = page.getByTestId(`${id}-poi`);
+      for (const selector of [
+        ".kozmos-poi-summary",
+        ".kozmos-poi-hours",
+        ".kozmos-poi-chips li",
+      ]) {
+        assert.equal(
+          (await measure(poi.locator(selector))).borderTopWidth,
+          "1px",
+          `${mode} ${selector} must own its border`,
+        );
+      }
+      assert.equal((await measure(poi.locator("h2"))).fontSize, "20px");
+      assert.equal(
+        await poi.evaluate((e) => e.scrollWidth <= e.clientWidth),
+        true,
+        "POI must fit its host without scoped preflight",
+      );
       assert.equal(
         (await measure(page.getByTestId(`${id}-host-heading`))).fontSize,
         "48px",

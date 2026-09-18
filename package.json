@@ -30,6 +30,7 @@
     "test:storybook-vue-smoke": "node scripts/check-storybook-vue-smoke.mjs",
     "test:storybook-audit": "node scripts/audit-storybook.mjs",
     "test:storybook-interactions": "node scripts/check-storybook-interactions.mjs",
+    "test:poi-details": "node scripts/check-poi-detail-examples.mjs",
     "test:css-build": "node --test packages/react/postcss/*.test.cjs",
     "test:declarations": "node --test scripts/emit-format-declarations.test.mjs",
     "lint": "turbo run lint",

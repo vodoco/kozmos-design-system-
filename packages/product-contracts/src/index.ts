@@ -52,6 +52,46 @@ export interface POIPresentation {
   actions: readonly POIAction[];
 }
 
+/** Optional, already-localized detail content. Keep category-specific API fields
+ * in the product adapter, not in the shared POI identity or React props. */
+export interface POIDetailAttributeGroup {
+  id: string;
+  heading: string;
+  items: readonly { id: string; label: string }[];
+}
+
+/** Kind describes meaning without coupling the contract to a platform icon. */
+export interface POIDetailSummary {
+  id: string;
+  kind: "rating" | "price" | "accessibility" | "dietary" | "crowd";
+  label: string;
+  value: string;
+  detail?: string;
+}
+
+export interface POIOpeningHoursPresentation {
+  label: string;
+  summary: string;
+  rows: readonly { id: string; day: string; hours: string }[];
+  note?: string;
+}
+
+export type POISupplementaryAction = "book" | "call";
+
+export interface POIDetailsPresentation {
+  travelEstimate?: TravelEstimatePresentation;
+  summary?: readonly POIDetailSummary[];
+  groups?: readonly POIDetailAttributeGroup[];
+  openingHours?: POIOpeningHoursPresentation;
+  /** Plain text only. Products must adapt/sanitize rich API content separately. */
+  description?: { preview: string; full?: string };
+  tags?: readonly { id: string; label: string }[];
+  supplementaryActions?: readonly {
+    action: POISupplementaryAction;
+    label: string;
+  }[];
+}
+
 export interface TravelEstimatePresentation {
   durationSeconds: number;
   durationLabel: string;

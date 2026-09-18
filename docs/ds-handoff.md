@@ -7,6 +7,14 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**SDK screenshot examples, 2026-09-18:** read
+poi-reference-examples-2026-09-18.md. Restaurant/entrance references now use
+one richer POIDetailPanel, additive detail contracts and explicit optional
+book/call capabilities. Seven stories cover normal, sparse, map-shell and failure
+states. The screenshots do not provide real media or gesture specifications;
+no real map, routing or external actions are claimed. Remaining venue fixtures
+and real SDK integration are next. No push/merge/npm.
+
 **Installed-product continuation, 2026-09-18:** read
 `installed-product-pilot-2026-09-18.md`. The existing MapScale Review app is now
 checked from isolated installed tarballs, with strict library checks, its 680

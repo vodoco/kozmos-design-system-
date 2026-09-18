@@ -8,6 +8,30 @@ const media = [
 ];
 
 describe("POIMediaGallery", () => {
+  it("shows a labelled failure and recovers when the source changes", () => {
+    const props = {
+      label: "Photos",
+      positionLabel: (n: number) => String(n),
+      unavailableLabel: "Photo unavailable",
+    };
+    const { rerender } = render(
+      <POIMediaGallery {...props} media={[media[0]]} />,
+    );
+    fireEvent.error(screen.getByAltText("Shop entrance"));
+    expect(
+      screen.getByRole("img", { name: "Shop entrance: Photo unavailable" }),
+    ).toBeVisible();
+    rerender(
+      <POIMediaGallery
+        {...props}
+        media={[{ ...media[0], src: "/replacement.jpg" }]}
+      />,
+    );
+    expect(screen.getByAltText("Shop entrance")).toHaveAttribute(
+      "src",
+      "/replacement.jpg",
+    );
+  });
   it("provides labelled controls and announces position", () => {
     const onChange = vi.fn();
     render(

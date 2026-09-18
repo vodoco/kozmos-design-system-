@@ -16,7 +16,37 @@ export interface POIMediaGalleryProps extends Omit<
   onActiveIndexChange?: (index: number) => void;
   previousLabel?: string;
   nextLabel?: string;
+  unavailableLabel?: string;
   positionLabel: (current: number, total: number) => string;
+}
+
+function MediaImage({
+  item,
+  eager,
+  unavailableLabel,
+}: {
+  item: POIMediaPresentation;
+  eager: boolean;
+  unavailableLabel: string;
+}) {
+  const [failed, setFailed] = React.useState(false);
+  return failed ? (
+    <div
+      className="kozmos-poi-media-unavailable"
+      role="img"
+      aria-label={`${item.alt}: ${unavailableLabel}`}
+    >
+      {unavailableLabel}
+    </div>
+  ) : (
+    <img
+      alt={item.alt}
+      className="aspect-[4/3] w-full rounded-container bg-muted object-cover"
+      loading={eager ? "eager" : "lazy"}
+      src={item.src}
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 const POIMediaGallery = React.forwardRef<HTMLElement, POIMediaGalleryProps>(
@@ -30,6 +60,7 @@ const POIMediaGallery = React.forwardRef<HTMLElement, POIMediaGalleryProps>(
       onActiveIndexChange,
       previousLabel = "Previous image",
       nextLabel = "Next image",
+      unavailableLabel = "Image unavailable",
       positionLabel,
       ...props
     },
@@ -52,7 +83,7 @@ const POIMediaGallery = React.forwardRef<HTMLElement, POIMediaGalleryProps>(
       if (!controlled) setInternalIndex(nextIndex);
       onActiveIndexChange?.(nextIndex);
       listRef.current?.children[nextIndex]?.scrollIntoView?.({
-        behavior: "smooth",
+        behavior: "auto",
         block: "nearest",
         inline: "start",
       });
@@ -111,11 +142,11 @@ const POIMediaGallery = React.forwardRef<HTMLElement, POIMediaGalleryProps>(
               data-active={index === currentIndex || undefined}
               key={item.id}
             >
-              <img
-                alt={item.alt}
-                className="aspect-[4/3] w-full rounded-container bg-muted object-cover"
-                loading={index === 0 ? "eager" : "lazy"}
-                src={item.src}
+              <MediaImage
+                key={item.src}
+                item={item}
+                eager={index === 0}
+                unavailableLabel={unavailableLabel}
               />
             </li>
           ))}

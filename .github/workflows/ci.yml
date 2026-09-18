@@ -205,6 +205,21 @@ jobs:
             "python3 -m http.server 6008 --bind 127.0.0.1 --directory storybook-static" \
             "bash -lc 'until curl -sf http://127.0.0.1:6008/index.json >/dev/null; do sleep 2; done; STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:storybook-docs && STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:storybook-audit-fixes && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=firefox pnpm -w test:storybook-audit-fixes && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=webkit pnpm -w test:storybook-audit-fixes'"
 
+      - name: Verify SDK POI Reference Examples
+        run: |
+          pnpm --filter @kozmos/docs exec concurrently -k -s first -n "POI,TEST" \
+            "python3 -m http.server 6008 --bind 127.0.0.1 --directory storybook-static" \
+            "bash -lc 'until curl -sf http://127.0.0.1:6008/index.json >/dev/null; do sleep 2; done; STORYBOOK_URL=http://127.0.0.1:6008 pnpm -w test:poi-details && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=firefox pnpm -w test:poi-details && STORYBOOK_URL=http://127.0.0.1:6008 ADAPTIVE_BROWSER=webkit pnpm -w test:poi-details'"
+
+      - name: Preserve POI Reference Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: poi-detail-examples
+          path: test-results/poi-detail-examples
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Build and Smoke Test Internal Vue Harness
         run: |
           pnpm --filter @kozmos/docs build-storybook:vue

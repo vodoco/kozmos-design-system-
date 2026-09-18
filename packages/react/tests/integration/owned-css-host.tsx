@@ -18,6 +18,7 @@ import {
   Listbox,
   Text,
   Heading,
+  POIDetailPanel,
 } from "@kozmos/react";
 
 function Controls({ id }: { id: string }) {
@@ -156,6 +157,47 @@ function Controls({ id }: { id: string }) {
       <div className="host-slot">
         <button className="host-slot-button">Host slot</button>
       </div>
+      <POIDetailPanel
+        data-testid={`${id}-poi`}
+        poi={{
+          id,
+          name: "Terminal entrance",
+          floorId: "1",
+          floorLabel: "Floor 1",
+          media: [],
+          actions: ["navigate"],
+        }}
+        actionLabels={{
+          navigate: "Go",
+          share: "Share",
+          favourite: "Favourite",
+          bookmark: "Bookmark",
+          order: "Order",
+        }}
+        onAction={() => undefined}
+        details={{
+          summary: [
+            {
+              id: "access",
+              kind: "accessibility",
+              label: "Accessibility",
+              value: "Step-free",
+            },
+          ],
+          groups: [
+            {
+              id: "languages",
+              heading: "Languages",
+              items: [{ id: "en", label: "English" }],
+            },
+          ],
+          openingHours: {
+            label: "Hours",
+            summary: "View opening hours",
+            rows: [{ id: "mon", day: "Monday", hours: "09:00–17:00" }],
+          },
+        }}
+      />
     </section>
   );
 }

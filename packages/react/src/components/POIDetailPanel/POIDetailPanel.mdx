@@ -14,3 +14,41 @@ presentations.
 <Canvas of={Stories.Inline} />
 <Canvas of={Stories.PartialData} />
 <Controls />
+
+## SDK reference examples
+
+The **Product SDK / POI Detail Examples** stories rebuild the supplied restaurant
+and entrance references with Kozmos tokens. Restaurant, Entrance, On Map,
+Missing Data, Failed Media, Action States and Long Content are separate acceptance
+cases. Fixture actions never call a booking service, share API or routing engine.
+
+The optional `details: POIDetailsPresentation` model adds typed summary items,
+ordered information groups, venue-local opening-hours rows, plain-text description
+expansion and tags. Empty groups and absent photos/logos are omitted, not replaced
+with invented data. The host supplies localized text and explicit availability.
+Keep rich API content sanitization, venue timezone handling and opening-status
+calculation in the product adapter.
+
+Existing `onAction` and `actionLabels` remain unchanged. Optional book/call
+capabilities use `details.supplementaryActions`, `onSupplementaryAction` and
+`supplementaryActionStates`; without a callback those actions are disabled.
+Favourite/bookmark are controlled toggle buttons in the header.
+
+The example uses `AdaptiveMapShell`, not a modal drawer. On narrow hosts an
+explicit button requests more detail space; wider hosts use a side panel.
+This is not drag/snap interaction or an actual map renderer. Close returns focus
+to the example's opener. The application owns focus restoration in real use.
+
+### Intentional differences from the screenshots
+
+- Secondary actions wrap rather than becoming clipped, undiscoverable controls.
+- Touch targets retain the shared 44px minimum; narrow headers may use two rows.
+- No counterfeit logos, payment trademarks, photographs or map tiles are drawn.
+- Attribute chips are information, not non-functional buttons.
+- Opening hours follow the attribute groups consistently in this first model.
+- Estimates, hours, ratings and accessibility claims are illustrative fixture data.
+
+Run `pnpm test:poi-details` against a running Storybook. Set
+`ADAPTIVE_BROWSER=firefox` or `ADAPTIVE_BROWSER=webkit` to check another engine.
+Screenshots, failures and incomplete accessibility checks are saved under
+`test-results/poi-detail-examples/`. This is UI acceptance, not SDK certification.
