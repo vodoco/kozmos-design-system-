@@ -35,6 +35,18 @@ capabilities use `details.supplementaryActions`, `onSupplementaryAction` and
 `supplementaryActionStates`; without a callback those actions are disabled.
 Favourite/bookmark are controlled toggle buttons in the header.
 
+Selected favourites/bookmarks use the themed filled Button treatment with an
+outline Pointr icon; unselected controls remain outlined. Navigation uses a
+24px icon and 16px/24px semibold label, with the existing ~11px/14px token for
+the estimate. Information chips/tags are non-interactive, with a 32px minimum
+height, ~13px/16px type, 16px corners and room to grow for wrapped/zoomed text.
+They are not 44px action targets.
+
+Group items and services accept optional `iconName`, using the existing Kozmos
+icon registry. Icons are decorative, 16px, and explicitly assigned by the adapter;
+the component does not infer them from translated text. Unknown icons leave
+the full label visible. No external image URL or raw SVG is accepted by this field.
+
 Summary facts use the shared `MetaStrip`: exactly one row of cells, with local
 horizontal scrolling when the host is too narrow. Facts never move to a second
 row. Labels may wrap within a cell without splitting ordinary words; icon/text

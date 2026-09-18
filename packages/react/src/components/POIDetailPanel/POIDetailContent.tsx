@@ -1,16 +1,38 @@
 import React from "react";
-import type { POIDetailsPresentation } from "@kozmos/product-contracts";
-import { Accessibility, Clock, Leaf, Star } from "lucide-react";
+import type {
+  POIDetailsPresentation,
+  POIServicePresentation,
+} from "@kozmos/product-contracts";
+import {
+  ClockPlus,
+  Feather,
+  getIconDefinition,
+  isKozmosIconKey,
+} from "@kozmos/icons";
+import { Accessibility, Star } from "lucide-react";
 import { Button } from "../Button";
 import { MetaStrip, MetaStripItem } from "../MetaStrip";
 
 const summaryIcons = {
   rating: Star,
   accessibility: Accessibility,
-  dietary: Leaf,
-  crowd: Clock,
+  dietary: Feather,
+  crowd: ClockPlus,
   price: null,
 };
+
+export function POIDetailAttribute({ item }: { item: POIServicePresentation }) {
+  const Icon =
+    item.iconName && isKozmosIconKey(item.iconName)
+      ? getIconDefinition(item.iconName)?.component
+      : undefined;
+  return (
+    <>
+      {Icon && <Icon aria-hidden="true" size={16} />}
+      <span>{item.label}</span>
+    </>
+  );
+}
 
 export function POIDetailSummaryStrip({
   details,
@@ -72,7 +94,7 @@ export function POIDetailContent({
             <ul className="kozmos-poi-chips">
               {group.items.map((item) => (
                 <li className="kozmos-reset" key={item.id}>
-                  {item.label}
+                  <POIDetailAttribute item={item} />
                 </li>
               ))}
             </ul>

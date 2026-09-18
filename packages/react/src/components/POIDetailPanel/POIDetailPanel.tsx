@@ -5,22 +5,25 @@ import type {
   POIPresentation,
   POISupplementaryAction,
 } from "@kozmos/product-contracts";
+import { Navigation, X } from "lucide-react";
 import {
   Bookmark,
-  CalendarCheck,
+  CalendarCheck01,
   Heart,
-  Navigation,
   Phone,
-  Share2,
-  ShoppingBag,
-  X,
-} from "lucide-react";
+  Share01,
+  ShoppingBag02,
+} from "@kozmos/icons";
 import { cn } from "../../utils";
 import { Button } from "../Button";
 import { IconButton } from "../IconButton";
 import { Heading } from "../Heading";
 import { POIMediaGallery } from "../POIMediaGallery";
-import { POIDetailContent, POIDetailSummaryStrip } from "./POIDetailContent";
+import {
+  POIDetailAttribute,
+  POIDetailContent,
+  POIDetailSummaryStrip,
+} from "./POIDetailContent";
 
 export interface POIActionState {
   disabled?: boolean;
@@ -69,10 +72,10 @@ const actionIcons = {
   navigate: Navigation,
   favourite: Heart,
   bookmark: Bookmark,
-  share: Share2,
-  order: ShoppingBag,
+  share: Share01,
+  order: ShoppingBag02,
 };
-const supplementaryIcons = { book: CalendarCheck, call: Phone };
+const supplementaryIcons = { book: CalendarCheck01, call: Phone };
 const isToggle = (action: POIAction) =>
   action === "favourite" || action === "bookmark";
 
@@ -187,8 +190,8 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
               return (
                 <IconButton
                   key={action}
-                  variant="outline"
-                  emotion="neutral"
+                  variant={state?.pressed ? "default" : "outline"}
+                  emotion={state?.pressed ? "themed" : "neutral"}
                   aria-label={actionLabels[action]}
                   aria-pressed={state?.pressed ?? false}
                   disabled={state?.disabled}
@@ -196,11 +199,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
                   onClick={() => onAction(action, poi.id)}
                   type="button"
                 >
-                  <Icon
-                    aria-hidden="true"
-                    size={18}
-                    fill={state?.pressed ? "currentColor" : "none"}
-                  />
+                  <Icon aria-hidden="true" size={20} />
                 </IconButton>
               );
             })}
@@ -212,7 +211,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
                 onClick={onClose}
                 type="button"
               >
-                <X aria-hidden="true" size={18} />
+                <X aria-hidden="true" size={20} />
               </IconButton>
             )}
           </div>
@@ -242,7 +241,11 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
               return (
                 <Button
                   key={action}
-                  className="kozmos-poi-action"
+                  className={cn(
+                    "kozmos-poi-action",
+                    action === "navigate" && "kozmos-poi-action-primary",
+                  )}
+                  data-has-estimate={Boolean(estimate) || undefined}
                   disabled={state?.disabled}
                   isLoading={state?.loading}
                   onClick={() => onAction(action, poi.id)}
@@ -261,7 +264,10 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
                       : undefined
                   }
                 >
-                  <Icon aria-hidden="true" size={20} />
+                  <Icon
+                    aria-hidden="true"
+                    size={action === "navigate" ? 24 : 20}
+                  />
                   <span>
                     {actionLabels[action]}
                     {estimate && (
@@ -337,7 +343,7 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
                 <ul className="kozmos-poi-chips">
                   {poi.services!.map((service) => (
                     <li className="kozmos-reset" key={service.id}>
-                      {service.label}
+                      <POIDetailAttribute item={service} />
                     </li>
                   ))}
                 </ul>

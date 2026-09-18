@@ -11,10 +11,17 @@ export const poiActionLabels: Record<POIAction, string> = {
   share: "Share",
   order: "Order",
 };
-const group = (id: string, heading: string, labels: string[]) => ({
+const group = (
+  id: string,
+  heading: string,
+  labels: (string | { label: string; iconName: string })[],
+) => ({
   id,
   heading,
-  items: labels.map((label, index) => ({ id: `${id}-${index}`, label })),
+  items: labels.map((value, index) => ({
+    id: `${id}-${index}`,
+    ...(typeof value === "string" ? { label: value } : value),
+  })),
 });
 const accessibility = group("accessibility", "Accessibility", [
   "Wheelchair accessible",
@@ -78,7 +85,7 @@ export const restaurantDetails: POIDetailsPresentation = {
     group("services", "Service options", ["Dine-in", "Takeout", "Delivery"]),
     accessibility,
     group("amenities", "Amenities", [
-      "WiFi",
+      { label: "WiFi", iconName: "wifi" },
       "Play area",
       "Restrooms",
       "Alcohol service",
@@ -131,7 +138,7 @@ export const entranceDetails: POIDetailsPresentation = {
   groups: [
     accessibility,
     group("amenities", "Amenities", [
-      "WiFi",
+      { label: "WiFi", iconName: "wifi" },
       "Chargers",
       "Restrooms",
       "Luggage storage",
@@ -223,7 +230,7 @@ export const fitnessDetails: POIDetailsPresentation = {
       "Assistance available",
     ]),
     group("amenities", "Amenities", [
-      "WiFi",
+      { label: "WiFi", iconName: "wifi" },
       "Chargers",
       "Restrooms",
       "Locker room",

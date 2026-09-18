@@ -141,12 +141,54 @@ try {
             "title clipping",
           );
           if (story === "restaurant") {
+            const primary = panel.locator(".kozmos-poi-action-primary");
+            const type = await primary.evaluate((element) => ({
+              font: getComputedStyle(element).fontSize,
+              weight: getComputedStyle(element).fontWeight,
+              leading: getComputedStyle(element).lineHeight,
+              estimate: getComputedStyle(element.querySelector("small"))
+                .fontSize,
+              icon: element.querySelector("svg").getBoundingClientRect().width,
+            }));
+            assert.equal(type.font, "16px");
+            assert.equal(type.weight, "600");
+            assert.equal(type.leading, "24px");
+            assert(Math.abs(parseFloat(type.estimate) - 11) < 0.05);
+            assert.equal(type.icon, 24);
+            const wifi = panel
+              .locator(".kozmos-poi-chips li")
+              .filter({ hasText: /^WiFi$/ });
+            const tag = await wifi.evaluate((element) => ({
+              height: element.getBoundingClientRect().height,
+              font: parseFloat(getComputedStyle(element).fontSize),
+              line: getComputedStyle(element).lineHeight,
+              icon: element.querySelector("svg")?.getBoundingClientRect().width,
+            }));
+            assert.equal(tag.height, 32);
+            assert(Math.abs(tag.font - 13) < 0.05);
+            assert.equal(tag.line, "16px");
+            assert.equal(tag.icon, 16);
             const favourite = page.getByRole("button", {
               name: "Favourite",
               exact: true,
             });
             await favourite.click();
             assert.equal(await favourite.getAttribute("aria-pressed"), "true");
+            // Compare idle fills, not the selected control's hovered token
+            // against the navigation button's idle token.
+            await page.mouse.move(0, 0);
+            await page.waitForFunction(
+              (element) =>
+                getComputedStyle(element).backgroundColor ===
+                getComputedStyle(
+                  document.querySelector(".kozmos-poi-action-primary"),
+                ).backgroundColor,
+              await favourite.elementHandle(),
+            );
+            assert.equal(
+              await favourite.locator("svg").getAttribute("fill"),
+              "none",
+            );
             await page
               .getByRole("button", { name: "Book", exact: true })
               .click();

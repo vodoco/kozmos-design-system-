@@ -57,7 +57,9 @@ export interface POIPresentation {
 export interface POIDetailAttributeGroup {
   id: string;
   heading: string;
-  items: readonly { id: string; label: string }[];
+  /** Optional iconName follows the existing service presentation contract.
+   * Text remains authoritative when a platform cannot resolve an icon. */
+  items: readonly POIServicePresentation[];
 }
 
 /** Kind describes meaning without coupling the contract to a platform icon. */

@@ -32,6 +32,60 @@ const poi: POIPresentation = {
 };
 
 describe("POIDetailPanel", () => {
+  it("renders optional decorative attribute icons and preserves unknown-icon text", () => {
+    render(
+      <POIDetailPanel
+        poi={poi}
+        actionLabels={labels}
+        onAction={vi.fn()}
+        details={{
+          groups: [
+            {
+              id: "amenities",
+              heading: "Amenities",
+              items: [
+                { id: "wifi", label: "Wireless network", iconName: "wifi" },
+                {
+                  id: "future",
+                  label: "Future amenity",
+                  iconName: "not-a-registered-icon",
+                },
+                {
+                  id: "inherited",
+                  label: "Inherited property",
+                  iconName: "constructor",
+                },
+              ],
+            },
+          ],
+        }}
+      />,
+    );
+    const wifi = screen.getByText("Wireless network").closest("li");
+    expect(wifi?.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(wifi?.querySelector("svg")).toHaveAttribute("width", "16");
+    expect(
+      screen.getByText("Future amenity").closest("li")?.querySelector("svg"),
+    ).toBeNull();
+    expect(
+      screen
+        .getByText("Inherited property")
+        .closest("li")
+        ?.querySelector("svg"),
+    ).toBeNull();
+  });
+  it("keeps inactive save controls outlined", () => {
+    render(
+      <POIDetailPanel
+        poi={restaurantPOI}
+        actionLabels={labels}
+        onAction={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Favourite" })).toHaveClass(
+      "kozmos-button-outline",
+    );
+  });
   it("uses the shared keyboard-scrollable metadata strip", () => {
     const { container } = render(
       <POIDetailPanel
@@ -147,6 +201,11 @@ describe("POIDetailPanel", () => {
     );
     const favourite = screen.getByRole("button", { name: "Favourite" });
     expect(favourite).toHaveAttribute("aria-pressed", "true");
+    expect(favourite).toHaveClass(
+      "kozmos-button-default",
+      "kozmos-button-emotion-filled",
+    );
+    expect(favourite.querySelector("svg")).toHaveAttribute("fill", "none");
     fireEvent.click(favourite);
     expect(onAction).toHaveBeenCalledWith("favourite", "il-forno");
     expect(favourite).toHaveAttribute("aria-pressed", "true");

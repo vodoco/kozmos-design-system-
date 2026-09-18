@@ -96,9 +96,20 @@
   .kozmos-poi-action svg {
     flex-shrink: 0;
   }
+  .kozmos-poi-action-primary {
+    @apply text-base font-semibold;
+    padding-block: 0.5rem;
+    padding-inline: 1rem;
+  }
+  .kozmos-poi-action-primary[data-has-estimate] {
+    min-block-size: 3.5rem;
+  }
   .kozmos-poi-estimate {
     display: block;
-    font-size: 0.75rem;
+    font-size: calc(
+      var(--primitives-typography-font-size-paragraph-xsmall) * 1rem / 16
+    );
+    line-height: calc(var(--primitives-typography-line-height-50) * 1rem / 16);
     font-weight: normal;
   }
   .kozmos-poi-summary-item {
@@ -147,8 +158,22 @@
   }
   .kozmos-poi-chips li {
     @apply rounded-control border border-border;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-block-size: 2rem;
     max-inline-size: 100%;
-    padding: 0.375rem 0.75rem;
+    padding: 0.4375rem 0.75rem;
+    font-size: calc(
+      var(--primitives-typography-font-size-paragraph-small) * 1rem / 16
+    );
+    line-height: 1rem;
+  }
+  .kozmos-poi-chips li svg {
+    flex-shrink: 0;
+  }
+  .kozmos-poi-chips li > span {
+    min-inline-size: 0;
   }
   .kozmos-poi-hours {
     @apply border border-border rounded-control;

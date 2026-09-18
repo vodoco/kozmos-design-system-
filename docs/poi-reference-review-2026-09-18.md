@@ -34,6 +34,60 @@ reflow over clipping, tiny targets or invented media.
 
 ## What is implemented
 
+### Measured-detail pass (21:51 screenshot references)
+
+The latest screenshots clarify the compact information-tag spec and navigation
+hierarchy. They supersede the earlier suggestion to enlarge informational tags
+to 44px: that would conflate non-interactive information with action targets.
+
+- Go: 16px/24px semibold label, 24px navigation glyph, 16px horizontal padding,
+  and the existing ~11px/14px estimate token. The button remains at least 44px
+  tall (56px with the estimate). Text may grow instead of being line-clamped.
+- Information chips and hashtags: 32px minimum height, ~13px/16px type, 12px
+  horizontal padding, 16px corners and vertically centered content. The screenshot
+  also says 8px vertical padding plus a 1px border; that sums to 34px with its
+  16px line box, not 32px. We use 7px inner vertical padding to honor the 32px
+  border-box height, rather than clip text. Long text and zoom can increase height.
+- Favourite/bookmark: Pointr's existing exported outlines, with a themed filled
+  selected state rather than just filling the glyph. Unselected state stays
+  outlined and `aria-pressed` remains controlled. Existing press feedback stays;
+  no extra bounce/autoplay is introduced from an annotation alone.
+- Share, booking, order and phone use the repository's Pointr icons. Navigation
+  keeps the matching registered Lucide pointer. No paths were traced/redrawn.
+- Dietary and crowd summaries reuse Pointr's feather and clock-plus glyphs.
+- Optional attribute/service icons: group items reuse POIServicePresentation's
+  `iconName` field. WiFi fixtures demonstrate the 16px decorative glyph and 4px
+  gap. Missing, unknown or inherited-property names preserve text safely. Icons
+  are assigned explicitly, never inferred from translated labels. This additive
+  contract is checked in installed React 18/19 consumers.
+- The Step-free reveal story incorrectly showed a focus/crosshair icon. It now
+  uses the existing wheelchair-style accessibility glyph at 24px. Exact source
+  wheelchair artwork is not available; it has not been fabricated.
+
+Frontend-design and Figma-to-code guidance informed this pass. Figma's design
+context tool was unavailable; measurements come from the user-provided inspector
+screenshots, not a claim of a fresh authenticated Figma inspection. Readex Pro
+is not shipped in this repository. The deliberate system-font policy remains;
+changing that requires approved font assets and a separate cross-product metrics
+review. The source tag's 17px radius is also intentionally superseded by the
+user's explicit 16px instruction. Metadata still has exactly one row of cells.
+
+The changes are confined to SDK POI composition and its optional data, plus the
+Step-free story. They do not silently redesign the standalone Tag/Chip catalogue.
+Real map/route integration, approved media, brand-font choice and device/manual
+acceptance remain open; UI test counts do not settle those questions.
+
+Verification for this measured-detail pass: 475 React tests, 198 POI cases across
+Chromium/Firefox/WebKit, owned-CSS gates with/without scope in all three engines,
+installed React 18/19 consumers, builds, lint/type checks, compiled classes and
+CSS compiler tests passed. Browser checks now assert the actual Go text/icon
+metrics, 32px WiFi tag height, 16px decorative icon, and selected fill/outline.
+The selected fill comparison moves the pointer off the button first: comparing a
+hovered save button with an idle navigation button would compare different
+intentional tokens. No accessibility rule was disabled. Step-free's 24px glyph,
+controlled reveal and narrow/reduced-motion behavior were smoke-tested in both
+themes. The earlier catalogue-wide Docs results are not a new full visual audit.
+
 ### User-directed single-row metadata correction
 
 The requested interaction is one row of metadata cells, never a wrapped second

@@ -338,7 +338,7 @@ import type { POIDetailsPresentation, POIPresentation } from "@kozmos/product-co
 const poi: POIPresentation = { id: "entry", name: "Entrance", floorId: "1", floorLabel: "Floor 1", media: [], actions: ["navigate"] };
 const details: POIDetailsPresentation = {
   summary: [{ id: "access", kind: "accessibility", label: "Accessibility", value: "Step-free" }],
-  groups: [{ id: "language", heading: "Languages", items: [{ id: "en", label: "English" }] }],
+  groups: [{ id: "amenities", heading: "Amenities", items: [{ id: "wifi", label: "WiFi", iconName: "wifi" }] }],
   supplementaryActions: [{ action: "call", label: "Call" }],
 };
 export function Example() {
