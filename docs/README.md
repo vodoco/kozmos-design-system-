@@ -32,6 +32,10 @@ The Pointr iOS thread, 2026-09-19, newest first:
   the exact Git state, the fifteen commits, routing as built and measured (Dunkin' to Airport
   Shuttles, both modes, every step), the findings, the eight open decisions, and the order of
   what comes next. Read first.
+- `pointr-ios-pass3-2026-09-19.md`: Pass 3 — routing between two places the visitor names, on
+  the Kozmos routing parts: what PointrKit's wayfinding gives as measured, the flow, one route
+  step by step in both modes, the design-system gaps (no transition arrow), the findings for
+  Pointr (Design-QA answers in Arabic unless asked otherwise), and what is not done.
 - `pointr-ios-pass2-2026-09-19.md`: Pass 2 — what Design-QA's 1,196 places actually carry, and
   the card connected to it: taxonomy chips and highlights by the web adapter's rules, contacts
   from the SDK's buttons, the venue's hours text, descriptions; six upstream findings.

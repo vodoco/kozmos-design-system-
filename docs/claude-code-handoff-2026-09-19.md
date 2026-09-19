@@ -462,7 +462,7 @@ Establish SDK property schema and adapter tests, then render real taxonomy facts
 
 ### Pass 3 — actual routing
 
-**Status: built on 19 September 2026, `afa7bdf`**, recorded in §5 of the [handoff after Pass 3](claude-code-handoff-2026-09-19-pass3.md) until its report exists. Two calculations per request (normal and accessible), the routes' own time and distance, hand-stepped directions with the map following each step's level; verified live on a two-floor route. Loading, failure, no-route and cancellation are coded and unit-tested, not exercised live. Two findings: the SDK must be asked for the device's language (Design-QA defaults to Arabic), and `DirectionType` has no transition arrow.
+**Status: done on 19 September 2026, `afa7bdf`**, as the [Pass 3 report](pointr-ios-pass3-2026-09-19.md) records; the [handoff after Pass 3](claude-code-handoff-2026-09-19-pass3.md) carries the session state. Two calculations per request (normal and accessible), the routes' own time and distance, hand-stepped directions with the map following each step's level; verified live on a two-floor route. Loading, failure, no-route and cancellation are coded and unit-tested, not exercised live. Two findings: the SDK must be asked for the device's language (Design-QA defaults to Arabic), and `DirectionType` has no transition arrow.
 
 Use the SDK's documented route APIs with an explicit origin/destination. Wire Kozmos route-input, preview, summary and instruction components. Cover calculation/loading/failure/no route, accessibility options, cancellation, multi-floor changes and return to POI browsing. Route time/distance must come from the actual route. Do not label fixture wayfinding as live navigation.
 

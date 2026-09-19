@@ -59,8 +59,7 @@ The web examples and the pinned taxonomy 10.12.0 projection are the reference fo
 | `afa7bdf` | 3     | Routing between two named places on the Kozmos routing parts; the SDK's language |
 
 Reports: [Pass 1](pointr-ios-pass1-2026-09-19.md) (its "Change it yourself" section is the
-operator's guide to the host), [Pass 2](pointr-ios-pass2-2026-09-19.md). **Pass 3 has no report
-yet**; §5 below is its record and the source for one.
+operator's guide to the host), [Pass 2](pointr-ios-pass2-2026-09-19.md). [Pass 3](pointr-ios-pass3-2026-09-19.md), written after this handoff from §5 below.
 
 ## 4. Constraints still in force
 
@@ -312,9 +311,8 @@ in Astra's §11. The Pass 1 report's "Change it yourself" has the rest.
 
 ## 11. What to do next, in order
 
-1. **Write the Pass 3 report** `docs/pointr-ios-pass3-2026-09-19.md` from §5, add its lines to
-   `docs/README.md` and `docs/ds-handoff.md` §10, and set Astra's §10 Pass 3 status to done
-   with the report's link, as Passes 1 and 2 did.
+1. **The Pass 3 report** — done: [pointr-ios-pass3-2026-09-19.md](pointr-ios-pass3-2026-09-19.md),
+   with the index, the log and Astra's §10 pointing at it.
 2. **Close Pass 3's own leftovers** (§5.5): identify the SDK step marker; try a `Do Not Route`
    place for a live no-route; gate Go on readiness or give the not-ready state a retry; check
    the three panels on the iPad; a VoiceOver pass over the directions list.
