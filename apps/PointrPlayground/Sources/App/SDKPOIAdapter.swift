@@ -10,9 +10,21 @@ enum SDKPOIAdapter {
         guard let level else { return "" }
         return "\(level.building.identifier):\(level.index)"
     }
+    /// The rule the Kozmos card applies to artwork it is handed — HTTPS, a
+    /// host, no credentials in the address — applied here first, so the card
+    /// is never handed an address it would refuse and show as unavailable.
     static func https(_ value: String?) -> String? {
-        guard let value, let url = URL(string: value), url.scheme == "https", url.host != nil else { return nil }
+        guard let value, let url = URL(string: value), url.scheme?.lowercased() == "https",
+              url.host != nil, url.user == nil, url.password == nil else { return nil }
         return value
+    }
+
+    /// Gallery items from the SDK's image list. Numbered after filtering, so
+    /// "image 2 of 2" is the second image a visitor can see.
+    static func media(poiId: String, name: String, urls: [String]) -> [KozmosPOIMediaPresentation] {
+        urls.compactMap(https).enumerated().map { index, src in
+            .init(id: "\(poiId)-image-\(index)", src: src, alt: "\(name), image \(index + 1)")
+        }
     }
 
     static func presentation(_ poi: PTRPoi) -> KozmosPOIPresentation {
@@ -22,9 +34,7 @@ enum SDKPOIAdapter {
               buildingId: poi.position.building?.identifier,
               buildingLabel: poi.position.building?.name,
               logo: https(poi.logoUrl).map { .init(src: $0, alt: poi.name) },
-              media: (poi.imageUrls ?? []).enumerated().compactMap { index, value in
-                  https(value).map { .init(id: "\(poi.identifier)-image-\(index)", src: $0, alt: "\(poi.name), image \(index + 1)") }
-              },
+              media: media(poiId: poi.identifier, name: poi.name, urls: poi.imageUrls ?? []),
               actions: [.favourite, .bookmark])
     }
 

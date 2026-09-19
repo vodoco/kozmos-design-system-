@@ -29,6 +29,28 @@ final class SDKIntegrationTests: XCTestCase {
         XCTAssertNil(SDKPOIAdapter.https("file:///tmp/icon.png"))
         XCTAssertEqual(SDKPOIAdapter.https("https://example.com/icon.png"), "https://example.com/icon.png")
     }
+
+    /// The same rule as the card's own artwork helper: no credentials, no
+    /// other schemes, no relative paths. Values are not echoed in messages.
+    func testRemoteArtworkRejectsCredentialsAndOtherSchemes() {
+        for url in ["https://user:password@example.com/icon.png", "https://user@example.com/icon.png",
+                    "javascript:alert(1)", "data:image/png;base64,abc", "icon.png", "https:///no-host.png", ""] {
+            XCTAssertNil(SDKPOIAdapter.https(url), "a refused address was accepted")
+        }
+        XCTAssertNotNil(SDKPOIAdapter.https("HTTPS://example.com/upper-case-scheme.png"))
+    }
+
+    /// Filtered before numbering: a dropped address does not leave a gap in
+    /// "image N of M", and the identifiers stay unique.
+    func testGalleryMediaIsNumberedAfterFiltering() {
+        let media = SDKPOIAdapter.media(poiId: "poi-1", name: "Dunkin'", urls: [
+            "https://example.com/logo.png", "http://example.com/dropped.jpg", "https://example.com/counter.jpg"
+        ])
+        XCTAssertEqual(media.map(\.src), ["https://example.com/logo.png", "https://example.com/counter.jpg"])
+        XCTAssertEqual(media.map(\.alt), ["Dunkin', image 1", "Dunkin', image 2"])
+        XCTAssertEqual(Set(media.map(\.id)).count, 2)
+        XCTAssertEqual(SDKPOIAdapter.media(poiId: "poi-1", name: "Empty", urls: []), [])
+    }
     // MARK: Camera padding
 
     /// The shell's report at the medium detent on an iPhone 17 Pro, as logged

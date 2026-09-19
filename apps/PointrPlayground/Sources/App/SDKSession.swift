@@ -95,6 +95,7 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         widget = nil
         building = nil
         selected = nil
+        framesSelection = false
         pois = []
         poiDataReady = false
         loadingBuilding = false
