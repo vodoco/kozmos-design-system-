@@ -1,0 +1,230 @@
+import SwiftUI
+import PointrKit
+import Kozmos
+
+struct QAConfiguration: Decodable {
+    let baseUrl: String
+    let clientIdentifier: String
+    let licenseKey: String
+    let siteId: String
+    let buildingId: String
+
+    static func load() throws -> Self {
+        guard let url = Bundle.main.url(forResource: "QAConfig", withExtension: "json") else {
+            throw ConfigurationError.missing
+        }
+        return try decode(Data(contentsOf: url))
+    }
+    static func decode(_ data: Data) throws -> Self {
+        let result = try JSONDecoder().decode(Self.self, from: data)
+        guard let url = URL(string: result.baseUrl), url.host == "design-qa-v10.pointr.cloud",
+              url.scheme == "https", url.user == nil, url.password == nil,
+              url.query == nil, url.fragment == nil, url.port == nil,
+              ["", "/"].contains(url.path),
+              !result.clientIdentifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !result.licenseKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              UUID(uuidString: result.siteId) != nil,
+              UUID(uuidString: result.buildingId) != nil else { throw ConfigurationError.invalid }
+        return result
+    }
+    enum ConfigurationError: Error { case missing, invalid }
+}
+
+/// Owns SDK state at the app boundary. Kozmos never imports PointrKit.
+@MainActor
+final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, PTRMapEventsListener, PTRPoiManagerDelegate, PTRDataManagerDelegate, PTRPermissionManagerDelegate {
+    @Published private(set) var status = "Connecting to Design-QA…"
+    @Published private(set) var failure: String?
+    @Published private(set) var widget: PTRMapWidgetViewController?
+    @Published private(set) var building: PTRBuilding?
+    @Published private(set) var pois: [PTRPoi] = []
+    @Published private(set) var selected: PTRPoi?
+    @Published private(set) var selectedFloorId = ""
+    @Published private(set) var poiDataReady = false
+    @Published var query = ""
+    @Published var saved = Set<String>()
+    @Published var favourites = Set<String>()
+    private var configuration: QAConfiguration?
+    private var started = false
+    private var loadingBuilding = false
+    private var buildingTask: Task<Void, Never>?
+    private var generation = UUID()
+
+    func start() {
+        guard !started else { return }
+        started = true
+        do { configuration = try .load() } catch {
+            failure = "QA configuration is missing or invalid. Run the local setup script."
+            return
+        }
+        guard let configuration else { return }
+        let requestGeneration = generation
+        // Browse-only milestone: do not request location/motion permissions.
+        Pointr.shared.permissionManager?.delegate = self
+        Pointr.shared.addListener(self)
+        let params = PTRParams()
+        params.baseUrl = configuration.baseUrl
+        params.clientIdentifier = configuration.clientIdentifier
+        params.licenseKey = configuration.licenseKey
+        params.mode = PointrDebugMode()
+        params.loggerLevel = .error
+        Pointr.shared.start(with: params) { [weak self] state in
+            Task { @MainActor in
+                guard self?.generation == requestGeneration else { return }
+                self?.handle(state)
+            }
+        }
+    }
+
+    func stop() {
+        generation = UUID()
+        buildingTask?.cancel()
+        buildingTask = nil
+        widget?.removeListener(self)
+        Pointr.shared.poiManager?.removeListener(self)
+        Pointr.shared.dataManager?.removeListener(self)
+        Pointr.shared.removeListener(self)
+        Pointr.shared.permissionManager?.delegate = nil
+        Pointr.shared.stop()
+        widget = nil
+        building = nil
+        selected = nil
+        pois = []
+        poiDataReady = false
+        loadingBuilding = false
+        started = false
+    }
+
+    func retry() {
+        stop()
+        failure = nil
+        status = "Connecting to Design-QA…"
+        start()
+    }
+
+    nonisolated func pointrStateDidChange(to state: PointrState) {
+        Task { @MainActor in self.handle(state) }
+    }
+
+    private func handle(_ state: PointrState) {
+        Pointr.shared.permissionManager?.delegate = self
+        status = PTRPointrStateToString(state)
+        switch state {
+        case .running:
+            guard !loadingBuilding, widget == nil else { return }
+            loadingBuilding = true
+            buildingTask = Task { await loadBuilding() }
+        case .failedNoInternet: failure = "The SDK could not connect. Check network access."
+        case .failedRegistration, .failedValidation: failure = "Design-QA rejected native SDK registration or license validation."
+        default: break
+        }
+    }
+
+    private func loadBuilding() async {
+        guard let config = configuration, let manager = Pointr.shared.siteManager else { return }
+        let result = await manager.buildings(forSiteId: config.siteId)
+        guard !Task.isCancelled else { return }
+        guard let target = result.0.first(where: { $0.identifier == config.buildingId }) else {
+            failure = "The selected QA building is unavailable to this SDK client."
+            loadingBuilding = false
+            return
+        }
+        building = target
+        selectedFloorId = SDKPOIAdapter.floorId(target.defaultLevel ?? target.levels.first)
+        let policy = SDKMapPolicy.make()
+        let controller = PTRMapWidgetViewController(location: target.mapWidgetLocation, configuration: policy)
+        controller.addListener(self)
+        widget = controller
+        Pointr.shared.poiManager?.addListener(self)
+        Pointr.shared.dataManager?.addListener(self)
+        Pointr.shared.dataManager?.loadData(forSite: config.siteId)
+        refreshPOIs()
+        status = "Loading map…"
+    }
+
+    func refreshPOIs() {
+        guard let building else { return }
+        pois = Pointr.shared.poiManager?.pois(for: building)?.getPoiList() ?? []
+        poiDataReady = Pointr.shared.dataManager?.isContentReady(forSite: building.site.identifier) ?? false
+    }
+
+    func select(_ poi: PTRPoi) {
+        selected = poi
+        if let level = poi.position.level { updateLevel(level) }
+        widget?.mapViewController.highlightPoi(poi)
+        widget?.mapViewController.focusPoi(poi)
+    }
+    func closeSelection() { selected = nil; widget?.mapViewController.unhighlightPoi() }
+    func selectFloor(_ id: String) {
+        guard let level = building?.levels.first(where: { SDKPOIAdapter.floorId($0) == id }) else { return }
+        updateLevel(level)
+        closeSelection()
+        widget?.mapViewController.showLevel(level, shouldZoomToLevel: true)
+    }
+    private func updateLevel(_ level: PTRLevel) {
+        let changedBuilding = building?.identifier != level.building.identifier
+        building = level.building
+        selectedFloorId = SDKPOIAdapter.floorId(level)
+        if changedBuilding { refreshPOIs() }
+    }
+    func zoom(_ delta: Double) {
+        guard let map = widget?.mapViewController else { return }
+        map.setZoomLevel(min(map.maximumZoomLevel, max(map.minimumZoomLevel, map.zoomLevel + delta)), animated: true)
+    }
+
+    nonisolated func map(_ map: PTRMapViewController, didReceiveTapOnFeature feature: PTRFeature) {
+        Task { @MainActor in
+            if let poi = feature as? PTRPoi { self.select(poi) }
+            else if let poi = self.pois.first(where: { $0.identifier == feature.identifier }) { self.select(poi) }
+        }
+    }
+    nonisolated func map(_ map: PTRMapViewController, didChangeLevel level: PTRLevel) {
+        Task { @MainActor in self.updateLevel(level) }
+    }
+    nonisolated func mapDidEndLoading(_ map: PTRMapViewController) {
+        Task { @MainActor in self.status = "Ready"; self.refreshPOIs() }
+    }
+    nonisolated func map(_ map: PTRMapViewController, didFailToLoadWith error: Error) {
+        Task { @MainActor in self.failure = "The map could not load. Check QA availability and try again." }
+    }
+    @objc(onPoiManagerChangedPoisForSite:)
+    nonisolated func onPoiManagerChangedPois(for site: PTRSite) {
+        Task { @MainActor in self.refreshPOIs() }
+    }
+    @objc(onDataManagerReadyForSite:)
+    nonisolated func onDataManagerReady(for site: PTRSite) {
+        Task { @MainActor in self.refreshPOIs() }
+    }
+    nonisolated func permissionManagerShouldRequestLocationAuthorizationPermissionForWhenInUse(_ permissionManager: any PTRPermissionManagerInterface) -> Bool { false }
+    nonisolated func permissionManagerShouldRequestLocationAuthorizationPermissionForAlways(_ permissionManager: any PTRPermissionManagerInterface) -> Bool { false }
+    nonisolated func permissionManagerShouldRequestCoreMotionAuthorizationPermission(_ permissionManager: any PTRPermissionManagerInterface) -> Bool { false }
+    nonisolated func permissionManagerShouldRequestBluetoothServicesPermission(_ permissionManager: any PTRPermissionManagerInterface) -> Bool { false }
+    nonisolated func permissionManagerShouldRequestBluetoothAuthorizationPermission(_ permissionManager: any PTRPermissionManagerInterface) -> Bool { false }
+}
+
+enum SDKMapPolicy {
+    static func make() -> PTRMapWidgetConfiguration {
+        let policy = PTRMapWidgetConfiguration.mapOnlyConfiguration()
+        // Explicit ownership of every non-map control, even if preset defaults change.
+        policy.isSearchEnabled = false
+        policy.isPoiDetailViewEnabled = false
+        policy.isRouteSummaryEnabled = false
+        policy.isWayfindingHeaderViewEnabled = false
+        policy.isWayfindingFooterViewEnabled = false
+        policy.isLevelSelectorEnabled = false
+        policy.isMapTrackingModeButtonEnabled = false
+        policy.isExitButtonEnabled = false
+        policy.isSplashScreenEnabled = false
+        policy.isOnboardingEnabled = false
+        policy.isJoystickEnabled = false
+        policy.isToastMessagesEnabled = false
+        policy.isInfoButtonEnabled = false
+        policy.isLocationIndicatorEnabled = false
+        policy.isQuickAccessEnabled = false
+        policy.isAppBannerEnabled = false
+        policy.isMarkMyCarEnabled = false
+        policy.isLoadingViewEnabled = false
+        policy.shouldFocusOnFirstUserPosition = false
+        return policy
+    }
+}

@@ -1,0 +1,59 @@
+name: KozmosPointrQA
+options:
+  deploymentTarget:
+    iOS: "16.6"
+packages:
+  Kozmos:
+    path: ../../packages/ios
+targets:
+  KozmosPointrQA:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/App
+        excludes: [Resources]
+      - path: Sources/App/Resources
+        buildPhase: resources
+    dependencies:
+      - package: Kozmos
+        product: Kozmos
+      - framework: .local/PointrKit.xcframework
+        embed: true
+      - framework: .local/MapLibre.xcframework
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kozmos.pointrqa
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+    info:
+      path: .local/Info.plist
+      properties:
+        CFBundleDisplayName: Kozmos Pointr QA
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSLocationWhenInUseUsageDescription: Location is used only when testing native indoor positioning.
+        NSBluetoothAlwaysUsageDescription: Bluetooth is used only when testing native indoor positioning.
+        NSMotionUsageDescription: Motion is used only when testing native indoor positioning.
+  KozmosPointrQATests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: KozmosPointrQA
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kozmos.pointrqa.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  KozmosPointrQA:
+    build:
+      targets:
+        KozmosPointrQA: all
+    test:
+      targets: [KozmosPointrQATests]
