@@ -79,7 +79,7 @@ extension SDKSession {
             for (name, route) in [("quickest", normal), ("step-free", accessible)] {
                 for (index, direction) in (route?.directions ?? []).enumerated() {
                     let accessible = direction.transitionInfo.map { String($0.isAccessible) } ?? "-"
-                    let transition = direction.transitionInfo.map { "\($0.mainType)/\($0.subType)" } ?? "-"
+                    let transition = direction.transitionInfo.map { "\($0.mainType)/\($0.subType) icon \($0.iconId)" } ?? "-"
                     log.debug("\(name, privacy: .public) step \(index, privacy: .public): type \(direction.messageType.rawValue, privacy: .public) \(direction.message, privacy: .public) · \(Int(direction.distance), privacy: .public) m \(Int(direction.duration), privacy: .public) s · \(direction.position.level?.name ?? "-", privacy: .public) · transition \(direction.isTransition, privacy: .public) \(transition, privacy: .public) accessible \(accessible, privacy: .public)")
                 }
             }
@@ -96,6 +96,12 @@ extension SDKSession {
             routeStatus = .ready
             showRoute()
         }
+    }
+
+    /// The not-ready state's recovery: the same request again.
+    func retryRouteCalculation() {
+        guard let origin, let destination = selected else { return }
+        calculateRoutes(from: origin, to: destination)
     }
 
     private func calculate(_ manager: any PTRWayfindingManagerInterface, from origin: PTRPoi, to destination: PTRPoi,
@@ -232,6 +238,10 @@ extension SDKSession {
 extension SDKSession: PTRWayfindingManagerDelegate {
     @objc(onWayfindingManagerReadyForSite:)
     nonisolated func onWayfindingManagerReady(for site: PTRSite) {
-        Task { @MainActor in self.wayfindingReady = true }
+        Task { @MainActor in
+            self.wayfindingReady = true
+            self.log.notice("wayfinding ready for \(site.name, privacy: .public), \(self.millisecondsSinceStart, privacy: .public) ms after start")
+            if SDKRoutePresenter.retriesOnReadiness(phase: self.phase, status: self.routeStatus) { self.retryRouteCalculation() }
+        }
     }
 }

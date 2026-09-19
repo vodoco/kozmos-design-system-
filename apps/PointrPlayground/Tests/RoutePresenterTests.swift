@@ -104,6 +104,25 @@ final class RoutePresenterTests: XCTestCase {
         XCTAssertEqual(estimate.mode, "walking")
     }
 
+    /// Not ready is the SDK's and passes; no route is the venue's.
+    func testTheNotReadyStateOffersARetryAndNoRouteAnotherStartingPoint() {
+        XCTAssertEqual(SDKRoutePresenter.recovery(for: .error), .tryAgain)
+        XCTAssertEqual(SDKRoutePresenter.recovery(for: .noRoute), .chooseAnotherOrigin)
+        XCTAssertNil(SDKRoutePresenter.recovery(for: .calculating))
+        XCTAssertNil(SDKRoutePresenter.recovery(for: .ready))
+        XCTAssertNil(SDKRoutePresenter.recovery(for: .idle))
+    }
+
+    /// Readiness arriving repeats the request only while the not-ready message shows.
+    func testReadinessRetriesOnlyTheNotReadyPreview() {
+        XCTAssertTrue(SDKRoutePresenter.retriesOnReadiness(phase: .routePreview, status: .error))
+        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .routePreview, status: .noRoute))
+        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .routePreview, status: .calculating))
+        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .browse, status: .error))
+        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .routeSetup, status: .error))
+        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .directions, status: .error))
+    }
+
     func testUsesInaccessibleTransitionsReadsTheSDKsFlag() {
         XCTAssertTrue(withStairs.usesInaccessibleTransitions)
         XCTAssertFalse(stepFree.usesInaccessibleTransitions)

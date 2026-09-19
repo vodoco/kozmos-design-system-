@@ -215,7 +215,11 @@ extension SDKMapScreen {
                     } else {
                         Text(session.routeMessage ?? "").font(KozmosTypography.subheadline)
                             .multilineTextAlignment(.center)
-                        KozmosButton("Choose another starting point", action: session.startRouteSetup)
+                        switch SDKRoutePresenter.recovery(for: session.routeStatus) {
+                        case .tryAgain?: KozmosButton("Try again", action: session.retryRouteCalculation)
+                        case .chooseAnotherOrigin?: KozmosButton("Choose another starting point", action: session.startRouteSetup)
+                        case nil: EmptyView()
+                        }
                     }
                 }
             },

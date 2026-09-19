@@ -153,4 +153,28 @@ enum SDKRoutePresenter {
     static func distanceLabel(for step: SDKRoute.Step) -> String? {
         step.distanceMetres >= 1 ? RouteFormat.distance(step.distanceMetres) : nil
     }
+
+    /// What the preview offers when a calculation produced no route.
+    enum Recovery: Equatable {
+        case tryAgain
+        case chooseAnotherOrigin
+    }
+
+    /// Not ready is the SDK's and passes — measured on Design-QA, the site's
+    /// wayfinding data was ready 239 ms after the building loaded — so the same
+    /// request is worth repeating. No route is the venue's: another starting
+    /// point is the only way on.
+    static func recovery(for status: KozmosRouteReadiness) -> Recovery? {
+        switch status {
+        case .error: return .tryAgain
+        case .noRoute: return .chooseAnotherOrigin
+        case .idle, .calculating, .ready: return nil
+        }
+    }
+
+    /// Whether readiness arriving repeats the request by itself: only while
+    /// the visitor is looking at the not-ready message.
+    static func retriesOnReadiness(phase: SDKSession.Phase, status: KozmosRouteReadiness) -> Bool {
+        phase == .routePreview && status == .error
+    }
 }

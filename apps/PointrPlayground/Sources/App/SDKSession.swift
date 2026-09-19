@@ -32,10 +32,10 @@ struct QAConfiguration: Decodable {
     enum ConfigurationError: Error { case missing, invalid }
 }
 
-/// The language PointrKit is asked to answer in: the visitor's, in the
+/// The language PointrKit is asked to answer in: the app's, in the
 /// `language_region` form the reference says it supports. Left unset, the
-/// SDK answers in the Cloud's default — Design-QA's is Arabic, and every
-/// direction arrived that way.
+/// SDK follows the device's first language — Arabic on the iPhone 17 Pro
+/// simulator, which is how every direction of the first live route arrived.
 enum SDKLanguage {
     static func preferred(_ locale: Locale = .current) -> String? {
         guard let language = locale.language.languageCode?.identifier else { return nil }
@@ -92,6 +92,8 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     /// hands the camera to the visitor.
     var framesSelection = false
     private var started = false
+    /// When `start()` ran, for the readiness timings in the log.
+    var startedAt = Date()
     private var loadingBuilding = false
     private var buildingTask: Task<Void, Never>?
     private var generation = UUID()
@@ -99,6 +101,7 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     func start() {
         guard !started else { return }
         started = true
+        startedAt = Date()
         do { configuration = try .load() } catch {
             failure = "QA configuration is missing or invalid. Run the local setup script."
             return
@@ -115,6 +118,7 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         params.mode = PointrDebugMode()
         params.loggerLevel = .error
         params.preferredLanguage = SDKLanguage.preferred()
+        log.notice("SDK asked for language \(params.preferredLanguage ?? "none", privacy: .public); app locale \(Locale.current.identifier, privacy: .public); device languages \(Locale.preferredLanguages.prefix(3).joined(separator: ","), privacy: .public)")
         Pointr.shared.start(with: params) { [weak self] state in
             Task { @MainActor in
                 guard self?.generation == requestGeneration else { return }
@@ -192,10 +196,13 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         Pointr.shared.dataManager?.addListener(self)
         Pointr.shared.wayfindingManager?.addListener(self)
         wayfindingReady = Pointr.shared.wayfindingManager?.isReady(for: target.site) ?? false
+        log.notice("wayfinding \(self.wayfindingReady ? "ready" : "not ready", privacy: .public) for \(target.site.name, privacy: .public) when the building loaded, \(self.millisecondsSinceStart, privacy: .public) ms after start")
         Pointr.shared.dataManager?.loadData(forSite: config.siteId)
         refreshPOIs()
         status = "Loading map…"
     }
+
+    var millisecondsSinceStart: Int { Int(Date().timeIntervalSince(startedAt) * 1000) }
 
     func refreshPOIs() {
         guard let building else { return }
