@@ -354,7 +354,7 @@ The user's 13:35 screenshot prompted a diagnostic pass. Source and current Simul
 
 ### A. Map controls sit in the middle of useful map content
 
-**Status (Pass 1): fixed, `4061d92`.** Anchored to the trailing edge; at a tall detent a `ViewThatFits` drops zoom, then everything, instead of drawing over the search bar.
+**Status (Pass 1): fixed, `4061d92` and the audit's shell fix.** Anchored to the trailing edge; at a tall detent a `ViewThatFits` drops zoom, then everything, instead of drawing over the search bar. On an iPad the shell laid the controls and the top bar out across the whole width, under the floating panel; it now lays them out in the map beside it, on both platforms' rule.
 
 `SDKMapScreen` passes `controlsPlacement: .bottom` and an HStack containing the collapsible floor selector plus zoom/compass. The result is visibly centred over POIs.
 
@@ -389,7 +389,7 @@ Acceptance: initial/controlled index, buttons, touch scrolling, counter, media r
 
 ### D. Double card/sheet container
 
-**Status (Pass 1): fixed on phones, `4061d92`.** `.sheet` when docked, `.panel` when floating. On iPad the card's border draws inside the shell's floating container and breaks at the corners; who owns that chrome is an open decision.
+**Status (Pass 1): fixed on phones, `4061d92`.** `.sheet` when docked, `.panel` when floating. On iPad the card's `.panel` border draws inside the shell's floating container and breaks at the corners. The web composes the same way (the React shell's side `aside` has its own background, shadow and 20px corners; the card keeps its 16px border inside it), so whether `.panel` should drop its border like `.sheet` is a decision for both platforms, not a native patch.
 
 The host embeds `KozmosPOIDetailPanel` in the adaptive sheet but does not supply its sheet presentation. The default bordered card adds another rounded container inside the sheet.
 
@@ -598,5 +598,5 @@ Some older documents contain old next-step proposals or results from older snaps
 - [x] Unimplemented taxonomy/routing/positioning and release gates explicit.
 - [x] Latest gallery/control/camera/sheet defects remain open, not falsely marked fixed.
 - [x] Editing map, commands, acceptance gates and continuation prompt supplied.
-- [ ] Claude should recheck state and read applicable local project instructions before changing code.
+- [x] Claude should recheck state and read applicable local project instructions before changing code. _Done 2026-09-19: Git state confirmed as recorded; no `CLAUDE.md`/`AGENTS.md` in the worktree; `.agents/workflows/ios-expert.md` read._
 - [x] Preserve/commit this handoff as appropriate before temporary-worktree cleanup; no cleanup or commit was performed by this documentation pass. _Committed verbatim as `21c7cbf` on `claude/pointr-browse-repairs`; the branch is not pushed._

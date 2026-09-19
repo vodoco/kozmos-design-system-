@@ -746,7 +746,7 @@ outline button, a destructive shade, colour scopes for text, strokes and icons, 
 dashboard's v9 library publishes only `listItem`, and ~228 PDS / Pointr bindings still pointing at
 the unpublished "Primitive Tokens" collection.
 
-## 10 · The log, 2026-09-13 to 2026-09-17
+## 10 · The log, 2026-09-13 to 2026-09-19
 
 ### 2026-09-13
 
@@ -1136,6 +1136,30 @@ source files and new RTL story IDs. No push, merge or publication, and no shared
 Next: continue remaining field/overlay families, then remove legacy native scope entirely.
 Real browser floors, physical adaptive devices, native parity, map-adapter consumer proof,
 full accessibility/visual review and package/release gates still precede production.
+
+### 2026-09-18 to 2026-09-19 · From the catalogue to a real Pointr host (Astra)
+
+Astra's remaining batches never reached `main`. They sit on `astra/browser-compatibility`
+in the worktree `/private/tmp/kozmos-browser-compat.uqPMBD`, 33 commits past `origin/main`,
+unpushed: one public catalogue with platform reference tabs, the web POI reference examples
+and their taxonomy-driven display, the native POI card brought up to them, and finally
+`apps/PointrPlayground` — a real PointrKit 10.3.0 host on Design-QA with Kozmos-owned UI,
+a browse-only milestone. Each batch has a dated report; `docs/README.md` lists them. The
+handback to Claude Code is `claude-code-handoff-2026-09-19.md`, whose §8 names seven native
+findings and whose §10 orders four passes. On `main`, Astra merged #53 and opened #54, which
+is for review only. Nothing reached npm.
+
+### 2026-09-19 · Pointr iOS Pass 1 (Claude Code)
+
+Branch `claude/pointr-browse-repairs`, cut from Astra's at `663cde1` in the same worktree,
+unpushed. Findings A–D measured and fixed; the measurements are in
+`pointr-ios-pass1-2026-09-19.md`. Two of the fixes are the shared shell's, not the host's:
+it now saturates opposing insets at the map's size as React's `resolveMapInsets` does, and
+lays its top bar and controls out in the map beside a floating panel instead of under it.
+The native gallery was rebuilt to React's contract. Two rules held: every new test was run
+against the code it was written for and failed there first; every "fixed" was read from a
+3× simulator screenshot, not from a passing test. E, F, G and Passes 2–4 are not started.
+Five decisions wait on Olcay, listed in the report.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

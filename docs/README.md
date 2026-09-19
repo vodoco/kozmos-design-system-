@@ -25,6 +25,33 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 ## Current
 
+The Pointr iOS thread, 2026-09-19, newest first:
+
+- `pointr-ios-pass1-2026-09-19.md`: Pass 1 of the handoff below — map controls, the selected
+  marker's framing, the native gallery and the sheet card, each measured in the simulator;
+  what is verified, what is not, and the decisions that wait on Olcay.
+- `claude-code-handoff-2026-09-19.md`: Astra's handover of the Pointr iOS work to Claude Code —
+  the worktree, the SDK setup, the seven native findings and the four passes that follow. Its
+  status notes say which findings Pass 1 closed.
+- `pointr-ios-integration-2026-09-19.md`: the real PointrKit host — SDK artifacts and their
+  provenance, the QA configuration, the browse-only milestone and its limits.
+
+The Storybook and POI thread, 2026-09-18:
+
+- `ios-poi-examples-2026-09-18.md`: the native POI card brought up to the shared examples,
+  fixture generation from the React fixtures, simulator coverage and the accessibility decision.
+- `poi-taxonomy-display-2026-09-18.md`: how taxonomy 10.12.0 properties become card content —
+  labels, icons, order, highlights — and the seven upstream questions it left open.
+- `poi-reference-examples-2026-09-18.md` and `poi-reference-review-2026-09-18.md`: the web POI
+  examples and their follow-up review. The three-cell metadata rule in the later document wins.
+- `public-catalogue-guide-2026-09-18.md` and `snippet-validation-2026-09-18.md`: one public
+  React catalogue with platform reference tabs, and which of those references are actually
+  compiled against installed packages.
+- `installed-product-pilot-2026-09-18.md` and `production-readiness-recheck-2026-09-18.md`:
+  the installed-package consumer pilot and the release gates it did and did not clear.
+- `storybook-component-review-2026-09-18.md` and `storybook-manual-review-2026-09-18.md`: the
+  component-by-component visual review and the manual queue behind the green automated scan.
+
 - `storybook-screenshot-audit-2026-09-17.md`: latest screenshot-driven fixes,
   cross-engine regression matrix, exposed Select accessibility blocker, maintenance
   commands and remaining pre-publication gates. Start here for the newest batch.
