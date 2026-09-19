@@ -4,6 +4,28 @@ import SnapshotTesting
 @testable import Kozmos
 
 final class KozmosPOIDetailTests: XCTestCase {
+    func testSparseJSONUsesTheSameDefaultsAsSwiftInitializers() throws {
+        let decoded = try JSONDecoder().decode(KozmosPOIDetailsPresentation.self, from: Data("{}".utf8))
+        XCTAssertEqual(decoded, .init())
+        let partial = try JSONDecoder().decode(KozmosPOIDetailsPresentation.self, from: Data(##"{"tags":[{"id":"pizza","label":"#pizza"}]}"##.utf8))
+        XCTAssertEqual(partial.tags.count, 1)
+        XCTAssertEqual(partial.summary, [])
+        XCTAssertThrowsError(try JSONDecoder().decode(KozmosPOIDetailsPresentation.self, from: Data(#"{"summary":"not an array"}"#.utf8)))
+    }
+
+    func testLegacyServiceIconsUseTheKozmosResolver() {
+        let tag = KozmosPOIDetailTag(service: .init(id: "alert", label: "Access notice", iconName: "alert-circle"))
+        XCTAssertEqual(tag.systemImage, "exclamationmark.circle")
+        XCTAssertNil(KozmosPOIDetailTag(service: .init(id: "text", label: "Text only")).systemImage)
+    }
+
+    func testLoadingLabelCanBeLocalizedWithoutChangingActionIdentity() {
+        let button = POIDetailActionButton(label: "Reservar", systemImage: "calendar", loadingLabel: "Cargando", state: .init(loading: true), action: {})
+        XCTAssertEqual(button.loadingLabel, "Cargando")
+        XCTAssertEqual(button.label, "Reservar")
+        XCTAssertTrue(button.state.loading)
+    }
+
     func testMetadataCapPreservesPriorityAndAdaptsToMissingItems() {
         let items = (0..<5).map { KozmosPOIDetailSummary(id: "\($0)", label: "Fact", value: "\($0)") }
         XCTAssertEqual(KozmosPOIDetailsPresentation(summary: items).visibleSummary.map(\.id), ["0", "1", "2"])
@@ -59,6 +81,40 @@ final class KozmosPOIDetailTests: XCTestCase {
     }
 
     #if os(iOS)
+    private func pixel(_ image: UIImage, x: CGFloat, y: CGFloat) throws -> [UInt8] {
+        let source = try XCTUnwrap(image.cgImage?.cropping(to: CGRect(x: x * image.scale, y: y * image.scale, width: 1, height: 1)))
+        var rgba = [UInt8](repeating: 0, count: 4)
+        let context = try XCTUnwrap(CGContext(data: &rgba, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue))
+        context.draw(source, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+        return rgba
+    }
+
+    @MainActor func testLayoutsReverseRenderedOrderExactlyOnce() throws {
+        for direction in [LayoutDirection.leftToRight, .rightToLeft] {
+            let summary = ImageRenderer(content: POISummaryLayout {
+                Color.red.frame(height: 20)
+                Color.blue.frame(height: 20)
+            }.frame(width: 200).environment(\.layoutDirection, direction))
+            let fact = ImageRenderer(content: POIFactLayout {
+                Color.red.frame(width: 20, height: 20)
+                Color.blue.frame(width: 40, height: 20)
+            }.frame(width: 66).environment(\.layoutDirection, direction))
+            let flow = ImageRenderer(content: FlowLayout(spacing: 8) {
+                Color.red.frame(width: 40, height: 20)
+                Color.blue.frame(width: 40, height: 20)
+            }.frame(width: 88).environment(\.layoutDirection, direction))
+            for (name, image, x) in [("summary", summary.uiImage, 25.0), ("fact", fact.uiImage, 10.0), ("tags", flow.uiImage, 10.0)] {
+                let rgba = try pixel(XCTUnwrap(image), x: x, y: 10)
+                if direction == .leftToRight {
+                    XCTAssertGreaterThan(rgba[0], rgba[2], "\(name): first item must be on the left in LTR")
+                } else {
+                    XCTAssertGreaterThan(rgba[2], rgba[0], "\(name): first item must move to the right in RTL")
+                }
+            }
+        }
+    }
+
     @MainActor func testMetadataRendersAcrossWidthsCountsAndLargeType() throws {
         let items: [KozmosPOIDetailSummary] = [
             .init(id: "rating", label: "Rating", value: "4.7 / 5", detail: "32 reviews", systemImage: "star"),

@@ -29,6 +29,19 @@ public struct KozmosPOIDetailsPresentation: Sendable, Hashable, Codable {
         self.description = description
     }
 
+    /// JSON callers get the same empty-collection defaults as Swift callers.
+    /// Wrong types still throw; this does not silently repair malformed data.
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        summary = try values.decodeIfPresent([KozmosPOIDetailSummary].self, forKey: .summary) ?? []
+        groups = try values.decodeIfPresent([KozmosPOIDetailAttributeGroup].self, forKey: .groups) ?? []
+        tags = try values.decodeIfPresent([KozmosPOIDetailTag].self, forKey: .tags) ?? []
+        supplementaryActions = try values.decodeIfPresent([KozmosPOIDetailAction].self, forKey: .supplementaryActions) ?? []
+        travelEstimate = try values.decodeIfPresent(KozmosTravelEstimatePresentation.self, forKey: .travelEstimate)
+        openingHours = try values.decodeIfPresent(KozmosPOIOpeningHours.self, forKey: .openingHours)
+        description = try values.decodeIfPresent(KozmosPOIDetailDescription.self, forKey: .description)
+    }
+
     /// A POI has one row of at most three equal-width highlights. Callers must
     /// order by product priority before passing these; never sort by label.
     public var visibleSummary: [KozmosPOIDetailSummary] { Array(summary.prefix(3)) }
@@ -70,6 +83,11 @@ public struct KozmosPOIDetailTag: Sendable, Hashable, Identifiable, Codable {
                 iconUrl: String? = nil, iconMonochrome: Bool? = nil) {
         self.id = id; self.label = label; self.systemImage = systemImage
         self.iconUrl = iconUrl; self.iconMonochrome = iconMonochrome
+    }
+
+    init(service: KozmosPOIServicePresentation) {
+        self.init(id: service.id, label: service.label,
+                  systemImage: service.iconName.map(KozmosIcon.symbolName(for:)))
     }
 }
 

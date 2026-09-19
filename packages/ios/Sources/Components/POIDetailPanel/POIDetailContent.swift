@@ -38,10 +38,9 @@ struct POIDetailIcon: View {
 
 struct POIDetailTags: View {
     let items: [KozmosPOIDetailTag]
-    @Environment(\.layoutDirection) private var layoutDirection
 
     var body: some View {
-        FlowLayout(spacing: 8, layoutDirection: layoutDirection) {
+        FlowLayout(spacing: 8) {
             ForEach(items) { item in
                 HStack(spacing: 4) {
                     POIDetailIcon(systemImage: item.systemImage, url: item.iconUrl,
@@ -65,14 +64,13 @@ struct POIDetailTags: View {
 /// the intrinsic icon/text cluster centered avoids the web's flex-wrap gap.
 struct POIDetailSummary: View {
     let items: [KozmosPOIDetailSummary]
-    @Environment(\.layoutDirection) private var layoutDirection
 
     var body: some View {
-        POISummaryLayout(layoutDirection: layoutDirection) {
+        POISummaryLayout {
             ForEach(Array(items.prefix(3).enumerated()), id: \.element.id) { index, item in
                 Group {
                     if item.systemImage != nil || item.iconUrl != nil {
-                        POIFactLayout(layoutDirection: layoutDirection) {
+                        POIFactLayout {
                             icon(item).frame(width: 20, height: 20)
                             text(item)
                         }
@@ -151,7 +149,6 @@ struct POIDetailSummary: View {
 /// combined intrinsic bounds. Nested ViewThatFits/HStacks otherwise choose a
 /// vertical icon before considering the narrower, two-line text alternative.
 struct POIFactLayout: Layout {
-    var layoutDirection: LayoutDirection = .leftToRight
 
     private func sizes(_ proposal: ProposedViewSize, _ subviews: Subviews) -> (CGSize, CGSize) {
         let icon = subviews[0].sizeThatFits(.unspecified)
@@ -166,14 +163,13 @@ struct POIFactLayout: Layout {
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let (icon, text) = sizes(.init(width: bounds.width, height: bounds.height), subviews)
-        let rtl = layoutDirection == .rightToLeft
-        subviews[0].place(at: CGPoint(x: rtl ? bounds.maxX - icon.width : bounds.minX, y: bounds.midY - icon.height / 2), proposal: .init(icon))
-        subviews[1].place(at: CGPoint(x: rtl ? bounds.minX : bounds.minX + icon.width + 6, y: bounds.midY - text.height / 2), proposal: .init(text))
+        // Layout positions are logical: SwiftUI mirrors them for RTL.
+        subviews[0].place(at: CGPoint(x: bounds.minX, y: bounds.midY - icon.height / 2), proposal: .init(icon))
+        subviews[1].place(at: CGPoint(x: bounds.minX + icon.width + 6, y: bounds.midY - text.height / 2), proposal: .init(text))
     }
 }
 
 struct POISummaryLayout: Layout {
-    var layoutDirection: LayoutDirection = .leftToRight
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         guard !subviews.isEmpty else { return .zero }
@@ -187,8 +183,7 @@ struct POISummaryLayout: Layout {
         guard !subviews.isEmpty else { return }
         let width = bounds.width / CGFloat(subviews.count)
         for index in subviews.indices {
-            let column = layoutDirection == .rightToLeft ? subviews.count - 1 - index : index
-            subviews[index].place(at: CGPoint(x: bounds.minX + CGFloat(column) * width, y: bounds.minY),
+            subviews[index].place(at: CGPoint(x: bounds.minX + CGFloat(index) * width, y: bounds.minY),
                                  proposal: .init(width: width, height: bounds.height))
         }
     }
@@ -226,6 +221,7 @@ struct POIDetailExtendedContent: View {
                 } label: {
                     Text(hours.summary).font(KozmosTypography.footnote)
                         .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                        .frame(minHeight: 20)
                 }
                 .padding(12)
                 .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
@@ -238,9 +234,12 @@ struct POIDetailExtendedContent: View {
                         .font(KozmosTypography.subheadline)
                         .fixedSize(horizontal: false, vertical: true)
                     if description.full != description.preview {
-                        Button(expanded ? readLessLabel : readMoreLabel) { expanded.toggle() }
-                            .font(KozmosTypography.footnote)
-                            .frame(minHeight: 44)
+                        Button { expanded.toggle() } label: {
+                            Text(expanded ? readLessLabel : readMoreLabel)
+                                .font(KozmosTypography.footnote)
+                                .frame(minHeight: 44)
+                                .contentShape(Rectangle())
+                        }
                     }
                 }
             }

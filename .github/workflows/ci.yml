@@ -62,6 +62,9 @@ jobs:
       - name: Verify Component Contracts
         run: pnpm components:contract:check
 
+      - name: Verify Native POI Fixtures Match Storybook
+        run: node --import tsx scripts/sync-ios-poi-examples.mjs
+
       - name: Verify Token Contrast Contracts
         run: pnpm tokens:contrast:check
 
@@ -80,7 +83,7 @@ jobs:
       # raw shadow classes sat in components it did not name. This one scans
       # everything and fails when a count goes up.
       - name: Verify No New Raw Values
-        run: pnpm tokens:raw:check
+        run: node --test scripts/lib/raw-value-patterns.test.mjs && pnpm tokens:raw:check
 
       # A Tailwind class the build cannot generate is dropped without a word, and
       # a toHaveClass assertion still passes. bg-background/90 left
@@ -295,6 +298,17 @@ jobs:
       - name: Test iOS Package
         working-directory: packages/ios
         run: swift test
+
+      - name: Test Native POI Rendering on iOS Simulator
+        run: node scripts/check-ios-poi.mjs
+
+      - name: Preserve Native POI Render Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-poi-test-results
+          path: ${{ runner.temp }}/kozmos-ios-poi-*/TestResults.xcresult
+          if-no-files-found: warn
 
       - name: Parse SwiftUI Code Connect
         run: pnpm figma:parse:ios:linked

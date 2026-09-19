@@ -50,6 +50,7 @@ public struct KozmosPOIDetailPanel: View {
     private let readMoreLabel: String
     private let readLessLabel: String
     private let tagsLabel: String
+    private let loadingLabel: String
     private let presentation: Presentation
     private let titleLevel: TitleLevel
     private let onAction: (KozmosPOIAction, String) -> Void
@@ -74,7 +75,8 @@ public struct KozmosPOIDetailPanel: View {
         onSupplementaryAction: ((String, String) -> Void)? = nil,
         readMoreLabel: String = "Read more",
         readLessLabel: String = "Read less",
-        tagsLabel: String = "Tags"
+        tagsLabel: String = "Tags",
+        loadingLabel: String = "Loading"
     ) {
         self.poi = poi; self.details = details; self.actionLabels = actionLabels
         self.onAction = onAction; self.actionStates = actionStates; self.onClose = onClose
@@ -85,6 +87,7 @@ public struct KozmosPOIDetailPanel: View {
         self.supplementaryActionStates = supplementaryActionStates
         self.onSupplementaryAction = onSupplementaryAction
         self.readMoreLabel = readMoreLabel; self.readLessLabel = readLessLabel; self.tagsLabel = tagsLabel
+        self.loadingLabel = loadingLabel
     }
 
     private var quickActions: [KozmosPOIAction] {
@@ -137,9 +140,7 @@ public struct KozmosPOIDetailPanel: View {
                             Text(servicesHeading).font(KozmosTypography.footnote)
                                 .foregroundColor(KozmosColors.primitivesColorsForeground500)
                                 .accessibilityAddTraits(.isHeader)
-                            POIDetailTags(items: services.map {
-                                .init(id: $0.id, label: $0.label, systemImage: $0.iconName)
-                            })
+                            POIDetailTags(items: services.map(KozmosPOIDetailTag.init(service:)))
                         }
                     }
                     POIDetailExtendedContent(details: details, readMoreLabel: readMoreLabel,
@@ -222,6 +223,7 @@ public struct KozmosPOIDetailPanel: View {
             ForEach(quickActions, id: \.self) { action in
                 POIDetailActionButton(label: actionLabels[action] ?? action.rawValue,
                                      systemImage: Self.systemImage(for: action), iconOnly: true,
+                                     loadingLabel: loadingLabel,
                                      state: actionStates[action] ?? .init()) { onAction(action, poi.id) }
                     .accessibilityIdentifier("poi-action-\(action.rawValue)")
             }
@@ -243,12 +245,14 @@ public struct KozmosPOIDetailPanel: View {
                             [$0.durationLabel, $0.distanceLabel].compactMap { $0 }.joined(separator: " · ")
                         } : nil,
                         primary: action == .navigate,
+                        loadingLabel: loadingLabel,
                         state: actionStates[action] ?? .init()
                     ) { onAction(action, poi.id) }
                     .accessibilityIdentifier("poi-action-\(action.rawValue)")
                 }
                 ForEach(details.supplementaryActions) { item in
                     POIDetailActionButton(label: item.label, systemImage: item.systemImage,
+                                         loadingLabel: loadingLabel,
                                          state: supplementaryActionStates[item.action] ?? .init(disabled: onSupplementaryAction == nil)) {
                         onSupplementaryAction?(item.action, poi.id)
                     }
@@ -262,8 +266,8 @@ public struct KozmosPOIDetailPanel: View {
     }
 
     private var allMessages: [(String, KozmosPOIActionState)] {
-        poi.actions.compactMap { action in actionStates[action].map { (action.rawValue, $0) } }
-        + details.supplementaryActions.compactMap { item in supplementaryActionStates[item.action].map { (item.action, $0) } }
+        poi.actions.compactMap { action in actionStates[action].map { ("core:\(action.rawValue)", $0) } }
+        + details.supplementaryActions.compactMap { item in supplementaryActionStates[item.action].map { ("supplementary:\(item.action)", $0) } }
     }
 
     private var messages: some View {
@@ -289,6 +293,7 @@ struct POIDetailActionButton: View {
     var estimate: String? = nil
     var primary = false
     var iconOnly = false
+    var loadingLabel = "Loading"
     var state = KozmosPOIActionState()
     let action: () -> Void
 
@@ -327,7 +332,7 @@ struct POIDetailActionButton: View {
         .disabled(state.disabled || state.loading)
         .opacity(state.disabled ? 0.5 : 1)
         .accessibilityLabel(label)
-        .accessibilityValue(state.loading ? Text("Loading") : Text(estimate ?? ""))
+        .accessibilityValue(state.loading ? Text(loadingLabel) : Text(estimate ?? ""))
         .accessibilityAddTraits(state.pressed ? [.isSelected] : [])
     }
 }
@@ -396,11 +401,9 @@ struct KozmosPanelShape: Shape {
 /// clip when localized labels or Dynamic Type make them wide.
 struct FlowLayout: Layout {
     var spacing: CGFloat
-    var layoutDirection: LayoutDirection
 
-    init(spacing: CGFloat = 8, layoutDirection: LayoutDirection = .leftToRight) {
+    init(spacing: CGFloat = 8) {
         self.spacing = spacing
-        self.layoutDirection = layoutDirection
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -421,10 +424,8 @@ struct FlowLayout: Layout {
             var x = bounds.minX
             for index in row.indices {
                 let size = subviews[index].sizeThatFits(.init(width: bounds.width, height: nil))
-                let physicalX = layoutDirection == .rightToLeft
-                    ? bounds.maxX - (x - bounds.minX) - size.width : x
                 subviews[index].place(
-                    at: CGPoint(x: physicalX, y: y),
+                    at: CGPoint(x: x, y: y),
                     proposal: ProposedViewSize(size)
                 )
                 x += size.width + spacing

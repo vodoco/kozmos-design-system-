@@ -19,6 +19,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+import { rawValuePatterns as PATTERNS } from "./lib/raw-value-patterns.mjs";
 
 const ROOT = process.cwd();
 const postcss = createRequire(path.join(ROOT, "packages/react/package.json"))(
@@ -36,23 +37,6 @@ const fail = (m) => {
 const BASELINE = {
   colour: { total: 32, components: 7 },
   radius: { total: 7, components: 6 },
-};
-
-const TAILWIND_PALETTE =
-  "slate|gray|grey|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|white|black";
-
-const PATTERNS = {
-  // A literal from Tailwind's own palette, where Semantics or Primitives.Colors
-  // already names the job.
-  colour: new RegExp(
-    `\\b(?:bg|text|ring|border|fill|stroke|from|via|to|decoration|outline|shadow|accent|caret|divide)-(?:${TAILWIND_PALETTE})(?:-\\d{2,3})?(?:\\/\\d{1,3})?\\b`,
-    "g",
-  ),
-  // A raw radius, or one reaching past Semantics.Radius into a primitive.
-  // rounded-none, rounded-pill/control/container/panel and a calc() deriving
-  // from a semantic role are all legitimate.
-  radius:
-    /\brounded-(?:sm|md|lg|xl|2xl|3xl|full)\b|\brounded-\[(?!inherit|calc\([^\]]*--semantics-)[^\]]*\]/g,
 };
 
 console.log("Raw values that bypass a role\n");
