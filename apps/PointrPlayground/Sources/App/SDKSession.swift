@@ -45,6 +45,8 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     @Published var saved = Set<String>()
     @Published var favourites = Set<String>()
     private var configuration: QAConfiguration?
+    /// What the shell's chrome covers, as it last reported it.
+    private var chromeInsets = KozmosMapCollisionInsets.zero
     private var started = false
     private var loadingBuilding = false
     private var buildingTask: Task<Void, Never>?
@@ -152,14 +154,42 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         selected = poi
         if let level = poi.position.level { updateLevel(level) }
         widget?.mapViewController.highlightPoi(poi)
+        // Padding first: `focusPoi` centres the place in whatever viewport
+        // the map has when it is called.
+        applyCameraPadding(animated: false)
         widget?.mapViewController.focusPoi(poi)
     }
-    func closeSelection() { selected = nil; widget?.mapViewController.unhighlightPoi() }
+    func closeSelection() { clearSelection(animated: true) }
     func selectFloor(_ id: String) {
         guard let level = building?.levels.first(where: { SDKPOIAdapter.floorId($0) == id }) else { return }
         updateLevel(level)
-        closeSelection()
+        // Not animated: the level's own camera move follows immediately.
+        clearSelection(animated: false)
         widget?.mapViewController.showLevel(level, shouldZoomToLevel: true)
+    }
+    private func clearSelection(animated: Bool) {
+        selected = nil
+        widget?.mapViewController.unhighlightPoi()
+        applyCameraPadding(animated: animated)
+    }
+
+    /// The shell reports its chrome after every settled layout change. The
+    /// map keeps its centre coordinate across a padding change, so a selected
+    /// place stays framed as the sheet, keyboard or window moves.
+    func setChromeInsets(_ insets: KozmosMapCollisionInsets) {
+        chromeInsets = insets
+        applyCameraPadding(animated: false)
+    }
+    private func applyCameraPadding(animated: Bool) {
+        guard let map = widget?.mapViewController.mapLibreView else { return }
+        let inset = SDKCameraPadding.contentInset(
+            chrome: chromeInsets, mapHeight: map.bounds.height, hasSelection: selected != nil)
+        guard inset != map.contentInset else { return }
+        if animated {
+            map.setContentInset(inset, animated: true, completionHandler: nil)
+        } else {
+            map.contentInset = inset
+        }
     }
     private func updateLevel(_ level: PTRLevel) {
         let changedBuilding = building?.identifier != level.building.identifier

@@ -5,6 +5,9 @@ import Kozmos
 struct SDKMapScreen: View {
     @StateObject private var session = SDKSession()
     @State private var detent: KozmosMapPanelDetent = .medium
+    /// The shell docks its panel as a sheet on compact widths and floats it
+    /// beside the map on regular ones; the card has to match.
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var matches: [PTRPoi] {
         let query = session.query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -21,10 +24,7 @@ struct SDKMapScreen: View {
                     panelLabel: session.selected?.name ?? "QA places", panelPlacement: .end,
                     controlsPlacement: .bottom, panelDetent: $detent,
                     panelDetents: [.collapsed, .medium, .large],
-                    onCollisionInsetsChange: { insets in
-                        widget.mapViewController.mapLibreView.contentInset = UIEdgeInsets(
-                            top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
-                    },
+                    onCollisionInsetsChange: session.setChromeInsets,
                     map: { SDKMapHost(widget: widget) },
                     mapStatusContent: {
                         VStack {
@@ -33,15 +33,18 @@ struct SDKMapScreen: View {
                         }.padding(16)
                     },
                     controls: {
-                        HStack(alignment: .bottom) {
-                            KozmosFloorSelector(
-                                floors: (session.building?.levels ?? []).sorted { $0.index < $1.index }.map {
-                                    .init(id: SDKPOIAdapter.floorId($0), label: $0.name, shortLabel: $0.shortName)
-                                },
-                                selectedFloor: .init(get: { session.selectedFloorId }, set: session.selectFloor),
-                                variant: .collapsible)
-                            KozmosMapControlsGroup(onZoomIn: { session.zoom(1) }, onZoomOut: { session.zoom(-1) },
-                                                   onCompassReset: { widget.mapViewController.resetNorth() })
+                        // The shell proposes this slot only the height left
+                        // between the top bar and the sheet. At a tall detent
+                        // the whole cluster no longer fits, and drawn anyway it
+                        // overflowed upward over the search bar. Zoom yields to
+                        // pinch first; the levels stay while they fit.
+                        ViewThatFits(in: .vertical) {
+                            controls(widget, zoom: true)
+                            controls(widget, zoom: false)
+                            // Not `EmptyView`: it adds no child at all, and
+                            // with nothing fitting `ViewThatFits` falls back to
+                            // its last real child — the levels, over the search.
+                            Color.clear.frame(width: 0, height: 0)
                         }
                     },
                     topBar: { KozmosSearchBar(text: $session.query, placeholder: "Search this building") },
@@ -58,6 +61,26 @@ struct SDKMapScreen: View {
         }
         .task { session.start() }
         .onDisappear { session.stop() }
+    }
+
+    /// `.bottom` gives the slot the full width of the map and leaves the corner
+    /// to the caller. Anchored to the trailing edge, where a thumb reaches,
+    /// rather than centred over the places the map is showing. Levels sit
+    /// outermost, as in the fixture playground.
+    private func controls(_ widget: PTRMapWidgetViewController, zoom: Bool) -> some View {
+        HStack(alignment: .bottom, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+            Spacer(minLength: 0)
+            if zoom {
+                KozmosMapControlsGroup(onZoomIn: { session.zoom(1) }, onZoomOut: { session.zoom(-1) },
+                                       onCompassReset: { widget.mapViewController.resetNorth() })
+            }
+            KozmosFloorSelector(
+                floors: (session.building?.levels ?? []).sorted { $0.index < $1.index }.map {
+                    .init(id: SDKPOIAdapter.floorId($0), label: $0.name, shortLabel: $0.shortName)
+                },
+                selectedFloor: .init(get: { session.selectedFloorId }, set: session.selectFloor),
+                variant: .collapsible)
+        }
     }
 
     @ViewBuilder private var panel: some View {
@@ -79,6 +102,10 @@ struct SDKMapScreen: View {
                     .bookmark: .init(pressed: session.saved.contains(poi.identifier))
                 ],
                 onClose: session.closeSelection,
+                // The shell draws the container — background, corners, shadow
+                // and grab handle. The card's own bordered card inside it was
+                // a second container.
+                presentation: horizontalSizeClass == .regular ? .panel : .sheet,
                 details: SDKPOIAdapter.details(poi))
         } else {
             ScrollView {
