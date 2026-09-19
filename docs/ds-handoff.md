@@ -1161,6 +1161,18 @@ against the code it was written for and failed there first; every "fixed" was re
 3× simulator screenshot, not from a passing test. E, F, G and Passes 2–4 are not started.
 Five decisions wait on Olcay, listed in the report.
 
+### 2026-09-19 · Pointr iOS Pass 2 (Claude Code)
+
+Item E, `pointr-ios-pass2-2026-09-19.md`. Every one of Design-QA's 1,196 places was read
+through the SDK before a line of mapping was written: no ratings, prices on a sentinel, seven
+empty day schedules each, hours typed into two CMS keys, 269 places with Website and Call
+buttons, six taxonomy properties among forty CMS keys. The web's taxonomy adapter now runs
+natively over the same pinned 10.12.0 projection, generated for iOS by a script CI keeps
+fresh; the SDK's buttons become contact actions the host opens, or a message when the device
+cannot; hours are the venue's text and say so. Structured hours are not rendered: PointrKit
+documents no day order. 31 tests in the app; Dunkin', Boston AMERICA! and a Terminal E lounge
+checked live. Next: routing (Pass 3), and the six upstream findings for Pointr.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

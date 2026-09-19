@@ -397,6 +397,8 @@ Use the component's intended sheet presentation where appropriate and verify own
 
 ### E. Rich live data is not connected
 
+**Status (Pass 2): connected, `43d6793`, `ac09652`, `a8de911`.** Measured over all 1,196 Design-QA places first; the card now carries taxonomy chips and highlights by the web adapter's rules, contacts from the SDK's buttons, the venue's hours text, and the description. What the data does not have — ratings, prices, structured hours with slots — stays absent, with diagnostics. See the [Pass 2 report](pointr-ios-pass2-2026-09-19.md).
+
 `SDKPOIAdapter` does not currently emit taxonomy groups/highlights, opening hours, availability, route estimates or supplementary contact actions. The empty space/minimal content is partly an integration gap, not necessarily missing upstream content.
 
 Inspect actual documented SDK properties safely, establish schemas, and map them into the existing rich presentation model. Preserve absent values and diagnostics. Do not make the fixture generator the live adapter or add JavaScript evaluation to native code.
@@ -451,6 +453,8 @@ Implement A–D above first, with targeted tests and Simulator review. Include F
 Do not change Cloud values to make the UI look good. Build fixture cases for sparse/failed data and reproduce the reported live Dunkin' case separately.
 
 ### Pass 2 — connect rich real POI data
+
+**Status: done on 19 September 2026**, as the [Pass 2 report](pointr-ios-pass2-2026-09-19.md) records, with six upstream findings for §9 (hours in CMS text, an undocumented day order, `Payment Options` as prose, `unitNumber` and category strings outside the taxonomy, keywords as search terms, descriptions that repeat the name).
 
 Establish SDK property schema and adapter tests, then render real taxonomy facts using the existing presentation contract. Test one/two/three/more-than-three facts, missing/zero/false/invalid values, icon/text-only values, different venue categories and long localized labels. Document any upstream ambiguity instead of inventing a schema.
 

@@ -27,6 +27,9 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 The Pointr iOS thread, 2026-09-19, newest first:
 
+- `pointr-ios-pass2-2026-09-19.md`: Pass 2 — what Design-QA's 1,196 places actually carry, and
+  the card connected to it: taxonomy chips and highlights by the web adapter's rules, contacts
+  from the SDK's buttons, the venue's hours text, descriptions; six upstream findings.
 - `pointr-ios-pass1-2026-09-19.md`: Pass 1 of the handoff below — map controls, the selected
   marker's framing, the native gallery and the sheet card, each measured in the simulator;
   what is verified, what is not, and the decisions that wait on Olcay.

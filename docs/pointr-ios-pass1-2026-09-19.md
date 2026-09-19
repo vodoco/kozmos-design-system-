@@ -224,7 +224,8 @@ Not run: Chromatic, the web browser suites (no React source changed), Android.
 
 ## Not started
 
-E (rich live data), F (search and selection lifecycle), G (floor certification), and Passes 2–4.
+F (search and selection lifecycle), G (floor certification), and Passes 3–4. E was done next, as
+[Pass 2](pointr-ios-pass2-2026-09-19.md) records.
 The keyboard was not exercised: the simulator uses a hardware keyboard. Landscape was computed,
 not driven.
 
