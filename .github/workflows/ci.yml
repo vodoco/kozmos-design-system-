@@ -65,6 +65,9 @@ jobs:
       - name: Verify Native POI Fixtures Match Storybook
         run: node --import tsx scripts/sync-ios-poi-examples.mjs
 
+      - name: Verify Native Taxonomy Projection Matches the Web Examples
+        run: node scripts/sync-ios-taxonomy.mjs
+
       - name: Verify Token Contrast Contracts
         run: pnpm tokens:contrast:check
 
