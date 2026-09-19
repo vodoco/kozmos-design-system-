@@ -220,6 +220,41 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
         XCTAssertEqual(insets.right, 0, accuracy: 0.001)
     }
 
+    /// Mirrors React's `resolveMapInsets`: the top and left edges keep their
+    /// value, and the edge opposite each is cut to what remains. A camera
+    /// padded by more than the map's height has nowhere to put its centre.
+    func testOpposingInsetsSaturateAtTheMapSize() {
+        var detent = KozmosMapPanelDetent.large
+        let binding = Binding(get: { detent }, set: { detent = $0 })
+        let view = KozmosAdaptiveMapShell(
+            controlsPlacement: .bottom,
+            panelDetent: binding,
+            collisionInsets: KozmosMapCollisionInsets(top: 300, right: 300, bottom: 0, left: 300),
+            map: { Color.clear },
+            mapStatusContent: { EmptyView() },
+            controls: { Color.clear },
+            panel: { Color.clear }
+        )
+        let size = CGSize(width: 400, height: shellHeight)
+        let insets = view.resolvedCollisionInsets(in: size, layoutDirection: .leftToRight, isRegularWidth: false)
+
+        // Unclamped, the large panel and the controls band alone would be
+        // 704 + 32 against an 800pt map, on top of the caller's 300.
+        XCTAssertEqual(insets.top, 300, accuracy: 0.001)
+        XCTAssertEqual(insets.bottom, 500, accuracy: 0.001)
+        XCTAssertEqual(insets.left, 300, accuracy: 0.001)
+        XCTAssertEqual(insets.right, 100, accuracy: 0.001)
+        XCTAssertEqual(insets.top + insets.bottom, Double(shellHeight), accuracy: 0.001)
+    }
+
+    /// Before the shell has been measured it is zero by zero, and every edge
+    /// saturates to nothing rather than going negative.
+    func testAnUnmeasuredShellReportsNoInsets() {
+        let insets = shell(collisionInsets: KozmosMapCollisionInsets(top: 72, right: 0, bottom: 0, left: 0))
+            .resolvedCollisionInsets(in: .zero, layoutDirection: .leftToRight, isRegularWidth: false)
+        XCTAssertEqual(insets, .zero)
+    }
+
     func testAPanelWithASingleDetentDoesNotOfferAGrabHandle() {
         let one = shell(detents: [.medium])
         XCTAssertEqual(one.orderedDetents(in: shellHeight).count, 1)

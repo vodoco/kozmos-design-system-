@@ -302,17 +302,32 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             : 0
         let panelOnPhysicalRight = (panelPlacement == .end) == (layoutDirection == .leftToRight)
 
+        let top = max(collisionInsets.top, Double(topBarInset))
+        let right = max(
+            collisionInsets.right,
+            Double(panelOnPhysicalRight ? sidePanelWidth : controlsColumn)
+        )
+        let bottom = max(collisionInsets.bottom, Double(dockedPanel + controlsBand))
+        let left = max(
+            collisionInsets.left,
+            Double(panelOnPhysicalRight ? controlsColumn : sidePanelWidth)
+        )
+
+        // Opposing edges saturate at the map's size, as React's
+        // `resolveMapInsets` does: a map covered from edge to edge has no
+        // usable camera area, not a negative one. Without this, a tall
+        // detent under bottom controls reported more bottom and top inset
+        // than the map had height, and a camera centred in that viewport
+        // lands above the map.
+        let width = Double(max(size.width, 0))
+        let height = Double(max(size.height, 0))
+        let clampedLeft = min(left, width)
+        let clampedTop = min(top, height)
         return KozmosMapCollisionInsets(
-            top: max(collisionInsets.top, Double(topBarInset)),
-            right: max(
-                collisionInsets.right,
-                Double(panelOnPhysicalRight ? sidePanelWidth : controlsColumn)
-            ),
-            bottom: max(collisionInsets.bottom, Double(dockedPanel + controlsBand)),
-            left: max(
-                collisionInsets.left,
-                Double(panelOnPhysicalRight ? controlsColumn : sidePanelWidth)
-            )
+            top: clampedTop,
+            right: min(right, width - clampedLeft),
+            bottom: min(bottom, height - clampedTop),
+            left: clampedLeft
         )
     }
 
