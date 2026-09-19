@@ -25,6 +25,14 @@ public struct KozmosDirectionStep: View {
         self.distance = distance
         self.duration = duration
     }
+
+    /// What VoiceOver reads for a step: the instruction, then the distance
+    /// and the duration, as one element. The arrow says nothing the
+    /// instruction does not, and a system symbol left audible reads its own
+    /// description — "Up", or "Remove Map Pin" for the destination.
+    static func accessibilityDescription(instruction: String, distance: String?, duration: String?) -> String {
+        [instruction, distance, duration].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
+    }
     
     public var body: some View {
         HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
@@ -35,6 +43,7 @@ public struct KozmosDirectionStep: View {
                     Image(systemName: type.iconName)
                         .foregroundColor(KozmosColors.primitivesColorsTheme500)
                 )
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing25) {
                 Text(instruction)
@@ -56,5 +65,7 @@ public struct KozmosDirectionStep: View {
             RoundedRectangle(cornerRadius: KozmosDimensions.primitivesLayoutSpacing150)
                 .stroke(KozmosColors.primitivesColorsBackground300, lineWidth: 1)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Self.accessibilityDescription(instruction: instruction, distance: distance, duration: duration))
     }
 }

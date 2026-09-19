@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import PointrKit
 import Kozmos
 
@@ -258,12 +259,24 @@ extension SDKMapScreen {
                                 distance: SDKRoutePresenter.distanceLabel(for: step),
                                 duration: session.stepFloorLabel(step.id))
                             .opacity(step.id == session.stepIndex ? 1 : 0.45)
+                            // The dimming is visual; VoiceOver hears the trait.
+                            .accessibilityAddTraits(step.id == session.stepIndex ? .isSelected : [])
                             .id(step.id)
                         }
                     }
                     .padding(KozmosDimensions.primitivesLayoutSpacing200)
                 }
-                .onChange(of: session.stepIndex) { index in withAnimation { proxy.scrollTo(index, anchor: .center) } }
+                .onChange(of: session.stepIndex) { index in
+                    withAnimation { proxy.scrollTo(index, anchor: .center) }
+                    // Next and Previous keep VoiceOver's focus on the button;
+                    // the step that changed under it is announced.
+                    if steps.indices.contains(index) {
+                        let step = steps[index]
+                        let parts = ["Step \(index + 1) of \(steps.count).", step.message,
+                                     SDKRoutePresenter.distanceLabel(for: step), session.stepFloorLabel(step.id)]
+                        UIAccessibility.post(notification: .announcement, argument: parts.compactMap { $0 }.joined(separator: ", "))
+                    }
+                }
             }
             KozmosSeparator()
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {

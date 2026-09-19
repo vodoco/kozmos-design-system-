@@ -40,6 +40,8 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
                         .foregroundColor(KozmosColors.primitivesColorsTheme500)
                         .background(KozmosColors.primitivesColorsTheme500.opacity(0.12))
                         .clipShape(Circle())
+                        // The words beside it carry the meaning.
+                        .accessibilityHidden(true)
                 }
 
                 VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing25) {
