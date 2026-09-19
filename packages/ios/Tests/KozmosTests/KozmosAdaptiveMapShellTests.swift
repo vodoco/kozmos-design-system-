@@ -1,5 +1,6 @@
 import XCTest
 import SwiftUI
+import SnapshotTesting
 @testable import Kozmos
 
 /// Detent geometry and the collision insets the shell reports back.
@@ -254,6 +255,85 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
             .resolvedCollisionInsets(in: .zero, layoutDirection: .leftToRight, isRegularWidth: false)
         XCTAssertEqual(insets, .zero)
     }
+
+    /// The top bar and the controls are laid out in the map beside a floating
+    /// panel. Docked, the panel takes no width, and they get the whole shell.
+    func testChromeIsLaidOutBesideAFloatingPanel() {
+        let view = shell(controlsPlacement: .bottom)
+        let wide = CGSize(width: 1024, height: 700)
+        let padding = KozmosDimensions.primitivesLayoutSpacing200
+
+        XCTAssertEqual(view.floatingPanelOccupancy(in: wide, isRegularWidth: false), 0)
+        XCTAssertEqual(view.chromeWidth(in: wide, isRegularWidth: false), 1024, accuracy: 0.001)
+        // The panel is min(416, 42%) plus a gutter either side: 448 of 1024.
+        XCTAssertEqual(view.floatingPanelOccupancy(in: wide, isRegularWidth: true), 416 + padding * 2, accuracy: 0.001)
+        XCTAssertEqual(view.chromeWidth(in: wide, isRegularWidth: true), 1024 - 416 - padding * 2, accuracy: 0.001)
+        // Narrower than 416 / 0.42, the panel is 42% of the width.
+        let narrow = CGSize(width: 400, height: shellHeight)
+        XCTAssertEqual(view.chromeWidth(in: narrow, isRegularWidth: true), 400 - 168 - padding * 2, accuracy: 0.001)
+    }
+
+    #if os(iOS)
+    /// Rendered, not reasoned about: with the panel floating, a trailing
+    /// control cluster and a full-width top bar were drawn under it. Both must
+    /// stop at the panel's gutter, on whichever side the panel is.
+    @MainActor func testChromeIsNotDrawnUnderAFloatingPanel() async throws {
+        let size = CGSize(width: 1024, height: 600)
+        // The panel: 416 wide, 16 in from the trailing edge.
+        let panelNearEdge: CGFloat = 1024 - 16 - 416
+        for direction in [LayoutDirection.leftToRight, .rightToLeft] {
+            let view = KozmosAdaptiveMapShell(
+                controlsPlacement: .bottom,
+                map: { Color.white },
+                mapStatusContent: { EmptyView() },
+                controls: {
+                    // A caller's trailing-anchored cluster.
+                    HStack(spacing: 0) { Spacer(minLength: 0); Color.red.frame(width: 44, height: 44) }
+                },
+                topBar: { Color.green.frame(height: 44) },
+                panel: { Color.blue }
+            )
+            .environment(\.horizontalSizeClass, .regular)
+            .environment(\.layoutDirection, direction)
+            .frame(width: size.width, height: size.height)
+            let controller = UIHostingController(rootView: view)
+            let strategy = Snapshotting<UIViewController, UIImage>.image(size: size)
+            let image = await withCheckedContinuation { continuation in
+                strategy.snapshot(controller).run { continuation.resume(returning: $0) }
+            }
+            let cgImage = try XCTUnwrap(image.cgImage)
+            let scale = CGFloat(cgImage.width) / size.width
+            func span(of matches: (UInt8, UInt8, UInt8) -> Bool, atY y: CGFloat) throws -> ClosedRange<CGFloat>? {
+                let row = try XCTUnwrap(cgImage.cropping(to: CGRect(x: 0, y: y * scale, width: CGFloat(cgImage.width), height: 1)))
+                var rgba = [UInt8](repeating: 0, count: cgImage.width * 4)
+                let context = try XCTUnwrap(CGContext(
+                    data: &rgba, width: cgImage.width, height: 1, bitsPerComponent: 8, bytesPerRow: cgImage.width * 4,
+                    space: CGColorSpaceCreateDeviceRGB(),
+                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue))
+                context.draw(row, in: CGRect(x: 0, y: 0, width: cgImage.width, height: 1))
+                let xs = (0..<cgImage.width).filter { matches(rgba[$0 * 4], rgba[$0 * 4 + 1], rgba[$0 * 4 + 2]) }
+                guard let first = xs.first, let last = xs.last else { return nil }
+                return CGFloat(first) / scale...CGFloat(last + 1) / scale
+            }
+            // The cluster's row: 16 above the bottom edge, 44 tall.
+            let red = try XCTUnwrap(try span(of: { r, g, b in r > 180 && g < 90 && b < 90 }, atY: size.height - 16 - 22),
+                                    "\(direction): the controls are not visible at all — they are under the panel")
+            // The bar's row: 16 below the top edge.
+            let green = try XCTUnwrap(try span(of: { r, g, b in g > 120 && r < 110 && b < 110 }, atY: 16 + 22))
+            switch direction {
+            case .leftToRight:
+                XCTAssertLessThanOrEqual(red.upperBound, panelNearEdge - 16, "the cluster stops at the panel's gutter")
+                XCTAssertLessThanOrEqual(green.upperBound, panelNearEdge - 16 + 0.5, "the bar stops at the panel's gutter")
+                XCTAssertLessThan(green.lowerBound, 1, "the bar starts at the map's edge, not centred on the shell")
+            default:
+                let panelFarEdge: CGFloat = 16 + 416
+                XCTAssertGreaterThanOrEqual(red.lowerBound, panelFarEdge + 16)
+                XCTAssertGreaterThanOrEqual(green.lowerBound, panelFarEdge + 16 - 0.5)
+                XCTAssertGreaterThan(green.upperBound, size.width - 1)
+            }
+        }
+    }
+    #endif
 
     func testAPanelWithASingleDetentDoesNotOfferAGrabHandle() {
         let one = shell(detents: [.medium])

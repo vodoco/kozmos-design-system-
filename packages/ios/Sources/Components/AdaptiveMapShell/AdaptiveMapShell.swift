@@ -291,9 +291,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         isRegularWidth: Bool
     ) -> KozmosMapCollisionInsets {
         let edgePadding = KozmosDimensions.primitivesLayoutSpacing200
-        let sidePanelWidth = hasPanel && isRegularWidth
-            ? min(416, size.width * 0.42) + edgePadding * 2
-            : 0
+        let sidePanelWidth = floatingPanelOccupancy(in: size, isRegularWidth: isRegularWidth)
         let dockedPanel = dockedPanelHeight(in: size, isRegularWidth: isRegularWidth)
         let inCorner = hasControls && controlsPlacement == .top
         let controlsColumn = inCorner ? controlsSize.width + edgePadding * 2 : 0
@@ -337,6 +335,29 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         hasPanel && !isRegularWidth ? settledPanelHeight(in: size.height) : 0
     }
 
+    /// The width a floating panel takes from its side of the shell, gutters
+    /// included — zero when the panel is docked to the bottom.
+    func floatingPanelOccupancy(in size: CGSize, isRegularWidth: Bool) -> CGFloat {
+        guard hasPanel, isRegularWidth else { return 0 }
+        return min(416, size.width * 0.42) + KozmosDimensions.primitivesLayoutSpacing200 * 2
+    }
+
+    /// The width the top bar and the controls are laid out in: the map beside
+    /// a floating panel, or the whole shell when the panel is docked. Chrome
+    /// laid out across the whole shell went under a floating panel, which is
+    /// above it — a trailing-anchored control cluster vanished on an iPad, and
+    /// a centred top bar lost its trailing third. React's shell lays both out
+    /// in the map area beside the panel; this is that area's width.
+    func chromeWidth(in size: CGSize, isRegularWidth: Bool) -> CGFloat {
+        max(size.width - floatingPanelOccupancy(in: size, isRegularWidth: isRegularWidth), 0)
+    }
+
+    /// Which side of the shell the chrome keeps when a panel floats: the side
+    /// the panel is not on. Logical, so it mirrors with the panel.
+    private var chromeSide: Alignment {
+        panelPlacement == .end ? .leading : .trailing
+    }
+
     /// How far down the top bar pushes anything sharing the top edge. Zero when
     /// the slot renders nothing, so a caller passing a conditional top bar does
     /// not permanently reserve the shell's padding for an empty view.
@@ -369,10 +390,12 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                         .zIndex(2)
                 }
 
+                let chromeWidth = chromeWidth(in: geometry.size, isRegularWidth: isRegularWidth)
+
                 if hasTopBar {
                     topBar
                         .frame(maxWidth: 672)
-                        .frame(width: geometry.size.width, alignment: .center)
+                        .frame(width: chromeWidth, alignment: .center)
                         // Measured before the padding, so a slot that renders
                         // nothing measures nothing.
                         .background(
@@ -384,6 +407,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                             }
                         )
                         .padding(.top, topBarHeight > 0 ? KozmosDimensions.primitivesLayoutSpacing200 : 0)
+                        .frame(width: geometry.size.width, alignment: chromeSide)
                         .zIndex(3)
                 }
 
@@ -407,13 +431,14 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                         // to know; the slot is proposed the space it really
                         // has, so a `ViewThatFits` in it can adapt.
                         .frame(
-                            width: geometry.size.width,
+                            width: chromeWidth,
                             height: max(
                                 geometry.size.height - dockedPanelHeight(in: geometry.size, isRegularWidth: isRegularWidth),
                                 0
                             ),
                             alignment: controlsAlignment
                         )
+                        .frame(width: geometry.size.width, alignment: chromeSide)
                         .zIndex(3)
                 }
 
