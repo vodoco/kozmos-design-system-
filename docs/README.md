@@ -6,6 +6,10 @@ these files honest are listed in its §7.
 
 ## Start here
 
+Latest native continuation: [Pointr iOS Pass 1 — 2026-09-19](pointr-ios-pass1-2026-09-19.md),
+the first pass of [Astra's handoff to Claude Code](claude-code-handoff-2026-09-19.md): map
+controls, the selected marker, the native gallery and the sheet card, measured in the simulator.
+
 Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
 It closes declaration-format and inert-opacity debt and migrates the temporal fields.
 Earlier baseline: [Overnight quality pass — 2026-09-18](overnight-quality-pass-2026-09-18.md).

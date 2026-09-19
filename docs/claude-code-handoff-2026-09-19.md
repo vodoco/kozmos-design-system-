@@ -2,6 +2,12 @@
 
 Prepared 19 September 2026, Europe/London. This is a continuation guide, not a release sign-off.
 
+> **Update, 19 September 2026, Claude Code:** Pass 1 is done on `claude/pointr-browse-repairs`, cut
+> from this branch at `663cde1` in the same worktree. A, B, C and D in section 8 are fixed and
+> measured in the simulator; the evidence, and what is still unverified, is in the
+> [Pass 1 report](pointr-ios-pass1-2026-09-19.md). E, F, G and Passes 2–4 have not started. The
+> rest of this document is Astra's handover, with status notes where Pass 1 changed it.
+
 ## 1. Read this first
 
 The user wants a real Pointr-powered experience with **Kozmos-owned UI**, using the POI detail examples as the product reference. Pointr should provide the map, SDK data, selection/camera, and eventually routing/positioning. Its default application UI must not replace the Kozmos components.
@@ -12,17 +18,17 @@ The latest user request is to write this handoff for continuation in Claude Code
 
 ### Exact working state
 
-| Item | State at handoff |
-| --- | --- |
-| Implementation worktree | `/private/tmp/kozmos-browser-compat.uqPMBD` |
-| Implementation branch | `astra/browser-compatibility` |
-| Implementation HEAD | `663cde142fd95788eb6a222599bd634f6b97b948` |
-| Main checkout | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev` |
-| Main HEAD | `a02a008` |
-| Commits reachable from implementation but not main | 41 at inspection; do not blindly cherry-pick only the newest commit |
-| Separate Storybook preview checkout | `/private/tmp/kozmos-owned-css-verify.dV1etM`, detached at `ad1a23b` |
-| Implementation status before this document | Clean |
-| Handoff changes | This new document in implementation; a short pointer document in main. Documentation only, not committed by this handoff pass |
+| Item                                               | State at handoff                                                                                                              |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Implementation worktree                            | `/private/tmp/kozmos-browser-compat.uqPMBD`                                                                                   |
+| Implementation branch                              | `astra/browser-compatibility`                                                                                                 |
+| Implementation HEAD                                | `663cde142fd95788eb6a222599bd634f6b97b948`                                                                                    |
+| Main checkout                                      | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`                                                                    |
+| Main HEAD                                          | `a02a008`                                                                                                                     |
+| Commits reachable from implementation but not main | 41 at inspection; do not blindly cherry-pick only the newest commit                                                           |
+| Separate Storybook preview checkout                | `/private/tmp/kozmos-owned-css-verify.dV1etM`, detached at `ad1a23b`                                                          |
+| Implementation status before this document         | Clean                                                                                                                         |
+| Handoff changes                                    | This new document in implementation; a short pointer document in main. Documentation only, not committed by this handoff pass |
 
 The main checkout does **not** contain the full implementation. The port-6006 preview can also be older than the implementation branch. A running browser tab is not evidence of which source revision is being served. There are several other worktrees belonging to other work: leave them alone.
 
@@ -72,24 +78,24 @@ The user logged in to Design-QA Cloud. Browser authentication may expire or may 
 
 This table is a navigation aid, not a substitute for reading the diff and dated reports. Later decisions supersede earlier ones.
 
-| Commit | Milestone |
-| --- | --- |
-| `9274fa3` | Single public catalogue and accessible platform references |
-| `b9dd0d6` | Responsive actions and catalogue repairs |
-| `9da04cc` | Compile exact displayed React recipes against installed packages |
-| `71e31bd` | Preserve consumer typography inside theme boundaries |
-| `54f24b5` | Installed-package MapScale product pilot |
-| `a06ca47` | Reusable SDK-reference POI anatomy and acceptance examples |
-| `c7c35d6` | React gallery state/selection repair and expanded acceptance checks |
-| `1d4e323` | Consistent 16px POI/control corners |
+| Commit    | Milestone                                                                     |
+| --------- | ----------------------------------------------------------------------------- |
+| `9274fa3` | Single public catalogue and accessible platform references                    |
+| `b9dd0d6` | Responsive actions and catalogue repairs                                      |
+| `9da04cc` | Compile exact displayed React recipes against installed packages              |
+| `71e31bd` | Preserve consumer typography inside theme boundaries                          |
+| `54f24b5` | Installed-package MapScale product pilot                                      |
+| `a06ca47` | Reusable SDK-reference POI anatomy and acceptance examples                    |
+| `c7c35d6` | React gallery state/selection repair and expanded acceptance checks           |
+| `1d4e323` | Consistent 16px POI/control corners                                           |
 | `a9e9cb3` | Single-row metadata and alignment; its overflow approach was later superseded |
-| `ddb2656` | Reference typography, existing icons, save states |
-| `eb68e53` | Pinned taxonomy-driven property display |
-| `95ccf34` | Final POI metadata policy: maximum three adaptive cells, no strip scrolling |
-| `ad1a23b` | Horizontally scrollable POI action strip |
-| `a38e24a` | Rich native POI cards and shared fixture examples |
-| `80e565d` | Native layout/RTL/model hardening and simulator test coverage |
-| `663cde1` | Real Pointr QA host, SDK data/map connection, Kozmos-owned UI |
+| `ddb2656` | Reference typography, existing icons, save states                             |
+| `eb68e53` | Pinned taxonomy-driven property display                                       |
+| `95ccf34` | Final POI metadata policy: maximum three adaptive cells, no strip scrolling   |
+| `ad1a23b` | Horizontally scrollable POI action strip                                      |
+| `a38e24a` | Rich native POI cards and shared fixture examples                             |
+| `80e565d` | Native layout/RTL/model hardening and simulator test coverage                 |
+| `663cde1` | Real Pointr QA host, SDK data/map connection, Kozmos-owned UI                 |
 
 The branch also includes preceding CSS ownership, theme/config/portal isolation, accessibility, adaptive layout, declaration-format and package verification work. Consult the earlier reports in section 13 rather than undoing these foundations to solve a local visual issue.
 
@@ -145,32 +151,32 @@ Keep SDK authentication, models, lifecycle, routing, schema parsing and product 
 
 All source paths below are relative to **`/private/tmp/kozmos-browser-compat.uqPMBD`**, not the main checkout.
 
-| Concern | File(s) |
-| --- | --- |
-| Real native app entry | `apps/PointrPlayground/Sources/App/App.swift` |
-| SDK startup, callbacks, floor/selection, policy, retry | `apps/PointrPlayground/Sources/App/SDKSession.swift` |
-| Live SDK-to-presentation mapping | `apps/PointrPlayground/Sources/App/SDKPOIAdapter.swift` |
-| Map host/shell/search/controls/panel | `apps/PointrPlayground/Sources/App/SDKMapScreen.swift` |
-| App target and framework embedding | `apps/PointrPlayground/project.yml` |
-| SDK configuration/policy tests | `apps/PointrPlayground/Tests/SDKIntegrationTests.swift` |
-| Local artifact preparation | `scripts/prepare-pointr-ios.mjs` |
-| Native card structure | `packages/ios/Sources/Components/POIDetailPanel/POIDetailPanel.swift` |
-| Native summary/tag/hours layouts | `packages/ios/Sources/Components/POIDetailPanel/POIDetailContent.swift` |
-| Native rich presentation models | `packages/ios/Sources/Components/POIDetailPanel/POIDetailsPresentation.swift` |
-| Native gallery (known gaps) | `packages/ios/Sources/Components/POIMediaGallery/POIMediaGallery.swift` |
-| Native card/render tests | `packages/ios/Tests/KozmosTests/KozmosPOIDetailTests.swift` |
-| Fixture example UI | `apps/Playground.swiftpm/Sources/App/Views/POIExamplesScreen.swift` |
-| Generated native fixtures — do not hand-edit | `apps/Playground.swiftpm/Sources/App/Model/POIExampleData.swift` |
-| Fixture source | `packages/react/src/components/POIDetailPanel/POIDetailPanel.fixtures.ts` |
-| Example taxonomy adapter | `packages/react/src/components/POIDetailPanel/POITaxonomy.fixtures.ts` |
-| Pinned taxonomy projection | `packages/react/src/components/POIDetailPanel/taxonomy-10.12.0.fixture.json` |
-| Web POI rendering | `packages/react/src/components/POIDetailPanel/POIDetailPanel.tsx`, `POIDetailContent.tsx` |
-| Web POI styles | `packages/react/src/styles/owned-poi-detail.css`, `owned-poi-gallery.css` |
-| Web gallery behaviour | `packages/react/src/components/POIMediaGallery/POIMediaGallery.tsx` |
-| Public cross-platform contract | `packages/product-contracts/src/index.ts` |
-| Public catalogue configuration | `apps/docs/.storybook/main.ts`, `preview.tsx`, `preview.css` |
-| Shared language-code controls | `packages/react/src/components/PlatformSnippets.tsx` |
-| Public support statement | `apps/docs/src/platform-support.mdx` |
+| Concern                                                | File(s)                                                                                   |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Real native app entry                                  | `apps/PointrPlayground/Sources/App/App.swift`                                             |
+| SDK startup, callbacks, floor/selection, policy, retry | `apps/PointrPlayground/Sources/App/SDKSession.swift`                                      |
+| Live SDK-to-presentation mapping                       | `apps/PointrPlayground/Sources/App/SDKPOIAdapter.swift`                                   |
+| Map host/shell/search/controls/panel                   | `apps/PointrPlayground/Sources/App/SDKMapScreen.swift`                                    |
+| App target and framework embedding                     | `apps/PointrPlayground/project.yml`                                                       |
+| SDK configuration/policy tests                         | `apps/PointrPlayground/Tests/SDKIntegrationTests.swift`                                   |
+| Local artifact preparation                             | `scripts/prepare-pointr-ios.mjs`                                                          |
+| Native card structure                                  | `packages/ios/Sources/Components/POIDetailPanel/POIDetailPanel.swift`                     |
+| Native summary/tag/hours layouts                       | `packages/ios/Sources/Components/POIDetailPanel/POIDetailContent.swift`                   |
+| Native rich presentation models                        | `packages/ios/Sources/Components/POIDetailPanel/POIDetailsPresentation.swift`             |
+| Native gallery (known gaps)                            | `packages/ios/Sources/Components/POIMediaGallery/POIMediaGallery.swift`                   |
+| Native card/render tests                               | `packages/ios/Tests/KozmosTests/KozmosPOIDetailTests.swift`                               |
+| Fixture example UI                                     | `apps/Playground.swiftpm/Sources/App/Views/POIExamplesScreen.swift`                       |
+| Generated native fixtures — do not hand-edit           | `apps/Playground.swiftpm/Sources/App/Model/POIExampleData.swift`                          |
+| Fixture source                                         | `packages/react/src/components/POIDetailPanel/POIDetailPanel.fixtures.ts`                 |
+| Example taxonomy adapter                               | `packages/react/src/components/POIDetailPanel/POITaxonomy.fixtures.ts`                    |
+| Pinned taxonomy projection                             | `packages/react/src/components/POIDetailPanel/taxonomy-10.12.0.fixture.json`              |
+| Web POI rendering                                      | `packages/react/src/components/POIDetailPanel/POIDetailPanel.tsx`, `POIDetailContent.tsx` |
+| Web POI styles                                         | `packages/react/src/styles/owned-poi-detail.css`, `owned-poi-gallery.css`                 |
+| Web gallery behaviour                                  | `packages/react/src/components/POIMediaGallery/POIMediaGallery.tsx`                       |
+| Public cross-platform contract                         | `packages/product-contracts/src/index.ts`                                                 |
+| Public catalogue configuration                         | `apps/docs/.storybook/main.ts`, `preview.tsx`, `preview.css`                              |
+| Shared language-code controls                          | `packages/react/src/components/PlatformSnippets.tsx`                                      |
+| Public support statement                               | `apps/docs/src/platform-support.mdx`                                                      |
 
 ### Live SDK lifecycle details
 
@@ -208,15 +214,15 @@ The vendor sample contained credential-bearing material, including an embedded G
 
 ### Locations on this machine
 
-| Local item | Location |
-| --- | --- |
-| Original downloaded/extracted materials | `/private/tmp/kozmos-pointr-sdk.eTJWCz` |
-| SDK extraction | `/private/tmp/kozmos-pointr-sdk.eTJWCz/sdk/PointrKit.xcframework` |
-| MapLibre extraction | `/private/tmp/kozmos-pointr-sdk.eTJWCz/maplibre/MapLibre.xcframework` |
-| Saved QA bootstrap HTML — sensitive | `/private/tmp/kozmos-pointr-sdk.eTJWCz/websdk.html` |
-| Host copies of frameworks | `apps/PointrPlayground/.local/` |
-| Native QA configuration — sensitive | `apps/PointrPlayground/Sources/App/Resources/QAConfig.json` |
-| Generated project | `apps/PointrPlayground/KozmosPointrQA.xcodeproj` |
+| Local item                              | Location                                                              |
+| --------------------------------------- | --------------------------------------------------------------------- |
+| Original downloaded/extracted materials | `/private/tmp/kozmos-pointr-sdk.eTJWCz`                               |
+| SDK extraction                          | `/private/tmp/kozmos-pointr-sdk.eTJWCz/sdk/PointrKit.xcframework`     |
+| MapLibre extraction                     | `/private/tmp/kozmos-pointr-sdk.eTJWCz/maplibre/MapLibre.xcframework` |
+| Saved QA bootstrap HTML — sensitive     | `/private/tmp/kozmos-pointr-sdk.eTJWCz/websdk.html`                   |
+| Host copies of frameworks               | `apps/PointrPlayground/.local/`                                       |
+| Native QA configuration — sensitive     | `apps/PointrPlayground/Sources/App/Resources/QAConfig.json`           |
+| Generated project                       | `apps/PointrPlayground/KozmosPointrQA.xcodeproj`                      |
 
 The frameworks, generated project, and configuration exist at handoff and are Git-ignored. Configuration mode was verified as **0600**. Paths under `/tmp` and `/private/tmp` refer to the same temporary area on this Mac.
 
@@ -243,11 +249,11 @@ If curl reports an environment CA-file error involving `/config/certs`, `/usr/bi
 
 Do not confuse the fixture playground, current real-SDK app, and obsolete failed host.
 
-| App | Purpose | Target/bundle |
-| --- | --- | --- |
-| `apps/Playground.swiftpm` | Deterministic examples + local fixture wayfinding | Scheme `Playground`; bundle `playground.swiftpm.Playground` |
-| `apps/PointrPlayground` | Current real SDK QA app | Scheme `KozmosPointrQA`; bundle `com.kozmos.pointrqa` |
-| Old `apps/PointrPlayground.swiftpm` experiment | Replaced; do not revive | Old bundle `pointrplayground.swiftpm.KozmosPointrQA` |
+| App                                            | Purpose                                           | Target/bundle                                               |
+| ---------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------- |
+| `apps/Playground.swiftpm`                      | Deterministic examples + local fixture wayfinding | Scheme `Playground`; bundle `playground.swiftpm.Playground` |
+| `apps/PointrPlayground`                        | Current real SDK QA app                           | Scheme `KozmosPointrQA`; bundle `com.kozmos.pointrqa`       |
+| Old `apps/PointrPlayground.swiftpm` experiment | Replaced; do not revive                           | Old bundle `pointrplayground.swiftpm.KozmosPointrQA`        |
 
 ### Existing real-SDK host
 
@@ -348,17 +354,23 @@ The user's 13:35 screenshot prompted a diagnostic pass. Source and current Simul
 
 ### A. Map controls sit in the middle of useful map content
 
+**Status (Pass 1): fixed, `4061d92`.** Anchored to the trailing edge; at a tall detent a `ViewThatFits` drops zoom, then everything, instead of drawing over the search bar.
+
 `SDKMapScreen` passes `controlsPlacement: .bottom` and an HStack containing the collapsible floor selector plus zoom/compass. The result is visibly centred over POIs.
 
 Recommended fix: use the shell's existing supported placement/layout contract to anchor controls to a logical edge above the current panel, with safe-area spacing. Inspect the shared shell implementation before changing it. Verify collapsed/medium/large detents, keyboard, landscape, RTL and tablet. Avoid hard-coded screenshot coordinates.
 
 ### B. Focused marker is partly hidden by the search bar
 
+**Status (Pass 1): fixed, `7e03485`, `4061d92`, `aa4a6c0`.** Measured cause: `focusPoi` centres the anchor exactly, but the 95.2pt pin was taller than the 79.8pt band above it. The camera now centres the pin, the shell saturates its insets as React does, and a sheet change during the flight no longer strands the place off-centre.
+
 The latest live Dunkin' selection placed the top of its green marker under the search overlay. Collision insets are currently passed to the public MapLibre view, and selection calls SDK `focusPoi` directly. That is not yet sufficient proof of correct camera framing.
 
 Trace the timing/meaning of shell measurements, public SDK camera padding/inset APIs and focus operations. Do not claim a precise root cause until measured. Keep the entire selected marker visible in the unobscured region as sheet/keyboard geometry changes; use supported SDK APIs rather than repeatedly nudging the map with unexplained offsets.
 
 ### C. Native gallery needs a proper behaviour and media-policy pass
+
+**Status (Pass 1): fixed, `7b4a868`.** One index for strip, buttons and counter, including finger swipes (verified live, both directions); distinct loading, loaded and unavailable states with retry; React's layout contract. Still unverified: controlled refusal, VoiceOver, real network failure, iOS 16. The crop policy is an open question for both platforms.
 
 Source-confirmed gaps in `POIMediaGallery.swift`:
 
@@ -376,6 +388,8 @@ Do not silently delete the first SDK image because it resembles a logo, or infer
 Acceptance: initial/controlled index, buttons, touch scrolling, counter, media replacement/shrink/empty state, POI changes, RTL, narrow/wide widths, loading/failure and VoiceOver agree; parent vertical scrolling is not hijacked.
 
 ### D. Double card/sheet container
+
+**Status (Pass 1): fixed on phones, `4061d92`.** `.sheet` when docked, `.panel` when floating. On iPad the card's border draws inside the shell's floating container and breaks at the corners; who owns that chrome is an open decision.
 
 The host embeds `KozmosPOIDetailPanel` in the adaptive sheet but does not supply its sheet presentation. The default bordered card adds another rounded container inside the sheet.
 
@@ -585,4 +599,4 @@ Some older documents contain old next-step proposals or results from older snaps
 - [x] Latest gallery/control/camera/sheet defects remain open, not falsely marked fixed.
 - [x] Editing map, commands, acceptance gates and continuation prompt supplied.
 - [ ] Claude should recheck state and read applicable local project instructions before changing code.
-- [ ] Preserve/commit this handoff as appropriate before temporary-worktree cleanup; no cleanup or commit was performed by this documentation pass.
+- [x] Preserve/commit this handoff as appropriate before temporary-worktree cleanup; no cleanup or commit was performed by this documentation pass. _Committed verbatim as `21c7cbf` on `claude/pointr-browse-repairs`; the branch is not pushed._
