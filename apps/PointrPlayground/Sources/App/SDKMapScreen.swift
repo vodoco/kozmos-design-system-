@@ -21,7 +21,7 @@ struct SDKMapScreen: View {
             if let widget = session.widget {
                 KozmosAdaptiveMapShell(
                     mapLabel: "Design-QA indoor map", mapStatus: session.failure != nil ? .error : (session.status == "Ready" ? .ready : .loading),
-                    panelLabel: session.selected?.name ?? "QA places", panelPlacement: .end,
+                    panelLabel: panelLabel, panelPlacement: .end,
                     controlsPlacement: .bottom, panelDetent: $detent,
                     panelDetents: [.collapsed, .medium, .large],
                     onCollisionInsetsChange: session.setChromeInsets,
@@ -83,13 +83,33 @@ struct SDKMapScreen: View {
         }
     }
 
+    private var panelLabel: String {
+        switch session.phase {
+        case .browse: return session.selected?.name ?? "QA places"
+        case .routeSetup: return "Starting point"
+        case .routePreview: return "Route preview"
+        case .directions: return "Directions"
+        }
+    }
+
     @ViewBuilder private var panel: some View {
+        switch session.phase {
+        case .browse: browsePanel
+        case .routeSetup: routeSetupPanel
+        case .routePreview: routePreviewPanel
+        case .directions: directionsPanel
+        }
+    }
+
+    @ViewBuilder private var browsePanel: some View {
         if let poi = session.selected {
             KozmosPOIDetailPanel(
                 poi: SDKPOIAdapter.presentation(poi),
-                actionLabels: [.favourite: "Favourite", .bookmark: "Save"],
+                actionLabels: [.navigate: "Go", .favourite: "Favourite", .bookmark: "Save"],
                 onAction: { action, id in
                     switch action {
+                    case .navigate:
+                        session.startRouteSetup()
                     case .favourite:
                         if !session.favourites.insert(id).inserted { session.favourites.remove(id) }
                     case .bookmark:
@@ -118,7 +138,7 @@ struct SDKMapScreen: View {
                         .font(KozmosTypography.caption)
                     if let failure = session.failure { Text(failure).accessibilityAddTraits(.isStaticText) }
                     else if session.status != "Ready" { Text(session.status).font(KozmosTypography.footnote) }
-                    Text("Saved and favourite states are local to this session. Routing is not connected yet.")
+                    Text("Saved and favourite states are local to this session. A route starts from a place you choose: there is no live positioning in this milestone.")
                         .font(KozmosTypography.caption)
                         .foregroundStyle(.secondary)
                     KozmosPOIResultList(
@@ -131,6 +151,128 @@ struct SDKMapScreen: View {
                         emptyState: { Text("No places available for this floor or search.") })
                 }.padding(16)
             }
+        }
+    }
+}
+
+/// The three routing surfaces, composed from Kozmos parts as the fixture
+/// playground composes them. The host adds only the starting-point picker,
+/// which the playground does not need: it has an entrance to start from.
+extension SDKMapScreen {
+    private var originItems: [KozmosPOIResultListItem] {
+        session.originCandidates.enumerated().map { index, poi in
+            .init(poi: SDKPOIAdapter.presentation(poi),
+                  result: .init(poiId: poi.identifier, resultIndex: index, floorId: SDKPOIAdapter.floorId(poi.position.level)))
+        }
+    }
+
+    var routeSetupPanel: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                KozmosIconButton(iconName: "chevron.left", variant: .ghost, action: session.cancelRouteSetup)
+                    .accessibilityLabel("Back to place details")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Directions").font(KozmosTypography.headline).accessibilityAddTraits(.isHeader)
+                    Text("to \(session.selected?.name ?? "")").font(KozmosTypography.subheadline)
+                        .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(KozmosDimensions.primitivesLayoutSpacing200)
+            KozmosSearchBar(text: $session.originQuery, placeholder: "Choose a starting point")
+                .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
+            ScrollView {
+                KozmosPOIResultList(
+                    items: originItems,
+                    resultCountLabel: "\(session.originCandidates.count) places",
+                    label: "Starting points",
+                    onSelect: session.chooseOrigin,
+                    emptyState: { Text("No places match.") })
+                .padding(KozmosDimensions.primitivesLayoutSpacing200)
+            }
+            .scrollDismissesKeyboard(.interactively)
+        }
+    }
+
+    var routePreviewPanel: some View {
+        KozmosRoutePreviewPanel(
+            destinationName: session.selected?.name ?? "",
+            options: session.routeOptions,
+            status: session.routeStatus,
+            backLabel: "Back to place details",
+            continueLabel: "Show directions",
+            optionsCountLabel: session.origin.map { "\(session.routeOptions.count) routes from \($0.name)" },
+            selectedRouteAnnouncement: session.selectedRouteAnnouncement,
+            onOptionSelect: session.selectRouteOption,
+            onBack: session.endRoute,
+            onContinue: { _ in session.showDirections() },
+            statusContent: {
+                VStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                    if session.routeStatus == .calculating {
+                        KozmosSpinner()
+                        Text("Working out the way there…").font(KozmosTypography.subheadline)
+                            .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                    } else {
+                        Text(session.routeMessage ?? "").font(KozmosTypography.subheadline)
+                            .multilineTextAlignment(.center)
+                        KozmosButton("Choose another starting point", action: session.startRouteSetup)
+                    }
+                }
+            },
+            alert: { EmptyView() })
+    }
+
+    var directionsPanel: some View {
+        let route = session.selectedRoute
+        let steps = route?.steps ?? []
+        let remaining = route?.remaining(from: session.stepIndex) ?? (distanceMetres: 0, durationSeconds: 0)
+        return VStack(spacing: 0) {
+            KozmosRouteSummary(
+                etaText: "Arrive \(RouteFormat.arrival(in: remaining.durationSeconds))",
+                distanceText: "\(RouteFormat.distance(remaining.distanceMetres)) · \(RouteFormat.duration(remaining.durationSeconds)) left",
+                state: .active,
+                onEndRoute: session.endRoute
+            ) {
+                KozmosIcon("navigation-pointer-01", size: .md, color: .primary)
+            }
+            .padding(KozmosDimensions.primitivesLayoutSpacing200)
+            HStack {
+                Text("Step \(session.stepIndex + 1) of \(steps.count) · to \(session.selected?.name ?? "")")
+                    .font(KozmosTypography.subheadline).foregroundColor(KozmosColors.primitivesColorsForeground500)
+                Spacer()
+            }
+            .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
+            .padding(.bottom, KozmosDimensions.primitivesLayoutSpacing100)
+            KozmosSeparator()
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                        ForEach(steps) { step in
+                            KozmosDirectionStep(
+                                type: SDKRoutePresenter.directionType(forMessageType: step.messageType),
+                                instruction: step.message,
+                                distance: SDKRoutePresenter.distanceLabel(for: step),
+                                duration: session.stepFloorLabel(step.id))
+                            .opacity(step.id == session.stepIndex ? 1 : 0.45)
+                            .id(step.id)
+                        }
+                    }
+                    .padding(KozmosDimensions.primitivesLayoutSpacing200)
+                }
+                .onChange(of: session.stepIndex) { index in withAnimation { proxy.scrollTo(index, anchor: .center) } }
+            }
+            KozmosSeparator()
+            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                KozmosIconButton(iconName: "chevron.left", variant: .outline, isDisabled: session.stepIndex == 0,
+                                 action: session.rewindStep)
+                    .accessibilityLabel("Previous step")
+                if session.stepIndex >= steps.count - 1 {
+                    KozmosButton("Finish", action: session.endRoute).frame(maxWidth: .infinity)
+                } else {
+                    KozmosButton("Next step", action: session.advanceStep).frame(maxWidth: .infinity)
+                }
+            }
+            .padding(KozmosDimensions.primitivesLayoutSpacing200)
         }
     }
 }

@@ -84,7 +84,7 @@ enum SDKPOIAdapter {
               buildingLabel: poi.position.building?.name,
               logo: https(poi.logoUrl).map { .init(src: $0, alt: poi.name) },
               media: media(poiId: poi.identifier, name: poi.name, urls: poi.imageUrls ?? []),
-              actions: [.favourite, .bookmark])
+              actions: [.navigate, .favourite, .bookmark])
     }
 
     static func details(_ poi: PTRPoi) -> SDKPOIDetails {

@@ -155,6 +155,14 @@ final class SDKIntegrationTests: XCTestCase {
         XCTAssertEqual(result.issues, [])
     }
 
+    /// Directions arrived in Arabic, Design-QA's default, until the SDK was
+    /// asked for the visitor's language.
+    func testTheSDKIsAskedForTheVisitorsLanguage() {
+        XCTAssertEqual(SDKLanguage.preferred(Locale(identifier: "en_GB")), "en_GB")
+        XCTAssertEqual(SDKLanguage.preferred(Locale(identifier: "ja_JP")), "ja_JP")
+        XCTAssertEqual(SDKLanguage.preferred(Locale(identifier: "fr")), "fr")
+    }
+
     // MARK: Camera padding
 
     /// The shell's report at the medium detent on an iPhone 17 Pro, as logged

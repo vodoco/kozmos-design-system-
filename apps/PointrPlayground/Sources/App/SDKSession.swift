@@ -1,6 +1,7 @@
 import SwiftUI
 import PointrKit
 import Kozmos
+import MapLibre
 import os
 
 struct QAConfiguration: Decodable {
@@ -31,6 +32,18 @@ struct QAConfiguration: Decodable {
     enum ConfigurationError: Error { case missing, invalid }
 }
 
+/// The language PointrKit is asked to answer in: the visitor's, in the
+/// `language_region` form the reference says it supports. Left unset, the
+/// SDK answers in the Cloud's default — Design-QA's is Arabic, and every
+/// direction arrived that way.
+enum SDKLanguage {
+    static func preferred(_ locale: Locale = .current) -> String? {
+        guard let language = locale.language.languageCode?.identifier else { return nil }
+        if let region = locale.region?.identifier { return "\(language)_\(region)" }
+        return language
+    }
+}
+
 /// Owns SDK state at the app boundary. Kozmos never imports PointrKit.
 @MainActor
 final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, PTRMapEventsListener, PTRPoiManagerDelegate, PTRDataManagerDelegate, PTRPermissionManagerDelegate {
@@ -50,14 +63,34 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     @Published var query = ""
     @Published var saved = Set<String>()
     @Published var favourites = Set<String>()
+
+    // MARK: Routing — the flow lives in SDKRouting.swift; the state lives here.
+
+    enum Phase { case browse, routeSetup, routePreview, directions }
+    @Published var phase: Phase = .browse
+    @Published var originQuery = ""
+    @Published var origin: PTRPoi?
+    @Published var routeStatus: KozmosRouteReadiness = .idle
+    @Published var routeMessage: String?
+    @Published var quickestRoute: SDKRoute?
+    @Published var stepFreeRoute: SDKRoute?
+    @Published var selectedOptionId = SDKRoutePresenter.OptionID.quickest
+    @Published var stepIndex = 0
+    @Published var wayfindingReady = false
+    /// The SDK's routes behind the options: the map draws these.
+    var sdkRoutes: [String: PTRRoute] = [:]
+    var calculationTask: Task<Void, Never>?
+    /// Whether the map is framing the route; a pan or a pinch ends it.
+    var framesRoute = false
+
     private var configuration: QAConfiguration?
-    private let log = Logger(subsystem: "com.kozmos.pointrqa", category: "poi")
+    let log = Logger(subsystem: "com.kozmos.pointrqa", category: "poi")
     /// What the shell's chrome covers, as it last reported it.
-    private var chromeInsets = KozmosMapCollisionInsets.zero
+    var chromeInsets = KozmosMapCollisionInsets.zero
     /// Whether the selected place is still framed the way `focusPoi` leaves
     /// it. Moving the map — a pan, a pinch, a rotation, the zoom buttons —
     /// hands the camera to the visitor.
-    private var framesSelection = false
+    var framesSelection = false
     private var started = false
     private var loadingBuilding = false
     private var buildingTask: Task<Void, Never>?
@@ -81,6 +114,7 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         params.licenseKey = configuration.licenseKey
         params.mode = PointrDebugMode()
         params.loggerLevel = .error
+        params.preferredLanguage = SDKLanguage.preferred()
         Pointr.shared.start(with: params) { [weak self] state in
             Task { @MainActor in
                 guard self?.generation == requestGeneration else { return }
@@ -95,6 +129,7 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         buildingTask = nil
         widget?.removeListener(self)
         Pointr.shared.poiManager?.removeListener(self)
+        Pointr.shared.wayfindingManager?.removeListener(self)
         Pointr.shared.dataManager?.removeListener(self)
         Pointr.shared.removeListener(self)
         Pointr.shared.permissionManager?.delegate = nil
@@ -105,6 +140,8 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         selectedDetails = nil
         actionStates = [:]
         framesSelection = false
+        resetRouting()
+        wayfindingReady = false
         pois = []
         poiDataReady = false
         loadingBuilding = false
@@ -153,6 +190,8 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         widget = controller
         Pointr.shared.poiManager?.addListener(self)
         Pointr.shared.dataManager?.addListener(self)
+        Pointr.shared.wayfindingManager?.addListener(self)
+        wayfindingReady = Pointr.shared.wayfindingManager?.isReady(for: target.site) ?? false
         Pointr.shared.dataManager?.loadData(forSite: config.siteId)
         refreshPOIs()
         status = "Loading map…"
@@ -172,10 +211,15 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         // What the data did not let the card show, for whoever is testing
         // the venue's content. Place content, never configuration.
         for issue in details.issues { log.notice("\(poi.name, privacy: .public): \(issue, privacy: .public)") }
+        resetRouting()
         if let level = poi.position.level { updateLevel(level) }
         widget?.mapViewController.highlightPoi(poi)
-        // Padding first: `focusPoi` centres the place in whatever viewport
-        // the map has when it is called.
+        frame(poi)
+    }
+
+    /// Bring the camera to a place. Padding first: `focusPoi` centres the
+    /// place in whatever viewport the map has when it is called.
+    func frame(_ poi: PTRPoi) {
         applyCameraPadding(animated: false)
         framesSelection = true
         widget?.mapViewController.focusPoi(poi, shouldZoom: true)
@@ -210,11 +254,12 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         }
     }
 
-    private func clearSelection(animated: Bool) {
+    func clearSelection(animated: Bool) {
         selected = nil
         selectedDetails = nil
         actionStates = [:]
         framesSelection = false
+        resetRouting()
         widget?.mapViewController.unhighlightPoi()
         applyCameraPadding(animated: animated)
     }
@@ -231,15 +276,20 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     /// framing, so focusing with zoom never undoes their zoom.
     func setChromeInsets(_ insets: KozmosMapCollisionInsets) {
         chromeInsets = insets
-        guard applyCameraPadding(animated: false), framesSelection, let selected else { return }
-        widget?.mapViewController.focusPoi(selected, shouldZoom: true)
+        guard applyCameraPadding(animated: false) else { return }
+        if framesRoute, let route = selectedRoute {
+            fitRoute(route)
+        } else if framesSelection, let selected {
+            widget?.mapViewController.focusPoi(selected, shouldZoom: true)
+        }
     }
-    /// Returns whether the padding changed.
+    /// Returns whether the padding changed. The pin's reserve applies to a
+    /// framed place, not to a route, which is fitted to the chrome alone.
     @discardableResult
-    private func applyCameraPadding(animated: Bool) -> Bool {
+    func applyCameraPadding(animated: Bool) -> Bool {
         guard let map = widget?.mapViewController.mapLibreView else { return false }
         let inset = SDKCameraPadding.contentInset(
-            chrome: chromeInsets, mapHeight: map.bounds.height, hasSelection: selected != nil)
+            chrome: chromeInsets, mapHeight: map.bounds.height, hasSelection: selected != nil && phase == .browse)
         guard inset != map.contentInset else { return false }
         if animated {
             map.setContentInset(inset, animated: true, completionHandler: nil)
@@ -248,7 +298,7 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         }
         return true
     }
-    private func updateLevel(_ level: PTRLevel) {
+    func updateLevel(_ level: PTRLevel) {
         let changedBuilding = building?.identifier != level.building.identifier
         building = level.building
         selectedFloorId = SDKPOIAdapter.floorId(level)
@@ -256,6 +306,7 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     }
     func zoom(_ delta: Double) {
         framesSelection = false
+        framesRoute = false
         guard let map = widget?.mapViewController else { return }
         map.setZoomLevel(min(map.maximumZoomLevel, max(map.minimumZoomLevel, map.zoomLevel + delta)), animated: true)
     }
@@ -263,13 +314,13 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     // The visitor moving the map. Measured on Design-QA: a pan reports
     // `mapDidReceivePan`, a pinch `didZoom`, and a `focusPoi` flight neither.
     nonisolated func mapDidReceivePan(_ map: PTRMapViewController) {
-        Task { @MainActor in self.framesSelection = false }
+        Task { @MainActor in self.framesSelection = false; self.framesRoute = false }
     }
     nonisolated func map(_ map: PTRMapViewController, didZoom zoomValue: Double) {
-        Task { @MainActor in self.framesSelection = false }
+        Task { @MainActor in self.framesSelection = false; self.framesRoute = false }
     }
     nonisolated func mapDidReceiveSignificantRotationGesture(_ map: PTRMapViewController) {
-        Task { @MainActor in self.framesSelection = false }
+        Task { @MainActor in self.framesSelection = false; self.framesRoute = false }
     }
 
     nonisolated func map(_ map: PTRMapViewController, didReceiveTapOnFeature feature: PTRFeature) {
