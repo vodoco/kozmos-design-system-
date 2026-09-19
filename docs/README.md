@@ -9,7 +9,8 @@ these files honest are listed in its §7.
 Latest native continuation: [Claude Code handoff after Pass 3 —
 2026-09-19](claude-code-handoff-2026-09-19-pass3.md), the state of the Pointr iOS work after the
 three passes of [Astra's handoff to Claude Code](claude-code-handoff-2026-09-19.md): routing
-between two named places, measured on the simulator, and what a new session does next.
+between two named places, measured on the simulator, and what a new session does next — updated
+20 September with the [closure of Pass 3's leftovers](pointr-ios-pass3-closure-2026-09-20.md).
 
 Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
 It closes declaration-format and inert-opacity debt and migrates the temporal fields.
@@ -26,8 +27,13 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 ## Current
 
-The Pointr iOS thread, 2026-09-19, newest first:
+The Pointr iOS thread, 2026-09-19 to 2026-09-20, newest first:
 
+- `pointr-ios-pass3-closure-2026-09-20.md`: Pass 3's five leftovers closed or bounded — the SDK's
+  next-portal marker identified through MapLibre's style API, no live no-route candidate on
+  Design-QA (every `Do Not Route` is "false"), readiness measured and the not-ready state given a
+  retry, the iPad's three panels driven by a new XCUITest, VoiceOver's tree over the directions
+  read and repaired; Pass 3's Arabic finding withdrawn (the simulator's language).
 - `claude-code-handoff-2026-09-19-pass3.md`: Claude Code's handoff to a new session after Pass 3 —
   the exact Git state, the fifteen commits, routing as built and measured (Dunkin' to Airport
   Shuttles, both modes, every step), the findings, the eight open decisions, and the order of
@@ -35,7 +41,8 @@ The Pointr iOS thread, 2026-09-19, newest first:
 - `pointr-ios-pass3-2026-09-19.md`: Pass 3 — routing between two places the visitor names, on
   the Kozmos routing parts: what PointrKit's wayfinding gives as measured, the flow, one route
   step by step in both modes, the design-system gaps (no transition arrow), the findings for
-  Pointr (Design-QA answers in Arabic unless asked otherwise), and what is not done.
+  Pointr, and what is not done. Its language finding was withdrawn on 20 September: the Arabic
+  was the iPhone simulator's own first language, not a Cloud default.
 - `pointr-ios-pass2-2026-09-19.md`: Pass 2 — what Design-QA's 1,196 places actually carry, and
   the card connected to it: taxonomy chips and highlights by the web adapter's rules, contacts
   from the SDK's buttons, the venue's hours text, descriptions; six upstream findings.

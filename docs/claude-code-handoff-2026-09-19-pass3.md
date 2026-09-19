@@ -5,12 +5,19 @@ Written by Claude Code at the end of the session that did Passes 1, 2 and 3 of
 that session's context. Read this document first, then Astra's, then the pass reports it names.
 Nothing here was pushed, merged or published; no Cloud content was changed.
 
+> **Update, 20 September 2026, Claude Code:** §11 item 2 is done. The five leftovers of Pass 3
+> are closed or bounded in the [closure report](pointr-ios-pass3-closure-2026-09-20.md): the
+> SDK's marker identified, no live no-route candidate on Design-QA, the not-ready state given a
+> retry, the iPad's three panels driven by a new UI test, VoiceOver's tree read and repaired.
+> Pass 3's language finding is withdrawn (§5.5, 3). §5.5 carries each item's status, §7 two more
+> decisions, §8 the findings, §10 four more traps, §11 starts at item 3. Commits `65ddd1c`, `25629b3`, `cf75072` and the docs commit.
+
 ## 1. Exact working state
 
 | What                    | Where                                                                                                                                                                                                                     |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Implementation worktree | `/private/tmp/kozmos-browser-compat.uqPMBD`                                                                                                                                                                               |
-| Branch                  | `claude/pointr-browse-repairs`, HEAD `afa7bdf` plus the docs commit that adds this file                                                                                                                                   |
+| Branch                  | `claude/pointr-browse-repairs`, HEAD `cf75072` plus the docs commit that adds this update (20 September); `afa7bdf` plus `5a177df` and `77a78c0` was the state on the 19th                                                |
 | Cut from                | Astra's `astra/browser-compatibility` at `663cde1`, itself 33 commits past `origin/main` (`a02a008`)                                                                                                                      |
 | Pushed                  | **Nothing.** Neither branch exists on the remote. "ok proceed" authorised work, never a push.                                                                                                                             |
 | Main checkout           | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev` at `a02a008` on `main`, clean but for one untracked pointer file, `docs/claude-code-handoff-2026-09-19.md`, which points into the worktree                     |
@@ -40,23 +47,28 @@ The web examples and the pinned taxonomy 10.12.0 projection are the reference fo
 
 ## 3. The commits on the branch, oldest first
 
-| Commit    | Pass  | What                                                                             |
-| --------- | ----- | -------------------------------------------------------------------------------- |
-| `21c7cbf` | —     | Astra's handoff preserved verbatim                                               |
-| `7e03485` | 1     | Shared shell saturates its opposing insets at the map's size                     |
-| `4061d92` | 1     | Map controls anchored; selected pin kept in view; sheet presentation             |
-| `aa4a6c0` | 1     | A selected place stays framed when the sheet settles mid-flight                  |
-| `7b4a868` | 1     | POI gallery: one index for strip, buttons and counter; real states               |
-| `dc7b78d` | 1     | Pass 1 report                                                                    |
-| `214ca2f` | audit | Shell lays chrome out beside a floating panel, not under it (iPad)               |
-| `10d3b65` | audit | CI runs the gallery and shell suites on the simulator                            |
-| `191c6b4` | audit | Credentialled artwork addresses refused before the card sees them                |
-| `bf9fd7d` | audit | Audit docs and the two measurement tools                                         |
-| `43d6793` | 2     | Taxonomy projection generated for iOS from the web examples' JSON, checked in CI |
-| `ac09652` | 2     | `TaxonomyPresenter`, a rule-for-rule port of the web adapter, with tests         |
-| `a8de911` | 2     | The card gets a place's live data: taxonomy, contacts, hours, description        |
-| `87f2e64` | 2     | Pass 2 report                                                                    |
-| `afa7bdf` | 3     | Routing between two named places on the Kozmos routing parts; the SDK's language |
+| Commit    | Pass  | What                                                                                   |
+| --------- | ----- | -------------------------------------------------------------------------------------- |
+| `21c7cbf` | —     | Astra's handoff preserved verbatim                                                     |
+| `7e03485` | 1     | Shared shell saturates its opposing insets at the map's size                           |
+| `4061d92` | 1     | Map controls anchored; selected pin kept in view; sheet presentation                   |
+| `aa4a6c0` | 1     | A selected place stays framed when the sheet settles mid-flight                        |
+| `7b4a868` | 1     | POI gallery: one index for strip, buttons and counter; real states                     |
+| `dc7b78d` | 1     | Pass 1 report                                                                          |
+| `214ca2f` | audit | Shell lays chrome out beside a floating panel, not under it (iPad)                     |
+| `10d3b65` | audit | CI runs the gallery and shell suites on the simulator                                  |
+| `191c6b4` | audit | Credentialled artwork addresses refused before the card sees them                      |
+| `bf9fd7d` | audit | Audit docs and the two measurement tools                                               |
+| `43d6793` | 2     | Taxonomy projection generated for iOS from the web examples' JSON, checked in CI       |
+| `ac09652` | 2     | `TaxonomyPresenter`, a rule-for-rule port of the web adapter, with tests               |
+| `a8de911` | 2     | The card gets a place's live data: taxonomy, contacts, hours, description              |
+| `87f2e64` | 2     | Pass 2 report                                                                          |
+| `afa7bdf` | 3     | Routing between two named places on the Kozmos routing parts; the SDK's language       |
+| `5a177df` | 3     | This handoff, first version                                                            |
+| `77a78c0` | 3     | Pass 3 report                                                                          |
+| `65ddd1c` | close | The not-ready state retries, readiness retries by itself; language and readiness logs  |
+| `25629b3` | close | A step reads as one element, the arrow silent; the current step selected and announced |
+| `cf75072` | close | The routing flow as a UI test on any simulator, the tree attached                      |
 
 Reports: [Pass 1](pointr-ios-pass1-2026-09-19.md) (its "Change it yourself" section is the
 operator's guide to the host), [Pass 2](pointr-ios-pass2-2026-09-19.md). [Pass 3](pointr-ios-pass3-2026-09-19.md), written after this handoff from §5 below.
@@ -139,6 +151,8 @@ From Astra's handoff, and from Olcay's rules. None has been relaxed.
   `language_region` (`SDKLanguage.preferred()`). Before this, every instruction arrived in
   **Arabic**, Design-QA's Cloud default; after it, in English. The user manager's own
   `preferredLanguage` (device-stored, needs a user session) is not used.
+  _Corrected 20 September: the Arabic was the iPhone simulator's own first language, not a
+  Cloud default; the iPad, asked for no language, answered in English (closure report §6)._
 
 ### 5.4 Measured on the iPhone 17 Pro simulator (iOS 26.5), Terminal B
 
@@ -182,8 +196,9 @@ and the place framed; English messages after the language change. The quickest r
 2. **Granularity differs by mode.** The normal-mode route carried only transitions and the
    destination (4 steps); the accessible one carried the turns as well (10). Whether that is
    SDK behaviour or venue data is a question for Pointr.
-3. **Design-QA answers in Arabic unless asked otherwise.** Recorded for Pointr; the host now
-   asks in the device's language.
+3. ~~**Design-QA answers in Arabic unless asked otherwise.** Recorded for Pointr; the host now
+   asks in the device's language.~~ _Withdrawn 20 September: the simulator's first language,
+   not the Cloud's; the host asks for the app's language, which stays right._
 4. **The top search bar stays in every phase**, bound to the browse query. Whether to hide or
    repurpose it during routing is a product question (the fixture playground was not checked
    for this).
@@ -191,20 +206,32 @@ and the place framed; English messages after the language change. The quickest r
    Origins are limited to the current building, calculation is synchronous and takes
    milliseconds, and no unroutable place was tried. They are covered by the presenter tests
    and by inspection only. Design-QA has a `Do Not Route` CMS key; a place carrying it is the
-   candidate for a live no-route case.
+   candidate for a live no-route case. _20 September: no candidate — every `Do Not Route` on the
+   site is the string "false", and Silver Line, one of the 38 places carrying it, routes (213 m);
+   closure report §2._
 6. **Readiness is not gating Go.** `wayfindingReady` is tracked but the button is always
    enabled; an early Go shows the not-ready message with "Choose another starting point",
-   which is the wrong recovery for that case (a retry would be right).
+   which is the wrong recovery for that case (a retry would be right). _20 September: fixed —
+   the state offers Try again, and readiness arriving while it shows retries by itself;
+   readiness came 240–330 ms after the building loaded on every launch, before any place could
+   be selected. Go still does not wait: decision 8, now with numbers; closure report §3._
 7. **The floor name travels in `KozmosDirectionStep`'s duration slot** ("58 m • Second
    Floor"). The component has no floor slot; a gap to report, not a defect.
 8. **An SDK marker appears on the current step.** After Show directions a navy marker with a
    "●>○" glyph sat on the elevator step. The host draws no markers; identify it (route
    step or transition marker of `PTRMapViewController`) before styling anything around it.
+   _20 September: identified — PointrKit's next-portal marker, style layer
+   `custom-ptrlayer_symbol_next-portal_ptr_ptr`, its icon named after the portal's kind
+   (`wf-custom-transition` is the glyph, `wf-lift-down` a lift); no public API touches it;
+   closure report §1._
 9. **The remaining figures are step sums.** "201 m · 4 min left" sums the steps from the
    current one; the steps sum to within a metre and two seconds of the route totals here.
 10. **Not verified at all:** iPad (the three panels in the floating panel), Dynamic Type,
     RTL, VoiceOver (non-current steps are dimmed to 45 % with no trait), dark mode, iOS 18.4
-    for the QA app, real network failure, cancellation.
+    for the QA app, real network failure, cancellation. _20 September: the iPad's three panels
+    are driven and captured by the UI test (closure report §4); VoiceOver's tree was read, the
+    steps made one element each with the arrow silent and the current one selected and announced
+    (§5) — a session by ear is still owed. The rest stands._
 
 ### 5.6 Acceptance gates of Astra's §10, Pass 3
 
@@ -230,6 +257,9 @@ and the place framed; English messages after the language change. The quickest r
 | Package suites (`node scripts/check-ios-poi.mjs`, iOS 18.4 and 26.5 full runs)                | Last run after the Pass 1 audit; **not re-run after Passes 2–3**, which changed no package source |
 | Live walk-through                                                                             | As §5.4; iPhone only                                                                              |
 
+_20 September: the closure report's §8 has the runs after the leftovers — the QA app's unit tests,
+the UI test on both simulators, and the package suites re-run after the package change._
+
 ## 7. Open decisions for Olcay
 
 Unchanged from the earlier passes:
@@ -244,7 +274,16 @@ New from Pass 3:
 
 6. Extend `DirectionType` (iOS and web) with transition kinds, or accept the straight arrow.
 7. The top search bar during routing (§5.5, 4).
-8. Whether Go waits for wayfinding readiness (§5.5, 6).
+8. Whether Go waits for wayfinding readiness (§5.5, 6). _Measured 20 September: readiness
+   arrives 240–330 ms after the building loads, before the place list; the not-ready state
+   now retries (closure report §3)._
+
+New from the closure of Pass 3, 20 September:
+
+9. Whether the SDK's next-portal marker should be hidden or restyled through MapLibre's style
+   API, which PointrKit does not document as a surface (closure report §1).
+10. The preview's option cards: 208pt each, the second cut at the panel's edge on the phone and
+    the iPad alike (closure report §4).
 
 ## 8. Upstream findings for Pointr
 
@@ -252,7 +291,10 @@ From Pass 2: hours live in two CMS text keys and the taxonomy's `openingHours` i
 order of `PTRPoiDaySchedule` is undocumented; `Payment Options` is prose, not `paymentMethods`;
 `unitNumber` and category strings sit outside the taxonomy; keywords are pipe-joined search
 terms; some descriptions repeat the name. From Pass 3: the Cloud default language on Design-QA is
-Arabic; the normal-mode route drops turn instructions; both are in §5.5.
+Arabic (withdrawn 20 September: the simulator's own language); the normal-mode route drops turn
+instructions; both are in §5.5. From 20 September: `Do Not Route` arrives as the string "false"
+on 38 kerbside places and is never true; two places named "Airport Shuttles" on Terminal B's
+First Floor; "Dunkin' " carries a trailing space.
 
 ## 9. Running and checking it
 
@@ -290,6 +332,14 @@ xcrun simctl spawn 51937B59-CEAE-4BC7-BC34-FEB17E28FAE7 log show --predicate 'su
 xcrun simctl spawn 51937B59-CEAE-4BC7-BC34-FEB17E28FAE7 log stream --predicate 'subsystem == "com.kozmos.pointrqa"' --level debug --style compact
 ```
 
+The routing flow on any simulator, the iPad included, with a screenshot and the accessibility
+tree of each panel in the result bundle (`xcrun xcresulttool export attachments --path … --output-path …`);
+the named places are optional, and the environment must be exported, not appended:
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD/apps/PointrPlayground && TEST_RUNNER_KOZMOS_QA_DESTINATION="Airport Shuttles" TEST_RUNNER_KOZMOS_QA_ORIGIN="Dunkin" xcodebuild -project KozmosPointrQA.xcodeproj -scheme KozmosPointrQAUI -destination "platform=iOS Simulator,id=1CB35135-48B2-407B-8515-C8C6EFC1D963" -derivedDataPath /private/tmp/kozmos-pointr-qa-xcode -resultBundlePath /private/tmp/kozmos-pointr-ui.xcresult CODE_SIGNING_ALLOWED=NO test 2>&1 | grep -E "QA-FLOW|Test Case .* (passed|failed)|TEST (SUCCEEDED|FAILED)"
+```
+
 Repo gates after host changes: `pnpm tokens:raw:check`, `pnpm components:contract:check`.
 After package changes: `node scripts/check-ios-poi.mjs` and the two full `xcodebuild test` runs
 in Astra's §11. The Pass 1 report's "Change it yourself" has the rest.
@@ -308,14 +358,25 @@ in Astra's §11. The Pass 1 report's "Change it yourself" has the rest.
 - Edits to `.github/workflows/*` trip a security hook in this tool; apply with a script.
 - `lint-staged` prints "No staged files match any configured task" on Swift-only commits; normal.
 - The tuple `?? (0, 0)` loses its labels; write `?? (distanceMetres: 0, durationSeconds: 0)`.
+- A `KEY=value` after `xcodebuild` is a build setting; environment for a test runner is exported
+  before the command as `TEST_RUNNER_KEY=value`.
+- XCUITest's snapshot lists what SwiftUI hides (`.accessibilityHidden`) and ignores
+  (`.accessibilityElement(children: .ignore)`): absence cannot be asserted there. A hosted view's
+  UIKit accessibility API reaches no SwiftUI element in a unit test either.
+- The iPhone 17 Pro simulator's first language is Arabic (`AppleLanguages` ar, en-GB); an
+  English app runs as `en_SA` and shows nothing of it. Read the device's languages before
+  blaming a backend for the language it answers in.
+- The simulator tool's `inspect` was unavailable and the iPad had no device grant; XCUITest needs
+  neither, and `xcrun simctl io <udid> screenshot` works on any booted simulator.
 
 ## 11. What to do next, in order
 
 1. **The Pass 3 report** — done: [pointr-ios-pass3-2026-09-19.md](pointr-ios-pass3-2026-09-19.md),
    with the index, the log and Astra's §10 pointing at it.
-2. **Close Pass 3's own leftovers** (§5.5): identify the SDK step marker; try a `Do Not Route`
-   place for a live no-route; gate Go on readiness or give the not-ready state a retry; check
-   the three panels on the iPad; a VoiceOver pass over the directions list.
+2. **Close Pass 3's own leftovers** (§5.5) — done, 20 September:
+   [pointr-ios-pass3-closure-2026-09-20.md](pointr-ios-pass3-closure-2026-09-20.md). The marker
+   identified; no live no-route candidate; the not-ready state retries; the iPad driven by the
+   UI test; VoiceOver's tree repaired, a session by ear still owed.
 3. **Handoff items F and G** (Astra's §8): search lifecycle with the keywords the places carry;
    floor certification (the building follows the map's level callbacks — observed, not proven).
 4. **Pass 4** (Astra's §10): VoiceOver, Dynamic Type, RTL, iPad and landscape, iOS 16.6 minimum,
@@ -327,7 +388,7 @@ in Astra's §11. The Pass 1 report's "Change it yourself" has the rest.
 > Continue the Pointr iOS work. Read `docs/claude-code-handoff-2026-09-19-pass3.md` in the
 > worktree `/private/tmp/kozmos-browser-compat.uqPMBD` (branch `claude/pointr-browse-repairs`),
 > then Astra's `docs/claude-code-handoff-2026-09-19.md` and the Pass 1 and 2 reports. Confirm
-> the Git state first. Start with §11 item 1. Nothing is to be pushed.
+> the Git state first. Start with §11 item 3. Nothing is to be pushed.
 
 ## 13. Checklist
 
@@ -339,3 +400,5 @@ in Astra's §11. The Pass 1 report's "Change it yourself" has the rest.
 - [x] The five older decisions carried forward unchanged; three new ones added.
 - [x] Docs index, the log and Astra's handoff updated in the same commit as this file; the
       memory pointer and the main checkout's pointer file alongside.
+- [x] 20 September: Pass 3's leftovers closed or bounded; the language finding withdrawn where
+      it was stated; the closure report indexed and logged.

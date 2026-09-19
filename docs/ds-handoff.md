@@ -746,7 +746,7 @@ outline button, a destructive shade, colour scopes for text, strokes and icons, 
 dashboard's v9 library publishes only `listItem`, and ~228 PDS / Pointr bindings still pointing at
 the unpublished "Primitive Tokens" collection.
 
-## 10 · The log, 2026-09-13 to 2026-09-19
+## 10 · The log, 2026-09-13 to 2026-09-20
 
 ### 2026-09-13
 
@@ -1182,10 +1182,28 @@ preview offers them as Quickest and Step-free with the routes' own time and dist
 directions are stepped by hand, the map following each step's level and position. Measured
 live: Dunkin' to Airport Shuttles, 200 m and 213 s in both modes, 4 steps against 10, the
 elevator on both, the floor pill following the level change, Finish returning to the card.
-Two findings: Design-QA answers in Arabic unless the SDK is asked for the device's language,
-which it now is; and the four Kozmos direction arrows have no transition form, so an elevator
+Two findings: the directions arrived in Arabic until the SDK was asked for the app's language
+(withdrawn 2026-09-20: the iPhone simulator's own first language, not a Cloud default); and the
+four Kozmos direction arrows have no transition form, so an elevator
 or a walkway keeps the SDK's words under a straight arrow — a design-system gap, not a host
 patch. 41 tests in the app. Next: the pass's leftovers, then F, G and Pass 4.
+
+### 2026-09-20 · Pointr iOS: Pass 3's leftovers closed (Claude Code)
+
+`pointr-ios-pass3-closure-2026-09-20.md`, commits `65ddd1c`, `25629b3`, `cf75072`. The marker on the current
+step is PointrKit's next-portal marker, read through MapLibre's public style API: one point
+feature at the next transition's node, its icon named after the kind (`wf-custom-transition`,
+`wf-lift-down`), no public API to it. No live no-route case: all 38 `Do Not Route` values on the
+site are the string "false" and Silver Line routes. Readiness measured on eight launches, 240–330
+ms after the building loads; the not-ready state now offers Try again and retries by itself when
+readiness arrives, no route keeps "Choose another starting point". A new XCUITest drives the
+routing flow on any simulator — the iPad included, which the desktop tool cannot — and attaches
+each panel's screenshot and accessibility tree. VoiceOver got each step as three loose elements
+with the arrow reading "Up" or "Remove Map Pin"; a step is now one element, the summary's icon
+silent, the current step selected and announced. Withdrawn: Pass 3's "Design-QA answers in
+Arabic" — the iPhone simulator's first language is Arabic, the iPad asked for nothing got English.
+Also found: the building at launch varies (item G), two "Airport Shuttles" on one floor. Next: F,
+G, Pass 4.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

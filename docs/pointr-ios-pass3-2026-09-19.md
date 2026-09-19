@@ -36,6 +36,11 @@ Read from the 10.3.0 headers and confirmed on Design-QA before the surfaces were
   of the first live route did. `PTRParams.preferredLanguage`, in the `language_region` form the
   reference names, is now set from the device locale, and the instructions arrived in English.
   The user manager's device-stored `preferredLanguage` needs a user session and is not used.
+  _Corrected 20 September 2026: the Arabic was the iPhone simulator's own first language
+  (`AppleLanguages` ar, en-GB), not the Cloud's default — the iPad, asked for no language,
+  answered in English. The setting stays, as the app's language rather than the device's; the
+  finding for Pointr below is withdrawn. See the
+  [closure report](pointr-ios-pass3-closure-2026-09-20.md)._
 - **Message types seen live:** 3 Turn Left, 4 Turn Right, 6 Turn Slightly Left, 7 Turn Slightly
   Right, 9 an elevator transition, 11 a corridor or walkway transition, 13 Destination. Every
   transition on the routes tried was `wayfinding-network/custom-transition` with `isAccessible`
@@ -148,8 +153,10 @@ Astra's §10 gates for this pass:
 
 ## Findings for Pointr, for §9's list
 
-1. **Design-QA's default language is Arabic.** Every instruction arrives in Arabic unless the
-   SDK is asked otherwise; nothing in the quick-start says so.
+1. ~~**Design-QA's default language is Arabic.** Every instruction arrives in Arabic unless the
+   SDK is asked otherwise; nothing in the quick-start says so.~~ _Withdrawn 20 September 2026:
+   the simulator's first language was Arabic; PointrKit followed it, as it followed English on
+   the iPad. Not a finding for Pointr._
 2. **The normal-mode route drops the turns.** 4 steps against the accessible route's 10, and 2
    against 6, on the same paths: only transitions and the destination remain. Whether that is
    the SDK or the venue's wayfinding data is Pointr's to say.
