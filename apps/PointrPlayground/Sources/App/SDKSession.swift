@@ -47,6 +47,10 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     private var configuration: QAConfiguration?
     /// What the shell's chrome covers, as it last reported it.
     private var chromeInsets = KozmosMapCollisionInsets.zero
+    /// Whether the selected place is still framed the way `focusPoi` leaves
+    /// it. Moving the map — a pan, a pinch, a rotation, the zoom buttons —
+    /// hands the camera to the visitor.
+    private var framesSelection = false
     private var started = false
     private var loadingBuilding = false
     private var buildingTask: Task<Void, Never>?
@@ -157,7 +161,8 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         // Padding first: `focusPoi` centres the place in whatever viewport
         // the map has when it is called.
         applyCameraPadding(animated: false)
-        widget?.mapViewController.focusPoi(poi)
+        framesSelection = true
+        widget?.mapViewController.focusPoi(poi, shouldZoom: true)
     }
     func closeSelection() { clearSelection(animated: true) }
     func selectFloor(_ id: String) {
@@ -169,27 +174,39 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     }
     private func clearSelection(animated: Bool) {
         selected = nil
+        framesSelection = false
         widget?.mapViewController.unhighlightPoi()
         applyCameraPadding(animated: animated)
     }
 
-    /// The shell reports its chrome after every settled layout change. The
-    /// map keeps its centre coordinate across a padding change, so a selected
-    /// place stays framed as the sheet, keyboard or window moves.
+    /// The shell reports its chrome after every settled layout change: the
+    /// sheet, the keyboard, the window.
+    ///
+    /// A padding change re-centres the map on whatever is at its centre, and
+    /// cancels a camera move in flight. Measured: the sheet settling while
+    /// `focusPoi` was flying ended the flight at its starting zoom, and the
+    /// place was left off-centre. Until the visitor moves the map, a selected
+    /// place is focused again in the new viewport instead. The visitor can only
+    /// change the zoom by pinching or with the buttons, and either ends the
+    /// framing, so focusing with zoom never undoes their zoom.
     func setChromeInsets(_ insets: KozmosMapCollisionInsets) {
         chromeInsets = insets
-        applyCameraPadding(animated: false)
+        guard applyCameraPadding(animated: false), framesSelection, let selected else { return }
+        widget?.mapViewController.focusPoi(selected, shouldZoom: true)
     }
-    private func applyCameraPadding(animated: Bool) {
-        guard let map = widget?.mapViewController.mapLibreView else { return }
+    /// Returns whether the padding changed.
+    @discardableResult
+    private func applyCameraPadding(animated: Bool) -> Bool {
+        guard let map = widget?.mapViewController.mapLibreView else { return false }
         let inset = SDKCameraPadding.contentInset(
             chrome: chromeInsets, mapHeight: map.bounds.height, hasSelection: selected != nil)
-        guard inset != map.contentInset else { return }
+        guard inset != map.contentInset else { return false }
         if animated {
             map.setContentInset(inset, animated: true, completionHandler: nil)
         } else {
             map.contentInset = inset
         }
+        return true
     }
     private func updateLevel(_ level: PTRLevel) {
         let changedBuilding = building?.identifier != level.building.identifier
@@ -198,8 +215,21 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         if changedBuilding { refreshPOIs() }
     }
     func zoom(_ delta: Double) {
+        framesSelection = false
         guard let map = widget?.mapViewController else { return }
         map.setZoomLevel(min(map.maximumZoomLevel, max(map.minimumZoomLevel, map.zoomLevel + delta)), animated: true)
+    }
+
+    // The visitor moving the map. Measured on Design-QA: a pan reports
+    // `mapDidReceivePan`, a pinch `didZoom`, and a `focusPoi` flight neither.
+    nonisolated func mapDidReceivePan(_ map: PTRMapViewController) {
+        Task { @MainActor in self.framesSelection = false }
+    }
+    nonisolated func map(_ map: PTRMapViewController, didZoom zoomValue: Double) {
+        Task { @MainActor in self.framesSelection = false }
+    }
+    nonisolated func mapDidReceiveSignificantRotationGesture(_ map: PTRMapViewController) {
+        Task { @MainActor in self.framesSelection = false }
     }
 
     nonisolated func map(_ map: PTRMapViewController, didReceiveTapOnFeature feature: PTRFeature) {
