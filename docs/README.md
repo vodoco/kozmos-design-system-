@@ -6,9 +6,10 @@ these files honest are listed in its §7.
 
 ## Start here
 
-Latest native continuation: [Pointr iOS Pass 1 — 2026-09-19](pointr-ios-pass1-2026-09-19.md),
-the first pass of [Astra's handoff to Claude Code](claude-code-handoff-2026-09-19.md): map
-controls, the selected marker, the native gallery and the sheet card, measured in the simulator.
+Latest native continuation: [Claude Code handoff after Pass 3 —
+2026-09-19](claude-code-handoff-2026-09-19-pass3.md), the state of the Pointr iOS work after the
+three passes of [Astra's handoff to Claude Code](claude-code-handoff-2026-09-19.md): routing
+between two named places, measured on the simulator, and what a new session does next.
 
 Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
 It closes declaration-format and inert-opacity debt and migrates the temporal fields.
@@ -27,6 +28,10 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 The Pointr iOS thread, 2026-09-19, newest first:
 
+- `claude-code-handoff-2026-09-19-pass3.md`: Claude Code's handoff to a new session after Pass 3 —
+  the exact Git state, the fifteen commits, routing as built and measured (Dunkin' to Airport
+  Shuttles, both modes, every step), the findings, the eight open decisions, and the order of
+  what comes next. Read first.
 - `pointr-ios-pass2-2026-09-19.md`: Pass 2 — what Design-QA's 1,196 places actually carry, and
   the card connected to it: taxonomy chips and highlights by the web adapter's rules, contacts
   from the SDK's buttons, the venue's hours text, descriptions; six upstream findings.

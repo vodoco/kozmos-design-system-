@@ -1173,6 +1173,20 @@ cannot; hours are the venue's text and say so. Structured hours are not rendered
 documents no day order. 31 tests in the app; Dunkin', Boston AMERICA! and a Terminal E lounge
 checked live. Next: routing (Pass 3), and the six upstream findings for Pointr.
 
+### 2026-09-19 · Pointr iOS Pass 3 (Claude Code)
+
+Routing, `afa7bdf`; the record is §5 of `claude-code-handoff-2026-09-19-pass3.md` until the
+pass report is written. Go on the card opens a starting-point picker over the building's
+places; the SDK calculates a normal and an accessible route, synchronously, in 15–77 ms; the
+preview offers them as Quickest and Step-free with the routes' own time and distance; the
+directions are stepped by hand, the map following each step's level and position. Measured
+live: Dunkin' to Airport Shuttles, 200 m and 213 s in both modes, 4 steps against 10, the
+elevator on both, the floor pill following the level change, Finish returning to the card.
+Two findings: Design-QA answers in Arabic unless the SDK is asked for the device's language,
+which it now is; and the four Kozmos direction arrows have no transition form, so an elevator
+or a walkway keeps the SDK's words under a straight arrow — a design-system gap, not a host
+patch. 41 tests in the app. Next: the Pass 3 report, then F, G and Pass 4.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

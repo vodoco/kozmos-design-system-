@@ -7,6 +7,8 @@ Prepared 19 September 2026, Europe/London. This is a continuation guide, not a r
 > measured in the simulator; the evidence, and what is still unverified, is in the
 > [Pass 1 report](pointr-ios-pass1-2026-09-19.md). E, F, G and Passes 2–4 have not started. The
 > rest of this document is Astra's handover, with status notes where Pass 1 changed it.
+> The state after all three passes, and what a new session does next, is in
+> [`claude-code-handoff-2026-09-19-pass3.md`](claude-code-handoff-2026-09-19-pass3.md).
 
 ## 1. Read this first
 
@@ -459,6 +461,8 @@ Do not change Cloud values to make the UI look good. Build fixture cases for spa
 Establish SDK property schema and adapter tests, then render real taxonomy facts using the existing presentation contract. Test one/two/three/more-than-three facts, missing/zero/false/invalid values, icon/text-only values, different venue categories and long localized labels. Document any upstream ambiguity instead of inventing a schema.
 
 ### Pass 3 — actual routing
+
+**Status: built on 19 September 2026, `afa7bdf`**, recorded in §5 of the [handoff after Pass 3](claude-code-handoff-2026-09-19-pass3.md) until its report exists. Two calculations per request (normal and accessible), the routes' own time and distance, hand-stepped directions with the map following each step's level; verified live on a two-floor route. Loading, failure, no-route and cancellation are coded and unit-tested, not exercised live. Two findings: the SDK must be asked for the device's language (Design-QA defaults to Arabic), and `DirectionType` has no transition arrow.
 
 Use the SDK's documented route APIs with an explicit origin/destination. Wire Kozmos route-input, preview, summary and instruction components. Cover calculation/loading/failure/no route, accessibility options, cancellation, multi-floor changes and return to POI browsing. Route time/distance must come from the actual route. Do not label fixture wayfinding as live navigation.
 
