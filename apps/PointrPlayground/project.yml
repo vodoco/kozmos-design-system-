@@ -50,6 +50,16 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kozmos.pointrqa.tests
         GENERATE_INFOPLIST_FILE: YES
+  KozmosPointrQAUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: KozmosPointrQA
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kozmos.pointrqa.uitests
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   KozmosPointrQA:
     build:
@@ -57,3 +67,11 @@ schemes:
         KozmosPointrQA: all
     test:
       targets: [KozmosPointrQATests]
+  # Live, on the simulator, against Design-QA: kept out of the unit scheme.
+  KozmosPointrQAUI:
+    build:
+      targets:
+        KozmosPointrQA: all
+        KozmosPointrQAUITests: [test]
+    test:
+      targets: [KozmosPointrQAUITests]
