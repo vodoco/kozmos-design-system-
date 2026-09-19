@@ -45,6 +45,11 @@ public struct KozmosPOIDetailPanel: View {
     private let closeLabel: String
     private let mediaLabel: String
     private let mediaPositionLabel: (Int, Int) -> String
+    private let mediaPreviousLabel: String
+    private let mediaNextLabel: String
+    private let mediaUnavailableLabel: String
+    private let mediaControlsLabel: String?
+    private let mediaRetryHint: String
     private let accessRestrictionsHeading: String
     private let servicesHeading: String
     private let readMoreLabel: String
@@ -66,6 +71,11 @@ public struct KozmosPOIDetailPanel: View {
         closeLabel: String = "Close details",
         mediaLabel: String? = nil,
         mediaPositionLabel: @escaping (Int, Int) -> String = { "Image \($0) of \($1)" },
+        mediaPreviousLabel: String = "Previous image",
+        mediaNextLabel: String = "Next image",
+        mediaUnavailableLabel: String = "Image unavailable",
+        mediaControlsLabel: String? = nil,
+        mediaRetryHint: String = "Double-tap to try again",
         accessRestrictionsHeading: String = "Access restrictions",
         servicesHeading: String = "Service options",
         presentation: Presentation = .inline,
@@ -82,6 +92,9 @@ public struct KozmosPOIDetailPanel: View {
         self.onAction = onAction; self.actionStates = actionStates; self.onClose = onClose
         self.closeLabel = closeLabel; self.mediaLabel = mediaLabel ?? "\(poi.name) photos"
         self.mediaPositionLabel = mediaPositionLabel
+        self.mediaPreviousLabel = mediaPreviousLabel; self.mediaNextLabel = mediaNextLabel
+        self.mediaUnavailableLabel = mediaUnavailableLabel; self.mediaControlsLabel = mediaControlsLabel
+        self.mediaRetryHint = mediaRetryHint
         self.accessRestrictionsHeading = accessRestrictionsHeading; self.servicesHeading = servicesHeading
         self.presentation = presentation; self.titleLevel = titleLevel
         self.supplementaryActionStates = supplementaryActionStates
@@ -134,7 +147,11 @@ public struct KozmosPOIDetailPanel: View {
                             .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                             .accessibilityLabel("\(accessRestrictionsHeading), \(label)")
                     }
-                    KozmosPOIMediaGallery(media: poi.media, label: mediaLabel, positionLabel: mediaPositionLabel)
+                    KozmosPOIMediaGallery(
+                        media: poi.media, label: mediaLabel, positionLabel: mediaPositionLabel,
+                        previousLabel: mediaPreviousLabel, nextLabel: mediaNextLabel,
+                        controlsLabel: mediaControlsLabel, unavailableLabel: mediaUnavailableLabel,
+                        loadingLabel: loadingLabel, retryHint: mediaRetryHint)
                     if let services = poi.services, !services.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(servicesHeading).font(KozmosTypography.footnote)
