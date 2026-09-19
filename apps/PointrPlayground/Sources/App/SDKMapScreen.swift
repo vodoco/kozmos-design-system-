@@ -106,7 +106,9 @@ struct SDKMapScreen: View {
                 // and grab handle. The card's own bordered card inside it was
                 // a second container.
                 presentation: horizontalSizeClass == .regular ? .panel : .sheet,
-                details: SDKPOIAdapter.details(poi))
+                details: session.selectedDetails?.presentation ?? .init(),
+                supplementaryActionStates: session.actionStates,
+                onSupplementaryAction: session.perform(action:poiId:))
         } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
@@ -116,7 +118,7 @@ struct SDKMapScreen: View {
                         .font(KozmosTypography.caption)
                     if let failure = session.failure { Text(failure).accessibilityAddTraits(.isStaticText) }
                     else if session.status != "Ready" { Text(session.status).font(KozmosTypography.footnote) }
-                    Text("Saved and favourite states are local to this session. Routing and taxonomy highlights are not connected yet.")
+                    Text("Saved and favourite states are local to this session. Routing is not connected yet.")
                         .font(KozmosTypography.caption)
                         .foregroundStyle(.secondary)
                     KozmosPOIResultList(

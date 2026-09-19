@@ -1,6 +1,7 @@
 import SwiftUI
 import PointrKit
 import Kozmos
+import os
 
 struct QAConfiguration: Decodable {
     let baseUrl: String
@@ -39,12 +40,18 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     @Published private(set) var building: PTRBuilding?
     @Published private(set) var pois: [PTRPoi] = []
     @Published private(set) var selected: PTRPoi?
+    /// The selected place mapped for the card, with the contact addresses the
+    /// host keeps and the diagnostics it logs.
+    @Published private(set) var selectedDetails: SDKPOIDetails?
+    /// What the card shows on a contact action after it was tried.
+    @Published private(set) var actionStates: [String: KozmosPOIActionState] = [:]
     @Published private(set) var selectedFloorId = ""
     @Published private(set) var poiDataReady = false
     @Published var query = ""
     @Published var saved = Set<String>()
     @Published var favourites = Set<String>()
     private var configuration: QAConfiguration?
+    private let log = Logger(subsystem: "com.kozmos.pointrqa", category: "poi")
     /// What the shell's chrome covers, as it last reported it.
     private var chromeInsets = KozmosMapCollisionInsets.zero
     /// Whether the selected place is still framed the way `focusPoi` leaves
@@ -95,6 +102,8 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         widget = nil
         building = nil
         selected = nil
+        selectedDetails = nil
+        actionStates = [:]
         framesSelection = false
         pois = []
         poiDataReady = false
@@ -157,6 +166,12 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
 
     func select(_ poi: PTRPoi) {
         selected = poi
+        let details = SDKPOIAdapter.details(poi)
+        selectedDetails = details
+        actionStates = [:]
+        // What the data did not let the card show, for whoever is testing
+        // the venue's content. Place content, never configuration.
+        for issue in details.issues { log.notice("\(poi.name, privacy: .public): \(issue, privacy: .public)") }
         if let level = poi.position.level { updateLevel(level) }
         widget?.mapViewController.highlightPoi(poi)
         // Padding first: `focusPoi` centres the place in whatever viewport
@@ -173,8 +188,32 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         clearSelection(animated: false)
         widget?.mapViewController.showLevel(level, shouldZoomToLevel: true)
     }
+    /// A contact action from the card. The address was validated when the
+    /// place was mapped; the device decides whether it can open it — a
+    /// simulator has no phone — and the card is told either way.
+    func perform(action: String, poiId: String) {
+        guard selected?.identifier == poiId, let contact = selectedDetails?.contacts[action] else { return }
+        let url = contact.url
+        guard UIApplication.shared.canOpenURL(url) else {
+            let what: String
+            switch contact {
+            case .website: what = "Websites can't be opened on this device."
+            case .call: what = "Calling isn't available on this device."
+            case .email: what = "Email isn't set up on this device."
+            }
+            actionStates[action] = .init(message: what, messageTone: .status)
+            return
+        }
+        actionStates[action] = .init(loading: true)
+        UIApplication.shared.open(url) { [weak self] opened in
+            self?.actionStates[action] = opened ? .init() : .init(message: "That couldn't be opened.", messageTone: .error)
+        }
+    }
+
     private func clearSelection(animated: Bool) {
         selected = nil
+        selectedDetails = nil
+        actionStates = [:]
         framesSelection = false
         widget?.mapViewController.unhighlightPoi()
         applyCameraPadding(animated: animated)

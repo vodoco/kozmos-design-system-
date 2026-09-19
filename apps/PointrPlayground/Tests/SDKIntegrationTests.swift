@@ -51,6 +51,110 @@ final class SDKIntegrationTests: XCTestCase {
         XCTAssertEqual(Set(media.map(\.id)).count, 2)
         XCTAssertEqual(SDKPOIAdapter.media(poiId: "poi-1", name: "Empty", urls: []), [])
     }
+    // MARK: The card's details from the SDK's fields
+
+    private func details(
+        name: String = "Dunkin'", attributes: [String: Any] = [:],
+        rating: Double = -999_999, ratingMax: Double = -999_999, ratingCount: Int = -999_999,
+        priceRange: Int = -999_999, priceMax: Int = 4, structuredHourSlots: Int = 0,
+        buttons: [SDKPOIButton] = [], tags: [String] = [], longDescription: String? = nil
+    ) -> SDKPOIDetails {
+        SDKPOIAdapter.details(
+            name: name, attributes: attributes, rating: rating, ratingMax: ratingMax, ratingCount: ratingCount,
+            priceRange: priceRange, priceMax: priceMax, structuredHourSlots: structuredHourSlots,
+            buttons: buttons, tags: tags, longDescription: longDescription)
+    }
+
+    /// Design-QA's every place: the SDK's sentinel for rating and price, seven
+    /// empty day schedules, no buttons. The card gets nothing, and no issue
+    /// says otherwise.
+    func testTheSDKSentinelsAreAbsentNotZero() {
+        let result = details()
+        XCTAssertEqual(result.presentation, .init())
+        XCTAssertEqual(result.issues, [])
+        XCTAssertEqual(result.contacts, [:])
+    }
+
+    func testARatingIsFormattedFromTheSDKsNumbers() {
+        let rated = details(rating: 4.7, ratingMax: 5, ratingCount: 32, priceRange: 3)
+        XCTAssertEqual(rated.presentation.summary.map(\.id), ["rating", "priceRange"])
+        XCTAssertEqual(rated.presentation.summary[0].value, "4.7 / 5")
+        XCTAssertEqual(rated.presentation.summary[0].detail, "32 reviews")
+        XCTAssertEqual(rated.presentation.summary[1].priceLevel, 3)
+        XCTAssertEqual(details(rating: 4, ratingMax: 5, ratingCount: 1).presentation.summary[0].detail, "1 review")
+        XCTAssertEqual(details(rating: 4, ratingMax: 5, ratingCount: 0).presentation.summary[0].detail, nil)
+        // Off the scale, or a scale of zero, is absent.
+        XCTAssertEqual(details(rating: 6, ratingMax: 5).presentation.summary, [])
+        XCTAssertEqual(details(rating: 3, ratingMax: 0).presentation.summary, [])
+        // The card's price scale is 1 to 4; another scale is reported, not stretched.
+        let other = details(priceRange: 2, priceMax: 5)
+        XCTAssertEqual(other.presentation.summary, [])
+        XCTAssertEqual(other.issues, ["Price scale is 5, not the card's 4"])
+    }
+
+    func testButtonsBecomeContactActionsOnlyWithAddressesTheHostCanOpen() {
+        let result = details(buttons: [
+            .init(name: "Website", kind: .href, intent: "http://www.dunkindonuts.com/dunkindonuts/en.html"),
+            .init(name: "Call", kind: .tel, intent: "(978) 317-6611"),
+            .init(name: "", kind: .mailto, intent: "hello@example.com"),
+            .init(name: "Website", kind: .href, intent: "Https://www.example.com/"),
+            .init(name: "Website", kind: .href, intent: "www.example.com"),
+            .init(name: "Call", kind: .tel, intent: "n/a"),
+            .init(name: "Email", kind: .mailto, intent: "not an address"),
+            .init(name: "Order", kind: .custom, intent: "order://x"),
+        ])
+        XCTAssertEqual(result.presentation.supplementaryActions.map(\.action), ["website", "call", "email", "website-4"])
+        XCTAssertEqual(result.presentation.supplementaryActions.map(\.label), ["Website", "Call", "Email", "Website"])
+        XCTAssertEqual(result.presentation.supplementaryActions.map(\.systemImage), ["globe", "phone", "envelope", "globe"])
+        XCTAssertEqual(result.contacts["call"], .call(URL(string: "tel:9783176611")!))
+        XCTAssertEqual(result.contacts["email"], .email(URL(string: "mailto:hello@example.com")!))
+        XCTAssertEqual(result.contacts["website-4"]?.url.absoluteString, "Https://www.example.com/")
+        XCTAssertEqual(result.issues, ["Invalid Website address", "Invalid Call address", "Invalid Email address", "Unsupported button action: Order"])
+    }
+
+    /// Design-QA keeps hours in two CMS text keys; the plain one wins, the
+    /// escaped-HTML one is scrubbed, and neither is an open-or-closed claim.
+    func testOpeningHoursComeFromTheVenuesTextNotAStatusCalculation() {
+        let plain = details(attributes: [
+            "hours of operation text": "Sun - Fri: 4:30a - 9:30p / Sat: 4:30a - 6:30p",
+            "Hours of Operation / Schedule": "&lt;p&gt;Sun - Fri: 4:30a - 9:30p / Sat: 4:30a - 6:30p&lt;/p&gt;",
+        ])
+        XCTAssertEqual(plain.presentation.openingHours?.summary, "Sun - Fri: 4:30a - 9:30p / Sat: 4:30a - 6:30p")
+        XCTAssertEqual(plain.presentation.openingHours?.rows, [])
+        XCTAssertEqual(plain.presentation.openingHours?.note, "As listed by the venue. Not a live opening status.")
+        let escaped = details(attributes: [
+            "Hours of Operation / Schedule": "&lt;span style=&quot;font-family: &amp;quot;Open Sans&amp;quot;&quot;&gt;60 minutes prior to first departure - 30 minutes prior to last departure&lt;/span&gt;&lt;p&gt;&lt;/p&gt;",
+        ])
+        XCTAssertEqual(escaped.presentation.openingHours?.summary, "60 minutes prior to first departure - 30 minutes prior to last departure")
+        XCTAssertNil(details(attributes: ["Hours of Operation / Schedule": "&lt;p&gt;&lt;br&gt;&lt;/p&gt;"]).presentation.openingHours)
+        // A structured schedule with slots is reported, never rendered in a guessed day order.
+        let structured = details(attributes: ["hours of operation text": "9-5"], structuredHourSlots: 14)
+        XCTAssertEqual(structured.presentation.openingHours?.summary, "9-5")
+        XCTAssertEqual(structured.issues, ["Structured opening hours present (14 slots) but not rendered: day order is undocumented"])
+    }
+
+    func testADescriptionThatIsOnlyTheNameIsDropped() {
+        XCTAssertNil(details(name: "Alamo", longDescription: "Alamo ").presentation.description)
+        XCTAssertNil(details(name: "Alamo", longDescription: "  ").presentation.description)
+        let real = details(name: "Airport Shuttle", longDescription: "Serves Terminals A &amp; B to the subway station.")
+        XCTAssertEqual(real.presentation.description?.full, "Serves Terminals A & B to the subway station.")
+        let long = details(name: "X", longDescription: String(repeating: "word ", count: 60))
+        XCTAssertEqual(long.presentation.description?.preview.count, 201)
+    }
+
+    /// Taxonomy properties in the attributes reach the card through the same
+    /// presenter the web uses; the SDK's typed fields replace their raw twins.
+    func testAttributesReachTheCardThroughTheTaxonomyPresenter() {
+        let result = details(attributes: [
+            "serviceTypes": ["Banking and Credit Union"], "isWheelchairAccessible": NSNumber(value: true),
+            "rating": ["score": 4.7], "priceRange": 3, "description": "raw twin", "name": "raw twin",
+        ], tags: ["#coffee", "#coffee", "#airside"])
+        XCTAssertEqual(result.presentation.summary.map(\.id), ["isWheelchairAccessible"])
+        XCTAssertEqual(result.presentation.groups.map(\.heading), ["Service Types", "Accessibility"])
+        XCTAssertEqual(result.presentation.tags.map(\.label), ["#airside", "#coffee"])
+        XCTAssertEqual(result.issues, [])
+    }
+
     // MARK: Camera padding
 
     /// The shell's report at the medium detent on an iPhone 17 Pro, as logged
