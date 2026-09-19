@@ -43,6 +43,8 @@ const run = spawnSync(
     "-resultBundlePath",
     join(output, "TestResults.xcresult"),
     "-only-testing:KozmosTests/KozmosPOIDetailTests",
+    "-only-testing:KozmosTests/KozmosPOIMediaGalleryTests",
+    "-only-testing:KozmosTests/KozmosAdaptiveMapShellTests",
     "-only-testing:KozmosTests/ProductContractsTests",
     "CODE_SIGNING_ALLOWED=NO",
     "test",
