@@ -10,6 +10,8 @@ import app.cash.paparazzi.Paparazzi
 import com.kozmos.contracts.KozmosPOIAction
 import com.kozmos.contracts.KozmosPOIPresentation
 import org.junit.Rule
+import androidx.compose.foundation.background
+import com.kozmos.tokens.KozmosColors
 import org.junit.Test
 
 class KozmosPOIDetailPanelPaparazziTest {
@@ -43,6 +45,36 @@ class KozmosPOIDetailPanelPaparazziTest {
                         ),
                         onAction = { _, _ -> },
                         onClose = {}
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * In the sheet presentation the panel paints no surface of its own: it
+     * sits on the sheet's, as the browse panel does (Olcay, 21st: the card
+     * looked like a card within a card). The grey behind the header is the
+     * evidence; a white card there changes the golden.
+     */
+    @Test
+    fun theSheetPresentationSitsOnTheSheetsSurface() {
+        paparazzi.snapshot {
+            MaterialTheme {
+                Box(modifier = Modifier.background(KozmosColors.primitivesColorsBackground100).padding(24.dp).width(320.dp)) {
+                    KozmosPOIDetailPanel(
+                        poi = KozmosPOIPresentation(
+                            id = "lounge",
+                            name = "British Airways Lounge",
+                            floorId = "4",
+                            floorLabel = "Fourth Floor",
+                            buildingLabel = "Terminal E",
+                            actions = listOf(KozmosPOIAction.Navigate)
+                        ),
+                        actionLabels = mapOf(KozmosPOIAction.Navigate to "Go"),
+                        onAction = { _, _ -> },
+                        onClose = {},
+                        presentation = KozmosPOIDetailPanelPresentation.Sheet
                     )
                 }
             }

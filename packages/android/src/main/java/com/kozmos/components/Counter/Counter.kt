@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kozmos.tokens.KozmosDimensions
@@ -39,7 +40,10 @@ fun KozmosCounter(
      * Unset and `tone` draws as it always has; set and the emotion decides the
      * colour. A counter is always a filled pill, so there is one treatment.
      */
-    emotion: KozmosEmotion? = null
+    emotion: KozmosEmotion? = null,
+    /** A fill of the host's own — a category's colour — over the tone's and
+     *  the emotion's; the digits go white on it. */
+    fill: Color? = null
 ) {
     val height = if (size == CounterSize.Sm) 18.dp else 20.dp
     val minWidth = if (size == CounterSize.Sm) 18.dp else 20.dp
@@ -60,8 +64,8 @@ fun KozmosCounter(
         CounterTone.Inverse -> KozmosThemeTokens.primitivesColorsForeground100
     }
 
-    val resolvedContainer = emotion?.surface ?: containerColor
-    val resolvedContent = emotion?.onSurface ?: contentColor
+    val resolvedContainer = fill ?: emotion?.surface ?: containerColor
+    val resolvedContent = if (fill != null) KozmosThemeTokens.primitivesColorsBackground0 else (emotion?.onSurface ?: contentColor)
 
     Box(
         modifier = modifier

@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.counter.CounterTone
 import com.kozmos.components.counter.KozmosCounter
@@ -44,7 +45,8 @@ import com.kozmos.tokens.KozmosDimensions
  * supplied by the consuming app through [KozmosCategoryPresentation]. A
  * `resultCount` draws as the system's counter at the icon square's top-right;
  * `resultCountLabel` is its spoken form (the state description) and draws
- * nothing.
+ * nothing. A `tint` — the category's own colour — takes the icon and the
+ * counter's fill; the square stays neutral.
  */
 @Composable
 fun KozmosCategoryTile(
@@ -52,6 +54,9 @@ fun KozmosCategoryTile(
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    /** The category's own colour, as the chosen-category field wears it: it
+     *  takes the icon and the counter's fill; the square stays neutral. */
+    tint: Color? = null,
     icon: (@Composable () -> Unit)? = null
 ) {
     val trackEvent = LocalKozmosAnalytics.current
@@ -104,7 +109,7 @@ fun KozmosCategoryTile(
                 ) {
                     if (icon != null) {
                         // The icon in the theme colour, as on the other platforms.
-                        CompositionLocalProvider(LocalContentColor provides KozmosColors.primitivesColorsTheme500) {
+                        CompositionLocalProvider(LocalContentColor provides (tint ?: KozmosColors.primitivesColorsTheme500)) {
                             Box(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300), contentAlignment = Alignment.Center) {
                                 icon()
                             }
@@ -118,6 +123,7 @@ fun KozmosCategoryTile(
                     KozmosCounter(
                         text = count.toString(),
                         tone = CounterTone.Brand,
+                        fill = tint,
                         modifier = Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-4).dp)
                     )
                 }

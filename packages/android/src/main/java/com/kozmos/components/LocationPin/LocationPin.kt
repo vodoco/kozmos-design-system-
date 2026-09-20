@@ -64,10 +64,14 @@ fun KozmosLocationPin(
     selected: Boolean = false,
     featured: Boolean = false,
     offFloor: Boolean = false,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    /** A colour of the host's own — a category's — for the marker, over the
+     *  variant's; a featured pin keeps the alert colour. */
+    tint: Color? = null
 ) {
     val markerColor: Color = when {
         featured -> KozmosColors.primitivesColorsEmotionalAlert500
+        tint != null -> tint
         variant == KozmosLocationPinVariant.Default -> KozmosColors.primitivesColorsForeground100
         variant == KozmosLocationPinVariant.Primary -> KozmosColors.primitivesColorsTheme500
         variant == KozmosLocationPinVariant.Secondary -> KozmosColors.primitivesColorsForeground400

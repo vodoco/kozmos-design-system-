@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -120,13 +121,19 @@ fun KozmosPOIDetailPanel(
             .fillMaxWidth()
             .semantics { contentDescription = poi.name },
         shape = shape,
-        color = KozmosColors.primitivesColorsBackground0,
+        // In a sheet the panel paints no surface of its own: it sits on the
+        // sheet's, as the browse panel does, with no border and no shadow.
+        color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) Color.Transparent else KozmosColors.primitivesColorsBackground0,
         border = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) {
             null
         } else {
             BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
         },
-        shadowElevation = if (presentation == KozmosPOIDetailPanelPresentation.Panel) 16.dp else 8.dp
+        shadowElevation = when (presentation) {
+            KozmosPOIDetailPanelPresentation.Panel -> 16.dp
+            KozmosPOIDetailPanelPresentation.Sheet -> 0.dp
+            else -> 8.dp
+        }
     ) {
         // The body scrolls under a pinned header, which requires a bounded
         // height. When the caller nests the panel somewhere unbounded (another

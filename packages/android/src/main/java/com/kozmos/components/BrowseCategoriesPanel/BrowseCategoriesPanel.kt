@@ -16,6 +16,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,8 @@ fun KozmosBrowseCategoriesPanel(
     modifier: Modifier = Modifier,
     label: String = "Browse categories",
     renderIcon: (@Composable (KozmosCategoryPresentation) -> Unit)? = null,
+    /** A category's own colour for its tile, or null for the theme's. */
+    tint: (KozmosCategoryPresentation) -> Color? = { null },
     search: (@Composable () -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
     emptyState: (@Composable () -> Unit)? = null
@@ -103,6 +106,7 @@ fun KozmosBrowseCategoriesPanel(
                     KozmosCategoryTile(
                         category = category,
                         onSelect = onSelect,
+                        tint = tint(category),
                         icon = renderIcon?.let { render -> { render(category) } }
                     )
                 }
