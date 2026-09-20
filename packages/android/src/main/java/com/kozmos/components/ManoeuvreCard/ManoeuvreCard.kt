@@ -34,7 +34,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.directionstep.DirectionType
 import com.kozmos.components.directionstep.icon
-import com.kozmos.components.glasssurface.KozmosGlassSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceStyle
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
@@ -63,6 +64,7 @@ fun KozmosManoeuvreCard(
     collapseLabel: String = "Hide itinerary",
     manoeuvreLabel: String = "Current manoeuvre",
     maxItineraryHeight: Dp = 320.dp,
+    surface: KozmosSurfaceStyle = KozmosSurfaceStyle.Solid,
     itinerary: @Composable () -> Unit
 ) {
     Surface(
@@ -70,8 +72,8 @@ fun KozmosManoeuvreCard(
         // named thing, and two nodes called the same would be read twice.
         modifier = modifier.then(if (expanded) Modifier else Modifier.semantics { contentDescription = manoeuvreLabel }),
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
-        color = KozmosGlassSurfaceDefaults.tint,
-        border = KozmosGlassSurfaceDefaults.border,
+        color = KozmosSurfaceDefaults.tint(surface),
+        border = KozmosSurfaceDefaults.border(surface),
         shadowElevation = 8.dp
     ) {
         Column(

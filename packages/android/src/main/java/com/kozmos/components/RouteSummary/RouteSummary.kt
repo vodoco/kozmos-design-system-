@@ -29,7 +29,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.kozmos.components.button.KozmosButton
-import com.kozmos.components.glasssurface.KozmosGlassSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceStyle
 import com.kozmos.components.button.KozmosButtonEmotion
 import com.kozmos.components.button.KozmosButtonSize
 import com.kozmos.components.button.KozmosButtonVariant
@@ -49,15 +50,16 @@ fun KozmosRouteSummary(
     modifier: Modifier = Modifier,
     state: KozmosRouteSummaryState = KozmosRouteSummaryState.Active,
     onStartNavigation: (() -> Unit)? = null,
+    surface: KozmosSurfaceStyle = KozmosSurfaceStyle.Solid,
     transportModeIcon: (@Composable () -> Unit)? = null
 ) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-        color = KozmosGlassSurfaceDefaults.tint,
+        color = KozmosSurfaceDefaults.tint(surface),
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,
-        border = KozmosGlassSurfaceDefaults.border
+        border = KozmosSurfaceDefaults.border(surface)
     ) {
         Column(
             modifier = Modifier
@@ -140,15 +142,16 @@ fun KozmosRouteSummary(
     modifier: Modifier = Modifier,
     arrivalText: String? = null,
     endLabel: String = "End",
+    surface: KozmosSurfaceStyle = KozmosSurfaceStyle.Solid,
     progress: (@Composable () -> Unit)? = null
 ) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-        color = KozmosGlassSurfaceDefaults.tint,
+        color = KozmosSurfaceDefaults.tint(surface),
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,
-        border = KozmosGlassSurfaceDefaults.border
+        border = KozmosSurfaceDefaults.border(surface)
     ) {
         Column(
             modifier = Modifier
