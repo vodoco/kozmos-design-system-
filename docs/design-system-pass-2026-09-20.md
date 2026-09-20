@@ -104,9 +104,11 @@ WindowManager's folding feature exists today and an emulator can be folded. Not 
   row. Android's location line truncates to one line; iOS and the web wrap it.
 - The search bar's magnifying glass reads "Search" to VoiceOver before the field.
 - Unchanged from Pass 3: no transition arrow in `DirectionType`, no floor slot and no
-  current-step state on a direction step, no route input component (the QA app's picker is its
-  own composition), the preview's 208pt option cards cut at the panel's edge, the `.panel`
-  border inside a floating container, the zoom buttons on phones.
+  current-step state on a direction step, the preview's 208pt option cards cut at the panel's
+  edge, the `.panel`
+  border inside a floating container, the zoom buttons on phones. Pass 3's "no route input"
+  is withdrawn: `RoutingInputGroup` and `WayfindingCard` with its input row exist on all three
+  platforms, and the QA app's picker should have composed them.
 - The Figma side of these parts was not touched: no Figma access in this session. The header
   rule and the switcher's open list are drift to reconcile through the importer plugin.
 

@@ -147,9 +147,13 @@ Astra's §10 gates for this pass:
    the floor name travels in the duration slot ("58 m • Second Floor").
 3. **A current-step state.** The directions list dims the other steps to 45 % opacity; the
    component has no selected or current variant, and VoiceOver hears nothing of it.
-4. **A route input.** `packages/ios` has `RouteOptionCard`, `RoutePreviewPanel`,
+4. ~~**A route input.** `packages/ios` has `RouteOptionCard`, `RoutePreviewPanel`,
    `RouteSummary` and `DirectionStep`, and no origin or destination input: the picker here is
-   the host's. A product that lets visitors choose where a route starts needs one.
+   the host's. A product that lets visitors choose where a route starts needs one.~~
+   _Corrected 20 September: `KozmosRoutingInputGroup` and `KozmosWayfindingCard` with
+   `KozmosWayfindingInputRow` exist on iOS, the web and Android — a search for "route" in the
+   component names missed "Routing" and "Wayfinding". The QA app's picker should have composed
+   them; that is the design-system pass's first item._
 
 ## Findings for Pointr, for §9's list
 
