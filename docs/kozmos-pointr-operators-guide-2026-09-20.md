@@ -291,7 +291,7 @@ _Later on the 20th, evening, Olcay ruled on the navigation stage's six
 ([navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md) §5): the rail keeps the
 prototype's numbers; a glass surface role is built now on all three platforms (the handoff's
 §5.13) and the card and the summary take it; a compact detent in the shell; each platform's own
-icon set for the transition arrows; the Compose button's sizes are fixed; the level list keeps its
+icon set for the transition arrows; the button-height decision withdrawn (44 on every platform by contract); the level list keeps its
 names beside the labels, as built. He also had the branch pushed — decision 5 above is answered
 as far as the commits go; the ignored SDK files still live only in the worktree. Next: the glass
 role, the transition arrows, the search sheet; F, G and Pass 4 after._

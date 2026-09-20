@@ -146,8 +146,10 @@ cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6
 4. **Transition arrows** are still the recorded gap: "Take Elevator down to First Floor" carries a
    straight arrow on the card, the rail and the itinerary alike. The icon set for lift, escalator
    and stairs is a design decision before any platform draws one.
-5. **End on Android** is the button's `Sm` size, which the Compose button still draws 44 tall; the
-   web and iOS draw a shorter pill. A Button matter, not the summary's.
+5. ~~**End on Android** is the button's `Sm` size, which the Compose button still draws 44 tall;
+   the web and iOS draw a shorter pill.~~ Withdrawn: every platform draws every button size 44
+   tall, by the component contract (`component-contracts.json`, `button.sizes`), and the web's
+   `sm` is `h-11` as well. The iOS pill only looked shorter beside the title. Nothing to fix.
 6. **The open level list's form** (names beside labels, or the prototype's labels-only column) is
    still open from the [design system pass](design-system-pass-2026-09-20.md).
 
@@ -155,6 +157,6 @@ _Answered by Olcay the same evening:_ **1** the rail keeps the prototype's numbe
 **glass surface role** is built now on all three platforms — the handoff's ruling §5.13, from
 `Semantics.Effect.glass` — and the card and the summary take it, the three map cards after;
 **3** a compact detent in the shell; **4** each platform's own icon set for the transition
-arrows; **5** the Compose button's sizes are fixed; **6** the open level list keeps its names
+arrows; **5** withdrawn — the button is 44 tall on every platform by contract, nothing to fix; **6** the open level list keeps its names
 beside the labels, as built. The order of the stages: the glass role, the transition arrows,
 then the prototype's search sheet.
