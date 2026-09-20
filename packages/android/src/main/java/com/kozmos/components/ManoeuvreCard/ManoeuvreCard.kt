@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.directionstep.DirectionType
 import com.kozmos.components.directionstep.icon
+import com.kozmos.components.glasssurface.KozmosGlassSurfaceDefaults
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
@@ -69,7 +70,8 @@ fun KozmosManoeuvreCard(
         // named thing, and two nodes called the same would be read twice.
         modifier = modifier.then(if (expanded) Modifier else Modifier.semantics { contentDescription = manoeuvreLabel }),
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
-        color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
+        color = KozmosGlassSurfaceDefaults.tint,
+        border = KozmosGlassSurfaceDefaults.border,
         shadowElevation = 8.dp
     ) {
         Column(

@@ -1,6 +1,5 @@
 package com.kozmos.components.routesummary
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +29,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.kozmos.components.button.KozmosButton
+import com.kozmos.components.glasssurface.KozmosGlassSurfaceDefaults
 import com.kozmos.components.button.KozmosButtonEmotion
 import com.kozmos.components.button.KozmosButtonSize
 import com.kozmos.components.button.KozmosButtonVariant
@@ -54,10 +54,10 @@ fun KozmosRouteSummary(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-        color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
+        color = KozmosGlassSurfaceDefaults.tint,
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,
-        border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground900.copy(alpha = 0.08f))
+        border = KozmosGlassSurfaceDefaults.border
     ) {
         Column(
             modifier = Modifier
@@ -145,10 +145,10 @@ fun KozmosRouteSummary(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-        color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
+        color = KozmosGlassSurfaceDefaults.tint,
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,
-        border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground900.copy(alpha = 0.08f))
+        border = KozmosGlassSurfaceDefaults.border
     ) {
         Column(
             modifier = Modifier
