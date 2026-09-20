@@ -353,6 +353,27 @@ drag and anchored peek, and the QA app's sheet on the taxonomy's tiles.
 
 ## 9. Traps met, for the next reader
 
+_Added on the 21st, from the sheet stage:_
+
+- A SwiftUI `safeAreaInset` on content inside a content-fitted layout takes the whole proposal:
+  the fitted sheet grew to its cap. Fitted content never scrolls, so its safe areas are plain
+  padding; the explicit-height sheet keeps the inset (a scroll view inside runs under it).
+- A SwiftUI `simultaneousGesture` drag moves a sheet but cannot stop the button under the
+  travelling finger from firing on release, and `.disabled` toggled mid-touch cancels the drag
+  itself. A UIKit pan recogniser on the hosting view can both fail on a rule and cancel the
+  button's touches (`KozmosSheetPanCatcher`).
+- XCUITest's `press(thenDragTo:)` from a resting tile's centre lands in the home indicator's band
+  and becomes the system's swipe; drag from the tile's square, above it.
+- The owned-CSS build prefixes keyframe names with `kozmos-`; name them without it in the source.
+- Measure a turning element by `offsetWidth`, not its rotated client rect.
+- A Compose `onGloballyPositioned` state is a frame late and Paparazzi draws one frame; an
+  alignment line read in the parent's own measure pass is not.
+- The prototype's AI ring was first read as 66 wide from a scaled element; the DOM's `inset`
+  and a 4x pixel scan gave the truth (a 2.5 band on a 48 circle). Measure twice.
+- `.ignoresSafeArea()` with no argument also ignores the keyboard's region: the sheet stayed
+  under the keyboard and the routing flow's origin row could not be tapped. `.ignoresSafeArea(.container)`
+  runs the map to the edges and still lets the sheet rise above the keyboard.
+
 - The iPhone 17 Pro simulator speaks Arabic first; `defaults read -g AppleLanguages` before
   concluding anything about a backend's language.
 - A `$T` shell variable holding two `-only-testing` arguments passes as one; xcodebuild ran 0

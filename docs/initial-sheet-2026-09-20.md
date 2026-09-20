@@ -51,23 +51,48 @@ explicitly where that was wanted.
   apart as the prototype's are (columns stay 8).
 - `SearchBar` (iOS) takes a `focused:` binding, so a host can open the sheet when the field is
   tapped and end the search from a Cancel of its own.
-- `AISearchButton` (all three) is laid out at the prototype's 48, its 66 ring drawn behind and
-  overflowing: a row of the field and the button is the field's height again. It was 66 in the
-  row, which pushed the tiles 18 down and, with the scroll view stopping above the home
-  indicator, left a collapsed sheet showing a third of the first tile row instead of the squares
-  and a label line. Seen live on the iPhone, measured, fixed on every platform.
+- `AISearchButton` (all three) is the prototype's 48 circle: its gradient ring a band two and a
+  half wide around a 43 white disc, nothing outside the button. It had been a 66 ring around a 44
+  disc — an 11-wide collar, from a wrong first reading of the prototype — which also made the
+  search row 66 tall and pushed the tiles down; Olcay called it thick, the prototype was
+  re-measured by DOM and pixels (ring 48, disc inset 2.5, spin 3.6 s), and the iOS render test
+  asserting the thin band failed against the collar first.
 - The category grid aligns its cells at the top on iOS (`GridItem(alignment: .top)`): a one-line
   label beside a two-line one kept its square half a line lower, as Olcay saw in the first
   screenshot. A render test with "Gates" beside "Entrances & Exits" failed against the old grid and
   passes now; the web's grid and Compose's already aligned at the top, and `pnpm test:search-sheet`
   measures the web's row on three engines.
-- The AI search ring's gradient turns in place, once every three seconds, on all three
+- The AI search ring's gradient turns in place, the prototype's 3.6 seconds a turn, on all three
   platforms, at Olcay's ask: SwiftUI's `rotationEffect` under `repeatForever`, still under Reduce
   Motion; a CSS keyframe on `.kozmos-ai-search-ring`, `none` under `prefers-reduced-motion`
   (measured by the same check, on three engines, with reduced motion emulated); Compose's
   `rememberInfiniteTransition`, still when the system's animator scale is off. Paparazzi and the
   iOS render tests see the first frame, so the goldens hold; on the iPhone two screenshots half a
   second apart show the ring's hues moved and the field beside it unchanged.
+
+### The shells run edge to edge
+
+Olcay, on the QA app: _"the map and bottom sheet should expand to the edges. not cut off."_ The
+shell had laid the map out inside the safe areas — a band under the status bar — and the sheet's
+content stopped above the home indicator. Now, on all three platforms, the map runs under the
+status bar and the home indicator and the sheet's surface reaches the bottom edge, while the
+chrome keeps the safe areas: the top bar and the controls sit inside them, a floating panel keeps
+them around it, and the sheet's content keeps the bottom and side ones — a summary above the home
+indicator, a `KozmosPanelScrollView` running under it with its content inset. The detents are
+shares of the whole height, as the prototype's are of its frame. The camera's reported insets keep
+the safe areas the map now runs under.
+
+- iOS: an outer reader takes the safe areas, the shell ignores them, and `KozmosSheetSafeArea`
+  gives the sheet's content its own. Two render tests inside a simulated 59 / 34 device failed
+  against the old shell first: the map's red at the very top, the sheet a fifth of the whole
+  height with its surface at the edge and plain content 34 above it, scrolling content under it.
+- Web: the device's `env()` safe areas are `chromeInsets` to the layout resolver — the map is the
+  whole shell, the floating panel and the top bar keep them, the sheet's content pads by them —
+  while the host's `safeAreaInsets` (a keyboard) stay exclusions the map keeps out of. Tested on
+  the resolver.
+- Compose: the chrome and the sheet's content take `WindowInsets.safeDrawing`, the map does not;
+  an activity that calls `enableEdgeToEdge()` shows it, a padded one loses nothing. Paparazzi has
+  no insets, so the goldens hold.
 
 ## 3. The QA app's sheet
 
@@ -117,20 +142,24 @@ Every new rule was made to fail before it passed.
 
 ## 5. The last gate
 
-| Gate                                                                 | Result                                                                                                                                                                                                                                                                                                                                                                                                   |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| iOS package, iPhone 17 Pro (iOS 26.5), button baselines skipped      | 122, from 120                                                                                                                                                                                                                                                                                                                                                                                            |
-| iOS package, iPhone 16 (iOS 18.4), baselines on                      | 122                                                                                                                                                                                                                                                                                                                                                                                                      |
-| iOS package, `swift test` on macOS                                   | 90 (the render tests and the UIKit catcher are iOS-only)                                                                                                                                                                                                                                                                                                                                                 |
-| QA app unit, iPad Pro 11                                             | 46, of which `QuickAccessTests` 6                                                                                                                                                                                                                                                                                                                                                                        |
-| QA app UI, iPhone 17 Pro: `BrowseSheetUITests`, `RoutingFlowUITests` | both pass: the sheet rests on the row, a drag from a tile's square grows it without opening the tile, the field opens it to large with Cancel, a query lists places with Filters, a row opens the card at half and back returns the sheet with the query, Clear returns the tiles, a tile becomes its chip and its × returns the field; the route still reaches its directions through the sheet's field |
-| Fixture playground                                                   | builds                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Web: lint, typecheck, unit                                           | ok; ok; 540 in 120 files                                                                                                                                                                                                                                                                                                                                                                                 |
-| Web: `test:map-sheet` on chromium / firefox / webkit                 | 3 of 3 (with the touch handoff) / 2 of 2 / 2 of 2                                                                                                                                                                                                                                                                                                                                                        |
-| Web: `test:navigation`, `test:poi-details`, `test:owned-css`         | 20 of 20; ok; ok                                                                                                                                                                                                                                                                                                                                                                                         |
-| Web: classes, css-build, raw values, glass parity, snippets          | ok, all five                                                                                                                                                                                                                                                                                                                                                                                             |
-| Compose: `PanelDetentsTest`; `verifyPaparazziDebug`                  | 9; ok — two shell goldens re-recorded for the new default, the search sheet's for the AI button's footprint, two new                                                                                                                                                                                                                                                                                     |
-| Live, iPhone 17 Pro, a finger on a tile at rest (`touch_path`)       | the sheet rises to medium and the tile does not open                                                                                                                                                                                                                                                                                                                                                     |
+After the stage's four rulings and Olcay's three later ones — the tiles' top edge, the thin
+turning ring, the shells edge to edge — everything was run again:
+
+| Gate                                                                 | Result                                                                                                                                                                                                                                                                       |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| iOS package, iPhone 17 Pro (iOS 26.5), button baselines skipped      | 124 (three new edge tests, one for the tiles' top edge, the thin ring's)                                                                                                                                                                                                     |
+| iOS package, iPhone 16 (iOS 18.4), baselines on                      | 126                                                                                                                                                                                                                                                                          |
+| iOS package, `swift test` on macOS                                   | 90 (the render tests and the UIKit catcher are iOS-only)                                                                                                                                                                                                                     |
+| QA app unit, iPad Pro 11                                             | 46, of which `QuickAccessTests` 6                                                                                                                                                                                                                                            |
+| QA app UI, iPhone 17 Pro: `BrowseSheetUITests`, `RoutingFlowUITests` | both pass on the edge-to-edge build: the sheet from rest to the chip and back; the route through the sheet's field to its directions (the first edge-to-edge build ignored the keyboard's region too, and the picker's rows sat under the keyboard — `.container` only, now) |
+| Fixture playground                                                   | builds                                                                                                                                                                                                                                                                       |
+| Web: lint, typecheck, unit                                           | ok; ok; 541 in 121 files                                                                                                                                                                                                                                                     |
+| Web: `test:map-sheet` on chromium / firefox / webkit                 | 3 of 3 (with the touch handoff) / 2 of 2 / 2 of 2                                                                                                                                                                                                                            |
+| Web: `test:search-sheet` on the three engines                        | 3 of 3 each: the tiles' top edge, the 48 ring with its 2.5 band and 43 disc, the turn, the rest under reduced motion                                                                                                                                                         |
+| Web: `test:navigation`, `test:poi-details`, `test:owned-css`         | 20 of 20; ok; ok                                                                                                                                                                                                                                                             |
+| Web: classes, css-build, raw values, glass parity, snippets          | ok, all five                                                                                                                                                                                                                                                                 |
+| Compose: `PanelDetentsTest`; `verifyPaparazziDebug`                  | 9; ok — two shell goldens re-recorded for the new default, the search sheet's for the thin ring, two new                                                                                                                                                                     |
+| Live, iPhone 17 Pro                                                  | a finger on a tile at rest raises the sheet to medium and the tile stays closed; two screenshots half a second apart differ only in the ring; at rest the map's grey is under the status bar and the sheet's surface at the bottom edge                                      |
 
 Not run: Chromatic; Android on a device or emulator; the Figma side (no importer access).
 
