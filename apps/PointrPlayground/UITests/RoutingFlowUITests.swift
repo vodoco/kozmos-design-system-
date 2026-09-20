@@ -51,20 +51,35 @@ final class RoutingFlowUITests: XCTestCase {
         wait(for: [enabled], timeout: timeout)
     }
 
-    /// What the directions expose: exactly one step carrying the selected
-    /// trait, and that step reading as one element — instruction, distance,
-    /// floor — rather than as loose texts. (XCUITest's snapshot still lists
-    /// what SwiftUI hides or ignores, so absence is checked by the package's
-    /// hosted accessibility test, not here.)
-    private func assertDirectionsAreReadable(_ directions: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
-        let current = directions.descendants(matching: .any).matching(NSPredicate(format: "isSelected == true"))
-        // The list is lazy: its rows exist a moment after the buttons do.
+    /// The directions on the Kozmos parts: the manoeuvre card over the map
+    /// reads the current step, opens into the itinerary where exactly one
+    /// step carries the selected trait, and closes again. (XCUITest's
+    /// snapshot still lists what SwiftUI hides or ignores, so absence is
+    /// checked by the package's tests, not here.)
+    private func assertDirectionsAreReadable(file: StaticString = #filePath, line: UInt = #line) {
+        // The current manoeuvre, over the map, is a button that reads the
+        // instruction and its detail and opens into the itinerary.
+        let card = any("Current manoeuvre")
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "no manoeuvre card over the map", file: file, line: line)
+        let manoeuvre = card.buttons.firstMatch
+        XCTAssertTrue(manoeuvre.waitForExistence(timeout: 5), "the card has no manoeuvre to read", file: file, line: line)
+        print("QA-FLOW manoeuvre reads: \(manoeuvre.label)")
+        XCTAssertFalse(manoeuvre.label.isEmpty, "the manoeuvre reads as nothing", file: file, line: line)
+        manoeuvre.tap()
+        // Open, the itinerary lists every step; exactly one reads as current.
+        let itinerary = any("Itinerary")
+        XCTAssertTrue(itinerary.waitForExistence(timeout: 10), "the card did not open into the itinerary", file: file, line: line)
+        let current = itinerary.descendants(matching: .any).matching(NSPredicate(format: "isSelected == true"))
         _ = current.firstMatch.waitForExistence(timeout: 10)
         XCTAssertEqual(current.count, 1, "steps reading as current: \(current.allElementsBoundByIndex.map(\.label))", file: file, line: line)
         for element in current.allElementsBoundByIndex {
             print("QA-FLOW current step reads: \(element.label)")
-            XCTAssertTrue(element.label.contains(", "), "the current step is not one combined element: \(element.label)", file: file, line: line)
+            XCTAssertFalse(element.label.isEmpty, "the current step reads as nothing", file: file, line: line)
         }
+        attachTree(itinerary, name: "5-itinerary-open")
+        attach("5-itinerary-open")
+        app.buttons["Hide itinerary"].tap()
+        XCTAssertTrue(manoeuvre.waitForExistence(timeout: 5), "the itinerary did not close back to the manoeuvre", file: file, line: line)
     }
 
     // MARK: - The flow
@@ -157,7 +172,7 @@ final class RoutingFlowUITests: XCTestCase {
         XCTAssertTrue(next.waitForExistence(timeout: 20) || finish.waitForExistence(timeout: 5), "no directions")
         attachTree(any("Directions"), name: "5-directions-first-step")
         attach("5-directions-first-step")
-        assertDirectionsAreReadable(any("Directions"))
+        assertDirectionsAreReadable()
         var steps = 1
         while next.exists, steps < 40 {
             next.tap()
@@ -171,7 +186,7 @@ final class RoutingFlowUITests: XCTestCase {
         print("QA-FLOW steps: \(steps)")
         attachTree(any("Directions"), name: "5-directions-last-step")
         attach("5-directions-last-step")
-        assertDirectionsAreReadable(any("Directions"))
+        assertDirectionsAreReadable()
         finish.tap()
 
         // 6. Back on the card.

@@ -6,6 +6,8 @@ import Kozmos
 struct SDKMapScreen: View {
     @StateObject private var session = SDKSession()
     @State private var detent: KozmosMapPanelDetent = .medium
+    /// Whether the manoeuvre card over the map is open into the itinerary.
+    @State private var itineraryExpanded = false
     /// The shell docks its panel as a sheet on compact widths and floats it
     /// beside the map on regular ones; the card has to match.
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -48,7 +50,7 @@ struct SDKMapScreen: View {
                             Color.clear.frame(width: 0, height: 0)
                         }
                     },
-                    topBar: { KozmosSearchBar(text: $session.query, placeholder: "Search this building") },
+                    topBar: { topBar },
                     panel: { panel }
                 )
             } else {
@@ -62,6 +64,40 @@ struct SDKMapScreen: View {
         }
         .task { session.start() }
         .onDisappear { session.stop() }
+        .onChange(of: session.phase) { _ in itineraryExpanded = false }
+    }
+
+    /// Browsing and choosing a starting point, the search bar; navigating, the
+    /// current manoeuvre over the map, opening into the whole itinerary — the
+    /// prototype's instruction card.
+    @ViewBuilder private var topBar: some View {
+        if session.phase == .directions, let step = currentStep {
+            KozmosManoeuvreCard(
+                type: SDKRoutePresenter.directionType(forMessageType: step.messageType),
+                instruction: step.message,
+                detail: [SDKRoutePresenter.distanceLabel(for: step), session.stepFloorLabel(step.id)]
+                    .compactMap { $0 }.joined(separator: " · "),
+                isExpanded: itineraryExpanded,
+                onToggle: { withAnimation { itineraryExpanded.toggle() } }
+            ) {
+                KozmosItinerary(
+                    origin: session.origin?.name ?? "",
+                    steps: (session.route?.steps ?? []).map { step in
+                        KozmosItineraryStep(
+                            id: String(step.id), instruction: step.message,
+                            type: SDKRoutePresenter.directionType(forMessageType: step.messageType),
+                            isCurrent: step.id == session.stepIndex)
+                    },
+                    destination: session.selected?.name ?? "")
+            }
+        } else {
+            KozmosSearchBar(text: $session.query, placeholder: "Search this building")
+        }
+    }
+
+    private var currentStep: SDKRoute.Step? {
+        guard let steps = session.route?.steps, steps.indices.contains(session.stepIndex) else { return nil }
+        return steps[session.stepIndex]
     }
 
     /// `.bottom` gives the slot the full width of the map and leaves the corner
@@ -222,55 +258,40 @@ extension SDKMapScreen {
         }
     }
 
+    /// The prototype's navigation sheet: the destination with End beside it,
+    /// what is left and when it ends, the rail; then the step buttons. The
+    /// steps themselves are in the card over the map.
     var directionsPanel: some View {
         let route = session.route
         let steps = route?.steps ?? []
         let remaining = route?.remaining(from: session.stepIndex) ?? (distanceMetres: 0, durationSeconds: 0)
+        let total = route?.distanceMetres ?? 0
         return VStack(spacing: 0) {
             KozmosRouteSummary(
-                etaText: "Arrive \(RouteFormat.arrival(in: remaining.durationSeconds))",
-                distanceText: "\(RouteFormat.distance(remaining.distanceMetres)) · \(RouteFormat.duration(remaining.durationSeconds)) left",
-                state: .active,
+                title: session.selected?.name ?? "Directions",
+                durationText: RouteFormat.duration(remaining.durationSeconds),
+                distanceText: RouteFormat.distance(remaining.distanceMetres),
+                arrivalText: "Arrive \(RouteFormat.arrival(in: remaining.durationSeconds))",
                 onEndRoute: session.endRoute
             ) {
-                KozmosIcon("navigation-pointer-01", size: .md, color: .primary)
+                KozmosRouteProgressRail(
+                    // By ground covered, so a lift or a level change — no
+                    // distance — does not move the disc; by step when the
+                    // route covers no ground at all.
+                    progress: total > 0 ? (total - remaining.distanceMetres) / total
+                        : (steps.count > 1 ? Double(session.stepIndex) / Double(steps.count - 1) : 1),
+                    type: currentStep.map { SDKRoutePresenter.directionType(forMessageType: $0.messageType) } ?? .destination,
+                    label: "Step \(session.stepIndex + 1) of \(steps.count)")
             }
             .padding(KozmosDimensions.primitivesLayoutSpacing200)
-            HStack {
-                Text("Step \(session.stepIndex + 1) of \(steps.count) · to \(session.selected?.name ?? "")")
-                    .font(KozmosTypography.subheadline).foregroundColor(KozmosColors.primitivesColorsForeground500)
-                Spacer()
-            }
-            .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
-            .padding(.bottom, KozmosDimensions.primitivesLayoutSpacing100)
-            KozmosSeparator()
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
-                        ForEach(steps) { step in
-                            KozmosDirectionStep(
-                                type: SDKRoutePresenter.directionType(forMessageType: step.messageType),
-                                instruction: step.message,
-                                distance: SDKRoutePresenter.distanceLabel(for: step),
-                                duration: session.stepFloorLabel(step.id))
-                            .opacity(step.id == session.stepIndex ? 1 : 0.45)
-                            // The dimming is visual; VoiceOver hears the trait.
-                            .accessibilityAddTraits(step.id == session.stepIndex ? .isSelected : [])
-                            .id(step.id)
-                        }
-                    }
-                    .padding(KozmosDimensions.primitivesLayoutSpacing200)
-                }
-                .onChange(of: session.stepIndex) { index in
-                    withAnimation { proxy.scrollTo(index, anchor: .center) }
-                    // Next and Previous keep VoiceOver's focus on the button;
-                    // the step that changed under it is announced.
-                    if steps.indices.contains(index) {
-                        let step = steps[index]
-                        let parts = ["Step \(index + 1) of \(steps.count).", step.message,
-                                     SDKRoutePresenter.distanceLabel(for: step), session.stepFloorLabel(step.id)]
-                        UIAccessibility.post(notification: .announcement, argument: parts.compactMap { $0 }.joined(separator: ", "))
-                    }
+            .onChange(of: session.stepIndex) { index in
+                // Next and Previous keep VoiceOver's focus on the button; the
+                // step that changed under it is announced.
+                if steps.indices.contains(index) {
+                    let step = steps[index]
+                    let parts = ["Step \(index + 1) of \(steps.count).", step.message,
+                                 SDKRoutePresenter.distanceLabel(for: step), session.stepFloorLabel(step.id)]
+                    UIAccessibility.post(notification: .announcement, argument: parts.compactMap { $0 }.joined(separator: ", "))
                 }
             }
             KozmosSeparator()
