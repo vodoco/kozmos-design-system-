@@ -202,6 +202,13 @@ engine:
 cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:navigation
 ```
 
+The glass surface role has a parity check of its own, and the owned-CSS suite above measures it
+in both themes ([glass-surface-2026-09-20.md](glass-surface-2026-09-20.md)):
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm tokens:glass:check
+```
+
 ## 5. Where each behaviour lives
 
 The QA app (`apps/PointrPlayground/Sources/App`):
@@ -230,6 +237,7 @@ them under `packages/react/src/components` and `packages/android/src/main/java/c
 | The rail's geometry and the disc's travel                                                                   | `RouteProgressRail/RouteProgressRail.swift`: `discLeading`                                                | `RouteProgressRail/RouteProgressRail.tsx`: `ROUTE_PROGRESS_RAIL`, `discLeading`                                                | `RouteProgressRail/RouteProgressRail.kt`: `…Geometry`      |
 | The summary's navigation layout (destination, End, stats, progress)                                         | `RouteSummary/RouteSummary.swift`: `init(destination:…)`                                                  | `RouteSummary/RouteSummary.tsx`: `RouteSummaryNavigation`                                                                      | `RouteSummary/RouteSummary.kt`: the `destination` overload |
 | The QA app's directions on those parts; the flow test's reading of them                                     | `apps/PointrPlayground/…/SDKMapScreen.swift`: `topBar`, `directionsPanel`; `RoutingFlowUITests.swift`     | the Examples/Navigation story                                                                                                  | —                                                          |
+| The glass surface role — the tint, the edge, the off switch                                                 | `KozmosGlassSurface.swift`; the token in `KozmosEffects.swift`                                            | `styles/owned-components.css`: `.kozmos-surface-glass`; `context/design-config.ts`; `GlassSurface/`                            | `GlassSurface/GlassSurface.kt`; `tokens/KozmosEffects.kt`  |
 | Collapsible level switcher: named rows, trailing-aligned, opaque; the pill hidden from VoiceOver while open | `FloorSelector/FloorSelector.swift`: `expandedList`, `namedFloorButton`, the `expanded:` test initializer | no collapsible variant                                                                                                         | no collapsible variant                                     |
 | Search bar: magnifier silent, clear button labelled                                                         | `SearchBar/SearchBar.swift`                                                                               | `SearchBar/SearchBar.tsx` (already)                                                                                            | `SearchBar/SearchBar.kt` (already, "Clear")                |
 | The long-name fixture                                                                                       | `apps/Playground.swiftpm/…/POIExampleData.swift` (generated)                                              | `POIDetailPanel/POIDetailPanel.fixtures.ts`: `longContentPOI`, `longContentDetails`; the `LongContent` story                   | —                                                          |

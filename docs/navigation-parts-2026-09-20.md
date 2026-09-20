@@ -138,8 +138,9 @@ cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6
 1. **The rail's geometry** — 10-point dots, a 34-point disc, a 6-point track — is the prototype's,
    measured, not a token: the nearest sizes are 32 and 40. Keep the prototype's numbers as the
    part's own, or tokenise.
-2. **The card over the map is white at 90 %**, as the prototype's; on the QA app the map's labels
-   show through it. Keep, or opaque like the open level list.
+2. ~~**The card over the map is white at 90 %**, as the prototype's; on the QA app the map's labels
+   show through it. Keep, or opaque like the open level list.~~ Answered and built: the glass
+   surface role, [glass-surface-2026-09-20.md](glass-surface-2026-09-20.md).
 3. **The QA app's sheet while navigating** stays at the medium detent, so a third of it is empty
    under the buttons; the prototype's navigation sheet is compact. A `.fraction` detent the shell
    already has, or a compact detent — the shell's decision, not the app's.

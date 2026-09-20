@@ -20,6 +20,8 @@ read that before building anything a screen shows. The operator's guide for all 
 [kozmos-pointr-operators-guide-2026-09-20.md](kozmos-pointr-operators-guide-2026-09-20.md).
 Then the prototype's three navigation parts were built on iOS, React and Android and the QA
 app's directions put on them: [navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md).
+Then the glass surface role the handoff had ruled, built on all three platforms and measured:
+[glass-surface-2026-09-20.md](glass-surface-2026-09-20.md).
 
 Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
 It closes declaration-format and inert-opacity debt and migrates the temporal fields.
@@ -38,6 +40,10 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 The Pointr iOS thread, 2026-09-19 to 2026-09-20, newest first:
 
+- `glass-surface-2026-09-20.md`: the glass surface role from `Semantics.Effect.glass` on iOS, React
+  and Android — the token emitted natively, the web rule and component, the SwiftUI modifier, the
+  Compose defaults — with the card, the summary and the three web map cards on it; Liquid Glass
+  renders black in snapshots; the scoped preflight and `kozmos-reset`; three decisions.
 - `navigation-parts-2026-09-20.md`: the manoeuvre card over the map that opens into the
   itinerary, the itinerary list, the route progress rail and the summary's navigation layout,
   built on iOS, React and Android with pixel-measured tests, a three-engine browser check,

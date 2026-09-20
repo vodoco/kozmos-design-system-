@@ -274,9 +274,9 @@ build id, and a comment is not worth a re-stamp.
 - ~~`docs/figma-library-manifest.json` four weeks stale~~ — regenerated in #28, which also made the
   manifest and payload generators write Prettier-formatted output, so a regeneration is a
   content-only diff instead of 3,331 reflowed lines.
-- **Ruled, not yet built:** `tokens:raw:check` at 35 raw colours and 7 raw radii. Twenty-nine of the
-  colours are the same `bg-white/70` on three map cards and clear the moment the **glass** surface
-  role lands (§5.13).
+- **Ruled, then built (20 September):** `tokens:raw:check` stood at 35 raw colours and 7 raw radii;
+  the three map cards' `bg-white/70` cleared when the **glass** surface role landed (§5.13) — 20
+  colours remain, the baseline lowered to hold them.
 - **Ruled, not yet built:** the 18 floating-point values. Noise from a Figma export, not decisions.
   The type-scale ruling (§5.11) rounds `11.008…` and `13.008…` and adds 12 and 15 in the same pass. `Primitives.Typography.font.size` is read by no platform, and the
   `letterSpacing` and `line.height` scales are unused.
@@ -470,7 +470,9 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
 12. **The neutral ramp keeps both names** — `background.N` ascending for surfaces, `foreground.N`
     descending for ink, as today. The product maps to these at its own boundary; nothing is renamed.
 13. **A glass surface role is added** — composed from the `Semantics.Effect.glass` values that
-    already exist. It clears 29 of the 35 raw colours the ratchet counts.
+    already exist. It clears 29 of the 35 raw colours the ratchet counts. _Built on 20 September
+    on all three platforms: [glass-surface-2026-09-20.md](glass-surface-2026-09-20.md); the ratchet
+    stands at 20._
 14. **`Brand` (Readex Pro) stays, scoped with `unicode-range`** — the product is 93.8% Readex Pro,
     so the role matches what it sets. A declared system stack takes CJK, which the face does not
     cover, instead of whatever each browser picks.
@@ -1255,6 +1257,20 @@ Ruled the same evening: the rail's numbers stay; a glass surface role (§5.13) i
 three platforms and the card and the summary take it; a compact detent in the shell; each
 platform's own transition icons; the button-height finding withdrawn (44 everywhere by contract); the level list as built. The
 branch was pushed to origin. Next: the glass role, the transition arrows, the search sheet.
+
+### 2026-09-20 · The glass surface role (Claude Code)
+
+§5.13 built — `glass-surface-2026-09-20.md`, commits `60cca79`, `cae0b91`, `c72a06d`, `bfb035c`
+and the docs commit. `Semantics.Effect.glass` reaches iOS and Android as `KozmosEffects`, emitted
+by the tokens build; the web's `.kozmos-surface-glass` reads the token's variables and is switched
+off only while transparency is reduced; iOS composes the tint over the system's thin material;
+Compose draws the tint and the edge, having no backdrop blur. The manoeuvre card and the route
+summary are on the role on all three platforms, and the three web map cards too: the raw-colour
+ratchet drops from 32 to 20. Two findings: the system's Liquid Glass renders black in a hosted
+snapshot, so the material composition stays the role on every iOS version and Liquid Glass is a
+decision; and the scoped legacy preflight beat the role's edge on every engine until the element
+carried `kozmos-reset`. `tokens:glass:check` holds the token, its emission, the rule and the
+consumers together; the owned-CSS suite measures the role in both themes.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
