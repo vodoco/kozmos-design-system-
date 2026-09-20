@@ -58,6 +58,8 @@ final class RoutingFlowUITests: XCTestCase {
     /// hosted accessibility test, not here.)
     private func assertDirectionsAreReadable(_ directions: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
         let current = directions.descendants(matching: .any).matching(NSPredicate(format: "isSelected == true"))
+        // The list is lazy: its rows exist a moment after the buttons do.
+        _ = current.firstMatch.waitForExistence(timeout: 10)
         XCTAssertEqual(current.count, 1, "steps reading as current: \(current.allElementsBoundByIndex.map(\.label))", file: file, line: line)
         for element in current.allElementsBoundByIndex {
             print("QA-FLOW current step reads: \(element.label)")
