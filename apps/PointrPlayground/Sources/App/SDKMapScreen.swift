@@ -259,11 +259,12 @@ struct SDKMapScreen: View {
         [session.category?.id ?? "-", trimmedQuery.isEmpty ? "empty" : "query", searchFocused ? "focused" : "idle", session.recents.isEmpty ? "-" : "recents"].joined(separator: "/")
     }
 
-    /// The row's four forms, as the prototype's: the field with the AI search;
-    /// focused and empty, a Cancel beside it; with a query, Filters between
-    /// them; a tile chosen, its chip and count in the field's place. Filters
-    /// and the AI search have no flow in this milestone; they are here to be
-    /// seen where the prototype puts them.
+    /// The row's three forms: the field with the AI search; focused and
+    /// empty, a Cancel beside it; a tile chosen, its chip and count in the
+    /// field's place. The prototype's Filters button is not here: Olcay
+    /// removed it on the 21st — the AI companion is to take filtering. The
+    /// AI search has no flow yet; it is here to be seen where the prototype
+    /// puts it.
     @ViewBuilder private var searchRow: some View {
         HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
             if let category = session.category {
@@ -272,6 +273,7 @@ struct SDKMapScreen: View {
                 KozmosCategoryField(
                     label: category.name,
                     count: session.places(in: category).count,
+                    countLabel: Self.placesLabel,
                     tint: tint(category),
                     onClear: session.clearCategory
                 ) {
@@ -289,15 +291,10 @@ struct SDKMapScreen: View {
                         .transition(KozmosTransitions.reveal)
                 }
             }
-            if session.category != nil || !trimmedQuery.isEmpty {
-                KozmosIconButton(iconName: "slider.horizontal.3", variant: .outline, size: .lg, action: {})
-                    .accessibilityLabel("Filters")
-                    .transition(KozmosTransitions.reveal)
-            }
             KozmosAISearchButton(action: {})
         }
         // Every change of the row's form — the field narrowing for Cancel, the
-        // chip taking the field's place, Filters arriving — on the standard motion.
+        // chip taking the field's place — on the standard motion.
         .animation(KozmosMotion.standard, value: contentState)
     }
 
@@ -306,11 +303,17 @@ struct SDKMapScreen: View {
         session.query = ""
     }
 
-    /// The taxonomy's eighteen tiles (the two personal ones first), on the
-    /// system's grid, in the sheet: no surface or rule of its own.
+    /// The taxonomy's tiles (the two personal ones first), each with its
+    /// count of places at its square's top-right, on the system's grid, in
+    /// the sheet: no surface or rule of its own. Until the venue's places are
+    /// counted every tile shows without a count; then a tile without a place
+    /// leaves, on the standard motion.
     private var tiles: some View {
         KozmosBrowseCategoriesPanel(
-            categories: QuickAccess.tiles.map { KozmosCategoryPresentation(id: $0.id, label: $0.name) },
+            categories: session.visibleTiles.map { category in
+                let count = session.count(of: category)
+                return KozmosCategoryPresentation(id: category.id, label: category.name, resultCount: count, resultCountLabel: count.map(Self.placesLabel))
+            },
             label: "Quick access",
             presentation: .sheet,
             onSelect: { id in
@@ -323,7 +326,11 @@ struct SDKMapScreen: View {
             },
             emptyState: { Text("No quick access for this venue.") }
         )
+        .animation(KozmosMotion.standard, value: session.visibleTiles.map(\.id))
     }
+
+    /// The count's spoken form, on the tiles and the chip alike.
+    static func placesLabel(_ count: Int) -> String { count == 1 ? "1 place" : "\(count) places" }
 
     /// The category's colour: the system's data colour the taxonomy's icon
     /// name maps onto, the theme's for the personal tiles.

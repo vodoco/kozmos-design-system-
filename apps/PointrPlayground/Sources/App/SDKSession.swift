@@ -66,6 +66,11 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     /// The quick-access tile chosen, replacing the search field with its chip
     /// until cleared; nil while browsing or searching by text.
     @Published var category: QuickAccessCategory?
+    /// Each taxonomy tile's places in the loaded venue, counted once per
+    /// load; nil until the venue's places have arrived. The personal tiles
+    /// count live from what this session has marked (`count(of:)`).
+    @Published private(set) var tileCounts: [String: Int]?
+    private var loggedPlaceCount = -1
     /// The places opened this session, most recent first, at most three: what
     /// the focused, empty field offers, as the prototype's "Recently visited".
     @Published private(set) var recents: [PTRPoi] = []
@@ -210,6 +215,42 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         guard let building else { return }
         pois = Pointr.shared.poiManager?.pois(for: building)?.getPoiList() ?? []
         poiDataReady = Pointr.shared.dataManager?.isContentReady(forSite: building.site.identifier) ?? false
+        countTiles()
+    }
+
+    /// The venue's places against every taxonomy tile, in one pass, once the
+    /// places have arrived; and, once per load, what the content says about
+    /// its places besides their names — the words a companion could filter on.
+    private func countTiles() {
+        guard !pois.isEmpty else { tileCounts = nil; return }
+        let places = pois.map { (name: $0.name, freeText: SDKPOIAdapter.freeText($0)) }
+        tileCounts = QuickAccess.counts(of: QuickAccess.categories, places: places)
+        guard places.count != loggedPlaceCount else { return }
+        loggedPlaceCount = places.count
+        let words = Set(places.flatMap(\.freeText).map { $0.lowercased() }).sorted()
+        log.notice("QA-DATA \(places.count, privacy: .public) places, \(words.count, privacy: .public) distinct tags and keywords")
+        for start in stride(from: 0, to: words.count, by: 40) {
+            log.notice("QA-DATA words \(start, privacy: .public): \(words[start..<min(start + 40, words.count)].joined(separator: " | "), privacy: .public)")
+        }
+    }
+
+    /// A tile's places in the loaded venue, or nil before they are counted.
+    func count(of category: QuickAccessCategory) -> Int? {
+        switch category.id {
+        case QuickAccess.favouritesId, QuickAccess.bookmarksId: return places(in: category).count
+        default: return tileCounts?[category.id]
+        }
+    }
+
+    /// The tiles the sheet shows: every tile until the venue's places are
+    /// counted, then those with at least one place — the personal tiles too,
+    /// so an empty Favourites or Bookmarks is not offered.
+    var visibleTiles: [QuickAccessCategory] {
+        guard var counts = tileCounts else { return QuickAccess.tiles }
+        for id in [QuickAccess.favouritesId, QuickAccess.bookmarksId] {
+            if let tile = QuickAccess.category(id: id) { counts[id] = count(of: tile) ?? 0 }
+        }
+        return QuickAccess.visibleTiles(counts: counts)
     }
 
     func select(_ poi: PTRPoi) {

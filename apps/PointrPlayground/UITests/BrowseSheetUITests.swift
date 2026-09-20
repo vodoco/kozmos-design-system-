@@ -3,7 +3,10 @@ import XCTest
 /// The initial sheet, driven the way a visitor drives it: it rests on the
 /// search row and the first tile row; a drag on a tile grows it; the field
 /// opens it to large; a query lists places and a place opens as a card at
-/// half height with the sheet's place remembered; a tile becomes a chip.
+/// half height with the sheet's place remembered; a tile becomes a chip with
+/// the tile's own count. Once the venue's places are counted, every tile
+/// shown carries a count of at least one — the empty ones have left — and
+/// there is no Filters button in any form (Olcay, 21st).
 /// Live Design-QA data, like the routing flow: not in CI.
 ///
 /// The query is the first word of `TEST_RUNNER_KOZMOS_QA_DESTINATION`, or
@@ -31,6 +34,16 @@ final class BrowseSheetUITests: XCTestCase {
         app.buttons.matching(NSPredicate(format: "label BEGINSWITH[c] %@", name)).firstMatch
     }
 
+    /// The tiles with a count: after the venue's places are counted, every
+    /// tile shown has one, its spoken form "N places".
+    private var countedTiles: XCUIElementQuery {
+        app.buttons.matching(NSPredicate(format: "value ENDSWITH[c] ' places' OR value ENDSWITH[c] ' place'"))
+    }
+
+    private func count(in tile: XCUIElement) -> Int {
+        Int((tile.value as? String ?? "").split(separator: " ").first ?? "") ?? 0
+    }
+
     /// The search field: the sheet's first row, wherever the sheet rests.
     private var field: XCUIElement { app.textFields.firstMatch }
 
@@ -38,7 +51,8 @@ final class BrowseSheetUITests: XCTestCase {
     func testTheSheetRestsOnTheSearchRowGrowsUnderAFingerAndOpensForTheField() throws {
         app.launch()
         let height = app.frame.height
-        XCTAssertTrue(tile("Favourites").waitForExistence(timeout: 120), "the quick-access tiles did not appear")
+        let anchor = countedTiles.firstMatch
+        XCTAssertTrue(anchor.waitForExistence(timeout: 120), "no tile with a count appeared")
         XCTAssertTrue(field.exists, "no search field in the sheet")
         attach("1-rest")
 
@@ -50,7 +64,7 @@ final class BrowseSheetUITests: XCTestCase {
         // sheet, and does not open the tile it started on. From the square,
         // not the tile's centre: a resting tile's lower half lies in the home
         // indicator's band, where an upward swipe is the system's, not the app's.
-        let square = tile("Favourites").coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.28))
+        let square = anchor.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.28))
         square.press(forDuration: 0.05, thenDragTo: square.withOffset(CGVector(dx: 0, dy: -300)), withVelocity: .slow, thenHoldForDuration: 0.15)
         let grownTop = field.frame.minY
         XCTAssertLessThan(grownTop, restingTop - 150, "a swipe on a tile did not grow the sheet: \(restingTop) → \(grownTop)")
@@ -64,7 +78,7 @@ final class BrowseSheetUITests: XCTestCase {
         XCTAssertLessThan(openTop, height * 0.2, "the field's focus did not open the sheet to large: the field is at \(openTop)")
         attach("3-focused")
 
-        // A query lists places; Filters replaces Cancel.
+        // A query lists places; Cancel goes. No Filters: the AI companion filters.
         // The named place's first word; the building the map opened on varies
         // between launches (handoff item G) and may not have it, so a vowel
         // stands in until some place matches.
@@ -83,7 +97,7 @@ final class BrowseSheetUITests: XCTestCase {
             firstRow = list.buttons.firstMatch
         }
         XCTAssertTrue(firstRow.waitForExistence(timeout: 10), "no result rows for \(query)")
-        XCTAssertTrue(app.buttons["Filters"].exists, "no Filters button with a query")
+        XCTAssertFalse(app.buttons["Filters"].exists, "a Filters button is shown with a query; it was removed")
         XCTAssertFalse(any("search-cancel").exists, "Cancel still shown with a query")
         attach("4-results")
 
@@ -107,20 +121,37 @@ final class BrowseSheetUITests: XCTestCase {
 
         // Clearing the field brings the tiles back; the sheet stays.
         app.buttons["Clear search"].tap()
-        XCTAssertTrue(tile("Favourites").waitForExistence(timeout: 5), "the tiles did not return after Clear")
+        XCTAssertTrue(countedTiles.firstMatch.waitForExistence(timeout: 5), "the tiles did not return after Clear")
         XCTAssertLessThan(field.frame.minY, height * 0.2, "Clear moved the sheet")
 
-        // A tile becomes the chip in the field's place; its × brings the field back.
-        tile("Gates").tap()
-        XCTAssertTrue(any("category-chip").waitForExistence(timeout: 5), "no chip for the chosen tile")
+        // With the sheet large, every tile in view carries a count of at
+        // least one: the empty ones have left the grid.
+        let shown = countedTiles.allElementsBoundByIndex.map { ($0.label, $0.value as? String ?? "") }
+        XCTAssertFalse(shown.isEmpty, "no counted tiles with the sheet large")
+        for (label, value) in shown {
+            XCTAssertGreaterThan(Int(value.split(separator: " ").first ?? "") ?? 0, 0, "\(label) is shown without a place: '\(value)'")
+        }
+        print("QA-SHEET \(shown.count) tiles with places in view: \(shown.map { "\($0.0) (\($0.1))" }.joined(separator: "; "))")
+
+        // A tile becomes the chip in the field's place, carrying the tile's
+        // own count; its × brings the field back.
+        let chosen = countedTiles.firstMatch
+        let chosenName = chosen.label
+        let chosenCount = count(in: chosen)
+        chosen.tap()
+        XCTAssertTrue(any("category-chip").waitForExistence(timeout: 5), "no chip for \(chosenName)")
         XCTAssertFalse(field.exists, "the field is still shown beside the chip")
-        XCTAssertTrue(app.buttons["Filters"].exists, "no Filters button with a tile chosen")
+        let chipLabel = any("category-chip").label
+        XCTAssertTrue(chipLabel.hasPrefix(chosenName), "the chip is not \(chosenName)'s: '\(chipLabel)'")
+        XCTAssertTrue(chipLabel.hasSuffix("\(chosenCount) place") || chipLabel.hasSuffix("\(chosenCount) places"), "the chip's count is not the tile's \(chosenCount): '\(chipLabel)'")
+        XCTAssertFalse(app.buttons["Filters"].exists, "a Filters button is shown with a tile chosen; it was removed")
+        print("QA-SHEET \(chosenName): tile \(chosenCount), chip '\(chipLabel)'")
         attach("7-chip")
         let remove = any("category-chip").buttons.firstMatch
         XCTAssertTrue(remove.exists, "the chip has no remove button")
         remove.tap()
         XCTAssertTrue(field.waitForExistence(timeout: 5), "the field did not return after the chip was removed")
-        XCTAssertTrue(tile("Favourites").exists, "the tiles did not return after the chip was removed")
+        XCTAssertTrue(countedTiles.firstMatch.waitForExistence(timeout: 5), "the tiles did not return after the chip was removed")
         attach("8-back-to-tiles")
     }
 }

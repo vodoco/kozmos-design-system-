@@ -104,6 +104,33 @@ enum QuickAccess {
         return phrases.contains { phrase in texts.contains { text in contains(text, phrase) } }
     }
 
+    /// Every category's count of places, in one pass over the places: each
+    /// place's words are split once and tried against every category's
+    /// phrases, so a venue's whole quick-access bar is counted at once. It
+    /// agrees with `matches` place by place. The personal tiles are not
+    /// counted here; they count what the session has marked.
+    static func counts(of categories: [QuickAccessCategory], places: [(name: String, freeText: [String])]) -> [String: Int] {
+        let phrasesByCategory = categories.map { category in
+            (id: category.id, phrases: category.terms.map(words).filter { !$0.isEmpty })
+        }
+        var counts = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, 0) })
+        for place in places {
+            let texts = ([place.name] + place.freeText).map(words)
+            for entry in phrasesByCategory where entry.phrases.contains(where: { phrase in texts.contains { contains($0, phrase) } }) {
+                counts[entry.id, default: 0] += 1
+            }
+        }
+        return counts
+    }
+
+    /// The tiles the sheet shows: every tile until the venue's places are
+    /// counted; then those with at least one place, in the tiles' order — a
+    /// tile that would lead to no result leaves the grid (Olcay, 21st).
+    static func visibleTiles(counts: [String: Int]?) -> [QuickAccessCategory] {
+        guard let counts else { return tiles }
+        return tiles.filter { (counts[$0.id] ?? 0) > 0 }
+    }
+
     static func contains(_ text: [String], _ phrase: [String]) -> Bool {
         guard phrase.count <= text.count else { return false }
         return (0...(text.count - phrase.count)).contains { start in

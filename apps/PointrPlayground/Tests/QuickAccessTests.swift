@@ -61,4 +61,26 @@ final class QuickAccessTests: XCTestCase {
         XCTAssertTrue(QuickAccess.matches(restrooms, name: "Restroom", freeText: []))
         XCTAssertFalse(QuickAccess.matches(gates, name: "Restroom", freeText: []))
     }
+
+    func testEveryCategoryIsCountedInOnePassAndAgreesWithTheMatch() {
+        let gates = QuickAccessCategory(id: "gates", name: "Gates", icon: .symbol("x"), terms: ["gate"], tint: .theme)
+        let dining = QuickAccessCategory(id: "dining", name: "Dining", icon: .symbol("x"), terms: ["restaurant", "coffee shop"], tint: .orange)
+        let lounges = QuickAccessCategory(id: "lounges", name: "Lounges", icon: .symbol("x"), terms: ["lounge"], tint: .purple)
+        let places: [(name: String, freeText: [String])] = [
+            ("Gate B22", []), ("Gate C1", ["boarding"]), ("Dunkin'", ["Coffee Shop"]),
+            ("Legal Sea Foods", ["restaurant", "seafood"]), ("Restroom", ["gates level"]),
+        ]
+        let counts = QuickAccess.counts(of: [gates, dining, lounges], places: places)
+        XCTAssertEqual(counts, ["gates": 2, "dining": 2, "lounges": 0], "a phrase must run whole: 'gates level' is not 'gate'")
+        for category in [gates, dining, lounges] {
+            let oneByOne = places.filter { QuickAccess.matches(category, name: $0.name, freeText: $0.freeText) }.count
+            XCTAssertEqual(counts[category.id], oneByOne, "\(category.id): the pass disagrees with the match")
+        }
+    }
+
+    func testTilesWithoutAPlaceLeaveOnceTheVenueIsCountedAndAllShowBefore() {
+        XCTAssertEqual(QuickAccess.visibleTiles(counts: nil).count, QuickAccess.tiles.count, "before the count, every tile shows")
+        let visible = QuickAccess.visibleTiles(counts: ["gates": 3, "dining": 0, QuickAccess.bookmarksId: 1])
+        XCTAssertEqual(visible.map(\.id), [QuickAccess.bookmarksId, "gates"], "only tiles with a place show, in the tiles' order")
+    }
 }
