@@ -217,6 +217,20 @@ footprint and 66 ring, the ring's turn and its rest under reduced motion — on 
 cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:search-sheet
 ```
 
+The motion tokens — three durations, two easings — and their native files, the shells' snaps and
+the parts' entrances on them; and the quick-access search words derived from the taxonomy:
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm tokens:motion:check
+```
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && node scripts/sync-ios-quick-access.mjs
+```
+
+(`--fetch` re-reads the pinned taxonomy and rewrites the vendored terms; `--write` rewrites the
+Swift literal.)
+
 The prototype itself can be re-driven and re-measured at any time:
 
 ```sh
@@ -278,7 +292,13 @@ and its golden under `src/test/snapshots/images/`; `apps/PointrPlayground/Tests/
 `packages/react/src/components/AdaptiveMapShell/panel-detents.ts` and
 `packages/android/.../AdaptiveMapShell/PanelDetents.kt`, each with its tests, and
 `scripts/check-map-sheet.mjs`; the QA app's tiles in `Sources/App/Model/QuickAccess.swift` with
-`Tests/QuickAccessTests.swift` and `UITests/BrowseSheetUITests.swift`.
+`Tests/QuickAccessTests.swift` and `UITests/BrowseSheetUITests.swift`; the motion tokens in
+`packages/tokens/src/tokens*.json` (`Semantics.Motion.duration`, `.easing`), emitted by
+`build.mjs` as `KozmosMotion.swift` / `.kt` and CSS variables, with `KozmosTransitions.swift`,
+`Motion/Transitions.kt` and the `pop` / `reveal` / `crossfade` rules in `owned-components.css`;
+the category field in `CategoryField/` on each platform; the quick-access words in
+`scripts/sync-ios-quick-access.mjs`, `Resources/QuickAccess/aviation-terms-10.12.0.json` and
+`Model/QuickAccessTerms.swift`.
 
 ## 6. Measuring, not eyeballing
 
@@ -373,6 +393,9 @@ _Added on the 21st, from the sheet stage:_
 - `.ignoresSafeArea()` with no argument also ignores the keyboard's region: the sheet stayed
   under the keyboard and the routing flow's origin row could not be tapped. `.ignoresSafeArea(.container)`
   runs the map to the edges and still lets the sheet rise above the keyboard.
+- A SwiftUI `.animation(value:)` keyed on the sheet's height also eases a measurement into place —
+  the anchored peek arriving after the first layout — and a render test sees a mid-motion frame
+  (the peek tests read 103 for 136). Key it on the detent, which a measurement never changes.
 
 - The iPhone 17 Pro simulator speaks Arabic first; `defaults read -g AppleLanguages` before
   concluding anything about a backend's language.

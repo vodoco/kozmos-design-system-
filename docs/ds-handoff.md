@@ -1333,6 +1333,24 @@ QA app's sheet was recomposed on Kozmos parts with the taxonomy's aviation quick
 on each platform; the web sheet driven on three engines and by touch on chromium; the QA app's
 sheet driven by a UI test.
 
+### 2026-09-21 · The category state, the ring, the motion tokens (Claude Code)
+
+`initial-sheet-2026-09-20.md`, its later sections. Olcay's screenshots of the QA app, one after
+another: the tiles' squares dropping beside a two-line label (the grid now aligns its cells at the
+top); the AI ring as a thick collar (the prototype re-measured — a 48 circle with a 2.5 band, the
+"66 outer" a wrong first reading — and its rainbow made of the data-colour tokens, turning 3.6 s a
+turn); the map inset from the status bar and the sheet cut above the home indicator (the three
+shells run edge to edge, the chrome and the sheet's content keeping the safe areas, the keyboard's
+region still respected); the row's forms switching instantly (the system had no motion tokens —
+`Semantics.Motion` gains three durations and two easings, the prototype's curves, emitted natively,
+with `KozmosTransitions` on each platform, the shells' snaps on them and the iOS shell's rise on a
+host-set detent — keyed on the detent, not the height, so a measurement lands at once); and the
+chosen category
+(`taxonomy.json`'s `alsoKnownAs` lists are the search words, derived by
+`sync-ios-quick-access.mjs`; the prototype's 48-tall field in the category's colour is
+`CategoryField` on all three; the map shows the category's places alone). Every one measured, most
+made to fail first.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

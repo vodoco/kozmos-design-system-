@@ -94,6 +94,58 @@ the safe areas the map now runs under.
   an activity that calls `enableEdgeToEdge()` shows it, a padded one loses nothing. Paparazzi has
   no insets, so the goldens hold.
 
+### Olcay's four points on the category state (the 21st)
+
+_"The transition between component states are instant"; "check taxonomy.json for quick access
+search"; "check the prototype for the AI search button"; "observe the quick access search states
+when the user chooses one."_ Measured first, then built:
+
+- **The prototype's own row switches are instant** — its field wrap and Cancel carry no
+  transition; only its sheet (280 ms), its chip colours (180 ms), its field's border (150 ms) and
+  its AI dock (460 ms) move. The animation is a design decision beyond it, and the system had no
+  motion tokens to make it with: `Semantics.Motion` held only an enter/exit scale and two slide
+  lengths. Now it holds **three durations** — quick 150 ms, standard 280 ms, deliberate 460 ms —
+  and **two easings** — standard `cubic-bezier(0.4, 0, 0.2, 1)`, emphasised
+  `cubic-bezier(0.34, 1.56, 0.64, 1)` — the prototype's own curves, emitted natively as
+  `KozmosMotion` for iOS and Compose and as CSS variables, held together by
+  `pnpm tokens:motion:check`. On them, three transitions on each platform (`KozmosTransitions`,
+  `.kozmos-pop` / `-reveal` / `-crossfade`): a part taking another's place pops (from 90 %, a little
+  left, fading in — the prototype's chip keyframe), a control appearing beside another reveals, and
+  content replacing content crossfades. The sheets snap between detents on the standard motion
+  instead of their own spring; the search bar's clear circle comes on the quick one; the QA app's
+  row and what follows it animate on the standard one through every form. The iOS shell also
+  animates a detent a host sets — the field's focus opening the sheet — as it animates a snap,
+  keyed on the detent rather than on the height: an animation keyed on the height also eased the
+  anchored peek's measurement into place, and the peek render tests caught it in a mid-motion
+  frame (103 for 136) before the key changed. The web's transition and Compose's
+  `animateDpAsState` already did. Measured on the iPhone from a screen recording split into
+  frames with AVFoundation: after the tap, the field's right edge eased from 330 to 242 over
+  eight successive frames, and the sheet's top rose from 705 to 58 pt over seven — 1112, 673,
+  423, 282, 208, 178, 175 px at 3× — where each had been one frame's jump.
+- **The icon button's large size is 48**, the prototype's Filters and AI search beside a 44 field;
+  it had been 44 like the others (the web's `lg` changed nothing at all). The component contract
+  names it, the check holds all three platforms to it, and the QA app's Filters uses it. A decision
+  for Olcay if 44 was wanted everywhere.
+- **The taxonomy's words.** `taxonomy.json` carries, per type, a `displayName` and an
+  `alsoKnownAs` list — a boarding gate is "gate", "gates", "flight gate"; a restroom "toilet",
+  "washroom", "wc" — and no colours or search fields. `scripts/sync-ios-quick-access.mjs` joins
+  the quick-access matchers to those (a matcher with service types names the service, not the
+  whole office type) into a vendored terms file and a Swift literal; a tile now matches by phrase
+  running whole through a place's name, tag or keyword. Gates no longer carries "office" or
+  "transportation".
+- **The AI search's ring is the prototype's rainbow** — red, amber, green, cyan, blue, violet —
+  drawn from the system's own data colours and its success green (`semantics-data-red`, `-yellow`,
+  `emotional-success-500`, `-teal`, `-blue`, `-purple`), the same six stops on iOS, web and
+  Compose; the web check reads the resolved red and blue back.
+- **A chosen category** in the prototype: the field becomes a 48-tall field in the category's
+  colour — a 12 % fill, a 1-pixel border, the icon at 28, the name at 15 semibold, a 22-tall count
+  pill, a 32 clear — Filters and the AI search beside it, the sheet at the same detent, and the
+  map's other pins faded to 22 %. Built as **`CategoryField` / `KozmosCategoryField`** on all
+  three platforms with the category's tint (the taxonomy names each quick-access icon by colour;
+  each maps onto a data colour, the theme for the personal tiles), measured on iOS by pixels, on
+  the web on three engines, on Compose by golden. The QA app's row uses it, and asks the SDK to
+  show the category's places alone (`poisToShow`; its per-place style has no opacity to fade with).
+
 ## 3. The QA app's sheet
 
 [SDKMapScreen.swift](../apps/PointrPlayground/Sources/App/SDKMapScreen.swift) `searchSheet`:
@@ -163,21 +215,35 @@ turning ring, the shells edge to edge — everything was run again:
 
 Not run: Chromatic; Android on a device or emulator; the Figma side (no importer access).
 
+After the category-state batch (the 21st) everything ran again: iOS package 127 on iOS 26.5 and
+127 on 18.4 (the rainbow band, the category field, the tiles' top edge, the edges), 90 on macOS;
+QA app unit 46 (`QuickAccessTests` on the taxonomy's words); both UI tests; the playground builds;
+web 544 unit tests, `test:search-sheet` 4 of 4 on chromium, firefox and webkit (the tiles, the
+ring's turn and rest, the category field's colour, pill, clear and the row's 48 buttons),
+`test:map-sheet`, `test:owned-css`, `test:navigation`, `test:poi-details`, classes, css-build,
+raw values, `tokens:motion:check`, `components:contract:check`; Compose `verifyPaparazziDebug`
+with the category field's golden new and the search sheet's re-recorded; live on the iPhone, the
+recorded focus transition's frames.
+
 ## 6. Change it yourself
 
-| What                                     | Where                                                                                                                                                          |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The numbers, on any platform             | iOS `KozmosMapPanelDetent.height(in:)`; web `PANEL_DETENT_RULES`; Compose `KozmosMapPanelDetent.Companion`                                                     |
-| The drag rule                            | iOS `KozmosPanelDragKind.decide`; web `decidePanelDrag`; Compose `decidePanelDrag` and the `NestedScrollConnection`                                            |
-| A sheet's peek                           | iOS `.kozmosPanelPeekAnchor()`; web `{...panelPeekAnchorProps}`; Compose `Modifier.kozmosPanelPeekAnchor()`                                                    |
-| Content that scrolls in a sheet (iOS)    | `KozmosPanelScrollView` in place of `ScrollView`; a plain `ScrollView` scrolls at every detent and never hands off                                             |
-| The QA app's tiles and their words       | `apps/PointrPlayground/Sources/App/Model/QuickAccess.swift`; the vendored file and icons in `Sources/App/Resources/QuickAccess`                                |
-| The QA app's sheet and its detent memory | `SDKMapScreen.swift`: `searchSheet`, `searchRow`, the three `onChange`s                                                                                        |
-| Drive the web sheet                      | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:map-sheet` (`ADAPTIVE_BROWSER=firefox\|webkit`), on a served Storybook build                                    |
-| Measure the web's tiles and the AI ring  | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:search-sheet`, the same way                                                                                     |
-| Drive the QA app's sheet                 | the `KozmosPointrQAUI` scheme, `-only-testing:KozmosPointrQAUITests/BrowseSheetUITests`, with the two `TEST_RUNNER_KOZMOS_QA_*` names                          |
-| Re-drive the prototype                   | `node scripts/measure-prototype-sheet.cjs <out-dir>`                                                                                                           |
-| Re-record the Compose goldens            | `ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew --no-daemon -q recordPaparazziDebug --tests "*KozmosAdaptiveMapShellPaparazziTest*"` in `packages/android` |
+| What                                     | Where                                                                                                                                                                                               |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The numbers, on any platform             | iOS `KozmosMapPanelDetent.height(in:)`; web `PANEL_DETENT_RULES`; Compose `KozmosMapPanelDetent.Companion`                                                                                          |
+| The drag rule                            | iOS `KozmosPanelDragKind.decide`; web `decidePanelDrag`; Compose `decidePanelDrag` and the `NestedScrollConnection`                                                                                 |
+| A sheet's peek                           | iOS `.kozmosPanelPeekAnchor()`; web `{...panelPeekAnchorProps}`; Compose `Modifier.kozmosPanelPeekAnchor()`                                                                                         |
+| Content that scrolls in a sheet (iOS)    | `KozmosPanelScrollView` in place of `ScrollView`; a plain `ScrollView` scrolls at every detent and never hands off                                                                                  |
+| The QA app's tiles and their words       | `apps/PointrPlayground/Sources/App/Model/QuickAccess.swift`; the vendored file and icons in `Sources/App/Resources/QuickAccess`                                                                     |
+| The QA app's sheet and its detent memory | `SDKMapScreen.swift`: `searchSheet`, `searchRow`, the three `onChange`s                                                                                                                             |
+| Drive the web sheet                      | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:map-sheet` (`ADAPTIVE_BROWSER=firefox\|webkit`), on a served Storybook build                                                                         |
+| Measure the web's tiles and the AI ring  | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:search-sheet`, the same way                                                                                                                          |
+| Drive the QA app's sheet                 | the `KozmosPointrQAUI` scheme, `-only-testing:KozmosPointrQAUITests/BrowseSheetUITests`, with the two `TEST_RUNNER_KOZMOS_QA_*` names                                                               |
+| Re-drive the prototype                   | `node scripts/measure-prototype-sheet.cjs <out-dir>`                                                                                                                                                |
+| The motion tokens and their native files | `packages/tokens/src/tokens*.json` `Semantics.Motion`; `build.mjs` `ios-swift/motion`, `android-compose/motion`; `pnpm tokens:build`, copy `KozmosMotion.swift` / `.kt`; `pnpm tokens:motion:check` |
+| The transitions                          | iOS `KozmosTransitions.swift`; web `owned-components.css` (`pop`, `reveal`, `crossfade`); Compose `Motion/Transitions.kt`                                                                           |
+| The quick-access words                   | `node scripts/sync-ios-quick-access.mjs --fetch --write`; `Resources/QuickAccess/aviation-terms-10.12.0.json`; `Model/QuickAccessTerms.swift`                                                       |
+| The category field                       | `CategoryField/` on each platform; the QA app's `searchRow`; `scripts/check-search-sheet.mjs`                                                                                                       |
+| Re-record the Compose goldens            | `ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew --no-daemon -q recordPaparazziDebug --tests "*KozmosAdaptiveMapShellPaparazziTest*"` in `packages/android`                                      |
 
 ## 7. Left as found, and for Olcay
 
