@@ -89,11 +89,58 @@ try {
     assert.equal(ring.animationName, "kozmos-ai-search-spin", `the ring does not turn: ${ring.animationName}`);
     assert.equal(ring.animationDuration, "3.6s", `the ring's turn is not the prototype's 3.6 seconds: ${ring.animationDuration}`);
     assert.match(ring.background, /conic-gradient/, `the ring is not the conic gradient: ${ring.background}`);
+    // The rainbow's stops resolve to the data colours: red first and last, blue among them.
+    assert.match(ring.background, /rgb\(220, 38, 38\)/, `the ring's red is not the data red: ${ring.background}`);
+    assert.match(ring.background, /rgb\(37, 99, 235\)/, `the ring's blue is not the data blue: ${ring.background}`);
     // It turns: the transform differs a moment later.
     const first = await page.locator(".kozmos-ai-search-ring").evaluate((node) => getComputedStyle(node).transform);
     await page.waitForTimeout(400);
     const later = await page.locator(".kozmos-ai-search-ring").evaluate((node) => getComputedStyle(node).transform);
     assert.notEqual(first, later, `the ring's transform did not change over 400 ms: ${first}`);
+  });
+
+  await finish(await open("product-sdk-categoryfield--in-the-search-row"), "category-field-in-the-row", async (page) => {
+    const field = page.getByRole("group", { name: "Gates, 2 places" });
+    await field.waitFor();
+    const box = await field.boundingBox();
+    near(box.height, 48, 1, "the category field is not 48 tall");
+    const styles = await field.evaluate((node) => {
+      const s = getComputedStyle(node);
+      const pill = node.querySelector("[aria-label='2 places']");
+      const clear = node.querySelector("button");
+      const icon = node.querySelector("span[aria-hidden]");
+      return {
+        border: s.borderTopWidth + " " + s.borderTopColor,
+        background: s.backgroundColor,
+        color: s.color,
+        radius: s.borderTopLeftRadius,
+        pill: pill ? { height: pill.offsetHeight, background: getComputedStyle(pill).backgroundColor, color: getComputedStyle(pill).color } : null,
+        clear: clear ? clear.offsetWidth + "x" + clear.offsetHeight : null,
+        icon: icon ? icon.offsetWidth : null,
+      };
+    });
+    // The data yellow, #d97706, as the border and the pill; a 12 % tint as the fill.
+    assert.equal(styles.border, "1px rgb(217, 119, 6)", `the border is not the category's colour: ${styles.border}`);
+    assert.equal(styles.color, "rgb(217, 119, 6)", `the text is not the category's colour: ${styles.color}`);
+    // color-mix resolves to rgba() on some engines and color(srgb …) on others.
+    const fill = /rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/.exec(styles.background) ?? (() => {
+      const m = /color\(srgb ([\d.]+) ([\d.]+) ([\d.]+) \/ ([\d.]+)\)/.exec(styles.background);
+      return m ? [m[0], String(Math.round(m[1] * 255)), String(Math.round(m[2] * 255)), String(Math.round(m[3] * 255)), m[4]] : null;
+    })();
+    assert.ok(fill, `the fill is not a colour with alpha: ${styles.background}`);
+    assert.deepEqual(fill.slice(1, 4).map(Number), [217, 119, 6], `the fill is not the category's colour: ${styles.background}`);
+    near(Number(fill[4]), 0.12, 0.01, "the fill is not at 12 %");
+    assert.equal(styles.radius, "16px", `the radius is not the control's: ${styles.radius}`);
+    assert.equal(styles.pill?.height, 22, `the pill is not 22 tall: ${JSON.stringify(styles.pill)}`);
+    assert.equal(styles.pill?.background, "rgb(217, 119, 6)", `the pill is not filled with the colour: ${JSON.stringify(styles.pill)}`);
+    assert.equal(styles.clear, "32x32", `the clear is not 32: ${styles.clear}`);
+    assert.equal(styles.icon, 28, `the icon is not 28: ${styles.icon}`);
+    // The row: the field, Filters at 48 and the AI search at 48, all one height band.
+    const filters = await page.getByRole("button", { name: "Filters" }).boundingBox();
+    const ai = await page.getByRole("button", { name: "AI search" }).boundingBox();
+    near(filters.height, 48, 1, "Filters is not 48");
+    near(ai.height, 48, 1, "the AI search is not 48");
+    near(filters.y + filters.height / 2, box.y + box.height / 2, 1, "Filters is not centred on the field");
   });
 
   await finish(await open("product-sdk-aisearchbutton--default", { reducedMotion: "reduce" }), "ai-search-ring-rests-with-reduced-motion", async (page) => {

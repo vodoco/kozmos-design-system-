@@ -777,6 +777,18 @@ assertContains(
   "44px IconButton root class",
 );
 assertContains(
+  files.reactIconButton,
+  source.reactIconButton,
+  'if (size === "lg") return "h-12 w-12 px-0',
+  "48px IconButton large size",
+);
+assertContains(
+  files.androidIconButton,
+  source.androidIconButton,
+  "modifier.size(if (size == KozmosIconButtonSize.Lg) 48.dp else 44.dp)",
+  "Android IconButton 44dp, 48dp for the large size",
+);
+assertContains(
   files.reactCounter,
   source.reactCounter,
   "h-5 min-w-5 px-1.5 text-xs",
@@ -9145,8 +9157,8 @@ assertAllVariants(
 assertContains(
   files.iosIconButton,
   source.iosIconButton,
-  ".frame(width: 44, height: 44)",
-  "iOS IconButton 44px frame",
+  ".frame(width: size == .lg ? 48 : 44, height: size == .lg ? 48 : 44)",
+  "iOS IconButton 44px frame, 48 for the large size",
 );
 assertContains(
   files.iosIconButton,
@@ -9553,8 +9565,8 @@ assertAllVariants(
 assertContains(
   files.androidIconButton,
   source.androidIconButton,
-  "modifier.size(44.dp)",
-  "Android IconButton 44dp frame",
+  "modifier.size(if (size == KozmosIconButtonSize.Lg) 48.dp else 44.dp)",
+  "Android IconButton 44dp frame, 48 for the large size",
 );
 assertContains(
   files.androidIconButton,

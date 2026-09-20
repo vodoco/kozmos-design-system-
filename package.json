@@ -86,6 +86,7 @@
     "figma:stamp:check": "node scripts/stamp-figma-plugin.mjs --check",
     "tokens:elevation:check": "node scripts/check-elevation-parity.mjs",
     "tokens:glass:check": "node scripts/check-glass-parity.mjs",
+    "tokens:motion:check": "node scripts/check-motion-parity.mjs",
     "tokens:raw:check": "node scripts/check-raw-values.mjs",
     "components:classes:check": "node scripts/check-compiled-classes.mjs",
     "packages:install:check": "node scripts/check-package-install.mjs",

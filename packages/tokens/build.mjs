@@ -821,6 +821,112 @@ public enum ${className} {
   },
 });
 
+// ---- Motion: durations and easings -------------------------------------
+// `Semantics.Motion.duration.*` and `Semantics.Motion.easing.*` are what every
+// transition between a component's states is timed with, on all three
+// platforms; the values are the prototype's own curves, measured. The CSS
+// build emits them as they are; these read them for the native packages.
+const MOTION_DOC =
+  "The motion tokens, mirroring `Semantics.Motion` in `packages/tokens`: three durations — quick for a state's small change, standard for a layout change, deliberate for a large move — and two easings, standard (ease out and settle) and emphasised (a small overshoot). `pnpm tokens:motion:check` holds every number here to the token files.";
+function motionTokens(dictionary) {
+  const values = {};
+  for (const token of dictionary.allTokens) {
+    const path = token.path;
+    if (path[0] !== "Semantics" || path[1] !== "Motion") continue;
+    if (path[2] === "duration" && path[3] !== "scale") {
+      const ms = /^(\d+(?:\.\d+)?)ms$/.exec(String(token.value ?? token.$value));
+      if (!ms) throw new Error(`motion: Semantics.Motion.duration.${path[3]} is not a duration in ms`);
+      values[`duration.${path[3]}`] = Number(ms[1]);
+    }
+    if (path[2] === "easing") {
+      const m = /^cubic-bezier\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)$/.exec(String(token.value ?? token.$value));
+      if (!m) throw new Error(`motion: Semantics.Motion.easing.${path[3]} is not a cubic-bezier`);
+      values[`easing.${path[3]}`] = m.slice(1, 5).map(Number);
+    }
+  }
+  for (const field of ["duration.quick", "duration.standard", "duration.deliberate", "easing.standard", "easing.emphasised"]) {
+    if (!(field in values)) throw new Error(`motion: Semantics.Motion.${field} is missing`);
+  }
+  return values;
+}
+
+StyleDictionary.registerFormat({
+  name: "ios-swift/motion",
+  format: ({ dictionary, options }) => {
+    const className = options.className || "KozmosMotion";
+    const m = motionTokens(dictionary);
+    const doc = wrapWords(MOTION_DOC, 76).map((l) => `/// ${l}`).join("\n");
+    const bezier = (v) => `CubicBezierToken(x1: ${v[0]}, y1: ${v[1]}, x2: ${v[2]}, y2: ${v[3]})`;
+    return `// Do not edit directly, this file was auto-generated.
+import CoreGraphics
+import SwiftUI
+
+${doc}
+public struct CubicBezierToken {
+    public let x1: CGFloat
+    public let y1: CGFloat
+    public let x2: CGFloat
+    public let y2: CGFloat
+
+    public init(x1: CGFloat, y1: CGFloat, x2: CGFloat, y2: CGFloat) {
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+    }
+
+    /// The curve as SwiftUI draws it, over a duration in seconds.
+    public func animation(duration: TimeInterval) -> Animation {
+        .timingCurve(x1, y1, x2, y2, duration: duration)
+    }
+}
+
+public enum ${className} {
+    /// Seconds.
+    public static let semanticsMotionDurationQuick: TimeInterval = ${(m["duration.quick"] / 1000).toFixed(3)}
+    public static let semanticsMotionDurationStandard: TimeInterval = ${(m["duration.standard"] / 1000).toFixed(3)}
+    public static let semanticsMotionDurationDeliberate: TimeInterval = ${(m["duration.deliberate"] / 1000).toFixed(3)}
+    public static let semanticsMotionEasingStandard = ${bezier(m["easing.standard"])}
+    public static let semanticsMotionEasingEmphasised = ${bezier(m["easing.emphasised"])}
+
+    /// The standard curve over the quick, standard and deliberate durations.
+    public static var quick: Animation { semanticsMotionEasingStandard.animation(duration: semanticsMotionDurationQuick) }
+    public static var standard: Animation { semanticsMotionEasingStandard.animation(duration: semanticsMotionDurationStandard) }
+    public static var deliberate: Animation { semanticsMotionEasingStandard.animation(duration: semanticsMotionDurationDeliberate) }
+    /// The emphasised curve over the standard duration: a small overshoot.
+    public static var emphasised: Animation { semanticsMotionEasingEmphasised.animation(duration: semanticsMotionDurationStandard) }
+}
+`;
+  },
+});
+
+StyleDictionary.registerFormat({
+  name: "android-compose/motion",
+  format: ({ dictionary, options }) => {
+    const className = options.className || "KozmosMotion";
+    const m = motionTokens(dictionary);
+    const doc = wrapWords(MOTION_DOC, 76).map((l) => ` * ${l}`).join("\n");
+    const bezier = (v) => `CubicBezierEasing(${v[0]}f, ${v[1]}f, ${v[2]}f, ${v[3]}f)`;
+    return `// Do not edit directly, this file was auto-generated.
+package com.kozmos.tokens
+
+import androidx.compose.animation.core.CubicBezierEasing
+
+/**
+${doc}
+ */
+object ${className} {
+    /** Milliseconds. */
+    const val semanticsMotionDurationQuick: Int = ${Math.round(m["duration.quick"])}
+    const val semanticsMotionDurationStandard: Int = ${Math.round(m["duration.standard"])}
+    const val semanticsMotionDurationDeliberate: Int = ${Math.round(m["duration.deliberate"])}
+    val semanticsMotionEasingStandard: CubicBezierEasing = ${bezier(m["easing.standard"])}
+    val semanticsMotionEasingEmphasised: CubicBezierEasing = ${bezier(m["easing.emphasised"])}
+}
+`;
+  },
+});
+
 StyleDictionary.registerFormat({
   name: "android-compose/effects",
   format: ({ dictionary, options }) => {
@@ -1103,6 +1209,11 @@ async function build() {
               format: "android-compose/effects",
               options: { className: "KozmosEffects" },
             },
+            {
+              destination: "KozmosMotion.kt",
+              format: "android-compose/motion",
+              options: { className: "KozmosMotion" },
+            },
           ],
         },
       },
@@ -1187,6 +1298,13 @@ async function build() {
               format: "ios-swift/effects",
               options: {
                 className: "KozmosEffects",
+              },
+            },
+            {
+              destination: "KozmosMotion.swift",
+              format: "ios-swift/motion",
+              options: {
+                className: "KozmosMotion",
               },
             },
           ],

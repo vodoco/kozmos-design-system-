@@ -73,8 +73,8 @@
           "spinnerSize": 14
         },
         "large": {
-          "width": 44,
-          "height": 44,
+          "width": 48,
+          "height": 48,
           "iconSize": 20,
           "spinnerSize": 16
         }
@@ -82,7 +82,8 @@
       "content": {
         "radius": 9999,
         "strokeWidth": 1
-      }
+      },
+      "notes": "The large size is 48, the prototype's Filters and AI search beside a 44 field; small and default are 44 (2026-09-21)."
     },
     "counter": {
       "tones": ["neutral", "brand", "destructive", "inverse"],

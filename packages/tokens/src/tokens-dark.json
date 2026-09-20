@@ -1184,12 +1184,12 @@
         "25": {
           "$type": "color",
           "$value": "#070708",
-          "$description": "The dark ramp inverts \u2014 0 is the page and higher steps lift off it \u2014 so these sit the same proportion along 0 -> 100 as their light counterparts."
+          "$description": "The dark ramp inverts — 0 is the page and higher steps lift off it — so these sit the same proportion along 0 -> 100 as their light counterparts."
         },
         "50": {
           "$type": "color",
           "$value": "#0C0D0E",
-          "$description": "The dark ramp inverts \u2014 0 is the page and higher steps lift off it \u2014 so these sit the same proportion along 0 -> 100 as their light counterparts."
+          "$description": "The dark ramp inverts — 0 is the page and higher steps lift off it — so these sit the same proportion along 0 -> 100 as their light counterparts."
         },
         "100": {
           "$value": "#17191C",
@@ -2436,7 +2436,7 @@
       "Container": {
         "$value": "{Primitives.Layout.radius.250}",
         "$type": "dimension",
-        "$description": "Cards and dialogs: a surface that holds controls. Deliberately rounder than Control \u2014 the two were both 16, so a 44px field and a 400px card drew the same corner and the role distinction was cosmetic."
+        "$description": "Cards and dialogs: a surface that holds controls. Deliberately rounder than Control — the two were both 16, so a 44px field and a 400px card drew the same corner and the role distinction was cosmetic."
       },
       "Panel": {
         "$value": "{Primitives.Layout.radius.300}",
@@ -2466,7 +2466,7 @@
         "surface": {
           "$value": "{Primitives.Colors.background.200}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.foreground.0}",
@@ -2476,14 +2476,14 @@
         "text": {
           "$value": "{Primitives.Colors.foreground.400}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place — success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
         }
       },
       "themed": {
         "surface": {
           "$value": "{Primitives.Colors.theme.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.theme.900}",
@@ -2493,14 +2493,14 @@
         "text": {
           "$value": "{Primitives.Colors.theme.600}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place — success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
         }
       },
       "success": {
         "surface": {
           "$value": "{Primitives.Colors.emotional.success.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.emotional.success.900}",
@@ -2510,14 +2510,14 @@
         "text": {
           "$value": "{Primitives.Colors.emotional.success.800}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place — success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
         }
       },
       "danger": {
         "surface": {
           "$value": "{Primitives.Colors.emotional.danger.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.emotional.danger.900}",
@@ -2527,14 +2527,14 @@
         "text": {
           "$value": "{Primitives.Colors.emotional.danger.600}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place — success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
         }
       },
       "alert": {
         "surface": {
           "$value": "{Primitives.Colors.emotional.alert.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.emotional.alert.900}",
@@ -2544,14 +2544,14 @@
         "text": {
           "$value": "{Primitives.Colors.emotional.alert.800}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place — success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
         }
       },
       "informative": {
         "surface": {
           "$value": "{Primitives.Colors.emotional.info.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.emotional.info.900}",
@@ -2561,7 +2561,7 @@
         "text": {
           "$value": "{Primitives.Colors.emotional.info.700}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place — success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
         }
       }
     },
@@ -2569,7 +2569,7 @@
       "Raised": {
         "$value": "{shadow.sm}",
         "$type": "shadow",
-        "$description": "A surface lifted just off the page: cards, list rows, a file row. Barely there on purpose \u2014 the surface and its border do the work, and the shadow only says it is not painted on."
+        "$description": "A surface lifted just off the page: cards, list rows, a file row. Barely there on purpose — the surface and its border do the work, and the shadow only says it is not painted on."
       },
       "Floating": {
         "$value": "{shadow.md}",
@@ -2716,6 +2716,21 @@
             "com.figma.variableId": "VariableID:1440:2661",
             "com.figma.isOverride": true
           }
+        },
+        "quick": {
+          "$type": "duration",
+          "$value": "150ms",
+          "$description": "A state's small change: a border, a colour, a control appearing."
+        },
+        "standard": {
+          "$type": "duration",
+          "$value": "280ms",
+          "$description": "A layout change: a sheet between detents, a row changing form."
+        },
+        "deliberate": {
+          "$type": "duration",
+          "$value": "460ms",
+          "$description": "A large move across the screen: a panel entering, the AI search docking."
         }
       },
       "slide": {
@@ -2734,6 +2749,18 @@
             "com.figma.variableId": "VariableID:1440:2663",
             "com.figma.isOverride": true
           }
+        }
+      },
+      "easing": {
+        "standard": {
+          "$type": "other",
+          "$value": "cubic-bezier(0.4, 0, 0.2, 1)",
+          "$description": "Ease out then settle: what moves between detents and forms."
+        },
+        "emphasised": {
+          "$type": "other",
+          "$value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+          "$description": "A small overshoot: a chip or a mode popping into place."
         }
       }
     },
