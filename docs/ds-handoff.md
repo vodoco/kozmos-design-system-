@@ -1235,6 +1235,23 @@ removed; the search bar's magnifier silenced and its clear button labelled on iO
 label aligned; the hidden pill taken out of VoiceOver's tree while the level list is open; the
 operator's guide written (`kozmos-pointr-operators-guide-2026-09-20.md`).
 
+### 2026-09-20 · The navigation parts (Claude Code)
+
+On its own recommendation after the audit: the prototype's three navigation parts built on iOS,
+React and Android — `navigation-parts-2026-09-20.md`, commits `3f360e2`, `e3353b7`, `e43941b`,
+`bef76c9`, `536cdc1`, `f82f3fe`, `9783145` and the docs commit. A manoeuvre card over the map
+that opens into the itinerary and is as tall as it up to a cap; an itinerary list with the
+current step emphasised; a route progress rail whose disc travels by ground covered; and the
+route summary's additive navigation layout — the destination with End, the stats on one row, the
+rail. The QA app's directions and the fixture playground moved onto them; the Storybook has an
+Examples/Navigation composition. Measured everywhere: the iOS render tests caught the rail's stack
+centred a dot to the right and the open card taking its whole allowance (a `Layout` now proposes
+the cap and takes the child's size); the new three-engine browser check caught the open card and
+its itinerary sharing one landmark name, fixed on all three platforms. Gates: package 81/94/96,
+CI step 52, app 39 and the flow test, react 507, `test:navigation` 20 × 3, Paparazzi verified.
+Still open: the transition arrows, the rail's untokenised geometry, the card's translucency, the
+QA sheet's detent while navigating, the level list's form. F, G and Pass 4 still wait.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

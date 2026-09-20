@@ -193,6 +193,15 @@ Figma only through the importer plugin (`docs/style-playbook.md`, the Figma loop
 "Rebuild" a component in the plugin: it changes the node id Code Connect pins. `pnpm
 figma:verify` from the terminal beats the in-plugin audit for drift.
 
+The navigation parts — the manoeuvre card, the itinerary, the rail, the summary's navigation
+layout — have their own browser check on the same served build
+([navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md) §4), twenty checks on each
+engine:
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:navigation
+```
+
 ## 5. Where each behaviour lives
 
 The QA app (`apps/PointrPlayground/Sources/App`):
@@ -211,14 +220,19 @@ The QA app (`apps/PointrPlayground/Sources/App`):
 The design system (`packages/ios/Sources/Components`, with the React and Compose twins beside
 them under `packages/react/src/components` and `packages/android/src/main/java/com/kozmos/components`):
 
-| Behaviour                                                                                                   | iOS                                                                                                       | Web                                                                                                                            | Android                                                  |
-| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| Card header: name and quick buttons on one row, name ≤ 3 lines                                              | `POIDetailPanel/POIDetailPanel.swift`: `header`, `identity`                                               | `styles/owned-poi-detail.css`: `.kozmos-poi-header`, `.kozmos-poi-identity`, `.kozmos-poi-title`, `.kozmos-poi-header-actions` | `POIDetailPanel/POIDetailPanel.kt`: `Header`, `maxLines` |
-| Direction step reads as one element, arrow silent                                                           | `DirectionStep/DirectionStep.swift`: `accessibilityDescription`                                           | (icon has no title; rows are plain)                                                                                            | —                                                        |
-| Route summary's icon silent                                                                                 | `RouteSummary/RouteSummary.swift`                                                                         | —                                                                                                                              | —                                                        |
-| Collapsible level switcher: named rows, trailing-aligned, opaque; the pill hidden from VoiceOver while open | `FloorSelector/FloorSelector.swift`: `expandedList`, `namedFloorButton`, the `expanded:` test initializer | no collapsible variant                                                                                                         | no collapsible variant                                   |
-| Search bar: magnifier silent, clear button labelled                                                         | `SearchBar/SearchBar.swift`                                                                               | `SearchBar/SearchBar.tsx` (already)                                                                                            | `SearchBar/SearchBar.kt` (already, "Clear")              |
-| The long-name fixture                                                                                       | `apps/Playground.swiftpm/…/POIExampleData.swift` (generated)                                              | `POIDetailPanel/POIDetailPanel.fixtures.ts`: `longContentPOI`, `longContentDetails`; the `LongContent` story                   | —                                                        |
+| Behaviour                                                                                                   | iOS                                                                                                       | Web                                                                                                                            | Android                                                    |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| Card header: name and quick buttons on one row, name ≤ 3 lines                                              | `POIDetailPanel/POIDetailPanel.swift`: `header`, `identity`                                               | `styles/owned-poi-detail.css`: `.kozmos-poi-header`, `.kozmos-poi-identity`, `.kozmos-poi-title`, `.kozmos-poi-header-actions` | `POIDetailPanel/POIDetailPanel.kt`: `Header`, `maxLines`   |
+| Direction step reads as one element, arrow silent                                                           | `DirectionStep/DirectionStep.swift`: `accessibilityDescription`                                           | (icon has no title; rows are plain)                                                                                            | —                                                          |
+| Route summary's icon silent                                                                                 | `RouteSummary/RouteSummary.swift`                                                                         | —                                                                                                                              | —                                                          |
+| The manoeuvre card, its cap, what it reads                                                                  | `ManoeuvreCard/ManoeuvreCard.swift`: `KozmosCappedHeightLayout`, `accessibilityDescription`               | `ManoeuvreCard/ManoeuvreCard.tsx`: `manoeuvreDescription`                                                                      | `ManoeuvreCard/ManoeuvreCard.kt`                           |
+| The itinerary's rows, the current one emphasised                                                            | `Itinerary/Itinerary.swift`                                                                               | `Itinerary/Itinerary.tsx`                                                                                                      | `Itinerary/Itinerary.kt`                                   |
+| The rail's geometry and the disc's travel                                                                   | `RouteProgressRail/RouteProgressRail.swift`: `discLeading`                                                | `RouteProgressRail/RouteProgressRail.tsx`: `ROUTE_PROGRESS_RAIL`, `discLeading`                                                | `RouteProgressRail/RouteProgressRail.kt`: `…Geometry`      |
+| The summary's navigation layout (destination, End, stats, progress)                                         | `RouteSummary/RouteSummary.swift`: `init(destination:…)`                                                  | `RouteSummary/RouteSummary.tsx`: `RouteSummaryNavigation`                                                                      | `RouteSummary/RouteSummary.kt`: the `destination` overload |
+| The QA app's directions on those parts; the flow test's reading of them                                     | `apps/PointrPlayground/…/SDKMapScreen.swift`: `topBar`, `directionsPanel`; `RoutingFlowUITests.swift`     | the Examples/Navigation story                                                                                                  | —                                                          |
+| Collapsible level switcher: named rows, trailing-aligned, opaque; the pill hidden from VoiceOver while open | `FloorSelector/FloorSelector.swift`: `expandedList`, `namedFloorButton`, the `expanded:` test initializer | no collapsible variant                                                                                                         | no collapsible variant                                     |
+| Search bar: magnifier silent, clear button labelled                                                         | `SearchBar/SearchBar.swift`                                                                               | `SearchBar/SearchBar.tsx` (already)                                                                                            | `SearchBar/SearchBar.kt` (already, "Clear")                |
+| The long-name fixture                                                                                       | `apps/Playground.swiftpm/…/POIExampleData.swift` (generated)                                              | `POIDetailPanel/POIDetailPanel.fixtures.ts`: `longContentPOI`, `longContentDetails`; the `LongContent` story                   | —                                                          |
 
 Tests for the above: `packages/ios/Tests/KozmosTests/KozmosPOIDetailTests.swift` (the measured
 header test, the render matrix, the fixture decoding), `KozmosFloorSelectorTests.swift`,
@@ -275,11 +289,12 @@ and its golden under `src/test/snapshots/images/`; `apps/PointrPlayground/Tests/
 
 ## 8. What the design system still lacks, from the prototype
 
-A manoeuvre card over the map that opens into the itinerary; a route progress rail; an
-itinerary list (FROM, steps, TO); a gradient-ring AI search button; a location marker with a halo
-and pulse; the collapsible level switcher on web and Android; an in-surface status message; a
-floor slot and a current-step state on a direction step; the transition arrows. Measured
-geometry for each is in the prototype report.
+A gradient-ring AI search button; a location marker with a halo and pulse; the collapsible level
+switcher on web and Android; an in-surface status message; a floor slot and a current-step state
+on a direction step; the transition arrows. Measured geometry for each is in the prototype
+report. The manoeuvre card, the route progress rail and the itinerary list were built on the
+20th on all three platforms — [navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md),
+with its own six decisions.
 
 ## 9. Traps met, for the next reader
 

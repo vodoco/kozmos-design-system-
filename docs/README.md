@@ -18,6 +18,8 @@ every screen state became the live prototype, measured in
 [pointr-prototype-screen-states-2026-09-20.md](pointr-prototype-screen-states-2026-09-20.md):
 read that before building anything a screen shows. The operator's guide for all of it is
 [kozmos-pointr-operators-guide-2026-09-20.md](kozmos-pointr-operators-guide-2026-09-20.md).
+Then the prototype's three navigation parts were built on iOS, React and Android and the QA
+app's directions put on them: [navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md).
 
 Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
 It closes declaration-format and inert-opacity debt and migrates the temporal fields.
@@ -36,6 +38,11 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 The Pointr iOS thread, 2026-09-19 to 2026-09-20, newest first:
 
+- `navigation-parts-2026-09-20.md`: the manoeuvre card over the map that opens into the
+  itinerary, the itinerary list, the route progress rail and the summary's navigation layout,
+  built on iOS, React and Android with pixel-measured tests, a three-engine browser check,
+  Paparazzi goldens, stories, docs and examples; the QA app and the fixture playground on them;
+  six decisions.
 - `pointr-prototype-screen-states-2026-09-20.md`: the product prototype Olcay named as the reference,
   read through the DOM — every screen state measured in CSS pixels (search, the card, the
   four-mode preview, turn-by-turn with the instruction card, itinerary and progress rail, levels,

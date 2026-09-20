@@ -17,7 +17,9 @@ Nothing here was pushed, merged or published; no Cloud content was changed.
 > ([pointr-prototype-screen-states-2026-09-20.md](pointr-prototype-screen-states-2026-09-20.md))
 > the routing flow changed (`6527d7a`): no preview step and no modes — Go opens the picker and the
 > directions follow at once — so §5.1's step 3, §7's decision 10 and the preview rows of
-> §5.6 describe a state that is gone.
+> §5.6 describe a state that is gone. Later still the prototype's navigation parts were built and
+> the directions moved onto them ([navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md)):
+> the sheet no longer lists the steps; the card over the map does.
 
 ## 1. Exact working state
 

@@ -127,9 +127,13 @@ what still say it, a Figma-side cleanup through the importer, not a code change.
 
 ## 7. What is missing, from these screens
 
-- A **manoeuvre card** over the map with a grabber that opens the itinerary (§4).
-- A **route progress rail** with a manoeuvre disc and end dots (§4).
-- An **itinerary list** — FROM, steps with the current one emphasised, TO (§4).
+_Later the same day the first three were built on iOS, React and Android —
+[navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md) — and the QA app's directions put
+on them._
+
+- ~~A **manoeuvre card** over the map with a grabber that opens the itinerary (§4).~~ Built.
+- ~~A **route progress rail** with a manoeuvre disc and end dots (§4).~~ Built.
+- ~~An **itinerary list** — FROM, steps with the current one emphasised, TO (§4).~~ Built.
 - An **AI search button**: a gradient-ring icon button (§1).
 - A location marker with a halo and pulse (§1).
 - Everything already recorded: the in-surface status message, the collapsible selector on the

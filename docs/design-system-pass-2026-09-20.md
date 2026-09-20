@@ -100,6 +100,10 @@ WindowManager's folding feature exists today and an emulator can be folded. Not 
 
 ## 4. Also seen, for the list of what the design system lacks
 
+_Later the same day the prototype's three navigation parts — the manoeuvre card, the itinerary,
+the progress rail — were built on all three platforms:
+[navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md)._
+
 - Android's action strip is a `FlowRow` that wraps into rows; iOS and the web scroll it in one
   row. Android's location line truncates to one line; iOS and the web wrap it.
 - The search bar's magnifying glass reads "Search" to VoiceOver before the field.
