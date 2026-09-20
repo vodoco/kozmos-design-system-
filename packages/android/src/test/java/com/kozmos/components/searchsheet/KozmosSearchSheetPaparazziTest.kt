@@ -41,7 +41,12 @@ class KozmosSearchSheetPaparazziTest {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf("Food and drink", "Shops", "Toilets", "Gates").forEachIndexed { index, label ->
                             KozmosCategoryTile(
-                                category = KozmosCategoryPresentation(id = label, label = label, selected = index == 0),
+                                // Gates carries a count: the counter at its square's top-right.
+                                category = KozmosCategoryPresentation(
+                                    id = label, label = label, selected = index == 0,
+                                    resultCount = if (label == "Gates") 12 else null,
+                                    resultCountLabel = if (label == "Gates") "12 places" else null
+                                ),
                                 onSelect = {},
                                 modifier = Modifier.weight(1f)
                             ) { Icon(Icons.Default.Restaurant, contentDescription = null) }
