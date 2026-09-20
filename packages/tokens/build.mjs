@@ -738,6 +738,126 @@ extension View {
   },
 });
 
+// ---- Effects: the glass surface role -----------------------------------
+// `Semantics.Effect.glass` is what the glass surface role is composed from:
+// the tint's opacity, the blur and saturation of what shows through, the
+// noise, the edge and the refraction opacities. The same numbers in both
+// modes — the theme decides the tint's colour, not the effect — so a token
+// that differs between modes is refused, as a shadow's geometry is.
+const GLASS_FIELDS = [
+  "opacity",
+  "blur",
+  "saturation",
+  "noise.opacity",
+  "border.opacity",
+  "refraction.opacity",
+];
+const GLASS_DOC =
+  "The glass surface role's effect, mirroring `Semantics.Effect.glass` in `packages/tokens`: the tint's opacity, the blur and saturation of what shows through, the noise, edge and refraction opacities. The same numbers in both themes — the theme decides the tint's colour, not the effect. `pnpm tokens:glass:check` holds every number here to the token files.";
+function glassEffect(dictionary) {
+  const values = {};
+  for (const token of dictionary.allTokens) {
+    const path = token.path;
+    if (
+      path.length < 4 ||
+      path[0] !== "Semantics" ||
+      path[1] !== "Effect" ||
+      path[2] !== "glass"
+    )
+      continue;
+    const key = path.slice(3).join(".");
+    const light = Number(token.value ?? token.$value);
+    const dark = Number(
+      (token.attributes && token.attributes.darkValue) ?? light,
+    );
+    if (!Number.isFinite(light))
+      throw new Error(`effects: Semantics.Effect.glass.${key} is not a number`);
+    if (light !== dark)
+      throw new Error(
+        `effects: Semantics.Effect.glass.${key} differs between modes (${light} / ${dark}); the theme decides the tint, not the effect`,
+      );
+    values[key] = light;
+  }
+  for (const field of GLASS_FIELDS)
+    if (!(field in values))
+      throw new Error(`effects: Semantics.Effect.glass.${field} is missing`);
+  return values;
+}
+
+StyleDictionary.registerFormat({
+  name: "ios-swift/effects",
+  format: ({ dictionary, options }) => {
+    const className = options.className || "KozmosEffects";
+    const g = glassEffect(dictionary);
+    const doc = wrapWords(GLASS_DOC, 76)
+      .map((l) => `/// ${l}`)
+      .join("\n");
+    return `// Do not edit directly, this file was auto-generated.
+import CoreGraphics
+
+${doc}
+public struct GlassEffectToken {
+    public let opacity: CGFloat
+    public let blur: CGFloat
+    public let saturation: CGFloat
+    public let noiseOpacity: CGFloat
+    public let borderOpacity: CGFloat
+    public let refractionOpacity: CGFloat
+
+    public init(opacity: CGFloat, blur: CGFloat, saturation: CGFloat, noiseOpacity: CGFloat, borderOpacity: CGFloat, refractionOpacity: CGFloat) {
+        self.opacity = opacity
+        self.blur = blur
+        self.saturation = saturation
+        self.noiseOpacity = noiseOpacity
+        self.borderOpacity = borderOpacity
+        self.refractionOpacity = refractionOpacity
+    }
+}
+
+public enum ${className} {
+    public static let semanticsEffectGlass = GlassEffectToken(opacity: ${g.opacity}, blur: ${g.blur}, saturation: ${g.saturation}, noiseOpacity: ${g["noise.opacity"]}, borderOpacity: ${g["border.opacity"]}, refractionOpacity: ${g["refraction.opacity"]})
+}
+`;
+  },
+});
+
+StyleDictionary.registerFormat({
+  name: "android-compose/effects",
+  format: ({ dictionary, options }) => {
+    const className = options.className || "KozmosEffects";
+    const g = glassEffect(dictionary);
+    const doc = wrapWords(GLASS_DOC, 76)
+      .map((l) => ` * ${l}`)
+      .join("\n");
+    return `// Do not edit directly, this file was auto-generated.
+package com.kozmos.tokens
+
+/**
+${doc}
+ */
+data class GlassEffectToken(
+    val opacity: Float,
+    val blur: Float,
+    val saturation: Float,
+    val noiseOpacity: Float,
+    val borderOpacity: Float,
+    val refractionOpacity: Float
+)
+
+object ${className} {
+    val semanticsEffectGlass = GlassEffectToken(
+        opacity = ${g.opacity}f,
+        blur = ${g.blur}f,
+        saturation = ${g.saturation}f,
+        noiseOpacity = ${g["noise.opacity"]}f,
+        borderOpacity = ${g["border.opacity"]}f,
+        refractionOpacity = ${g["refraction.opacity"]}f
+    )
+}
+`;
+  },
+});
+
 StyleDictionary.registerFormat({
   name: "pointr/color-palette",
   format: ({ dictionary, file }) => {
@@ -978,6 +1098,11 @@ async function build() {
               format: "android-compose/shadows",
               options: { className: "KozmosShadows" },
             },
+            {
+              destination: "KozmosEffects.kt",
+              format: "android-compose/effects",
+              options: { className: "KozmosEffects" },
+            },
           ],
         },
       },
@@ -1055,6 +1180,13 @@ async function build() {
               format: "ios-swift/shadows",
               options: {
                 className: "KozmosShadows",
+              },
+            },
+            {
+              destination: "KozmosEffects.swift",
+              format: "ios-swift/effects",
+              options: {
+                className: "KozmosEffects",
               },
             },
           ],

@@ -111,12 +111,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
             }
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing200)
-        .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
-                .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
-        )
+        .kozmosGlassSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 
@@ -165,12 +160,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
             }
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing200)
-        .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
-                .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
-        )
+        .kozmosGlassSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 }

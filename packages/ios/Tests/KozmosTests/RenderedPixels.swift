@@ -61,6 +61,13 @@ struct RenderedPixels {
                       width: CGFloat(maxX - minX + 1) / scale, height: CGFloat(maxY - minY + 1) / scale)
     }
 
+    /// The colour drawn at a point, in points.
+    func color(at point: CGPoint) -> (r: UInt8, g: UInt8, b: UInt8) {
+        let x = min(max(Int(point.x * scale), 0), width - 1), y = min(max(Int(point.y * scale), 0), height - 1)
+        let i = (y * width + x) * 4
+        return (rgba[i], rgba[i + 1], rgba[i + 2])
+    }
+
     /// The theme fill of a pressed or primary button.
     static func isTheme(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { b > 120 && Int(b) > Int(r) + 60 && Int(b) > Int(g) + 40 }
     /// Body text, as opposed to the grey of a secondary label.
