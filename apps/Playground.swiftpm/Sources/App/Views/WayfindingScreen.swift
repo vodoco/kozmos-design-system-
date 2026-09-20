@@ -7,6 +7,8 @@ struct WayfindingScreen: View {
     /// What the shell reports its own chrome is covering. The map pads its
     /// camera by this instead of measuring the layout itself.
     @State private var collisionInsets: KozmosMapCollisionInsets = .zero
+    /// Whether the manoeuvre card over the map is open into the itinerary.
+    @State private var itineraryExpanded = false
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -150,14 +152,26 @@ struct WayfindingScreen: View {
     @ViewBuilder
     private var topBarLayer: some View {
         if store.phase == .navigating, let step = store.currentStep {
-            KozmosDirectionStep(
+            // The current manoeuvre over the map, opening into the whole
+            // itinerary — the same composition as the Pointr QA app.
+            KozmosManoeuvreCard(
                 type: step.type,
                 instruction: step.instruction,
-                distance: step.distanceMetres.map(VenueFormat.distance),
-                duration: store.venue.floor(step.floorId)?.presentation.label
-            )
-            .kozmosElevation(KozmosShadows.semanticsElevationFloating)
+                detail: [step.distanceMetres.map(VenueFormat.distance), store.venue.floor(step.floorId)?.presentation.label]
+                    .compactMap { $0 }.joined(separator: " · "),
+                isExpanded: itineraryExpanded,
+                onToggle: { withAnimation { itineraryExpanded.toggle() } }
+            ) {
+                KozmosItinerary(
+                    origin: store.venue.originLabel,
+                    steps: store.steps.map { step in
+                        KozmosItineraryStep(id: String(step.id), instruction: step.instruction, type: step.type,
+                                            isCurrent: step.id == store.stepIndex)
+                    },
+                    destination: store.selectedPOI?.presentation.name ?? "")
+            }
             .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
+            .onChange(of: store.phase) { _ in itineraryExpanded = false }
         }
     }
 
@@ -193,13 +207,22 @@ struct WayfindingScreen: View {
             .padding(.bottom, KozmosDimensions.primitivesLayoutSpacing200)
 
         case .navigating:
+            // The prototype's navigation sheet: the destination with End, what
+            // is left and when it ends, the rail by ground covered.
+            let remaining = store.remainingRoute
+            let total = store.activeRoute?.distanceMetres ?? 0
             KozmosRouteSummary(
-                etaText: "Arrive \(VenueFormat.arrival(in: store.remainingRoute.durationSeconds))",
-                distanceText: "\(VenueFormat.distance(store.remainingRoute.distanceMetres)) · \(VenueFormat.duration(store.remainingRoute.durationSeconds)) left",
-                state: .active,
+                destination: store.selectedPOI?.presentation.name ?? "Directions",
+                durationText: VenueFormat.duration(remaining.durationSeconds),
+                distanceText: VenueFormat.distance(remaining.distanceMetres),
+                arrivalText: "Arrive \(VenueFormat.arrival(in: remaining.durationSeconds))",
                 onEndRoute: { store.endRoute() }
             ) {
-                KozmosIcon("navigation-pointer-01", size: .md, color: .primary)
+                KozmosRouteProgressRail(
+                    progress: total > 0 ? (total - remaining.distanceMetres) / total
+                        : (store.steps.count > 1 ? Double(store.stepIndex) / Double(store.steps.count - 1) : 1),
+                    type: store.currentStep?.type ?? .destination,
+                    label: "Step \(store.stepIndex + 1) of \(store.steps.count)")
             }
             .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
             .padding(.bottom, KozmosDimensions.primitivesLayoutSpacing200)
@@ -350,40 +373,10 @@ struct WayfindingScreen: View {
         }
     }
 
+    /// The steps themselves are in the card over the map; the sheet keeps the
+    /// summary above and the buttons that move between them.
     private var navigationPanel: some View {
         VStack(spacing: 0) {
-            PanelHeader(
-                title: store.selectedPOI?.presentation.name ?? "Directions",
-                subtitle: "Step \(store.stepIndex + 1) of \(store.steps.count)",
-                onBack: nil,
-                backLabel: ""
-            )
-
-            KozmosSeparator()
-
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
-                        ForEach(store.steps) { step in
-                            KozmosDirectionStep(
-                                type: step.type,
-                                instruction: step.instruction,
-                                distance: step.distanceMetres.map(VenueFormat.distance),
-                                duration: store.venue.floor(step.floorId)?.presentation.label
-                            )
-                            .opacity(step.id == store.stepIndex ? 1 : 0.45)
-                            .id(step.id)
-                        }
-                    }
-                    .padding(KozmosDimensions.primitivesLayoutSpacing200)
-                }
-                .onChange(of: store.stepIndex) { index in
-                    withAnimation { proxy.scrollTo(index, anchor: .center) }
-                }
-            }
-
-            KozmosSeparator()
-
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
                 KozmosIconButton(
                     iconName: "chevron.left",
