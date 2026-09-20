@@ -3,6 +3,7 @@ package com.kozmos.components.aisearchbutton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -33,23 +34,30 @@ fun KozmosAISearchButton(
     label: String = "AI search",
     enabled: Boolean = true
 ) {
+    // The button's own footprint is the prototype's 48; the 66 ring is drawn
+    // behind it and overflows, so a row of the field and this button stays
+    // the field's height.
     Box(
         modifier = modifier
-            .size(66.dp)
-            .clip(CircleShape)
-            .background(
-                Brush.sweepGradient(
-                    listOf(
-                        KozmosColors.primitivesColorsTheme300,
-                        KozmosColors.primitivesColorsTheme600,
-                        KozmosColors.primitivesColorsTheme300
-                    )
-                )
-            )
+            .size(48.dp)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
+        Box(
+            modifier = Modifier
+                .requiredSize(66.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.sweepGradient(
+                        listOf(
+                            KozmosColors.primitivesColorsTheme300,
+                            KozmosColors.primitivesColorsTheme600,
+                            KozmosColors.primitivesColorsTheme300
+                        )
+                    )
+                )
+        )
         Surface(
             modifier = Modifier.size(44.dp),
             shape = CircleShape,

@@ -4,10 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -24,18 +26,25 @@ class KozmosAdaptiveMapShellPaparazziTest {
     @get:Rule
     val paparazzi = Paparazzi(maxPercentDifference = 0.0)
 
-    private fun shell(surface: KozmosSurfaceStyle) = @androidx.compose.runtime.Composable {
+    private fun shell(
+        surface: KozmosSurfaceStyle,
+        detents: List<KozmosMapPanelDetent> = listOf(KozmosMapPanelDetent.Content),
+        detent: KozmosMapPanelDetent? = null,
+        panel: @Composable () -> Unit = {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Airport Shuttles")
+                Text("4 min · 201 m")
+            }
+        }
+    ) = @Composable {
         MaterialTheme {
             Box(modifier = Modifier.fillMaxSize().height(640.dp)) {
                 KozmosAdaptiveMapShell(
                     map = { Box(modifier = Modifier.fillMaxSize().background(Color.Red)) },
-                    panel = {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Airport Shuttles")
-                            Text("4 min · 201 m")
-                        }
-                    },
-                    panelSurface = surface
+                    panel = panel,
+                    panelSurface = surface,
+                    panelDetents = detents,
+                    panelDetent = detent
                 )
             }
         }
@@ -49,5 +58,35 @@ class KozmosAdaptiveMapShellPaparazziTest {
     @Test
     fun theBottomPanelCanBeGlass() {
         paparazzi.snapshot(composable = shell(KozmosSurfaceStyle.Glass))
+    }
+
+    /** The default detents: the sheet rests at medium, 54 % of the shell, under its handle. */
+    @Test
+    fun theSheetRestsAtMediumWithItsHandle() {
+        paparazzi.snapshot(
+            composable = shell(
+                KozmosSurfaceStyle.Solid,
+                detents = KozmosDefaultPanelDetents,
+                panel = { Box(modifier = Modifier.fillMaxSize().background(Color.Green)) }
+            )
+        )
+    }
+
+    /** Collapsed rests on the content's peek anchor: a 250-tall row plus a 16 margin, over a blue that barely shows. */
+    @Test
+    fun theCollapsedSheetRestsOnItsPeekAnchor() {
+        paparazzi.snapshot(
+            composable = shell(
+                KozmosSurfaceStyle.Solid,
+                detents = KozmosDefaultPanelDetents,
+                detent = KozmosMapPanelDetent.Collapsed,
+                panel = {
+                    Column {
+                        Box(modifier = Modifier.fillMaxWidth().height(250.dp).background(Color.Green).kozmosPanelPeekAnchor())
+                        Box(modifier = Modifier.fillMaxWidth().height(900.dp).background(Color.Blue))
+                    }
+                }
+            )
+        )
     }
 }
