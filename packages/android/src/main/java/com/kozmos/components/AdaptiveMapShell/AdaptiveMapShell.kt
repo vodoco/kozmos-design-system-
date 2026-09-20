@@ -24,6 +24,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kozmos.contracts.KozmosMapCollisionInsets
 import com.kozmos.contracts.KozmosMapReadiness
+import com.kozmos.components.surface.KozmosSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceStyle
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
@@ -53,7 +55,9 @@ fun KozmosAdaptiveMapShell(
     panelLabel: String = "Map details",
     panelPlacement: KozmosMapPanelPlacement = KozmosMapPanelPlacement.End,
     collisionInsets: KozmosMapCollisionInsets = KozmosMapCollisionInsets.Zero,
-    onCollisionInsetsChange: ((KozmosMapCollisionInsets) -> Unit)? = null
+    onCollisionInsetsChange: ((KozmosMapCollisionInsets) -> Unit)? = null,
+    /** What the panel sits on: solid by default, glass where the product asks for it. */
+    panelSurface: KozmosSurfaceStyle = KozmosSurfaceStyle.Solid
 ) {
     LaunchedEffect(collisionInsets) {
         onCollisionInsetsChange?.invoke(collisionInsets)
@@ -142,12 +146,16 @@ fun KozmosAdaptiveMapShell(
                         )
                         .semantics { contentDescription = panelLabel },
                     shape = RoundedCornerShape(radius),
-                    color = KozmosColors.primitivesColorsBackground0,
+                    color = KozmosSurfaceDefaults.tint(panelSurface),
+                    border = KozmosSurfaceDefaults.border(panelSurface),
                     shadowElevation = 24.dp
                 ) {
                     panel()
                 }
             } else {
+                // A bottom panel is as tall as what it holds, up to 64 % of
+                // the shell: fitted to its content by construction, as the
+                // iOS shell's content detent and the web's `panelSizing` are.
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -155,7 +163,8 @@ fun KozmosAdaptiveMapShell(
                         .align(Alignment.BottomCenter)
                         .semantics { contentDescription = panelLabel },
                     shape = RoundedCornerShape(topStart = radius, topEnd = radius),
-                    color = KozmosColors.primitivesColorsBackground0,
+                    color = KozmosSurfaceDefaults.tint(panelSurface),
+                    border = KozmosSurfaceDefaults.border(panelSurface),
                     shadowElevation = 24.dp
                 ) {
                     panel()
