@@ -131,13 +131,13 @@
     }
   }
   /* The map shell's bottom sheet: its height and top ease between detents
-     (the prototype's 280 ms curve) except under a finger; the handle's row
+     on the standard motion (the prototype's 280 ms curve) except under a finger; the handle's row
      is 16 tall with a 40 x 4 capsule in a background-scale grey, the same
      handle the iOS shell draws. */
   .kozmos-map-sheet {
     transition:
-      top 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-      height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      top var(--semantics-motion-duration-standard) var(--semantics-motion-easing-standard),
+      height var(--semantics-motion-duration-standard) var(--semantics-motion-easing-standard);
     touch-action: none;
   }
   .kozmos-map-sheet[data-dragging] {
@@ -168,15 +168,82 @@
     border-radius: 999px;
     background-color: var(--primitives-colors-background-300);
   }
-  /* The AI search's ring: the theme's own ramp, 300 to 600 and back, as a
-     conic gradient. The first gradient the system draws, made of tokens.
+  /* How the system's parts enter, on the motion tokens — the same few moves
+     everywhere, so a row changing form reads as one thing happening. A part
+     that takes another's place pops (the prototype's chip: from 90 %, a
+     little left, fading in); a control appearing beside another reveals
+     (fades in from its side); content replacing content crossfades. Still
+     under reduced motion. */
+  .kozmos-pop {
+    animation: pop var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-emphasised) both;
+  }
+  .kozmos-reveal {
+    animation: reveal var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-standard) both;
+  }
+  .kozmos-crossfade {
+    animation: crossfade var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-standard) both;
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: translateX(-22px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateX(calc(var(--semantics-motion-slide-md) * 1px));
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes crossfade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .kozmos-category-field {
+    animation: pop var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-emphasised) both;
+  }
+  .kozmos-search-clear {
+    animation: reveal var(--semantics-motion-duration-quick)
+      var(--semantics-motion-easing-standard) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kozmos-pop,
+    .kozmos-reveal,
+    .kozmos-crossfade,
+    .kozmos-category-field,
+    .kozmos-search-clear {
+      animation: none;
+    }
+  }
+  /* The AI search's ring: the prototype's rainbow from the system's own data
+     colours and its success green, as a conic gradient made of tokens.
      It turns in place, the prototype's 3.6 seconds a turn, unless motion is reduced. */
   .kozmos-ai-search-ring {
     background: conic-gradient(
       from 0deg,
-      var(--primitives-colors-theme-300),
-      var(--primitives-colors-theme-600),
-      var(--primitives-colors-theme-300)
+      var(--semantics-data-red),
+      var(--semantics-data-yellow),
+      var(--primitives-colors-emotional-success-500),
+      var(--semantics-data-teal),
+      var(--semantics-data-blue),
+      var(--semantics-data-purple),
+      var(--semantics-data-red)
     );
     animation: ai-search-spin 3.6s linear infinite;
   }

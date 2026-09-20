@@ -69,6 +69,7 @@ export * from "./components/POIDetailPanel";
 export * from "./components/AISearchButton";
 export * from "./components/AdaptiveMapShell";
 export * from "./components/CategoryTile";
+export * from "./components/CategoryField";
 export * from "./components/BrowseCategoriesPanel";
 export * from "./components/RouteOptionCard";
 export * from "./components/RoutePreviewPanel";

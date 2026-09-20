@@ -28,3 +28,11 @@ describe("IconButton", () => {
     expect(button).toHaveClass("kozmos-button");
   });
 });
+
+it("draws the large size at 48, the prototype's, beside a 44 field", () => {
+  render(<IconButton size="lg" aria-label="Filters" icon={<svg />} />);
+  expect(screen.getByRole("button", { name: "Filters" })).toHaveClass(
+    "h-12",
+    "w-12",
+  );
+});

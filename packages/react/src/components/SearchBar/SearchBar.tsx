@@ -83,7 +83,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
               onChange?.("");
               onClear?.();
             }}
-            className="ml-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-pill transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="kozmos-search-clear ml-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-pill transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Clear search"
             type="button"
           >
