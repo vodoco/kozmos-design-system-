@@ -1275,6 +1275,16 @@ Then, on Olcay's answers: solid is the default and glass an option — a surface
 platforms (`04bce5a`, `480471f`, `e6898e3`), the QA app and the examples asking for glass, the
 three web map cards solid by default; the shell's sheet and the Button's glass variant next.
 
+### 2026-09-20 · The map shell's sheet (Claude Code)
+
+`map-shell-sheet-2026-09-20.md`, commits `20575a0`, `72009db`, `ccf33ed` and the docs commit. The
+sheet fits its content — a content detent on iOS through the capped layout, `panelSizing` on the
+web from the content's scroll height, by construction on Android — and takes the surface style,
+solid by default, on all three shells; the QA app's directions sheet rests fitted and on glass, as
+the prototype's. Measured on each platform; the capped layout was clamped to its cap when a
+render test showed a fixed-height child overrunning it. The Button's glass variant next, then the
+transition arrows and the search sheet.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

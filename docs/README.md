@@ -22,6 +22,8 @@ Then the prototype's three navigation parts were built on iOS, React and Android
 app's directions put on them: [navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md).
 Then the glass surface role the handoff had ruled, built on all three platforms and measured:
 [glass-surface-2026-09-20.md](glass-surface-2026-09-20.md).
+Then the map shell's sheet, fitted to its content and on the surface style, on all three:
+[map-shell-sheet-2026-09-20.md](map-shell-sheet-2026-09-20.md).
 
 Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
 It closes declaration-format and inert-opacity debt and migrates the temporal fields.
@@ -40,6 +42,9 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 The Pointr iOS thread, 2026-09-19 to 2026-09-20, newest first:
 
+- `map-shell-sheet-2026-09-20.md`: the map shell's sheet fitted to its content — a content detent on
+  iOS, `panelSizing` on the web, by construction on Android — and on the surface style, solid by
+  default; the QA app's directions sheet on both; measured on each platform.
 - `glass-surface-2026-09-20.md`: the glass surface role from `Semantics.Effect.glass` on iOS, React
   and Android — the token emitted natively, the web rule and component, the SwiftUI modifier, the
   Compose defaults — with the card, the summary and the three web map cards on it; Liquid Glass
