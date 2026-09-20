@@ -86,6 +86,9 @@ function NavigationExample() {
       mapLabel="Example map"
       map={<div className="h-full w-full bg-muted/40" />}
       panelLabel="Directions"
+      panelPresentation="bottom"
+      panelSizing="content"
+      panelSurface="glass"
       topBar={
         <ManoeuvreCard
           type={step.type}

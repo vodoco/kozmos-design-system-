@@ -7,6 +7,7 @@ import type {
   MapReadiness,
 } from "@kozmos/product-contracts";
 import { cn } from "../../utils";
+import { surfaceClass, type SurfaceVariant } from "../Surface";
 import {
   resolveAdaptiveMapLayout,
   resolveMapInsets,
@@ -31,6 +32,14 @@ export interface AdaptiveMapShellProps extends React.HTMLAttributes<HTMLDivEleme
   panelPresentation?: MapPanelPresentation;
   /** Requested bottom-panel height fraction (0.12–0.88); reduced if map chrome needs space. */
   panelFraction?: number;
+  /**
+   * How a bottom panel is sized: by `panelFraction`, or fitted to its content
+   * — as tall as what it holds, between the same limits — for a sheet that
+   * holds a summary and a row of buttons and nothing to scroll.
+   */
+  panelSizing?: "fraction" | "content";
+  /** What the panel sits on: solid by default, glass where the product asks for it. */
+  panelSurface?: SurfaceVariant;
   /** Minimum renderer padding. Combined with measured chrome using max, not addition. */
   collisionInsets?: Partial<MapCollisionInsets>;
   /** Additional shell-local edge exclusions, e.g. keyboard overlap. Merged with CSS safe areas. */
@@ -72,6 +81,8 @@ const AdaptiveMapShell = React.forwardRef<
       panelPlacement = "end",
       panelPresentation = "auto",
       panelFraction,
+      panelSizing = "fraction",
+      panelSurface = "solid",
       collisionInsets,
       safeAreaInsets,
       usableRegions,
@@ -86,6 +97,7 @@ const AdaptiveMapShell = React.forwardRef<
     const safeArea = React.useRef<HTMLDivElement>(null);
     const bar = React.useRef<HTMLDivElement>(null);
     const buttons = React.useRef<HTMLDivElement>(null);
+    const panelContent = React.useRef<HTMLDivElement>(null);
     const [measured, setMeasured] = React.useState({
       ready: false,
       width: 0,
@@ -94,6 +106,7 @@ const AdaptiveMapShell = React.forwardRef<
       barHeight: 0,
       controlsWidth: 0,
       controlsHeight: 0,
+      panelContentHeight: 0,
       safe: { top: 0, right: 0, bottom: 0, left: 0 },
     });
     React.useImperativeHandle(ref, () => root.current!, []);
@@ -119,6 +132,8 @@ const AdaptiveMapShell = React.forwardRef<
             buttons.current?.offsetHeight ?? 0,
             buttons.current?.scrollHeight ?? 0,
           ),
+          // What the panel holds, not what it was given: the scroll height.
+          panelContentHeight: panelContent.current?.scrollHeight ?? 0,
           safe: {
             top: parseFloat(safeStyle.paddingTop) || 0,
             right: parseFloat(safeStyle.paddingRight) || 0,
@@ -132,9 +147,11 @@ const AdaptiveMapShell = React.forwardRef<
       };
       measure();
       const observer = new ResizeObserver(measure);
-      [element, bar.current, buttons.current].forEach((node) => {
-        if (node) observer.observe(node);
-      });
+      [element, bar.current, buttons.current, panelContent.current].forEach(
+        (node) => {
+          if (node) observer.observe(node);
+        },
+      );
       observer.observe(safeArea.current!, { box: "border-box" });
       // Inherited direction can change without a resize (including a host locale switch).
       const directionObserver = new MutationObserver(measure);
@@ -154,7 +171,7 @@ const AdaptiveMapShell = React.forwardRef<
         directionObserver.disconnect();
         window.removeEventListener("resize", measure);
       };
-    }, [Boolean(topBar), Boolean(controls)]);
+    }, [Boolean(topBar), Boolean(controls), Boolean(panel)]);
 
     const safe = {
       top: mergeSafeInset(measured.safe.top, safeAreaInsets?.top),
@@ -162,12 +179,19 @@ const AdaptiveMapShell = React.forwardRef<
       bottom: mergeSafeInset(measured.safe.bottom, safeAreaInsets?.bottom),
       left: mergeSafeInset(measured.safe.left, safeAreaInsets?.left),
     };
+    // Fitted to its content: the content's own height as a share of the
+    // shell, within the same limits as a requested fraction. Measured a
+    // render late, as the chrome is.
+    const effectivePanelFraction =
+      panelSizing === "content" && measured.height > 0
+        ? measured.panelContentHeight / measured.height
+        : panelFraction;
     const layout = resolveAdaptiveMapLayout({
       ...measured,
       hasPanel: Boolean(panel),
       panelPlacement,
       panelPresentation,
-      panelFraction,
+      panelFraction: effectivePanelFraction,
       minimumMapHeight:
         (topBar ? measured.barHeight : 0) +
         (controls ? measured.controlsHeight : 0) +
@@ -358,13 +382,17 @@ const AdaptiveMapShell = React.forwardRef<
             hidden={unavailable || (measured.ready && !layout.panelBounds)}
             style={position(layout.panelBounds ?? zero)}
             className={cn(
-              "z-40 overflow-hidden bg-background shadow-overlay",
+              surfaceClass(panelSurface),
+              "z-40 overflow-hidden shadow-overlay",
               layout.presentation === "bottom"
                 ? "rounded-t-container"
                 : "rounded-container",
             )}
           >
-            <div className="h-full min-h-0 overflow-y-auto overscroll-contain">
+            <div
+              ref={panelContent}
+              className="h-full min-h-0 overflow-y-auto overscroll-contain"
+            >
               {panel}
             </div>
           </aside>

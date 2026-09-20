@@ -152,6 +152,14 @@ try {
         const current = page.getByRole("region", { name: "Itinerary" }).locator('[aria-current="step"]');
         assert.equal(await current.count(), 1);
         assert.equal(await current.textContent(), "Take Corridor to Garage B", "the second step is not current after Next");
+        // The sheet is fitted to its content — the summary and the buttons —
+        // and on the glass surface; the map has the rest.
+        const sheet = page.getByRole("complementary", { name: "Directions" });
+        const sheetBox = await box(sheet);
+        const contentHeight = await sheet.locator("> div").first().evaluate((node) => node.scrollHeight);
+        assert.ok(Math.abs(sheetBox.height - contentHeight) <= 2, `the sheet (${sheetBox.height}) is not fitted to its content (${contentHeight})`);
+        assert.ok(sheetBox.height < viewport.height * 0.5, `the fitted sheet takes ${sheetBox.height} of ${viewport.height}`);
+        assert.ok(await sheet.evaluate((node) => node.classList.contains("kozmos-surface-glass")), "the sheet is not on the glass surface");
       });
     }
   }
