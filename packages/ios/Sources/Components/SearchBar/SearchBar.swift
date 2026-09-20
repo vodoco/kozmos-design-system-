@@ -13,8 +13,9 @@ public struct KozmosSearchBar: View {
     }
     
     public var body: some View {
-        HStack {
+        HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
             Image(systemName: "magnifyingglass")
+                .font(.system(size: 16, weight: .medium))
                 .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 // Decoration: the field says what it is. Left audible, the
                 // symbol read "Search" before it.
@@ -31,15 +32,24 @@ public struct KozmosSearchBar: View {
                     text = ""
                     onClear?()
                 }) {
-                    Image(systemName: "xmark.circle.fill")
+                    // A 24 grey circle to see; the 44 button around it to hit.
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                        .frame(width: KozmosDimensions.primitivesLayoutSizing300, height: KozmosDimensions.primitivesLayoutSizing300)
+                        .background(Circle().fill(KozmosColors.primitivesColorsBackground300))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
                 .accessibilityLabel("Clear search")
             }
         }
-        .padding(EdgeInsets(top: KozmosDimensions.primitivesLayoutSpacing200, leading: KozmosDimensions.primitivesLayoutSpacing200, bottom: KozmosDimensions.primitivesLayoutSpacing200, trailing: KozmosDimensions.primitivesLayoutSpacing200))
+        .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
+        // 44 tall: a control's height, the prototype's field.
+        .frame(height: 44)
         .background(KozmosColors.primitivesColorsBackground0)
-        .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
+        .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .kozmosElevation(KozmosShadows.semanticsElevationFloating)
         // No outer margins. A component that pads itself decides its caller's
         // layout for them, and here it meant the field could never sit the same

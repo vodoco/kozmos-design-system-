@@ -21,20 +21,21 @@ public struct KozmosUserLocationMarker: View {
             // constantly — the floor changes, the camera moves — and a
             // repeating implicit animation left mid-flight by a rebuild renders
             // a stray ring adrift from the marker. A clock cannot get stranded.
+            // The halo: 64 at 14 %, still.
+            Circle()
+                .fill(KozmosColors.semanticsDataBlue)
+                .opacity(0.14)
+                .frame(width: 64, height: 64)
+
+            // The ring: 48, pulsing.
             TimelineView(.animation) { context in
                 let phase = Self.pulsePhase(at: context.date)
                 Circle()
                     .fill(KozmosColors.semanticsDataBlue)
-                    .frame(width: 24, height: 24)
-                    .scaleEffect(1 + 0.8 * phase)
-                    .opacity(0.5 * (1 - phase))
+                    .frame(width: 48, height: 48)
+                    .scaleEffect(0.6 + 0.4 * phase)
+                    .opacity(0.3 * (1 - phase))
             }
-
-            // Static Ring
-            Circle()
-                .fill(KozmosColors.semanticsDataBlue)
-                .opacity(0.2)
-                .frame(width: 36, height: 36)
 
             // Heading Cone
             if showHeading {
@@ -54,13 +55,13 @@ public struct KozmosUserLocationMarker: View {
                     .rotationEffect(.degrees(heading))
             }
 
-            // Core Dot
+            // The dot: 18, with a 3 white border.
             Circle()
                 .fill(KozmosColors.semanticsDataBlue)
-                .frame(width: 16, height: 16)
+                .frame(width: 18, height: 18)
                 .overlay(
                     Circle()
-                        .stroke(Color.white, lineWidth: 2)
+                        .stroke(Color.white, lineWidth: 3)
                 )
         }
         .frame(width: 64, height: 64)

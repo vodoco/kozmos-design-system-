@@ -38,16 +38,33 @@ public struct KozmosCategoryTile<Icon: View>: View {
             )
             onSelect(category.id)
         } label: {
-            VStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+            VStack(spacing: KozmosDimensions.primitivesLayoutSpacing75) {
+                // The icon's square: 64, radius Control, the container edge;
+                // the selection shows on it. The label sits under it.
                 icon
-                    .frame(width: 40, height: 40)
+                    .frame(width: KozmosDimensions.primitivesLayoutSizing300, height: KozmosDimensions.primitivesLayoutSizing300)
                     .foregroundColor(KozmosColors.primitivesColorsTheme500)
+                    .frame(width: KozmosDimensions.primitivesLayoutSizing800, height: KozmosDimensions.primitivesLayoutSizing800)
+                    .background(
+                        category.selected
+                            ? KozmosColors.primitivesColorsTheme500.opacity(0.05)
+                            : KozmosColors.primitivesColorsBackground0
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
+                            .stroke(
+                                category.selected ? KozmosColors.primitivesColorsTheme500 : KozmosColors.semanticsBorderSubtle,
+                                lineWidth: category.selected ? 2 : 1
+                            )
+                    )
                     .accessibilityHidden(true)
 
                 Text(category.label)
-                    .font(.subheadline.weight(.medium))
+                    .font(KozmosTypography.caption2)
                     .foregroundColor(KozmosColors.primitivesColorsForeground100)
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
                 if let resultCountLabel = category.resultCountLabel {
@@ -56,23 +73,9 @@ public struct KozmosCategoryTile<Icon: View>: View {
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: 112)
-            .padding(KozmosDimensions.primitivesLayoutSpacing150)
-            .background(
-                category.selected
-                    ? KozmosColors.primitivesColorsTheme500.opacity(0.05)
-                    : KozmosColors.primitivesColorsBackground0
-            )
-            .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
-                    .stroke(
-                        category.selected
-                            ? KozmosColors.primitivesColorsTheme500
-                            : KozmosColors.primitivesColorsForeground300,
-                        lineWidth: category.selected ? 2 : 1
-                    )
-            )
+            .frame(maxWidth: .infinity)
+            .padding(KozmosDimensions.primitivesLayoutSpacing50)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(disabled)

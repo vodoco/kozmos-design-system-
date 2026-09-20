@@ -16,9 +16,11 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
     private let hasSearch: Bool
     private let hasActions: Bool
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 140), spacing: KozmosDimensions.primitivesLayoutSpacing150)
-    ]
+    // Four across, gap 8: the prototype's grid of icon squares.
+    private let columns = Array(
+        repeating: GridItem(.flexible(), spacing: KozmosDimensions.primitivesLayoutSpacing100),
+        count: 4
+    )
 
     public init(
         categories: [KozmosCategoryPresentation],
@@ -71,7 +73,7 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
                                 )
                         )
                 } else {
-                    LazyVGrid(columns: columns, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                    LazyVGrid(columns: columns, spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                         ForEach(categories) { category in
                             KozmosCategoryTile(category: category, onSelect: onSelect) {
                                 renderIcon(category)
