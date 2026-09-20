@@ -27,8 +27,10 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
     private let hasActions: Bool
 
     // Four across, gap 8: the prototype's grid of icon squares.
+    // Cells align at the top: a one-line label beside a two-line one keeps
+    // its square on the same edge instead of dropping by half a line.
     private let columns = Array(
-        repeating: GridItem(.flexible(), spacing: KozmosDimensions.primitivesLayoutSpacing100),
+        repeating: GridItem(.flexible(), spacing: KozmosDimensions.primitivesLayoutSpacing100, alignment: .top),
         count: 4
     )
 

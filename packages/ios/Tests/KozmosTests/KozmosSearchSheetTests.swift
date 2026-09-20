@@ -26,6 +26,28 @@ final class KozmosSearchSheetTests: XCTestCase {
     }
 
     /// The row: 80 tall; a dot before the floor when it is the current one.
+    /// Two tiles in one row, a one-line and a two-line label: the squares
+    /// share a top edge. The grid aligns its cells at the top, so a short
+    /// label does not drop its square by half a line.
+    @MainActor func testTilesInARowShareATopEdgeWhateverTheirLabelsLength() async throws {
+        let size = CGSize(width: 402, height: 200)
+        let panel = KozmosBrowseCategoriesPanel(
+            categories: [
+                KozmosCategoryPresentation(id: "gates", label: "Gates"),
+                KozmosCategoryPresentation(id: "entrances", label: "Entrances & Exits"),
+            ],
+            presentation: .sheet,
+            onSelect: { _ in },
+            renderIcon: { _ in Image(systemName: "square.fill").resizable() },
+            emptyState: { EmptyView() }
+        )
+        .background(Color.white)
+        let pixels = try await RenderedPixels.render(panel, size: size)
+        let first = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 0, y: 0, width: 110, height: 200), where: Self.isBlue), "no icon in the first tile")
+        let second = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 110, y: 0, width: 100, height: 200), where: Self.isBlue), "no icon in the second tile")
+        XCTAssertEqual(first.minY, second.minY, accuracy: 1, "the squares do not share a top edge: \(first.minY) vs \(second.minY)")
+    }
+
     @MainActor func testTheRowIsEightyTallWithADotOnTheCurrentFloor() async throws {
         func row(currentFloorId: String?) -> some View {
             KozmosPOIResultCard(
