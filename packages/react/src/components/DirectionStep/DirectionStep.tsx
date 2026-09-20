@@ -3,19 +3,76 @@ import {
   ArrowBigRight,
   ArrowBigLeft,
   ArrowBigUp,
+  ArrowDownToLine,
+  ArrowRightToLine,
+  ArrowUpFromLine,
   MapPin,
+  Undo2,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../utils";
 
-export type DirectionType = "straight" | "left" | "right" | "destination";
+/**
+ * What a step of a route asks for. The four turns, and the transitions the
+ * routing engines describe: a level change by lift, escalator or stairs — up
+ * or down — or by something unnamed; a same-level transition, a walkway or a
+ * corridor to another building; and turning back. Each platform draws the
+ * closest glyph its own icon set has, and the instruction's words carry the
+ * rest.
+ */
+export type DirectionType =
+  | "straight"
+  | "left"
+  | "right"
+  | "destination"
+  | "lift-up"
+  | "lift-down"
+  | "escalator-up"
+  | "escalator-down"
+  | "stairs-up"
+  | "stairs-down"
+  | "level-up"
+  | "level-down"
+  | "transition"
+  | "turn-back";
 
-/** The arrow for each direction, one table for every part that draws one. */
+export const DIRECTION_TYPES: readonly DirectionType[] = [
+  "straight",
+  "left",
+  "right",
+  "destination",
+  "lift-up",
+  "lift-down",
+  "escalator-up",
+  "escalator-down",
+  "stairs-up",
+  "stairs-down",
+  "level-up",
+  "level-down",
+  "transition",
+  "turn-back",
+];
+
+/**
+ * The arrow for each direction, one table for every part that draws one.
+ * Lucide has no lift, escalator or stairs: a level change shows the
+ * direction of travel, whatever carries it.
+ */
 export const DIRECTION_ICONS: Record<DirectionType, LucideIcon> = {
   straight: ArrowBigUp,
   left: ArrowBigLeft,
   right: ArrowBigRight,
   destination: MapPin,
+  "lift-up": ArrowUpFromLine,
+  "lift-down": ArrowDownToLine,
+  "escalator-up": ArrowUpFromLine,
+  "escalator-down": ArrowDownToLine,
+  "stairs-up": ArrowUpFromLine,
+  "stairs-down": ArrowDownToLine,
+  "level-up": ArrowUpFromLine,
+  "level-down": ArrowDownToLine,
+  transition: ArrowRightToLine,
+  "turn-back": Undo2,
 };
 
 /**

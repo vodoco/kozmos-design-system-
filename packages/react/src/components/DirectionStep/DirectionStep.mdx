@@ -7,7 +7,11 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 # DirectionStep
 
-Displays the DirectionStep interface topology natively.
+A step of a route: the arrow, the instruction, the distance and the duration. The `type` is one of the four turns — `straight`, `left`, `right`, `destination` — or a transition: a level change by lift, escalator or stairs, up or down (`lift-up`, `escalator-down`, `stairs-up`…), by something the route does not name (`level-up`, `level-down`), a same-level `transition` — a walkway, a corridor, another building — and `turn-back`. Each platform draws the closest glyph its own icon set has: the web and iOS show a level change as the direction of travel (iOS has a figure for stairs), Android has a lift, an escalator and stairs of its own; the instruction's words carry the rest. The arrow is decorative: assistive technology hears the instruction.
+
+<Canvas>
+  <Story of={DirectionStepStories.Transitions} />
+</Canvas>
 
 <Canvas>
   <Story of={DirectionStepStories.Default} />
