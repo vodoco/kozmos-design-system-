@@ -356,7 +356,8 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     func resolvedCollisionInsets(
         in size: CGSize,
         layoutDirection: LayoutDirection,
-        isRegularWidth: Bool
+        isRegularWidth: Bool,
+        safeArea: EdgeInsets = EdgeInsets()
     ) -> KozmosMapCollisionInsets {
         let edgePadding = KozmosDimensions.primitivesLayoutSpacing200
         let sidePanelWidth = floatingPanelOccupancy(in: size, isRegularWidth: isRegularWidth)
@@ -368,15 +369,21 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             : 0
         let panelOnPhysicalRight = (panelPlacement == .end) == (layoutDirection == .leftToRight)
 
-        let top = max(collisionInsets.top, Double(topBarInset))
+        // The map runs under the safe areas; the camera keeps out of them.
+        let safeLeft = layoutDirection == .leftToRight ? safeArea.leading : safeArea.trailing
+        let safeRight = layoutDirection == .leftToRight ? safeArea.trailing : safeArea.leading
+        let top = max(collisionInsets.top, Double(topBarInset + safeArea.top))
         let right = max(
             collisionInsets.right,
-            Double(panelOnPhysicalRight ? sidePanelWidth : controlsColumn)
+            Double((panelOnPhysicalRight ? sidePanelWidth : controlsColumn) + safeRight)
         )
-        let bottom = max(collisionInsets.bottom, Double(dockedPanel + controlsBand))
+        let bottom = max(
+            collisionInsets.bottom,
+            Double(dockedPanel > 0 ? dockedPanel + controlsBand : controlsBand + safeArea.bottom)
+        )
         let left = max(
             collisionInsets.left,
-            Double(panelOnPhysicalRight ? controlsColumn : sidePanelWidth)
+            Double((panelOnPhysicalRight ? controlsColumn : sidePanelWidth) + safeLeft)
         )
 
         // Opposing edges saturate at the map's size, as React's
@@ -437,11 +444,28 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     // MARK: - Body
 
     public var body: some View {
+        // Edge to edge, as the prototype's screen: the map runs under the
+        // status bar and the home indicator and the sheet's surface reaches
+        // the bottom edge, while the chrome and the sheet's content keep the
+        // safe areas the outer reader saw. The detents are shares of the
+        // whole height, as the prototype's are of its frame.
+        GeometryReader { outer in
+            shell(safeArea: outer.safeAreaInsets)
+                // The container's safe areas only: the keyboard's region still
+                // insets the shell, so the sheet rises above the keyboard and
+                // a picker's rows stay reachable while a field is focused.
+                .ignoresSafeArea(.container)
+        }
+        .frame(minHeight: 448)
+    }
+
+    private func shell(safeArea: EdgeInsets) -> some View {
         GeometryReader { geometry in
             let insets = resolvedCollisionInsets(
                 in: geometry.size,
                 layoutDirection: layoutDirection,
-                isRegularWidth: isRegularWidth
+                isRegularWidth: isRegularWidth,
+                safeArea: safeArea
             )
 
             ZStack(alignment: .topLeading) {
@@ -474,7 +498,9 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                                 )
                             }
                         )
-                        .padding(.top, topBarHeight > 0 ? KozmosDimensions.primitivesLayoutSpacing200 : 0)
+                        .padding(.top, topBarHeight > 0 ? KozmosDimensions.primitivesLayoutSpacing200 + safeArea.top : 0)
+                        .padding(.leading, safeArea.leading)
+                        .padding(.trailing, safeArea.trailing)
                         .frame(width: geometry.size.width, alignment: chromeSide)
                         .zIndex(3)
                 }
@@ -491,8 +517,12 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                         )
                         .padding(KozmosDimensions.primitivesLayoutSpacing200)
                         // The top bar shares this edge, so the controls clear
-                        // whatever it occupies rather than sitting under it.
-                        .padding(.top, topBarInset)
+                        // whatever it occupies rather than sitting under it;
+                        // the status bar likewise.
+                        .padding(.top, topBarInset + safeArea.top)
+                        .padding(.leading, safeArea.leading)
+                        .padding(.trailing, safeArea.trailing)
+                        .padding(.bottom, hasPanel && !isRegularWidth ? 0 : safeArea.bottom)
                         // Bounded by the band left above the panel rather than
                         // the whole shell. Controls that overflowed used to
                         // disappear behind the panel with no way for the caller
@@ -511,7 +541,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                 }
 
                 if hasPanel {
-                    panelContainer(in: geometry)
+                    panelContainer(in: geometry, safeArea: safeArea)
                         .zIndex(4)
                 }
             }
@@ -524,7 +554,6 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             .onAppear { onCollisionInsetsChange?(insets) }
             .onChange(of: insets) { onCollisionInsetsChange?($0) }
         }
-        .frame(minHeight: 448)
         .background(KozmosColors.primitivesColorsBackground100)
         .clipped()
     }
@@ -532,7 +561,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     // MARK: - Panel
 
     @ViewBuilder
-    private func panelContainer(in geometry: GeometryProxy) -> some View {
+    private func panelContainer(in geometry: GeometryProxy, safeArea: EdgeInsets) -> some View {
         if isRegularWidth {
             panel
                 .frame(width: min(416, geometry.size.width * 0.42))
@@ -543,6 +572,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                 )
                 .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.18), radius: 24, x: 0, y: 12)
                 .padding(KozmosDimensions.primitivesLayoutSpacing200)
+                .padding(EdgeInsets(top: safeArea.top, leading: safeArea.leading, bottom: safeArea.bottom, trailing: safeArea.trailing))
                 .frame(
                     width: geometry.size.width,
                     height: geometry.size.height,
@@ -565,6 +595,13 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                             }
                             panel
                                 .environment(\.kozmosPanelScrollEnabled, panelScrollEnabled(in: geometry.size.height, docked: true))
+                                // Fitted content never scrolls, so the safe
+                                // areas are plain padding here: a safe-area
+                                // inset would take the whole proposal and the
+                                // sheet would stop fitting.
+                                .padding(.bottom, safeArea.bottom)
+                                .padding(.leading, safeArea.leading)
+                                .padding(.trailing, safeArea.trailing)
                                 .frame(maxWidth: .infinity, alignment: .top)
                         }
                     }
@@ -582,6 +619,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
 
                         panel
                             .environment(\.kozmosPanelScrollEnabled, panelScrollEnabled(in: geometry.size.height, docked: true))
+                            .modifier(KozmosSheetSafeArea(safeArea: safeArea))
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     }
                     // An explicit height rather than a cap: the panel is laid
@@ -855,5 +893,20 @@ where TopBar == EmptyView, MapStatusContent == EmptyView, Controls == EmptyView 
             topBar: { EmptyView() },
             panel: panel
         )
+    }
+}
+
+/// The docked sheet's content keeps the bottom and side safe areas as its own,
+/// so a summary sits above the home indicator while a `KozmosPanelScrollView`
+/// runs under it with its content inset — the sheet's surface itself reaches
+/// the edge.
+private struct KozmosSheetSafeArea: ViewModifier {
+    let safeArea: EdgeInsets
+
+    func body(content: Content) -> some View {
+        content
+            .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: safeArea.bottom) }
+            .safeAreaInset(edge: .leading, spacing: 0) { Color.clear.frame(width: safeArea.leading) }
+            .safeAreaInset(edge: .trailing, spacing: 0) { Color.clear.frame(width: safeArea.trailing) }
     }
 }

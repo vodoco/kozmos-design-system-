@@ -560,3 +560,62 @@ final class KozmosMapShellPeekAnchorTests: XCTestCase {
     }
     #endif
 }
+
+/// The shell runs edge to edge — the map under the status bar and the home
+/// indicator, the sheet's surface to the bottom edge — while its chrome and
+/// the sheet's content keep the safe areas, as the prototype's screen does.
+final class KozmosMapShellEdgesTests: XCTestCase {
+    private let shellHeight: CGFloat = 800
+
+    func testTheReportedInsetsKeepTheSafeAreas() {
+        let shell = KozmosAdaptiveMapShell(
+            panelDetent: .constant(.collapsed), panelDetents: [.collapsed, .large],
+            map: { Color.red }, mapStatusContent: { EmptyView() }, controls: { EmptyView() },
+            topBar: { EmptyView() }, panel: { Color.green }
+        )
+        let safe = EdgeInsets(top: 59, leading: 0, bottom: 34, trailing: 0)
+        let docked = shell.resolvedCollisionInsets(in: CGSize(width: 390, height: shellHeight), layoutDirection: .leftToRight, isRegularWidth: false, safeArea: safe)
+        XCTAssertGreaterThanOrEqual(docked.top, 59, "the camera may put content under the status bar")
+        let floating = shell.resolvedCollisionInsets(in: CGSize(width: 1024, height: shellHeight), layoutDirection: .leftToRight, isRegularWidth: true, safeArea: safe)
+        XCTAssertGreaterThanOrEqual(floating.bottom, 34, "with no docked sheet the camera may put content under the home indicator")
+    }
+
+    #if os(iOS)
+    /// The shell inside a "device" with a 59 status bar and a 34 home indicator.
+    @MainActor private func render<Panel: View>(@ViewBuilder panel: () -> Panel) async throws -> RenderedPixels {
+        let view = KozmosAdaptiveMapShell(
+            panelDetent: .constant(.collapsed), panelDetents: [.collapsed, .large],
+            map: { Color.red }, mapStatusContent: { EmptyView() }, controls: { EmptyView() },
+            topBar: { EmptyView() }, panel: panel
+        )
+        .environment(\.horizontalSizeClass, .compact)
+        .safeAreaInset(edge: .top, spacing: 0) { Color.clear.frame(height: 59) }
+        .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: 34) }
+        return try await RenderedPixels.render(view, size: CGSize(width: 390, height: shellHeight))
+    }
+
+    private static func isGreen(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { g > 150 && r < 120 && b < 140 }
+
+    /// The map's red at the very top; the sheet a fifth of the whole height,
+    /// its surface to the bottom edge, its plain content stopping 34 above it.
+    @MainActor func testTheMapRunsUnderTheStatusBarAndTheSheetKeepsTheHomeIndicator() async throws {
+        let pixels = try await render { Color.green }
+        let top = pixels.color(at: CGPoint(x: 40, y: 5))
+        XCTAssertGreaterThan(top.r, 150, "the map does not run under the status bar: \(top)")
+        XCTAssertLessThan(top.g, 120, "the map does not run under the status bar: \(top)")
+        let green = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 0, y: 0, width: 390, height: shellHeight), where: Self.isGreen), "no sheet content")
+        XCTAssertEqual(green.maxY, shellHeight - 34, accuracy: 1.5, "the sheet's content does not stop above the home indicator")
+        XCTAssertEqual(green.minY, shellHeight - 160 + 16, accuracy: 1.5, "the sheet is not a fifth of the whole height under its handle: \(green)")
+        let edge = pixels.color(at: CGPoint(x: 40, y: shellHeight - 10))
+        XCTAssertGreaterThan(edge.g, 240, "the sheet's surface does not reach the bottom edge: \(edge)")
+        XCTAssertGreaterThan(edge.r, 240, "the sheet's surface does not reach the bottom edge: \(edge)")
+    }
+
+    /// Scrolling content runs under the home indicator, as a scroll view's does.
+    @MainActor func testScrollingContentRunsUnderTheHomeIndicator() async throws {
+        let pixels = try await render { KozmosPanelScrollView { Color.green.frame(height: 900) } }
+        let edge = pixels.color(at: CGPoint(x: 40, y: shellHeight - 10))
+        XCTAssertTrue(Self.isGreen(edge.r, edge.g, edge.b), "the scrolling content stops above the home indicator: \(edge)")
+    }
+    #endif
+}

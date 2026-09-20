@@ -92,15 +92,32 @@ final class KozmosSearchSheetTests: XCTestCase {
         XCTAssertEqual(dot.width, 18 - 3, accuracy: 2, "the dot's blue is not 18 less its 3 border: \(dot)")
     }
 
-    /// The AI search: a theme ring 66 wide with a white centre.
-    @MainActor func testTheAISearchIsARingAroundAWhiteDisc() async throws {
-        let view = KozmosAISearchButton(action: {}).padding(8).background(Color.white)
-        let size = CGSize(width: 82, height: 82)
+    /// The AI search, the prototype's: a 48 circle whose gradient ring is a
+    /// band two and a half wide around a 43 white disc — minimal, not a
+    /// collar — with the 16 icon in the theme's colour at the centre.
+    @MainActor func testTheAISearchIsAThinRingAroundAWhiteDisc() async throws {
+        let size = CGSize(width: 80, height: 80)
+        let view = KozmosAISearchButton(action: {}).frame(width: 80, height: 80).background(Color.white)
         let pixels = try await RenderedPixels.render(view, size: size)
         let ring = try XCTUnwrap(pixels.boundingBox(in: CGRect(origin: .zero, size: size), where: Self.isBlue), "no ring")
-        XCTAssertEqual(ring.width, 66, accuracy: 2, "the ring is not 66: \(ring)")
-        let centre = pixels.color(at: CGPoint(x: 41, y: 30))
-        XCTAssertGreaterThan(centre.g, 240, "the disc is not white: \(centre)")
+        XCTAssertEqual(ring.width, 48, accuracy: 2, "the ring is not the button's 48: \(ring)")
+        // Along a radius, past the icon at the centre: the white disc, then
+        // the band, then the white background.
+        let centre = CGPoint(x: 40, y: 40)
+        var band = 0
+        var firstBlue: CGFloat?
+        for offset in stride(from: 12, through: 30, by: 0.5) {
+            let colour = pixels.color(at: CGPoint(x: centre.x + CGFloat(offset), y: centre.y))
+            if Self.isBlue(colour.r, colour.g, colour.b) {
+                if firstBlue == nil { firstBlue = CGFloat(offset) }
+                band += 1
+            }
+        }
+        let bandWidth = CGFloat(band) * 0.5
+        XCTAssertEqual(bandWidth, 2.5, accuracy: 1.25, "the ring's band is not two and a half wide: \(bandWidth)")
+        XCTAssertEqual(try XCTUnwrap(firstBlue), 21.5, accuracy: 1.5, "the band does not start at the 43 disc's edge: \(String(describing: firstBlue))")
+        let disc = pixels.color(at: CGPoint(x: 40, y: 28))
+        XCTAssertGreaterThan(disc.g, 240, "the disc is not white: \(disc)")
     }
     #endif
 }

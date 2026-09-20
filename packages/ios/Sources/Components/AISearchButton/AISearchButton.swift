@@ -13,33 +13,24 @@ public struct KozmosAISearchButton: View {
         self.action = action
     }
 
-    static let ring: CGFloat = 66
-    static let disc: CGFloat = 44
-    /// The button's own footprint, the prototype's 48: the ring overflows it,
-    /// so a row that holds the field and this button stays the field's height.
+    /// The prototype's: a 48 circle, the gradient a band two and a half wide
+    /// around a 43 white disc, the 16 icon at the centre.
+    static let ring: CGFloat = 48
+    static let disc: CGFloat = 43
+    static let band: CGFloat = 2.5
+    /// The button's own footprint is the ring: nothing overflows the row.
     static let footprint: CGFloat = 48
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// The ring's gradient turns in place, once every three seconds, unless
-    /// motion is reduced; the first frame is the resting one.
+    /// The ring's gradient turns in place, the prototype's 3.6 seconds a
+    /// turn, unless motion is reduced; the first frame is the resting one.
     @State private var ringAngle: Double = 0
-    static let spinDuration: Double = 3
+    static let spinDuration: Double = 3.6
 
     public var body: some View {
         Button(action: action) {
             ZStack {
-                Circle()
-                    .fill(KozmosColors.primitivesColorsBackground0)
-                    .frame(width: Self.disc, height: Self.disc)
-                    .kozmosElevation(KozmosShadows.semanticsElevationRaised)
-                Image(systemName: "sparkles")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(KozmosColors.primitivesColorsTheme500)
-                    .accessibilityHidden(true)
-            }
-            .frame(width: Self.footprint, height: Self.footprint)
-            // Drawn, not laid out: the ring takes no room from the row.
-            .background(
+                // The gradient turns; the circle it fills does not move.
                 Circle()
                     .fill(
                         AngularGradient(
@@ -52,9 +43,16 @@ public struct KozmosAISearchButton: View {
                         )
                     )
                     .frame(width: Self.ring, height: Self.ring)
-                    // The gradient turns; the circle it fills does not move.
                     .rotationEffect(.degrees(ringAngle))
-            )
+                Circle()
+                    .fill(KozmosColors.primitivesColorsBackground0)
+                    .frame(width: Self.disc, height: Self.disc)
+                Image(systemName: "sparkles")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(KozmosColors.primitivesColorsTheme500)
+                    .accessibilityHidden(true)
+            }
+            .frame(width: Self.footprint, height: Self.footprint)
             .contentShape(Circle())
         }
         .onAppear {
