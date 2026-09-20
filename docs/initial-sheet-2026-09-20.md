@@ -56,6 +56,18 @@ explicitly where that was wanted.
   row, which pushed the tiles 18 down and, with the scroll view stopping above the home
   indicator, left a collapsed sheet showing a third of the first tile row instead of the squares
   and a label line. Seen live on the iPhone, measured, fixed on every platform.
+- The category grid aligns its cells at the top on iOS (`GridItem(alignment: .top)`): a one-line
+  label beside a two-line one kept its square half a line lower, as Olcay saw in the first
+  screenshot. A render test with "Gates" beside "Entrances & Exits" failed against the old grid and
+  passes now; the web's grid and Compose's already aligned at the top, and `pnpm test:search-sheet`
+  measures the web's row on three engines.
+- The AI search ring's gradient turns in place, once every three seconds, on all three
+  platforms, at Olcay's ask: SwiftUI's `rotationEffect` under `repeatForever`, still under Reduce
+  Motion; a CSS keyframe on `.kozmos-ai-search-ring`, `none` under `prefers-reduced-motion`
+  (measured by the same check, on three engines, with reduced motion emulated); Compose's
+  `rememberInfiniteTransition`, still when the system's animator scale is off. Paparazzi and the
+  iOS render tests see the first frame, so the goldens hold; on the iPhone two screenshots half a
+  second apart show the ring's hues moved and the field beside it unchanged.
 
 ## 3. The QA app's sheet
 
@@ -133,6 +145,7 @@ Not run: Chromatic; Android on a device or emulator; the Figma side (no importer
 | The QA app's tiles and their words       | `apps/PointrPlayground/Sources/App/Model/QuickAccess.swift`; the vendored file and icons in `Sources/App/Resources/QuickAccess`                                |
 | The QA app's sheet and its detent memory | `SDKMapScreen.swift`: `searchSheet`, `searchRow`, the three `onChange`s                                                                                        |
 | Drive the web sheet                      | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:map-sheet` (`ADAPTIVE_BROWSER=firefox\|webkit`), on a served Storybook build                                    |
+| Measure the web's tiles and the AI ring  | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:search-sheet`, the same way                                                                                     |
 | Drive the QA app's sheet                 | the `KozmosPointrQAUI` scheme, `-only-testing:KozmosPointrQAUITests/BrowseSheetUITests`, with the two `TEST_RUNNER_KOZMOS_QA_*` names                          |
 | Re-drive the prototype                   | `node scripts/measure-prototype-sheet.cjs <out-dir>`                                                                                                           |
 | Re-record the Compose goldens            | `ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew --no-daemon -q recordPaparazziDebug --tests "*KozmosAdaptiveMapShellPaparazziTest*"` in `packages/android` |

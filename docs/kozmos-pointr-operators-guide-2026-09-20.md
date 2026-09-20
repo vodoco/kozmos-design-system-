@@ -210,6 +210,13 @@ handle, the anchored peek — is driven on the same served build, as the prototy
 cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:map-sheet
 ```
 
+The search sheet's parts on the web — the tiles' shared top edge, the AI search button's 48
+footprint and 66 ring, the ring's turn and its rest under reduced motion — on the same build:
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:search-sheet
+```
+
 The prototype itself can be re-driven and re-measured at any time:
 
 ```sh
