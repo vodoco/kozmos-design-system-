@@ -1218,7 +1218,13 @@ and an Android golden. The open level switcher names every level beside its shor
 current one filled, trailing-aligned to the pill. Folded phones: Olcay chose the iPhone Fold
 first; Xcode 26.6 has no device type, runtime or fold API for it, so the recommendation is to
 bring the web shell's hinge-region model to the iOS and Compose shells ahead of the SDKs. F, G
-and Pass 4 wait.
+and Pass 4 wait. Then Olcay named the reference for the screen states: the prototype at
+`agentic-search-zeta.vercel.app`, over the older Figma boards. It was read through the DOM and
+recorded in `pointr-prototype-screen-states-2026-09-20.md`: every state measured, mapped onto
+Kozmos parts, five decisions (circular quick buttons, labels-only level list, Readex Pro, four
+route modes on 132px cards, the step-free toggle's home) and the missing parts — a manoeuvre
+card, a progress rail, an itinerary list, a gradient-ring AI search button, a pulsing location
+marker.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

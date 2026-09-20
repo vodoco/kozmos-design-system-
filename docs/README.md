@@ -32,6 +32,10 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 The Pointr iOS thread, 2026-09-19 to 2026-09-20, newest first:
 
+- `pointr-prototype-screen-states-2026-09-20.md`: the product prototype Olcay named as the reference,
+  read through the DOM — every screen state measured in CSS pixels (search, the card, the
+  four-mode preview, turn-by-turn with the instruction card, itinerary and progress rail, levels,
+  the web layout), each mapped onto the Kozmos part it needs, five decisions and the parts missing.
 - `design-system-pass-2026-09-20.md`: Olcay's redirection to the design system — the card's name
   and quick buttons on one row with the name wrapping to three lines, on iOS, the web and
   Android, measured on each; the open level switcher naming every level; folded phones: no
