@@ -100,7 +100,13 @@ struct SDKMapScreen: View {
                     destination: session.selected?.name ?? "")
             }
         } else {
-            KozmosSearchBar(text: $session.query, placeholder: "Search this building")
+            // The prototype's search row: the field with the AI search beside
+            // it. The AI search has no flow in this milestone; it is here to
+            // be seen where the prototype puts it.
+            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                KozmosSearchBar(text: $session.query, placeholder: "Search this building")
+                KozmosAISearchButton(action: {})
+            }
         }
     }
 
@@ -191,6 +197,8 @@ struct SDKMapScreen: View {
                                   result: .init(poiId: poi.identifier, resultIndex: index, floorId: SDKPOIAdapter.floorId(poi.position.level)))
                         },
                         resultCountLabel: "\(matches.count) places",
+                        // A dot before the floor of a result on the floor the map shows.
+                        currentFloorId: session.selectedFloorId,
                         onSelect: { id in if let poi = session.pois.first(where: { $0.identifier == id }) { session.select(poi) } },
                         emptyState: { Text("No places available for this floor or search.") })
                 }.padding(16)
