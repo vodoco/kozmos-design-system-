@@ -32,6 +32,7 @@
     "test:storybook-interactions": "node scripts/check-storybook-interactions.mjs",
     "test:poi-details": "node scripts/check-poi-detail-examples.mjs",
     "test:navigation": "node scripts/check-navigation-examples.mjs",
+    "test:map-sheet": "node scripts/check-map-sheet.mjs",
     "test:poi-gallery": "node scripts/check-poi-gallery.mjs",
     "test:css-build": "node --test packages/react/postcss/*.test.cjs",
     "test:declarations": "node --test scripts/emit-format-declarations.test.mjs",

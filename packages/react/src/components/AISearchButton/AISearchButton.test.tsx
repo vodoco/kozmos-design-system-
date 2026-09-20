@@ -7,7 +7,8 @@ describe("AISearchButton", () => {
     const onClick = vi.fn();
     const { container } = render(<AISearchButton onClick={onClick} />);
     const button = screen.getByRole("button", { name: "AI search" });
-    expect(button).toHaveClass("kozmos-ai-search", "h-[66px]", "w-[66px]");
+    // Laid out at the prototype's 48; the 66 ring is drawn outside it.
+    expect(button).toHaveClass("kozmos-ai-search", "h-12", "w-12");
     expect(container.querySelector(".kozmos-ai-search-ring")).toHaveAttribute(
       "aria-hidden",
       "true",

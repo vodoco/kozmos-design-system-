@@ -134,9 +134,11 @@ export function resolveAdaptiveMapLayout(
       },
     };
   }
+  // The bottom sheet's usable range and resting share: the detents'
+  // (components/AdaptiveMapShell/panel-detents.ts — medium, 0.12–0.94).
   const fraction = Number.isFinite(input.panelFraction)
-    ? Math.min(0.88, Math.max(0.12, input.panelFraction!))
-    : 0.48;
+    ? Math.min(0.94, Math.max(0.12, input.panelFraction!))
+    : 0.54;
   const panelHeight = Math.min(
     mapBounds.height * fraction,
     Math.max(0, mapBounds.height - positive(input.minimumMapHeight)),

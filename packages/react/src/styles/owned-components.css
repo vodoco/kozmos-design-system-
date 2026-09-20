@@ -130,6 +130,44 @@
       backdrop-filter: none;
     }
   }
+  /* The map shell's bottom sheet: its height and top ease between detents
+     (the prototype's 280 ms curve) except under a finger; the handle's row
+     is 16 tall with a 40 x 4 capsule in a background-scale grey, the same
+     handle the iOS shell draws. */
+  .kozmos-map-sheet {
+    transition:
+      top 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+      height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    touch-action: none;
+  }
+  .kozmos-map-sheet[data-dragging] {
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kozmos-map-sheet {
+      transition: none;
+    }
+  }
+  .kozmos-map-sheet-handle {
+    display: flex;
+    flex: none;
+    align-items: flex-start;
+    justify-content: center;
+    height: var(--primitives-layout-spacing-200);
+    padding-top: var(--primitives-layout-spacing-75);
+    cursor: grab;
+    outline: none;
+  }
+  .kozmos-map-sheet-handle:focus-visible .kozmos-map-sheet-grip {
+    box-shadow: 0 0 0 2px var(--primitives-colors-theme-500);
+  }
+  .kozmos-map-sheet-grip {
+    display: block;
+    width: var(--primitives-layout-sizing-500);
+    height: 4px;
+    border-radius: 999px;
+    background-color: var(--primitives-colors-background-300);
+  }
   /* The AI search's ring: the theme's own ramp, 300 to 600 and back, as a
      conic gradient. The first gradient the system draws, made of tokens. */
   .kozmos-ai-search-ring {
