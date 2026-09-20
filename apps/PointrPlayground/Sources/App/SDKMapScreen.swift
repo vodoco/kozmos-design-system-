@@ -80,7 +80,7 @@ struct SDKMapScreen: View {
     @ViewBuilder private var topBar: some View {
         if session.phase == .directions, let step = currentStep {
             KozmosManoeuvreCard(
-                type: SDKRoutePresenter.directionType(forMessageType: step.messageType),
+                type: SDKRoutePresenter.directionType(forMessageType: step.messageType, transitionSubType: step.transitionSubType),
                 instruction: step.message,
                 detail: [SDKRoutePresenter.distanceLabel(for: step), session.stepFloorLabel(step.id)]
                     .compactMap { $0 }.joined(separator: " · "),
@@ -94,7 +94,7 @@ struct SDKMapScreen: View {
                     steps: (session.route?.steps ?? []).map { step in
                         KozmosItineraryStep(
                             id: String(step.id), instruction: step.message,
-                            type: SDKRoutePresenter.directionType(forMessageType: step.messageType),
+                            type: SDKRoutePresenter.directionType(forMessageType: step.messageType, transitionSubType: step.transitionSubType),
                             isCurrent: step.id == session.stepIndex)
                     },
                     destination: session.selected?.name ?? "")
@@ -290,7 +290,7 @@ extension SDKMapScreen {
                     // route covers no ground at all.
                     progress: total > 0 ? (total - remaining.distanceMetres) / total
                         : (steps.count > 1 ? Double(session.stepIndex) / Double(steps.count - 1) : 1),
-                    type: currentStep.map { SDKRoutePresenter.directionType(forMessageType: $0.messageType) } ?? .destination,
+                    type: currentStep.map { SDKRoutePresenter.directionType(forMessageType: $0.messageType, transitionSubType: $0.transitionSubType) } ?? .destination,
                     label: "Step \(session.stepIndex + 1) of \(steps.count)")
             }
             .padding(KozmosDimensions.primitivesLayoutSpacing200)

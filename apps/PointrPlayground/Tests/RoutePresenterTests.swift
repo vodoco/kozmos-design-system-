@@ -8,7 +8,7 @@ final class RoutePresenterTests: XCTestCase {
     private func step(_ id: Int, type: Int, distance: Double = 20, duration: Double = 15,
                       transition: Bool = false, accessible: Bool? = nil, floor: String = "b:1") -> SDKRoute.Step {
         SDKRoute.Step(id: id, message: "Step \(id)", messageType: type, distanceMetres: distance, durationSeconds: duration,
-                      isTransition: transition, transitionIsAccessible: accessible, floorId: floor,
+                      isTransition: transition, transitionIsAccessible: accessible, transitionSubType: nil, floorId: floor,
                       coordinate: CLLocationCoordinate2D(latitude: 42.36 + Double(id) * 0.0001, longitude: -71.02))
     }
 
@@ -26,17 +26,32 @@ final class RoutePresenterTests: XCTestCase {
         ])
     }
 
-    func testTheSDKsMessageTypesMapOntoTheFourArrows() {
+    func testTheSDKsMessageTypesMapOntoTheDirections() {
         let expectations: [(Int, DirectionType)] = [
-            (0, .straight), (1, .straight), (16, .straight), (17, .straight), (5, .straight),
+            (0, .straight), (1, .straight), (16, .straight), (17, .straight), (5, .turnBack),
             (3, .left), (6, .left), (4, .right), (7, .right),
             (2, .destination), (13, .destination), (14, .destination), (18, .destination),
             (22, .destination), (23, .destination), (24, .destination), (25, .destination), (26, .destination),
-            (8, .straight), (9, .straight), (10, .straight), (11, .straight), (27, .straight), (-1, .straight),
+            (8, .transition), (11, .transition), (12, .transition),
+            (9, .levelDown), (10, .levelUp), (27, .straight), (-1, .straight),
         ]
         for (type, arrow) in expectations {
             XCTAssertEqual(SDKRoutePresenter.directionType(forMessageType: type), arrow, "message type \(type)")
         }
+    }
+
+    /// A level change names its means when the SDK does, as the taxonomy
+    /// spells the transition's subtype.
+    func testALevelChangeNamesItsMeansFromTheTransitionsSubtype() {
+        XCTAssertEqual(SDKRoutePresenter.directionType(forMessageType: 9, transitionSubType: "elevator"), .liftDown)
+        XCTAssertEqual(SDKRoutePresenter.directionType(forMessageType: 10, transitionSubType: "wheelchair-lift"), .liftUp)
+        XCTAssertEqual(SDKRoutePresenter.directionType(forMessageType: 10, transitionSubType: "escalator"), .escalatorUp)
+        XCTAssertEqual(SDKRoutePresenter.directionType(forMessageType: 9, transitionSubType: "staircase"), .stairsDown)
+        XCTAssertEqual(SDKRoutePresenter.directionType(forMessageType: 10, transitionSubType: "interior-step"), .stairsUp)
+        XCTAssertEqual(SDKRoutePresenter.directionType(forMessageType: 9, transitionSubType: "ramp"), .levelDown)
+        XCTAssertEqual(SDKRoutePresenter.directionType(forMessageType: 10, transitionSubType: nil), .levelUp)
+        // The subtype means nothing on a turn.
+        XCTAssertEqual(SDKRoutePresenter.directionType(forMessageType: 3, transitionSubType: "elevator"), .left)
     }
 
     func testAStepThatCoversNoGroundShowsNoDistance() {

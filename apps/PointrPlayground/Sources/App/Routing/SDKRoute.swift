@@ -18,6 +18,9 @@ struct SDKRoute: Equatable {
         let isTransition: Bool
         /// For a transition: whether it is step-free, as the SDK knows it.
         let transitionIsAccessible: Bool?
+        /// For a transition: the taxonomy's subtype — elevator, escalator,
+        /// stairs, ramp, moving-walkway… — as the SDK carries it.
+        let transitionSubType: String?
         let floorId: String
         let coordinate: CLLocationCoordinate2D
 
@@ -25,6 +28,7 @@ struct SDKRoute: Equatable {
             lhs.id == rhs.id && lhs.message == rhs.message && lhs.messageType == rhs.messageType
                 && lhs.distanceMetres == rhs.distanceMetres && lhs.durationSeconds == rhs.durationSeconds
                 && lhs.isTransition == rhs.isTransition && lhs.transitionIsAccessible == rhs.transitionIsAccessible
+                && lhs.transitionSubType == rhs.transitionSubType
                 && lhs.floorId == rhs.floorId && lhs.coordinate.latitude == rhs.coordinate.latitude
                 && lhs.coordinate.longitude == rhs.coordinate.longitude
         }
@@ -57,6 +61,7 @@ struct SDKRoute: Equatable {
                      distanceMetres: Double(direction.distance), durationSeconds: Double(direction.duration),
                      isTransition: direction.isTransition,
                      transitionIsAccessible: direction.transitionInfo?.isAccessible,
+                     transitionSubType: direction.transitionInfo?.subType,
                      floorId: SDKPOIAdapter.floorId(direction.position.level),
                      coordinate: direction.position.coordinate)
             },
@@ -103,17 +108,34 @@ enum RouteFormat {
 /// how a step's arrow is chosen, what a failure offers. There are no
 /// wayfinding modes yet, so no options: one route, and its directions.
 enum SDKRoutePresenter {
-    /// `PTRDirectionMessageType` onto the design system's four arrows. The
-    /// system has no arrow for a transition — stairs, a lift, an escalator, a
-    /// building change — or for turning back; those keep the SDK's own words
-    /// under a straight arrow. A gap for the design system, recorded, not
-    /// papered over with a symbol of the host's own.
-    static func directionType(forMessageType messageType: Int) -> DirectionType {
+    /// `PTRDirectionMessageType` and, for a transition, the taxonomy's
+    /// subtype, onto the design system's directions. A level change names
+    /// its means when the SDK does — lift, escalator, stairs — and shows the
+    /// direction of travel otherwise; an inter-building or same-level
+    /// transition is a transition; turning back is its own arrow.
+    static func directionType(forMessageType messageType: Int, transitionSubType: String? = nil) -> DirectionType {
         switch messageType {
         case 3, 6: return .left            // turn left, slightly left
         case 4, 7: return .right           // turn right, slightly right
+        case 5: return .turnBack
         case 2, 13, 14, 18, 22, 23, 24, 25, 26: return .destination
+        case 8, 11, 12: return .transition // same level, inter-building, virtual inter-building
+        case 9: return levelChange(transitionSubType, up: false)
+        case 10: return levelChange(transitionSubType, up: true)
         default: return .straight
+        }
+    }
+
+    /// The taxonomy's transition subtypes, as `search_taxonomy` lists them:
+    /// elevator and wheelchair-lift are lifts; escalator is an escalator;
+    /// stairs, staircase and interior-step are stairs; the rest — ramp,
+    /// moving-walkway, raise-… — show the direction alone.
+    static func levelChange(_ subType: String?, up: Bool) -> DirectionType {
+        switch subType?.lowercased() {
+        case "elevator", "wheelchair-lift": return up ? .liftUp : .liftDown
+        case "escalator": return up ? .escalatorUp : .escalatorDown
+        case "stairs", "staircase", "interior-step": return up ? .stairsUp : .stairsDown
+        default: return up ? .levelUp : .levelDown
         }
     }
 

@@ -272,7 +272,10 @@ final class WayfindingStore: ObservableObject {
         switch step.type {
         case .left: return -90
         case .right: return 90
-        case .straight, .destination: return 0
+        case .turnBack: return 180
+        case .straight, .destination, .liftUp, .liftDown, .escalatorUp, .escalatorDown,
+             .stairsUp, .stairsDown, .levelUp, .levelDown, .transition:
+            return 0
         }
     }
 

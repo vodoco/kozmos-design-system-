@@ -1,14 +1,35 @@
 import SwiftUI
 
-public enum DirectionType: Sendable {
+/// What a step of a route asks for. The four turns, and the transitions the
+/// routing engines describe: a level change by lift, escalator or stairs —
+/// up or down — or by something unnamed; a same-level transition, a
+/// walkway or a corridor to another building; and turning back. Each
+/// platform draws the closest glyph its own icon set has, and the
+/// instruction's words carry the rest.
+public enum DirectionType: Sendable, CaseIterable {
     case straight, left, right, destination
-    
+    case liftUp, liftDown
+    case escalatorUp, escalatorDown
+    case stairsUp, stairsDown
+    /// A level change by a transition the route does not name.
+    case levelUp, levelDown
+    /// A transition on the same level: a walkway, a corridor, another building.
+    case transition
+    case turnBack
+
+    /// SF Symbols has no lift and no escalator: those, and an unnamed level
+    /// change, show the direction of travel; stairs have their own figure.
     var iconName: String {
         switch self {
         case .straight: return "arrow.up"
         case .left: return "arrow.turn.up.left"
         case .right: return "arrow.turn.up.right"
         case .destination: return "mappin.and.ellipse"
+        case .liftUp, .escalatorUp, .levelUp: return "arrow.up.to.line"
+        case .liftDown, .escalatorDown, .levelDown: return "arrow.down.to.line"
+        case .stairsUp, .stairsDown: return "figure.stairs"
+        case .transition: return "arrow.forward.to.line"
+        case .turnBack: return "arrow.uturn.backward"
         }
     }
 }

@@ -156,6 +156,10 @@ enum VenueRouter {
                     case .right: instruction = "Turn right along the main corridor"
                     case .straight: instruction = "Continue along the main corridor"
                     case .destination: instruction = "Continue to the destination"
+                    // The fixture's corridors turn; they never change level.
+                    case .liftUp, .liftDown, .escalatorUp, .escalatorDown, .stairsUp, .stairsDown,
+                         .levelUp, .levelDown, .transition, .turnBack:
+                        instruction = "Continue along the main corridor"
                     }
                 }
 
