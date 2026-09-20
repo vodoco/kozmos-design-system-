@@ -15,10 +15,25 @@ public struct KozmosAISearchButton: View {
 
     static let ring: CGFloat = 66
     static let disc: CGFloat = 44
+    /// The button's own footprint, the prototype's 48: the ring overflows it,
+    /// so a row that holds the field and this button stays the field's height.
+    static let footprint: CGFloat = 48
 
     public var body: some View {
         Button(action: action) {
             ZStack {
+                Circle()
+                    .fill(KozmosColors.primitivesColorsBackground0)
+                    .frame(width: Self.disc, height: Self.disc)
+                    .kozmosElevation(KozmosShadows.semanticsElevationRaised)
+                Image(systemName: "sparkles")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(KozmosColors.primitivesColorsTheme500)
+                    .accessibilityHidden(true)
+            }
+            .frame(width: Self.footprint, height: Self.footprint)
+            // Drawn, not laid out: the ring takes no room from the row.
+            .background(
                 Circle()
                     .fill(
                         AngularGradient(
@@ -31,16 +46,7 @@ public struct KozmosAISearchButton: View {
                         )
                     )
                     .frame(width: Self.ring, height: Self.ring)
-                Circle()
-                    .fill(KozmosColors.primitivesColorsBackground0)
-                    .frame(width: Self.disc, height: Self.disc)
-                    .kozmosElevation(KozmosShadows.semanticsElevationRaised)
-                Image(systemName: "sparkles")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(KozmosColors.primitivesColorsTheme500)
-                    .accessibilityHidden(true)
-            }
-            .frame(width: Self.ring, height: Self.ring)
+            )
             .contentShape(Circle())
         }
         .buttonStyle(.plain)

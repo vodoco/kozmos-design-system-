@@ -6,7 +6,17 @@ import SwiftUI
 /// categories it is given; filtering, searching, and result counts belong to
 /// the consuming app.
 public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: View, EmptyStateContent: View>: View {
+    /// Where the panel is drawn: on its own, with its own surface and a rule
+    /// under the search row; or inside the shell's sheet, which draws the
+    /// surface, where the search row sits straight over the grid as the
+    /// prototype's does.
+    public enum Presentation: Sendable {
+        case panel
+        case sheet
+    }
+
     private let categories: [KozmosCategoryPresentation]
+    private let presentation: Presentation
     private let label: String
     private let onSelect: (String) -> Void
     private let renderIcon: (KozmosCategoryPresentation) -> Icon
@@ -25,6 +35,7 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
     public init(
         categories: [KozmosCategoryPresentation],
         label: String = "Browse categories",
+        presentation: Presentation = .panel,
         onSelect: @escaping (String) -> Void,
         @ViewBuilder renderIcon: @escaping (KozmosCategoryPresentation) -> Icon,
         @ViewBuilder search: () -> Search,
@@ -32,6 +43,7 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
         @ViewBuilder emptyState: () -> EmptyStateContent
     ) {
         self.categories = categories
+        self.presentation = presentation
         self.label = label
         self.onSelect = onSelect
         self.renderIcon = renderIcon
@@ -55,10 +67,17 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
                 }
                 .padding(KozmosDimensions.primitivesLayoutSpacing200)
 
-                Divider().overlay(KozmosColors.primitivesColorsForeground300)
+                if presentation == .panel {
+                    Divider().overlay(KozmosColors.primitivesColorsForeground300)
+                }
             }
 
-            ScrollView {
+            // In a sheet the grid scrolls only at the largest detent, as the
+            // prototype's does; the sheet grows first. The padding is the
+            // content's, not the scroll view's, so the scroll view reaches
+            // the sheet's bottom edge and can run under the home indicator.
+            KozmosPanelScrollView {
+                Group {
                 if categories.isEmpty {
                     emptyState
                         .frame(maxWidth: .infinity)
@@ -73,7 +92,8 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
                                 )
                         )
                 } else {
-                    LazyVGrid(columns: columns, spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                    // Rows 12 apart, columns 8: the prototype's grid.
+                    LazyVGrid(columns: columns, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
                         ForEach(categories) { category in
                             KozmosCategoryTile(category: category, onSelect: onSelect) {
                                 renderIcon(category)
@@ -81,11 +101,12 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
                         }
                     }
                 }
+                }
+                .padding(KozmosDimensions.primitivesLayoutSpacing200)
             }
-            .padding(KozmosDimensions.primitivesLayoutSpacing200)
         }
         .frame(maxWidth: .infinity)
-        .background(KozmosColors.primitivesColorsBackground0)
+        .background(presentation == .panel ? KozmosColors.primitivesColorsBackground0 : Color.clear)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(label)
     }
@@ -95,6 +116,7 @@ public extension KozmosBrowseCategoriesPanel where Search == EmptyView, Actions 
     init(
         categories: [KozmosCategoryPresentation],
         label: String = "Browse categories",
+        presentation: Presentation = .panel,
         onSelect: @escaping (String) -> Void,
         @ViewBuilder renderIcon: @escaping (KozmosCategoryPresentation) -> Icon,
         @ViewBuilder emptyState: () -> EmptyStateContent
@@ -102,6 +124,7 @@ public extension KozmosBrowseCategoriesPanel where Search == EmptyView, Actions 
         self.init(
             categories: categories,
             label: label,
+            presentation: presentation,
             onSelect: onSelect,
             renderIcon: renderIcon,
             search: { EmptyView() },

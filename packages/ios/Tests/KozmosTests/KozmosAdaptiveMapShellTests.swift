@@ -11,13 +11,14 @@ import SnapshotTesting
 final class KozmosMapPanelDetentTests: XCTestCase {
     private let shellHeight: CGFloat = 800
 
+    /// The prototype's fractions: a fifth, 54 % and 94 %.
     func testNamedDetentsAreProportionalToTheShell() {
-        XCTAssertEqual(KozmosMapPanelDetent.medium.height(in: shellHeight), 384, accuracy: 0.001)
-        XCTAssertEqual(KozmosMapPanelDetent.large.height(in: shellHeight), 704, accuracy: 0.001)
-        XCTAssertEqual(KozmosMapPanelDetent.collapsed.height(in: shellHeight), 144, accuracy: 0.001)
+        XCTAssertEqual(KozmosMapPanelDetent.medium.height(in: shellHeight), 432, accuracy: 0.001)
+        XCTAssertEqual(KozmosMapPanelDetent.large.height(in: shellHeight), 752, accuracy: 0.001)
+        XCTAssertEqual(KozmosMapPanelDetent.collapsed.height(in: shellHeight), 160, accuracy: 0.001)
     }
 
-    /// A landscape or split-screen shell is short enough that 18% would not fit
+    /// A landscape or split-screen shell is short enough that 20 % would not fit
     /// the grab handle and a header row.
     func testCollapsedNeverFallsBelowTheHandleAndHeader() {
         let short: CGFloat = 400
@@ -77,7 +78,7 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
     }
 
     func testDetentsAreOrderedByHeightAndDeduplicated() {
-        let view = shell(detents: [.large, .collapsed, .medium, .fraction(0.48)])
+        let view = shell(detents: [.large, .collapsed, .medium, .fraction(0.54)])
         let ordered = view.orderedDetents(in: shellHeight)
 
         XCTAssertEqual(ordered.count, 3)
@@ -109,7 +110,7 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
             panel: { Color.clear }
         )
         XCTAssertEqual(view.activeDetent(in: shellHeight), .large)
-        XCTAssertEqual(view.settledPanelHeight(in: shellHeight), 704, accuracy: 0.001)
+        XCTAssertEqual(view.settledPanelHeight(in: shellHeight), 752, accuracy: 0.001)
     }
 
     func testSettledHeightIsClampedToTheOfferedDetents() {
@@ -338,7 +339,7 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
     func testAPanelWithASingleDetentDoesNotOfferAGrabHandle() {
         let one = shell(detents: [.medium])
         XCTAssertEqual(one.orderedDetents(in: shellHeight).count, 1)
-        XCTAssertEqual(one.settledPanelHeight(in: shellHeight), 384, accuracy: 0.001)
+        XCTAssertEqual(one.settledPanelHeight(in: shellHeight), 432, accuracy: 0.001)
     }
 
     /// On a regular width the panel floats beside the map instead of docking,
@@ -439,6 +440,123 @@ final class KozmosMapShellContentDetentTests: XCTestCase {
         XCTAssertGreaterThan(onGlass.r, 200, "the glass sheet hides the map: \(onGlass)")
         XCTAssertLessThan(onGlass.g, 250, "the glass sheet is opaque: \(onGlass)")
         XCTAssertGreaterThan(onGlass.g, 100, "the glass sheet is not tinted: \(onGlass)")
+    }
+    #endif
+}
+
+/// The prototype's drag rule, decided once at a drag's first move
+/// (docs/pointr-prototype-initial-sheet-2026-09-20.md §2).
+final class KozmosPanelDragKindTests: XCTestCase {
+    private func decide(
+        handle: Bool = false, dx: CGFloat = 0, dy: CGFloat, largest: Bool, offset: CGFloat = 0
+    ) -> KozmosPanelDragKind {
+        KozmosPanelDragKind.decide(
+            startsInHandle: handle, translation: CGSize(width: dx, height: dy),
+            atLargestDetent: largest, scrollOffset: offset
+        )
+    }
+
+    func testADragThatStartsOnTheHandleIsTheHandles() {
+        XCTAssertEqual(decide(handle: true, dy: -40, largest: false), .handle)
+        XCTAssertEqual(decide(handle: true, dy: 40, largest: true), .handle)
+    }
+
+    func testASidewaysMoveIsTheContents() {
+        XCTAssertEqual(decide(dx: 12, dy: -8, largest: false), .content)
+        XCTAssertEqual(decide(dx: -12, dy: 8, largest: true), .content)
+    }
+
+    func testBelowTheLargestDetentEitherDirectionMovesTheSheet() {
+        XCTAssertEqual(decide(dy: -40, largest: false), .sheet)
+        XCTAssertEqual(decide(dy: 40, largest: false), .sheet)
+        XCTAssertEqual(decide(dy: 40, largest: false, offset: 100), .sheet, "below the largest detent the content cannot have scrolled")
+    }
+
+    func testAtTheLargestDetentAnUpwardDragIsTheContents() {
+        XCTAssertEqual(decide(dy: -40, largest: true), .content)
+    }
+
+    func testAtTheLargestDetentADownwardDragScrollsBackFirstThenMovesTheSheet() {
+        XCTAssertEqual(decide(dy: 40, largest: true, offset: 40), .content)
+        XCTAssertEqual(decide(dy: 40, largest: true, offset: 0), .sheet)
+    }
+}
+
+/// The sheet's content scrolls only at the largest detent, and the collapsed
+/// detent rests on the row the content marks.
+final class KozmosMapShellPeekAnchorTests: XCTestCase {
+    private let shellHeight: CGFloat = 800
+
+    private func shell(at detent: KozmosMapPanelDetent) -> KozmosAdaptiveMapShell<Color, EmptyView, EmptyView, Color, EmptyView> {
+        KozmosAdaptiveMapShell(
+            panelDetent: .constant(detent), panelDetents: [.collapsed, .medium, .large],
+            map: { Color.red }, mapStatusContent: { EmptyView() }, controls: { EmptyView() },
+            topBar: { EmptyView() }, panel: { Color.green }
+        )
+    }
+
+    func testTheContentMayScrollOnlyAtTheLargestDetent() {
+        XCTAssertTrue(shell(at: .large).panelScrollEnabled(in: shellHeight, docked: true))
+        XCTAssertFalse(shell(at: .medium).panelScrollEnabled(in: shellHeight, docked: true))
+        XCTAssertFalse(shell(at: .collapsed).panelScrollEnabled(in: shellHeight, docked: true))
+        XCTAssertTrue(shell(at: .collapsed).panelScrollEnabled(in: shellHeight, docked: false), "beside the map the panel always scrolls")
+    }
+
+    func testTheAnchoredCollapsedHeightIsTheAnchorPlusAMarginWithinAQuarterAndThreeQuarters() {
+        XCTAssertEqual(KozmosMapPanelDetent.anchoredCollapsedHeight(peekBottom: 250, in: shellHeight), 266)
+        XCTAssertEqual(KozmosMapPanelDetent.anchoredCollapsedHeight(peekBottom: 40, in: shellHeight), 192)
+        XCTAssertEqual(KozmosMapPanelDetent.anchoredCollapsedHeight(peekBottom: 700, in: shellHeight), 576)
+    }
+
+    #if os(iOS)
+    @MainActor private func render(anchorHeight: CGFloat) async throws -> RenderedPixels {
+        let view = KozmosAdaptiveMapShell(
+            panelDetent: .constant(.collapsed), panelDetents: [.collapsed, .large],
+            map: { Color.red }, mapStatusContent: { EmptyView() }, controls: { EmptyView() },
+            topBar: { EmptyView() },
+            panel: {
+                VStack(spacing: 0) {
+                    Color.green.frame(height: anchorHeight).kozmosPanelPeekAnchor()
+                    Color.blue.frame(height: 900)
+                }
+            }
+        )
+        .environment(\.horizontalSizeClass, .compact)
+        return try await RenderedPixels.render(view, size: CGSize(width: 390, height: shellHeight))
+    }
+
+    private var whole: CGRect { CGRect(x: 0, y: 0, width: 390, height: shellHeight) }
+    private static func isGreen(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { g > 150 && r < 120 && b < 140 }
+    // SwiftUI's blue is (0, 122, 255): the green channel is not low.
+    private static func isBlue(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { b > 200 && r < 60 && g < 160 }
+
+    /// A 250-point anchor row: the sheet is the handle's row, the row and a
+    /// 16-point margin of what follows — 282 — not a fifth of the shell.
+    @MainActor func testTheCollapsedSheetRestsOnThePeekAnchor() async throws {
+        let pixels = try await render(anchorHeight: 250)
+        let green = try XCTUnwrap(pixels.boundingBox(in: whole, where: Self.isGreen), "no anchor row drawn")
+        XCTAssertEqual(green.height, 250, accuracy: 1.5, "the anchor row is cut")
+        XCTAssertEqual(green.maxY, shellHeight - 16, accuracy: 1.5, "the margin under the anchor is not 16")
+        let blue = try XCTUnwrap(pixels.boundingBox(in: whole, where: Self.isBlue), "nothing follows the anchor row")
+        XCTAssertEqual(blue.height, 16, accuracy: 1.5, "more than the margin shows under the anchor")
+        let map = pixels.color(at: CGPoint(x: 40, y: green.minY - 40))
+        XCTAssertGreaterThan(map.r, 150, "the map is not just above the peeking sheet: \(map)")
+        XCTAssertLessThan(map.g, 120, "the map is not just above the peeking sheet: \(map)")
+    }
+
+    /// A 40-point anchor: the sheet never peeks under a quarter of the shell.
+    @MainActor func testTheAnchoredPeekNeverFallsUnderAQuarter() async throws {
+        let pixels = try await render(anchorHeight: 40)
+        let blue = try XCTUnwrap(pixels.boundingBox(in: whole, where: Self.isBlue))
+        XCTAssertEqual(blue.height, 192 - 16 - 40, accuracy: 1.5, "the sheet is not a quarter of the shell")
+    }
+
+    /// A 700-point anchor: the sheet never peeks over three quarters.
+    @MainActor func testTheAnchoredPeekNeverRisesOverThreeQuarters() async throws {
+        let pixels = try await render(anchorHeight: 700)
+        let green = try XCTUnwrap(pixels.boundingBox(in: whole, where: Self.isGreen))
+        XCTAssertEqual(green.height, 576 - 16, accuracy: 1.5, "the sheet is not three quarters of the shell")
+        XCTAssertEqual(green.maxY, shellHeight, accuracy: 1.5)
     }
     #endif
 }

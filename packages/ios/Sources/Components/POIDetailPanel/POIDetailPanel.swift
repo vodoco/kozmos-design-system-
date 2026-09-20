@@ -121,7 +121,9 @@ public struct KozmosPOIDetailPanel: View {
     }
 
     public var body: some View {
-        ScrollView {
+        // Yields to the shell's sheet: scrolls only at its largest detent, and
+        // hands a downward drag back to the sheet once at its top.
+        KozmosPanelScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 header.padding(16)
                 if let description = poi.description, !description.isEmpty {
@@ -131,7 +133,9 @@ public struct KozmosPOIDetailPanel: View {
                         .padding(.horizontal, 16).padding(.bottom, 16)
                 }
                 if !stripActions.isEmpty || !details.supplementaryActions.isEmpty {
-                    actionButtons.padding(.bottom, 16)
+                    // The sheet's smallest detent rests on this row: the
+                    // prototype's place card peeks at its header and Go.
+                    actionButtons.padding(.bottom, 16).kozmosPanelPeekAnchor()
                 }
                 messages
                 if !details.visibleSummary.isEmpty {

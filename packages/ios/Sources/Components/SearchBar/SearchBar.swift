@@ -5,10 +5,19 @@ public struct KozmosSearchBar: View {
     @Binding var text: String
     let placeholder: String
     let onClear: (() -> Void)?
+    /// The host's focus for the field, so a sheet can open when the field is
+    /// tapped and the host can end the search from a Cancel of its own.
+    let focused: FocusState<Bool>.Binding?
     
-    public init(text: Binding<String>, placeholder: String = "Search...", onClear: (() -> Void)? = nil) {
+    public init(
+        text: Binding<String>,
+        placeholder: String = "Search...",
+        focused: FocusState<Bool>.Binding? = nil,
+        onClear: (() -> Void)? = nil
+    ) {
         self._text = text
         self.placeholder = placeholder
+        self.focused = focused
         self.onClear = onClear
     }
     
@@ -21,7 +30,7 @@ public struct KozmosSearchBar: View {
                 // symbol read "Search" before it.
                 .accessibilityHidden(true)
             
-            TextField(placeholder, text: $text)
+            field
                 .onSubmit {
                     trackEvent(KozmosAnalyticsEvent(eventName: "search_initiated", component: "SearchBar", properties: ["query": text]))
                 }
@@ -54,5 +63,13 @@ public struct KozmosSearchBar: View {
         // No outer margins. A component that pads itself decides its caller's
         // layout for them, and here it meant the field could never sit the same
         // distance from the top of a sheet as it did from the sides.
+    }
+
+    @ViewBuilder private var field: some View {
+        if let focused {
+            TextField(placeholder, text: $text).focused(focused)
+        } else {
+            TextField(placeholder, text: $text)
+        }
     }
 }

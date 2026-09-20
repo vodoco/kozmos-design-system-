@@ -31,14 +31,16 @@ public enum KozmosMapPanelDetent: Hashable, Sendable {
     func height(in shellHeight: CGFloat) -> CGFloat {
         let maximum = shellHeight * CGFloat(Self.usableFractions.upperBound)
         switch self {
+        // The prototype's three detents, driven and measured: a fifth of the
+        // frame, 54 % and 94 % (docs/pointr-prototype-initial-sheet-2026-09-20.md §1).
         case .collapsed:
             // Proportional on a tall phone, but never so short on a landscape
             // or split-screen shell that the handle and header stop fitting.
-            return min(max(shellHeight * 0.18, Self.minimumCollapsedHeight), shellHeight * 0.4)
+            return min(max(shellHeight * 0.2, Self.minimumCollapsedHeight), shellHeight * 0.4)
         case .medium, .content:
-            return shellHeight * 0.48
+            return shellHeight * 0.54
         case .large:
-            return shellHeight * 0.88
+            return shellHeight * 0.94
         case .fraction(let value):
             let clamped = min(
                 max(value, Self.usableFractions.lowerBound),
@@ -48,6 +50,17 @@ public enum KozmosMapPanelDetent: Hashable, Sendable {
         case .height(let points):
             return min(max(points, 0), maximum)
         }
+    }
+
+    /// The collapsed detent when the sheet's content marks a peek anchor
+    /// (`kozmosPanelPeekAnchor()`): the anchor's bottom edge plus a margin,
+    /// within a quarter and three quarters of the shell — the prototype's place
+    /// card rests on its Go row.
+    static func anchoredCollapsedHeight(peekBottom: CGFloat, in shellHeight: CGFloat) -> CGFloat {
+        min(
+            max(peekBottom + KozmosDimensions.primitivesLayoutSpacing200, shellHeight * 0.24),
+            shellHeight * 0.72
+        )
     }
 
     var accessibilityDescription: String {
@@ -133,6 +146,14 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     private let panelSurface: KozmosSurfaceStyle
     /// The sheet's height while it is fitted to its content, as measured.
     @State private var contentPanelHeight: CGFloat = 0
+    /// The bottom edge of the content's peek anchor, from the sheet's top;
+    /// zero when the content marks none.
+    @State private var peekAnchorBottom: CGFloat = 0
+    /// How far the content's `KozmosPanelScrollView` has scrolled.
+    @State private var panelScrollOffset: CGFloat = 0
+    /// What the drag in progress on the sheet's body is doing, from its first
+    /// move until the finger lifts.
+    @State private var bodyDrag: KozmosPanelDragKind?
     private let collisionInsets: KozmosMapCollisionInsets
     private let onCollisionInsetsChange: ((KozmosMapCollisionInsets) -> Void)?
 
@@ -208,11 +229,33 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     /// between the collapsed and the large heights, or medium until measured;
     /// every other detent from its own arithmetic.
     func detentHeight(_ detent: KozmosMapPanelDetent, in shellHeight: CGFloat) -> CGFloat {
-        guard detent == .content, contentPanelHeight > 0 else { return detent.height(in: shellHeight) }
-        return min(
-            max(contentPanelHeight, KozmosMapPanelDetent.collapsed.height(in: shellHeight)),
-            KozmosMapPanelDetent.large.height(in: shellHeight)
-        )
+        switch detent {
+        case .collapsed where peekAnchorBottom > 0:
+            return KozmosMapPanelDetent.anchoredCollapsedHeight(peekBottom: peekAnchorBottom, in: shellHeight)
+        case .content where contentPanelHeight > 0:
+            return min(
+                max(contentPanelHeight, detentHeight(.collapsed, in: shellHeight)),
+                KozmosMapPanelDetent.large.height(in: shellHeight)
+            )
+        default:
+            return detent.height(in: shellHeight)
+        }
+    }
+
+    /// Whether the panel has settled on the tallest detent on offer: the only
+    /// place the content is allowed to scroll under a finger.
+    func isAtLargestDetent(in shellHeight: CGFloat) -> Bool {
+        guard let largest = orderedDetents(in: shellHeight).last else { return true }
+        return settledPanelHeight(in: shellHeight) >= detentHeight(largest, in: shellHeight) - 0.5
+    }
+
+    /// Whether the sheet's content may scroll right now: beside the map it
+    /// always may; docked, only at the largest detent and with no drag moving
+    /// the sheet. Mid-drag the change cancels the content's own pan, so one
+    /// finger never scrolls the list and moves the sheet at once.
+    func panelScrollEnabled(in shellHeight: CGFloat, docked: Bool) -> Bool {
+        guard docked else { return true }
+        return isAtLargestDetent(in: shellHeight) && dragTranslation == 0 && bodyDrag != .sheet
     }
 
     /// The detent set in ascending height order, with duplicates removed.
@@ -476,6 +519,8 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             .onPreferenceChange(KozmosMapShellTopBarHeightKey.self) { topBarHeight = $0 }
             .onPreferenceChange(KozmosMapShellControlsSizeKey.self) { controlsSize = $0 }
             .onPreferenceChange(KozmosMapShellContentPanelHeightKey.self) { contentPanelHeight = $0 }
+            .onPreferenceChange(KozmosMapShellPeekBottomKey.self) { peekAnchorBottom = $0 }
+            .onPreferenceChange(KozmosPanelScrollOffsetKey.self) { panelScrollOffset = $0 }
             .onAppear { onCollisionInsetsChange?(insets) }
             .onChange(of: insets) { onCollisionInsetsChange?($0) }
         }
@@ -519,6 +564,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                                 grabber(in: geometry.size.height)
                             }
                             panel
+                                .environment(\.kozmosPanelScrollEnabled, panelScrollEnabled(in: geometry.size.height, docked: true))
                                 .frame(maxWidth: .infinity, alignment: .top)
                         }
                     }
@@ -535,6 +581,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                         }
 
                         panel
+                            .environment(\.kozmosPanelScrollEnabled, panelScrollEnabled(in: geometry.size.height, docked: true))
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     }
                     // An explicit height rather than a cap: the panel is laid
@@ -548,11 +595,30 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                     )
                 }
             }
+            // The peek anchor, resolved where the sheet's top is zero: its
+            // bottom edge becomes the collapsed detent (`anchoredCollapsedHeight`).
+            .overlayPreferenceValue(KozmosMapShellPeekAnchorKey.self) { anchor in
+                GeometryReader { proxy in
+                    Color.clear.preference(
+                        key: KozmosMapShellPeekBottomKey.self,
+                        value: anchor.map { proxy[$0].maxY } ?? 0
+                    )
+                }
+                .allowsHitTesting(false)
+            }
             .kozmosSurface(
                 KozmosPanelShape(radius: KozmosDimensions.semanticsRadiusPanel, roundsBottom: false),
                 style: panelSurface
             )
             .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.18), radius: 24, x: 0, y: -8)
+            // The whole sheet drags, not only its handle: the prototype's
+            // rule, with the content's scroll handed off by `KozmosPanelDragKind`.
+            // On iOS a UIKit pan recogniser, which can fail for a drag the
+            // content keeps and cancel the touches of a tile the sheet's drag
+            // started on; elsewhere SwiftUI's drag, simultaneous with the
+            // content's own gestures.
+            .background(bodyDragCatcher(in: geometry))
+            .simultaneousGesture(bodyDragGesture(in: geometry), including: Self.usesUIKitPan ? .subviews : .all)
             .frame(
                 width: geometry.size.width,
                 height: geometry.size.height,
@@ -561,6 +627,84 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             .accessibilityElement(children: .contain)
             .accessibilityLabel(panelLabel)
         }
+    }
+
+    #if canImport(UIKit)
+    private static var usesUIKitPan: Bool { true }
+
+    @ViewBuilder private func bodyDragCatcher(in geometry: GeometryProxy) -> some View {
+        let shellHeight = geometry.size.height
+        KozmosSheetPanCatcher(
+            shouldBegin: { start, translation in
+                let kind = KozmosPanelDragKind.decide(
+                    startsInHandle: showsGrabber && start.y < Self.grabberRowHeight,
+                    translation: translation,
+                    atLargestDetent: isAtLargestDetent(in: shellHeight),
+                    scrollOffset: panelScrollOffset
+                )
+                guard kind == .sheet else { return false }
+                bodyDrag = .sheet
+                return true
+            },
+            changed: { translation in
+                dragTranslation = translation
+            },
+            ended: { translation, velocity in
+                bodyDrag = nil
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                    dragTranslation = 0
+                    // The fling's velocity, projected 120 ms on, so a fast short
+                    // drag still lands on the detent it was aiming for.
+                    let target = settledPanelHeight(in: shellHeight) - translation - velocity * 0.12
+                    if let nearest = nearestDetent(to: target, in: shellHeight) {
+                        setDetent(nearest)
+                    }
+                }
+            }
+        )
+    }
+    #else
+    private static var usesUIKitPan: Bool { false }
+
+    @ViewBuilder private func bodyDragCatcher(in geometry: GeometryProxy) -> some View { EmptyView() }
+    #endif
+
+    /// A drag anywhere on the sheet. What it does is decided at its first move
+    /// and held until the finger lifts: the handle's own gesture keeps a drag
+    /// that starts on the handle; a sideways move, or a scroll at the largest
+    /// detent, is the content's; anything else moves the sheet and snaps it,
+    /// as the handle's drag does.
+    private func bodyDragGesture(in geometry: GeometryProxy) -> some Gesture {
+        let shellHeight = geometry.size.height
+        // The sheet's top when the drag begins, in the global space the
+        // translation is measured in — the settled height, not the live one,
+        // because the live one moves with the drag it is deciding about.
+        let sheetTop = geometry.frame(in: .global).minY + shellHeight - settledPanelHeight(in: shellHeight)
+        return DragGesture(minimumDistance: kozmosMapPanelTapSlop, coordinateSpace: .global)
+            .onChanged { value in
+                if bodyDrag == nil {
+                    bodyDrag = KozmosPanelDragKind.decide(
+                        startsInHandle: showsGrabber && value.startLocation.y < sheetTop + Self.grabberRowHeight,
+                        translation: value.translation,
+                        atLargestDetent: isAtLargestDetent(in: shellHeight),
+                        scrollOffset: panelScrollOffset
+                    )
+                }
+                guard bodyDrag == .sheet else { return }
+                dragTranslation = value.translation.height
+            }
+            .onEnded { value in
+                let kind = bodyDrag
+                bodyDrag = nil
+                guard kind == .sheet else { return }
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                    dragTranslation = 0
+                    let target = settledPanelHeight(in: shellHeight) - value.predictedEndTranslation.height
+                    if let nearest = nearestDetent(to: target, in: shellHeight) {
+                        setDetent(nearest)
+                    }
+                }
+            }
     }
 
     private func grabber(in shellHeight: CGFloat) -> some View {
