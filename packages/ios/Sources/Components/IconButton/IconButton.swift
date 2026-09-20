@@ -53,7 +53,8 @@ public struct KozmosIconButton: View {
                 }
             }
             .foregroundColor(foregroundColor)
-            .frame(width: 44, height: 44)
+            // The large size is the prototype's 48: Filters and the AI search beside a 44 field.
+            .frame(width: size == .lg ? 48 : 44, height: size == .lg ? 48 : 44)
             .kozmosButtonSurface(
                 variant == .glass ? .glass : nil,
                 fill: backgroundColor,

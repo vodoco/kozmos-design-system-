@@ -631,6 +631,13 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                         height: livePanelHeight(in: geometry.size.height),
                         alignment: .top
                     )
+                    // A detent the host sets — the field's focus opening the
+                    // sheet — moves on the standard motion like a snap does.
+                    // Keyed on the detent, not its height: a measurement
+                    // refining the same detent (an anchor, a content height)
+                    // lands at once, so the render tests and the peek see the
+                    // settled height in their first frame.
+                    .animation(KozmosMotion.standard, value: activeDetent(in: geometry.size.height))
                 }
             }
             // The peek anchor, resolved where the sheet's top is zero: its
@@ -689,7 +696,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             },
             ended: { translation, velocity in
                 bodyDrag = nil
-                withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                withAnimation(KozmosMotion.standard) {
                     dragTranslation = 0
                     // The fling's velocity, projected 120 ms on, so a fast short
                     // drag still lands on the detent it was aiming for.
@@ -735,7 +742,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                 let kind = bodyDrag
                 bodyDrag = nil
                 guard kind == .sheet else { return }
-                withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                withAnimation(KozmosMotion.standard) {
                     dragTranslation = 0
                     let target = settledPanelHeight(in: shellHeight) - value.predictedEndTranslation.height
                     if let nearest = nearestDetent(to: target, in: shellHeight) {
@@ -770,7 +777,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                         dragTranslation = value.translation.height
                     }
                     .onEnded { value in
-                        withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                        withAnimation(KozmosMotion.standard) {
                             dragTranslation = 0
 
                             if abs(value.translation.height) < kozmosMapPanelTapSlop {
@@ -795,7 +802,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             .accessibilityHint("Swipe up or down to resize the panel")
             .accessibilityAdjustableAction { direction in
                 let step = direction == .increment ? 1 : -1
-                withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                withAnimation(KozmosMotion.standard) {
                     setDetent(steppedDetent(from: detent, by: step, in: shellHeight))
                 }
             }

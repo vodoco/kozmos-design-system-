@@ -8,6 +8,8 @@ import SwiftUI
 final class KozmosSearchSheetTests: XCTestCase {
     #if os(iOS)
     private static func isBlue(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { b > 120 && Int(b) > Int(r) + 40 && Int(b) > Int(g) + 20 }
+    /// A colour with a hue: far from white and from grey.
+    private static func isSaturated(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { Int(max(r, g, b)) - Int(min(r, g, b)) > 70 }
 
     /// The tile: a 64 square holding the icon, the label under it.
     @MainActor func testTheTileIsASquareWithTheLabelUnderIt() async throws {
@@ -99,7 +101,8 @@ final class KozmosSearchSheetTests: XCTestCase {
         let size = CGSize(width: 80, height: 80)
         let view = KozmosAISearchButton(action: {}).frame(width: 80, height: 80).background(Color.white)
         let pixels = try await RenderedPixels.render(view, size: size)
-        let ring = try XCTUnwrap(pixels.boundingBox(in: CGRect(origin: .zero, size: size), where: Self.isBlue), "no ring")
+        // The band is the rainbow: any saturated colour, not one hue.
+        let ring = try XCTUnwrap(pixels.boundingBox(in: CGRect(origin: .zero, size: size), where: Self.isSaturated), "no ring")
         XCTAssertEqual(ring.width, 48, accuracy: 2, "the ring is not the button's 48: \(ring)")
         // Along a radius, past the icon at the centre: the white disc, then
         // the band, then the white background.
@@ -108,7 +111,7 @@ final class KozmosSearchSheetTests: XCTestCase {
         var firstBlue: CGFloat?
         for offset in stride(from: 12, through: 30, by: 0.5) {
             let colour = pixels.color(at: CGPoint(x: centre.x + CGFloat(offset), y: centre.y))
-            if Self.isBlue(colour.r, colour.g, colour.b) {
+            if Self.isSaturated(colour.r, colour.g, colour.b) {
                 if firstBlue == nil { firstBlue = CGFloat(offset) }
                 band += 1
             }
@@ -118,6 +121,37 @@ final class KozmosSearchSheetTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(firstBlue), 21.5, accuracy: 1.5, "the band does not start at the 43 disc's edge: \(String(describing: firstBlue))")
         let disc = pixels.color(at: CGPoint(x: 40, y: 28))
         XCTAssertGreaterThan(disc.g, 240, "the disc is not white: \(disc)")
+    }
+    #endif
+}
+
+/// The category field: the search field's form with a category chosen, the
+/// prototype's geometry in the category's colour.
+final class KozmosCategoryFieldTests: XCTestCase {
+    #if os(iOS)
+    private static func isOrange(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { r > 200 && g > 60 && g < 140 && b < 60 }
+
+    /// 48 tall; the pill and the border in the colour, the fill the colour's tint.
+    @MainActor func testTheFieldIsFortyEightTallWithThePillAndBorderInTheColour() async throws {
+        let view = KozmosCategoryField(label: "Dining", count: 19, tint: KozmosColors.semanticsDataOrange, onClear: {}) {
+            Image(systemName: "fork.knife").font(.system(size: 20))
+        }
+        .frame(width: 254)
+        .padding(16)
+        .background(Color.white)
+        let pixels = try await RenderedPixels.render(view, size: CGSize(width: 286, height: 80))
+        let whole = CGRect(x: 0, y: 0, width: 286, height: 80)
+        let coloured = try XCTUnwrap(pixels.boundingBox(in: whole, where: Self.isOrange), "nothing in the category's colour")
+        XCTAssertEqual(coloured.height, 48, accuracy: 1.5, "the field is not 48 tall: \(coloured)")
+        XCTAssertEqual(coloured.width, 254, accuracy: 1.5, "the border does not span the field: \(coloured)")
+        // Inside the border the fill is the tint, not the colour: light, warm, not white.
+        let fill = pixels.color(at: CGPoint(x: 200, y: 40))
+        XCTAssertGreaterThan(fill.r, 235, "the fill is not a light tint: \(fill)")
+        XCTAssertLessThan(fill.b, 240, "the fill is white, not the colour's tint: \(fill)")
+        XCTAssertGreaterThan(Int(fill.r) - Int(fill.b), 8, "the fill carries no warmth of the colour: \(fill)")
+        // The count pill: a solid run of the colour 22 tall, right of the label.
+        let pill = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 100, y: 20, width: 80, height: 40), where: Self.isOrange), "no count pill")
+        XCTAssertEqual(pill.height, 22, accuracy: 1.5, "the pill is not 22 tall: \(pill)")
     }
     #endif
 }

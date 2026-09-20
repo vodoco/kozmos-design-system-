@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The AI search, beside the search field: a 44 disc inside a 66 ring whose
+/// The AI search, beside the search field: a 48 circle whose thin ring is a
 /// gradient runs through the theme's own ramp — 300 to 600 and back, the
 /// first gradient the system draws, made of tokens — with a 16 icon. The
 /// button shows the icon alone and is named by its label.
@@ -26,22 +26,25 @@ public struct KozmosAISearchButton: View {
     /// turn, unless motion is reduced; the first frame is the resting one.
     @State private var ringAngle: Double = 0
     static let spinDuration: Double = 3.6
+    static let rainbow: [Color] = [
+        KozmosColors.semanticsDataRed,
+        KozmosColors.semanticsDataYellow,
+        KozmosColors.primitivesColorsEmotionalSuccess500,
+        KozmosColors.semanticsDataTeal,
+        KozmosColors.semanticsDataBlue,
+        KozmosColors.semanticsDataPurple,
+        KozmosColors.semanticsDataRed,
+    ]
 
     public var body: some View {
         Button(action: action) {
             ZStack {
                 // The gradient turns; the circle it fills does not move.
+                // The prototype's rainbow, from the system's own data colours
+                // and its success green: red, yellow, green, teal, blue, purple
+                // and round to red.
                 Circle()
-                    .fill(
-                        AngularGradient(
-                            colors: [
-                                KozmosColors.primitivesColorsTheme300,
-                                KozmosColors.primitivesColorsTheme600,
-                                KozmosColors.primitivesColorsTheme300,
-                            ],
-                            center: .center
-                        )
-                    )
+                    .fill(AngularGradient(colors: Self.rainbow, center: .center))
                     .frame(width: Self.ring, height: Self.ring)
                     .rotationEffect(.degrees(ringAngle))
                 Circle()

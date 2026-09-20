@@ -52,8 +52,11 @@ public struct KozmosSearchBar: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Clear search")
+                .transition(KozmosTransitions.reveal)
             }
         }
+        // The clear circle comes and goes on the quick motion, not at once.
+        .animation(KozmosMotion.quick, value: text.isEmpty)
         .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
         // 44 tall: a control's height, the prototype's field.
         .frame(height: 44)
