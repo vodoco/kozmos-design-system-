@@ -66,6 +66,7 @@ export * from "./components/POIResultCard";
 export * from "./components/POIResultList";
 export * from "./components/POIMediaGallery";
 export * from "./components/POIDetailPanel";
+export * from "./components/AISearchButton";
 export * from "./components/AdaptiveMapShell";
 export * from "./components/CategoryTile";
 export * from "./components/BrowseCategoriesPanel";

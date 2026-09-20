@@ -31,10 +31,7 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
         ref={ref}
         aria-pressed={category.selected}
         className={cn(
-          "flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-container border bg-background p-3 text-center text-sm font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          category.selected
-            ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-            : "border-border hover:bg-muted/60",
+          "kozmos-category-tile flex w-full flex-col items-center gap-1.5 rounded-control bg-transparent p-1 text-center text-[11px] font-normal leading-[14px] text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}
         data-category-id={category.id}
@@ -43,13 +40,20 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
         type={type}
         {...props}
       >
+        {/* The icon's square: 64, radius Control, the container edge; the
+            selection shows on it. The label sits under it, two lines at most. */}
         <span
           aria-hidden="true"
-          className="flex h-10 w-10 items-center justify-center text-primary"
+          className={cn(
+            "flex h-16 w-16 shrink-0 items-center justify-center rounded-control border bg-background text-primary transition-colors [&>svg]:h-6 [&>svg]:w-6",
+            category.selected
+              ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+              : "border-border",
+          )}
         >
           {icon}
         </span>
-        <span className="max-w-full text-balance leading-tight">
+        <span className="line-clamp-2 max-w-full text-balance">
           {category.label}
         </span>
         {category.resultCountLabel && (

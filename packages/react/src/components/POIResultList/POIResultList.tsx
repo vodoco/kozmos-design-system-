@@ -22,6 +22,8 @@ export interface POIResultListProps extends Omit<
   resultCountLabel: string;
   emptyState?: React.ReactNode;
   featuredLabel?: string;
+  /** The floor the map shows: a result on it carries a dot before its floor. */
+  currentFloorId?: string;
 }
 
 const POIResultList = React.forwardRef<HTMLElement, POIResultListProps>(
@@ -35,6 +37,7 @@ const POIResultList = React.forwardRef<HTMLElement, POIResultListProps>(
       resultCountLabel,
       emptyState,
       featuredLabel,
+      currentFloorId,
       ...props
     },
     ref,
@@ -58,6 +61,7 @@ const POIResultList = React.forwardRef<HTMLElement, POIResultListProps>(
             {items.map(({ poi, result }) => (
               <li key={poi.id}>
                 <POIResultCard
+                  currentFloorId={currentFloorId}
                   featuredLabel={featuredLabel}
                   onSelect={onSelect}
                   poi={poi}

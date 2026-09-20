@@ -38,4 +38,18 @@ describe("CategoryTile", () => {
       screen.getByRole("button", { name: "Customer service" }),
     ).toBeDisabled();
   });
+
+  it("is the prototype's tile: a 64 icon square, radius Control, the label under it", () => {
+    const { container } = render(
+      <CategoryTile
+        category={{ id: "food", label: "Food and drink", selected: false }}
+        icon={<svg />}
+        onSelect={() => {}}
+      />,
+    );
+    const square = container.querySelector("[aria-hidden='true']");
+    expect(square).toHaveClass("h-16", "w-16", "rounded-control", "border");
+    expect(screen.getByText("Food and drink")).toHaveClass("line-clamp-2");
+    expect(screen.getByRole("button")).toHaveClass("text-[11px]");
+  });
 });

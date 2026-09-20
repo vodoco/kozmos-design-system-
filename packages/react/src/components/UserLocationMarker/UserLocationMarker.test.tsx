@@ -32,4 +32,24 @@ describe("UserLocationMarker", () => {
 
     expect(container.querySelector("svg")).not.toBeInTheDocument();
   });
+
+  it("is the prototype's marker: an 18 dot with a 3 border, a 48 pulsing ring, a 64 halo", () => {
+    const { container } = render(<UserLocationMarker showHeading={false} />);
+    const layers = Array.from(container.querySelectorAll("div > div")).map(
+      (n) => n.className,
+    );
+    expect(
+      layers.some(
+        (c) => c.includes("h-16 w-16") && c.includes("opacity-[0.14]"),
+      ),
+    ).toBe(true);
+    expect(
+      layers.some((c) => c.includes("h-12 w-12") && c.includes("animate-ping")),
+    ).toBe(true);
+    expect(
+      layers.some(
+        (c) => c.includes("h-[18px] w-[18px]") && c.includes("border-[3px]"),
+      ),
+    ).toBe(true);
+  });
 });

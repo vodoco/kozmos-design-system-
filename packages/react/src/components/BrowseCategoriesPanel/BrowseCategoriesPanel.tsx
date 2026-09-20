@@ -56,7 +56,7 @@ const BrowseCategoriesPanel = React.forwardRef<
               {emptyState}
             </div>
           ) : (
-            <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 lg:grid-cols-4">
+            <ul className="m-0 grid list-none grid-cols-4 gap-2 p-0">
               {categories.map((category) => (
                 <li className="min-w-0" key={category.id}>
                   <CategoryTile

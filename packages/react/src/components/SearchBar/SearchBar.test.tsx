@@ -57,4 +57,12 @@ describe("SearchBar", () => {
     rerender(<SearchBar value="" onChange={() => {}} readOnly />);
     expect(screen.getByRole("searchbox")).toHaveAttribute("readonly");
   });
+
+  it("is 44 tall at radius Control, the clear control a 24 circle in a 44 hit area", () => {
+    render(<SearchBar value="Station" onChange={() => {}} />);
+    expect(screen.getByRole("search")).toHaveClass("h-11", "rounded-control");
+    const clear = screen.getByRole("button", { name: "Clear search" });
+    expect(clear).toHaveClass("h-11", "w-11");
+    expect(clear.firstElementChild).toHaveClass("h-6", "w-6", "rounded-pill");
+  });
 });

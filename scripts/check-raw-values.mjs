@@ -36,7 +36,7 @@ const fail = (m) => {
 // Counts as they stood on 2026-09-09. Lower these as they are fixed.
 const BASELINE = {
   colour: { total: 19, components: 6 },
-  radius: { total: 7, components: 6 },
+  radius: { total: 6, components: 5 },
 };
 
 console.log("Raw values that bypass a role\n");
