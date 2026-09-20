@@ -1228,6 +1228,12 @@ marker. Olcay ruled the same afternoon: the 16px squares stay; system fonts per 
 the code's state — Readex Pro is only the unused brand token and the Figma text styles); no
 wayfinding modes and no preview step, so the QA app's Go now opens the picker and the directions
 follow at once (`6527d7a`, 40 app tests, the flow test green); the level list's form still his.
+Audited the same evening at Olcay's request: the owned-CSS gate, skipped after the card's
+stylesheet changed, run and green on three engines; the header test rewritten to tell one, two
+and three lines apart (14.5, 39.5, 64.5 points at 320pt); the preview's unused estimate presenter
+removed; the search bar's magnifier silenced and its clear button labelled on iOS, the Android
+label aligned; the hidden pill taken out of VoiceOver's tree while the level list is open; the
+operator's guide written (`kozmos-pointr-operators-guide-2026-09-20.md`).
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

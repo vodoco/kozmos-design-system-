@@ -180,6 +180,11 @@ positioning (a later explicit scope), Android: none of it.
 
 ## Change it yourself
 
+_Later on 20 September the preview step and its two modes were removed on Olcay's direction
+(`6527d7a`); Go opens the picker and the directions follow at once. The rows below that name
+the preview, the options or `routePreviewPanel` describe a state that is gone; the operator's
+guide (`kozmos-pointr-operators-guide-2026-09-20.md`) has the current map._
+
 | Behaviour                                                                                 | File                                                                              |
 | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | Option labels, the warnings, the arrow table, the under-a-metre rule                      | `apps/PointrPlayground/Sources/App/Routing/SDKRoute.swift`: `SDKRoutePresenter`   |

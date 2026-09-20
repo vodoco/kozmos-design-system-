@@ -198,6 +198,10 @@ Item F, item G (its evidence grew; §6), Pass 4, Android.
 
 ## 10. Change it yourself
 
+_Later on 20 September the preview step was removed on Olcay's direction (`6527d7a`): the
+recovery now lives in the picker's `routeStatusRow` in `SDKMapScreen.swift`, and the rows below
+that name the preview describe a state that is gone. The operator's guide has the current map._
+
 | Behaviour                                                 | File                                                                                               |
 | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | Which failure gets which recovery; when readiness retries | `apps/PointrPlayground/Sources/App/Routing/SDKRoute.swift`: `recovery`, `retriesOnReadiness`       |
