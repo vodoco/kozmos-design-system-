@@ -169,7 +169,8 @@
     background-color: var(--primitives-colors-background-300);
   }
   /* The AI search's ring: the theme's own ramp, 300 to 600 and back, as a
-     conic gradient. The first gradient the system draws, made of tokens. */
+     conic gradient. The first gradient the system draws, made of tokens.
+     It turns in place, once every three seconds, unless motion is reduced. */
   .kozmos-ai-search-ring {
     background: conic-gradient(
       from 0deg,
@@ -177,6 +178,18 @@
       var(--primitives-colors-theme-600),
       var(--primitives-colors-theme-300)
     );
+    animation: ai-search-spin 3s linear infinite;
+  }
+  /* The build prefixes keyframe names with kozmos-: this becomes kozmos-ai-search-spin. */
+  @keyframes ai-search-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kozmos-ai-search-ring {
+      animation: none;
+    }
   }
   .kozmos-button {
     @apply inline-flex items-center justify-center whitespace-nowrap rounded-control bg-transparent text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98];
