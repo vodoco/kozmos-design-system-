@@ -17,10 +17,12 @@ export interface ManoeuvreCardProps extends Omit<
   onToggle: () => void;
   expandLabel?: string;
   collapseLabel?: string;
-  /** What the closed card is called to assistive technology. */
+  /**
+   * What the closed card is called to assistive technology. Open, the card
+   * has no name of its own: the itinerary inside it is the named thing, and
+   * two landmarks called the same would be read twice.
+   */
   manoeuvreLabel?: string;
-  /** What the open card is called to assistive technology. */
-  itineraryLabel?: string;
   /** Past this height, in pixels, the itinerary scrolls. */
   maxItineraryHeight?: number;
   /** The itinerary the card opens into — `Itinerary`, in the products. */
@@ -53,7 +55,6 @@ const ManoeuvreCard = React.forwardRef<HTMLElement, ManoeuvreCardProps>(
       expandLabel = "Show itinerary",
       collapseLabel = "Hide itinerary",
       manoeuvreLabel = "Current manoeuvre",
-      itineraryLabel = "Itinerary",
       maxItineraryHeight = 320,
       children,
       ...props
@@ -63,7 +64,7 @@ const ManoeuvreCard = React.forwardRef<HTMLElement, ManoeuvreCardProps>(
     return (
       <section
         ref={ref}
-        aria-label={expanded ? itineraryLabel : manoeuvreLabel}
+        aria-label={expanded ? undefined : manoeuvreLabel}
         className={cn(
           "kozmos-manoeuvre-card flex w-full flex-col gap-3 rounded-container bg-background/90 px-4 pb-1 pt-4 text-foreground shadow-floating backdrop-blur-xl",
           className,

@@ -19,6 +19,7 @@ public struct KozmosManoeuvreCard<Itinerary: View>: View {
     let onToggle: () -> Void
     let expandLabel: String
     let collapseLabel: String
+    let manoeuvreLabel: String
     let maxItineraryHeight: CGFloat
     let itinerary: Itinerary
 
@@ -30,6 +31,7 @@ public struct KozmosManoeuvreCard<Itinerary: View>: View {
         onToggle: @escaping () -> Void,
         expandLabel: String = "Show itinerary",
         collapseLabel: String = "Hide itinerary",
+        manoeuvreLabel: String = "Current manoeuvre",
         maxItineraryHeight: CGFloat = 320,
         @ViewBuilder itinerary: () -> Itinerary
     ) {
@@ -40,6 +42,7 @@ public struct KozmosManoeuvreCard<Itinerary: View>: View {
         self.onToggle = onToggle
         self.expandLabel = expandLabel
         self.collapseLabel = collapseLabel
+        self.manoeuvreLabel = manoeuvreLabel
         self.maxItineraryHeight = maxItineraryHeight
         self.itinerary = itinerary()
     }
@@ -127,7 +130,9 @@ public struct KozmosManoeuvreCard<Itinerary: View>: View {
         .clipShape(shape)
         .kozmosElevation(KozmosShadows.semanticsElevationFloating)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(isExpanded ? "Itinerary" : "Current manoeuvre")
+        // Open, the card has no name of its own: the itinerary inside is the
+        // named thing, and two groups called the same would be read twice.
+        .accessibilityLabel(isExpanded ? "" : manoeuvreLabel)
     }
 }
 

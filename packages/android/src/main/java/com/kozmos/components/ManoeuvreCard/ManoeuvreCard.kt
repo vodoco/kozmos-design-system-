@@ -61,12 +61,13 @@ fun KozmosManoeuvreCard(
     expandLabel: String = "Show itinerary",
     collapseLabel: String = "Hide itinerary",
     manoeuvreLabel: String = "Current manoeuvre",
-    itineraryLabel: String = "Itinerary",
     maxItineraryHeight: Dp = 320.dp,
     itinerary: @Composable () -> Unit
 ) {
     Surface(
-        modifier = modifier.semantics { contentDescription = if (expanded) itineraryLabel else manoeuvreLabel },
+        // Open, the card has no name of its own: the itinerary inside is the
+        // named thing, and two nodes called the same would be read twice.
+        modifier = modifier.then(if (expanded) Modifier else Modifier.semantics { contentDescription = manoeuvreLabel }),
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
         color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
         shadowElevation = 8.dp

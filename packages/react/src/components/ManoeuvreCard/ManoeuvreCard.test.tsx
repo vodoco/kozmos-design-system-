@@ -57,9 +57,8 @@ describe("ManoeuvreCard", () => {
       </ManoeuvreCard>,
     );
 
-    expect(
-      screen.getByRole("region", { name: "Itinerary" }),
-    ).toBeInTheDocument();
+    // No name of its own: the itinerary inside is the named thing.
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
     expect(screen.getByText("FROM Dunkin")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Turn left/ }),
