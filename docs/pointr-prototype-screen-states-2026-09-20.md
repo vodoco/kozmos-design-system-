@@ -20,6 +20,9 @@ font; controls, inputs and chips are **Readex Pro**.
 
 ## 1. Search — nothing selected
 
+_The sheet's detents, gestures and every state it moves through were driven and measured later
+the same day: [pointr-prototype-initial-sheet-2026-09-20.md](pointr-prototype-initial-sheet-2026-09-20.md)._
+
 | Element                         | Measured                                                                                                                                                                                              | Kozmos                                                                                              |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Venue info button               | 52 × 52 white, radius 16, shadow, top-right at 16; inner 44 hit area, 16 icon                                                                                                                         | `MapControlButton`                                                                                  |
