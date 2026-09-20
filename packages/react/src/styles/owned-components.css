@@ -95,48 +95,6 @@
   .kozmos-field-success {
     @apply text-success;
   }
-  .kozmos-button {
-    @apply inline-flex items-center justify-center whitespace-nowrap rounded-control bg-transparent text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98];
-    cursor: pointer;
-    text-transform: none;
-    -webkit-appearance: button;
-    background-image: none;
-  }
-  .kozmos-button-default {
-    @apply bg-[var(--components-primary-buttons-themed-button-background-idle)] text-[var(--components-primary-buttons-themed-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-themed-button-background-hover)];
-  }
-  .kozmos-button:disabled {
-    cursor: default;
-  }
-  .kozmos-button-destructive {
-    @apply bg-[var(--components-primary-buttons-danger-button-background-idle)] text-[var(--components-primary-buttons-danger-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-danger-button-background-hover)];
-  }
-  .kozmos-button-outline {
-    @apply border border-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] bg-background text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:border-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)];
-  }
-  /* secondary/80 and accent/10 were inert token-alpha utilities. Their repair
-     remains the existing visual debt, not an unreviewed style change here. */
-  .kozmos-button-secondary {
-    @apply bg-secondary text-secondary-foreground;
-  }
-  .kozmos-button-ghost {
-    @apply text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)];
-  }
-  .kozmos-button-link {
-    @apply text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] underline-offset-4 hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:underline;
-  }
-  .kozmos-button-glass {
-    @apply glass glass-spotlight glass-bevel text-foreground hover:bg-white/10 active:scale-[0.98];
-  }
-  /* The glass surface role: a surface over content it does not belong to —
-     the manoeuvre card, the navigation summary, the map's cards. Composed
-     from Semantics.Effect.glass: the theme's glass colour at the token's
-     opacity, what shows through blurred and saturated by the token's
-     numbers, an edge at the token's border opacity, light in both themes.
-     The design config sets --kozmos-surface-glass-opacity and -blur only
-     while transparency is reduced; otherwise the token is the value. The
-     element also carries kozmos-reset, or the scoped legacy preflight keeps
-     its border reset over the edge. */
   /* The solid surface: the default. The background colour with the subtle
      border, the container edge. */
   .kozmos-surface-solid {
@@ -172,6 +130,83 @@
       backdrop-filter: none;
     }
   }
+  .kozmos-button {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-control bg-transparent text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98];
+    cursor: pointer;
+    text-transform: none;
+    -webkit-appearance: button;
+    background-image: none;
+  }
+  .kozmos-button-default {
+    @apply bg-[var(--components-primary-buttons-themed-button-background-idle)] text-[var(--components-primary-buttons-themed-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-themed-button-background-hover)];
+  }
+  .kozmos-button:disabled {
+    cursor: default;
+  }
+  .kozmos-button-destructive {
+    @apply bg-[var(--components-primary-buttons-danger-button-background-idle)] text-[var(--components-primary-buttons-danger-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-danger-button-background-hover)];
+  }
+  .kozmos-button-outline {
+    @apply border border-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] bg-background text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:border-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)];
+  }
+  /* secondary/80 and accent/10 were inert token-alpha utilities. Their repair
+     remains the existing visual debt, not an unreviewed style change here. */
+  .kozmos-button-secondary {
+    @apply bg-secondary text-secondary-foreground;
+  }
+  .kozmos-button-ghost {
+    @apply text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)];
+  }
+  .kozmos-button-link {
+    @apply text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] underline-offset-4 hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:underline;
+  }
+  /* The glass variant is the glass surface — the same declarations as
+     .kozmos-surface-glass, written out because @apply will not take an
+     owned class; tokens:glass:check holds the two together — with the
+     spotlight the design config drives; hovered, a tenth more of the tint. */
+  .kozmos-button-glass {
+    @apply glass-spotlight text-foreground active:scale-[0.98];
+    background-color: rgba(
+      var(--kozmos-glass-rgb),
+      var(--kozmos-surface-glass-opacity, var(--semantics-effect-glass-opacity))
+    );
+    -webkit-backdrop-filter: blur(
+        var(
+          --kozmos-surface-glass-blur,
+          calc(var(--semantics-effect-glass-blur) * 1px)
+        )
+      )
+      saturate(var(--semantics-effect-glass-saturation));
+    backdrop-filter: blur(
+        var(
+          --kozmos-surface-glass-blur,
+          calc(var(--semantics-effect-glass-blur) * 1px)
+        )
+      )
+      saturate(var(--semantics-effect-glass-saturation));
+    border: 1px solid
+      rgba(255, 255, 255, var(--semantics-effect-glass-border-opacity));
+  }
+  .kozmos-button-glass:hover {
+    background-color: rgba(
+      var(--kozmos-glass-rgb),
+      calc(
+        var(
+            --kozmos-surface-glass-opacity,
+            var(--semantics-effect-glass-opacity)
+          ) + 0.1
+      )
+    );
+  }
+  /* The glass surface role: a surface over content it does not belong to —
+     the manoeuvre card, the navigation summary, the map's cards. Composed
+     from Semantics.Effect.glass: the theme's glass colour at the token's
+     opacity, what shows through blurred and saturated by the token's
+     numbers, an edge at the token's border opacity, light in both themes.
+     The design config sets --kozmos-surface-glass-opacity and -blur only
+     while transparency is reduced; otherwise the token is the value. The
+     element also carries kozmos-reset, or the scoped legacy preflight keeps
+     its border reset over the edge. */
   .kozmos-button-size-default {
     @apply h-11 px-4 py-2;
   }

@@ -460,6 +460,14 @@ try {
       (await measure(page.getByTestId("outer-glass"))).backgroundColor,
       (await measure(page.getByTestId("nested-glass"))).backgroundColor,
     );
+    // The glass button is the glass surface: the token's filter and tint.
+    const glassButton = await page.getByTestId("nested-glass").evaluate((node) => {
+      const s = getComputedStyle(node);
+      return { background: s.backgroundColor, filter: s.backdropFilter || s.webkitBackdropFilter };
+    });
+    assert.match(glassButton.filter, /blur\(20px\) saturate\(1\.8\)/, `${mode}: the glass button's filter: ${glassButton.filter}`);
+    const buttonTint = /^rgba\(255, 255, 255, (0\.\d+)\)$/.exec(glassButton.background);
+    assert(buttonTint && Math.abs(Number(buttonTint[1]) - 0.7) < 0.01, `${mode}: the glass button's tint: ${glassButton.background}`);
     // The glass surface role reads Semantics.Effect.glass: the theme's glass
     // colour at 0.7, blur 20 and saturation 1.8 on what shows through, a
     // light edge at 0.2; the two themes' tints differ.

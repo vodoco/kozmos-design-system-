@@ -77,6 +77,13 @@ const values = {};
     }
     if (/\d\.\d+\s*\)/.test(block[1].replace(/calc\([^)]*\)/g, "")))
       fail("web: the role carries a number of its own where the token should be");
+    const button = /\.kozmos-button-glass\s*\{([\s\S]*?)\n\s*\}/.exec(css);
+    if (!button) fail("web: .kozmos-button-glass is missing");
+    else {
+      const missing = ["opacity", "blur", "saturation", "border.opacity"].map((f) => FIELDS[f].css).filter((v) => !button[1].includes(`var(${v})`));
+      if (missing.length) fail(`web: the button's glass variant does not read ${missing.join(", ")}`);
+      else ok("web: the button's glass variant reads the glass token, as the surface does");
+    }
   }
   const emitted = "packages/tokens/dist/css/variables-light.css";
   if (!exists(emitted)) ok("web: tokens dist not built in this checkout, emitted variables skipped");

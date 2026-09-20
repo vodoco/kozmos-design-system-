@@ -35,7 +35,7 @@ const fail = (m) => {
 
 // Counts as they stood on 2026-09-09. Lower these as they are fixed.
 const BASELINE = {
-  colour: { total: 20, components: 7 },
+  colour: { total: 19, components: 6 },
   radius: { total: 7, components: 6 },
 };
 
