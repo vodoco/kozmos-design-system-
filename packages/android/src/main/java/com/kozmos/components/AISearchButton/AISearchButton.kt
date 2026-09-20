@@ -1,5 +1,16 @@
 package com.kozmos.components.aisearchbutton
 
+import android.provider.Settings
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -44,9 +55,23 @@ fun KozmosAISearchButton(
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
+        // The gradient turns in place, once every three seconds, unless the
+        // system's animations are off; the first frame is the resting one.
+        val transition = rememberInfiniteTransition(label = "kozmos-ai-search-ring")
+        val ringAngle by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(animation = tween(durationMillis = 3000, easing = LinearEasing), repeatMode = RepeatMode.Restart),
+            label = "kozmos-ai-search-ring-angle"
+        )
+        val context = LocalContext.current
+        val animationsOn = remember(context) {
+            Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
+        }
         Box(
             modifier = Modifier
                 .requiredSize(66.dp)
+                .graphicsLayer { rotationZ = if (animationsOn) ringAngle else 0f }
                 .clip(CircleShape)
                 .background(
                     Brush.sweepGradient(
