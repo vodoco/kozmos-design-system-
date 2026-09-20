@@ -4,7 +4,9 @@ import SwiftUI
 ///
 /// Mirrors the React `CategoryTile`: the tile owns presentation and selection
 /// semantics only. Category identity, labels, counts, and selected state are
-/// supplied by the consuming app through `KozmosCategoryPresentation`.
+/// supplied by the consuming app through `KozmosCategoryPresentation`. A
+/// `resultCount` draws as the system's counter at the icon square's
+/// top-right; `resultCountLabel` is its spoken form and draws nothing.
 public struct KozmosCategoryTile<Icon: View>: View {
     @Environment(\.kozmosAnalytics) private var trackEvent
 
@@ -58,6 +60,16 @@ public struct KozmosCategoryTile<Icon: View>: View {
                                 lineWidth: category.selected ? 2 : 1
                             )
                     )
+                    // The count: the system's counter, brand tone, at the
+                    // square's top-right, four beyond its edges so the icon
+                    // stays clear. The spoken form is the presentation's
+                    // `resultCountLabel`, the tile's accessibility value.
+                    .overlay(alignment: .topTrailing) {
+                        if let count = category.resultCount {
+                            KozmosCounter("\(count)", tone: .brand)
+                                .offset(x: 4, y: -4)
+                        }
+                    }
                     .accessibilityHidden(true)
 
                 Text(category.label)
@@ -66,12 +78,6 @@ public struct KozmosCategoryTile<Icon: View>: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
-
-                if let resultCountLabel = category.resultCountLabel {
-                    Text(resultCountLabel)
-                        .font(KozmosTypography.caption)
-                        .foregroundColor(KozmosColors.primitivesColorsForeground500)
-                }
             }
             .frame(maxWidth: .infinity)
             .padding(KozmosDimensions.primitivesLayoutSpacing50)

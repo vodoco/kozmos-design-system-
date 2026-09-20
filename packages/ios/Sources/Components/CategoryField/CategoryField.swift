@@ -11,6 +11,8 @@ import SwiftUI
 public struct KozmosCategoryField<Icon: View>: View {
     private let label: String
     private let count: Int?
+    /// The count's spoken form; the host pluralises and localises it.
+    private let countLabel: (Int) -> String
     private let tint: Color
     private let clearLabel: String
     private let onClear: () -> Void
@@ -19,6 +21,7 @@ public struct KozmosCategoryField<Icon: View>: View {
     public init(
         label: String,
         count: Int? = nil,
+        countLabel: @escaping (Int) -> String = { "\($0) places" },
         tint: Color = KozmosColors.primitivesColorsTheme500,
         clearLabel: String = "Clear category",
         onClear: @escaping () -> Void,
@@ -26,6 +29,7 @@ public struct KozmosCategoryField<Icon: View>: View {
     ) {
         self.label = label
         self.count = count
+        self.countLabel = countLabel
         self.tint = tint
         self.clearLabel = clearLabel
         self.onClear = onClear
@@ -54,7 +58,7 @@ public struct KozmosCategoryField<Icon: View>: View {
                     .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing75)
                     .frame(minWidth: Self.pillHeight, minHeight: Self.pillHeight)
                     .background(Capsule().fill(tint))
-                    .accessibilityLabel("\(count) places")
+                    .accessibilityLabel(countLabel(count))
             }
             Spacer(minLength: 0)
             Button(action: onClear) {
@@ -77,6 +81,6 @@ public struct KozmosCategoryField<Icon: View>: View {
                 .strokeBorder(tint, lineWidth: 1)
         )
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(count.map { "\(label), \($0) places" } ?? label)
+        .accessibilityLabel(count.map { "\(label), \(countLabel($0))" } ?? label)
     }
 }

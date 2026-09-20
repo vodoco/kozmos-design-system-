@@ -27,6 +27,31 @@ final class KozmosSearchSheetTests: XCTestCase {
         XCTAssertGreaterThan(label.minY, icon.maxY + 8, "the label is not under the square")
     }
 
+    /// The tile's count: the system's counter, brand tone, at the square's
+    /// top-right, four beyond its edges, the icon left clear. The spoken
+    /// form is the presentation's label; no caption is drawn.
+    @MainActor func testTheTilesCountIsACounterAtTheSquaresTopRight() async throws {
+        let view = KozmosCategoryTile(
+            category: KozmosCategoryPresentation(id: "gates", label: "Gates", resultCount: 12, resultCountLabel: "12 places"),
+            onSelect: { _ in }
+        ) { Image(systemName: "airplane").font(.system(size: 24)) }
+        .frame(width: 96)
+        .padding(16)
+        .background(Color.white)
+        // Pinned to the top, so the square is 64 at x 32–96, y 20–84: the 16 padding and the tile's own 4.
+        let pixels = try await RenderedPixels.render(VStack(spacing: 0) { view; Spacer(minLength: 0) }.background(Color.white), size: CGSize(width: 128, height: 140))
+        let counter = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 70, y: 0, width: 58, height: 40), where: RenderedPixels.isTheme), "no counter at the square's top-right")
+        XCTAssertEqual(counter.height, 20, accuracy: 2, "the counter is not the system's 20 counter: \(counter)")
+        XCTAssertEqual(counter.maxX, 100, accuracy: 2, "the counter does not overhang the square's right edge (96) by 4: \(counter)")
+        XCTAssertEqual(counter.minY, 16, accuracy: 2, "the counter does not overhang the square's top edge (20) by 4: \(counter)")
+        XCTAssertNotNil(pixels.boundingBox(in: counter, where: { r, g, b in r > 240 && g > 240 && b > 240 }), "no white digits in the counter")
+        let icon = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 0, y: 40, width: 128, height: 44), where: RenderedPixels.isTheme), "no icon")
+        XCTAssertGreaterThanOrEqual(icon.minY, counter.maxY, "the counter runs into the icon: \(counter) over \(icon)")
+        // No caption under the label: one line of dark text and nothing more.
+        let label = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 0, y: 86, width: 128, height: 54), where: RenderedPixels.isDarkText), "no label")
+        XCTAssertLessThan(label.height, 18, "a caption is drawn under the label: \(label)")
+    }
+
     /// The row: 80 tall; a dot before the floor when it is the current one.
     /// Two tiles in one row, a one-line and a two-line label: the squares
     /// share a top edge. The grid aligns its cells at the top, so a short
