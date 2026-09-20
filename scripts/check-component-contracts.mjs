@@ -194,6 +194,7 @@ const files = {
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
   reactCounterFigma: "packages/react/src/components/Counter/Counter.figma.tsx",
   reactBadge: "packages/react/src/components/Badge/Badge.tsx",
+  reactCategoryTile: "packages/react/src/components/CategoryTile/CategoryTile.tsx",
   reactBadgeFigma: "packages/react/src/components/Badge/Badge.figma.tsx",
   reactCardFigma: "packages/react/src/components/Card/Card.figma.tsx",
   reactList: "packages/react/src/components/List/List.tsx",
@@ -301,6 +302,7 @@ const files = {
   iosIcon: "packages/ios/Sources/Components/Icon/Icon.swift",
   iosIconFigma: "packages/ios/Sources/Components/Icon/Icon.figma.swift",
   iosIconButton: "packages/ios/Sources/Components/IconButton/IconButton.swift",
+  iosCategoryTile: "packages/ios/Sources/Components/CategoryTile/CategoryTile.swift",
   iosCounter: "packages/ios/Sources/Components/Counter/Counter.swift",
   iosCounterFigma:
     "packages/ios/Sources/Components/Counter/Counter.figma.swift",
@@ -395,6 +397,8 @@ const files = {
     "packages/android/src/main/java/com/kozmos/components/IconButton/IconButton.kt",
   androidCounter:
     "packages/android/src/main/java/com/kozmos/components/Counter/Counter.kt",
+  androidCategoryTile:
+    "packages/android/src/main/java/com/kozmos/components/CategoryTile/CategoryTile.kt",
   androidCounterFigma:
     "packages/android/src/main/java/com/kozmos/components/Counter/Counter.figma.kt",
   androidNavigationItem:
@@ -521,6 +525,7 @@ const figmaFoundationsPayload = JSON.parse(source.figmaFoundationsPayload);
 const {
   button,
   iconButton,
+  categoryTile,
   counter,
   badge,
   checkbox,
@@ -9166,6 +9171,53 @@ assertContains(
   ".tint(foregroundColor)",
   "iOS IconButton loading indicator foreground tint",
 );
+
+// CategoryTile: the count is the system's counter, brand tone, at the icon
+// square's top-right, the contract's overhang beyond its top and right edges.
+{
+  const overhang = categoryTile.content.counterOverhang;
+  const tone = categoryTile.content.counterTone;
+  assertContains(
+    files.reactCategoryTile,
+    source.reactCategoryTile,
+    // An absolute offset counts from inside the square's 1px border.
+    `<Counter className="absolute -right-[${overhang + 1}px] -top-[${overhang + 1}px]" tone="${tone}">`,
+    `React CategoryTile counter at the square's top-right, ${overhang} beyond its edges, ${tone} tone`,
+  );
+  assertContains(
+    files.iosCategoryTile,
+    source.iosCategoryTile,
+    `KozmosCounter("\\(count)", tone: .${tone})`,
+    `iOS CategoryTile counter, ${tone} tone`,
+  );
+  assertContains(
+    files.iosCategoryTile,
+    source.iosCategoryTile,
+    `.offset(x: ${overhang}, y: -${overhang})`,
+    `iOS CategoryTile counter ${overhang} beyond the square's edges`,
+  );
+  assertContains(
+    files.androidCategoryTile,
+    source.androidCategoryTile,
+    `tone = CounterTone.${tone[0].toUpperCase()}${tone.slice(1)}`,
+    `Android CategoryTile counter, ${tone} tone`,
+  );
+  assertContains(
+    files.androidCategoryTile,
+    source.androidCategoryTile,
+    `.offset(x = ${overhang}.dp, y = (-${overhang}).dp)`,
+    `Android CategoryTile counter ${overhang} beyond the square's edges`,
+  );
+  for (const [file, content] of [
+    [files.reactCategoryTile, source.reactCategoryTile],
+    [files.iosCategoryTile, source.iosCategoryTile],
+    [files.androidCategoryTile, source.androidCategoryTile],
+  ]) {
+    if (/resultCountLabel\s*[?!]?\.let\s*\{\s*resultCountLabel|text-muted-foreground|KozmosTypography\.caption\b/.test(content)) {
+      fail(`${file}: draws resultCountLabel as a caption; it is the spoken form only`);
+    }
+  }
+}
 
 assertAllVariants(
   files.iosCounter,

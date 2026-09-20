@@ -68,6 +68,34 @@ try {
     }
   });
 
+
+  // The tile's count: the system's counter, brand tone, 20 tall, four beyond
+  // the square's top and right edges; its spoken form is not drawn.
+  await finish(await open("product-sdk-categorytile--default"), "the-count-is-a-counter-at-the-squares-top-right", async (page) => {
+    const counter = page.locator('.kozmos-category-tile [data-slot="counter"]');
+    await counter.waitFor();
+    const m = await counter.evaluate((node) => {
+      const square = node.parentElement.getBoundingClientRect();
+      const box = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      return {
+        squareRight: square.right, squareTop: square.top, squareWidth: square.width,
+        right: box.right, top: box.top, height: box.height, width: box.width,
+        background: style.backgroundColor, text: node.textContent,
+      };
+    });
+    near(m.squareWidth, 64, 0.5, "the square is not 64");
+    near(m.height, 20, 0.5, "the counter is not the system's 20 counter");
+    assert.ok(m.width >= 20, `the counter is narrower than its 20 minimum: ${m.width}`);
+    near(m.right, m.squareRight + 4, 0.5, "the counter does not overhang the square's right edge by 4");
+    near(m.top, m.squareTop - 4, 0.5, "the counter does not overhang the square's top edge by 4");
+    assert.equal(m.text, "12", `the counter does not show the count: ${m.text}`);
+    assert.notEqual(m.background, "rgba(0, 0, 0, 0)", "the counter has no fill");
+    const spoken = page.locator(".kozmos-category-tile .sr-only");
+    assert.equal(await spoken.count(), 1, "no spoken form for the count");
+    const spokenBox = await spoken.boundingBox();
+    assert.ok(!spokenBox || spokenBox.width <= 1, `the spoken form is drawn: ${JSON.stringify(spokenBox)}`);
+  });
   await finish(await open("product-sdk-aisearchbutton--default"), "ai-search-ring-turns", async (page) => {
     const button = page.getByRole("button", { name: "AI search" });
     await button.waitFor();

@@ -85,6 +85,19 @@
       },
       "notes": "The large size is 48, the prototype's Filters and AI search beside a 44 field; small and default are 44 (2026-09-21)."
     },
+    "categoryTile": {
+      "content": {
+        "squareSize": 64,
+        "squareRadius": "control",
+        "iconSize": 24,
+        "labelFontSize": 11,
+        "labelLineHeight": 14,
+        "counterSize": "default",
+        "counterTone": "brand",
+        "counterOverhang": 4
+      },
+      "notes": "resultCount draws as the system's counter at the icon square's top-right, counterOverhang beyond its top and right edges so the icon stays clear; resultCountLabel is its spoken form and draws nothing."
+    },
     "counter": {
       "tones": ["neutral", "brand", "destructive", "inverse"],
       "sizes": {
