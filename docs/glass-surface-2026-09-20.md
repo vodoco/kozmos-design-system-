@@ -135,6 +135,10 @@ suite (the solid one opaque in the background colour with a 1px subtle edge) on 
 513 unit tests, the parity check reading the consumers through `surfaceClass`; on Android, a
 golden of both styles over red and the navigation goldens re-recorded on the solid default.
 
+Final gates on the surface style: the package 98 on iOS 26.5 and 100 on 18.4, CI's simulator step
+52, the QA app's flow UI test on the glass card and summary, `test:navigation` 20 of 20 on three
+engines, the Storybook docs check, `verifyPaparazziDebug`.
+
 Left from §5: the system's Liquid Glass — Olcay did not choose it; glass stays the material
 composition, measured. Next, in his order: the shell's sheet on the surface style with the
 compact detent; the Button's glass variant onto the token; then the transition arrows and the
