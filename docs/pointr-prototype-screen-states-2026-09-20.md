@@ -134,8 +134,10 @@ on them._
 - ~~A **manoeuvre card** over the map with a grabber that opens the itinerary (§4).~~ Built.
 - ~~A **route progress rail** with a manoeuvre disc and end dots (§4).~~ Built.
 - ~~An **itinerary list** — FROM, steps with the current one emphasised, TO (§4).~~ Built.
-- An **AI search button**: a gradient-ring icon button (§1).
-- A location marker with a halo and pulse (§1).
+- ~~An **AI search button**: a gradient-ring icon button (§1).~~ Built.
+- ~~A location marker with a halo and pulse (§1).~~ Built — both in
+  [search-sheet-2026-09-20.md](search-sheet-2026-09-20.md), with the tile, row and field on the
+  prototype's geometry.
 - Everything already recorded: the in-surface status message, the collapsible selector on the
   web and Android, a floor slot and current-step state on a step. ~~Transition arrows~~ — built,
   [transition-arrows-2026-09-20.md](transition-arrows-2026-09-20.md).

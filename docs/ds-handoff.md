@@ -1305,6 +1305,19 @@ direction. The QA app maps the SDK's message types and the taxonomy's transition
 them; "Take Elevator down" finally carries a down arrow. Measured on each platform. Next: the
 prototype's search sheet.
 
+### 2026-09-20 · The search sheet (Claude Code)
+
+`search-sheet-2026-09-20.md`, commits `757f1ce`, `486b216`, `0623479`, `bdf97e9`, `1b5090e` and
+the docs commit. On Olcay's four answers: the category tile, the result row and the search field
+take the prototype's geometry on tokens — a 64 icon square, an 80-tall row with a dot on the map's
+floor, a 44 field with a 24 clear circle — and the two parts the system lacked are built: the
+location marker's halo (18, 48, 64) and the AI search button, a 66 ring whose gradient runs
+through the theme's own ramp, the first gradient made of tokens. All three platforms, each
+measured; the iOS render tests each failed once against a mutated part. The QA app's search row
+has the AI search beside the field and the dot on results. That closes the five stages Olcay
+ordered on the 20th: the glass surface as a style, the sheet, the Button's glass, the transition
+arrows, the search sheet.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

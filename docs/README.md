@@ -25,7 +25,9 @@ Then the glass surface role the handoff had ruled, built on all three platforms 
 Then the map shell's sheet, fitted to its content and on the surface style, on all three:
 [map-shell-sheet-2026-09-20.md](map-shell-sheet-2026-09-20.md). Then the directions for
 transitions — lift, escalator, stairs, a level change, a walkway, turning back — on all three:
-[transition-arrows-2026-09-20.md](transition-arrows-2026-09-20.md).
+[transition-arrows-2026-09-20.md](transition-arrows-2026-09-20.md). Last, the search sheet's parts on
+the prototype's geometry and the two it lacked, on all three:
+[search-sheet-2026-09-20.md](search-sheet-2026-09-20.md).
 
 Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
 It closes declaration-format and inert-opacity debt and migrates the temporal fields.
@@ -44,6 +46,9 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 The Pointr iOS thread, 2026-09-19 to 2026-09-20, newest first:
 
+- `search-sheet-2026-09-20.md`: the category tile, the result row with its current-floor dot, the
+  search field and the location marker on the prototype's geometry, on tokens, plus the AI search
+  button with its ring from the theme ramp — iOS, React and Android, measured; the QA app's search row.
 - `transition-arrows-2026-09-20.md`: `DirectionType` gains ten cases for transitions on iOS, React and
   Android, each platform drawing what its own icon set has (probed); the QA app maps the SDK's
   message types and the taxonomy's transition subtypes onto them; measured on each platform.
