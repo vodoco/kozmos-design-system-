@@ -248,5 +248,29 @@ final class KozmosPOIDetailTests: XCTestCase {
         XCTAssertEqual(thirdLine, secondLine, accuracy: 4, "the third line is not one more line (\(heights))")
         XCTAssertEqual(endless, three, accuracy: 1.5, "an endless name is not capped at three lines (\(heights))")
     }
+
+    /// In the sheet presentation the panel paints no surface of its own: it
+    /// sits on the sheet's, as the browse panel does (Olcay, 21st: the card
+    /// looked like a card within a card). Inline keeps its own.
+    @MainActor func testTheSheetPresentationPaintsNoSurfaceOfItsOwn() async throws {
+        let poi = KozmosPOIPresentation(id: "lounge", name: "British Airways Lounge", floorId: "e:4", floorLabel: "Fourth Floor", buildingLabel: "Terminal E")
+        func panel(_ presentation: KozmosPOIDetailPanel.Presentation) -> some View {
+            KozmosPOIDetailPanel(
+                poi: poi, actionLabels: [.navigate: "Go"], onAction: { _, _ in }, onClose: {},
+                presentation: presentation, details: .init(), onSupplementaryAction: { _, _ in }
+            )
+            .padding(8)
+            .background(KozmosColors.primitivesColorsBackground100)
+        }
+        let size = CGSize(width: 320, height: 240)
+        let isWhite: (UInt8, UInt8, UInt8) -> Bool = { r, g, b in r > 252 && g > 252 && b > 252 }
+        // The panel's top edge, mid-width: inside the panel, above its header's text.
+        let probe = CGRect(x: 150, y: 10, width: 12, height: 6)
+        let sheet = try await RenderedPixels.render(panel(.sheet), size: size)
+        XCTAssertNil(sheet.boundingBox(in: probe, where: isWhite), "the sheet presentation paints its own white surface")
+        let inline = try await RenderedPixels.render(panel(.inline), size: size)
+        XCTAssertNotNil(inline.boundingBox(in: probe, where: isWhite), "the inline presentation lost its own surface")
+    }
     #endif
+
 }

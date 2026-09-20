@@ -6,22 +6,27 @@ import SwiftUI
 /// semantics only. Category identity, labels, counts, and selected state are
 /// supplied by the consuming app through `KozmosCategoryPresentation`. A
 /// `resultCount` draws as the system's counter at the icon square's
-/// top-right; `resultCountLabel` is its spoken form and draws nothing.
+/// top-right; `resultCountLabel` is its spoken form and draws nothing. A
+/// `tint` — the category's own colour, as the chosen-category field wears
+/// it — takes the icon and the counter's fill; the square stays neutral.
 public struct KozmosCategoryTile<Icon: View>: View {
     @Environment(\.kozmosAnalytics) private var trackEvent
 
     private let category: KozmosCategoryPresentation
+    private let tint: Color?
     private let isDisabled: Bool
     private let onSelect: (String) -> Void
     private let icon: Icon
 
     public init(
         category: KozmosCategoryPresentation,
+        tint: Color? = nil,
         isDisabled: Bool = false,
         onSelect: @escaping (String) -> Void,
         @ViewBuilder icon: () -> Icon
     ) {
         self.category = category
+        self.tint = tint
         self.isDisabled = isDisabled
         self.onSelect = onSelect
         self.icon = icon()
@@ -45,7 +50,7 @@ public struct KozmosCategoryTile<Icon: View>: View {
                 // the selection shows on it. The label sits under it.
                 icon
                     .frame(width: KozmosDimensions.primitivesLayoutSizing300, height: KozmosDimensions.primitivesLayoutSizing300)
-                    .foregroundColor(KozmosColors.primitivesColorsTheme500)
+                    .foregroundColor(tint ?? KozmosColors.primitivesColorsTheme500)
                     .frame(width: KozmosDimensions.primitivesLayoutSizing800, height: KozmosDimensions.primitivesLayoutSizing800)
                     .background(
                         category.selected
@@ -66,7 +71,7 @@ public struct KozmosCategoryTile<Icon: View>: View {
                     // `resultCountLabel`, the tile's accessibility value.
                     .overlay(alignment: .topTrailing) {
                         if let count = category.resultCount {
-                            KozmosCounter("\(count)", tone: .brand)
+                            KozmosCounter("\(count)", tone: .brand, fill: tint)
                                 .offset(x: 4, y: -4)
                         }
                     }
@@ -95,10 +100,11 @@ public struct KozmosCategoryTile<Icon: View>: View {
 public extension KozmosCategoryTile where Icon == EmptyView {
     init(
         category: KozmosCategoryPresentation,
+        tint: Color? = nil,
         isDisabled: Bool = false,
         onSelect: @escaping (String) -> Void
     ) {
-        self.init(category: category, isDisabled: isDisabled, onSelect: onSelect) {
+        self.init(category: category, tint: tint, isDisabled: isDisabled, onSelect: onSelect) {
             EmptyView()
         }
     }

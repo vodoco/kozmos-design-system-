@@ -48,6 +48,9 @@ public struct KozmosLocationPin: View {
     private let offFloor: Bool
     private let isDisabled: Bool
     private let onSelect: (() -> Void)?
+    /// A colour of the host's own — a category's — for the marker, over the
+    /// variant's; a featured pin keeps the alert colour.
+    private let tint: Color?
 
     public init(
         variant: KozmosLocationPinVariant = .primary,
@@ -59,7 +62,8 @@ public struct KozmosLocationPin: View {
         featured: Bool = false,
         offFloor: Bool = false,
         isDisabled: Bool = false,
-        onSelect: (() -> Void)? = nil
+        onSelect: (() -> Void)? = nil,
+        tint: Color? = nil
     ) {
         self.variant = variant
         self.size = size
@@ -71,10 +75,12 @@ public struct KozmosLocationPin: View {
         self.offFloor = offFloor
         self.isDisabled = isDisabled
         self.onSelect = onSelect
+        self.tint = tint
     }
 
     private var markerColor: Color {
         if featured { return KozmosColors.primitivesColorsEmotionalAlert500 }
+        if let tint { return tint }
         switch variant {
         case .default: return KozmosColors.primitivesColorsForeground100
         case .primary: return KozmosColors.primitivesColorsTheme500

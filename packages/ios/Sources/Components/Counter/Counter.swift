@@ -20,17 +20,22 @@ public struct KozmosCounter: View {
     /// the colour. A counter is always a filled pill, so there is one
     /// treatment rather than two.
     let emotion: KozmosEmotion?
+    /// A fill of the host's own — a category's colour — over the tone's and
+    /// the emotion's; the digits go white on it.
+    let fill: Color?
 
     public init(
         _ text: String,
         tone: KozmosCounterTone = .neutral,
         size: KozmosCounterSize = .default,
-        emotion: KozmosEmotion? = nil
+        emotion: KozmosEmotion? = nil,
+        fill: Color? = nil
     ) {
         self.text = text
         self.tone = tone
         self.size = size
         self.emotion = emotion
+        self.fill = fill
     }
 
     public var body: some View {
@@ -40,8 +45,8 @@ public struct KozmosCounter: View {
             .lineLimit(1)
             .padding(.horizontal, horizontalPadding)
             .frame(minWidth: minWidth, minHeight: height)
-            .background(emotion?.surface ?? backgroundColor)
-            .foregroundColor(emotion?.onSurface ?? foregroundColor)
+            .background(fill ?? emotion?.surface ?? backgroundColor)
+            .foregroundColor(fill != nil ? KozmosColors.primitivesColorsBackground0 : (emotion?.onSurface ?? foregroundColor))
             .clipShape(Capsule())
     }
 

@@ -52,6 +52,39 @@ final class KozmosSearchSheetTests: XCTestCase {
         XCTAssertLessThan(label.height, 18, "a caption is drawn under the label: \(label)")
     }
 
+    /// A tile in its category's colour: the icon and the counter take the
+    /// tint, the square stays neutral — as the chosen-category field does.
+    @MainActor func testTheTileTakesItsCategorysColour() async throws {
+        let view = KozmosCategoryTile(
+            category: KozmosCategoryPresentation(id: "dining", label: "Dining", resultCount: 3, resultCountLabel: "3 places"),
+            tint: KozmosColors.semanticsDataRed,
+            onSelect: { _ in }
+        ) { Image(systemName: "fork.knife").font(.system(size: 24)) }
+        .frame(width: 96)
+        .padding(16)
+        .background(Color.white)
+        let pixels = try await RenderedPixels.render(VStack(spacing: 0) { view; Spacer(minLength: 0) }.background(Color.white), size: CGSize(width: 128, height: 140))
+        let icon = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 32, y: 40, width: 64, height: 44), where: Self.isRedTint), "no icon in the tint")
+        XCTAssertLessThan(icon.width, 30, "the icon is not 24: \(icon)")
+        // Right of the icon's glyph, whose ascender can reach above the square's centre.
+        let counter = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 78, y: 0, width: 50, height: 40), where: Self.isRedTint), "no counter in the tint")
+        XCTAssertEqual(counter.height, 20, accuracy: 2, "the counter is not the 20 counter: \(counter)")
+        XCTAssertNil(pixels.boundingBox(in: CGRect(x: 0, y: 0, width: 128, height: 100), where: RenderedPixels.isTheme), "the theme colour is still drawn on a tinted tile")
+    }
+
+    /// A pin in a category's colour: the marker takes the tint.
+    @MainActor func testThePinTakesItsTint() async throws {
+        let view = KozmosLocationPin(size: .md, tint: KozmosColors.semanticsDataRed).padding(14).background(Color.white)
+        let size = CGSize(width: 60, height: 60)
+        let pixels = try await RenderedPixels.render(view, size: size)
+        let marker = try XCTUnwrap(pixels.boundingBox(in: CGRect(origin: .zero, size: size), where: Self.isRedTint), "no marker in the tint")
+        // The 32 medium pin's fill, inside its 2 white stroke: 28, as the Compose golden measures it.
+        XCTAssertEqual(marker.width, 28, accuracy: 2, "the marker is not the 32 medium pin's 28 fill: \(marker)")
+        XCTAssertNil(pixels.boundingBox(in: CGRect(origin: .zero, size: size), where: RenderedPixels.isTheme), "the theme colour is still drawn on a tinted pin")
+    }
+
+    private static func isRedTint(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { r > 150 && Int(r) > Int(g) + 60 && Int(r) > Int(b) + 60 }
+
     /// The row: 80 tall; a dot before the floor when it is the current one.
     /// Two tiles in one row, a one-line and a two-line label: the squares
     /// share a top edge. The grid aligns its cells at the top, so a short

@@ -20,6 +20,8 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
     private let label: String
     private let onSelect: (String) -> Void
     private let renderIcon: (KozmosCategoryPresentation) -> Icon
+    /// A category's own colour for its tile, or nil for the theme's.
+    private let tint: (KozmosCategoryPresentation) -> Color?
     private let search: Search
     private let actions: Actions
     private let emptyState: EmptyStateContent
@@ -40,6 +42,7 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
         presentation: Presentation = .panel,
         onSelect: @escaping (String) -> Void,
         @ViewBuilder renderIcon: @escaping (KozmosCategoryPresentation) -> Icon,
+        tint: @escaping (KozmosCategoryPresentation) -> Color? = { _ in nil },
         @ViewBuilder search: () -> Search,
         @ViewBuilder actions: () -> Actions,
         @ViewBuilder emptyState: () -> EmptyStateContent
@@ -49,6 +52,7 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
         self.label = label
         self.onSelect = onSelect
         self.renderIcon = renderIcon
+        self.tint = tint
         self.search = search()
         self.actions = actions()
         self.emptyState = emptyState()
@@ -97,7 +101,7 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
                     // Rows 12 apart, columns 8: the prototype's grid.
                     LazyVGrid(columns: columns, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
                         ForEach(categories) { category in
-                            KozmosCategoryTile(category: category, onSelect: onSelect) {
+                            KozmosCategoryTile(category: category, tint: tint(category), onSelect: onSelect) {
                                 renderIcon(category)
                             }
                         }
@@ -121,6 +125,7 @@ public extension KozmosBrowseCategoriesPanel where Search == EmptyView, Actions 
         presentation: Presentation = .panel,
         onSelect: @escaping (String) -> Void,
         @ViewBuilder renderIcon: @escaping (KozmosCategoryPresentation) -> Icon,
+        tint: @escaping (KozmosCategoryPresentation) -> Color? = { _ in nil },
         @ViewBuilder emptyState: () -> EmptyStateContent
     ) {
         self.init(
@@ -129,6 +134,7 @@ public extension KozmosBrowseCategoriesPanel where Search == EmptyView, Actions 
             presentation: presentation,
             onSelect: onSelect,
             renderIcon: renderIcon,
+            tint: tint,
             search: { EmptyView() },
             actions: { EmptyView() },
             emptyState: emptyState

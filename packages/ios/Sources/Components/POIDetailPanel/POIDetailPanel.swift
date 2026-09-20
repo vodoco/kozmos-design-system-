@@ -173,7 +173,9 @@ public struct KozmosPOIDetailPanel: View {
         // Reset scroll/disclosure state only when selecting a different place.
         .id(poi.id)
         .foregroundColor(KozmosColors.primitivesColorsForeground100)
-        .background(KozmosColors.primitivesColorsBackground0)
+        // In a sheet the panel paints no surface of its own: it sits on the
+        // sheet's, as the browse panel does, with no border and no card.
+        .background(presentation == .sheet ? Color.clear : KozmosColors.primitivesColorsBackground0)
         .clipShape(panelShape)
         .overlay(panelShape.stroke(presentation == .sheet ? Color.clear : KozmosColors.semanticsBorderSubtle, lineWidth: 1))
         .accessibilityElement(children: .contain)
