@@ -16,7 +16,7 @@ Nothing here was pushed, merged or published; no Cloud content was changed.
 > wait on that thread. Against the prototype he then named as the reference
 > ([pointr-prototype-screen-states-2026-09-20.md](pointr-prototype-screen-states-2026-09-20.md))
 > the routing flow changed (`6527d7a`): no preview step and no modes — Go opens the picker and the
-> directions follow at once — so §5.1's step 3, §7's decisions 6 and 10 and the preview rows of
+> directions follow at once — so §5.1's step 3, §7's decision 10 and the preview rows of
 > §5.6 describe a state that is gone.
 
 ## 1. Exact working state

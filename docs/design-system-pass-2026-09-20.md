@@ -114,21 +114,21 @@ WindowManager's folding feature exists today and an emulator can be folded. Not 
 
 ## 5. Verified
 
-| Check                                                      | Result                                                                                        |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| iOS render tests, unfixed components                       | both new tests failed: the buttons moved and the name ran on; the open list was a 52pt column |
-| Package, iOS 26.5, iPhone 17 Pro, button baselines skipped | 86, from 84                                                                                   |
-| Package, iOS 18.4, iPhone 16, baselines on                 | 88, from 86                                                                                   |
-| Package, `swift test` on macOS                             | 78, unchanged: the new tests render on iOS                                                    |
-| `node scripts/check-ios-poi.mjs`, CI's simulator step      | 52, from 51                                                                                   |
-| QA app unit tests, iPad; its routing UI test, iPhone       | 43; passed, with the wait for the lazy rows                                                   |
-| Playground build with the seventh example                  | succeeded; the fixture freshness check passes                                                 |
-| Browser suite `test:poi-details`, old stylesheet           | 6 of 66 failed, all six the long-content header                                               |
-| The same, new stylesheet, chromium, firefox, webkit        | 66 of 66 on each                                                                              |
-| React unit tests, lint, `test:css-build`, contract parity  | 494 tests in 114 files; ok; ok; ok                                                            |
-| `docs:snippets:check`, docs typecheck, `tokens:raw:check`  | 327 identifiers ok; ok; ok                                                                    |
-| Android, `verifyPaparazziDebug`                            | passed with the recorded golden; the button golden unchanged                                  |
-| Live, iPhone 17 Pro                                        | the long-name card; the open list with names, then opaque                                     |
+| Check                                                      | Result                                                                                                                      |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| iOS render tests, unfixed components                       | both new tests failed: the buttons moved and the name ran on; the open list was a 52pt column                               |
+| Package, iOS 26.5, iPhone 17 Pro, button baselines skipped | 86, from 84                                                                                                                 |
+| Package, iOS 18.4, iPhone 16, baselines on                 | 88, from 86                                                                                                                 |
+| Package, `swift test` on macOS                             | 78, unchanged: the new tests render on iOS                                                                                  |
+| `node scripts/check-ios-poi.mjs`, CI's simulator step      | 52, from 51                                                                                                                 |
+| QA app unit tests, iPad; its routing UI test, iPhone       | 43; passed, with the wait for the lazy rows (39 after `6527d7a` removed the preview's presenter and its tests, still green) |
+| Playground build with the seventh example                  | succeeded; the fixture freshness check passes                                                                               |
+| Browser suite `test:poi-details`, old stylesheet           | 6 of 66 failed, all six the long-content header                                                                             |
+| The same, new stylesheet, chromium, firefox, webkit        | 66 of 66 on each                                                                                                            |
+| React unit tests, lint, `test:css-build`, contract parity  | 494 tests in 114 files; ok; ok; ok                                                                                          |
+| `docs:snippets:check`, docs typecheck, `tokens:raw:check`  | 327 identifiers ok; ok; ok                                                                                                  |
+| Android, `verifyPaparazziDebug`                            | passed with the recorded golden; the button golden unchanged                                                                |
+| Live, iPhone 17 Pro                                        | the long-name card; the open list with names, then opaque                                                                   |
 
 Not run: Chromatic, the owned-CSS and gallery browser suites (no shared CSS beyond the card's
 header changed), Android on a device or emulator. Not done: the Figma side of both parts.

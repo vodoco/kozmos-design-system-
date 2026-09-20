@@ -13,7 +13,11 @@ between two named places, measured on the simulator, and what a new session does
 20 September with the [closure of Pass 3's leftovers](pointr-ios-pass3-closure-2026-09-20.md).
 Later that day the work turned to the design system itself:
 [the design system pass](design-system-pass-2026-09-20.md) — the card's header on all three
-platforms, the level switcher's open list, and what folded phones need.
+platforms, the level switcher's open list, and what folded phones need — and the reference for
+every screen state became the live prototype, measured in
+[pointr-prototype-screen-states-2026-09-20.md](pointr-prototype-screen-states-2026-09-20.md):
+read that before building anything a screen shows. The operator's guide for all of it is
+[kozmos-pointr-operators-guide-2026-09-20.md](kozmos-pointr-operators-guide-2026-09-20.md).
 
 Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
 It closes declaration-format and inert-opacity debt and migrates the temporal fields.
