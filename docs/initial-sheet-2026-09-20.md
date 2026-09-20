@@ -146,6 +146,68 @@ when the user chooses one."_ Measured first, then built:
   the web on three engines, on Compose by golden. The QA app's row uses it, and asks the SDK to
   show the category's places alone (`poisToShow`; its per-place style has no opacity to fade with).
 
+### Olcay's tile rulings and the Filters button (the 21st, later)
+
+Olcay, with a screenshot of the QA grid: _"If no result it should drop from the list. Also it
+would be great to show counter on top right of the boxes for item count."_ Then: _"let's remove
+the filter button. I'd like the ai to handle all filters."_
+
+- **The tile's count is the system's counter.** `CategoryPresentation` already carried
+  `resultCount` and `resultCountLabel`; the tile drew the label as a caption under its name and
+  ignored the number. Now `resultCount` draws as `Counter` — brand tone, the default 20 size — at
+  the icon square's top-right, 4 beyond its top and right edges so the icon stays clear, on all
+  three platforms; `resultCountLabel` is the spoken form (the iOS accessibility value, the
+  Compose state description, a visually hidden span on the web) and draws nothing. The contract
+  names it (`components.categoryTile`, `counterOverhang` 4) and `pnpm components:contract:check`
+  holds the three sources to it: set the overhang to 5 and the check fails on the React tile.
+  Proof on each platform: the iOS render test reads the counter 20 tall with its right edge at
+  100 and its top at 16 around a square at 32–96 × 20–84 (it failed first with "no counter at
+  the square's top-right", then on the canvas centring the guide now records); the web test and
+  the Playwright check measure the counter's box against the square's (20 tall, +4 right, +4 top,
+  the spoken form 0 wide); the Android golden, re-recorded after a red of 3.46 % against the old
+  caption, measures the counter 31 px tall at 1.5625 px/dp (19.8 dp), its right edge 6 px past
+  the square's and its top 6 px above (3.8 dp each).
+- **A tile without a place leaves the grid.** The QA app counts every taxonomy tile's places in
+  one pass over the loaded venue (`QuickAccess.counts(of:places:)`, unit-tested to agree with the
+  one-by-one match and to keep "gates level" from counting as "gate"), keeps the count per tile
+  (`SDKSession.tileCounts`, `count(of:)`) and shows `visibleTiles`: every tile until the places
+  are counted, then those with at least one — the personal tiles too, so an empty Favourites or
+  Bookmarks is not offered. Tiles leave on the standard motion. Driven on the iPhone with 306
+  places loaded, 9 of the 18 tiles remained — Check-in & Baggage 9, Gates 2, Customer Service 1,
+  Parking & Ground Transport 13, Dining 3, Wellness & Spirituality 2, Restrooms 52, Kid-Friendly
+  1, Pet-Friendly 5 — every one with a count of at least one, and the chosen tile's chip carried
+  the tile's own number (Check-in & Baggage, 9). The SDK delivers the venue in steps
+  (`mapDidEndLoading`, `onPoiManagerChangedPois`, `onDataManagerReady`: 210 places, then 306 a
+  moment later when it comes); a launch that stayed at 210 kept one tile, Parking & Ground
+  Transport with 3. The counts follow what the SDK has delivered — the content's truth, not a
+  rule of ours — so the grid can change once after launch.
+- **No Filters button.** Removed from the row in every form; the UI test asserts its absence with
+  a query and with a tile chosen. The prototype still draws one (48 × 48, outline); the icon
+  button's large size stays a component size.
+- **The AI as the filter — what is true today.** On-device Apple Intelligence is iOS 26's
+  Foundation Models framework: `SystemLanguageModel.default` and a `LanguageModelSession` that
+  answers with a typed value (`@Generable`, guided generation) or calls a `Tool` the app defines.
+  That is the shape of "the user asks for vegan restaurants and the results alter": the model
+  turns the request into a place request (kind, requirements, near) and a tool searches the venue
+  the way a tile does. `scripts/check-foundation-models.swift` is that check; it compiles and
+  runs on this Mac (macOS 26.6.2) and answers _unavailable, reason: appleIntelligenceNotEnabled_
+  — Apple Intelligence is off in System Settings, which is Olcay's to switch on (the simulators
+  use the Mac's model). Two facts bound what the AI could say: taxonomy 10.12.0 has no vegan
+  type (its nearest fuzzy hit is vending-machine), and the Design-QA venue's places carry **no
+  tags or keywords at all** — `QA-DATA 210 places, 0 distinct tags and keywords`, and 306, 0 —
+  so "vegan" can only come from a name, a description or the model's own knowledge of a chain,
+  never from the content. The prototype's own AI flow, driven and read
+  (`docs/pointr-prototype-ai-companion-2026-09-21.md`, `scripts/measure-prototype-ai.cjs`): the
+  AI button opens a full-frame Assistant chat page over everything (a circle growing from the
+  button in 0.46 s, a puck flying to the header's ring); a typed request is answered locally by
+  ten regexes in a fixed order with a canned sentence and place cards inside the chat after a
+  fixed 700 ms "Thinking" bubble — no API, no fetch (122 requests over 55 steps, none of them
+  xhr, fetch or websocket), no speech (the mic types one of four scripted phrases); the chat
+  never alters the sheet's list, the chip or the pins; and the Filters button is nowhere in the
+  AI flow — it is a separate full-frame page whose 81 chips do narrow the list, though only four
+  of them match the tag table. So "the AI handles all filters" is a step beyond the prototype,
+  which presents options in the chat and filters on a page.
+
 ## 3. The QA app's sheet
 
 [SDKMapScreen.swift](../apps/PointrPlayground/Sources/App/SDKMapScreen.swift) `searchSheet`:
@@ -227,23 +289,27 @@ recorded focus transition's frames.
 
 ## 6. Change it yourself
 
-| What                                     | Where                                                                                                                                                                                               |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The numbers, on any platform             | iOS `KozmosMapPanelDetent.height(in:)`; web `PANEL_DETENT_RULES`; Compose `KozmosMapPanelDetent.Companion`                                                                                          |
-| The drag rule                            | iOS `KozmosPanelDragKind.decide`; web `decidePanelDrag`; Compose `decidePanelDrag` and the `NestedScrollConnection`                                                                                 |
-| A sheet's peek                           | iOS `.kozmosPanelPeekAnchor()`; web `{...panelPeekAnchorProps}`; Compose `Modifier.kozmosPanelPeekAnchor()`                                                                                         |
-| Content that scrolls in a sheet (iOS)    | `KozmosPanelScrollView` in place of `ScrollView`; a plain `ScrollView` scrolls at every detent and never hands off                                                                                  |
-| The QA app's tiles and their words       | `apps/PointrPlayground/Sources/App/Model/QuickAccess.swift`; the vendored file and icons in `Sources/App/Resources/QuickAccess`                                                                     |
-| The QA app's sheet and its detent memory | `SDKMapScreen.swift`: `searchSheet`, `searchRow`, the three `onChange`s                                                                                                                             |
-| Drive the web sheet                      | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:map-sheet` (`ADAPTIVE_BROWSER=firefox\|webkit`), on a served Storybook build                                                                         |
-| Measure the web's tiles and the AI ring  | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:search-sheet`, the same way                                                                                                                          |
-| Drive the QA app's sheet                 | the `KozmosPointrQAUI` scheme, `-only-testing:KozmosPointrQAUITests/BrowseSheetUITests`, with the two `TEST_RUNNER_KOZMOS_QA_*` names                                                               |
-| Re-drive the prototype                   | `node scripts/measure-prototype-sheet.cjs <out-dir>`                                                                                                                                                |
-| The motion tokens and their native files | `packages/tokens/src/tokens*.json` `Semantics.Motion`; `build.mjs` `ios-swift/motion`, `android-compose/motion`; `pnpm tokens:build`, copy `KozmosMotion.swift` / `.kt`; `pnpm tokens:motion:check` |
-| The transitions                          | iOS `KozmosTransitions.swift`; web `owned-components.css` (`pop`, `reveal`, `crossfade`); Compose `Motion/Transitions.kt`                                                                           |
-| The quick-access words                   | `node scripts/sync-ios-quick-access.mjs --fetch --write`; `Resources/QuickAccess/aviation-terms-10.12.0.json`; `Model/QuickAccessTerms.swift`                                                       |
-| The category field                       | `CategoryField/` on each platform; the QA app's `searchRow`; `scripts/check-search-sheet.mjs`                                                                                                       |
-| Re-record the Compose goldens            | `ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew --no-daemon -q recordPaparazziDebug --tests "*KozmosAdaptiveMapShellPaparazziTest*"` in `packages/android`                                      |
+| What                                             | Where                                                                                                                                                                                               |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The numbers, on any platform                     | iOS `KozmosMapPanelDetent.height(in:)`; web `PANEL_DETENT_RULES`; Compose `KozmosMapPanelDetent.Companion`                                                                                          |
+| The drag rule                                    | iOS `KozmosPanelDragKind.decide`; web `decidePanelDrag`; Compose `decidePanelDrag` and the `NestedScrollConnection`                                                                                 |
+| A sheet's peek                                   | iOS `.kozmosPanelPeekAnchor()`; web `{...panelPeekAnchorProps}`; Compose `Modifier.kozmosPanelPeekAnchor()`                                                                                         |
+| Content that scrolls in a sheet (iOS)            | `KozmosPanelScrollView` in place of `ScrollView`; a plain `ScrollView` scrolls at every detent and never hands off                                                                                  |
+| The QA app's tiles and their words               | `apps/PointrPlayground/Sources/App/Model/QuickAccess.swift`; the vendored file and icons in `Sources/App/Resources/QuickAccess`                                                                     |
+| The QA app's sheet and its detent memory         | `SDKMapScreen.swift`: `searchSheet`, `searchRow`, the three `onChange`s                                                                                                                             |
+| Drive the web sheet                              | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:map-sheet` (`ADAPTIVE_BROWSER=firefox\|webkit`), on a served Storybook build                                                                         |
+| Measure the web's tiles and the AI ring          | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:search-sheet`, the same way                                                                                                                          |
+| Drive the QA app's sheet                         | the `KozmosPointrQAUI` scheme, `-only-testing:KozmosPointrQAUITests/BrowseSheetUITests`, with the two `TEST_RUNNER_KOZMOS_QA_*` names                                                               |
+| Re-drive the prototype                           | `node scripts/measure-prototype-sheet.cjs <out-dir>`                                                                                                                                                |
+| The motion tokens and their native files         | `packages/tokens/src/tokens*.json` `Semantics.Motion`; `build.mjs` `ios-swift/motion`, `android-compose/motion`; `pnpm tokens:build`, copy `KozmosMotion.swift` / `.kt`; `pnpm tokens:motion:check` |
+| The transitions                                  | iOS `KozmosTransitions.swift`; web `owned-components.css` (`pop`, `reveal`, `crossfade`); Compose `Motion/Transitions.kt`                                                                           |
+| The quick-access words                           | `node scripts/sync-ios-quick-access.mjs --fetch --write`; `Resources/QuickAccess/aviation-terms-10.12.0.json`; `Model/QuickAccessTerms.swift`                                                       |
+| The category field                               | `CategoryField/` on each platform; the QA app's `searchRow`; `scripts/check-search-sheet.mjs`                                                                                                       |
+| Re-record the Compose goldens                    | `ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew --no-daemon -q recordPaparazziDebug --tests "*KozmosAdaptiveMapShellPaparazziTest*"` in `packages/android`                                      |
+| The tile's count                                 | `CategoryTile` on each platform (`Counter`, brand tone, offset 4); `components.categoryTile` in the contract; `check-search-sheet.mjs`                                                              |
+| The QA app's tile counts and the empty-tile rule | `SDKSession.countTiles()` / `count(of:)` / `visibleTiles`; `QuickAccess.counts(of:places:)` / `visibleTiles(counts:)`                                                                               |
+| The venue's own words                            | the `QA-DATA` log lines (the command in the guide)                                                                                                                                                  |
+| On-device Apple Intelligence                     | `scripts/check-foundation-models.swift`                                                                                                                                                             |
 
 ## 7. Left as found, and for Olcay
 
@@ -255,3 +321,12 @@ recorded focus transition's frames.
   the sheet does not lower until the finger starts outside the list; chromium and WebKit hand off.
 - The Figma side of all of this is untouched: no importer access in this session.
 - Chromatic and Android on a device: not run.
+
+- **The personal tiles.** Favourites and Bookmarks now leave the grid while empty, like every
+  other tile; the prototype keeps a Bookmarks chip with its count. Whether they should stay as
+  entry points while empty is Olcay's call — one line in `SDKSession.visibleTiles`.
+- **The AI companion.** Before any building: Apple Intelligence on in this Mac's System Settings
+  (the check then runs guided generation on two phrases), the device floor (iOS 26 on an Apple
+  Intelligence-capable iPhone, iPhone 15 Pro and later, so the QA app needs a fallback or a floor),
+  and what the DS lacks for it — a companion surface (the prototype's chat, its listening and
+  thinking states) — which the prototype measurement names.

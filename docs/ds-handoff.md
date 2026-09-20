@@ -1351,6 +1351,15 @@ chosen category
 `CategoryField` on all three; the map shows the category's places alone). Every one measured, most
 made to fail first.
 
+Later that day, Olcay's tile rulings: a tile's count draws as the system's `Counter` at the icon
+square's top-right (4 beyond its edges, on all three, named in the contract) and a tile without a
+place leaves the grid (the QA app counts the loaded venue in one pass; 9 of 18 tiles remained
+with 306 places); the Filters button is gone, the AI companion is to take filtering. On-device
+Apple Intelligence was checked, not built: the Foundation Models framework runs here but reports
+Apple Intelligence not enabled on this Mac, the taxonomy has no vegan type, and the venue's places
+carry no tags or keywords. `initial-sheet-2026-09-20.md`, its last section, has the numbers and
+the decisions.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

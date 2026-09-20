@@ -71,6 +71,14 @@ is a build setting, not environment:
 cd /private/tmp/kozmos-browser-compat.uqPMBD/apps/PointrPlayground && TEST_RUNNER_KOZMOS_QA_DESTINATION="Airport Shuttles" TEST_RUNNER_KOZMOS_QA_ORIGIN="Dunkin" xcodebuild -project KozmosPointrQA.xcodeproj -scheme KozmosPointrQAUI -destination "platform=iOS Simulator,id=51937B59-CEAE-4BC7-BC34-FEB17E28FAE7" -derivedDataPath /private/tmp/kozmos-pointr-qa-xcode -resultBundlePath /private/tmp/kozmos-pointr-ui.xcresult CODE_SIGNING_ALLOWED=NO test 2>&1 | grep -E "QA-FLOW|Test Case .* (passed|failed)|TEST (SUCCEEDED|FAILED)"
 ```
 
+The venue's own words — every distinct tag and keyword its places carry, the material a
+companion could filter on — are logged once per load as `QA-DATA` lines (the session's
+`countTiles()`); read them from the simulator after any launch:
+
+```bash
+xcrun simctl spawn 51937B59-CEAE-4BC7-BC34-FEB17E28FAE7 log show --predicate 'subsystem == "com.kozmos.pointrqa"' --last 20m --style compact | grep QA-DATA
+```
+
 | Knob (prefix `TEST_RUNNER_`) | Effect                                                                                                                       |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `KOZMOS_QA_DESTINATION`      | the place to select (label prefix); otherwise the first place listed                                                         |
@@ -396,6 +404,9 @@ _Added on the 21st, from the sheet stage:_
 - A SwiftUI `.animation(value:)` keyed on the sheet's height also eases a measurement into place —
   the anchored peek arriving after the first layout — and a render test sees a mid-motion frame
   (the peek tests read 103 for 136). Key it on the detent, which a measurement never changes.
+- `RenderedPixels.render` centres a view shorter than its canvas: a tile rendered in a 140-tall
+  canvas sat 8 lower than its padding said, and the counter's "overhang" read 0.7. Pin the view to
+  the top with a trailing `Spacer` and the geometry is the padding's.
 
 - The iPhone 17 Pro simulator speaks Arabic first; `defaults read -g AppleLanguages` before
   concluding anything about a backend's language.
