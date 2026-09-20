@@ -161,6 +161,7 @@ still his to choose._
 
 1. The switcher's remaining improvements (§2): dismissal, scrolling, a hint on the pill, and the
    collapsible variant on the web and Android.
+   _The list's form is ruled, the same evening: names beside the labels, as built._
 2. Folded phones (§3): build the web's hinge model into the iOS and Compose shells now, ahead of
    the device SDKs, or wait.
 3. Android parity (§4): the wrapping action strip and the truncating location line.

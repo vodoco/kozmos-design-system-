@@ -287,6 +287,15 @@ and its golden under `src/test/snapshots/images/`; `apps/PointrPlayground/Tests/
 | —   | Fonts                                                                                                                         | **ruled: system fonts per platform**; already the code's state; Readex Pro remains only in the unused `Brand` token and the Figma text styles |
 | —   | Wayfinding modes and the preview                                                                                              | **ruled: none yet**; Go starts at once with a position, asks for a starting point without one; the QA app follows                             |
 
+_Later on the 20th, evening, Olcay ruled on the navigation stage's six
+([navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md) §5): the rail keeps the
+prototype's numbers; a glass surface role is built now on all three platforms (the handoff's
+§5.13) and the card and the summary take it; a compact detent in the shell; each platform's own
+icon set for the transition arrows; the Compose button's sizes are fixed; the level list keeps its
+names beside the labels, as built. He also had the branch pushed — decision 5 above is answered
+as far as the commits go; the ignored SDK files still live only in the worktree. Next: the glass
+role, the transition arrows, the search sheet; F, G and Pass 4 after._
+
 ## 8. What the design system still lacks, from the prototype
 
 A gradient-ring AI search button; a location marker with a halo and pulse; the collapsible level

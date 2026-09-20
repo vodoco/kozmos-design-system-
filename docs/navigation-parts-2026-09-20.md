@@ -4,8 +4,9 @@ Claude Code, proceeding on its own recommendation after the
 [audit](kozmos-pointr-operators-guide-2026-09-20.md) of the day's work: build the three
 navigation parts the [prototype](pointr-prototype-screen-states-2026-09-20.md) has and the design
 system lacked, on iOS, React and Android, with tests, stories, docs and examples, then put the
-Pointr QA app's directions on them. Branch `claude/pointr-browse-repairs`, unpushed, in
-`/private/tmp/kozmos-browser-compat.uqPMBD`.
+Pointr QA app's directions on them. Branch `claude/pointr-browse-repairs` in
+`/private/tmp/kozmos-browser-compat.uqPMBD`, pushed to origin on the evening of the 20th at
+Olcay's word (the worktree and its ignored SDK files stay where they are).
 
 | Commit    | What                                                                                                      |
 | --------- | --------------------------------------------------------------------------------------------------------- |
@@ -149,3 +150,11 @@ cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6
    web and iOS draw a shorter pill. A Button matter, not the summary's.
 6. **The open level list's form** (names beside labels, or the prototype's labels-only column) is
    still open from the [design system pass](design-system-pass-2026-09-20.md).
+
+_Answered by Olcay the same evening:_ **1** the rail keeps the prototype's numbers; **2** a
+**glass surface role** is built now on all three platforms — the handoff's ruling §5.13, from
+`Semantics.Effect.glass` — and the card and the summary take it, the three map cards after;
+**3** a compact detent in the shell; **4** each platform's own icon set for the transition
+arrows; **5** the Compose button's sizes are fixed; **6** the open level list keeps its names
+beside the labels, as built. The order of the stages: the glass role, the transition arrows,
+then the prototype's search sheet.

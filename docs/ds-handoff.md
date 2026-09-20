@@ -1251,6 +1251,10 @@ its itinerary sharing one landmark name, fixed on all three platforms. Gates: pa
 CI step 52, app 39 and the flow test, react 507, `test:navigation` 20 × 3, Paparazzi verified.
 Still open: the transition arrows, the rail's untokenised geometry, the card's translucency, the
 QA sheet's detent while navigating, the level list's form. F, G and Pass 4 still wait.
+Ruled the same evening: the rail's numbers stay; a glass surface role (§5.13) is built now on all
+three platforms and the card and the summary take it; a compact detent in the shell; each
+platform's own transition icons; the Compose button's sizes fixed; the level list as built. The
+branch was pushed to origin. Next: the glass role, the transition arrows, the search sheet.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
