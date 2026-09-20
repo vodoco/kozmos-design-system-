@@ -11,6 +11,9 @@ Nothing here was pushed, merged or published; no Cloud content was changed.
 > retry, the iPad's three panels driven by a new UI test, VoiceOver's tree read and repaired.
 > Pass 3's language finding is withdrawn (§5.5, 3). §5.5 carries each item's status, §7 two more
 > decisions, §8 the findings, §10 four more traps, §11 starts at item 3. Commits `65ddd1c`, `25629b3`, `cf75072` and the docs commit.
+> Later on the 20th Olcay redirected the work to the design system itself —
+> [design-system-pass-2026-09-20.md](design-system-pass-2026-09-20.md) — so items 3 and 4 below
+> wait on that thread.
 
 ## 1. Exact working state
 

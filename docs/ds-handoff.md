@@ -1205,6 +1205,21 @@ Arabic" — the iPhone simulator's first language is Arabic, the iPad asked for 
 Also found: the building at launch varies (item G), two "Airport Shuttles" on one floor. Next: F,
 G, Pass 4.
 
+### 2026-09-20 · Design system pass (Claude Code)
+
+Olcay redirected the work to the design system — "and if anything is missing, not to make the
+app most functional" — with three examples. `design-system-pass-2026-09-20.md`, commits
+`77b2ae7`, `04ca91a`, `400e097`, `bd4d3c8` and the docs commit. The card's name and its quick buttons now share one row on iOS, the web and
+Android, the name wrapping to three lines at most: before, iOS and the web stacked the buttons
+under a long name and Android cut it to one line. A long name is a shared fixture, in the
+Storybook example and the native playground; the change is measured by a pixel-reading iOS
+test, the browser suite's new header check (six failures on the old stylesheet, none on the new)
+and an Android golden. The open level switcher names every level beside its short label, the
+current one filled, trailing-aligned to the pill. Folded phones: Olcay chose the iPhone Fold
+first; Xcode 26.6 has no device type, runtime or fold API for it, so the recommendation is to
+bring the web shell's hinge-region model to the iOS and Compose shells ahead of the SDKs. F, G
+and Pass 4 wait.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

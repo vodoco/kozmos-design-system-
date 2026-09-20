@@ -11,6 +11,9 @@ Latest native continuation: [Claude Code handoff after Pass 3 —
 three passes of [Astra's handoff to Claude Code](claude-code-handoff-2026-09-19.md): routing
 between two named places, measured on the simulator, and what a new session does next — updated
 20 September with the [closure of Pass 3's leftovers](pointr-ios-pass3-closure-2026-09-20.md).
+Later that day the work turned to the design system itself:
+[the design system pass](design-system-pass-2026-09-20.md) — the card's header on all three
+platforms, the level switcher's open list, and what folded phones need.
 
 Latest local continuation: [npm foundations — 2026-09-18](npm-foundations-2026-09-18.md).
 It closes declaration-format and inert-opacity debt and migrates the temporal fields.
@@ -29,6 +32,11 @@ checks, source locations, preview ownership and remaining pre-publication gates.
 
 The Pointr iOS thread, 2026-09-19 to 2026-09-20, newest first:
 
+- `design-system-pass-2026-09-20.md`: Olcay's redirection to the design system — the card's name
+  and quick buttons on one row with the name wrapping to three lines, on iOS, the web and
+  Android, measured on each; the open level switcher naming every level; folded phones: no
+  iPhone Fold SDK in Xcode 26.6, the web shell's hinge model that iOS and Compose lack, a
+  recommendation; the gaps seen on the way.
 - `pointr-ios-pass3-closure-2026-09-20.md`: Pass 3's five leftovers closed or bounded — the SDK's
   next-portal marker identified through MapLibre's style API, no live no-route candidate on
   Design-QA (every `Do Not Route` is "false"), readiness measured and the not-ready state given a
