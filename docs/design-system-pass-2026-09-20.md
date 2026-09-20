@@ -148,6 +148,13 @@ header changed), Android on a device or emulator. Not done: the Figma side of bo
 
 ## 7. Decisions for Olcay
 
+_Later the same day, against the prototype Olcay named as the reference
+([pointr-prototype-screen-states-2026-09-20.md](pointr-prototype-screen-states-2026-09-20.md)):
+the card's quick buttons keep their 16px corners; system fonts on each platform, Readex Pro being
+the old font; no wayfinding modes and no preview step — Go starts at once with a position and
+asks for a starting point without one, which the QA app now does; the open level list's form is
+still his to choose._
+
 1. The switcher's remaining improvements (§2): dismissal, scrolling, a hint on the pill, and the
    collapsible variant on the web and Android.
 2. Folded phones (§3): build the web's hinge model into the iOS and Compose shells now, ahead of

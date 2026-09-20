@@ -1224,7 +1224,10 @@ recorded in `pointr-prototype-screen-states-2026-09-20.md`: every state measured
 Kozmos parts, five decisions (circular quick buttons, labels-only level list, Readex Pro, four
 route modes on 132px cards, the step-free toggle's home) and the missing parts — a manoeuvre
 card, a progress rail, an itinerary list, a gradient-ring AI search button, a pulsing location
-marker.
+marker. Olcay ruled the same afternoon: the 16px squares stay; system fonts per platform (already
+the code's state — Readex Pro is only the unused brand token and the Figma text styles); no
+wayfinding modes and no preview step, so the QA app's Go now opens the picker and the directions
+follow at once (`6527d7a`, 40 app tests, the flow test green); the level list's form still his.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 

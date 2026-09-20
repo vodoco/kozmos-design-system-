@@ -96,7 +96,22 @@ floor control "Ground Floor GF" with Floor up / Floor down, 183 × 52, radius 16
 compact-stepper variant with the floor's name; a zoom cluster 52 × 98; a "Change language" pill
 "English" 106 × 44 bottom-left; the venue info button top-right; the pin with a 36 label pill.
 
-## 6. Decisions the prototype puts to Olcay
+## 6. Decisions the prototype puts to Olcay — and the answers, the same afternoon
+
+Olcay ruled on four of the five: **the 16px squares stay** (the prototype's circles are its
+own); **system fonts on each platform** — Readex Pro is the old font, not a target; **no
+wayfinding modes yet, and no preview step**: Go starts wayfinding at once when the visitor has
+a GPS or Bluetooth position, and asks for a starting point before static step-by-step
+wayfinding when they do not; and with no modes, no step-free toggle anywhere. The level list
+(2) is still open: the question is put with a picture of both lists.
+
+The QA app follows the flow decision (`6527d7a`): Go opens the starting-point picker, one
+calculation, the directions as soon as it returns, the picker keeping a failure's reason. The
+font decision turned out to be the code's state already: the web's `sans` role is the
+`Semantics.Typography.Family.System` stack (SF Pro, Roboto, Segoe UI by platform), iOS and
+Android use their system fonts, and Readex Pro survives only as the opt-in `Brand` role that
+nothing loads — `Primitives.Typography.font.family.primary` and the Figma file's text styles are
+what still say it, a Figma-side cleanup through the importer, not a code change.
 
 1. **Quick buttons on the card: circles or 16px squares.** The earlier decision (Astra's handoff §2)
    fixed 16px corners and "not circular quick-action buttons"; the prototype draws 40px circles.

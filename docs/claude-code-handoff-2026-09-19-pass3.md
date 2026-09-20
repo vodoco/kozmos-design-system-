@@ -13,7 +13,11 @@ Nothing here was pushed, merged or published; no Cloud content was changed.
 > decisions, §8 the findings, §10 four more traps, §11 starts at item 3. Commits `65ddd1c`, `25629b3`, `cf75072` and the docs commit.
 > Later on the 20th Olcay redirected the work to the design system itself —
 > [design-system-pass-2026-09-20.md](design-system-pass-2026-09-20.md) — so items 3 and 4 below
-> wait on that thread.
+> wait on that thread. Against the prototype he then named as the reference
+> ([pointr-prototype-screen-states-2026-09-20.md](pointr-prototype-screen-states-2026-09-20.md))
+> the routing flow changed (`6527d7a`): no preview step and no modes — Go opens the picker and the
+> directions follow at once — so §5.1's step 3, §7's decisions 6 and 10 and the preview rows of
+> §5.6 describe a state that is gone.
 
 ## 1. Exact working state
 
