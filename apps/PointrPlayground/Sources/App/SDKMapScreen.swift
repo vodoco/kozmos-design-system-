@@ -224,16 +224,25 @@ struct SDKMapScreen: View {
             searchRow
                 .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
                 .padding(.top, KozmosDimensions.primitivesLayoutSpacing100)
-            if let category = session.category {
-                resultsList(session.places(in: category), countLabel: "\(session.places(in: category).count) places in \(category.name)")
-            } else if !trimmedQuery.isEmpty {
-                resultsList(matches, countLabel: "\(matches.count) places")
-            } else if searchFocused, !session.recents.isEmpty {
-                recentsList
-            } else {
-                tiles
+            // What follows the row crossfades as the row's state changes.
+            Group {
+                if let category = session.category {
+                    resultsList(session.places(in: category), countLabel: "\(session.places(in: category).count) places in \(category.name)")
+                        .id("category-\(category.id)")
+                } else if !trimmedQuery.isEmpty {
+                    resultsList(matches, countLabel: "\(matches.count) places")
+                        .id("results")
+                } else if searchFocused, !session.recents.isEmpty {
+                    recentsList
+                        .id("recents")
+                } else {
+                    tiles
+                        .id("tiles")
+                }
             }
+            .transition(KozmosTransitions.crossfade)
         }
+        .animation(KozmosMotion.standard, value: contentState)
         // One container for the sheet, so its identifier and value are its
         // own and not every child's. The value is for the flow test, which
         // picks its building by its place count (handoff item G).
@@ -244,6 +253,12 @@ struct SDKMapScreen: View {
 
     private var trimmedQuery: String { session.query.trimmingCharacters(in: .whitespacesAndNewlines) }
 
+    /// The row's and the content's state as one value, so every change of
+    /// form — idle, focused, a query, a category — animates on the same motion.
+    private var contentState: String {
+        [session.category?.id ?? "-", trimmedQuery.isEmpty ? "empty" : "query", searchFocused ? "focused" : "idle", session.recents.isEmpty ? "-" : "recents"].joined(separator: "/")
+    }
+
     /// The row's four forms, as the prototype's: the field with the AI search;
     /// focused and empty, a Cancel beside it; with a query, Filters between
     /// them; a tile chosen, its chip and count in the field's place. Filters
@@ -252,26 +267,38 @@ struct SDKMapScreen: View {
     @ViewBuilder private var searchRow: some View {
         HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
             if let category = session.category {
-                KozmosChip(text: category.name, variant: .brand, onRemove: session.clearCategory) {
-                    tileIcon(category, size: 16)
+                // The field's form with a category chosen: the prototype's
+                // 48 field in the category's colour, its count inside.
+                KozmosCategoryField(
+                    label: category.name,
+                    count: session.places(in: category).count,
+                    tint: tint(category),
+                    onClear: session.clearCategory
+                ) {
+                    tileIcon(category, size: 28)
                 }
                 .accessibilityIdentifier("category-chip")
-                KozmosCounter("\(session.places(in: category).count)")
-                Spacer(minLength: 0)
+                .transition(KozmosTransitions.pop)
             } else {
                 KozmosSearchBar(text: $session.query, placeholder: "Search", focused: $searchFocused, onClear: { searchFocused = false })
                     .accessibilityIdentifier("search-field")
+                    .transition(KozmosTransitions.crossfade)
                 if searchFocused, trimmedQuery.isEmpty {
                     KozmosButton("Cancel", variant: .ghost, action: cancelSearch)
                         .accessibilityIdentifier("search-cancel")
+                        .transition(KozmosTransitions.reveal)
                 }
             }
             if session.category != nil || !trimmedQuery.isEmpty {
-                KozmosIconButton(iconName: "slider.horizontal.3", variant: .outline, action: {})
+                KozmosIconButton(iconName: "slider.horizontal.3", variant: .outline, size: .lg, action: {})
                     .accessibilityLabel("Filters")
+                    .transition(KozmosTransitions.reveal)
             }
             KozmosAISearchButton(action: {})
         }
+        // Every change of the row's form — the field narrowing for Cancel, the
+        // chip taking the field's place, Filters arriving — on the standard motion.
+        .animation(KozmosMotion.standard, value: contentState)
     }
 
     private func cancelSearch() {
@@ -296,6 +323,21 @@ struct SDKMapScreen: View {
             },
             emptyState: { Text("No quick access for this venue.") }
         )
+    }
+
+    /// The category's colour: the system's data colour the taxonomy's icon
+    /// name maps onto, the theme's for the personal tiles.
+    private func tint(_ category: QuickAccessCategory) -> Color {
+        switch category.tint {
+        case .theme: return KozmosColors.primitivesColorsTheme700
+        case .red: return KozmosColors.semanticsDataRed
+        case .orange: return KozmosColors.semanticsDataOrange
+        case .yellow: return KozmosColors.semanticsDataYellow
+        case .green: return KozmosColors.primitivesColorsEmotionalSuccess500
+        case .teal: return KozmosColors.semanticsDataTeal
+        case .blue: return KozmosColors.semanticsDataBlue
+        case .purple: return KozmosColors.semanticsDataPurple
+        }
     }
 
     /// The taxonomy's published icon, drawn in the theme's colour as the

@@ -24,27 +24,33 @@ final class QuickAccessTests: XCTestCase {
         }
     }
 
-    func testTermsAreTheWordsOfTheNameAndTheMatchersWithoutTheStopWords() {
-        let gates = QuickAccess.terms(
-            name: "Gates",
-            matchers: [
-                ["mainType": "transportation-space", "subType": "boarding-gate"],
-                ["mainType": "service-space", "subType": "office", "serviceTypes": ["Travel and Tourism"]]
-            ]
-        )
-        XCTAssertEqual(gates, ["gates", "transportation", "boarding", "gate", "service", "office", "travel", "tourism"])
-        XCTAssertFalse(gates.contains("space"), "every matcher carries 'space'")
-        XCTAssertFalse(gates.contains("and"))
+    func testTheWordsAreTheTaxonomysOwnForEachMatchedType() throws {
+        let gates = try XCTUnwrap(QuickAccess.category(id: "gates"))
+        // Boarding Gate's name and aliases, and the office matcher's service — not every office.
+        for phrase in ["boarding gate", "gate", "gates", "flight gate", "travel and tourism"] {
+            XCTAssertTrue(gates.terms.contains(phrase), "Gates lacks \(phrase): \(gates.terms)")
+        }
+        XCTAssertFalse(gates.terms.contains("office"), "an office matcher with a service type is the service, not the office")
+        XCTAssertFalse(gates.terms.contains("law firm"))
+        let restrooms = try XCTUnwrap(QuickAccess.category(id: "restrooms"))
+        for phrase in ["restroom", "toilet", "washroom"] {
+            XCTAssertTrue(restrooms.terms.contains(phrase), "Restrooms lacks \(phrase)")
+        }
+        XCTAssertEqual(gates.tint, .yellow, "the taxonomy's icon for gates is the yellow one")
+        XCTAssertEqual(try XCTUnwrap(QuickAccess.category(id: "dining")).tint, .orange)
+        XCTAssertEqual(try XCTUnwrap(QuickAccess.category(id: QuickAccess.favouritesId)).tint, .theme)
     }
 
-    func testAPlaceMatchesOnWholeWordsOfItsNameTagsOrKeywords() {
-        let gates = QuickAccessCategory(id: "gates", name: "Gates", icon: .symbol("x"), terms: ["gates", "boarding", "gate"])
-        let dining = QuickAccessCategory(id: "dining", name: "Dining", icon: .symbol("x"), terms: ["dining", "food", "restaurant", "cafes", "coffee", "bar"])
+    func testAPlaceMatchesWhenAPhraseRunsWholeThroughItsNameTagsOrKeywords() {
+        let gates = QuickAccessCategory(id: "gates", name: "Gates", icon: .symbol("x"), terms: ["gate", "gates", "flight gate"], tint: .yellow)
+        let dining = QuickAccessCategory(id: "dining", name: "Dining", icon: .symbol("x"), terms: ["cafes, coffee & tea houses", "coffee shop", "bar"], tint: .orange)
         XCTAssertTrue(QuickAccess.matches(gates, name: "Gate B4", freeText: []))
+        XCTAssertTrue(QuickAccess.matches(gates, name: "Flight Gate 12", freeText: []))
         XCTAssertFalse(QuickAccess.matches(gates, name: "Gateway Lounge", freeText: []), "a whole word, not a prefix")
-        XCTAssertTrue(QuickAccess.matches(dining, name: "Starbucks", freeText: ["coffee", "cafe"]))
+        XCTAssertTrue(QuickAccess.matches(dining, name: "Starbucks", freeText: ["coffee shop"]), "a phrase in a tag")
+        XCTAssertFalse(QuickAccess.matches(dining, name: "Coffee Table Store", freeText: []), "'coffee shop' does not run through 'coffee table'")
         XCTAssertFalse(QuickAccess.matches(dining, name: "Barber", freeText: []), "'bar' is not a word of 'Barber'")
-        XCTAssertFalse(QuickAccess.matches(QuickAccessCategory(id: "f", name: "Favourites", icon: .symbol("heart"), terms: []), name: "Gate B4", freeText: []), "a personal tile matches nothing by words")
+        XCTAssertFalse(QuickAccess.matches(QuickAccessCategory(id: "f", name: "Favourites", icon: .symbol("heart"), terms: [], tint: .theme), name: "Gate B4", freeText: []), "a personal tile matches nothing by words")
     }
 
     func testTheRealGatesAndRestroomsCategoriesTellAGateFromARestroom() throws {

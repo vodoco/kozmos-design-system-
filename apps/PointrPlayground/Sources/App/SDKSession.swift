@@ -242,8 +242,15 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     func choose(category: QuickAccessCategory) {
         query = ""
         self.category = category
+        // The prototype fades the map's other pins to 22 %; the SDK offers to
+        // show a set of places, so the map shows the category's alone.
+        let shown = places(in: category)
+        widget?.mapViewController.poisToShow = shown.isEmpty ? nil : Set(shown)
     }
-    func clearCategory() { category = nil }
+    func clearCategory() {
+        category = nil
+        widget?.mapViewController.poisToShow = nil
+    }
 
     /// The places a tile shows, on every floor, by name.
     func places(in category: QuickAccessCategory) -> [PTRPoi] {
