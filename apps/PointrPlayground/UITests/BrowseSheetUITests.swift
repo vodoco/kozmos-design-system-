@@ -138,6 +138,8 @@ final class BrowseSheetUITests: XCTestCase {
         let chosen = countedTiles.firstMatch
         let chosenName = chosen.label
         let chosenCount = count(in: chosen)
+        let levels = app.buttons.matching(NSPredicate(format: "label MATCHES %@", "L\\d+"))
+        let levelBefore = levels.firstMatch.exists ? levels.firstMatch.label : "-"
         chosen.tap()
         XCTAssertTrue(any("category-chip").waitForExistence(timeout: 5), "no chip for \(chosenName)")
         XCTAssertFalse(field.exists, "the field is still shown beside the chip")
@@ -145,7 +147,12 @@ final class BrowseSheetUITests: XCTestCase {
         XCTAssertTrue(chipLabel.hasPrefix(chosenName), "the chip is not \(chosenName)'s: '\(chipLabel)'")
         XCTAssertTrue(chipLabel.hasSuffix("\(chosenCount) place") || chipLabel.hasSuffix("\(chosenCount) places"), "the chip's count is not the tile's \(chosenCount): '\(chipLabel)'")
         XCTAssertFalse(app.buttons["Filters"].exists, "a Filters button is shown with a tile chosen; it was removed")
-        print("QA-SHEET \(chosenName): tile \(chosenCount), chip '\(chipLabel)'")
+        // The map follows the category to the level of its first place and
+        // marks its places through the SDK's own markers, which are not
+        // accessibility elements: the level control is the evidence here, the
+        // screenshots the rest.
+        let levelAfter = levels.firstMatch.exists ? levels.firstMatch.label : "-"
+        print("QA-SHEET \(chosenName): tile \(chosenCount), chip '\(chipLabel)', level \(levelBefore) → \(levelAfter)")
         attach("7-chip")
         let remove = any("category-chip").buttons.firstMatch
         XCTAssertTrue(remove.exists, "the chip has no remove button")

@@ -71,6 +71,9 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     /// count live from what this session has marked (`count(of:)`).
     @Published private(set) var tileCounts: [String: Int]?
     private var loggedPlaceCount = -1
+    /// Whether the chosen category's places wear the Kozmos pin on the map,
+    /// through the SDK's per-place styles (`updatePoiStyles`), reset on clear.
+    private var stylesPlaces = false
     /// The places opened this session, most recent first, at most three: what
     /// the focused, empty field offers, as the prototype's "Recently visited".
     @Published private(set) var recents: [PTRPoi] = []
@@ -213,7 +216,10 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
 
     func refreshPOIs() {
         guard let building else { return }
-        pois = Pointr.shared.poiManager?.pois(for: building)?.getPoiList() ?? []
+        // The whole site's places — every building and level — not the loaded
+        // building's (Olcay, 21st: search and quick access are site-wide);
+        // each row and pin says where its place is.
+        pois = Pointr.shared.poiManager?.pois(for: building.site)?.getPoiList() ?? []
         poiDataReady = Pointr.shared.dataManager?.isContentReady(forSite: building.site.identifier) ?? false
         countTiles()
     }
@@ -287,10 +293,41 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         // show a set of places, so the map shows the category's alone.
         let shown = places(in: category)
         widget?.mapViewController.poisToShow = shown.isEmpty ? nil : Set(shown)
+        // The map follows the category: the places are site-wide, so when
+        // none is on the level shown, the level of the first — zoomed to it —
+        // as opening a place does. Then the pins, on the level now shown.
+        if !shown.contains(where: { SDKPOIAdapter.floorId($0.position.level) == selectedFloorId }),
+           let level = shown.first?.position.level {
+            updateLevel(level)
+            widget?.mapViewController.showLevel(level, shouldZoomToLevel: true)
+        }
+        showPins(at: shown, tint: category.tint.color)
     }
     func clearCategory() {
         category = nil
         widget?.mapViewController.poisToShow = nil
+        clearPins()
+    }
+
+    /// Colour-matching markers (Olcay, 21st): each of the category's places
+    /// wears the Kozmos pin in the category's colour as its marker image on
+    /// the map, through the SDK's per-place style — its own marker, restyled,
+    /// not a second one over it — on every level the places are on. The pin
+    /// is rendered once; the SDK's `PTRMapMarker` views were tried first and
+    /// drew nothing, snapshot or not.
+    private func showPins(at places: [PTRPoi], tint: Color) {
+        clearPins()
+        guard let map = widget?.mapViewController, !places.isEmpty else { return }
+        let renderer = ImageRenderer(content: KozmosLocationPin(size: .md, tint: tint).padding(6))
+        renderer.scale = UIScreen.main.scale
+        guard let image = renderer.uiImage else { return }
+        let styles = places.compactMap { PTRPoiMapStyle(poi: $0, image: image) }
+        map.updatePoiStyles(styles)
+        stylesPlaces = !styles.isEmpty
+    }
+    private func clearPins() {
+        if stylesPlaces { widget?.mapViewController.resetAllPoiStyles() }
+        stylesPlaces = false
     }
 
     /// The places a tile shows, on every floor, by name.

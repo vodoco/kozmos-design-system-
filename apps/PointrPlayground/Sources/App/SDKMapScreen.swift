@@ -324,6 +324,9 @@ struct SDKMapScreen: View {
             renderIcon: { presentation in
                 if let category = QuickAccess.category(id: presentation.id) { tileIcon(category, size: 24) }
             },
+            // Each tile in its category's colour, as the chosen category's
+            // field and the map's pins wear it (Olcay, 21st).
+            tint: { presentation in QuickAccess.category(id: presentation.id).map(tint) },
             emptyState: { Text("No quick access for this venue.") }
         )
         .animation(KozmosMotion.standard, value: session.visibleTiles.map(\.id))
@@ -334,18 +337,7 @@ struct SDKMapScreen: View {
 
     /// The category's colour: the system's data colour the taxonomy's icon
     /// name maps onto, the theme's for the personal tiles.
-    private func tint(_ category: QuickAccessCategory) -> Color {
-        switch category.tint {
-        case .theme: return KozmosColors.primitivesColorsTheme700
-        case .red: return KozmosColors.semanticsDataRed
-        case .orange: return KozmosColors.semanticsDataOrange
-        case .yellow: return KozmosColors.semanticsDataYellow
-        case .green: return KozmosColors.primitivesColorsEmotionalSuccess500
-        case .teal: return KozmosColors.semanticsDataTeal
-        case .blue: return KozmosColors.semanticsDataBlue
-        case .purple: return KozmosColors.semanticsDataPurple
-        }
-    }
+    private func tint(_ category: QuickAccessCategory) -> Color { category.tint.color }
 
     /// The taxonomy's published icon, drawn in the theme's colour as the
     /// prototype draws its tiles; the personal tiles use a symbol.
@@ -534,4 +526,22 @@ struct SDKMapHost: UIViewControllerRepresentable {
     let widget: PTRMapWidgetViewController
     func makeUIViewController(context: Context) -> PTRMapWidgetViewController { widget }
     func updateUIViewController(_ controller: PTRMapWidgetViewController, context: Context) {}
+}
+
+extension QuickAccessCategory.Tint {
+    /// The system's data colour the taxonomy's icon colour maps onto; the
+    /// theme's for the personal tiles. The tiles, the chosen category's
+    /// field and the map's pins all wear it.
+    var color: Color {
+        switch self {
+        case .theme: return KozmosColors.primitivesColorsTheme700
+        case .red: return KozmosColors.semanticsDataRed
+        case .orange: return KozmosColors.semanticsDataOrange
+        case .yellow: return KozmosColors.semanticsDataYellow
+        case .green: return KozmosColors.primitivesColorsEmotionalSuccess500
+        case .teal: return KozmosColors.semanticsDataTeal
+        case .blue: return KozmosColors.semanticsDataBlue
+        case .purple: return KozmosColors.semanticsDataPurple
+        }
+    }
 }
