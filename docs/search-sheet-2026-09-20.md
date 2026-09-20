@@ -53,7 +53,7 @@ system's were; the prototype's are not.
 | QA app unit tests; the flow UI test (twice, the last on the margin) | 40; passed                                                     |
 | React unit tests on the seven components, lint, build, classes, raw | 22; clean; ok; ok; colour 19, radius 6 across 5, locked        |
 | `docs:snippets:check`; Storybook docs check                         | 349 identifiers; 104 pages at two widths, 176 snippet sections |
-| `test:navigation` on chromium; `test:poi-details` on chromium       | 20 of 20; running at the time of writing                       |
+| `test:navigation` on chromium; `test:poi-details` on chromium       | 20 of 20; 66 cases verified on chromium                        |
 | Android, `verifyPaparazziDebug`                                     | passed; the new golden                                         |
 
 Not done: category tiles in the QA app — PointrKit's `PTRPoi` carries no category (only
