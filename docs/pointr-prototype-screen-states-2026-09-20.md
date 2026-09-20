@@ -137,7 +137,8 @@ on them._
 - An **AI search button**: a gradient-ring icon button (§1).
 - A location marker with a halo and pulse (§1).
 - Everything already recorded: the in-surface status message, the collapsible selector on the
-  web and Android, transition arrows, a floor slot and current-step state on a step.
+  web and Android, a floor slot and current-step state on a step. ~~Transition arrows~~ — built,
+  [transition-arrows-2026-09-20.md](transition-arrows-2026-09-20.md).
 
 ## 8. What was not reached
 

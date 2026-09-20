@@ -1294,6 +1294,17 @@ with the other variants' pixels untouched (the 18.4 baselines still match) and t
 palette class gone from the owned CSS. Measured on each platform. Next: the transition arrows,
 then the search sheet.
 
+### 2026-09-20 · Directions for transitions (Claude Code)
+
+`transition-arrows-2026-09-20.md`, commits `7c9e9ea`, `1e9f856`, `6c69f60` and the docs commit.
+`DirectionType` gains ten cases — a level change by lift, escalator or stairs, up or down, or
+unnamed; a same-level transition; turning back — on all three platforms, each drawing what its own
+icon set has: SF Symbols and lucide have no lift or escalator (probed), so the web and iOS show the
+direction of travel and the words carry the means; Material has all three and the words carry the
+direction. The QA app maps the SDK's message types and the taxonomy's transition subtypes onto
+them; "Take Elevator down" finally carries a down arrow. Measured on each platform. Next: the
+prototype's search sheet.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

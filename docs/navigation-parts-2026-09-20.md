@@ -144,9 +144,10 @@ cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6
 3. **The QA app's sheet while navigating** stays at the medium detent, so a third of it is empty
    under the buttons; the prototype's navigation sheet is compact. A `.fraction` detent the shell
    already has, or a compact detent — the shell's decision, not the app's.
-4. **Transition arrows** are still the recorded gap: "Take Elevator down to First Floor" carries a
+4. ~~**Transition arrows** are still the recorded gap: "Take Elevator down to First Floor" carries a
    straight arrow on the card, the rail and the itinerary alike. The icon set for lift, escalator
-   and stairs is a design decision before any platform draws one.
+   and stairs is a design decision before any platform draws one.~~ Answered and built:
+   [transition-arrows-2026-09-20.md](transition-arrows-2026-09-20.md).
 5. ~~**End on Android** is the button's `Sm` size, which the Compose button still draws 44 tall;
    the web and iOS draw a shorter pill.~~ Withdrawn: every platform draws every button size 44
    tall, by the component contract (`component-contracts.json`, `button.sizes`), and the web's
