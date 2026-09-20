@@ -39,6 +39,39 @@ describe("CategoryTile", () => {
     ).toBeDisabled();
   });
 
+  it("draws the count as the system's counter at the square's top-right and speaks its label", () => {
+    render(
+      <CategoryTile
+        category={{
+          id: "gates",
+          label: "Gates",
+          selected: false,
+          resultCount: 12,
+          resultCountLabel: "12 places",
+        }}
+        icon={<svg />}
+        onSelect={() => {}}
+      />,
+    );
+    const counter = screen.getByText("12");
+    expect(counter).toHaveAttribute("data-slot", "counter");
+    // The counter: brand tone, the default 20 size, four beyond the square's
+    // visible top and right edges (five from inside its 1px border).
+    expect(counter).toHaveClass(
+      "bg-primary",
+      "h-5",
+      "absolute",
+      "-right-[5px]",
+      "-top-[5px]",
+    );
+    expect(counter.parentElement).toHaveClass("relative", "h-16", "w-16");
+    // The spoken form is the label, not a caption: it is there for assistive technology only.
+    expect(screen.getByText("12 places")).toHaveClass("sr-only");
+    expect(
+      screen.getByRole("button", { name: /Gates.*12 places/ }),
+    ).toBeInTheDocument();
+  });
+
   it("is the prototype's tile: a 64 icon square, radius Control, the label under it", () => {
     const { container } = render(
       <CategoryTile

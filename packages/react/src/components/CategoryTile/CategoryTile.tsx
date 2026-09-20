@@ -1,5 +1,6 @@
 import React from "react";
 import type { CategoryPresentation } from "@kozmos/product-contracts";
+import { Counter } from "../Counter";
 import { cn } from "../../utils";
 
 export interface CategoryTileProps extends Omit<
@@ -45,21 +46,29 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
         <span
           aria-hidden="true"
           className={cn(
-            "flex h-16 w-16 shrink-0 items-center justify-center rounded-control border bg-background text-primary transition-colors [&>svg]:h-6 [&>svg]:w-6",
+            "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-control border bg-background text-primary transition-colors [&>svg]:h-6 [&>svg]:w-6",
             category.selected
               ? "border-primary bg-primary/5 ring-1 ring-primary/20"
               : "border-border",
           )}
         >
           {icon}
+          {category.resultCount !== undefined && (
+            // The count: the system's counter, brand tone, four beyond the
+            // square's top and right edges so the icon stays clear. An absolute
+            // offset counts from inside the 1px border, so five here is four
+            // past the visible edge.
+            <Counter className="absolute -right-[5px] -top-[5px]" tone="brand">
+              {category.resultCount}
+            </Counter>
+          )}
         </span>
         <span className="line-clamp-2 max-w-full text-balance">
           {category.label}
         </span>
         {category.resultCountLabel && (
-          <span className="text-xs font-normal text-muted-foreground">
-            {category.resultCountLabel}
-          </span>
+          // The count's spoken form; the counter itself is drawn in the square.
+          <span className="sr-only">{category.resultCountLabel}</span>
         )}
       </button>
     );
