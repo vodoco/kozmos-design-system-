@@ -359,3 +359,86 @@ final class KozmosAdaptiveMapShellTests: XCTestCase {
         XCTAssertEqual(insets.left, padding * 2, accuracy: 0.001)
     }
 }
+
+/// The content-fitted detent and the panel's surface, measured: the sheet is
+/// as tall as what it holds, no taller than large, and glass when asked.
+final class KozmosMapShellContentDetentTests: XCTestCase {
+    private let shellHeight: CGFloat = 800
+
+    /// Unmeasured, the content detent reads as medium and folds into it.
+    func testAnUnmeasuredContentDetentReadsAsMedium() {
+        XCTAssertEqual(KozmosMapPanelDetent.content.height(in: shellHeight), KozmosMapPanelDetent.medium.height(in: shellHeight))
+        let shell = KozmosAdaptiveMapShell(
+            panelDetents: [.collapsed, .content, .medium, .large],
+            map: { Color.red }, mapStatusContent: { EmptyView() }, controls: { EmptyView() },
+            topBar: { EmptyView() }, panel: { Color.green }
+        )
+        XCTAssertEqual(shell.orderedDetents(in: shellHeight).count, 3, "content and medium should fold into one until measured")
+    }
+
+    #if os(iOS)
+    @MainActor private func render(panelHeight: CGFloat, surface: KozmosSurfaceStyle = .solid) async throws -> RenderedPixels {
+        let size = CGSize(width: 390, height: shellHeight)
+        let view = KozmosAdaptiveMapShell(
+            panelDetent: .constant(.content),
+            panelDetents: [.collapsed, .content, .large],
+            panelSurface: surface,
+            map: { Color.red },
+            mapStatusContent: { EmptyView() },
+            controls: { EmptyView() },
+            topBar: { EmptyView() },
+            panel: { Color.green.frame(height: panelHeight) }
+        )
+        .environment(\.horizontalSizeClass, .compact)
+        return try await RenderedPixels.render(view, size: size)
+    }
+
+    private static func isGreen(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { g > 150 && r < 120 && b < 140 }
+    private static func isRed(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> Bool { r > 200 && g < 80 && b < 80 }
+
+    /// A 120-point panel: the sheet is the grab handle's row and the panel,
+    /// and the map keeps everything above it.
+    @MainActor func testTheSheetIsAsTallAsItsContent() async throws {
+        let pixels = try await render(panelHeight: 120)
+        let whole = CGRect(x: 0, y: 0, width: 390, height: shellHeight)
+        let content = try XCTUnwrap(pixels.boundingBox(in: whole, where: Self.isGreen), "no panel content drawn")
+        XCTAssertEqual(content.height, 120, accuracy: 1.5)
+        XCTAssertEqual(content.maxY, shellHeight, accuracy: 1.5, "the panel does not sit on the shell's bottom edge")
+        // Above the content there is the handle's row and then the map: the
+        // sheet's own colour 8 points up, the map's red 40 points up. (The
+        // sheet's shadow darkens the red just above it, so the map is found
+        // by a point, not a bounding box.)
+        let sheet = pixels.color(at: CGPoint(x: 40, y: content.minY - 8))
+        XCTAssertGreaterThan(sheet.g, 250, "the handle's row is not the sheet's colour: \(sheet)")
+        let map = pixels.color(at: CGPoint(x: 40, y: content.minY - 40))
+        XCTAssertGreaterThan(map.r, 150, "the map is not just above the fitted sheet: \(map)")
+        XCTAssertLessThan(map.g, 120, "the map is not just above the fitted sheet: \(map)")
+    }
+
+    /// Content taller than the shell: the sheet stops at the large detent.
+    @MainActor func testTheFittedSheetStopsAtLarge() async throws {
+        let pixels = try await render(panelHeight: 2000)
+        let whole = CGRect(x: 0, y: 0, width: 390, height: shellHeight)
+        let content = try XCTUnwrap(pixels.boundingBox(in: whole, where: Self.isGreen))
+        let large = KozmosMapPanelDetent.large.height(in: shellHeight)
+        // The content overflows the sheet and is clipped to it; what shows is
+        // the large height less the handle's row.
+        XCTAssertEqual(content.height + 16, large, accuracy: 2, "the fitted sheet is not capped at large")
+        XCTAssertEqual(content.maxY, shellHeight, accuracy: 1.5)
+    }
+
+    /// The sheet on glass: the handle's row is the map's red seen through
+    /// the tint, not the plain background colour.
+    @MainActor func testTheSheetCanBeGlass() async throws {
+        let solid = try await render(panelHeight: 120)
+        let glass = try await render(panelHeight: 120, surface: .glass)
+        let probe = CGPoint(x: 40, y: shellHeight - 120 - 8)
+        let onSolid = solid.color(at: probe)
+        let onGlass = glass.color(at: probe)
+        XCTAssertGreaterThan(onSolid.g, 250, "the solid sheet lets the red through: \(onSolid)")
+        XCTAssertGreaterThan(onGlass.r, 200, "the glass sheet hides the map: \(onGlass)")
+        XCTAssertLessThan(onGlass.g, 250, "the glass sheet is opaque: \(onGlass)")
+        XCTAssertGreaterThan(onGlass.g, 100, "the glass sheet is not tinted: \(onGlass)")
+    }
+    #endif
+}

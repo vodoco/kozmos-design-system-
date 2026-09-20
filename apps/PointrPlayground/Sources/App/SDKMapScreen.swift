@@ -26,7 +26,9 @@ struct SDKMapScreen: View {
                     mapLabel: "Design-QA indoor map", mapStatus: session.failure != nil ? .error : (session.status == "Ready" ? .ready : .loading),
                     panelLabel: panelLabel, panelPlacement: .end,
                     controlsPlacement: .bottom, panelDetent: $detent,
-                    panelDetents: [.collapsed, .medium, .large],
+                    panelDetents: [.collapsed, .content, .medium, .large],
+                    // The prototype's sheet is glass; the system's default is solid.
+                    panelSurface: .glass,
                     onCollisionInsetsChange: session.setChromeInsets,
                     map: { SDKMapHost(widget: widget) },
                     mapStatusContent: {
@@ -64,7 +66,12 @@ struct SDKMapScreen: View {
         }
         .task { session.start() }
         .onDisappear { session.stop() }
-        .onChange(of: session.phase) { _ in itineraryExpanded = false }
+        .onChange(of: session.phase) { phase in
+            itineraryExpanded = false
+            // Navigating, the sheet holds a summary and a row of buttons: it
+            // rests fitted to them, and the map has the rest.
+            detent = phase == .directions ? .content : .medium
+        }
     }
 
     /// Browsing and choosing a starting point, the search bar; navigating, the

@@ -16,6 +16,11 @@ public enum KozmosMapPanelDetent: Hashable, Sendable {
     case fraction(Double)
     /// An exact height in points.
     case height(CGFloat)
+    /// As tall as the panel's content, between the collapsed and the large
+    /// heights: for a sheet that holds a summary and a row of buttons and
+    /// nothing to scroll. The shell measures the content; on its own this
+    /// detent reads as medium.
+    case content
 
     /// Outside this range there is either no map or no panel worth showing.
     static let usableFractions: ClosedRange<Double> = 0.12...0.94
@@ -30,7 +35,7 @@ public enum KozmosMapPanelDetent: Hashable, Sendable {
             // Proportional on a tall phone, but never so short on a landscape
             // or split-screen shell that the handle and header stop fitting.
             return min(max(shellHeight * 0.18, Self.minimumCollapsedHeight), shellHeight * 0.4)
-        case .medium:
+        case .medium, .content:
             return shellHeight * 0.48
         case .large:
             return shellHeight * 0.88
@@ -48,6 +53,7 @@ public enum KozmosMapPanelDetent: Hashable, Sendable {
     var accessibilityDescription: String {
         switch self {
         case .collapsed: return "Collapsed"
+        case .content: return "Fitted to content"
         case .medium: return "Half height"
         case .large: return "Expanded"
         case .fraction(let value): return "\(Int((value * 100).rounded())) percent"
@@ -78,6 +84,11 @@ private struct KozmosMapShellControlsSizeKey: PreferenceKey {
         let next = nextValue()
         value = CGSize(width: max(value.width, next.width), height: max(value.height, next.height))
     }
+}
+
+struct KozmosMapShellContentPanelHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
 /// Adaptive container that layers a map, its controls, and a detail panel.
@@ -119,6 +130,9 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     private let controlsPlacement: ControlsPlacement
     private let panelDetentBinding: Binding<KozmosMapPanelDetent>?
     private let panelDetents: [KozmosMapPanelDetent]
+    private let panelSurface: KozmosSurfaceStyle
+    /// The sheet's height while it is fitted to its content, as measured.
+    @State private var contentPanelHeight: CGFloat = 0
     private let collisionInsets: KozmosMapCollisionInsets
     private let onCollisionInsetsChange: ((KozmosMapCollisionInsets) -> Void)?
 
@@ -148,6 +162,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         controlsPlacement: ControlsPlacement = .top,
         panelDetent: Binding<KozmosMapPanelDetent>? = nil,
         panelDetents: [KozmosMapPanelDetent] = [.collapsed, .medium, .large],
+        panelSurface: KozmosSurfaceStyle = .solid,
         collisionInsets: KozmosMapCollisionInsets = .zero,
         onCollisionInsetsChange: ((KozmosMapCollisionInsets) -> Void)? = nil,
         @ViewBuilder map: () -> Map,
@@ -163,6 +178,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
         self.controlsPlacement = controlsPlacement
         self.panelDetentBinding = panelDetent
         self.panelDetents = panelDetents.isEmpty ? [.medium] : panelDetents
+        self.panelSurface = panelSurface
         self.collisionInsets = collisionInsets
         self.onCollisionInsetsChange = onCollisionInsetsChange
         self.map = map()
@@ -188,12 +204,23 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
 
     // MARK: - Detents
 
+    /// A detent's height: the content-fitted one from the sheet as measured,
+    /// between the collapsed and the large heights, or medium until measured;
+    /// every other detent from its own arithmetic.
+    func detentHeight(_ detent: KozmosMapPanelDetent, in shellHeight: CGFloat) -> CGFloat {
+        guard detent == .content, contentPanelHeight > 0 else { return detent.height(in: shellHeight) }
+        return min(
+            max(contentPanelHeight, KozmosMapPanelDetent.collapsed.height(in: shellHeight)),
+            KozmosMapPanelDetent.large.height(in: shellHeight)
+        )
+    }
+
     /// The detent set in ascending height order, with duplicates removed.
     func orderedDetents(in shellHeight: CGFloat) -> [KozmosMapPanelDetent] {
         var seen = Set<CGFloat>()
         return panelDetents
-            .sorted { $0.height(in: shellHeight) < $1.height(in: shellHeight) }
-            .filter { seen.insert($0.height(in: shellHeight).rounded()).inserted }
+            .sorted { detentHeight($0, in: shellHeight) < detentHeight($1, in: shellHeight) }
+            .filter { seen.insert(detentHeight($0, in: shellHeight).rounded()).inserted }
     }
 
     /// The detent the panel has settled on — the caller's if it is controlling
@@ -217,18 +244,16 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     /// The height the panel rests at, ignoring any drag in progress.
     func settledPanelHeight(in shellHeight: CGFloat) -> CGFloat {
         let ordered = orderedDetents(in: shellHeight)
-        let height = activeDetent(in: shellHeight).height(in: shellHeight)
-        guard let smallest = ordered.first?.height(in: shellHeight),
-              let largest = ordered.last?.height(in: shellHeight)
-        else { return height }
-        return min(max(height, smallest), largest)
+        let height = detentHeight(activeDetent(in: shellHeight), in: shellHeight)
+        guard let first = ordered.first, let last = ordered.last else { return height }
+        return min(max(height, detentHeight(first, in: shellHeight)), detentHeight(last, in: shellHeight))
     }
 
     /// The height to draw right now, following the finger between detents.
     private func livePanelHeight(in shellHeight: CGFloat) -> CGFloat {
         let ordered = orderedDetents(in: shellHeight)
-        let smallest = ordered.first?.height(in: shellHeight) ?? settledPanelHeight(in: shellHeight)
-        let largest = ordered.last?.height(in: shellHeight) ?? settledPanelHeight(in: shellHeight)
+        let smallest = ordered.first.map { detentHeight($0, in: shellHeight) } ?? settledPanelHeight(in: shellHeight)
+        let largest = ordered.last.map { detentHeight($0, in: shellHeight) } ?? settledPanelHeight(in: shellHeight)
         // Dragging up is a negative translation, and makes the panel taller.
         return min(max(settledPanelHeight(in: shellHeight) - dragTranslation, smallest), largest)
     }
@@ -236,7 +261,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     /// The detent closest to a height, used to snap a drag once it ends.
     func nearestDetent(to height: CGFloat, in shellHeight: CGFloat) -> KozmosMapPanelDetent? {
         orderedDetents(in: shellHeight).min {
-            abs($0.height(in: shellHeight) - height) < abs($1.height(in: shellHeight) - height)
+            abs(detentHeight($0, in: shellHeight) - height) < abs(detentHeight($1, in: shellHeight) - height)
         }
     }
 
@@ -247,7 +272,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
     private func detentIndex(of detent: KozmosMapPanelDetent, in shellHeight: CGFloat) -> Int? {
         let ordered = orderedDetents(in: shellHeight)
         if let exact = ordered.firstIndex(of: detent) { return exact }
-        guard let nearest = nearestDetent(to: detent.height(in: shellHeight), in: shellHeight) else {
+        guard let nearest = nearestDetent(to: detentHeight(detent, in: shellHeight), in: shellHeight) else {
             return nil
         }
         return ordered.firstIndex(of: nearest)
@@ -450,6 +475,7 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             .frame(width: geometry.size.width, height: geometry.size.height)
             .onPreferenceChange(KozmosMapShellTopBarHeightKey.self) { topBarHeight = $0 }
             .onPreferenceChange(KozmosMapShellControlsSizeKey.self) { controlsSize = $0 }
+            .onPreferenceChange(KozmosMapShellContentPanelHeightKey.self) { contentPanelHeight = $0 }
             .onAppear { onCollisionInsetsChange?(insets) }
             .onChange(of: insets) { onCollisionInsetsChange?($0) }
         }
@@ -466,12 +492,9 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
             panel
                 .frame(width: min(416, geometry.size.width * 0.42))
                 .frame(maxHeight: .infinity)
-                .background(KozmosColors.primitivesColorsBackground0)
-                .clipShape(
-                    RoundedRectangle(
-                        cornerRadius: KozmosDimensions.semanticsRadiusPanel,
-                        style: .continuous
-                    )
+                .kozmosSurface(
+                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous),
+                    style: panelSurface
                 )
                 .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.18), radius: 24, x: 0, y: 12)
                 .padding(KozmosDimensions.primitivesLayoutSpacing200)
@@ -483,28 +506,51 @@ public struct KozmosAdaptiveMapShell<Map: View, Controls: View, TopBar: View, Pa
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel(panelLabel)
         } else {
-            VStack(spacing: 0) {
-                if showsGrabber {
-                    grabber(in: geometry.size.height)
-                }
+            let fitted = activeDetent(in: geometry.size.height) == .content && dragTranslation == 0
+            Group {
+                if fitted {
+                    // Fitted to its content in one layout pass: the layout
+                    // proposes the large height and takes what the content
+                    // needs. The measured height feeds the detent maths — the
+                    // insets, the snapping — a frame later.
+                    KozmosCappedHeightLayout(cap: KozmosMapPanelDetent.large.height(in: geometry.size.height)) {
+                        VStack(spacing: 0) {
+                            if showsGrabber {
+                                grabber(in: geometry.size.height)
+                            }
+                            panel
+                                .frame(maxWidth: .infinity, alignment: .top)
+                        }
+                    }
+                    .frame(width: geometry.size.width, alignment: .top)
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear.preference(key: KozmosMapShellContentPanelHeightKey.self, value: proxy.size.height)
+                        }
+                    )
+                } else {
+                    VStack(spacing: 0) {
+                        if showsGrabber {
+                            grabber(in: geometry.size.height)
+                        }
 
-                panel
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        panel
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    }
+                    // An explicit height rather than a cap: the panel is laid
+                    // out at whatever the detent gives it, so a footer stays on
+                    // the sheet's bottom edge at every detent instead of
+                    // falling off the screen.
+                    .frame(
+                        width: geometry.size.width,
+                        height: livePanelHeight(in: geometry.size.height),
+                        alignment: .top
+                    )
+                }
             }
-            // An explicit height rather than a cap: the panel is laid out at
-            // whatever the detent gives it, so a footer stays on the sheet's
-            // bottom edge at every detent instead of falling off the screen.
-            .frame(
-                width: geometry.size.width,
-                height: livePanelHeight(in: geometry.size.height),
-                alignment: .top
-            )
-            .background(KozmosColors.primitivesColorsBackground0)
-            .clipShape(
-                KozmosPanelShape(
-                    radius: KozmosDimensions.semanticsRadiusPanel,
-                    roundsBottom: false
-                )
+            .kozmosSurface(
+                KozmosPanelShape(radius: KozmosDimensions.semanticsRadiusPanel, roundsBottom: false),
+                style: panelSurface
             )
             .shadow(color: KozmosColors.primitivesColorsForeground900.opacity(0.18), radius: 24, x: 0, y: -8)
             .frame(
@@ -605,6 +651,7 @@ public extension KozmosAdaptiveMapShell where TopBar == EmptyView {
         controlsPlacement: ControlsPlacement = .top,
         panelDetent: Binding<KozmosMapPanelDetent>? = nil,
         panelDetents: [KozmosMapPanelDetent] = [.collapsed, .medium, .large],
+        panelSurface: KozmosSurfaceStyle = .solid,
         collisionInsets: KozmosMapCollisionInsets = .zero,
         onCollisionInsetsChange: ((KozmosMapCollisionInsets) -> Void)? = nil,
         @ViewBuilder map: () -> Map,
@@ -620,6 +667,7 @@ public extension KozmosAdaptiveMapShell where TopBar == EmptyView {
             controlsPlacement: controlsPlacement,
             panelDetent: panelDetent,
             panelDetents: panelDetents,
+            panelSurface: panelSurface,
             collisionInsets: collisionInsets,
             onCollisionInsetsChange: onCollisionInsetsChange,
             map: map,
@@ -640,6 +688,7 @@ where TopBar == EmptyView, MapStatusContent == EmptyView, Controls == EmptyView 
         controlsPlacement: ControlsPlacement = .top,
         panelDetent: Binding<KozmosMapPanelDetent>? = nil,
         panelDetents: [KozmosMapPanelDetent] = [.collapsed, .medium, .large],
+        panelSurface: KozmosSurfaceStyle = .solid,
         collisionInsets: KozmosMapCollisionInsets = .zero,
         onCollisionInsetsChange: ((KozmosMapCollisionInsets) -> Void)? = nil,
         @ViewBuilder map: () -> Map,
@@ -653,6 +702,7 @@ where TopBar == EmptyView, MapStatusContent == EmptyView, Controls == EmptyView 
             controlsPlacement: controlsPlacement,
             panelDetent: panelDetent,
             panelDetents: panelDetents,
+            panelSurface: panelSurface,
             collisionInsets: collisionInsets,
             onCollisionInsetsChange: onCollisionInsetsChange,
             map: map,

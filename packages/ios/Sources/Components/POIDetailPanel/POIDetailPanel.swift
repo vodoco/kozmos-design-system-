@@ -359,11 +359,19 @@ struct POIDetailActionButton: View {
 ///
 /// `UnevenRoundedRectangle` would express this directly but is iOS 17+, and the
 /// package deploys to iOS 16.
-struct KozmosPanelShape: Shape {
+struct KozmosPanelShape: InsettableShape {
     var radius: CGFloat
     var roundsBottom: Bool
+    var insetAmount: CGFloat = 0
 
-    func path(in rect: CGRect) -> Path {
+    func inset(by amount: CGFloat) -> KozmosPanelShape {
+        var shape = self
+        shape.insetAmount += amount
+        return shape
+    }
+
+    func path(in outer: CGRect) -> Path {
+        let rect = outer.insetBy(dx: insetAmount, dy: insetAmount)
         let r = min(radius, min(rect.width, rect.height) / 2)
         let bottomR = roundsBottom ? r : 0
 
