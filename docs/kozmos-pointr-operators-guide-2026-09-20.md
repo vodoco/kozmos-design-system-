@@ -407,6 +407,23 @@ _Added on the 21st, from the sheet stage:_
 - `RenderedPixels.render` centres a view shorter than its canvas: a tile rendered in a 140-tall
   canvas sat 8 lower than its padding said, and the counter's "overhang" read 0.7. Pin the view to
   the top with a trailing `Spacer` and the geometry is the padding's.
+- A Kotlin composable's trailing lambda binds to the LAST parameter: a `tint` added after `icon`
+  broke every `KozmosCategoryTile(...) { Icon(...) }` call with "too many arguments". New
+  parameters go before the trailing content lambda.
+- A multi-file Python patch that asserts halfway leaves the earlier files written and the later
+  ones untouched, and a test run afterwards can be green for the wrong reason (the pin's tint
+  test was never in the file that ran). Read each patch's own print, and grep the test's name in
+  the log before calling it green.
+- The 32 pin's fill measures 28 on every platform: its 2 white stroke is drawn inside the
+  diameter. Expect 28 when measuring a pin by its colour.
+- The SDK's map draws its own markers only: `PTRMapMarker` views through `addMarkers` (a hosted
+  SwiftUI pin, then a rendered image view, before and after a level switch, one reuse
+  identifier each) drew nothing, and a `PTRPoiMapStyle` image through `updatePoiStyles` drew the
+  SDK's icon. The restyle itself works: the category's places take the SDK's round quick-access
+  marker in the taxonomy's colour; `resetAllPoiStyles` clears it.
+- `pois(for: building)` is the loaded building's places, delivered in steps; `pois(for:
+building.site)` is the whole site's (1196 at Boston Logan). Search and the tiles count the
+  site.
 
 - The iPhone 17 Pro simulator speaks Arabic first; `defaults read -g AppleLanguages` before
   concluding anything about a backend's language.

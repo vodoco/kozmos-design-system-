@@ -193,9 +193,11 @@ the filter button. I'd like the ai to handle all filters."_
   runs on this Mac (macOS 26.6.2) and answers _unavailable, reason: appleIntelligenceNotEnabled_
   — Apple Intelligence is off in System Settings, which is Olcay's to switch on (the simulators
   use the Mac's model). Two facts bound what the AI could say: taxonomy 10.12.0 has no vegan
-  type (its nearest fuzzy hit is vending-machine), and the Design-QA venue's places carry **no
-  tags or keywords at all** — `QA-DATA 210 places, 0 distinct tags and keywords`, and 306, 0 —
-  so "vegan" can only come from a name, a description or the model's own knowledge of a chain,
+  type (its nearest fuzzy hit is vending-machine), and the Design-QA venue's places carry
+  **almost no tags or keywords**: a building's 210 or 306 places had none (`QA-DATA … 0
+distinct tags and keywords`), and the whole site's 1196 places have five words, all of them
+  the cell phone lot's (`cell | cell phone lot | cellphone | cellphone lot | phone`) — so
+  "vegan" can only come from a name, a description or the model's own knowledge of a chain,
   never from the content. The prototype's own AI flow, driven and read
   (`docs/pointr-prototype-ai-companion-2026-09-21.md`, `scripts/measure-prototype-ai.cjs`): the
   AI button opens a full-frame Assistant chat page over everything (a circle growing from the
@@ -207,6 +209,53 @@ the filter button. I'd like the ai to handle all filters."_
   AI flow — it is a separate full-frame page whose 81 chips do narrow the list, though only four
   of them match the tag table. So "the AI handles all filters" is a step beyond the prototype,
   which presents options in the chat and filters on a page.
+
+### Olcay's colours, pins, card surface and site-wide results (the 21st, later still)
+
+Four more, each with a screenshot: _"I'd like the colors of each category to match. I also would
+like to add color-matching markers on the map to show the locations."_ — _"POI card look like
+it's within another card. It should have the same bg as initial bottom sheet."_ — _"search and
+quick search results should be site wide. not per level."_
+
+- **A tile in its category's colour.** `CategoryTile` takes a `tint` on all three platforms: the
+  icon and the counter's fill wear it, the square stays neutral — the chosen-category field's
+  colour on its tile; `Counter` gains a fill override (white digits) for it, and
+  `BrowseCategoriesPanel` passes a tint per category, as it passes an icon. The QA app's one
+  mapping (`QuickAccessCategory.Tint.color`, the taxonomy's icon colour name → the system's
+  data colour) now feeds the tiles, the field and the map. Proof: the iOS render test reads the
+  tinted tile's icon and counter in the data red and no theme blue anywhere (red first: "extra
+  argument tint"); the web test reads the tint variable on the square and the counter's fill;
+  the Android golden's Gates tile is red where it was blue. The contract names `tint` and the
+  check holds the three sources to it.
+- **A pin in a category's colour.** `LocationPin` takes a `tint` for its marker on all three (a
+  featured pin keeps the alert colour); the iOS render test reads the 32 pin's 28 fill in the
+  tint (its 2 white stroke is inside the diameter — the Compose golden's 44 px at 1.5625 is the
+  same 28), the web test reads the colour and the 20 % fill, the Android golden holds a red pin.
+- **The map's markers.** The SDK's map draws its own markers and no view of ours: `PTRMapMarker`
+  views (a hosted SwiftUI pin, then a rendered `UIImageView`) added through `addMarkers` drew
+  nothing on any level, and `PTRPoiMapStyle(poi:image:)` through `updatePoiStyles` restyled the
+  category's places but drew the SDK's own icon, not the image. What does work is that restyle:
+  a chosen category's places wear the SDK's round quick-access marker with the category's icon
+  and name, in the taxonomy's colour — `updatePoiStyles` on choosing, `resetAllPoiStyles` on
+  clear — and the map **follows the category**: when none of its places is on the level shown,
+  the level of the first, zoomed to it, as opening a place does (Gates: L0 → L2, Terminal A).
+  Measured on the iPhone: the SDK's gate marker is `#ECA71E` (236, 167, 30); the tile and the
+  chip wear the system's data yellow `#D97706` — the same name, not the same colour. **For
+  Olcay:** the taxonomy's eight icon colours as tokens of their own (`Semantics.Category.*`,
+  the published values) would make tile, chip and marker one colour by construction; the data
+  colours stay for charts. The Kozmos pin with its tint is ready for the web's and Compose's
+  own map views, and for the SDK's if its marker API takes an image one day.
+- **The POI card on the sheet's surface.** In the sheet presentation `POIDetailPanel` paints no
+  surface, border or shadow of its own on any platform — it sits on the sheet's, as the browse
+  panel does. Proof: the iOS render test reads the sheet's grey at the panel's top edge where
+  inline reads white (red first, "paints its own white surface"); the Compose golden on the
+  sheet's grey reads (227, 228, 232) at the panel's edge and centre, where the pre-fix golden
+  read white (verify failed against it before re-recording); the web check reads
+  `rgba(0, 0, 0, 0)` and no border on the Sheet story. The contract names `sheetSurface: none`.
+- **Site-wide results.** The session's places are the site's (`poisForSite:` — every building
+  and level: 1196 places, where the loaded building gave 210 or 306), so search, the tiles'
+  counts and a category's list cover the whole site; each row says its floor and building, and
+  the map follows a chosen category to its first place's level.
 
 ## 3. The QA app's sheet
 
@@ -310,6 +359,10 @@ recorded focus transition's frames.
 | The QA app's tile counts and the empty-tile rule | `SDKSession.countTiles()` / `count(of:)` / `visibleTiles`; `QuickAccess.counts(of:places:)` / `visibleTiles(counts:)`                                                                               |
 | The venue's own words                            | the `QA-DATA` log lines (the command in the guide)                                                                                                                                                  |
 | On-device Apple Intelligence                     | `scripts/check-foundation-models.swift`                                                                                                                                                             |
+| A tile's or a pin's tint                         | `CategoryTile` / `LocationPin` `tint` on each platform; `Counter` `fill`; the QA app's `QuickAccessCategory.Tint.color`                                                                             |
+| The category's places on the map                 | `SDKSession.showPins(at:tint:)` (`updatePoiStyles`) and the map following the category in `choose(category:)`                                                                                       |
+| The POI panel's sheet surface                    | `POIDetailPanel` sheet presentation on each platform; `owned-poi-detail.css`; the Sheet story                                                                                                       |
+| Site-wide places                                 | `SDKSession.refreshPOIs()` (`pois(for: building.site)`)                                                                                                                                             |
 
 ## 7. Left as found, and for Olcay
 
@@ -330,3 +383,6 @@ recorded focus transition's frames.
   Intelligence-capable iPhone, iPhone 15 Pro and later, so the QA app needs a fallback or a floor),
   and what the DS lacks for it — a companion surface (the prototype's chat, its listening and
   thinking states) — which the prototype measurement names.
+- **The category palette.** Tile, chip and the SDK's marker share a colour name, not a value
+  (data yellow `#D97706` against the marker's `#ECA71E`). The taxonomy's eight icon colours as
+  `Semantics.Category` tokens would make them one; Olcay's call, since it is a token set.

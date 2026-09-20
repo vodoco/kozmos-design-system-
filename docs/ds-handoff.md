@@ -1357,8 +1357,12 @@ place leaves the grid (the QA app counts the loaded venue in one pass; 9 of 18 t
 with 306 places); the Filters button is gone, the AI companion is to take filtering. On-device
 Apple Intelligence was checked, not built: the Foundation Models framework runs here but reports
 Apple Intelligence not enabled on this Mac, the taxonomy has no vegan type, and the venue's places
-carry no tags or keywords. `initial-sheet-2026-09-20.md`, its last section, has the numbers and
-the decisions.
+carry almost no tags or keywords. Then the colours: `CategoryTile` and `LocationPin` take a tint
+and `Counter` a fill on all three, the QA app's tiles wear their categories' colours and a chosen
+category's places take the SDK's round marker in the taxonomy's colour (the SDK draws no view of
+ours; the tile's data yellow and the marker's yellow differ, a token decision for Olcay); the POI
+panel paints no surface of its own in a sheet on any platform; the session's places are the
+site's. `initial-sheet-2026-09-20.md`, its last sections, have the numbers and the decisions.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
