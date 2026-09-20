@@ -45,7 +45,8 @@ fun KozmosIconButton(
     enabled: Boolean = true,
     isLoading: Boolean = false
 ) {
-    val rootModifier = modifier.size(44.dp)
+    // The large size is the prototype's 48: Filters and the AI search beside a 44 field.
+    val rootModifier = modifier.size(if (size == KozmosIconButtonSize.Lg) 48.dp else 44.dp)
     val iconSize = when (size) {
         KozmosIconButtonSize.Sm -> 14.dp
         KozmosIconButtonSize.Lg -> 20.dp

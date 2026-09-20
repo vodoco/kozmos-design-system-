@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import com.kozmos.contracts.KozmosMapCollisionInsets
 import com.kozmos.contracts.KozmosMapReadiness
+import com.kozmos.components.motion.KozmosTransitions
 import com.kozmos.components.surface.KozmosSurfaceDefaults
 import com.kozmos.components.surface.KozmosSurfaceStyle
 import com.kozmos.tokens.KozmosColors
@@ -287,7 +288,12 @@ private fun BottomSheet(
     val atLargest = settled >= largest - 0.5.dp
     // Dragging up is a negative offset and makes the sheet taller.
     var dragOffset by remember { mutableFloatStateOf(0f) }
-    val animatedSettled by animateDpAsState(targetValue = settled, label = "kozmos-sheet-detent")
+    // Between detents on the standard motion, the prototype's own curve.
+    val animatedSettled by animateDpAsState(
+        targetValue = settled,
+        animationSpec = KozmosTransitions.standard(),
+        label = "kozmos-sheet-detent"
+    )
     val index = ordered.indexOfFirst { it.height(shellHeight, measures).value.roundToInt() == settled.value.roundToInt() }.coerceAtLeast(0)
     fun setDetent(detent: KozmosMapPanelDetent) {
         if (panelDetent == null) uncontrolled = detent

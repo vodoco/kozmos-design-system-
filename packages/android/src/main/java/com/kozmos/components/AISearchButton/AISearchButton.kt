@@ -71,12 +71,18 @@ fun KozmosAISearchButton(
                 .size(48.dp)
                 .graphicsLayer { rotationZ = if (animationsOn) ringAngle else 0f }
                 .clip(CircleShape)
+                // The prototype's rainbow from the system's own data colours
+                // and its success green.
                 .background(
                     Brush.sweepGradient(
                         listOf(
-                            KozmosColors.primitivesColorsTheme300,
-                            KozmosColors.primitivesColorsTheme600,
-                            KozmosColors.primitivesColorsTheme300
+                            KozmosColors.semanticsDataRed,
+                            KozmosColors.semanticsDataYellow,
+                            KozmosColors.primitivesColorsEmotionalSuccess500,
+                            KozmosColors.semanticsDataTeal,
+                            KozmosColors.semanticsDataBlue,
+                            KozmosColors.semanticsDataPurple,
+                            KozmosColors.semanticsDataRed
                         )
                     )
                 )
