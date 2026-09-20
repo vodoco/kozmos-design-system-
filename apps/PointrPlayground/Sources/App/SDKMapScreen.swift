@@ -52,7 +52,9 @@ struct SDKMapScreen: View {
                             Color.clear.frame(width: 0, height: 0)
                         }
                     },
-                    topBar: { topBar },
+                    // The shell's top slot spans the map's width; the row and the
+                    // card keep a margin from the edges, as the fixture playground does.
+                    topBar: { topBar.padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200) },
                     panel: { panel }
                 )
             } else {
