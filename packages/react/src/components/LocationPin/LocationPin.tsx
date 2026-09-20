@@ -16,6 +16,9 @@ export interface LocationPinProps extends React.HTMLAttributes<HTMLDivElement> {
   externalLabel?: string;
   labelPlacement?: "top" | "right" | "bottom" | "left";
   resultId?: string;
+  /** A colour of the host's own — a category's — for the marker, over the
+   *  variant's; a featured pin keeps the alert colour. */
+  tint?: string;
 }
 
 const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
@@ -33,6 +36,7 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
       offFloor = false,
       externalLabel,
       labelPlacement = "bottom",
+      tint,
       resultId,
       onClick,
       onKeyDown,
@@ -116,6 +120,14 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
           <MapPin
             aria-hidden="true"
             className={cn(sizeClasses[size], variantClasses[variant])}
+            style={
+              tint && !featured
+                ? {
+                    color: tint,
+                    fill: `color-mix(in srgb, ${tint} 20%, transparent)`,
+                  }
+                : undefined
+            }
           />
           {visibleContent !== undefined && visibleContent !== null && (
             <span

@@ -10,6 +10,9 @@ export interface CategoryTileProps extends Omit<
   category: CategoryPresentation;
   icon: React.ReactNode;
   onSelect: (categoryId: string) => void;
+  /** The category's own colour, as the chosen-category field wears it: it
+   *  takes the icon and the counter's fill; the square stays neutral. */
+  tint?: string;
 }
 
 const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
@@ -19,6 +22,7 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
       category,
       icon,
       onSelect,
+      tint,
       type = "button",
       disabled: disabledProp,
       ...props
@@ -26,6 +30,12 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
     ref,
   ) => {
     const disabled = category.disabled || disabledProp;
+    const tinted = tint
+      ? ({
+          "--kozmos-category-tint": tint,
+          color: "var(--kozmos-category-tint)",
+        } as React.CSSProperties)
+      : undefined;
 
     return (
       <button
@@ -51,6 +61,7 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
               ? "border-primary bg-primary/5 ring-1 ring-primary/20"
               : "border-border",
           )}
+          style={tinted}
         >
           {icon}
           {category.resultCount !== undefined && (
@@ -58,7 +69,15 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
             // square's top and right edges so the icon stays clear. An absolute
             // offset counts from inside the 1px border, so five here is four
             // past the visible edge.
-            <Counter className="absolute -right-[5px] -top-[5px]" tone="brand">
+            <Counter
+              className="absolute -right-[5px] -top-[5px]"
+              style={
+                tint
+                  ? { backgroundColor: "var(--kozmos-category-tint)" }
+                  : undefined
+              }
+              tone="brand"
+            >
               {category.resultCount}
             </Counter>
           )}

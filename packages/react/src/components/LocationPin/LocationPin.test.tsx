@@ -50,4 +50,25 @@ describe("LocationPin", () => {
     fireEvent.click(pin);
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it("takes a tint for the marker; a featured pin keeps the alert colour", () => {
+    const { rerender } = render(
+      <LocationPin label="Dining" tint="var(--semantics-data-red)" />,
+    );
+    const marker = screen.getByRole("img").querySelector("svg") as SVGElement;
+    expect(marker.style.getPropertyValue("color")).toBe(
+      "var(--semantics-data-red)",
+    );
+    expect(marker.style.getPropertyValue("fill")).toContain(
+      "var(--semantics-data-red)",
+    );
+    rerender(
+      <LocationPin featured label="Dining" tint="var(--semantics-data-red)" />,
+    );
+    expect(
+      (
+        screen.getByRole("img").querySelector("svg") as SVGElement
+      ).style.getPropertyValue("color"),
+    ).toBe("");
+  });
 });

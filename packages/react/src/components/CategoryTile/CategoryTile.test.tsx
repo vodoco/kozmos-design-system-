@@ -72,6 +72,34 @@ describe("CategoryTile", () => {
     ).toBeInTheDocument();
   });
 
+  it("takes its category's colour: the icon and the counter in the tint, the square neutral", () => {
+    render(
+      <CategoryTile
+        category={{
+          id: "dining",
+          label: "Dining",
+          selected: false,
+          resultCount: 3,
+          resultCountLabel: "3 places",
+        }}
+        icon={<svg />}
+        onSelect={() => {}}
+        tint="var(--semantics-data-red)"
+      />,
+    );
+    const counter = screen.getByText("3");
+    const square = counter.parentElement as HTMLElement;
+    expect(square.style.getPropertyValue("--kozmos-category-tint")).toBe(
+      "var(--semantics-data-red)",
+    );
+    expect(square.style.getPropertyValue("color")).toBe(
+      "var(--kozmos-category-tint)",
+    );
+    expect(counter.style.getPropertyValue("background-color")).toBe(
+      "var(--kozmos-category-tint)",
+    );
+  });
+
   it("is the prototype's tile: a 64 icon square, radius Control, the label under it", () => {
     const { container } = render(
       <CategoryTile

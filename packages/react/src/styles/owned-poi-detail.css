@@ -10,10 +10,12 @@
     overscroll-behavior: contain;
     overflow-wrap: anywhere;
   }
+  /* In a sheet the panel paints no surface of its own: it sits on the
+     sheet's, as the browse panel does, with no border and no card. */
   .kozmos-poi-detail[data-presentation="sheet"] {
     @apply rounded-t-control;
-    border-inline: 0;
-    border-block-end: 0;
+    background: transparent;
+    border: 0;
     border-end-start-radius: 0;
     border-end-end-radius: 0;
   }
