@@ -13,6 +13,14 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
     private let onStartNavigation: (() -> Void)?
     private let transportModeIcon: TransportModeIcon
     private let showsTransportModeIcon: Bool
+    // The navigation layout, when a title is given: the destination with End
+    // beside it, the time, distance and arrival on one row, and the caller's
+    // progress below. Mirrors the product prototype's navigation sheet.
+    private let title: String?
+    private let durationText: String?
+    private let arrivalText: String?
+    private let endLabel: String
+    private let progress: AnyView?
 
     public init(
         etaText: String,
@@ -29,9 +37,90 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
         self.onStartNavigation = onStartNavigation
         self.transportModeIcon = transportModeIcon()
         self.showsTransportModeIcon = true
+        self.title = nil
+        self.durationText = nil
+        self.arrivalText = nil
+        self.endLabel = "End"
+        self.progress = nil
+    }
+
+    /// The navigation layout: `title` is the destination, End beside it in
+    /// the danger outline; `durationText`, `distanceText` and `arrivalText`
+    /// on one row; `progress` — a `KozmosRouteProgressRail` in the products —
+    /// below.
+    public init(
+        title: String,
+        durationText: String,
+        distanceText: String,
+        arrivalText: String? = nil,
+        endLabel: String = "End",
+        onEndRoute: @escaping () -> Void,
+        @ViewBuilder progress: () -> some View
+    ) where TransportModeIcon == EmptyView {
+        self.etaText = durationText
+        self.distanceText = distanceText
+        self.state = .active
+        self.onEndRoute = onEndRoute
+        self.onStartNavigation = nil
+        self.transportModeIcon = EmptyView()
+        self.showsTransportModeIcon = false
+        self.title = title
+        self.durationText = durationText
+        self.arrivalText = arrivalText
+        self.endLabel = endLabel
+        self.progress = AnyView(progress())
     }
 
     public var body: some View {
+        if let title {
+            navigation(title: title)
+        } else {
+            summary
+        }
+    }
+
+    private func navigation(title: String) -> some View {
+        VStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+            HStack(alignment: .center, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                Text(title)
+                    .font(KozmosTypography.title3.weight(.semibold))
+                    .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityAddTraits(.isHeader)
+                KozmosButton(endLabel, variant: .outline, emotion: .danger, size: .sm, action: onEndRoute)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                Text(durationText ?? etaText)
+                    .font(KozmosTypography.subheadline.weight(.semibold))
+                    .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                Text(distanceText)
+                    .font(KozmosTypography.subheadline)
+                    .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                Spacer(minLength: KozmosDimensions.primitivesLayoutSpacing100)
+                if let arrivalText {
+                    Text(arrivalText)
+                        .font(KozmosTypography.subheadline)
+                        .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                }
+            }
+            .accessibilityElement(children: .combine)
+            if let progress {
+                progress
+            }
+        }
+        .padding(KozmosDimensions.primitivesLayoutSpacing200)
+        .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
+                .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
+        )
+        .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
+    }
+
+    private var summary: some View {
         VStack(spacing: KozmosDimensions.primitivesLayoutSpacing200) {
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
                 if showsTransportModeIcon {
@@ -101,5 +190,10 @@ public extension KozmosRouteSummary where TransportModeIcon == EmptyView {
         self.onStartNavigation = onStartNavigation
         self.transportModeIcon = EmptyView()
         self.showsTransportModeIcon = false
+        self.title = nil
+        self.durationText = nil
+        self.arrivalText = nil
+        self.endLabel = "End"
+        self.progress = nil
     }
 }

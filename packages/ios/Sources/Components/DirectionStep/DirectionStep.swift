@@ -1,6 +1,6 @@
 import SwiftUI
 
-public enum DirectionType {
+public enum DirectionType: Sendable {
     case straight, left, right, destination
     
     var iconName: String {
