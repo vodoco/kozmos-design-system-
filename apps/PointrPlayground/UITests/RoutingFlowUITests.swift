@@ -93,36 +93,44 @@ final class RoutingFlowUITests: XCTestCase {
         // 1. Browse: the building's places have loaded. Which building the map
         // opens on varies between launches (handoff item G); a run that needs
         // a particular one names its place count and relaunches until it gets it.
-        let loaded = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'POIs loaded'")).firstMatch
-        XCTAssertTrue(loaded.waitForExistence(timeout: 120), "the building's places never loaded")
+        // The sheet's value carries the count, since the sheet rests on the
+        // search row and the tiles, not on a list of every place.
+        let sheet = any("search-sheet")
+        let loaded = NSPredicate(format: "value CONTAINS 'POIs loaded'")
+        XCTAssertTrue(sheet.waitForExistence(timeout: 120), "no search sheet")
+        wait(for: [expectation(for: loaded, evaluatedWith: sheet)], timeout: 120)
+        let loadedValue = { (sheet.value as? String) ?? "" }
         if let wanted = environment["KOZMOS_QA_BUILDING_POIS"] {
             // The map's first level callback can switch the building a moment
             // after the configured one's places were counted.
-            let wantedLabel = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "\(wanted) POIs")).firstMatch
+            let wantedValue = NSPredicate(format: "value BEGINSWITH %@", "\(wanted) POIs")
             var launches = 1
-            while !wantedLabel.waitForExistence(timeout: 20), launches < 4 {
-                print("QA-FLOW building: \(loaded.label); wanted \(wanted) POIs, relaunching")
+            while !wantedValue.evaluate(with: sheet), launches < 4 {
+                print("QA-FLOW building: \(loadedValue()); wanted \(wanted) POIs, relaunching")
                 app.terminate()
                 app.launch()
                 launches += 1
-                XCTAssertTrue(loaded.waitForExistence(timeout: 120), "the building's places never loaded")
+                XCTAssertTrue(sheet.waitForExistence(timeout: 120), "no search sheet")
+                wait(for: [expectation(for: loaded, evaluatedWith: sheet)], timeout: 120)
             }
         }
-        print("QA-FLOW building: \(loaded.label)")
+        print("QA-FLOW building: \(loadedValue())")
         attach("1-browse")
 
-        if let destinationName {
-            let search = app.textFields["Search this building"]
-            XCTAssertTrue(search.waitForExistence(timeout: 10), "no top search bar")
-            search.tap()
-            search.typeText(destinationName)
-        }
+        // The field is the sheet's first row; tapping it opens the sheet and
+        // a query lists the places. Without a name, a vowel lists enough of
+        // them to take the first.
+        let search = app.textFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 10), "no search field in the sheet")
+        search.tap()
+        let typed = destinationName ?? "a"
+        search.typeText(typed)
         let places = any("Points of interest")
         var destination = row(labelBeginning: destinationName, in: places)
         if let destinationName, !destination.waitForExistence(timeout: 15) {
             // The building the map opened on has no such place: take its first one.
             print("QA-FLOW no place named \(destinationName) in this building; using the first")
-            app.textFields["Search this building"].typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: destinationName.count))
+            search.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: typed.count) + "a")
             destination = row(labelBeginning: nil, in: places)
         }
         XCTAssertTrue(destination.waitForExistence(timeout: 30), "no place to select")

@@ -54,6 +54,17 @@ enum SDKPOIAdapter {
     // Floor selection in the SDK is by building + level index, not a POI's
     // inherited feature identifier. Models returned by different managers can
     // represent the same floor with different feature identifiers.
+    /// The free text a place carries besides its name — its tags and, when the
+    /// venue's content has them, its keywords — the words a quick-access tile
+    /// searches by until the SDK exposes a place's type.
+    static func freeText(_ poi: PTRPoi) -> [String] {
+        var text = poi.tags ?? []
+        let extra = poi.extraData as? [String: Any]
+        if let keywords = extra?["keywords"] as? [String] { text += keywords }
+        else if let keywords = extra?["keywords"] as? String { text.append(keywords) }
+        return text
+    }
+
     static func floorId(_ level: PTRLevel?) -> String {
         guard let level else { return "" }
         return "\(level.building.identifier):\(level.index)"

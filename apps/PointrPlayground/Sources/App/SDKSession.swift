@@ -63,6 +63,12 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     @Published var query = ""
     @Published var saved = Set<String>()
     @Published var favourites = Set<String>()
+    /// The quick-access tile chosen, replacing the search field with its chip
+    /// until cleared; nil while browsing or searching by text.
+    @Published var category: QuickAccessCategory?
+    /// The places opened this session, most recent first, at most three: what
+    /// the focused, empty field offers, as the prototype's "Recently visited".
+    @Published private(set) var recents: [PTRPoi] = []
 
     // MARK: Routing — the flow lives in SDKRouting.swift; the state lives here.
 
@@ -208,6 +214,8 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
 
     func select(_ poi: PTRPoi) {
         selected = poi
+        recents = [poi] + recents.filter { $0.identifier != poi.identifier }
+        if recents.count > 3 { recents.removeLast(recents.count - 3) }
         let details = SDKPOIAdapter.details(poi)
         selectedDetails = details
         actionStates = [:]
@@ -228,6 +236,25 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         widget?.mapViewController.focusPoi(poi, shouldZoom: true)
     }
     func closeSelection() { clearSelection(animated: true) }
+
+    /// A tile: its places by the stand-in word match (`QuickAccess.matches`),
+    /// or the personal tiles by what this session has marked.
+    func choose(category: QuickAccessCategory) {
+        query = ""
+        self.category = category
+    }
+    func clearCategory() { category = nil }
+
+    /// The places a tile shows, on every floor, by name.
+    func places(in category: QuickAccessCategory) -> [PTRPoi] {
+        let matching: [PTRPoi]
+        switch category.id {
+        case QuickAccess.favouritesId: matching = pois.filter { favourites.contains($0.identifier) }
+        case QuickAccess.bookmarksId: matching = pois.filter { saved.contains($0.identifier) }
+        default: matching = pois.filter { QuickAccess.matches(category, name: $0.name, freeText: SDKPOIAdapter.freeText($0)) }
+        }
+        return matching.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
     func selectFloor(_ id: String) {
         guard let level = building?.levels.first(where: { SDKPOIAdapter.floorId($0) == id }) else { return }
         updateLevel(level)

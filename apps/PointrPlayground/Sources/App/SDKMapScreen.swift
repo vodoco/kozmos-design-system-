@@ -5,18 +5,25 @@ import Kozmos
 
 struct SDKMapScreen: View {
     @StateObject private var session = SDKSession()
-    @State private var detent: KozmosMapPanelDetent = .medium
+    /// The sheet rests collapsed on the search row and the first tile row, as
+    /// the prototype's does; the field's focus opens it to large.
+    @State private var detent: KozmosMapPanelDetent = .collapsed
+    /// Where the search sheet was when a place opened, restored when the
+    /// place's card closes or its route ends.
+    @State private var searchDetent: KozmosMapPanelDetent = .collapsed
+    @FocusState private var searchFocused: Bool
     /// Whether the manoeuvre card over the map is open into the itinerary.
     @State private var itineraryExpanded = false
     /// The shell docks its panel as a sheet on compact widths and floats it
     /// beside the map on regular ones; the card has to match.
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
+    /// The places a query names, on every floor.
     private var matches: [PTRPoi] {
-        let query = session.query.trimmingCharacters(in: .whitespacesAndNewlines)
-        return session.pois.filter {
-            (query.isEmpty ? SDKPOIAdapter.floorId($0.position.level) == session.selectedFloorId : $0.name.localizedCaseInsensitiveContains(query))
-        }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        let query = trimmedQuery
+        guard !query.isEmpty else { return [] }
+        return session.pois.filter { $0.name.localizedCaseInsensitiveContains(query) }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
     var body: some View {
@@ -26,7 +33,9 @@ struct SDKMapScreen: View {
                     mapLabel: "Design-QA indoor map", mapStatus: session.failure != nil ? .error : (session.status == "Ready" ? .ready : .loading),
                     panelLabel: panelLabel, panelPlacement: .end,
                     controlsPlacement: .bottom, panelDetent: $detent,
-                    panelDetents: [.collapsed, .content, .medium, .large],
+                    // Navigating, the sheet also fits its summary; browsing, the
+                    // prototype's three stops.
+                    panelDetents: session.phase == .directions ? [.collapsed, .content, .medium, .large] : [.collapsed, .medium, .large],
                     // The prototype's sheet is glass; the system's default is solid.
                     panelSurface: .glass,
                     onCollisionInsetsChange: session.setChromeInsets,
@@ -71,9 +80,31 @@ struct SDKMapScreen: View {
         .onChange(of: session.phase) { phase in
             itineraryExpanded = false
             // Navigating, the sheet holds a summary and a row of buttons: it
-            // rests fitted to them, and the map has the rest.
-            detent = phase == .directions ? .content : .medium
+            // rests fitted to them, and the map has the rest. Choosing a
+            // starting point needs the picker's list: half height. Back from
+            // a route, the search sheet returns where it was.
+            switch phase {
+            case .directions: detent = .content
+            case .routeSetup: detent = .medium
+            case .browse: detent = searchDetent
+            }
         }
+        // A place opens at half height and remembers where the search sheet
+        // was; its card closing returns there, query and results intact.
+        .onChange(of: session.selected?.identifier) { id in
+            guard session.phase == .browse else { return }
+            if id != nil {
+                searchDetent = detent
+                searchFocused = false
+                detent = .medium
+            } else {
+                detent = searchDetent
+            }
+        }
+        // Tapping the field opens the sheet to large, where the results have
+        // the height; a drag that lands anywhere else drops the focus.
+        .onChange(of: searchFocused) { focused in if focused { detent = .large } }
+        .onChange(of: detent) { detent in if detent != .large { searchFocused = false } }
     }
 
     /// Browsing and choosing a starting point, the search bar; navigating, the
@@ -101,15 +132,9 @@ struct SDKMapScreen: View {
                     },
                     destination: session.selected?.name ?? "")
             }
-        } else {
-            // The prototype's search row: the field with the AI search beside
-            // it. The AI search has no flow in this milestone; it is here to
-            // be seen where the prototype puts it.
-            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
-                KozmosSearchBar(text: $session.query, placeholder: "Search this building")
-                KozmosAISearchButton(action: {})
-            }
         }
+        // Browsing, the top slot is empty: the search row is the sheet's
+        // first row, as the prototype's is.
     }
 
     private var currentStep: SDKRoute.Step? {
@@ -182,30 +207,153 @@ struct SDKMapScreen: View {
                 supplementaryActionStates: session.actionStates,
                 onSupplementaryAction: session.perform(action:poiId:))
         } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(session.building?.name ?? "Design-QA").font(KozmosTypography.title2)
-                    Text("Live SDK data · browse-only milestone").font(KozmosTypography.footnote)
-                    Text(session.poiDataReady ? "\(session.pois.count) POIs loaded in this building" : "Loading site POI data…")
-                        .font(KozmosTypography.caption)
-                    if let failure = session.failure { Text(failure).accessibilityAddTraits(.isStaticText) }
-                    else if session.status != "Ready" { Text(session.status).font(KozmosTypography.footnote) }
-                    Text("Saved and favourite states are local to this session. A route starts from a place you choose: there is no live positioning in this milestone.")
-                        .font(KozmosTypography.caption)
-                        .foregroundStyle(.secondary)
-                    KozmosPOIResultList(
-                        items: matches.enumerated().map { index, poi in
-                            .init(poi: SDKPOIAdapter.presentation(poi),
-                                  result: .init(poiId: poi.identifier, resultIndex: index, floorId: SDKPOIAdapter.floorId(poi.position.level)))
-                        },
-                        resultCountLabel: "\(matches.count) places",
-                        // A dot before the floor of a result on the floor the map shows.
-                        currentFloorId: session.selectedFloorId,
-                        onSelect: { id in if let poi = session.pois.first(where: { $0.identifier == id }) { session.select(poi) } },
-                        emptyState: { Text("No places available for this floor or search.") })
-                }.padding(16)
+            searchSheet
+        }
+    }
+
+    // MARK: - The search sheet
+
+    /// The prototype's initial sheet: the search row pinned first, then what
+    /// the row's state calls for — the quick-access tiles at rest, the recent
+    /// places when the empty field is focused, the results for a query or a
+    /// tile. Every part is a Kozmos component; the shell draws the surface.
+    @ViewBuilder private var searchSheet: some View {
+        VStack(spacing: 0) {
+            // The row 8 under the handle's row, as the prototype's field sits
+            // 23 from the sheet's top; what follows brings its own top margin.
+            searchRow
+                .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
+                .padding(.top, KozmosDimensions.primitivesLayoutSpacing100)
+            if let category = session.category {
+                resultsList(session.places(in: category), countLabel: "\(session.places(in: category).count) places in \(category.name)")
+            } else if !trimmedQuery.isEmpty {
+                resultsList(matches, countLabel: "\(matches.count) places")
+            } else if searchFocused, !session.recents.isEmpty {
+                recentsList
+            } else {
+                tiles
             }
         }
+        // One container for the sheet, so its identifier and value are its
+        // own and not every child's. The value is for the flow test, which
+        // picks its building by its place count (handoff item G).
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("search-sheet")
+        .accessibilityValue(session.poiDataReady ? "\(session.pois.count) POIs loaded" : "loading")
+    }
+
+    private var trimmedQuery: String { session.query.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    /// The row's four forms, as the prototype's: the field with the AI search;
+    /// focused and empty, a Cancel beside it; with a query, Filters between
+    /// them; a tile chosen, its chip and count in the field's place. Filters
+    /// and the AI search have no flow in this milestone; they are here to be
+    /// seen where the prototype puts them.
+    @ViewBuilder private var searchRow: some View {
+        HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+            if let category = session.category {
+                KozmosChip(text: category.name, variant: .brand, onRemove: session.clearCategory) {
+                    tileIcon(category, size: 16)
+                }
+                .accessibilityIdentifier("category-chip")
+                KozmosCounter("\(session.places(in: category).count)")
+                Spacer(minLength: 0)
+            } else {
+                KozmosSearchBar(text: $session.query, placeholder: "Search", focused: $searchFocused, onClear: { searchFocused = false })
+                    .accessibilityIdentifier("search-field")
+                if searchFocused, trimmedQuery.isEmpty {
+                    KozmosButton("Cancel", variant: .ghost, action: cancelSearch)
+                        .accessibilityIdentifier("search-cancel")
+                }
+            }
+            if session.category != nil || !trimmedQuery.isEmpty {
+                KozmosIconButton(iconName: "slider.horizontal.3", variant: .outline, action: {})
+                    .accessibilityLabel("Filters")
+            }
+            KozmosAISearchButton(action: {})
+        }
+    }
+
+    private func cancelSearch() {
+        searchFocused = false
+        session.query = ""
+    }
+
+    /// The taxonomy's eighteen tiles (the two personal ones first), on the
+    /// system's grid, in the sheet: no surface or rule of its own.
+    private var tiles: some View {
+        KozmosBrowseCategoriesPanel(
+            categories: QuickAccess.tiles.map { KozmosCategoryPresentation(id: $0.id, label: $0.name) },
+            label: "Quick access",
+            presentation: .sheet,
+            onSelect: { id in
+                guard let category = QuickAccess.category(id: id) else { return }
+                searchFocused = false
+                session.choose(category: category)
+            },
+            renderIcon: { presentation in
+                if let category = QuickAccess.category(id: presentation.id) { tileIcon(category, size: 24) }
+            },
+            emptyState: { Text("No quick access for this venue.") }
+        )
+    }
+
+    /// The taxonomy's published icon, drawn in the theme's colour as the
+    /// prototype draws its tiles; the personal tiles use a symbol.
+    @ViewBuilder private func tileIcon(_ category: QuickAccessCategory, size: CGFloat) -> some View {
+        switch category.icon {
+        case .symbol(let name):
+            Image(systemName: name).font(.system(size: size * 0.85, weight: .medium))
+        case .bundled(let name):
+            if let image = UIImage(named: name) {
+                Image(uiImage: image).renderingMode(.template).resizable().scaledToFit().frame(width: size, height: size)
+            } else {
+                Image(systemName: "square.dashed").font(.system(size: size * 0.85))
+            }
+        }
+    }
+
+    private func resultsList(_ places: [PTRPoi], countLabel: String) -> some View {
+        KozmosPanelScrollView {
+            KozmosPOIResultList(
+                items: places.enumerated().map { index, poi in
+                    .init(poi: SDKPOIAdapter.presentation(poi),
+                          result: .init(poiId: poi.identifier, resultIndex: index, floorId: SDKPOIAdapter.floorId(poi.position.level)))
+                },
+                resultCountLabel: countLabel,
+                // A dot before the floor of a result on the floor the map shows.
+                currentFloorId: session.selectedFloorId,
+                onSelect: { id in if let poi = session.pois.first(where: { $0.identifier == id }) { session.select(poi) } },
+                emptyState: { Text("No places match.") })
+            .padding(KozmosDimensions.primitivesLayoutSpacing200)
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    /// The places opened this session, under the prototype's header and count.
+    private var recentsList: some View {
+        KozmosPanelScrollView {
+            VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
+                HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                    Text("Recently visited").font(KozmosTypography.footnote).fontWeight(.semibold)
+                        .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                        .accessibilityAddTraits(.isHeader)
+                    KozmosCounter("\(session.recents.count)")
+                }
+                KozmosPOIResultList(
+                    items: session.recents.enumerated().map { index, poi in
+                        .init(poi: SDKPOIAdapter.presentation(poi),
+                              result: .init(poiId: poi.identifier, resultIndex: index, floorId: SDKPOIAdapter.floorId(poi.position.level)))
+                    },
+                    resultCountLabel: "\(session.recents.count) recent places",
+                    label: "Recently visited",
+                    currentFloorId: session.selectedFloorId,
+                    onSelect: { id in if let poi = session.pois.first(where: { $0.identifier == id }) { session.select(poi) } },
+                    emptyState: { EmptyView() })
+            }
+            .padding(KozmosDimensions.primitivesLayoutSpacing200)
+        }
+        .scrollDismissesKeyboard(.interactively)
     }
 }
 
@@ -239,7 +387,9 @@ extension SDKMapScreen {
             routeStatusRow
                 .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
                 .padding(.top, KozmosDimensions.primitivesLayoutSpacing150)
-            ScrollView {
+            // The shell's scroll view: the list scrolls at the largest detent,
+            // and an upward drag grows the sheet first.
+            KozmosPanelScrollView {
                 KozmosPOIResultList(
                     items: originItems,
                     resultCountLabel: "\(session.originCandidates.count) places",
