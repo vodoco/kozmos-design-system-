@@ -94,9 +94,26 @@
         "labelLineHeight": 14,
         "counterSize": "default",
         "counterTone": "brand",
-        "counterOverhang": 4
+        "counterOverhang": 4,
+        "tint": "optional; the category's own colour takes the icon and the counter's fill, the square stays neutral"
       },
-      "notes": "resultCount draws as the system's counter at the icon square's top-right, counterOverhang beyond its top and right edges so the icon stays clear; resultCountLabel is its spoken form and draws nothing."
+      "notes": "resultCount draws as the system's counter at the icon square's top-right, counterOverhang beyond its top and right edges so the icon stays clear; resultCountLabel is its spoken form and draws nothing. A tint — the category's colour, as the chosen-category field wears it — takes the icon and the counter's fill."
+    },
+    "locationPin": {
+      "sizes": {
+        "small": { "diameter": 24 },
+        "default": { "diameter": 32 },
+        "large": { "diameter": 40 }
+      },
+      "content": {
+        "tint": "optional; a colour of the host's own for the marker, over the variant's; a featured pin keeps the alert colour"
+      }
+    },
+    "poiDetailPanel": {
+      "presentations": ["inline", "sheet", "panel"],
+      "content": {
+        "sheetSurface": "none; in a sheet the panel paints no surface, border or shadow of its own and sits on the sheet's"
+      }
     },
     "counter": {
       "tones": ["neutral", "brand", "destructive", "inverse"],

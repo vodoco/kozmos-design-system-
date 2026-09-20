@@ -96,6 +96,19 @@ try {
     const spokenBox = await spoken.boundingBox();
     assert.ok(!spokenBox || spokenBox.width <= 1, `the spoken form is drawn: ${JSON.stringify(spokenBox)}`);
   });
+
+  // In a sheet the POI panel paints no surface of its own: no fill, no border.
+  await finish(await open("product-sdk-poidetailpanel--sheet"), "the-poi-panel-in-a-sheet-paints-no-surface", async (page) => {
+    const panel = page.locator('.kozmos-poi-detail[data-presentation="sheet"]');
+    await panel.waitFor();
+    const m = await panel.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return { background: style.backgroundColor, borderTop: style.borderTopWidth, borderLeft: style.borderLeftWidth, shadow: style.boxShadow };
+    });
+    assert.equal(m.background, "rgba(0, 0, 0, 0)", `the sheet panel paints a surface: ${m.background}`);
+    assert.equal(m.borderTop, "0px", `the sheet panel keeps a top border: ${m.borderTop}`);
+    assert.equal(m.borderLeft, "0px", `the sheet panel keeps a side border: ${m.borderLeft}`);
+  });
   await finish(await open("product-sdk-aisearchbutton--default"), "ai-search-ring-turns", async (page) => {
     const button = page.getByRole("button", { name: "AI search" });
     await button.waitFor();
