@@ -143,3 +143,36 @@ Left from §5: the system's Liquid Glass — Olcay did not choose it; glass stay
 composition, measured. Next, in his order: the shell's sheet on the surface style with the
 compact detent; the Button's glass variant onto the token; then the transition arrows and the
 search sheet.
+
+## 7. Later still: the Button's glass variant onto the token
+
+Olcay's third answer: one glass on every platform. The Button's and the IconButton's glass
+variant drew white at 16 % with no blur on iOS and Android, and on the web the design config's
+slider-driven `glass` utility (blur 22 by default) with a raw `hover:bg-white/10`. It is now the
+glass surface (`5d9c980`, `1f10259`, `45b35b5`): on iOS `kozmosSurface(shape, style: .glass)`
+behind a small helper that leaves every other variant's fill, corner and edge exactly as they
+were — the pinned baselines on 18.4 still match; on Android `KozmosSurfaceDefaults`' tint and
+edge, the button through Material's border, the icon button through a border on its root; on the
+web the surface's declarations written into `.kozmos-button-glass` (`@apply` will not take an
+owned class; `tokens:glass:check` holds the two rules to the same token variables) with the
+spotlight the design config still drives and a hover a tenth more of the tint. The label is the
+ink colour on every platform. The last raw palette class in the owned CSS went with it: the
+ratchet stands at 19 across 6.
+
+Measured: over pure red, the iOS glass button's and icon button's middles are the tint over what
+shows through — both tests fail against the old chip; the Android golden of both over red; the
+owned-CSS suite asserts the glass button's filter (blur 20, saturate 1.8) and tint (0.7) in both
+themes on chromium, firefox and webkit.
+
+| Check                                                              | Result                                                |
+| ------------------------------------------------------------------ | ----------------------------------------------------- |
+| Package, iOS 26.5 (baselines skipped); iOS 18.4 with the baselines | 104, from 102; 106, from 104                          |
+| `node scripts/check-ios-poi.mjs`                                   | 52                                                    |
+| React: Button and IconButton tests, build, classes, raw, parity    | 19; ok; ok; 19 across 6, locked; ok                   |
+| `test:owned-css`, chromium / firefox / webkit                      | PASS on each, with the glass button's filter and tint |
+| Storybook docs check; `test:navigation` on chromium                | passed; 20 of 20                                      |
+| Android, `verifyPaparazziDebug`                                    | passed; a new golden of the glass buttons             |
+
+What the design config's `glass` utility still drives: its own consumers and the button's
+spotlight; the `GlassSettingsPanel` dev tool keeps its sliders, but no Kozmos component reads
+them for its surface any more.

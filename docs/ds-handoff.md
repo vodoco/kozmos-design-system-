@@ -1285,6 +1285,15 @@ the prototype's. Measured on each platform; the capped layout was clamped to its
 render test showed a fixed-height child overrunning it. The Button's glass variant next, then the
 transition arrows and the search sheet.
 
+### 2026-09-20 · The Button's glass variant (Claude Code)
+
+`glass-surface-2026-09-20.md` §7, commits `5d9c980`, `1f10259`, `45b35b5` and the docs commit.
+The Button's and IconButton's glass variant is the glass surface on all three platforms — the
+token's tint, blur and edge in place of white at 16 % and the design config's slider numbers —
+with the other variants' pixels untouched (the 18.4 baselines still match) and the last raw
+palette class gone from the owned CSS. Measured on each platform. Next: the transition arrows,
+then the search sheet.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:
