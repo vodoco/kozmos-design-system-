@@ -202,6 +202,20 @@ engine:
 cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:navigation
 ```
 
+The map shell's bottom sheet — its three detents, a drag anywhere on it, the scroll handoff, the
+handle, the anchored peek — is driven on the same served build, as the prototype was
+([initial-sheet-2026-09-20.md](initial-sheet-2026-09-20.md) §4; chromium adds a touch scenario):
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:map-sheet
+```
+
+The prototype itself can be re-driven and re-measured at any time:
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && node scripts/measure-prototype-sheet.cjs /tmp/prototype-sheet
+```
+
 The glass surface role has a parity check of its own, and the owned-CSS suite above measures it
 in both themes ([glass-surface-2026-09-20.md](glass-surface-2026-09-20.md)):
 
@@ -252,7 +266,12 @@ header test, the render matrix, the fixture decoding), `KozmosFloorSelectorTests
 keep the image); `scripts/check-poi-detail-examples.mjs` (the `long-content` block);
 `packages/android/src/test/java/com/kozmos/components/poidetailpanel/KozmosPOIDetailPanelPaparazziTest.kt`
 and its golden under `src/test/snapshots/images/`; `apps/PointrPlayground/Tests/*` and
-`UITests/RoutingFlowUITests.swift`.
+`UITests/RoutingFlowUITests.swift`; the sheet's rules in
+`packages/ios/Sources/Components/AdaptiveMapShell/KozmosPanelScrollView.swift`,
+`packages/react/src/components/AdaptiveMapShell/panel-detents.ts` and
+`packages/android/.../AdaptiveMapShell/PanelDetents.kt`, each with its tests, and
+`scripts/check-map-sheet.mjs`; the QA app's tiles in `Sources/App/Model/QuickAccess.swift` with
+`Tests/QuickAccessTests.swift` and `UITests/BrowseSheetUITests.swift`.
 
 ## 6. Measuring, not eyeballing
 
@@ -320,7 +339,10 @@ arrows were built on the 20th, night — [transition-arrows-2026-09-20.md](trans
 the AI search button and the marker's halo, and the tile, row and field on the prototype's
 geometry, in [search-sheet-2026-09-20.md](search-sheet-2026-09-20.md). The manoeuvre card, the route progress rail and the itinerary list were built on the
 20th on all three platforms — [navigation-parts-2026-09-20.md](navigation-parts-2026-09-20.md),
-with its own six decisions.
+with its own six decisions. Late on the 20th the initial sheet was driven
+([pointr-prototype-initial-sheet-2026-09-20.md](pointr-prototype-initial-sheet-2026-09-20.md)) and
+built ([initial-sheet-2026-09-20.md](initial-sheet-2026-09-20.md)): the three shells' detents,
+drag and anchored peek, and the QA app's sheet on the taxonomy's tiles.
 
 ## 9. Traps met, for the next reader
 

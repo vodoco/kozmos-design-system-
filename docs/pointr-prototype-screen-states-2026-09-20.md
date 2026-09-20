@@ -144,6 +144,11 @@ on them._
 - Everything already recorded: the in-surface status message, the collapsible selector on the
   web and Android, a floor slot and current-step state on a step. ~~Transition arrows~~ — built,
   [transition-arrows-2026-09-20.md](transition-arrows-2026-09-20.md).
+- ~~The sheet itself: the prototype's three detents, a drag anywhere on it with the content's
+  scroll handed off, and the place card's Go-fitted peek.~~ Driven
+  ([pointr-prototype-initial-sheet-2026-09-20.md](pointr-prototype-initial-sheet-2026-09-20.md))
+  and built on the three shells, with the QA app's sheet recomposed on the taxonomy's tiles
+  ([initial-sheet-2026-09-20.md](initial-sheet-2026-09-20.md).
 
 ## 8. What was not reached
 

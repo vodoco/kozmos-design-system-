@@ -1318,6 +1318,21 @@ has the AI search beside the field and the dot on results. That closes the five 
 ordered on the 20th: the glass surface as a style, the sheet, the Button's glass, the transition
 arrows, the search sheet.
 
+### 2026-09-20 · The initial sheet, driven and built (Claude Code)
+
+`pointr-prototype-initial-sheet-2026-09-20.md` (commit `dcb9c9d`, with
+`scripts/measure-prototype-sheet.cjs`) and `initial-sheet-2026-09-20.md`. Olcay asked for the
+prototype's initial bottom sheet analysed with its interactions: it was driven in a real browser
+and its React state read after every step — three detents at 20 / 54 / 94 % of the frame, the
+whole sheet dragging, the content scrolling only at full, a nearest-by-distance snap, the field's
+focus opening the sheet, a tile keeping the detent, a place card at half with a Go-fitted minimum
+and the search sheet's place remembered. On his four rulings the three shells were re-based to
+those numbers, drag anywhere with the scroll handoff, and an anchored peek the content marks; the
+QA app's sheet was recomposed on Kozmos parts with the taxonomy's aviation quick-access tiles
+(vendored, 10.12.0) searching by words as a stand-in for a type the SDK does not expose. Measured
+on each platform; the web sheet driven on three engines and by touch on chromium; the QA app's
+sheet driven by a UI test.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:
