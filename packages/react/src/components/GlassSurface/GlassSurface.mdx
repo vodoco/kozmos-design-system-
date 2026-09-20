@@ -1,0 +1,55 @@
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
+import * as GlassSurfaceStories from "./GlassSurface.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={GlassSurfaceStories} />
+
+# GlassSurface
+
+The glass surface role: what a surface over content it does not belong to is made of — a card over the map, a floating summary, a panel over a photo. It is composed from `Semantics.Effect.glass`: the theme's glass colour (white in light, black in dark) at the token's opacity, what shows through blurred and saturated by the token's numbers, and an edge at the token's border opacity, light in both themes. The shape is the caller's — `rounded-container`, `rounded-panel` — and the elevation too; the role is the material.
+
+With transparency reduced — the design config's `accessibility.reduceTransparency`, or the system's preference — the surface is the plain glass colour, opaque and unblurred: a preference, not a look.
+
+On iOS the role is `kozmosGlassSurface(_:)`: the same tint over the system's thin material, whose blur and saturation are the system's. On Android it is the tint and the edge alone: Compose blurs a node's own content, not what lies behind it.
+
+<Canvas>
+  <Story of={GlassSurfaceStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { GlassSurface } from "@kozmos/react";
+
+export function Example() {
+  return (
+    <GlassSurface className="rounded-container p-4 shadow-floating">
+      A card over the map
+    </GlassSurface>
+  );
+}
+    `}
+    swift={`
+import SwiftUI
+
+Text("A card over the map")
+    .padding(KozmosDimensions.primitivesLayoutSpacing200)
+    .kozmosGlassSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer, style: .continuous))
+    .kozmosElevation(KozmosShadows.semanticsElevationFloating)
+`}
+    kotlin={`
+Box(
+    modifier = Modifier
+        .kozmosGlassSurface(RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer))
+        .padding(KozmosDimensions.primitivesLayoutSpacing200)
+) {
+    Text("A card over the map")
+}
+    `}
+/>

@@ -460,6 +460,28 @@ try {
       (await measure(page.getByTestId("outer-glass"))).backgroundColor,
       (await measure(page.getByTestId("nested-glass"))).backgroundColor,
     );
+    // The glass surface role reads Semantics.Effect.glass: the theme's glass
+    // colour at 0.7, blur 20 and saturation 1.8 on what shows through, a
+    // light edge at 0.2; the two themes' tints differ.
+    const surface = (id) =>
+      page.getByTestId(`${id}-glass-surface`).evaluate((node) => {
+        const s = getComputedStyle(node);
+        return {
+          background: s.backgroundColor,
+          filter: s.backdropFilter || s.webkitBackdropFilter,
+          edge: s.borderTopColor,
+          edgeWidth: s.borderTopWidth,
+          edgeStyle: s.borderTopStyle,
+          edgeOpacityVar: s.getPropertyValue("--semantics-effect-glass-border-opacity"),
+        };
+      });
+    const nestedSurface = await surface("nested");
+    // A browser keeps eight bits of alpha: 0.7 reads back as 0.698 or 0.7.
+    const tint = /^rgba\(255, 255, 255, (0\.\d+)\)$/.exec(nestedSurface.background);
+    assert(tint && Math.abs(Number(tint[1]) - 0.7) < 0.01, `${mode}: the light glass surface's tint: ${nestedSurface.background}`);
+    assert.match(nestedSurface.filter, /blur\(20px\) saturate\(1\.8\)/, `${mode}: the glass surface's filter: ${nestedSurface.filter}`);
+    assert.equal(nestedSurface.edge, "rgba(255, 255, 255, 0.2)", `${mode}: the glass surface's edge: ${JSON.stringify(nestedSurface)}`);
+    assert.notEqual((await surface("outer")).background, nestedSurface.background, `${mode}: the two themes' glass tints are the same`);
     // Rotate/reflow a narrow host and switch direction without remounting. This
     // checks composition geometry, not certification of physical foldable devices.
     const outer = page.getByTestId("outer");

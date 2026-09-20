@@ -37,7 +37,7 @@ export type RouteSummaryProps =
   | RouteSummaryNavigationProps;
 
 const SURFACE =
-  "flex w-full flex-col rounded-[var(--primitives-radius-2xl)] border border-border bg-background/90 p-4 text-foreground shadow-overlay backdrop-blur-3xl transition-all duration-300";
+  "kozmos-reset kozmos-surface-glass flex w-full flex-col rounded-[var(--primitives-radius-2xl)] p-4 text-foreground shadow-overlay transition-all duration-300";
 
 const RouteSummaryNavigation = React.forwardRef<
   HTMLDivElement,

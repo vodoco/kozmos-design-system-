@@ -59,6 +59,7 @@ export * from "./components/LocationPin/LocationPin";
 export * from "./components/WayfindingCard/WayfindingCard";
 export * from "./components/DirectionStep/DirectionStep";
 export * from "./components/FloorSelector/FloorSelector";
+export * from "./components/GlassSurface";
 export * from "./components/Itinerary";
 export * from "./components/ManoeuvreCard";
 export * from "./components/POICard/POICard";

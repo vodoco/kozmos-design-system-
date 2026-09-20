@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  GlassSurface,
   Button,
   Input,
   Textarea,
@@ -86,6 +87,12 @@ function Controls({ id }: { id: string }) {
       <Button variant="glass" data-testid={`${id}-glass`}>
         Glass
       </Button>
+      <GlassSurface
+        data-testid={`${id}-glass-surface`}
+        className="rounded-container p-2"
+      >
+        Glass surface
+      </GlassSurface>
       <button
         className={buttonVariants({ size: "icon" })}
         data-testid={`${id}-helper-button`}

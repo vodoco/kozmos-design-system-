@@ -36,7 +36,7 @@ const SaveLocationCard = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "bg-white/70 dark:bg-black/70 backdrop-blur-3xl ring-1 ring-black/5 dark:ring-white/10 shadow-overlay rounded-[var(--primitives-radius-2xl)] p-5 flex flex-col gap-4 transition-all duration-300",
+          "kozmos-reset kozmos-surface-glass shadow-overlay rounded-[var(--primitives-radius-2xl)] p-5 flex flex-col gap-4 transition-all duration-300",
           className,
         )}
         {...props}

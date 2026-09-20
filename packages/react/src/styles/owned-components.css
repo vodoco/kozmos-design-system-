@@ -128,6 +128,44 @@
   .kozmos-button-glass {
     @apply glass glass-spotlight glass-bevel text-foreground hover:bg-white/10 active:scale-[0.98];
   }
+  /* The glass surface role: a surface over content it does not belong to —
+     the manoeuvre card, the navigation summary, the map's cards. Composed
+     from Semantics.Effect.glass: the theme's glass colour at the token's
+     opacity, what shows through blurred and saturated by the token's
+     numbers, an edge at the token's border opacity, light in both themes.
+     The design config sets --kozmos-surface-glass-opacity and -blur only
+     while transparency is reduced; otherwise the token is the value. The
+     element also carries kozmos-reset, or the scoped legacy preflight keeps
+     its border reset over the edge. */
+  .kozmos-surface-glass {
+    background-color: rgba(
+      var(--kozmos-glass-rgb),
+      var(--kozmos-surface-glass-opacity, var(--semantics-effect-glass-opacity))
+    );
+    -webkit-backdrop-filter: blur(
+        var(
+          --kozmos-surface-glass-blur,
+          calc(var(--semantics-effect-glass-blur) * 1px)
+        )
+      )
+      saturate(var(--semantics-effect-glass-saturation));
+    backdrop-filter: blur(
+        var(
+          --kozmos-surface-glass-blur,
+          calc(var(--semantics-effect-glass-blur) * 1px)
+        )
+      )
+      saturate(var(--semantics-effect-glass-saturation));
+    border: 1px solid
+      rgba(255, 255, 255, var(--semantics-effect-glass-border-opacity));
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .kozmos-surface-glass {
+      background-color: rgb(var(--kozmos-glass-rgb));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
   .kozmos-button-size-default {
     @apply h-11 px-4 py-2;
   }

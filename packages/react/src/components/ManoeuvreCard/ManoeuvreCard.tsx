@@ -66,7 +66,7 @@ const ManoeuvreCard = React.forwardRef<HTMLElement, ManoeuvreCardProps>(
         ref={ref}
         aria-label={expanded ? undefined : manoeuvreLabel}
         className={cn(
-          "kozmos-manoeuvre-card flex w-full flex-col gap-3 rounded-container bg-background/90 px-4 pb-1 pt-4 text-foreground shadow-floating backdrop-blur-xl",
+          "kozmos-manoeuvre-card kozmos-reset kozmos-surface-glass flex w-full flex-col gap-3 rounded-container px-4 pb-1 pt-4 text-foreground shadow-floating",
           className,
         )}
         {...props}
