@@ -160,7 +160,8 @@ struct WayfindingScreen: View {
                 detail: [step.distanceMetres.map(VenueFormat.distance), store.venue.floor(step.floorId)?.presentation.label]
                     .compactMap { $0 }.joined(separator: " · "),
                 isExpanded: itineraryExpanded,
-                onToggle: { withAnimation { itineraryExpanded.toggle() } }
+                onToggle: { withAnimation { itineraryExpanded.toggle() } },
+                surface: .glass
             ) {
                 KozmosItinerary(
                     origin: store.venue.originLabel,
@@ -216,6 +217,7 @@ struct WayfindingScreen: View {
                 durationText: VenueFormat.duration(remaining.durationSeconds),
                 distanceText: VenueFormat.distance(remaining.distanceMetres),
                 arrivalText: "Arrive \(VenueFormat.arrival(in: remaining.durationSeconds))",
+                surface: .glass,
                 onEndRoute: { store.endRoute() }
             ) {
                 KozmosRouteProgressRail(

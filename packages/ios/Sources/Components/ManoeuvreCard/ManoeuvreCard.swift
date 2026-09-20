@@ -3,7 +3,8 @@ import SwiftUI
 /// The current manoeuvre, floating over the map during navigation: its arrow,
 /// the instruction, how far and how long, and a grab bar that opens the full
 /// itinerary in its place. Mirrors the product prototype's instruction card:
-/// 402 wide it is 378 × 119, radius 18, on the glass surface, the instruction 20/600
+/// 402 wide it is 378 × 119, radius 18, a solid surface unless the product asks for
+/// glass, the instruction 20/600
 /// over a 14 grey detail, a 36 × 5 grab bar at its foot.
 ///
 /// The card owns the toggle and what VoiceOver hears of it. The itinerary it
@@ -20,6 +21,7 @@ public struct KozmosManoeuvreCard<Itinerary: View>: View {
     let expandLabel: String
     let collapseLabel: String
     let manoeuvreLabel: String
+    let surface: KozmosSurfaceStyle
     let maxItineraryHeight: CGFloat
     let itinerary: Itinerary
 
@@ -32,6 +34,7 @@ public struct KozmosManoeuvreCard<Itinerary: View>: View {
         expandLabel: String = "Show itinerary",
         collapseLabel: String = "Hide itinerary",
         manoeuvreLabel: String = "Current manoeuvre",
+        surface: KozmosSurfaceStyle = .solid,
         maxItineraryHeight: CGFloat = 320,
         @ViewBuilder itinerary: () -> Itinerary
     ) {
@@ -43,6 +46,7 @@ public struct KozmosManoeuvreCard<Itinerary: View>: View {
         self.expandLabel = expandLabel
         self.collapseLabel = collapseLabel
         self.manoeuvreLabel = manoeuvreLabel
+        self.surface = surface
         self.maxItineraryHeight = maxItineraryHeight
         self.itinerary = itinerary()
     }
@@ -126,7 +130,7 @@ public struct KozmosManoeuvreCard<Itinerary: View>: View {
         .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
         .padding(.bottom, KozmosDimensions.primitivesLayoutSpacing50)
         .frame(maxWidth: .infinity)
-        .kozmosGlassSurface(shape)
+        .kozmosSurface(shape, style: surface)
         .kozmosElevation(KozmosShadows.semanticsElevationFloating)
         .accessibilityElement(children: .contain)
         // Open, the card has no name of its own: the itinerary inside is the

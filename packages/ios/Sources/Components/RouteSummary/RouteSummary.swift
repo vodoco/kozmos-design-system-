@@ -21,6 +21,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
     private let arrivalText: String?
     private let endLabel: String
     private let progress: AnyView?
+    private let surface: KozmosSurfaceStyle
 
     public init(
         etaText: String,
@@ -28,6 +29,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
         state: KozmosRouteSummaryState = .active,
         onEndRoute: @escaping () -> Void,
         onStartNavigation: (() -> Void)? = nil,
+        surface: KozmosSurfaceStyle = .solid,
         @ViewBuilder transportModeIcon: () -> TransportModeIcon
     ) {
         self.etaText = etaText
@@ -42,6 +44,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
         self.arrivalText = nil
         self.endLabel = "End"
         self.progress = nil
+        self.surface = surface
     }
 
     /// The navigation layout: the destination's name with End beside it in
@@ -54,6 +57,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
         distanceText: String,
         arrivalText: String? = nil,
         endLabel: String = "End",
+        surface: KozmosSurfaceStyle = .solid,
         onEndRoute: @escaping () -> Void,
         @ViewBuilder progress: () -> some View
     ) where TransportModeIcon == EmptyView {
@@ -69,6 +73,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
         self.arrivalText = arrivalText
         self.endLabel = endLabel
         self.progress = AnyView(progress())
+        self.surface = surface
     }
 
     public var body: some View {
@@ -111,7 +116,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
             }
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing200)
-        .kozmosGlassSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
+        .kozmosSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous), style: surface)
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 
@@ -160,7 +165,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
             }
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing200)
-        .kozmosGlassSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
+        .kozmosSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous), style: surface)
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 }
@@ -171,7 +176,8 @@ public extension KozmosRouteSummary where TransportModeIcon == EmptyView {
         distanceText: String,
         state: KozmosRouteSummaryState = .active,
         onEndRoute: @escaping () -> Void,
-        onStartNavigation: (() -> Void)? = nil
+        onStartNavigation: (() -> Void)? = nil,
+        surface: KozmosSurfaceStyle = .solid
     ) {
         self.etaText = etaText
         self.distanceText = distanceText
@@ -185,5 +191,6 @@ public extension KozmosRouteSummary where TransportModeIcon == EmptyView {
         self.arrivalText = nil
         self.endLabel = "End"
         self.progress = nil
+        self.surface = surface
     }
 }

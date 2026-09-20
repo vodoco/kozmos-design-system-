@@ -78,7 +78,9 @@ struct SDKMapScreen: View {
                 detail: [SDKRoutePresenter.distanceLabel(for: step), session.stepFloorLabel(step.id)]
                     .compactMap { $0 }.joined(separator: " · "),
                 isExpanded: itineraryExpanded,
-                onToggle: { withAnimation { itineraryExpanded.toggle() } }
+                onToggle: { withAnimation { itineraryExpanded.toggle() } },
+                // The prototype's card and sheet are glass; the system's default is solid.
+                surface: .glass
             ) {
                 KozmosItinerary(
                     origin: session.origin?.name ?? "",
@@ -272,6 +274,7 @@ extension SDKMapScreen {
                 durationText: RouteFormat.duration(remaining.durationSeconds),
                 distanceText: RouteFormat.distance(remaining.distanceMetres),
                 arrivalText: "Arrive \(RouteFormat.arrival(in: remaining.durationSeconds))",
+                surface: .glass,
                 onEndRoute: session.endRoute
             ) {
                 KozmosRouteProgressRail(
