@@ -33,7 +33,10 @@ calculation in the product adapter.
 Existing `onAction` and `actionLabels` remain unchanged. Optional book/call
 capabilities use `details.supplementaryActions`, `onSupplementaryAction` and
 `supplementaryActionStates`; without a callback those actions are disabled.
-Favourite/bookmark are controlled toggle buttons in the header.
+Favourite/bookmark are controlled toggle buttons in the header. The name and those buttons
+share one row whatever the name's length: a long name wraps beside them, three lines at most,
+then truncates, and never pushes the buttons under it — the same rule on iOS and Android. The
+`LongContent` example carries a name that wraps, and the browser check measures it.
 
 Selected favourites/bookmarks use the themed filled Button treatment with an
 outline Pointr icon; unselected controls remain outlined. Navigation uses a
@@ -72,7 +75,8 @@ to the example's opener. The application owns focus restoration in real use.
   Icon buttons are rounded squares, not circles. Edge-attached sheets retain
   square bottom corners.
 - Secondary actions wrap rather than becoming clipped, undiscoverable controls.
-- Touch targets retain the shared 44px minimum; narrow headers may use two rows.
+- Touch targets retain the shared 44px minimum; the header keeps one row and lets the name
+  wrap instead.
 - No counterfeit logos, payment trademarks, photographs or map tiles are drawn.
 - Attribute chips are information, not non-functional buttons.
 - Opening hours follow the attribute groups consistently in this first model.

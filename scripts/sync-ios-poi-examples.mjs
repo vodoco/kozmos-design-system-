@@ -29,6 +29,12 @@ examples.push({
   poi: fixtures.restaurantPOI,
   details: fixtures.fullFieldDetails,
 });
+examples.push({
+  id: "long-content",
+  title: "Long content",
+  poi: fixtures.longContentPOI,
+  details: fixtures.longContentDetails,
+});
 for (const example of examples) {
   const d = example.details;
   example.details = {

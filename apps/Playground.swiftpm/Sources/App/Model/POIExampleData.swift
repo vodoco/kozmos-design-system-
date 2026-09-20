@@ -1632,6 +1632,316 @@ enum POIExampleData {
         }
       ]
     }
+  },
+  {
+    "id": "long-content",
+    "title": "Long content",
+    "poi": {
+      "id": "long-content",
+      "name": "Il Forno — Neapolitan restaurant and handmade pasta kitchen on the upper concourse",
+      "floorId": "1",
+      "floorLabel": "Current floor",
+      "buildingLabel": "Building A",
+      "availability": "open",
+      "availabilityLabel": "Open",
+      "description": "Wood-fired Neapolitan pizza & handmade pasta in a lively open kitchen.",
+      "media": [],
+      "actions": [
+        "navigate",
+        "share",
+        "favourite",
+        "bookmark"
+      ]
+    },
+    "details": {
+      "travelEstimate": {
+        "durationSeconds": 120,
+        "durationLabel": "2 min",
+        "distanceMetres": 120,
+        "distanceLabel": "120 m"
+      },
+      "supplementaryActions": [
+        {
+          "action": "book",
+          "label": "Book",
+          "systemImage": "calendar.badge.checkmark"
+        }
+      ],
+      "groups": [
+        {
+          "id": "long",
+          "heading": "Accessibility and assistance information",
+          "items": [
+            {
+              "id": "long",
+              "label": "Please contact the venue in advance for assistance with step-free access from the south entrance"
+            }
+          ]
+        },
+        {
+          "id": "Cuisines",
+          "heading": "Cuisines",
+          "items": [
+            {
+              "id": "cuisines:Italian",
+              "label": "Italian"
+            },
+            {
+              "id": "cuisines:Pizza",
+              "label": "Pizza"
+            },
+            {
+              "id": "cuisines:Mediterranean",
+              "label": "Mediterranean"
+            }
+          ]
+        },
+        {
+          "id": "Dietary Options",
+          "heading": "Dietary Options",
+          "items": [
+            {
+              "id": "dietaryOptions:Vegetarian",
+              "label": "Vegetarian"
+            },
+            {
+              "id": "dietaryOptions:Vegan",
+              "label": "Vegan"
+            },
+            {
+              "id": "dietaryOptions:Gluten-Free",
+              "label": "Gluten-Free"
+            }
+          ]
+        },
+        {
+          "id": "Service Options",
+          "heading": "Service Options",
+          "items": [
+            {
+              "id": "serviceOptions:Dine-in",
+              "label": "Dine-in",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/service-options/dine-in.png",
+              "iconMonochrome": true
+            }
+          ]
+        },
+        {
+          "id": "Accessibility",
+          "heading": "Accessibility",
+          "items": [
+            {
+              "id": "isWheelchairAccessible:true",
+              "label": "Wheelchair Friendly",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-wheelchair-accessible.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "hasHearingLoop:true",
+              "label": "Hearing Loop",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-hearing-loop.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "hasVisualAids:true",
+              "label": "Visual Aids",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-visual-aids.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "isAutismFriendly:true",
+              "label": "Autism Friendly",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-autism-friendly.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "hasAssistance:true",
+              "label": "Assistance Available",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-assistance.png",
+              "iconMonochrome": true
+            }
+          ]
+        },
+        {
+          "id": "Amenities",
+          "heading": "Amenities",
+          "items": [
+            {
+              "id": "hasWifi:true",
+              "label": "WiFi",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-wifi.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "hasRestrooms:true",
+              "label": "Restrooms",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-restrooms.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "hasOutdoorSeating:true",
+              "label": "Outdoor Seating",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-outdoor-seating.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "hasPlayArea:true",
+              "label": "Play Area",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-play-area.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "hasAlcoholService:true",
+              "label": "Alcohol Service",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-alcohol-service.png",
+              "iconMonochrome": true
+            }
+          ]
+        },
+        {
+          "id": "Good to Know",
+          "heading": "Good to Know",
+          "items": [
+            {
+              "id": "isFamilyFriendly:true",
+              "label": "Family Friendly",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-family-friendly.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "isPetFriendly:true",
+              "label": "Pet Friendly",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-pet-friendly.png",
+              "iconMonochrome": true
+            }
+          ]
+        },
+        {
+          "id": "Dress Code",
+          "heading": "Dress Code",
+          "items": [
+            {
+              "id": "dressCodes:smart-casual",
+              "label": "Smart Casual"
+            }
+          ]
+        },
+        {
+          "id": "Age Restriction",
+          "heading": "Age Restriction",
+          "items": [
+            {
+              "id": "ageRestriction:18+",
+              "label": "18+"
+            }
+          ]
+        },
+        {
+          "id": "Payment Methods",
+          "heading": "Payment Methods",
+          "items": [
+            {
+              "id": "paymentMethods:Cash",
+              "label": "Cash",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/cash.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "paymentMethods:Credit",
+              "label": "Credit/Debit",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/credit.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "paymentMethods:Google Pay",
+              "label": "Google Pay",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/google-pay.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "paymentMethods:Apple Pay",
+              "label": "Apple Pay",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/apple-pay.png",
+              "iconMonochrome": true
+            },
+            {
+              "id": "paymentMethods:Contactless",
+              "label": "Contactless",
+              "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/contactless.png",
+              "iconMonochrome": true
+            }
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "id": "rating",
+          "kind": "rating",
+          "label": "Rating",
+          "value": "4.7 / 5",
+          "detail": "32 reviews",
+          "systemImage": "star"
+        },
+        {
+          "id": "priceRange",
+          "kind": "price",
+          "label": "Price Range",
+          "value": "3 of 4",
+          "priceLevel": 3,
+          "tone": "neutral"
+        },
+        {
+          "id": "isWheelchairAccessible",
+          "kind": "property",
+          "label": "Wheelchair Accessible",
+          "value": "Wheelchair Friendly",
+          "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-wheelchair-accessible.png",
+          "iconMonochrome": true,
+          "tone": "neutral"
+        }
+      ],
+      "issues": [],
+      "openingHours": {
+        "label": "Opening hours",
+        "summary": "Open · Closes 12:30 pm",
+        "rows": [
+          {
+            "id": "weekdays",
+            "day": "Monday–Friday",
+            "hours": "8:00 am–12:30 pm"
+          },
+          {
+            "id": "saturday",
+            "day": "Saturday",
+            "hours": "9:00 am–12:30 pm"
+          },
+          {
+            "id": "sunday",
+            "day": "Sunday",
+            "hours": "Closed"
+          }
+        ],
+        "note": "Illustrative venue-local hours; not a live opening-status calculation."
+      },
+      "description": {
+        "preview": "Family-run since 1998, Il Forno serves Naples-style pizza from a wood-fired oven and pasta made fresh daily.",
+        "full": "Family-run since 1998, Il Forno serves Naples-style pizza from a wood-fired oven and pasta made fresh daily. The terrace seats overlook the atrium, and the open kitchen is the heart of the room. Weekend evenings are lively — booking recommended."
+      },
+      "tags": [
+        {
+          "id": "pizza",
+          "label": "#pizza"
+        },
+        {
+          "id": "italian",
+          "label": "#italian"
+        },
+        {
+          "id": "patio",
+          "label": "#patio"
+        }
+      ]
+    }
   }
 ]
 """#

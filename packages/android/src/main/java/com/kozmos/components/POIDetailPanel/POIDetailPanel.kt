@@ -300,7 +300,8 @@ private fun Header(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = KozmosColors.primitivesColorsForeground100,
-                maxLines = 1,
+                // Three lines at most, beside the buttons, as on iOS and the web.
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.semantics { heading() }
             )

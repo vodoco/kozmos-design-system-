@@ -69,11 +69,14 @@ final class KozmosPOIDetailTests: XCTestCase {
         let json = try XCTUnwrap(source.components(separatedBy: "#\"\"\"\n").last?.components(separatedBy: "\n\"\"\"#").first)
         struct Example: Decodable { let id: String; let poi: KozmosPOIPresentation; let details: KozmosPOIDetailsPresentation }
         let examples = try JSONDecoder().decode([Example].self, from: Data(json.utf8))
-        XCTAssertEqual(examples.count, 6)
+        XCTAssertEqual(examples.count, 7)
         for example in examples {
             XCTAssertFalse(example.poi.name.isEmpty)
             XCTAssertLessThanOrEqual(example.details.visibleSummary.count, 3)
         }
+        // The long-content example carries the name that wraps, on every platform.
+        let longContent = try XCTUnwrap(examples.first { $0.id == "long-content" })
+        XCTAssertGreaterThan(longContent.poi.name.count, 60)
         let restaurant = try XCTUnwrap(examples.first { $0.id == "restaurant" })
         XCTAssertEqual(restaurant.details.summary.first?.value, "4.7 / 5")
         XCTAssertNil(restaurant.details.groups.first?.items.first?.iconUrl)
@@ -188,6 +191,45 @@ final class KozmosPOIDetailTests: XCTestCase {
             attachment.lifetime = .keepAlways
             add(attachment)
         }
+    }
+
+    /// The name and the quick buttons share one row: a long name wraps beside
+    /// them, three lines at most, and never pushes them under it. The
+    /// favourite button is pressed, so its theme fill marks where the buttons
+    /// are; the name is the only dark text left of them.
+    @MainActor func testALongNameWrapsBesideTheQuickButtonsAndStopsAtThreeLines() async throws {
+        let width: CGFloat = 320
+        var buttonTop: [String: CGFloat] = [:]
+        var titleHeight: [String: CGFloat] = [:]
+        for (name, poiName) in [
+            ("short", "Il Forno"),
+            ("long", "Il Forno — Neapolitan restaurant and handmade pasta kitchen on the upper concourse"),
+            ("endless", String(repeating: "Il Forno Neapolitan restaurant ", count: 8)),
+        ] {
+            let poi = KozmosPOIPresentation(id: "long-name", name: poiName, floorId: "1", floorLabel: "Upper concourse",
+                                            buildingLabel: "Terminal 1", actions: [.navigate, .favourite, .bookmark])
+            let pixels = try await RenderedPixels.render(KozmosPOIDetailPanel(
+                poi: poi, actionLabels: [.navigate: "Go", .favourite: "Favourite", .bookmark: "Bookmark"],
+                onAction: { _, _ in }, actionStates: [.favourite: .init(pressed: true)], onClose: {},
+                details: .init(), onSupplementaryAction: { _, _ in }), size: CGSize(width: width, height: 600))
+            // The quick buttons: the leftmost is the pressed favourite, right of centre, near the top.
+            let favourite = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: width / 2, y: 0, width: width / 2, height: 200),
+                                                             where: RenderedPixels.isTheme), "\(name): no pressed favourite button")
+            buttonTop[name] = favourite.minY
+            // The name: dark text left of the buttons.
+            let title = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 12, y: 0, width: favourite.minX - 16, height: 200),
+                                                         where: RenderedPixels.isDarkText), "\(name): no title")
+            titleHeight[name] = title.height
+        }
+        let short = try XCTUnwrap(buttonTop["short"])
+        XCTAssertEqual(try XCTUnwrap(buttonTop["long"]), short, accuracy: 1, "a long name moved the buttons")
+        XCTAssertEqual(try XCTUnwrap(buttonTop["endless"]), short, accuracy: 1, "an endless name moved the buttons")
+        let oneLine = try XCTUnwrap(titleHeight["short"])
+        XCTAssertLessThan(oneLine, 30)
+        let threeLines = try XCTUnwrap(titleHeight["long"])
+        XCTAssertGreaterThan(threeLines, oneLine * 2.5, "the long name did not wrap")
+        XCTAssertLessThan(threeLines, oneLine + 2 * 32, "the long name took more than three lines")
+        XCTAssertEqual(try XCTUnwrap(titleHeight["endless"]), threeLines, accuracy: 1.5, "an endless name is not capped at three lines")
     }
     #endif
 }

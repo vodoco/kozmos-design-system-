@@ -506,6 +506,46 @@ try {
             );
             assert.equal(await favourite.getAttribute("aria-pressed"), "true");
           }
+          if (story === "long-content") {
+            // The name and the quick buttons share one row: a long name wraps
+            // beside them, three lines at most, and never pushes them under it.
+            const header = await panel.evaluate((e) => {
+              const title = e.querySelector(".kozmos-poi-title");
+              const actions = e.querySelector(".kozmos-poi-header-actions");
+              const t = title.getBoundingClientRect();
+              const a = actions.getBoundingClientRect();
+              return {
+                text: title.textContent,
+                titleTop: t.top,
+                titleBottom: t.bottom,
+                titleRight: t.right,
+                titleHeight: t.height,
+                actionsTop: a.top,
+                actionsLeft: a.left,
+                lineHeight: parseFloat(getComputedStyle(title).lineHeight),
+              };
+            });
+            assert.ok(header.text.length > 60, "the long-content name is long");
+            assert.ok(
+              header.actionsTop <= header.titleTop + 1 &&
+                header.actionsTop < header.titleBottom,
+              `the quick buttons sit beside the name, never under it (${JSON.stringify(header)})`,
+            );
+            assert.ok(
+              header.actionsLeft >= header.titleRight - 1,
+              "the quick buttons are to the side of the name",
+            );
+            assert.ok(
+              header.titleHeight <= header.lineHeight * 3 + 1,
+              `the name stops at three lines (${header.titleHeight}px of ${header.lineHeight}px lines)`,
+            );
+            if (viewport.width === 320) {
+              assert.ok(
+                header.titleHeight > header.lineHeight * 1.5,
+                "at 320px the long name wraps",
+              );
+            }
+          }
           if (story === "long-content" && viewport.width === 320) {
             await page.addStyleTag({ content: "html { font-size: 200%; }" });
             assert.equal(

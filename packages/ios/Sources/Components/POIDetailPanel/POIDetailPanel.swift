@@ -182,10 +182,10 @@ public struct KozmosPOIDetailPanel: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 12) {
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .top, spacing: 8) { identity; quickButtons }
-                VStack(alignment: .leading, spacing: 8) { identity; quickButtons }
-            }
+            // The name and the quick buttons share one row whatever the name's
+            // length: a long name wraps beside them, three lines at most, and
+            // never pushes them under it.
+            HStack(alignment: .top, spacing: 8) { identity; quickButtons }
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     location; Spacer(minLength: 4); availability
@@ -212,6 +212,7 @@ public struct KozmosPOIDetailPanel: View {
                 .accessibilityLabel(logo.alt)
             }
             Text(poi.name).font(KozmosTypography.title3.weight(.semibold))
+                .lineLimit(3)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityHeading(titleLevel.accessibilityHeadingLevel)

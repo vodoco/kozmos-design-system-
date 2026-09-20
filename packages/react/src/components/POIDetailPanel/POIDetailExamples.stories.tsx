@@ -22,6 +22,8 @@ import {
   parkingPOI,
   parkingDetails,
   fullFieldDetails,
+  longContentPOI,
+  longContentDetails,
 } from "./POIDetailPanel.fixtures";
 
 function Example({
@@ -256,27 +258,5 @@ export const ActionStates: Story = {
   },
 };
 export const LongContent: Story = {
-  args: {
-    poi: {
-      ...restaurantPOI,
-      name: "Il Forno — Neapolitan restaurant and handmade pasta kitchen on the upper concourse",
-    },
-    details: {
-      ...restaurantDetails,
-      groups: [
-        {
-          id: "long",
-          heading: "Accessibility and assistance information",
-          items: [
-            {
-              id: "long",
-              label:
-                "Please contact the venue in advance for assistance with step-free access from the south entrance",
-            },
-          ],
-        },
-        ...restaurantDetails.groups!,
-      ],
-    },
-  },
+  args: { poi: longContentPOI, details: longContentDetails },
 };

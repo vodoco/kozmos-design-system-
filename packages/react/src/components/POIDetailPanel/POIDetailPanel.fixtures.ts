@@ -331,3 +331,32 @@ export const fullFieldDetails: POIDetailsPresentation = {
     occupancyStatus: "occupied",
   }),
 };
+
+/**
+ * A name long enough to wrap, and a group label long enough to wrap: the
+ * header keeps the quick buttons beside a name of up to three lines, on every
+ * platform, and the detail content reflows at large type.
+ */
+export const longContentPOI: POIPresentation = {
+  ...restaurantPOI,
+  id: "long-content",
+  name: "Il Forno — Neapolitan restaurant and handmade pasta kitchen on the upper concourse",
+};
+
+export const longContentDetails: POIDetailsPresentation = {
+  ...restaurantDetails,
+  groups: [
+    {
+      id: "long",
+      heading: "Accessibility and assistance information",
+      items: [
+        {
+          id: "long",
+          label:
+            "Please contact the venue in advance for assistance with step-free access from the south entrance",
+        },
+      ],
+    },
+    ...(restaurantDetails.groups ?? []),
+  ],
+};

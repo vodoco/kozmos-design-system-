@@ -21,9 +21,12 @@
     flex-shrink: 0;
   }
   .kozmos-poi-header {
+    /* The name and the quick buttons share one row whatever the name's
+       length: a long name wraps beside them, three lines at most, and never
+       pushes them under it. */
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-wrap: nowrap;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
     padding: 1rem 1rem 0.75rem;
@@ -31,7 +34,7 @@
   .kozmos-poi-identity {
     display: flex;
     flex: 1 1 10rem;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.75rem;
     min-inline-size: 0;
   }
@@ -45,10 +48,15 @@
   .kozmos-poi-title {
     @apply text-xl font-semibold;
     margin: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    overflow-wrap: anywhere;
   }
   .kozmos-poi-header-actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     flex-shrink: 0;
     max-inline-size: 100%;
     margin-inline-start: auto;
