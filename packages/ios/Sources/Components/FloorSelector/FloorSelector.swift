@@ -139,7 +139,10 @@ public struct KozmosFloorSelector: View {
                 }
             }
             .padding(KozmosDimensions.primitivesLayoutSpacing75)
-            .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
+            // Opaque, unlike the closed control: the named rows make the list
+            // wide enough to cover the map's other controls, and a zoom button
+            // showing through a translucent row read as part of it.
+            .background(KozmosColors.primitivesColorsBackground0)
             .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
             .kozmosElevation(KozmosShadows.semanticsElevationFloating)
             .fixedSize()
