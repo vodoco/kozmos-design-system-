@@ -16,7 +16,15 @@ export interface AdaptiveMapLayoutInput {
   panelFraction?: number;
   /** Space required by measured map chrome before allocating bottom-panel height. */
   minimumMapHeight?: number;
+  /** Exclusions the map and the panel both keep out of, e.g. a keyboard. */
   safeAreaInsets?: Partial<LayoutInsets>;
+  /**
+   * The device's safe areas — the status bar, a notch, the home indicator —
+   * which the map runs under and the chrome keeps: a floating panel sits
+   * inside them; a bottom sheet's surface reaches the edge and its content
+   * keeps them.
+   */
+  chromeInsets?: Partial<LayoutInsets>;
   /** Host supplies hinge-free regions, already converted to shell-local units. */
   usableRegions?: readonly LayoutRect[];
 }
@@ -114,23 +122,37 @@ export function resolveAdaptiveMapLayout(
   const presentation = side ? "side" : "bottom";
   if (!input.hasPanel || !mapBounds.width || !mapBounds.height)
     return { mapBounds, panelBounds: null, presentation };
+  const chrome = input.chromeInsets ?? emptyInsets;
   if (side) {
-    const gap = Math.min(16, mapBounds.width / 4, mapBounds.height / 4);
+    // The floating panel keeps the device's safe areas around it.
+    const safeMap = intersectRect(mapBounds, {
+      x: mapBounds.x + positive(chrome.left),
+      y: mapBounds.y + positive(chrome.top),
+      width: Math.max(
+        0,
+        mapBounds.width - positive(chrome.left) - positive(chrome.right),
+      ),
+      height: Math.max(
+        0,
+        mapBounds.height - positive(chrome.top) - positive(chrome.bottom),
+      ),
+    });
+    const gap = Math.min(16, safeMap.width / 4, safeMap.height / 4);
     const panelWidth = Math.min(
       416,
-      mapBounds.width * 0.42,
-      Math.max(0, mapBounds.width - 2 * gap),
+      safeMap.width * 0.42,
+      Math.max(0, safeMap.width - 2 * gap),
     );
     return {
       mapBounds,
       presentation,
       panelBounds: {
         x: onRight
-          ? mapBounds.x + mapBounds.width - gap - panelWidth
-          : mapBounds.x + gap,
-        y: mapBounds.y + gap,
+          ? safeMap.x + safeMap.width - gap - panelWidth
+          : safeMap.x + gap,
+        y: safeMap.y + gap,
         width: panelWidth,
-        height: Math.max(0, mapBounds.height - 2 * gap),
+        height: Math.max(0, safeMap.height - 2 * gap),
       },
     };
   }

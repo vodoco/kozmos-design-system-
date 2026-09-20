@@ -76,7 +76,11 @@ export interface AdaptiveMapShellProps extends React.HTMLAttributes<HTMLDivEleme
   panelSurface?: SurfaceVariant;
   /** Minimum renderer padding. Combined with measured chrome using max, not addition. */
   collisionInsets?: Partial<MapCollisionInsets>;
-  /** Additional shell-local edge exclusions, e.g. keyboard overlap. Merged with CSS safe areas. */
+  /**
+   * Shell-local exclusions the map and the panel both keep out of, e.g. a
+   * keyboard. The device's own safe areas (CSS env()) are not these: the map
+   * runs under them and the chrome keeps them.
+   */
   safeAreaInsets?: Partial<MapCollisionInsets>;
   /** Hinge-free physical rectangles in shell-local CSS pixels. Omit for a continuous host. */
   usableRegions?: readonly MapLayoutRect[];
@@ -257,11 +261,15 @@ const AdaptiveMapShell = React.forwardRef<
       };
     }, [Boolean(topBar), Boolean(controls), Boolean(panel)]);
 
+    // The device's safe areas (CSS env()) are the chrome's: the map runs
+    // under them, as the prototype's does. What the host supplies — a
+    // keyboard — is an exclusion the map and the panel both keep out of.
+    const chrome = measured.safe;
     const safe = {
-      top: mergeSafeInset(measured.safe.top, safeAreaInsets?.top),
-      right: mergeSafeInset(measured.safe.right, safeAreaInsets?.right),
-      bottom: mergeSafeInset(measured.safe.bottom, safeAreaInsets?.bottom),
-      left: mergeSafeInset(measured.safe.left, safeAreaInsets?.left),
+      top: mergeSafeInset(0, safeAreaInsets?.top),
+      right: mergeSafeInset(0, safeAreaInsets?.right),
+      bottom: mergeSafeInset(0, safeAreaInsets?.bottom),
+      left: mergeSafeInset(0, safeAreaInsets?.left),
     };
     // The sheet's detents, in the height the sheet can use — the shell less
     // its safe areas, as the layout resolves it. The content detent and the
@@ -322,13 +330,19 @@ const AdaptiveMapShell = React.forwardRef<
       // as the prototype's full is.
       minimumMapHeight: topBar ? measured.barHeight + 32 : 0,
       safeAreaInsets: safe,
+      chromeInsets: chrome,
       usableRegions,
     });
     const unavailable =
       measured.ready && (!layout.mapBounds.width || !layout.mapBounds.height);
     const onRight =
       (panelPlacement === "end") === (measured.direction !== "rtl");
-    const available = { ...layout.mapBounds };
+    const available = {
+      x: layout.mapBounds.x + chrome.left,
+      y: layout.mapBounds.y + chrome.top,
+      width: Math.max(0, layout.mapBounds.width - chrome.left - chrome.right),
+      height: Math.max(0, layout.mapBounds.height - chrome.top - chrome.bottom),
+    };
     if (layout.panelBounds && layout.presentation === "side") {
       if (onRight) available.width = layout.panelBounds.x - available.x;
       else {
@@ -337,7 +351,7 @@ const AdaptiveMapShell = React.forwardRef<
           layout.mapBounds.x + layout.mapBounds.width - available.x;
       }
     } else if (layout.panelBounds && layout.presentation === "bottom") {
-      available.height = layout.panelBounds.y - available.y;
+      available.height = Math.max(0, layout.panelBounds.y - available.y);
     }
     const gap = Math.min(16, available.width / 4, available.height / 4);
     const chromeWidth = Math.max(0, available.width - 2 * gap);
@@ -387,7 +401,12 @@ const AdaptiveMapShell = React.forwardRef<
                   ? "right"
                   : "left",
       })),
-      collisionInsets,
+      {
+        top: Math.max(collisionInsets?.top ?? 0, chrome.top),
+        right: Math.max(collisionInsets?.right ?? 0, chrome.right),
+        bottom: Math.max(collisionInsets?.bottom ?? 0, chrome.bottom),
+        left: Math.max(collisionInsets?.left ?? 0, chrome.left),
+      },
     );
     const snapshot = JSON.stringify({
       ...layout,
@@ -654,6 +673,12 @@ const AdaptiveMapShell = React.forwardRef<
               // as pointer events. Below the largest detent every touch is
               // the sheet's.
               style={{
+                // The content keeps the device's safe areas inside the
+                // sheet's edge-to-edge surface; scrolling content runs under
+                // them to this padding.
+                paddingBottom: isSheet ? chrome.bottom : undefined,
+                paddingLeft: isSheet ? chrome.left : undefined,
+                paddingRight: isSheet ? chrome.right : undefined,
                 overflowY: scrollEnabled ? "auto" : "hidden",
                 touchAction: scrollEnabled
                   ? scrolled

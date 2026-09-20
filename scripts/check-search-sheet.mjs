@@ -2,8 +2,8 @@
  * The search sheet's parts, measured in a real browser against the
  * Storybook build: the category grid aligns its cells at the top, so a
  * one-line label beside a two-line one keeps its square on the same edge;
- * the AI search button is laid out at 48 with its 66 ring outside, and the
- * ring's gradient turns in place unless motion is reduced.
+ * the AI search button is a 48 circle whose gradient ring is a 2.5 band around
+ * a 43 disc, and the ring's gradient turns in place unless motion is reduced.
  *
  *   STORYBOOK_URL=http://127.0.0.1:6012 node scripts/check-search-sheet.mjs
  *   ADAPTIVE_BROWSER=firefox|webkit for the other engines.
@@ -80,10 +80,14 @@ try {
       const s = getComputedStyle(node);
       return { width: node.offsetWidth, height: node.offsetHeight, animationName: s.animationName, animationDuration: s.animationDuration, background: s.backgroundImage };
     });
-    near(ring.width, 66, 1, "the ring is not 66");
-    near(ring.height, 66, 1, "the ring is not 66");
+    near(ring.width, 48, 1, "the ring is not the button's 48");
+    near(ring.height, 48, 1, "the ring is not the button's 48");
+    // The disc 2.5 inside the ring: a band two and a half wide, the prototype's.
+    const disc = await page.locator(".kozmos-ai-search-ring + span").evaluate((node) => ({ width: node.offsetWidth, left: node.offsetLeft }));
+    near(disc.width, 43, 1, "the disc is not 43");
+    near(disc.left, 2.5, 0.75, "the ring's band is not two and a half wide");
     assert.equal(ring.animationName, "kozmos-ai-search-spin", `the ring does not turn: ${ring.animationName}`);
-    assert.equal(ring.animationDuration, "3s", `the ring's turn is not three seconds: ${ring.animationDuration}`);
+    assert.equal(ring.animationDuration, "3.6s", `the ring's turn is not the prototype's 3.6 seconds: ${ring.animationDuration}`);
     assert.match(ring.background, /conic-gradient/, `the ring is not the conic gradient: ${ring.background}`);
     // It turns: the transform differs a moment later.
     const first = await page.locator(".kozmos-ai-search-ring").evaluate((node) => getComputedStyle(node).transform);

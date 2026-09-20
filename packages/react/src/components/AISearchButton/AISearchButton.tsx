@@ -8,7 +8,8 @@ export interface AISearchButtonProps extends React.ButtonHTMLAttributes<HTMLButt
 }
 
 /**
- * The AI search: a 48 disc inside a 66 ring whose gradient runs through the
+ * The AI search, the prototype's: a 48 circle whose gradient ring is a band
+ * two and a half wide around a 43 white disc; the gradient runs through the
  * theme's own ramp — the first gradient made of tokens — with a 16 icon.
  * The ring is drawn by `.kozmos-ai-search-ring` in the owned CSS, from
  * `--primitives-colors-theme-300` to `-600` and back.
@@ -27,11 +28,11 @@ const AISearchButton = React.forwardRef<HTMLButtonElement, AISearchButtonProps>(
     >
       <span
         aria-hidden="true"
-        className="kozmos-ai-search-ring absolute inset-[-9px] rounded-pill"
+        className="kozmos-ai-search-ring absolute inset-0 rounded-pill"
       />
       <span
         aria-hidden="true"
-        className="absolute inset-[2px] rounded-pill bg-background shadow-raised"
+        className="absolute inset-[2.5px] rounded-pill bg-background"
       />
       <Sparkles aria-hidden="true" className="relative h-4 w-4 text-primary" />
     </button>

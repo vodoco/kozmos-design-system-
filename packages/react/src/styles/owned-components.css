@@ -170,7 +170,7 @@
   }
   /* The AI search's ring: the theme's own ramp, 300 to 600 and back, as a
      conic gradient. The first gradient the system draws, made of tokens.
-     It turns in place, once every three seconds, unless motion is reduced. */
+     It turns in place, the prototype's 3.6 seconds a turn, unless motion is reduced. */
   .kozmos-ai-search-ring {
     background: conic-gradient(
       from 0deg,
@@ -178,7 +178,7 @@
       var(--primitives-colors-theme-600),
       var(--primitives-colors-theme-300)
     );
-    animation: ai-search-spin 3s linear infinite;
+    animation: ai-search-spin 3.6s linear infinite;
   }
   /* The build prefixes keyframe names with kozmos-: this becomes kozmos-ai-search-spin. */
   @keyframes ai-search-spin {
