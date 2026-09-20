@@ -34,6 +34,19 @@ enum class DirectionType {
     Straight, Left, Right, Destination
 }
 
+/**
+ * The arrow for a direction, one table for every part that draws one.
+ * Turn icons must NOT auto-mirror: "turn left" stays a physical left turn
+ * in RTL locales. Only reading-order affordances (back, forward, chevrons)
+ * belong to Icons.AutoMirrored.
+ */
+fun DirectionType.icon(): ImageVector = when (this) {
+    DirectionType.Straight -> Icons.Default.ArrowUpward
+    DirectionType.Left -> Icons.Default.TurnLeft
+    DirectionType.Right -> Icons.Default.TurnRight
+    DirectionType.Destination -> Icons.Default.LocationOn
+}
+
 @Composable
 fun KozmosDirectionStep(
     type: DirectionType,
@@ -42,15 +55,7 @@ fun KozmosDirectionStep(
     distance: String? = null,
     duration: String? = null
 ) {
-    // Turn icons must NOT auto-mirror: "turn left" stays a physical left turn
-    // in RTL locales. Only reading-order affordances (back, forward, chevrons)
-    // belong to Icons.AutoMirrored.
-    val icon = when (type) {
-        DirectionType.Straight -> Icons.Default.ArrowUpward
-        DirectionType.Left -> Icons.Default.TurnLeft
-        DirectionType.Right -> Icons.Default.TurnRight
-        DirectionType.Destination -> Icons.Default.LocationOn
-    }
+    val icon = type.icon()
 
     Row(
         modifier = modifier

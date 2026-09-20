@@ -24,7 +24,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.kozmos.components.button.KozmosButton
+import com.kozmos.components.button.KozmosButtonEmotion
+import com.kozmos.components.button.KozmosButtonSize
+import com.kozmos.components.button.KozmosButtonVariant
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
@@ -113,6 +121,80 @@ fun KozmosRouteSummary(
                     Text("Start Navigation")
                 }
             }
+        }
+    }
+}
+
+/**
+ * The navigation layout: the destination's name with End beside it in the
+ * danger outline; the time, distance and arrival on one row; the caller's
+ * `progress` — a `KozmosRouteProgressRail`, in the products — below. The
+ * layout above is unchanged.
+ */
+@Composable
+fun KozmosRouteSummary(
+    destination: String,
+    durationText: String,
+    distanceText: String,
+    onEndRoute: () -> Unit,
+    modifier: Modifier = Modifier,
+    arrivalText: String? = null,
+    endLabel: String = "End",
+    progress: (@Composable () -> Unit)? = null
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
+        color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
+        tonalElevation = 6.dp,
+        shadowElevation = 12.dp,
+        border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground900.copy(alpha = 0.08f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(KozmosDimensions.primitivesLayoutSpacing200),
+            verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing150)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = destination,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = KozmosColors.primitivesColorsForeground100,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).semantics { heading() }
+                )
+                Spacer(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSpacing150))
+                KozmosButton(
+                    onClick = onEndRoute,
+                    variant = KozmosButtonVariant.Outline,
+                    emotion = KozmosButtonEmotion.Danger,
+                    size = KozmosButtonSize.Sm
+                ) {
+                    Text(endLabel)
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics(mergeDescendants = true) {}
+            ) {
+                CompositionLocalProvider(LocalContentColor provides KozmosColors.primitivesColorsForeground100) {
+                    Text(
+                        text = durationText,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    Spacer(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSpacing150))
+                    Text(text = distanceText, style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (arrivalText != null) {
+                        Text(text = arrivalText, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
+            progress?.invoke()
         }
     }
 }
