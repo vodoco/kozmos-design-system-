@@ -66,22 +66,18 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
 
     // MARK: Routing — the flow lives in SDKRouting.swift; the state lives here.
 
-    enum Phase { case browse, routeSetup, routePreview, directions }
+    enum Phase { case browse, routeSetup, directions }
     @Published var phase: Phase = .browse
     @Published var originQuery = ""
     @Published var origin: PTRPoi?
     @Published var routeStatus: KozmosRouteReadiness = .idle
     @Published var routeMessage: String?
-    @Published var quickestRoute: SDKRoute?
-    @Published var stepFreeRoute: SDKRoute?
-    @Published var selectedOptionId = SDKRoutePresenter.OptionID.quickest
+    @Published var route: SDKRoute?
     @Published var stepIndex = 0
     @Published var wayfindingReady = false
-    /// The SDK's routes behind the options: the map draws these.
-    var sdkRoutes: [String: PTRRoute] = [:]
+    /// The SDK's route behind the directions: the map draws this.
+    var sdkRoute: PTRRoute?
     var calculationTask: Task<Void, Never>?
-    /// Whether the map is framing the route; a pan or a pinch ends it.
-    var framesRoute = false
 
     private var configuration: QAConfiguration?
     let log = Logger(subsystem: "com.kozmos.pointrqa", category: "poi")
@@ -284,9 +280,7 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     func setChromeInsets(_ insets: KozmosMapCollisionInsets) {
         chromeInsets = insets
         guard applyCameraPadding(animated: false) else { return }
-        if framesRoute, let route = selectedRoute {
-            fitRoute(route)
-        } else if framesSelection, let selected {
+        if framesSelection, let selected {
             widget?.mapViewController.focusPoi(selected, shouldZoom: true)
         }
     }
@@ -313,7 +307,6 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     }
     func zoom(_ delta: Double) {
         framesSelection = false
-        framesRoute = false
         guard let map = widget?.mapViewController else { return }
         map.setZoomLevel(min(map.maximumZoomLevel, max(map.minimumZoomLevel, map.zoomLevel + delta)), animated: true)
     }
@@ -321,13 +314,13 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     // The visitor moving the map. Measured on Design-QA: a pan reports
     // `mapDidReceivePan`, a pinch `didZoom`, and a `focusPoi` flight neither.
     nonisolated func mapDidReceivePan(_ map: PTRMapViewController) {
-        Task { @MainActor in self.framesSelection = false; self.framesRoute = false }
+        Task { @MainActor in self.framesSelection = false }
     }
     nonisolated func map(_ map: PTRMapViewController, didZoom zoomValue: Double) {
-        Task { @MainActor in self.framesSelection = false; self.framesRoute = false }
+        Task { @MainActor in self.framesSelection = false }
     }
     nonisolated func mapDidReceiveSignificantRotationGesture(_ map: PTRMapViewController) {
-        Task { @MainActor in self.framesSelection = false; self.framesRoute = false }
+        Task { @MainActor in self.framesSelection = false }
     }
 
     nonisolated func map(_ map: PTRMapViewController, didReceiveTapOnFeature feature: PTRFeature) {

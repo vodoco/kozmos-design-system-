@@ -100,34 +100,9 @@ enum RouteFormat {
 }
 
 /// Route values onto the Kozmos routing contracts. Product policy lives here:
-/// which option is which, what a warning says, how a step's arrow is chosen.
+/// how a step's arrow is chosen, what a failure offers. There are no
+/// wayfinding modes yet, so no options: one route, and its directions.
 enum SDKRoutePresenter {
-    enum OptionID {
-        static let quickest = "quickest"
-        static let stepFree = "step-free"
-    }
-
-    /// The two options the preview offers, from the two calculations. A
-    /// calculation that found nothing is an option the visitor can see but
-    /// not choose, with the reason on it.
-    static func options(quickest: SDKRoute?, stepFree: SDKRoute?, selected: String) -> [KozmosRouteOptionPresentation] {
-        [(OptionID.quickest, "Quickest", KozmosRoutePreference.quickest, quickest),
-         (OptionID.stepFree, "Step-free", KozmosRoutePreference.stepFree, stepFree)].map { id, label, preference, route in
-            guard let route else {
-                return KozmosRouteOptionPresentation(
-                    id: id, label: label, durationSeconds: 0, durationLabel: "—", distanceMetres: 0, distanceLabel: "—",
-                    preference: preference, selected: false, available: false,
-                    warning: preference == .stepFree ? "No step-free route was found" : "No route was found")
-            }
-            return KozmosRouteOptionPresentation(
-                id: id, label: label,
-                durationSeconds: route.durationSeconds, durationLabel: RouteFormat.duration(route.durationSeconds),
-                distanceMetres: route.distanceMetres, distanceLabel: RouteFormat.distance(route.distanceMetres),
-                preference: preference, selected: id == selected, available: true,
-                warning: preference == .quickest && route.usesInaccessibleTransitions ? "Uses stairs or escalators" : nil)
-        }
-    }
-
     static func travelEstimate(_ route: SDKRoute) -> KozmosTravelEstimatePresentation {
         KozmosTravelEstimatePresentation(
             durationSeconds: route.durationSeconds, durationLabel: RouteFormat.duration(route.durationSeconds),
@@ -154,7 +129,7 @@ enum SDKRoutePresenter {
         step.distanceMetres >= 1 ? RouteFormat.distance(step.distanceMetres) : nil
     }
 
-    /// What the preview offers when a calculation produced no route.
+    /// What the picker offers when a calculation produced no route.
     enum Recovery: Equatable {
         case tryAgain
         case chooseAnotherOrigin
@@ -173,8 +148,8 @@ enum SDKRoutePresenter {
     }
 
     /// Whether readiness arriving repeats the request by itself: only while
-    /// the visitor is looking at the not-ready message.
+    /// the visitor is looking at the not-ready message in the picker.
     static func retriesOnReadiness(phase: SDKSession.Phase, status: KozmosRouteReadiness) -> Bool {
-        phase == .routePreview && status == .error
+        phase == .routeSetup && status == .error
     }
 }

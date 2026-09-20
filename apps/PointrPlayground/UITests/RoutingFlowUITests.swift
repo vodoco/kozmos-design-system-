@@ -139,23 +139,17 @@ final class RoutingFlowUITests: XCTestCase {
         print("QA-FLOW origin: \(origin.label)")
         origin.tap()
 
-        // 4. The preview.
-        let show = app.buttons["Show directions"]
-        XCTAssertTrue(show.waitForExistence(timeout: 30), "no preview")
+        // 4. The directions open as soon as the route exists; the picker stays
+        // with the reason when it does not.
         if environment["KOZMOS_QA_EXPECT_NO_ROUTE"] != nil {
-            let noRoute = app.staticTexts["No route was found between these places."]
+            let noRoute = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'No route was found'")).firstMatch
             XCTAssertTrue(noRoute.waitForExistence(timeout: 30), "a route was found after all")
-            XCTAssertTrue(app.buttons["Choose another starting point"].exists, "the no-route state offers no way on")
-            XCTAssertFalse(show.isEnabled, "Show directions is enabled with no route")
-            attachTree(any("Route preview"), name: "4-route-preview-no-route")
-            attach("4-route-preview-no-route")
+            XCTAssertTrue(originField.exists, "the picker did not stay for another starting point")
+            attachTree(any("Starting point"), name: "4-no-route")
+            attach("4-no-route")
             print("QA-FLOW no route, as expected")
             return
         }
-        waitUntilEnabled(show, timeout: 30)
-        attachTree(any("Route preview"), name: "4-route-preview")
-        attach("4-route-preview")
-        show.tap()
 
         // 5. The directions, stepped to the end.
         let next = app.buttons["Next step"]

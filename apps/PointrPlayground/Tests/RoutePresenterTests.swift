@@ -26,37 +26,6 @@ final class RoutePresenterTests: XCTestCase {
         ])
     }
 
-    func testTwoRoutesBecomeTwoOptionsWithTheStairsWarningOnTheQuickest() {
-        let options = SDKRoutePresenter.options(quickest: withStairs, stepFree: stepFree, selected: SDKRoutePresenter.OptionID.stepFree)
-        XCTAssertEqual(options.map(\.id), ["quickest", "step-free"])
-        XCTAssertEqual(options.map(\.label), ["Quickest", "Step-free"])
-        XCTAssertEqual(options.map(\.selected), [false, true])
-        XCTAssertEqual(options.map(\.available), [true, true])
-        XCTAssertEqual(options[0].durationLabel, "4 min")
-        XCTAssertEqual(options[0].distanceLabel, "250 m")
-        XCTAssertEqual(options[0].warning, "Uses stairs or escalators")
-        XCTAssertEqual(options[1].durationLabel, "5 min")
-        XCTAssertNil(options[1].warning)
-        XCTAssertEqual(options.map(\.preference), [.quickest, .stepFree])
-    }
-
-    /// A calculation that found nothing is still shown, unavailable, with its reason.
-    func testAMissingRouteIsAnUnavailableOption() {
-        let options = SDKRoutePresenter.options(quickest: withStairs, stepFree: nil, selected: SDKRoutePresenter.OptionID.quickest)
-        XCTAssertEqual(options[1].available, false)
-        XCTAssertEqual(options[1].warning, "No step-free route was found")
-        XCTAssertEqual(options[1].durationLabel, "—")
-        let none = SDKRoutePresenter.options(quickest: nil, stepFree: nil, selected: SDKRoutePresenter.OptionID.quickest)
-        XCTAssertEqual(none.map(\.available), [false, false])
-        XCTAssertEqual(none[0].warning, "No route was found")
-    }
-
-    /// A step-free transition on the quickest route is not a warning.
-    func testAnAccessibleTransitionRaisesNoWarning() {
-        let options = SDKRoutePresenter.options(quickest: stepFree, stepFree: stepFree, selected: SDKRoutePresenter.OptionID.quickest)
-        XCTAssertNil(options[0].warning)
-    }
-
     func testTheSDKsMessageTypesMapOntoTheFourArrows() {
         let expectations: [(Int, DirectionType)] = [
             (0, .straight), (1, .straight), (16, .straight), (17, .straight), (5, .straight),
@@ -113,13 +82,12 @@ final class RoutePresenterTests: XCTestCase {
         XCTAssertNil(SDKRoutePresenter.recovery(for: .idle))
     }
 
-    /// Readiness arriving repeats the request only while the not-ready message shows.
-    func testReadinessRetriesOnlyTheNotReadyPreview() {
-        XCTAssertTrue(SDKRoutePresenter.retriesOnReadiness(phase: .routePreview, status: .error))
-        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .routePreview, status: .noRoute))
-        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .routePreview, status: .calculating))
+    /// Readiness arriving repeats the request only while the not-ready message shows in the picker.
+    func testReadinessRetriesOnlyTheNotReadyPicker() {
+        XCTAssertTrue(SDKRoutePresenter.retriesOnReadiness(phase: .routeSetup, status: .error))
+        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .routeSetup, status: .noRoute))
+        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .routeSetup, status: .calculating))
         XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .browse, status: .error))
-        XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .routeSetup, status: .error))
         XCTAssertFalse(SDKRoutePresenter.retriesOnReadiness(phase: .directions, status: .error))
     }
 

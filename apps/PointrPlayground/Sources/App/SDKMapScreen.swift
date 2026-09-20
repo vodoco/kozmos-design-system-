@@ -88,7 +88,6 @@ struct SDKMapScreen: View {
         switch session.phase {
         case .browse: return session.selected?.name ?? "QA places"
         case .routeSetup: return "Starting point"
-        case .routePreview: return "Route preview"
         case .directions: return "Directions"
         }
     }
@@ -97,7 +96,6 @@ struct SDKMapScreen: View {
         switch session.phase {
         case .browse: browsePanel
         case .routeSetup: routeSetupPanel
-        case .routePreview: routePreviewPanel
         case .directions: directionsPanel
         }
     }
@@ -156,9 +154,10 @@ struct SDKMapScreen: View {
     }
 }
 
-/// The three routing surfaces, composed from Kozmos parts as the fixture
+/// The two routing surfaces, composed from Kozmos parts as the fixture
 /// playground composes them. The host adds only the starting-point picker,
 /// which the playground does not need: it has an entrance to start from.
+/// There is no preview step: the directions open as soon as a route exists.
 extension SDKMapScreen {
     private var originItems: [KozmosPOIResultListItem] {
         session.originCandidates.enumerated().map { index, poi in
@@ -182,6 +181,9 @@ extension SDKMapScreen {
             .padding(KozmosDimensions.primitivesLayoutSpacing200)
             KozmosSearchBar(text: $session.originQuery, placeholder: "Choose a starting point")
                 .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
+            routeStatusRow
+                .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
+                .padding(.top, KozmosDimensions.primitivesLayoutSpacing150)
             ScrollView {
                 KozmosPOIResultList(
                     items: originItems,
@@ -195,40 +197,33 @@ extension SDKMapScreen {
         }
     }
 
-    var routePreviewPanel: some View {
-        KozmosRoutePreviewPanel(
-            destinationName: session.selected?.name ?? "",
-            options: session.routeOptions,
-            status: session.routeStatus,
-            backLabel: "Back to place details",
-            continueLabel: "Show directions",
-            optionsCountLabel: session.origin.map { "\(session.routeOptions.count) routes from \($0.name)" },
-            selectedRouteAnnouncement: session.selectedRouteAnnouncement,
-            onOptionSelect: session.selectRouteOption,
-            onBack: session.endRoute,
-            onContinue: { _ in session.showDirections() },
-            statusContent: {
-                VStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
-                    if session.routeStatus == .calculating {
-                        KozmosSpinner()
-                        Text("Working out the way there…").font(KozmosTypography.subheadline)
-                            .foregroundColor(KozmosColors.primitivesColorsForeground500)
-                    } else {
-                        Text(session.routeMessage ?? "").font(KozmosTypography.subheadline)
-                            .multilineTextAlignment(.center)
-                        switch SDKRoutePresenter.recovery(for: session.routeStatus) {
-                        case .tryAgain?: KozmosButton("Try again", action: session.retryRouteCalculation)
-                        case .chooseAnotherOrigin?: KozmosButton("Choose another starting point", action: session.startRouteSetup)
-                        case nil: EmptyView()
-                        }
-                    }
+    /// What the calculation is doing, in the picker: the directions open by
+    /// themselves once a route exists, so only waiting and failure show here.
+    @ViewBuilder private var routeStatusRow: some View {
+        switch session.routeStatus {
+        case .calculating:
+            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                KozmosSpinner()
+                Text("Working out the way from \(session.origin?.name ?? "there")…").font(KozmosTypography.subheadline)
+                    .foregroundColor(KozmosColors.primitivesColorsForeground500)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        case .error, .noRoute:
+            VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                Text(session.routeMessage ?? "").font(KozmosTypography.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                if SDKRoutePresenter.recovery(for: session.routeStatus) == .tryAgain {
+                    KozmosButton("Try again", action: session.retryRouteCalculation)
                 }
-            },
-            alert: { EmptyView() })
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        case .idle, .ready:
+            EmptyView()
+        }
     }
 
     var directionsPanel: some View {
-        let route = session.selectedRoute
+        let route = session.route
         let steps = route?.steps ?? []
         let remaining = route?.remaining(from: session.stepIndex) ?? (distanceMetres: 0, durationSeconds: 0)
         return VStack(spacing: 0) {
