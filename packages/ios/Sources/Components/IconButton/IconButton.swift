@@ -54,11 +54,12 @@ public struct KozmosIconButton: View {
             }
             .foregroundColor(foregroundColor)
             .frame(width: 44, height: 44)
-            .background(backgroundColor)
-            .clipShape(Circle())
-            .overlay(
-                Circle()
-                    .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
+            .kozmosButtonSurface(
+                variant == .glass ? .glass : nil,
+                fill: backgroundColor,
+                stroke: borderColor,
+                strokeWidth: variant == .outline ? 1 : 0,
+                shape: Circle()
             )
         }
         .disabled(isDisabled || isLoading)
@@ -79,7 +80,8 @@ public struct KozmosIconButton: View {
         case .destructive: return KozmosColors.componentsPrimaryButtonsDangerButtonBackgroundIdle
         case .secondary: return KozmosColors.componentsPrimaryButtonsNeutralButtonBackgroundIdle
         case .outline, .ghost, .link: return Color.clear
-        case .glass: return KozmosColors.primitivesColorsForeground0.opacity(0.16)
+        // The glass variant is the glass surface; the fill is the surface's.
+        case .glass: return Color.clear
         }
     }
 
@@ -89,7 +91,7 @@ public struct KozmosIconButton: View {
         case .destructive: return KozmosColors.componentsPrimaryButtonsDangerButtonForegroundContentIdle
         case .secondary: return KozmosColors.primitivesColorsForeground100
         case .outline, .ghost, .link: return KozmosColors.primitivesColorsTheme500
-        case .glass: return KozmosColors.primitivesColorsForeground1000
+        case .glass: return KozmosColors.primitivesColorsForeground100
         }
     }
 
