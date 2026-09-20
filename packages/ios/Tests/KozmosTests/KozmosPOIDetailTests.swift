@@ -196,14 +196,19 @@ final class KozmosPOIDetailTests: XCTestCase {
     /// The name and the quick buttons share one row: a long name wraps beside
     /// them, three lines at most, and never pushes them under it. The
     /// favourite button is pressed, so its theme fill marks where the buttons
-    /// are; the name is the only dark text left of them.
+    /// are; the name is the only dark text left of them. Four names — one,
+    /// two, three and far too many lines — so the lines are counted by the
+    /// height each extra line adds, not guessed from a font size. Measured at
+    /// 320pt: 14.5, 39.5 and 64.5 points, 25 a line; the title column beside
+    /// three 44pt buttons is 136pt wide, about eleven characters.
     @MainActor func testALongNameWrapsBesideTheQuickButtonsAndStopsAtThreeLines() async throws {
         let width: CGFloat = 320
         var buttonTop: [String: CGFloat] = [:]
         var titleHeight: [String: CGFloat] = [:]
         for (name, poiName) in [
-            ("short", "Il Forno"),
-            ("long", "Il Forno — Neapolitan restaurant and handmade pasta kitchen on the upper concourse"),
+            ("one", "Il Forno"),
+            ("two", "Il Forno Pizzeria"),
+            ("three", "Il Forno — Neapolitan restaurant and handmade pasta kitchen on the upper concourse"),
             ("endless", String(repeating: "Il Forno Neapolitan restaurant ", count: 8)),
         ] {
             let poi = KozmosPOIPresentation(id: "long-name", name: poiName, floorId: "1", floorLabel: "Upper concourse",
@@ -212,6 +217,10 @@ final class KozmosPOIDetailTests: XCTestCase {
                 poi: poi, actionLabels: [.navigate: "Go", .favourite: "Favourite", .bookmark: "Bookmark"],
                 onAction: { _, _ in }, actionStates: [.favourite: .init(pressed: true)], onClose: {},
                 details: .init(), onSupplementaryAction: { _, _ in }), size: CGSize(width: width, height: 600))
+            let attachment = XCTAttachment(image: pixels.image)
+            attachment.name = "poi-card-name-\(name)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
             // The quick buttons: the leftmost is the pressed favourite, right of centre, near the top.
             let favourite = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: width / 2, y: 0, width: width / 2, height: 200),
                                                              where: RenderedPixels.isTheme), "\(name): no pressed favourite button")
@@ -221,15 +230,23 @@ final class KozmosPOIDetailTests: XCTestCase {
                                                          where: RenderedPixels.isDarkText), "\(name): no title")
             titleHeight[name] = title.height
         }
-        let short = try XCTUnwrap(buttonTop["short"])
-        XCTAssertEqual(try XCTUnwrap(buttonTop["long"]), short, accuracy: 1, "a long name moved the buttons")
-        XCTAssertEqual(try XCTUnwrap(buttonTop["endless"]), short, accuracy: 1, "an endless name moved the buttons")
-        let oneLine = try XCTUnwrap(titleHeight["short"])
-        XCTAssertLessThan(oneLine, 30)
-        let threeLines = try XCTUnwrap(titleHeight["long"])
-        XCTAssertGreaterThan(threeLines, oneLine * 2.5, "the long name did not wrap")
-        XCTAssertLessThan(threeLines, oneLine + 2 * 32, "the long name took more than three lines")
-        XCTAssertEqual(try XCTUnwrap(titleHeight["endless"]), threeLines, accuracy: 1.5, "an endless name is not capped at three lines")
+        let heights = titleHeight.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", ")
+        print("poi-card name heights in points: \(heights); button top \(buttonTop.sorted { $0.key < $1.key })")
+        let top = try XCTUnwrap(buttonTop["one"])
+        for name in ["two", "three", "endless"] {
+            XCTAssertEqual(try XCTUnwrap(buttonTop[name]), top, accuracy: 1, "the \(name)-line name moved the buttons")
+        }
+        let one = try XCTUnwrap(titleHeight["one"])
+        let two = try XCTUnwrap(titleHeight["two"])
+        let three = try XCTUnwrap(titleHeight["three"])
+        let endless = try XCTUnwrap(titleHeight["endless"])
+        // Each further line adds about a line height; the second and the third
+        // add the same amount, and nothing is added past the third.
+        let secondLine = two - one
+        let thirdLine = three - two
+        XCTAssertGreaterThan(secondLine, 12, "the two-line name did not wrap (\(heights))")
+        XCTAssertEqual(thirdLine, secondLine, accuracy: 4, "the third line is not one more line (\(heights))")
+        XCTAssertEqual(endless, three, accuracy: 1.5, "an endless name is not capped at three lines (\(heights))")
     }
     #endif
 }

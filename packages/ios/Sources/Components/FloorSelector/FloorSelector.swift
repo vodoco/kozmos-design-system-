@@ -111,6 +111,9 @@ public struct KozmosFloorSelector: View {
     public var body: some View {
         container
             .opacity(baseIsHidden ? 0 : 1)
+            // Invisible is not enough: at opacity zero the pill would still be
+            // an element VoiceOver could land on behind the open list.
+            .accessibilityHidden(baseIsHidden)
             .padding(KozmosDimensions.primitivesLayoutSpacing75)
             .background(baseIsHidden ? Color.clear : KozmosColors.primitivesColorsBackground0.opacity(0.9))
             .cornerRadius(KozmosDimensions.semanticsRadiusPanel)

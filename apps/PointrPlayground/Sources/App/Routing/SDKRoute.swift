@@ -103,13 +103,6 @@ enum RouteFormat {
 /// how a step's arrow is chosen, what a failure offers. There are no
 /// wayfinding modes yet, so no options: one route, and its directions.
 enum SDKRoutePresenter {
-    static func travelEstimate(_ route: SDKRoute) -> KozmosTravelEstimatePresentation {
-        KozmosTravelEstimatePresentation(
-            durationSeconds: route.durationSeconds, durationLabel: RouteFormat.duration(route.durationSeconds),
-            distanceMetres: route.distanceMetres, distanceLabel: RouteFormat.distance(route.distanceMetres),
-            mode: "walking", modeLabel: "Walking")
-    }
-
     /// `PTRDirectionMessageType` onto the design system's four arrows. The
     /// system has no arrow for a transition — stairs, a lift, an escalator, a
     /// building change — or for turning back; those keep the SDK's own words

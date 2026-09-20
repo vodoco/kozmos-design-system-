@@ -49,7 +49,7 @@ fun KozmosSearchBar(
                         trackEvent(com.kozmos.providers.KozmosAnalyticsEvent("SearchBar", "search_cleared"))
                         onClear()
                     }) {
-                        Icon(Icons.Default.Close, contentDescription = "Clear")
+                        Icon(Icons.Default.Close, contentDescription = "Clear search")
                     }
                 }
             },

@@ -10,6 +10,8 @@ struct RenderedPixels {
     let width: Int
     let height: Int
     let scale: CGFloat
+    /// The rendered image itself, for an attachment.
+    let image: UIImage
     private let rgba: [UInt8]
 
     @MainActor
@@ -25,6 +27,7 @@ struct RenderedPixels {
     }
 
     init(_ image: UIImage, pointWidth: CGFloat) throws {
+        self.image = image
         let cgImage = try XCTUnwrap(image.cgImage)
         width = cgImage.width
         height = cgImage.height

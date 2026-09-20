@@ -16,6 +16,9 @@ public struct KozmosSearchBar: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(KozmosColors.primitivesColorsForeground500)
+                // Decoration: the field says what it is. Left audible, the
+                // symbol read "Search" before it.
+                .accessibilityHidden(true)
             
             TextField(placeholder, text: $text)
                 .onSubmit {
@@ -31,6 +34,7 @@ public struct KozmosSearchBar: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(KozmosColors.primitivesColorsForeground500)
                 }
+                .accessibilityLabel("Clear search")
             }
         }
         .padding(EdgeInsets(top: KozmosDimensions.primitivesLayoutSpacing200, leading: KozmosDimensions.primitivesLayoutSpacing200, bottom: KozmosDimensions.primitivesLayoutSpacing200, trailing: KozmosDimensions.primitivesLayoutSpacing200))

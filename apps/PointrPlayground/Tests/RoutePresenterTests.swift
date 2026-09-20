@@ -65,14 +65,6 @@ final class RoutePresenterTests: XCTestCase {
         XCTAssertNotEqual(RouteFormat.arrival(in: 3600, from: now), RouteFormat.arrival(in: 0, from: now))
     }
 
-    func testATravelEstimateCarriesTheRoutesNumbers() {
-        let estimate = SDKRoutePresenter.travelEstimate(withStairs)
-        XCTAssertEqual(estimate.durationSeconds, 200)
-        XCTAssertEqual(estimate.durationLabel, "4 min")
-        XCTAssertEqual(estimate.distanceLabel, "250 m")
-        XCTAssertEqual(estimate.mode, "walking")
-    }
-
     /// Not ready is the SDK's and passes; no route is the venue's.
     func testTheNotReadyStateOffersARetryAndNoRouteAnotherStartingPoint() {
         XCTAssertEqual(SDKRoutePresenter.recovery(for: .error), .tryAgain)
