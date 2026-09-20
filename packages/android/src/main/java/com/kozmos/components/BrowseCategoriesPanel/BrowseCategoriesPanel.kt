@@ -90,13 +90,14 @@ fun KozmosBrowseCategoriesPanel(
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 140.dp),
+                // Four across, gap 8: the prototype's grid of icon squares.
+                columns = GridCells.Fixed(4),
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
                     KozmosDimensions.primitivesLayoutSpacing200
                 ),
-                horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing150),
-                verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing150)
+                horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
+                verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100)
             ) {
                 items(categories, key = { it.id }) { category ->
                     KozmosCategoryTile(

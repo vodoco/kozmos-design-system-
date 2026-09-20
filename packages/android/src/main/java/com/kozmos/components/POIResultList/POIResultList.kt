@@ -49,7 +49,9 @@ fun KozmosPOIResultList(
     label: String = "Points of interest",
     selectedPoiId: String? = null,
     featuredLabel: String = "Featured",
-    emptyState: (@Composable () -> Unit)? = null
+    emptyState: (@Composable () -> Unit)? = null,
+    /** The floor the map shows: a result on it carries a dot before its floor. */
+    currentFloorId: String? = null
 ) {
     Column(
         modifier = modifier
@@ -85,6 +87,7 @@ fun KozmosPOIResultList(
         } else {
             items.forEach { item ->
                 KozmosPOIResultCard(
+                    currentFloorId = currentFloorId,
                     poi = item.poi,
                     result = item.result.selecting(selectedPoiId),
                     onSelect = onSelect,

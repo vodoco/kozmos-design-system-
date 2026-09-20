@@ -9,10 +9,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -58,48 +64,52 @@ fun KozmosCategoryTile(
         },
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 112.dp)
             .semantics {
                 contentDescription = category.label
                 selected = category.selected
                 category.resultCountLabel?.let { stateDescription = it }
             },
         enabled = isEnabled,
-        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-        color = if (category.selected) {
-            KozmosColors.primitivesColorsTheme500.copy(alpha = 0.05f)
-        } else {
-            KozmosColors.primitivesColorsBackground0
-        },
-        border = BorderStroke(
-            width = if (category.selected) 2.dp else 1.dp,
-            color = if (category.selected) {
-                KozmosColors.primitivesColorsTheme500
-            } else {
-                KozmosColors.primitivesColorsForeground300
-            }
-        )
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
+        color = androidx.compose.ui.graphics.Color.Transparent
     ) {
         Column(
-            modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing150),
+            modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing50),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(
-                KozmosDimensions.primitivesLayoutSpacing100,
-                Alignment.CenterVertically
-            )
+            verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing75)
         ) {
-            if (icon != null) {
-                Box(
-                    modifier = Modifier.size(40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    icon()
+            // The icon's square: 64, radius Control, the container edge; the
+            // selection shows on it. The label sits under it, two lines at most.
+            Box(
+                modifier = Modifier
+                    .size(KozmosDimensions.primitivesLayoutSizing800)
+                    .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+                    .background(
+                        if (category.selected) KozmosColors.primitivesColorsTheme500.copy(alpha = 0.05f)
+                        else KozmosColors.primitivesColorsBackground0
+                    )
+                    .border(
+                        width = if (category.selected) 2.dp else 1.dp,
+                        color = if (category.selected) KozmosColors.primitivesColorsTheme500 else KozmosColors.semanticsBorderSubtle,
+                        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (icon != null) {
+                    // The icon in the theme colour, as on the other platforms.
+                    CompositionLocalProvider(LocalContentColor provides KozmosColors.primitivesColorsTheme500) {
+                        Box(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300), contentAlignment = Alignment.Center) {
+                            icon()
+                        }
+                    }
                 }
             }
 
             Text(
                 text = category.label,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 color = if (isEnabled) {
                     KozmosColors.primitivesColorsForeground100
                 } else {

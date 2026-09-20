@@ -78,6 +78,8 @@ fun KozmosPOIResultCard(
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
     featuredLabel: String = "Featured",
+    /** The floor the map shows: a result on it carries a dot before its floor. */
+    currentFloorId: String? = null,
     selectionLabel: String? = null
 ) {
     val trackEvent = LocalKozmosAnalytics.current
@@ -114,14 +116,14 @@ fun KozmosPOIResultCard(
                 selected = result.selected
             },
         enabled = available,
-        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
         color = KozmosColors.primitivesColorsBackground0,
         border = BorderStroke(
             width = if (result.selected) 2.dp else 1.dp,
             color = if (result.selected) {
                 KozmosColors.primitivesColorsTheme500
             } else {
-                KozmosColors.primitivesColorsForeground300
+                KozmosColors.semanticsBorderSubtle
             }
         )
     ) {
@@ -159,31 +161,17 @@ fun KozmosPOIResultCard(
                 }
             }
 
+            // 80 tall: the prototype's row.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = 96.dp)
-                    .padding(KozmosDimensions.primitivesLayoutSpacing200),
+                    .defaultMinSize(minHeight = KozmosDimensions.primitivesLayoutSizing1000)
+                    .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing200, vertical = KozmosDimensions.primitivesLayoutSpacing150),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(
                     KozmosDimensions.primitivesLayoutSpacing150
                 )
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = result.resultIndex.toString(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
-                    )
-                }
-
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(
@@ -193,7 +181,7 @@ fun KozmosPOIResultCard(
                     Text(
                         text = poi.name,
                         style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Normal,
                         color = KozmosColors.primitivesColorsForeground100,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -215,12 +203,15 @@ fun KozmosPOIResultCard(
                             KozmosDimensions.primitivesLayoutSpacing50
                         )
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Place,
-                            contentDescription = null,
-                            tint = KozmosColors.primitivesColorsForeground500,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        // A dot before the floor when it is the one the map shows.
+                        if (currentFloorId != null && result.floorId == currentFloorId) {
+                            Box(
+                                modifier = Modifier
+                                    .size(KozmosDimensions.primitivesLayoutSpacing75)
+                                    .clip(CircleShape)
+                                    .background(KozmosColors.primitivesColorsTheme500)
+                            )
+                        }
                         Text(
                             text = poi.locationLabel,
                             style = MaterialTheme.typography.bodyMedium,
@@ -253,24 +244,11 @@ fun KozmosPOIResultCard(
                     POILogo(poi = poi)
 
                     result.travelEstimate?.let { travelEstimate ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(
-                                KozmosDimensions.primitivesLayoutSpacing50
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Schedule,
-                                contentDescription = null,
-                                tint = KozmosColors.primitivesColorsForeground100,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Text(
-                                text = travelEstimate.durationLabel,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = KozmosColors.primitivesColorsForeground100
-                            )
-                        }
+                        Text(
+                            text = travelEstimate.durationLabel,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = KozmosColors.primitivesColorsForeground100
+                        )
                     }
                 }
             }
@@ -294,32 +272,14 @@ fun KozmosPOIResultCard(
 
 @Composable
 private fun POILogo(poi: KozmosPOIPresentation) {
-    val logo = poi.logo
-    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
-
-    if (logo != null) {
-        AsyncImage(
-            model = logo.src,
-            contentDescription = logo.alt,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .size(40.dp)
-                .clip(shape)
-        )
-    } else {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(shape)
-                .background(KozmosColors.primitivesColorsBackground100),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = poi.logoFallbackInitial,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = KozmosColors.primitivesColorsForeground500
-            )
-        }
-    }
+    // The logo when there is one, 48 at radius Control; nothing otherwise.
+    val logo = poi.logo ?: return
+    AsyncImage(
+        model = logo.src,
+        contentDescription = logo.alt,
+        contentScale = ContentScale.Fit,
+        modifier = Modifier
+            .size(KozmosDimensions.primitivesLayoutSizing600)
+            .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+    )
 }
