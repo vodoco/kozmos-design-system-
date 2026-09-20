@@ -9,6 +9,11 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -159,10 +164,15 @@ fun KozmosAdaptiveMapShell(
             }
         }
 
+        // The map runs to every edge; the chrome keeps the window's safe
+        // insets — the status bar, a cutout, the navigation bar — so an
+        // edge-to-edge activity (enableEdgeToEdge) shows the prototype's
+        // screen and a padded one loses nothing.
         if (topBar != null) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
                     .padding(KozmosDimensions.primitivesLayoutSpacing200)
                     .align(Alignment.TopCenter),
                 contentAlignment = Alignment.TopCenter
@@ -174,6 +184,7 @@ fun KozmosAdaptiveMapShell(
         if (controls != null) {
             Box(
                 modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
                     .padding(KozmosDimensions.primitivesLayoutSpacing200)
                     .align(
                         if (panelPlacement == KozmosMapPanelPlacement.End) {
@@ -198,6 +209,7 @@ fun KozmosAdaptiveMapShell(
 
                 Surface(
                     modifier = Modifier
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
                         .padding(KozmosDimensions.primitivesLayoutSpacing200)
                         .width(panelWidth)
                         .fillMaxHeight()
@@ -343,7 +355,13 @@ private fun BottomSheet(
                         onStep = { step -> setDetent(ordered[(index + step).coerceIn(0, ordered.size - 1)]) }
                     )
                 }
-                Box(modifier = Modifier.fillMaxWidth()) { panel() }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        // The sheet's surface reaches the bottom edge; what it
+                        // holds keeps above the navigation bar.
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
+                ) { panel() }
             }
         ) { measurables, constraints ->
             // The content keeps its own size at every detent: measured as tall

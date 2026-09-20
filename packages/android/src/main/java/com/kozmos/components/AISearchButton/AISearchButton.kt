@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -33,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.kozmos.tokens.KozmosColors
 
 /**
- * The AI search, beside the search field: a 44 disc inside a 66 ring whose
+ * The AI search, beside the search field: a 43 disc inside a 48 ring whose
  * sweep gradient runs through the theme's own ramp — 300 to 600 and back, the
  * first gradient the system draws, made of tokens — with a 16 icon. The
  * button shows the icon alone and is named by its label.
@@ -45,9 +44,8 @@ fun KozmosAISearchButton(
     label: String = "AI search",
     enabled: Boolean = true
 ) {
-    // The button's own footprint is the prototype's 48; the 66 ring is drawn
-    // behind it and overflows, so a row of the field and this button stays
-    // the field's height.
+    // The prototype's: a 48 circle whose gradient ring is a band two and a
+    // half wide around a 43 white disc — nothing overflows the row.
     Box(
         modifier = modifier
             .size(48.dp)
@@ -55,13 +53,13 @@ fun KozmosAISearchButton(
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
-        // The gradient turns in place, once every three seconds, unless the
+        // The gradient turns in place, the prototype's 3.6 seconds a turn, unless the
         // system's animations are off; the first frame is the resting one.
         val transition = rememberInfiniteTransition(label = "kozmos-ai-search-ring")
         val ringAngle by transition.animateFloat(
             initialValue = 0f,
             targetValue = 360f,
-            animationSpec = infiniteRepeatable(animation = tween(durationMillis = 3000, easing = LinearEasing), repeatMode = RepeatMode.Restart),
+            animationSpec = infiniteRepeatable(animation = tween(durationMillis = 3600, easing = LinearEasing), repeatMode = RepeatMode.Restart),
             label = "kozmos-ai-search-ring-angle"
         )
         val context = LocalContext.current
@@ -70,7 +68,7 @@ fun KozmosAISearchButton(
         }
         Box(
             modifier = Modifier
-                .requiredSize(66.dp)
+                .size(48.dp)
                 .graphicsLayer { rotationZ = if (animationsOn) ringAngle else 0f }
                 .clip(CircleShape)
                 .background(
@@ -84,10 +82,9 @@ fun KozmosAISearchButton(
                 )
         )
         Surface(
-            modifier = Modifier.size(44.dp),
+            modifier = Modifier.size(43.dp),
             shape = CircleShape,
-            color = KozmosColors.primitivesColorsBackground0,
-            shadowElevation = 4.dp
+            color = KozmosColors.primitivesColorsBackground0
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
