@@ -13,10 +13,10 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
     private let onStartNavigation: (() -> Void)?
     private let transportModeIcon: TransportModeIcon
     private let showsTransportModeIcon: Bool
-    // The navigation layout, when a title is given: the destination with End
+    // The navigation layout, when a destination is given: its name with End
     // beside it, the time, distance and arrival on one row, and the caller's
     // progress below. Mirrors the product prototype's navigation sheet.
-    private let title: String?
+    private let destination: String?
     private let durationText: String?
     private let arrivalText: String?
     private let endLabel: String
@@ -37,19 +37,19 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
         self.onStartNavigation = onStartNavigation
         self.transportModeIcon = transportModeIcon()
         self.showsTransportModeIcon = true
-        self.title = nil
+        self.destination = nil
         self.durationText = nil
         self.arrivalText = nil
         self.endLabel = "End"
         self.progress = nil
     }
 
-    /// The navigation layout: `title` is the destination, End beside it in
+    /// The navigation layout: the destination's name with End beside it in
     /// the danger outline; `durationText`, `distanceText` and `arrivalText`
     /// on one row; `progress` — a `KozmosRouteProgressRail` in the products —
     /// below.
     public init(
-        title: String,
+        destination: String,
         durationText: String,
         distanceText: String,
         arrivalText: String? = nil,
@@ -64,7 +64,7 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
         self.onStartNavigation = nil
         self.transportModeIcon = EmptyView()
         self.showsTransportModeIcon = false
-        self.title = title
+        self.destination = destination
         self.durationText = durationText
         self.arrivalText = arrivalText
         self.endLabel = endLabel
@@ -72,17 +72,17 @@ public struct KozmosRouteSummary<TransportModeIcon: View>: View {
     }
 
     public var body: some View {
-        if let title {
-            navigation(title: title)
+        if let destination {
+            navigation(destination: destination)
         } else {
             summary
         }
     }
 
-    private func navigation(title: String) -> some View {
+    private func navigation(destination: String) -> some View {
         VStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
             HStack(alignment: .center, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
-                Text(title)
+                Text(destination)
                     .font(KozmosTypography.title3.weight(.semibold))
                     .foregroundColor(KozmosColors.primitivesColorsForeground100)
                     .lineLimit(2)
@@ -190,7 +190,7 @@ public extension KozmosRouteSummary where TransportModeIcon == EmptyView {
         self.onStartNavigation = onStartNavigation
         self.transportModeIcon = EmptyView()
         self.showsTransportModeIcon = false
-        self.title = nil
+        self.destination = nil
         self.durationText = nil
         self.arrivalText = nil
         self.endLabel = "End"

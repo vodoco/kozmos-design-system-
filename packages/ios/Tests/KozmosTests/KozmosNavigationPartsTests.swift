@@ -148,7 +148,7 @@ final class KozmosNavigationPartsTests: XCTestCase {
     /// under that.
     @MainActor func testTheNavigationSummaryPutsEndBesideTheTitleAndTheStatsOnOneRow() async throws {
         let size = CGSize(width: 360, height: 180)
-        let view = KozmosRouteSummary(title: "Admirals Lounge", durationText: "5 min", distanceText: "241 m",
+        let view = KozmosRouteSummary(destination: "Admirals Lounge", durationText: "5 min", distanceText: "241 m",
                                       arrivalText: "Arrive 14:32", onEndRoute: {}) {
             Color.green.frame(height: 6)
         }

@@ -268,7 +268,7 @@ extension SDKMapScreen {
         let total = route?.distanceMetres ?? 0
         return VStack(spacing: 0) {
             KozmosRouteSummary(
-                title: session.selected?.name ?? "Directions",
+                destination: session.selected?.name ?? "Directions",
                 durationText: RouteFormat.duration(remaining.durationSeconds),
                 distanceText: RouteFormat.distance(remaining.distanceMetres),
                 arrivalText: "Arrive \(RouteFormat.arrival(in: remaining.durationSeconds))",
