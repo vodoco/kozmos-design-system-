@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "../../utils";
+import { surfaceClass, type SurfaceVariant } from "../Surface";
 import {
   DirectionIcon,
   type DirectionType,
@@ -9,6 +10,8 @@ export interface ManoeuvreCardProps extends Omit<
   React.HTMLAttributes<HTMLElement>,
   "children"
 > {
+  /** What the card sits on: solid by default, glass where the product asks for it. */
+  surface?: SurfaceVariant;
   type: DirectionType;
   instruction: string;
   detail?: string;
@@ -55,6 +58,7 @@ const ManoeuvreCard = React.forwardRef<HTMLElement, ManoeuvreCardProps>(
       expandLabel = "Show itinerary",
       collapseLabel = "Hide itinerary",
       manoeuvreLabel = "Current manoeuvre",
+      surface = "solid",
       maxItineraryHeight = 320,
       children,
       ...props
@@ -66,7 +70,7 @@ const ManoeuvreCard = React.forwardRef<HTMLElement, ManoeuvreCardProps>(
         ref={ref}
         aria-label={expanded ? undefined : manoeuvreLabel}
         className={cn(
-          "kozmos-manoeuvre-card kozmos-reset kozmos-surface-glass flex w-full flex-col gap-3 rounded-container px-4 pb-1 pt-4 text-foreground shadow-floating",
+          `kozmos-manoeuvre-card ${surfaceClass(surface)} flex w-full flex-col gap-3 rounded-container px-4 pb-1 pt-4 text-foreground shadow-floating`,
           className,
         )}
         {...props}

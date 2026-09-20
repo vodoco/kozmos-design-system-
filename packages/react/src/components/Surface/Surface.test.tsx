@@ -1,39 +1,46 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { GlassSurface } from "./GlassSurface";
+import { Surface, surfaceClass } from "./Surface";
 import {
   designConfigTokens,
   normalizeDesignConfig,
 } from "../../context/design-config";
 
-describe("GlassSurface", () => {
-  it("is the glass surface role, in the caller's shape", () => {
-    render(
-      <GlassSurface className="rounded-container p-4">
-        Over the map
-      </GlassSurface>,
-    );
+describe("Surface", () => {
+  it("is solid by default, in the caller's shape", () => {
+    render(<Surface className="rounded-container p-4">Over the map</Surface>);
     const surface = screen.getByText("Over the map");
-    expect(surface.tagName).toBe("DIV");
     expect(surface).toHaveClass(
-      "kozmos-surface-glass",
+      "kozmos-reset",
+      "kozmos-surface-solid",
       "rounded-container",
       "p-4",
     );
+    expect(surface).not.toHaveClass("kozmos-surface-glass");
+  });
+
+  it("is glass on request", () => {
+    render(<Surface variant="glass">Glass</Surface>);
+    expect(screen.getByText("Glass")).toHaveClass(
+      "kozmos-reset",
+      "kozmos-surface-glass",
+    );
+    expect(surfaceClass("glass")).toBe("kozmos-reset kozmos-surface-glass");
+    expect(surfaceClass()).toBe("kozmos-reset kozmos-surface-solid");
   });
 
   it("passes the caller's attributes through", () => {
     render(
-      <GlassSurface role="region" aria-label="Summary">
+      <Surface role="region" aria-label="Summary">
         Summary
-      </GlassSurface>,
+      </Surface>,
     );
     expect(screen.getByRole("region", { name: "Summary" })).toHaveClass(
-      "kozmos-surface-glass",
+      "kozmos-surface-solid",
     );
   });
 
-  it("is switched off by the design config only while transparency is reduced", () => {
+  it("switches glass off through the design config only while transparency is reduced", () => {
     const on = designConfigTokens(normalizeDesignConfig({}), "t");
     expect(on["--kozmos-surface-glass-opacity"]).toBe("initial");
     expect(on["--kozmos-surface-glass-blur"]).toBe("initial");

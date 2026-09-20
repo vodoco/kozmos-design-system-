@@ -1,10 +1,13 @@
 import React from "react";
 import { cn } from "../../utils";
+import { surfaceClass, type SurfaceVariant } from "../Surface";
 import { Button } from "../Button";
 import { Car, Navigation, MapPin, Edit3 } from "lucide-react";
 import { useKozmosAnalytics } from "../../utils/analytics";
 
 export interface SaveLocationCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** What the card sits on: solid by default, glass where the product asks for it. */
+  surface?: SurfaceVariant;
   title?: string;
   description?: string;
   isSaved?: boolean;
@@ -20,6 +23,7 @@ const SaveLocationCard = React.forwardRef<
   (
     {
       className,
+      surface = "solid",
       title = "Mark My Car",
       description = "Remember where you parked",
       isSaved = false,
@@ -36,7 +40,7 @@ const SaveLocationCard = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "kozmos-reset kozmos-surface-glass shadow-overlay rounded-[var(--primitives-radius-2xl)] p-5 flex flex-col gap-4 transition-all duration-300",
+          `${surfaceClass(surface)} shadow-overlay rounded-[var(--primitives-radius-2xl)] p-5 flex flex-col gap-4 transition-all duration-300`,
           className,
         )}
         {...props}

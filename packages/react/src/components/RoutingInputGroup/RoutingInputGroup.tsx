@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "../../utils";
+import { surfaceClass, type SurfaceVariant } from "../Surface";
 import { Input } from "../Input";
 import { Button } from "../Button";
 import { ArrowDownUp, Plus, X, Circle, MapPin } from "lucide-react";
@@ -12,6 +13,8 @@ export interface RoutePoint {
 }
 
 export interface RoutingInputGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** What the card sits on: solid by default, glass where the product asks for it. */
+  surface?: SurfaceVariant;
   points: RoutePoint[];
   onPointChange: (id: string, value: string) => void;
   onSwap?: () => void;
@@ -26,6 +29,7 @@ const RoutingInputGroup = React.forwardRef<
   (
     {
       className,
+      surface = "solid",
       points,
       onPointChange,
       onSwap,
@@ -56,7 +60,7 @@ const RoutingInputGroup = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "flex items-start gap-3 w-full kozmos-reset kozmos-surface-glass p-4 rounded-[var(--primitives-radius-2xl)] shadow-overlay transition-all duration-300",
+          `flex items-start gap-3 w-full ${surfaceClass(surface)} p-4 rounded-[var(--primitives-radius-2xl)] shadow-overlay transition-all duration-300`,
           className,
         )}
         {...props}

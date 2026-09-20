@@ -463,8 +463,8 @@ try {
     // The glass surface role reads Semantics.Effect.glass: the theme's glass
     // colour at 0.7, blur 20 and saturation 1.8 on what shows through, a
     // light edge at 0.2; the two themes' tints differ.
-    const surface = (id) =>
-      page.getByTestId(`${id}-glass-surface`).evaluate((node) => {
+    const surface = (id, variant = "glass") =>
+      page.getByTestId(`${id}-${variant}-surface`).evaluate((node) => {
         const s = getComputedStyle(node);
         return {
           background: s.backgroundColor,
@@ -482,6 +482,12 @@ try {
     assert.match(nestedSurface.filter, /blur\(20px\) saturate\(1\.8\)/, `${mode}: the glass surface's filter: ${nestedSurface.filter}`);
     assert.equal(nestedSurface.edge, "rgba(255, 255, 255, 0.2)", `${mode}: the glass surface's edge: ${JSON.stringify(nestedSurface)}`);
     assert.notEqual((await surface("outer")).background, nestedSurface.background, `${mode}: the two themes' glass tints are the same`);
+    // Solid, the default: the background colour whole, with the subtle border.
+    const solidSurface = await surface("nested", "solid");
+    assert.equal(solidSurface.background, await value("nested-solid-surface", "--primitives-colors-background-0"), `${mode}: the solid surface is not the background colour: ${solidSurface.background}`);
+    assert(!solidSurface.background.startsWith("rgba("), `${mode}: the solid surface is translucent: ${solidSurface.background}`);
+    assert.equal(solidSurface.edge, await value("nested-solid-surface", "--semantics-border-subtle"), `${mode}: the solid surface's edge: ${solidSurface.edge}`);
+    assert.equal(solidSurface.edgeWidth, "1px", `${mode}: the solid surface has no edge`);
     // Rotate/reflow a narrow host and switch direction without remounting. This
     // checks composition geometry, not certification of physical foldable devices.
     const outer = page.getByTestId("outer");

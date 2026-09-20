@@ -50,6 +50,7 @@ export const Navigation_: Story = {
     durationText: "4 min",
     distanceText: "201 m",
     arrivalText: "Arrive 12:58",
+    surface: "glass",
     onEndRoute: () => console.log("end route"),
     progress: (
       <RouteProgressRail progress={0.16} type="straight" label="Step 1 of 4" />

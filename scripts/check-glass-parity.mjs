@@ -122,25 +122,28 @@ const values = {};
     "packages/react/src/components/FeedbackCard/FeedbackCard.tsx",
     "packages/react/src/components/SaveLocationCard/SaveLocationCard.tsx",
     "packages/react/src/components/RoutingInputGroup/RoutingInputGroup.tsx",
-    "packages/react/src/components/GlassSurface/GlassSurface.tsx",
   ];
+  const surface = read("packages/react/src/components/Surface/Surface.tsx");
+  if (!surface.includes('glass: "kozmos-reset kozmos-surface-glass"') || !surface.includes('solid: "kozmos-reset kozmos-surface-solid"'))
+    fail("web: Surface does not name both variants with kozmos-reset");
+  else ok("web: Surface names solid and glass, with kozmos-reset");
   for (const file of web) {
     const src = read(file);
-    if (!src.includes("kozmos-reset kozmos-surface-glass")) fail(`consumer: ${file} is not on the role (with kozmos-reset)`);
-    else if (/bg-white\/70|backdrop-blur-3xl|bg-background\/90/.test(src)) fail(`consumer: ${file} still hand-rolls glass`);
-    else ok(`consumer: ${path.basename(file)} on the role`);
+    if (!src.includes("surfaceClass(surface)")) fail(`consumer: ${file} does not take its surface from Surface`);
+    else if (/bg-white\/70|backdrop-blur-3xl|bg-background\/90|kozmos-surface-glass/.test(src)) fail(`consumer: ${file} still hand-rolls glass`);
+    else ok(`consumer: ${path.basename(file)} takes its surface from Surface`);
   }
   const ios = ["packages/ios/Sources/Components/ManoeuvreCard/ManoeuvreCard.swift", "packages/ios/Sources/Components/RouteSummary/RouteSummary.swift"];
   for (const file of ios) {
     const src = read(file);
-    if (!src.includes(".kozmosGlassSurface(")) fail(`consumer: ${file} is not on the role`);
+    if (!src.includes(".kozmosSurface(")) fail(`consumer: ${file} is not on the role`);
     else if (src.includes("Background0.opacity(0.9)")) fail(`consumer: ${file} still hand-rolls glass`);
     else ok(`consumer: ${path.basename(file)} on the role`);
   }
   const android = ["packages/android/src/main/java/com/kozmos/components/ManoeuvreCard/ManoeuvreCard.kt", "packages/android/src/main/java/com/kozmos/components/RouteSummary/RouteSummary.kt"];
   for (const file of android) {
     const src = read(file);
-    if (!src.includes("KozmosGlassSurfaceDefaults")) fail(`consumer: ${file} is not on the role`);
+    if (!src.includes("KozmosSurfaceDefaults")) fail(`consumer: ${file} is not on the role`);
     else if (src.includes("copy(alpha = 0.9f)")) fail(`consumer: ${file} still hand-rolls glass`);
     else ok(`consumer: ${path.basename(file)} on the role`);
   }

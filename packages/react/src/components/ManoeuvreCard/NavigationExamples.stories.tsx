@@ -93,6 +93,7 @@ function NavigationExample() {
           detail={`${step.metres} m · ${step.floor}`}
           expanded={expanded}
           onToggle={() => setExpanded((open) => !open)}
+          surface="glass"
         >
           <Itinerary
             origin={route.origin}
@@ -108,6 +109,7 @@ function NavigationExample() {
             durationText={minutes(remainingSeconds)}
             distanceText={`${remainingMetres} m`}
             arrivalText="Arrive 12:58"
+            surface="glass"
             onEndRoute={() => setIndex(0)}
             progress={
               <RouteProgressRail

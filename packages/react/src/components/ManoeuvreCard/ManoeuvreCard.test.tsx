@@ -73,6 +73,30 @@ describe("ManoeuvreCard", () => {
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 
+  it("is solid by default and glass on request", () => {
+    const { rerender } = render(
+      <ManoeuvreCard
+        type="left"
+        instruction="Turn left"
+        expanded={false}
+        onToggle={() => {}}
+      />,
+    );
+    const card = screen.getByRole("region", { name: "Current manoeuvre" });
+    expect(card).toHaveClass("kozmos-reset", "kozmos-surface-solid");
+    rerender(
+      <ManoeuvreCard
+        type="left"
+        instruction="Turn left"
+        expanded={false}
+        onToggle={() => {}}
+        surface="glass"
+      />,
+    );
+    expect(card).toHaveClass("kozmos-surface-glass");
+    expect(card).not.toHaveClass("kozmos-surface-solid");
+  });
+
   it("takes its own labels", () => {
     render(
       <ManoeuvreCard

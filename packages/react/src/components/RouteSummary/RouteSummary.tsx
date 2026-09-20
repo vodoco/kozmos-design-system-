@@ -1,11 +1,14 @@
 import React from "react";
 import { cn } from "../../utils";
+import { surfaceClass, type SurfaceVariant } from "../Surface";
 import { Button } from "../Button";
 import { X, Navigation } from "lucide-react";
 
 interface RouteSummaryBaseProps extends React.HTMLAttributes<HTMLDivElement> {
   distanceText: string;
   onEndRoute: () => void;
+  /** What the summary sits on: solid by default, glass where the product asks for it. */
+  surface?: SurfaceVariant;
 }
 
 /** The summary as it was: the estimate over the distance, End as an icon. */
@@ -36,8 +39,8 @@ export type RouteSummaryProps =
   | RouteSummaryEstimateProps
   | RouteSummaryNavigationProps;
 
-const SURFACE =
-  "kozmos-reset kozmos-surface-glass flex w-full flex-col rounded-[var(--primitives-radius-2xl)] p-4 text-foreground shadow-overlay transition-all duration-300";
+const LAYOUT =
+  "flex w-full flex-col rounded-[var(--primitives-radius-2xl)] p-4 text-foreground shadow-overlay transition-all duration-300";
 
 const RouteSummaryNavigation = React.forwardRef<
   HTMLDivElement,
@@ -52,12 +55,17 @@ const RouteSummaryNavigation = React.forwardRef<
       arrivalText,
       endLabel = "End",
       progress,
+      surface = "solid",
       onEndRoute,
       ...props
     },
     ref,
   ) => (
-    <div ref={ref} className={cn(SURFACE, "gap-3", className)} {...props}>
+    <div
+      ref={ref}
+      className={cn(surfaceClass(surface), LAYOUT, "gap-3", className)}
+      {...props}
+    >
       <div className="flex items-center justify-between gap-3">
         <h2 className="m-0 line-clamp-2 min-w-0 flex-1 text-xl font-semibold leading-tight text-foreground">
           {destination}
@@ -98,10 +106,15 @@ const RouteSummary = React.forwardRef<HTMLDivElement, RouteSummaryProps>(
       state = "active",
       endRouteLabel = "End route",
       startNavigationLabel = "Start navigation",
+      surface = "solid",
       ...rest
     } = props;
     return (
-      <div ref={ref} className={cn(SURFACE, "gap-4", className)} {...rest}>
+      <div
+        ref={ref}
+        className={cn(surfaceClass(surface), LAYOUT, "gap-4", className)}
+        {...rest}
+      >
         {/* Information Row */}
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">

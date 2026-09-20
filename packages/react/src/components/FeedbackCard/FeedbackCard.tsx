@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { cn } from "../../utils";
+import { surfaceClass, type SurfaceVariant } from "../Surface";
 import { Button } from "../Button";
 import { Rating } from "../Rating";
 import { Textarea } from "../Textarea";
 import { useKozmosAnalytics } from "../../utils/analytics";
 
 export interface FeedbackCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** What the card sits on: solid by default, glass where the product asks for it. */
+  surface?: SurfaceVariant;
   title?: string;
   description?: string;
   onSubmitFeedback?: (rating: number, comment: string) => void;
@@ -17,6 +20,7 @@ const FeedbackCard = React.forwardRef<HTMLDivElement, FeedbackCardProps>(
   (
     {
       className,
+      surface = "solid",
       title = "Rate your experience",
       description = "How was your navigation today?",
       onSubmitFeedback,
@@ -41,7 +45,7 @@ const FeedbackCard = React.forwardRef<HTMLDivElement, FeedbackCardProps>(
       <div
         ref={ref}
         className={cn(
-          "kozmos-reset kozmos-surface-glass shadow-overlay rounded-[var(--primitives-radius-2xl)] p-6 flex flex-col gap-4 transition-all duration-300",
+          `${surfaceClass(surface)} shadow-overlay rounded-[var(--primitives-radius-2xl)] p-6 flex flex-col gap-4 transition-all duration-300`,
           className,
         )}
         {...props}

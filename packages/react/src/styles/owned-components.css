@@ -137,6 +137,12 @@
      while transparency is reduced; otherwise the token is the value. The
      element also carries kozmos-reset, or the scoped legacy preflight keeps
      its border reset over the edge. */
+  /* The solid surface: the default. The background colour with the subtle
+     border, the container edge. */
+  .kozmos-surface-solid {
+    background-color: var(--primitives-colors-background-0);
+    border: 1px solid var(--semantics-border-subtle);
+  }
   .kozmos-surface-glass {
     background-color: rgba(
       var(--kozmos-glass-rgb),

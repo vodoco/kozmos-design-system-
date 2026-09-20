@@ -33,6 +33,7 @@ const meta = {
     detail: "58 m · Second Floor",
     expanded: false,
     onToggle: () => {},
+    surface: "glass",
     children: (
       <Itinerary
         origin="Dunkin'"

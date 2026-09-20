@@ -66,6 +66,40 @@ describe("RouteSummary", () => {
     expect(onEndRoute).toHaveBeenCalledTimes(1);
   });
 
+  it("is solid by default and glass on request, in both layouts", () => {
+    const { container, rerender } = render(
+      <RouteSummary
+        destination="B"
+        durationText="1 min"
+        distanceText="32 m"
+        onEndRoute={vi.fn()}
+      />,
+    );
+    expect(container.firstChild).toHaveClass(
+      "kozmos-reset",
+      "kozmos-surface-solid",
+    );
+    rerender(
+      <RouteSummary
+        destination="B"
+        durationText="1 min"
+        distanceText="32 m"
+        onEndRoute={vi.fn()}
+        surface="glass"
+      />,
+    );
+    expect(container.firstChild).toHaveClass("kozmos-surface-glass");
+    rerender(
+      <RouteSummary
+        etaText="12 min"
+        distanceText="1.8 km"
+        onEndRoute={vi.fn()}
+        surface="glass"
+      />,
+    );
+    expect(container.firstChild).toHaveClass("kozmos-surface-glass");
+  });
+
   it("takes its own End label", () => {
     render(
       <RouteSummary
