@@ -1,6 +1,15 @@
 package com.kozmos.components.button
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import com.kozmos.components.iconbutton.KozmosIconButton
+import com.kozmos.components.iconbutton.KozmosIconButtonVariant
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,4 +54,24 @@ class KozmosButtonPaparazziTest {
             }
         }
     }
+
+    /**
+     * The glass variant is the glass surface: over pure red, the tint at
+     * the token's opacity with the light edge, the label in ink — not the
+     * dark chip of white at 16 % it used to be.
+     */
+    @Test
+    fun glassButtonsAreTheGlassSurface() {
+        paparazzi.snapshot {
+            MaterialTheme {
+                Box(modifier = Modifier.background(Color.Red).padding(24.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        KozmosButton(onClick = {}, variant = KozmosButtonVariant.Glass) { Text("Glass") }
+                        KozmosIconButton(icon = Icons.Default.Add, onClick = {}, contentDescription = "Add", variant = KozmosIconButtonVariant.Glass)
+                    }
+                }
+            }
+        }
+    }
 }
+

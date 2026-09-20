@@ -1,7 +1,6 @@
 package com.kozmos.components.iconbutton
 
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -13,6 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import com.kozmos.components.surface.KozmosSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceStyle
 import com.kozmos.tokens.KozmosThemeTokens
 
 enum class KozmosIconButtonVariant {
@@ -93,19 +96,24 @@ fun KozmosIconButton(
             val containerColor = when (variant) {
                 KozmosIconButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonBackgroundIdle
                 KozmosIconButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonBackgroundIdle
-                KozmosIconButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = 0.16f)
+                // The glass variant is the glass surface, composed from the token.
+                KozmosIconButtonVariant.Glass -> KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Glass)
                 else -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle
             }
             val contentColor = when (variant) {
                 KozmosIconButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonForegroundContentIdle
                 KozmosIconButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonForegroundContentIdle
-                KozmosIconButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground1000
+                KozmosIconButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground100
                 else -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle
             }
 
             FilledIconButton(
                 onClick = onClick,
-                modifier = rootModifier,
+                modifier = if (variant == KozmosIconButtonVariant.Glass) {
+                    rootModifier.border(KozmosSurfaceDefaults.border(KozmosSurfaceStyle.Glass), CircleShape)
+                } else {
+                    rootModifier
+                },
                 enabled = enabled && !isLoading,
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = containerColor,

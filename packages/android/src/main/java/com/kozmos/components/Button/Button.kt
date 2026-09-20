@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.components.surface.KozmosSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceStyle
 import com.kozmos.tokens.KozmosThemeTokens
 
 enum class KozmosButtonVariant {
@@ -148,14 +150,15 @@ fun KozmosButton(
             val containerColor = if (emotion != null && variant != KozmosButtonVariant.Glass) emotionPrimaryBackground(emotion) else when(variant) {
                 KozmosButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonBackgroundIdle
                 KozmosButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonBackgroundIdle
-                KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = 0.16f)
+                // The glass variant is the glass surface, composed from the token.
+                KozmosButtonVariant.Glass -> KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Glass)
                 else -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle
             }
             
             val contentColor = if (emotion != null && variant != KozmosButtonVariant.Glass) emotionPrimaryForeground(emotion) else when(variant) {
                  KozmosButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonForegroundContentIdle
                  KozmosButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonForegroundContentIdle
-                 KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground1000
+                 KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground100
                  else -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle
             }
             
@@ -168,7 +171,8 @@ fun KozmosButton(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = containerColor,
                     contentColor = contentColor
-                )
+                ),
+                border = if (variant == KozmosButtonVariant.Glass) KozmosSurfaceDefaults.border(KozmosSurfaceStyle.Glass) else null
             ) {
                 ButtonContent(isLoading, content)
             }
