@@ -37,3 +37,6 @@ packages/react/playwright/.cache/
 xcuserdata/
 *.xcuserstate
 *.xcuserdatad/
+
+# Kotlin compiler session files
+packages/android/.kotlin/

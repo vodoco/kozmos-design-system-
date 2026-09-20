@@ -114,3 +114,28 @@ style; drift to reconcile through the plugin, with the token as the source.
 3. **The Button's glass variant** still draws from the design config's slider numbers on the web
    (blur 22 by default) and as white at 16 % with no blur on iOS and Android. Move it onto the
    role's token, or leave it as the Button's own effect.
+
+## 6. Later the same night: solid by default, glass on request
+
+Olcay's answers to §5: the default is not to be glass-like — glass is an option beside solid;
+the shell's sheet goes on the surface with the compact detent; the Button's glass variant moves
+onto the token. So the role became a **surface style** on every platform (`04bce5a`, `480471f`,
+`e6898e3`): `KozmosSurfaceStyle` and `kozmosSurface(shape, style:)` on iOS, `Surface` with
+`variant` and `surfaceClass()` on the web, `KozmosSurfaceStyle` with `KozmosSurfaceDefaults` and
+`Modifier.kozmosSurface(shape, style)` on Android. **Solid** — the background colour with the
+subtle border — is the default; **glass** is the role as built. The manoeuvre card, the route
+summary, FeedbackCard, SaveLocationCard and RoutingInputGroup take `surface`, solid unless asked;
+the Pointr QA app, the fixture playground and the Storybook navigation examples ask for glass,
+the prototype's look. The three web map cards therefore change from their old hand-rolled glass
+to solid by default — the ruling applied to them as to everything.
+
+Measured: on iOS, solid whole, glass translucent, glass solid under Reduce Transparency, the
+navigation tests on the solid default; on the web, both variants in both themes in the owned-CSS
+suite (the solid one opaque in the background colour with a 1px subtle edge) on three engines,
+513 unit tests, the parity check reading the consumers through `surfaceClass`; on Android, a
+golden of both styles over red and the navigation goldens re-recorded on the solid default.
+
+Left from §5: the system's Liquid Glass — Olcay did not choose it; glass stays the material
+composition, measured. Next, in his order: the shell's sheet on the surface style with the
+compact detent; the Button's glass variant onto the token; then the transition arrows and the
+search sheet.

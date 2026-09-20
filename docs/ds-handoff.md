@@ -1271,6 +1271,9 @@ snapshot, so the material composition stays the role on every iOS version and Li
 decision; and the scoped legacy preflight beat the role's edge on every engine until the element
 carried `kozmos-reset`. `tokens:glass:check` holds the token, its emission, the rule and the
 consumers together; the owned-CSS suite measures the role in both themes.
+Then, on Olcay's answers: solid is the default and glass an option — a surface style on all three
+platforms (`04bce5a`, `480471f`, `e6898e3`), the QA app and the examples asking for glass, the
+three web map cards solid by default; the shell's sheet and the Button's glass variant next.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
