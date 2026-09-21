@@ -5,9 +5,16 @@
 // read-only get_code_connect_map tool, and fails when a node shows nothing or a
 // snippet imports something a consumer cannot use. It needs Figma desktop with
 // Preferences → Enable Dev Mode MCP Server, and the Kozmos DS - Core Library
-// file open: node ids resolve in the file in front. On 2026-09-21 the server
-// stopped answering tool calls while Figma sat idle in the background; the
-// script then stops and says so instead of waiting for ever.
+// file open: node ids resolve in the file in front. Keep Figma in front: on
+// 2026-09-21 the server answered no tool call for an hour and a half while
+// Figma sat in the background, and answered at once when it was brought
+// forward.
+//
+// Every call counts against a daily limit Figma sets per account, shared with
+// any other use of the Dev Mode server. A full pass is 285 calls (95 nodes on
+// three platforms); on 2026-09-21, after some 500 in the day, it answered
+// "Rate limit exceeded, please try again tomorrow". Narrow a pass with --label
+// and --node when you can. The script stops at the first rate-limit answer.
 //
 //   pnpm figma:connect:readback
 //   pnpm figma:connect:readback -- --label React --node 1933:9257
@@ -23,6 +30,7 @@ const REQUEST_TIMEOUT_MS = Number(
 );
 // This many unanswered calls in a row means the server has stopped answering.
 const MAX_CONSECUTIVE_TIMEOUTS = 8;
+let rateLimited = null;
 
 const PLATFORMS = [
   {
@@ -122,6 +130,9 @@ async function readMapping(nodeId, label) {
     if (consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS) {
       return { error: "not asked: the server had stopped answering" };
     }
+    if (rateLimited) {
+      return { error: "not asked: the rate limit had been reached" };
+    }
     try {
       const reply = await rpc("tools/call", {
         name: "get_code_connect_map",
@@ -133,6 +144,11 @@ async function readMapping(nodeId, label) {
       consecutiveTimeouts = 0;
       if (reply.error || reply.result?.isError) {
         lastError = JSON.stringify(reply.error || text).slice(0, 200);
+        // A retry spends another call of the day's allowance and fails the same way.
+        if (/rate limit/i.test(lastError)) {
+          rateLimited = rateLimited || lastError;
+          break;
+        }
         continue;
       }
       return { map: JSON.parse(text || "{}") };
@@ -196,11 +212,16 @@ for (const platform of PLATFORMS) {
     (node) => !onlyNodes.length || onlyNodes.includes(node),
   );
   let withSnippet = 0;
+  let notAsked = 0;
   const results = await inBatches(nodes, async (nodeId) => ({
     nodeId,
     ...(await readMapping(nodeId, platform.label)),
   }));
   for (const { nodeId, map, error } of results) {
+    if (error?.startsWith("not asked")) {
+      notAsked += 1;
+      continue;
+    }
     if (error) {
       report(`${platform.label} ${nodeId}: no mapping read (${error})`);
       continue;
@@ -229,11 +250,17 @@ for (const platform of PLATFORMS) {
     }
   }
   console.log(
-    `${platform.label}: ${nodes.length} linked node(s) asked, ${withSnippet} variant or instance node(s) carry a snippet`,
+    `${platform.label}: ${nodes.length - notAsked} of ${nodes.length} linked node(s) asked, ${withSnippet} variant or instance node(s) carry a snippet`,
   );
   if (consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS) {
     console.error(
       "The Dev Mode server stopped answering. Bring Figma to the front, or restart it, and run again.",
+    );
+    process.exit(1);
+  }
+  if (rateLimited) {
+    console.error(
+      `Figma's rate limit for the Dev Mode server is reached (${rateLimited}); nothing more was asked. Run again when it resets, narrowed with --label and --node.`,
     );
     process.exit(1);
   }
