@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -15,6 +16,12 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   reactHooks.configs["recommended-latest"],
+  {
+    // The repository's pre-commit hook lints with the root config, which
+    // carries the React plugin; this keeps `pnpm lint` in step with it.
+    plugins: { react },
+    rules: { "react/no-unescaped-entities": "error" },
+  },
   {
     languageOptions: {
       ecmaVersion: 2022,

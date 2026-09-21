@@ -5,20 +5,30 @@ import { Heading, Text } from "@kozmos/react";
 export function Section({
   title,
   lead,
+  actions,
+  level = 2,
   children,
 }: {
   title: string;
   lead?: ReactNode;
+  /** Controls beside the title: a switch, a filter. */
+  actions?: ReactNode;
+  level?: 2 | 3;
   children: ReactNode;
 }) {
   const headingId = useId();
   return (
     <section aria-labelledby={headingId} className="site-section">
       <header className="site-section-header">
-        <Heading level={2} id={headingId}>
+        <Heading
+          level={level}
+          id={headingId}
+          className={level === 2 ? "site-headline" : undefined}
+        >
           {title}
         </Heading>
         {lead ? <Text color="muted">{lead}</Text> : null}
+        {actions}
       </header>
       {children}
     </section>
@@ -37,7 +47,9 @@ export function PageHeader({
 }) {
   return (
     <header className="site-page-header">
-      <Heading level={1}>{title}</Heading>
+      <Heading level={1} className="site-title">
+        {title}
+      </Heading>
       {lead ? (
         <Text size="lg" color="muted">
           {lead}

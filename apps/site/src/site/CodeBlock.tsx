@@ -1,20 +1,5 @@
-import { useEffect, useState } from "react";
-import {
-  Button,
-  ScrollArea,
-  Separator,
-  Stack,
-  Surface,
-  Text,
-} from "@kozmos/react";
-
-type CopyStatus = "idle" | "copied" | "failed";
-
-const statusText: Record<CopyStatus, string> = {
-  idle: "",
-  copied: "Copied",
-  failed: "Copy failed",
-};
+import { ScrollArea, Separator, Stack, Surface, Text } from "@kozmos/react";
+import { CopyButton } from "./CopyButton";
 
 /**
  * GAP-05: Kozmos has no code block. This composes one from Surface,
@@ -23,23 +8,6 @@ const statusText: Record<CopyStatus, string> = {
  * the monospace family, and `kozmos-reset` would take it away again.
  */
 export function CodeBlock({ code, label }: { code: string; label: string }) {
-  const [status, setStatus] = useState<CopyStatus>("idle");
-
-  useEffect(() => {
-    if (status === "idle") return;
-    const timer = window.setTimeout(() => setStatus("idle"), 2000);
-    return () => window.clearTimeout(timer);
-  }, [status]);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setStatus("copied");
-    } catch {
-      setStatus("failed");
-    }
-  }
-
   return (
     <Surface className="site-code">
       <Stack
@@ -52,19 +20,7 @@ export function CodeBlock({ code, label }: { code: string; label: string }) {
         <Text as="span" size="sm" color="muted">
           {label}
         </Text>
-        <Stack direction="row" align="center" gap={2}>
-          <Text as="span" size="sm" color="muted" aria-live="polite">
-            {statusText[status]}
-          </Text>
-          <Button
-            size="sm"
-            variant="ghost"
-            aria-label={`Copy ${label}`}
-            onClick={copy}
-          >
-            Copy
-          </Button>
-        </Stack>
+        <CopyButton text={code} label={`Copy ${label}`} />
       </Stack>
       <Separator />
       <ScrollArea

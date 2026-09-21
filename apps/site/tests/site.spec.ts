@@ -7,6 +7,14 @@ const pages = [
   { path: "/examples", title: "Examples" },
   { path: "/examples/account-settings", title: "Account settings" },
   { path: "/examples/venue-explorer", title: "Venue explorer" },
+  { path: "/foundations", title: "Foundations" },
+  { path: "/foundations/colour", title: "Colour" },
+  { path: "/foundations/typography", title: "Typography" },
+  { path: "/foundations/layout", title: "Layout" },
+  { path: "/foundations/elevation", title: "Elevation and effects" },
+  { path: "/foundations/motion", title: "Motion" },
+  { path: "/foundations/icons", title: "Icons" },
+  { path: "/foundations/theming", title: "Theming" },
 ] as const;
 
 /** Console errors and uncaught exceptions, which a clean page has none of. */
@@ -29,11 +37,28 @@ async function hydrated(page: Page) {
   await page.waitForFunction(() =>
     Boolean(document.documentElement.dataset.theme),
   );
+  // The location marker's pulse never ends; only finite animations are waited for.
   await page.waitForFunction(() =>
     document
       .getAnimations()
-      .every((animation) => animation.playState !== "running"),
+      .every(
+        (animation) =>
+          animation.playState !== "running" ||
+          animation.effect?.getTiming().iterations === Infinity,
+      ),
   );
+}
+
+/** Scrolls the whole page once, so revealed sections and miniatures mount. */
+async function scrolled(page: Page) {
+  await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += 500) {
+      window.scrollTo(0, y);
+      await new Promise((resolve) => setTimeout(resolve, 40));
+    }
+    window.scrollTo(0, 0);
+  });
+  await hydrated(page);
 }
 
 /**
@@ -44,6 +69,7 @@ async function hydrated(page: Page) {
 const knownViolations: Record<string, readonly string[]> = {
   // GAP-17: AdaptiveMapShell's panel is an <aside>, nested in the page's main.
   "/examples/venue-explorer": ["landmark-complementary-is-top-level"],
+  "/": ["landmark-complementary-is-top-level"],
 };
 
 async function axeViolations(page: Page) {
@@ -97,6 +123,7 @@ for (const colorScheme of ["light", "dark"] as const) {
           "content",
           "noindex",
         );
+        await scrolled(page);
         expect(await axeViolations(page)).toEqual([]);
         expect(errors).toEqual([]);
       });
@@ -111,13 +138,27 @@ test.describe("on a narrow phone", () => {
   for (const { path } of pages) {
     test(`${path} has no sideways scroll`, async ({ page }) => {
       await page.goto(path);
-      await hydrated(page);
+      await scrolled(page);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - window.innerWidth,
       );
       expect(overflow).toBeLessThanOrEqual(0);
     });
   }
+
+  test("a foundations page offers its navigation in a drawer", async ({
+    page,
+  }) => {
+    await page.goto("/foundations/colour");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Foundations" }).click();
+    const drawer = page.getByRole("dialog", { name: "Foundations" });
+    await expect(drawer).toBeVisible();
+    await drawer.getByRole("link", { name: "Motion" }).click();
+    await expect(page).toHaveURL(/\/foundations\/motion$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Motion");
+    await expect(drawer).toBeHidden();
+  });
 });
 
 test("an unknown address answers 404 with the not-found page", async ({
@@ -193,6 +234,29 @@ test("site navigation stays in the page and moves focus to the content", async (
     ),
   ).toBe(true);
   await expect(page.locator("main#main")).toBeFocused();
+
+  // Into the reference, where the sidebar takes over: still the same document.
+  await page
+    .getByRole("navigation", { name: "Site" })
+    .getByRole("link", { name: "Foundations" })
+    .click();
+  await expect(page).toHaveURL(/\/foundations$/);
+  await page
+    .getByRole("complementary", { name: "Foundations" })
+    .getByRole("link", { name: "Icons" })
+    .click();
+  await expect(page).toHaveURL(/\/foundations\/icons$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Icons");
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { sameDocument?: boolean }).sameDocument,
+    ),
+  ).toBe(true);
+  await expect(
+    page
+      .getByRole("complementary", { name: "Foundations" })
+      .getByRole("link", { name: "Icons" }),
+  ).toHaveAttribute("aria-current", "page");
 });
 
 test("the skip link is the first stop and moves focus to the content", async ({
@@ -214,29 +278,197 @@ test("the skip link is the first stop and moves focus to the content", async ({
   await expect(page.locator("main#main")).toBeFocused();
 });
 
-test("the home demo themes and mirrors only itself", async ({ page }) => {
-  await page.emulateMedia({ colorScheme: "light" });
-  await page.goto("/");
-  await hydrated(page);
-  const demo = page.locator(
-    "section[aria-labelledby='home-title'] [data-kozmos-root]",
-  );
-  await expect(demo).toHaveAttribute("data-theme", "dark");
-  await page
-    .getByRole("group", { name: "This card's theme" })
-    .getByRole("radio", { name: "Light" })
-    .click();
-  await expect(demo).toHaveAttribute("data-theme", "light");
-  await page
-    .getByRole("group", { name: "Direction" })
-    .getByRole("radio", { name: "Right to left" })
-    .click();
-  await expect(demo).toHaveAttribute("dir", "rtl");
-  // The page around it is untouched.
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  await expect(
-    page.locator("body > [data-kozmos-root]").first(),
-  ).toHaveAttribute("dir", "ltr");
+test.describe("home", () => {
+  test("the hero scene themes and mirrors only itself, and its controls work", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("/");
+    await hydrated(page);
+    const scene = page
+      .locator("section[aria-labelledby='home-title'] [data-kozmos-root]")
+      .first();
+    await expect(scene).toHaveAttribute("data-theme", "dark");
+    await page
+      .getByRole("group", { name: "This scene's theme" })
+      .getByRole("radio", { name: "Light" })
+      .click();
+    await expect(scene).toHaveAttribute("data-theme", "light");
+    await page
+      .getByRole("group", { name: "Direction" })
+      .getByRole("radio", { name: "Right to left" })
+      .click();
+    await expect(scene).toHaveAttribute("dir", "rtl");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await expect(
+      page.locator("body > [data-kozmos-root]").first(),
+    ).toHaveAttribute("dir", "ltr");
+
+    const map = page.getByRole("region", { name: "Illustrative terminal map" });
+    await expect(map.getByRole("button", { name: /Gate B12/ })).toBeVisible();
+    await expect(map.getByRole("img", { name: "User location" })).toBeVisible();
+    await map.getByRole("button", { name: "Show my location" }).click();
+    await expect(map.getByRole("img", { name: "User location" })).toHaveCount(
+      0,
+    );
+    await expect(map.getByText("Turn left at the pharmacy")).toBeVisible();
+    await expect(map.getByText("Gate B12")).toBeVisible();
+  });
+
+  test("the live tiles respond", async ({ page }) => {
+    await page.goto("/");
+    await scrolled(page);
+    const tile = (name: string) =>
+      page.locator(".site-tile").filter({ hasText: name });
+
+    // Tokens: the nested provider flips.
+    const tokensTile = tile("One set of tokens");
+    await tokensTile.getByRole("switch", { name: "Dark" }).click();
+    await expect(
+      tokensTile.locator("[data-kozmos-root]").first(),
+    ).toHaveAttribute("data-theme", "dark");
+
+    // Adaptive: a narrow host puts the panel below the map.
+    const adaptive = tile("A map layout that fits its container");
+    await expect(adaptive.getByText("side", { exact: true })).toBeVisible();
+    const slider = adaptive.getByRole("slider", { name: "Host width" });
+    await slider.focus();
+    await page.keyboard.press("Home");
+    await expect(adaptive.getByText("bottom", { exact: true })).toBeVisible();
+
+    // Platforms: three snippets from the component's docs.
+    const platforms = tile("Three platforms, one part");
+    await platforms.getByRole("tab", { name: "SwiftUI" }).click();
+    await expect(
+      platforms.getByRole("region", { name: "Button.swift" }),
+    ).toContainText("KozmosButton");
+
+    // Contrast: four pairs, all passing.
+    await expect(
+      tile("Contrast, under contract").getByText("Pass"),
+    ).toHaveCount(4);
+  });
+
+  test("make it yours re-points the theme ramp", async ({ page }) => {
+    await page.goto("/");
+    await scrolled(page);
+    const section = page.getByRole("region", { name: "Make it yours" });
+    await section
+      .getByRole("group", { name: "Brand ramp" })
+      .getByRole("radio", { name: "Variant 1" })
+      .click();
+    await expect(section.getByText(/variables re-pointed/)).toBeVisible();
+    // The browser substitutes var() in a computed custom property, so the
+    // module's theme-600 must now equal the variant's 600 and not the page's.
+    const app = section.locator("[data-kozmos-root]").first();
+    const read = (name: string) =>
+      app.evaluate(
+        (element, property) =>
+          getComputedStyle(element).getPropertyValue(property).trim(),
+        name,
+      );
+    const pageTheme = await page.evaluate(() =>
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--primitives-colors-theme-600")
+        .trim(),
+    );
+    expect(await read("--primitives-colors-theme-600")).toBe(
+      await read("--primitives-colors-theme-variant-1-600"),
+    );
+    expect(await read("--primitives-colors-theme-600")).not.toBe(pageTheme);
+    await section.getByRole("switch", { name: "Dark theme" }).click();
+    await expect(app).toHaveAttribute("data-theme", "dark");
+  });
+
+  test("example miniatures mount once in view and stay inert", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await scrolled(page);
+    const miniature = page.getByRole("img", {
+      name: "Venue explorer example, shown small",
+    });
+    await expect(miniature).toBeVisible();
+    await expect(miniature.locator("[inert]")).toHaveCount(1);
+    await expect(miniature.locator("input[type=search]")).toHaveCount(1);
+    await expect(miniature.getByRole("searchbox")).toHaveCount(0);
+  });
+});
+
+test.describe("foundations", () => {
+  test("colour shows every ramp, and the contract passes in both themes", async ({
+    page,
+  }) => {
+    await page.goto("/foundations/colour");
+    await hydrated(page);
+    await expect(
+      page.getByRole("heading", { level: 3, name: "Theme variant 2" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("All 22 pairs pass in both themes"),
+    ).toBeVisible();
+    const table = page.getByRole("table", { name: "Contrast contract" });
+    await expect(table.getByRole("row")).toHaveCount(23);
+    await expect(table.getByText("Fail")).toHaveCount(0);
+  });
+
+  test("icons search, filter and copy", async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== "chromium",
+      "Only Chromium grants clipboard permission headlessly",
+    );
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/foundations/icons");
+    await hydrated(page);
+    await expect(
+      page.getByRole("heading", { level: 2, name: /^\d+ icons$/ }),
+    ).toBeVisible();
+    await page.getByRole("searchbox", { name: "Search icons" }).fill("arrow");
+    await expect(
+      page.getByRole("button", { name: "Copy arrow-left" }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Copy heart" })).toHaveCount(
+      0,
+    );
+    await page.getByRole("button", { name: "Copy arrow-left" }).click();
+    await expect(
+      page.getByText('Copied <Icon name="arrow-left" />'),
+    ).toBeVisible();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      '<Icon name="arrow-left" />',
+    );
+    await page.getByRole("searchbox", { name: "Search icons" }).fill("zzzz");
+    await expect(page.getByText("No icon matches")).toBeVisible();
+    await page.getByRole("button", { name: "Show all" }).click();
+    await expect(
+      page.getByRole("button", { name: "Copy heart" }),
+    ).toBeVisible();
+  });
+
+  test("typography measures the scale from the stylesheet", async ({
+    page,
+  }) => {
+    await page.goto("/foundations/typography");
+    await hydrated(page);
+    await expect(page.getByText("4xl · 36px / 40px")).toBeVisible();
+    await expect(page.getByText("xs · 12px / 16px")).toBeVisible();
+  });
+
+  test("the motion race runs on the tokens", async ({ page }) => {
+    await page.goto("/foundations/motion");
+    await hydrated(page);
+    const track = page.locator(".site-track").first();
+    const before = await track.locator(".site-runner").boundingBox();
+    await page.getByRole("button", { name: "Run" }).click();
+    await expect(track).toHaveAttribute("data-end", "true");
+    await hydrated(page);
+    const after = await track.locator(".site-runner").boundingBox();
+    expect(before && after && after.x - before.x).toBeGreaterThan(50);
+  });
 });
 
 /** The example itself, not the page around it (which also shows its source). */

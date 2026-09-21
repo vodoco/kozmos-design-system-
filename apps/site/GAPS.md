@@ -15,28 +15,33 @@ or Site (a need of this website, not of a product).
 from Kozmos parts and says so), _left visible_ (the defect shows on the page on
 purpose, because hiding it would hide the evidence).
 
-| ID     | What                                                          | Lane          | Status       |
-| ------ | ------------------------------------------------------------- | ------------- | ------------ |
-| GAP-01 | `NavigationItem` `asChild` throws                             | Core          | open         |
-| GAP-02 | `reset.css` ships raw Tailwind `theme()` calls                | Core          | open         |
-| GAP-03 | A pre-rendered page starts in the light theme                 | Core          | left visible |
-| GAP-04 | `Grid` cannot reflow, and a caller cannot make it             | Core          | composed     |
-| GAP-05 | No code block; `Text` has no monospace option                 | Core          | composed     |
-| GAP-06 | No skip link or visually-hidden text                          | Core          | composed     |
-| GAP-07 | Icons a website needs: theme, copy, external link             | Core          | open         |
-| GAP-08 | No footer                                                     | Core          | composed     |
-| GAP-09 | `buttonVariants` on a link keeps the link's underline         | Core          | left visible |
-| GAP-10 | No brand mark                                                 | Site          | open         |
-| GAP-11 | `EmptyState`'s title is not a heading                         | Core          | open         |
-| GAP-12 | `Alert` is always `role="alert"`, `AlertTitle` always an `h5` | Core          | composed     |
-| GAP-13 | `SelectTrigger` has no label; `Textarea` no helper text       | Core          | composed     |
-| GAP-14 | `CardTitle` is always an `h3`                                 | Core          | composed     |
-| GAP-15 | No icons for a venue's everyday categories                    | Product / SDK | open         |
-| GAP-16 | `TabsList` neither wraps nor scrolls                          | Core          | composed     |
-| GAP-17 | `AdaptiveMapShell`'s panel is an `<aside>`                    | Product / SDK | open         |
-| GAP-18 | `POIDetailPanel` has no presentation for the shell's panel    | Product / SDK | left visible |
-| GAP-19 | `Navbar` is always sticky                                     | Core          | composed     |
-| GAP-20 | `SearchBar`'s field is unstyled in WebKit (Safari, iOS)       | Product / SDK | left visible |
+| ID     | What                                                          | Lane                   | Status       |
+| ------ | ------------------------------------------------------------- | ---------------------- | ------------ |
+| GAP-01 | `NavigationItem` `asChild` throws                             | Core                   | open         |
+| GAP-02 | `reset.css` ships raw Tailwind `theme()` calls                | Core                   | open         |
+| GAP-03 | A pre-rendered page starts in the light theme                 | Core                   | left visible |
+| GAP-04 | `Grid` cannot reflow, and a caller cannot make it             | Core                   | composed     |
+| GAP-05 | No code block; `Text` has no monospace option                 | Core                   | composed     |
+| GAP-06 | No skip link or visually-hidden text                          | Core                   | composed     |
+| GAP-07 | Icons a website needs: theme, copy, external link             | Core                   | open         |
+| GAP-08 | No footer                                                     | Core                   | composed     |
+| GAP-09 | `buttonVariants` on a link keeps the link's underline         | Core                   | left visible |
+| GAP-10 | No brand mark                                                 | Site                   | open         |
+| GAP-11 | `EmptyState`'s title is not a heading                         | Core                   | open         |
+| GAP-12 | `Alert` is always `role="alert"`, `AlertTitle` always an `h5` | Core                   | composed     |
+| GAP-13 | `SelectTrigger` has no label; `Textarea` no helper text       | Core                   | composed     |
+| GAP-14 | `CardTitle` is always an `h3`                                 | Core                   | composed     |
+| GAP-15 | No icons for a venue's everyday categories                    | Product / SDK          | open         |
+| GAP-16 | `TabsList` neither wraps nor scrolls                          | Core                   | composed     |
+| GAP-17 | `AdaptiveMapShell`'s panel is an `<aside>`                    | Product / SDK          | open         |
+| GAP-18 | `POIDetailPanel` has no presentation for the shell's panel    | Product / SDK          | left visible |
+| GAP-19 | `Navbar` is always sticky                                     | Core                   | composed     |
+| GAP-20 | `SearchBar`'s field is unstyled in WebKit (Safari, iOS)       | Product / SDK          | left visible |
+| GAP-21 | `Heading` cannot reach the tokens' heading scale              | Core                   | composed     |
+| GAP-22 | Font-weight tokens carry names, not weights                   | Core                   | open         |
+| GAP-23 | Component-layer colours are baked values, not ramp aliases    | Core                   | left visible |
+| GAP-24 | `DynamicIsland` pins itself to the viewport                   | Platform / form factor | open         |
+| GAP-25 | `MapView` insists on 400px of height                          | Product / SDK          | composed     |
 
 ---
 
@@ -284,3 +289,77 @@ purpose, because hiding it would hide the evidence).
 - **Fix in Kozmos:** move `SearchBar`'s field to component-owned CSS like
   `Input`, and add it to the WebKit form-compatibility checks. Confirm in a real
   Safari too.
+
+## GAP-21 · `Heading` cannot reach the tokens' heading scale
+
+- **What:** the tokens carry a heading scale — h1 60px, h2 48, h3 38, h4 30,
+  h5 24, h6 20 (`--primitives-typography-font-size-headings-*`) — as Figma
+  draws it. The React `Heading` maps levels 1–6 onto `Text`'s `4xl`…`base`,
+  which are Tailwind's rem sizes: 36, 30, 24, 20, 18, 16px. The two scales
+  disagree at every level, and nothing in the React package can render the
+  token's 60px. `Text` has no family option either, so the mono family token
+  is unreachable through a component too.
+- **Evidence:** `.kozmos-text-4xl{font-size:2.25rem}` in the built stylesheet
+  against `--primitives-typography-font-size-headings-h1: 60` in the token
+  CSS; the typography page measures the component scale live and lists the
+  tokens beside it.
+- **Now:** the site's display, page and section titles are `Heading`s with a
+  class that sets the token size and line height from the tokens (`site.css`,
+  `.site-display`, `.site-title`, `.site-headline`); the rule allows
+  token-driven typography in site CSS for this reason. The line-height
+  pairings are the site's own, since the tokens pair none.
+- **Lane:** Core.
+- **Fix in Kozmos:** either drive `Text`'s sizes from the tokens, or add a
+  `display` size and a `family` prop, and say which scale is the product's.
+
+## GAP-22 · Font-weight tokens carry names, not weights
+
+- **What:** `--primitives-typography-font-weight-main-regular: Regular`,
+  `-bold: SemiBold`, `-light: Light` — Figma's style names. CSS `font-weight`
+  does not accept them, so the declaration is dropped; Swift and Kotlin would
+  need a lookup too. `Text`'s weights are Tailwind's numbers (400–700),
+  unconnected to the tokens.
+- **Evidence:** the token CSS; the typography page's weight table.
+- **Lane:** Core (tokens).
+- **Fix in Kozmos:** emit numeric weights (400, 600, 300), or map the names in
+  the token build.
+
+## GAP-23 · Component-layer colours are baked values, not ramp aliases
+
+- **What:** the 283 `--components-*` variables are generated with the theme's
+  hex values written in (`--components-primary-buttons-themed-button-background-idle: #0d44c2`)
+  rather than as aliases of the ramp (`var(--primitives-colors-theme-700)`).
+  A product that re-points the theme ramp through `ThemeProvider`'s `tokens`
+  — the documented way to brand a module — changes the utilities and leaves
+  every migrated component (Button, Input, the fields) in the old blue.
+- **Evidence:** the home page's "Make it yours" section re-points the ramp
+  and, for the component layer, matches each themed token to the ramp step
+  whose values it carries in both themes. On `f30c0f9` there are 45 themed
+  component tokens: 32 re-point (the backgrounds and borders), and 13 — the
+  content colours, white text and its disabled and pressed states — match no
+  ramp step and keep their baked value. The page prints the counts; the
+  `brandOverrides` unit test covers the matching.
+- **Now:** left visible: the section says how many tokens it could not reach.
+- **Lane:** Core (tokens build).
+- **Fix in Kozmos:** generate the component layer as aliases of the semantic
+  or primitive tokens it was derived from, so one override reaches everything.
+
+## GAP-24 · `DynamicIsland` pins itself to the viewport
+
+- **What:** `DynamicIsland` renders `position: fixed; top: 1rem; left: 50%`,
+  so it can only ever sit at the top of the browser window. It cannot be
+  placed in a map scene, a card or an example's frame.
+- **Now:** the hero scene shows the manoeuvre in a glass `Surface` around
+  `DirectionStep` instead.
+- **Lane:** Platform / form factor.
+- **Fix in Kozmos:** let the host decide the position (a `position` or
+  `portalContainer` prop), fixed by default.
+
+## GAP-25 · `MapView` insists on 400px of height
+
+- **What:** `MapView` carries `min-h-[400px]` in its own classes, and a
+  caller's class cannot lower it (GAP-04). A small map — a tile, a thumbnail,
+  a phone in landscape — is not possible.
+- **Now:** the hero scene and the adaptive tile give their frames 400px or
+  more.
+- **Lane:** Product / SDK.

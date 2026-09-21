@@ -5,10 +5,11 @@ import {
   route,
 } from "@react-router/dev/routes";
 import { examples } from "./examples/manifest";
+import { foundationPages } from "./foundations/nav";
 
 export default [
-  // One layout for every page, so the header stays mounted and focus can
-  // move to the new content after each navigation.
+  // One layout for every plain page, so the header stays mounted and focus
+  // can move to the new content after each navigation.
   layout("routes/site-layout.tsx", [
     index("routes/home.tsx"),
     route("get-started", "routes/get-started.tsx"),
@@ -18,5 +19,12 @@ export default [
       route(`examples/${example.slug}`, `examples/${example.slug}/route.tsx`),
     ),
     route("*", "routes/not-found.tsx"),
+  ]),
+  // Reference pages sit beside a section sidebar.
+  layout("routes/docs-layout.tsx", [
+    route("foundations", "routes/foundations/index.tsx"),
+    ...foundationPages.map((page) =>
+      route(`foundations/${page.slug}`, `routes/foundations/${page.slug}.tsx`),
+    ),
   ]),
 ] satisfies RouteConfig;

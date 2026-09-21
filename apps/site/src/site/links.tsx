@@ -50,19 +50,31 @@ export interface SiteNavItemProps {
   children: ReactNode;
   /** Whether nested paths also select the item. */
   end?: boolean;
+  placement?: "top" | "side";
+  icon?: ReactNode;
+  /** Called after a click that navigates, so a drawer can close. */
+  onNavigate?: () => void;
 }
 
-/** A top navigation item that marks itself selected on its own pages. */
-export function SiteNavItem({ to, children, end = false }: SiteNavItemProps) {
+/** A navigation item that marks itself selected on its own pages. */
+export function SiteNavItem({
+  to,
+  children,
+  end = false,
+  placement = "top",
+  icon,
+  onNavigate,
+}: SiteNavItemProps) {
   const href = useHref(to);
   const resolved = useResolvedPath(to);
   const selected = useMatch({ path: resolved.pathname, end }) !== null;
-  const handleClick = useRouterClick<HTMLElement>(to);
+  const handleClick = useRouterClick<HTMLElement>(to, () => onNavigate?.());
   return (
     <NavigationItem
       href={href}
-      placement="top"
+      placement={placement}
       selected={selected}
+      icon={icon}
       onClick={handleClick}
     >
       {children}

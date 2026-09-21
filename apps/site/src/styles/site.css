@@ -1,16 +1,19 @@
 /*
- * The site's own stylesheet: page layout only.
+ * The site's own stylesheet: layout, and type sizes the components cannot
+ * reach.
  *
- * Every colour, radius, shadow and piece of typography comes from a Kozmos
- * component or a Kozmos token. This file arranges components on the page —
- * widths, gaps, grids — and every rule that exists because Kozmos cannot
- * express it names the gap in GAPS.md. `pnpm --filter @kozmos/site lint`
- * enforces the rules (scripts/check-ds-only.mjs).
+ * Every colour, radius, shadow, size and spacing value here is a Kozmos
+ * token. Components carry their own styles; this file arranges them on the
+ * page. Typography appears only where a heading needs a size the token
+ * scale has and the Heading component does not (GAPS.md, GAP-21), and then
+ * only through the typography tokens. `pnpm --filter @kozmos/site lint`
+ * enforces all of it (scripts/check-ds-only.mjs).
  */
 
 /* Spacing aliases: the layout spacing tokens are unitless, like the semantic
    radii, so they are converted once here. */
 :root {
+  --site-space-50: calc(var(--primitives-layout-spacing-50) * 1px);
   --site-space-100: calc(var(--primitives-layout-spacing-100) * 1px);
   --site-space-150: calc(var(--primitives-layout-spacing-150) * 1px);
   --site-space-200: calc(var(--primitives-layout-spacing-200) * 1px);
@@ -19,6 +22,11 @@
   --site-space-600: calc(var(--primitives-layout-spacing-600) * 1px);
   --site-space-700: calc(var(--primitives-layout-spacing-700) * 1px);
   --site-space-900: calc(var(--primitives-layout-spacing-900) * 1px);
+  --site-radius-control: calc(var(--semantics-radius-control) * 1px);
+  --site-radius-container: calc(var(--semantics-radius-container) * 1px);
+  --site-radius-panel: calc(var(--semantics-radius-panel) * 1px);
+  --site-radius-pill: calc(var(--semantics-radius-pill) * 1px);
+  --site-header-height: calc(var(--primitives-layout-sizing-800) * 1px);
 }
 
 /* The document sits outside every ThemeProvider. root.tsx mirrors the
@@ -37,6 +45,65 @@ body {
   margin: 0;
 }
 
+/* ---- Type from tokens (GAP-21) ---------------------------------------- */
+
+/* The tokens carry a 60px h1 and a 48px h2; Heading stops at 36px. These
+   classes put the token sizes on a Heading; the weight stays the Heading's. */
+.site-display {
+  font-size: calc(var(--primitives-typography-font-size-headings-h1) * 1px);
+  line-height: calc(var(--primitives-typography-line-height-700) * 1px);
+  letter-spacing: calc(
+    var(--primitives-typography-letter-spacing-compact) * 1px
+  );
+  text-wrap: balance;
+}
+
+.site-title {
+  font-size: calc(var(--primitives-typography-font-size-headings-h2) * 1px);
+  line-height: calc(var(--primitives-typography-line-height-600) * 1px);
+  letter-spacing: calc(
+    var(--primitives-typography-letter-spacing-compact) * 1px
+  );
+  text-wrap: balance;
+}
+
+.site-headline {
+  font-size: calc(var(--primitives-typography-font-size-headings-h3) * 1px);
+  line-height: calc(var(--primitives-typography-line-height-500) * 1px);
+  letter-spacing: calc(
+    var(--primitives-typography-letter-spacing-default) * 1px
+  );
+  text-wrap: balance;
+}
+
+@media (max-width: 48rem) {
+  .site-display {
+    font-size: calc(var(--primitives-typography-font-size-headings-h2) * 1px);
+    line-height: calc(var(--primitives-typography-line-height-600) * 1px);
+  }
+
+  .site-title {
+    font-size: calc(var(--primitives-typography-font-size-headings-h3) * 1px);
+    line-height: calc(var(--primitives-typography-line-height-500) * 1px);
+  }
+
+  .site-headline {
+    font-size: calc(var(--primitives-typography-font-size-headings-h4) * 1px);
+    line-height: calc(var(--primitives-typography-line-height-400) * 1px);
+  }
+}
+
+/* A specimen at a token size: the page sets --size and --lh from tokens. */
+.site-specimen {
+  font-size: calc(var(--size) * 1px);
+  line-height: calc(var(--lh) * 1px);
+  text-wrap: balance;
+}
+
+.site-mono {
+  font-family: var(--semantics-typography-family-mono);
+}
+
 /* ---- Shell ------------------------------------------------------------ */
 
 .site-shell {
@@ -48,6 +115,7 @@ body {
 
 .site-main {
   flex: 1 0 auto;
+  min-inline-size: 0;
 }
 
 .site-main:focus {
@@ -60,7 +128,7 @@ body {
   position: absolute;
   inset-inline-start: var(--site-space-200);
   inset-block-start: var(--site-space-200);
-  z-index: 1;
+  z-index: var(--primitives-layer-50);
   transform: translateY(-200%);
 }
 
@@ -74,22 +142,62 @@ body {
   gap: var(--site-space-100);
 }
 
+/* ---- Reference pages: sidebar beside content -------------------------- */
+
+.site-docs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1 0 auto;
+}
+
+/* The sidebar's own display comes from its scoped utilities (GAP-04), so
+   the wrapper is what hides and shows it. */
+.site-docs-aside {
+  display: none;
+}
+
+.site-docs-toolbar {
+  padding: var(--site-space-200) var(--site-space-200) 0;
+}
+
+.site-docs-body {
+  min-inline-size: 0;
+}
+
+@media (min-width: 64rem) {
+  .site-docs {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .site-docs-aside {
+    display: block;
+    position: sticky;
+    top: var(--site-header-height);
+    align-self: start;
+    max-block-size: calc(100dvh - var(--site-header-height));
+    overflow-y: auto;
+  }
+
+  .site-docs-toolbar {
+    display: none;
+  }
+}
+
 /* ---- Page structure --------------------------------------------------- */
 
 /* Every single-column grid below says minmax(0, 1fr): an implicit column
    grows to its widest child's minimum width (a row of tabs, a line of code),
    pushing the whole page sideways on a phone. With it, wide children scroll
    inside their own ScrollArea instead. */
-
 .site-page {
-  padding-block: var(--site-space-700);
+  padding-block: var(--site-space-600) var(--site-space-900);
 }
 
 .site-page-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-200);
-  max-inline-size: 48rem;
+  max-inline-size: 52rem;
   margin-block-end: var(--site-space-600);
 }
 
@@ -100,14 +208,14 @@ body {
 }
 
 .site-section + .site-section {
-  margin-block-start: var(--site-space-900);
+  margin-block-start: var(--site-space-700);
 }
 
 .site-section-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-100);
-  max-inline-size: 48rem;
+  max-inline-size: 52rem;
 }
 
 .site-prose {
@@ -115,6 +223,13 @@ body {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-200);
   max-inline-size: 48rem;
+}
+
+.site-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--site-space-150);
 }
 
 /* GAP-04: Grid takes a fixed column count, with no responsive or auto-fit
@@ -140,14 +255,55 @@ body {
   block-size: 100%;
 }
 
-/* ---- Home ------------------------------------------------------------- */
+/* A full-bleed band with its own background. */
+.site-band {
+  padding-block: var(--site-space-700);
+  background: var(--primitives-colors-background-25);
+}
+
+.site-band-tint {
+  background: var(--primitives-colors-theme-0);
+}
+
+.site-band + .site-band {
+  border-block-start: var(--primitives-border-width-sm) solid
+    var(--semantics-border-subtle);
+}
+
+/* Content revealed as it scrolls into view. Only once the page has hydrated
+   (root.tsx sets data-theme on <html>); the pre-rendered page shows all. */
+html[data-theme] .site-reveal:not([data-shown="true"]) {
+  opacity: var(--primitives-opacity-0);
+  transform: translateY(calc(var(--semantics-motion-slide-md) * 2px));
+}
+
+.site-reveal {
+  transition:
+    opacity var(--semantics-motion-duration-deliberate)
+      var(--semantics-motion-easing-standard),
+    transform var(--semantics-motion-duration-deliberate)
+      var(--semantics-motion-easing-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .site-reveal:not([data-shown="true"]) {
+    opacity: var(--primitives-opacity-100);
+    transform: none;
+  }
+
+  .site-reveal {
+    transition: none;
+  }
+}
+
+/* ---- Home: hero ------------------------------------------------------- */
 
 .site-hero {
   display: grid;
   gap: var(--site-space-600);
   align-items: center;
-  padding-block: var(--site-space-700) var(--site-space-900);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  padding-block: var(--site-space-700);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
 }
 
 .site-hero-copy {
@@ -163,30 +319,346 @@ body {
   gap: var(--site-space-150);
 }
 
-.site-demo {
+/* The scene: a map drawn from Kozmos parts, in its own theme. */
+.site-scene {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-200);
-  padding: var(--site-space-300);
 }
 
-.site-demo-surface {
-  padding: var(--site-space-300);
-  border-radius: calc(var(--semantics-radius-container) * 1px);
+/* A fixed height, not an aspect ratio: with a minimum height, an aspect
+   ratio makes the width follow the height and the frame overflows a narrow
+   column. MapView asks for 400px of height; this gives it that and more. */
+.site-scene-frame {
+  position: relative;
+  inline-size: 100%;
+  block-size: 27rem;
+  border-radius: var(--site-radius-panel);
+  overflow: hidden;
+  box-shadow: var(--semantics-elevation-overlay);
 }
 
-.site-demo-controls {
+.site-scene-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.site-scene-pin {
+  position: absolute;
+  left: calc(50% + (var(--pin-x) - 50%) * var(--zoom, 1));
+  top: calc(50% + (var(--pin-y) - 50%) * var(--zoom, 1));
+  transform: translate(-50%, -100%);
+  animation: site-pin-in var(--semantics-motion-duration-deliberate)
+    var(--semantics-motion-easing-emphasised) both;
+  animation-delay: calc(var(--i) * var(--semantics-motion-duration-quick));
+  transition:
+    left var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-standard),
+    top var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-standard);
+}
+
+.site-scene-user {
+  transform: translate(-50%, -50%);
+  animation-name: site-marker-in;
+}
+
+@keyframes site-pin-in {
+  from {
+    opacity: var(--primitives-opacity-0);
+    transform: translate(
+      -50%,
+      calc(-100% - var(--semantics-motion-slide-md) * 2px)
+    );
+  }
+}
+
+@keyframes site-marker-in {
+  from {
+    opacity: var(--primitives-opacity-0);
+    transform: translate(-50%, -50%) scale(var(--semantics-motion-enter));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-scene-pin {
+    animation: none;
+    transition: none;
+  }
+}
+
+.site-scene-controls {
   display: flex;
   flex-wrap: wrap;
   gap: var(--site-space-200);
   align-items: end;
 }
 
-.site-demo-row {
+.site-scene-step {
+  padding: var(--site-space-150) var(--site-space-200);
+  border-radius: var(--site-radius-container);
+}
+
+/* ---- Home: the live tiles --------------------------------------------- */
+
+.site-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--site-space-200);
+}
+
+.site-tile {
+  grid-column: span 12;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+@media (min-width: 48rem) {
+  .site-tile-4,
+  .site-tile-6 {
+    grid-column: span 6;
+  }
+}
+
+@media (min-width: 64rem) {
+  .site-tile-4 {
+    grid-column: span 4;
+  }
+
+  .site-tile-6 {
+    grid-column: span 6;
+  }
+
+  .site-tile-8 {
+    grid-column: span 8;
+  }
+}
+
+.site-tile-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--site-space-200);
+  padding: 0 var(--site-space-300) var(--site-space-300);
+}
+
+/* Swatches: a Box whose colour is a token passed as --swatch. */
+.site-swatch-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--site-space-50);
+}
+
+.site-swatch-cell {
+  aspect-ratio: 1;
+  border-radius: calc(var(--semantics-radius-marker) * 1px);
+  background: var(--swatch);
+  transition: background-color var(--semantics-motion-duration-standard)
+    var(--semantics-motion-easing-standard);
+}
+
+.site-swatch-cell-wide {
+  aspect-ratio: 2 / 1;
+}
+
+.site-type-scale {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--site-space-100);
+}
+
+.site-emotions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--site-space-100);
+}
+
+.site-emotions > * {
+  inline-size: 100%;
+}
+
+/* The adaptive shell inside a container the visitor sizes. */
+.site-adaptive-host {
+  inline-size: min(100%, calc(var(--host-width) * 1px));
+  block-size: 20rem;
+  margin-inline: auto;
+  border-radius: var(--site-radius-container);
+  overflow: hidden;
+  border: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
+  transition: inline-size var(--semantics-motion-duration-standard)
+    var(--semantics-motion-easing-standard);
+}
+
+.site-adaptive-panel {
+  padding: var(--site-space-300);
+  display: grid;
+  gap: var(--site-space-100);
+}
+
+.site-adaptive-map {
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+}
+
+/* The motion track: a marker travels it at the chosen duration and easing. */
+.site-track {
+  position: relative;
+  block-size: calc(var(--primitives-layout-sizing-700) * 1px);
+  border-radius: var(--site-radius-pill);
+  background: var(--primitives-colors-background-100);
+}
+
+.site-runner {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: var(--site-space-100);
+  transform: translateY(-50%);
+  transition: inset-inline-start
+    var(--dur, var(--semantics-motion-duration-standard))
+    var(--ease, var(--semantics-motion-easing-standard));
+}
+
+.site-track[data-end="true"] .site-runner {
+  inset-inline-start: calc(
+    100% - var(--primitives-layout-sizing-700) * 1px + var(--site-space-100)
+  );
+}
+
+.site-track-lane {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-50);
+}
+
+/* Contrast samples: the pair's own colours, as text on its surface. */
+.site-pair {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
+  gap: var(--site-space-200);
+}
+
+.site-pair-sample {
+  inline-size: calc(var(--primitives-layout-sizing-800) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-600) * 1px);
+  display: grid;
+  place-items: center;
+  border-radius: var(--site-radius-control);
+  background: var(--pair-bg);
+  border: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
+}
+
+/* Text sets its own colour class; the sample's letters take the pair's. */
+.site-pair-sample .site-pair-text {
+  color: var(--pair-fg);
+}
+
+/* Glass over the category colours. */
+.site-glass-stage {
+  position: relative;
+  min-block-size: 15rem;
+  overflow: hidden;
+  border-radius: var(--site-radius-container);
+  background: var(--primitives-colors-background-25);
+}
+
+.site-blob {
+  position: absolute;
+  inline-size: 9rem;
+  block-size: 9rem;
+  border-radius: var(--site-radius-pill);
+  background: var(--blob);
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+}
+
+.site-glass-card {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: 50%;
+  transform: translate(-50%, -50%);
+  inline-size: min(100%, 18rem);
+  padding: var(--site-space-300);
+  border-radius: var(--site-radius-container);
+  display: grid;
+  gap: var(--site-space-100);
+}
+
+.site-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+  gap: var(--site-space-100);
+}
+
+.site-icon-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--site-radius-control);
+  background: var(--primitives-colors-background-25);
+}
+
+/* ---- Home: make it yours --------------------------------------------- */
+
+.site-brand {
+  display: grid;
+  gap: var(--site-space-400);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  align-items: start;
+}
+
+.site-brand-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-300);
+}
+
+.site-brand-app {
+  padding: var(--site-space-300);
+  border-radius: var(--site-radius-panel);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-300);
+}
+
+/* ---- Home: example miniatures ---------------------------------------- */
+
+/* The example itself, rendered small: the canvas is the example's real size
+   and the frame scales it to its own width (the script sets --scale). */
+.site-miniature {
+  position: relative;
+  aspect-ratio: var(--w) / var(--h);
+  overflow: hidden;
+  border-radius: var(--site-radius-container) var(--site-radius-container) 0 0;
+  background: var(--primitives-colors-background-25);
+  pointer-events: none;
+  user-select: none;
+}
+
+.site-miniature-canvas {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: calc(var(--w) * 1px);
+  block-size: calc(var(--h) * 1px);
+  transform-origin: 0 0;
+  transform: scale(var(--scale));
+}
+
+.site-miniature-loading {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.site-example-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
 }
 
 /* ---- Code ------------------------------------------------------------- */
@@ -198,7 +670,7 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-inline-size: 0;
-  border-radius: calc(var(--semantics-radius-container) * 1px);
+  border-radius: var(--site-radius-container);
   overflow: hidden;
 }
 
@@ -213,6 +685,101 @@ body {
 
 .site-code-pre {
   padding: var(--site-space-200);
+}
+
+/* ---- Foundations ------------------------------------------------------ */
+
+.site-ramp {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 6rem), 1fr));
+  gap: var(--site-space-100);
+}
+
+.site-swatch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-50);
+  min-inline-size: 0;
+}
+
+.site-swatch-colour {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--site-radius-control);
+  background: var(--swatch);
+  border: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
+}
+
+.site-swatch-large {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--site-space-200);
+}
+
+.site-swatch-large .site-swatch-colour {
+  inline-size: calc(var(--primitives-layout-sizing-1000) * 1px);
+  aspect-ratio: 1;
+}
+
+.site-bar {
+  block-size: calc(var(--primitives-layout-sizing-200) * 1px);
+  inline-size: min(100%, calc(var(--len) * 1px));
+  border-radius: calc(var(--semantics-radius-marker) * 1px);
+  background: var(--primitives-colors-theme-600);
+}
+
+.site-scale-row {
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--site-space-200);
+}
+
+.site-shape {
+  inline-size: calc(var(--primitives-layout-sizing-1000) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-1000) * 1px);
+  border-radius: var(--radius);
+  background: var(--primitives-colors-theme-0);
+  border: var(--primitives-border-width-md) solid
+    var(--primitives-colors-theme-600);
+}
+
+.site-shape-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-300);
+  align-items: end;
+}
+
+.site-shape-cell {
+  display: grid;
+  gap: var(--site-space-50);
+  justify-items: center;
+}
+
+.site-elevated {
+  box-shadow: var(--shadow);
+}
+
+.site-opacity {
+  inline-size: calc(var(--primitives-layout-sizing-800) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-800) * 1px);
+  border-radius: var(--site-radius-control);
+  background: var(--primitives-colors-theme-600);
+  opacity: var(--level);
+}
+
+.site-side-by-side {
+  display: grid;
+  gap: var(--site-space-300);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.site-theme-sample {
+  padding: var(--site-space-300);
+  border-radius: var(--site-radius-panel);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200);
 }
 
 /* ---- Footer ----------------------------------------------------------- */

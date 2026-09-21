@@ -3,6 +3,12 @@ import { SITE_NAME } from "../lib/site";
 import { SiteLink, SiteNavItem } from "./links";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
+export const primaryNavigation = [
+  { to: "/foundations", label: "Foundations" },
+  { to: "/examples", label: "Examples" },
+  { to: "/get-started", label: "Get started" },
+] as const;
+
 export function SiteHeader() {
   return (
     <Navbar
@@ -16,8 +22,11 @@ export function SiteHeader() {
       }
       navigation={
         <Box className="site-header-nav">
-          <SiteNavItem to="/get-started">Get started</SiteNavItem>
-          <SiteNavItem to="/examples">Examples</SiteNavItem>
+          {primaryNavigation.map((item) => (
+            <SiteNavItem key={item.to} to={item.to}>
+              {item.label}
+            </SiteNavItem>
+          ))}
         </Box>
       }
       utilities={<ThemeSwitcher />}

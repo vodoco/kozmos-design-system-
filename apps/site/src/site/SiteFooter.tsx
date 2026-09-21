@@ -1,5 +1,6 @@
 import { Container, Separator, Stack, Text } from "@kozmos/react";
 import { SiteLink } from "./links";
+import { primaryNavigation } from "./SiteHeader";
 
 /** GAP-08: Kozmos has no footer, so this one is composed from its parts. */
 export function SiteFooter() {
@@ -16,19 +17,16 @@ export function SiteFooter() {
             gap={4}
           >
             <Text size="sm" color="muted">
-              Kozmos design system. MIT licence.
+              Kozmos design system. MIT licence. Pre-release.
             </Text>
             <nav aria-label="Footer" className="site-footer-nav">
-              <Text as="span" size="sm">
-                <SiteLink to="/get-started" variant="subtle">
-                  Get started
-                </SiteLink>
-              </Text>
-              <Text as="span" size="sm">
-                <SiteLink to="/examples" variant="subtle">
-                  Examples
-                </SiteLink>
-              </Text>
+              {primaryNavigation.map((item) => (
+                <Text key={item.to} as="span" size="sm">
+                  <SiteLink to={item.to} variant="subtle">
+                    {item.label}
+                  </SiteLink>
+                </Text>
+              ))}
             </nav>
           </Stack>
         </Stack>

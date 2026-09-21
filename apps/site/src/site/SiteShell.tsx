@@ -1,26 +1,28 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import { useLocation } from "react-router";
 import { Box, Link } from "@kozmos/react";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
 /**
- * The page frame: skip link, header, main and footer.
- *
  * After a client-side navigation, focus moves to the main region, so a screen
  * reader lands on the new page's content instead of staying on the link that
  * was pressed. The first render is left alone.
  */
-export function SiteShell({ children }: { children: ReactNode }) {
-  const main = useRef<HTMLElement>(null);
+export function useFocusMainOnNavigate(main: RefObject<HTMLElement | null>) {
   const { pathname } = useLocation();
   const previousPath = useRef(pathname);
-
   useEffect(() => {
     if (previousPath.current === pathname) return;
     previousPath.current = pathname;
     main.current?.focus({ preventScroll: true });
-  }, [pathname]);
+  }, [main, pathname]);
+}
+
+/** The page frame: skip link, header, main and footer. */
+export function SiteShell({ children }: { children: ReactNode }) {
+  const main = useRef<HTMLElement>(null);
+  useFocusMainOnNavigate(main);
 
   return (
     <Box className="site-shell">

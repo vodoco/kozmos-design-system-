@@ -13,8 +13,10 @@
  *
  * CSS:
  *  - no colour literal, named colour or `!important`;
- *  - no typography (it comes from Text and Heading);
- *  - radii and shadows only from tokens, spacing only from tokens;
+ *  - typography only from Kozmos typography tokens (a size, line height,
+ *    family or spacing named by a token variable), never a literal — and
+ *    normally not at all: it comes from Text and Heading;
+ *  - radii and shadows only from tokens; fixed spacing only from tokens;
  *  - no selector that reaches into Kozmos (.kozmos-*, [data-slot]).
  *
  * Every exception the site needs is a gap in Kozmos, recorded in GAPS.md.
@@ -31,7 +33,8 @@ const ALLOWED_MODULES = [
   /^react-dom$/,
   /^react-router$/,
   /^@react-router\/dev\/(routes|config)$/,
-  /^@kozmos\/(react|tokens|product-contracts)(\/[\w./-]+)?$/,
+  // A Kozmos package, a subpath of one, or its text (`?raw`) for the token pages.
+  /^@kozmos\/(react|tokens|icons|product-contracts)(\/[\w./-]+)?(\?raw)?$/,
   /^\.{1,2}\//,
 ];
 
@@ -148,6 +151,16 @@ function withoutVars(value) {
   return out;
 }
 
+/**
+ * Whether a value is made of tokens and nothing else: every number in it
+ * comes from a var(), allowing the `* 1px` that turns a unitless token into
+ * a length.
+ */
+function tokenDriven(value) {
+  if (!value.includes("var(")) return false;
+  return !/\d/.test(withoutVars(value).replace(/\*\s*1(px|rem|em)\b/g, ""));
+}
+
 function lineOf(source, offset) {
   return source.slice(0, offset).split("\n").length;
 }
@@ -199,8 +212,12 @@ export function checkCss(source, file = "input.css") {
         }
       }
       if (property.startsWith("--")) continue;
-      if (TYPOGRAPHY_PROPERTY.test(property)) {
-        report(at, "typography", `${property} — typography comes from Text and Heading.`);
+      if (TYPOGRAPHY_PROPERTY.test(property) && !tokenDriven(value)) {
+        report(
+          at,
+          "typography",
+          `${property}: ${value} — typography comes from Text and Heading, or from a typography token.`,
+        );
       }
       if (RADIUS_PROPERTY.test(property) && !value.includes("var(")) {
         report(at, "radius", `${property}: ${value} — use a radius token.`);
@@ -298,12 +315,14 @@ export function checkScript(source, file = "input.tsx") {
     ) {
       checkStyle(node);
     } else if (
-      ts.isStringLiteral(node) ||
-      ts.isNoSubstitutionTemplateLiteral(node) ||
-      ts.isTemplateHead(node) ||
-      ts.isTemplateMiddle(node) ||
-      ts.isTemplateTail(node) ||
-      ts.isJsxText(node)
+      // A unit test's sample colours are inputs to a parser, not paint on a page.
+      !isTest &&
+      (ts.isStringLiteral(node) ||
+        ts.isNoSubstitutionTemplateLiteral(node) ||
+        ts.isTemplateHead(node) ||
+        ts.isTemplateMiddle(node) ||
+        ts.isTemplateTail(node) ||
+        ts.isJsxText(node))
     ) {
       const text = node.text ?? node.getText(tree);
       if (HEX_COLOUR.test(text) || COLOUR_FUNCTION.test(text)) {
@@ -320,8 +339,11 @@ function sourceFiles(directory) {
   const files = [];
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const full = path.join(directory, entry.name);
-    if (entry.isDirectory()) files.push(...sourceFiles(full));
-    else if (/\.(tsx?|css)$/.test(entry.name) && !entry.name.endsWith(".d.ts")) {
+    if (entry.isDirectory()) {
+      // Generated data is read, not written by hand, and holds no markup.
+      if (entry.name === "generated") continue;
+      files.push(...sourceFiles(full));
+    } else if (/\.(tsx?|css)$/.test(entry.name) && !entry.name.endsWith(".d.ts")) {
       files.push(full);
     }
   }

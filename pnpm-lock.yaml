@@ -314,6 +314,9 @@ importers:
 
   apps/site:
     dependencies:
+      "@kozmos/icons":
+        specifier: workspace:*
+        version: link:../../packages/icons
       "@kozmos/react":
         specifier: workspace:*
         version: link:../../packages/react
@@ -363,12 +366,18 @@ importers:
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@1.21.7)
+      eslint-plugin-react:
+        specifier: 7.37.5
+        version: 7.37.5(eslint@9.39.4(jiti@1.21.7))
       eslint-plugin-react-hooks:
         specifier: ^5.2.0
         version: 5.2.0(eslint@9.39.4(jiti@1.21.7))
       globals:
         specifier: ^17.4.0
         version: 17.4.0
+      react-docgen-typescript:
+        specifier: 2.4.0
+        version: 2.4.0(typescript@5.9.3)
       tsx:
         specifier: ^4.7.0
         version: 4.21.0
