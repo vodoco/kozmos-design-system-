@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "8d58fb10708d";
+const PLUGIN_BUILD = "4b34d2e5ce77";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -3864,6 +3864,7 @@ const COMPONENT_DOCS = [
 const FOCUS_VISIBLE_PROPERTY_NAME = "Focus Visible";
 const DEFAULT_ICON_COMPONENT_NAME = "Icon / Slot Default";
 const ICON_PAGE_NAME = "Icons";
+const UTILITIES_PAGE_NAME = "Utilities";
 const DEFAULT_CURATED_ICON_NAME = "search-md";
 const KOSMOS_ICON_DEFINITIONS = [
   {
@@ -8541,6 +8542,14 @@ figma.ui.onmessage = async (message) => {
 
   try {
     configureFontConfig(message && message.fontConfig);
+
+    // The panel asks once it has loaded, and shows the answer in its header:
+    // Figma can keep an older import running, and every result is only
+    // evidence about the build that produced it.
+    if (message.type === "ui-ready") {
+      figma.ui.postMessage({ type: "plugin-build", build: PLUGIN_BUILD });
+      return;
+    }
 
     if (message.type === "inspect") {
       postResultToUi({
@@ -14786,6 +14795,9 @@ async function auditLibrary() {
   );
   const audit = {
     generatedAt: new Date().toISOString(),
+    // The build that wrote this report: a pasted audit is only evidence about
+    // the code that produced it, and Figma can keep running an older import.
+    pluginBuild: PLUGIN_BUILD,
     fileName: figma.root.name,
     pages: [],
     variables: auditVariables(collections, variables),
@@ -70199,7 +70211,9 @@ function storeIconSlotAuditMetadata(icon, variableName, fallback, stats) {
 }
 
 async function ensureDefaultIconComponent(variableByName, stats) {
-  const existing = await findComponentByName(DEFAULT_ICON_COMPONENT_NAME);
+  const existing = await findComponentByName(DEFAULT_ICON_COMPONENT_NAME, [
+    UTILITIES_PAGE_NAME,
+  ]);
   if (existing) {
     existing.description =
       "Default generated icon slot fallback for neutral button surfaces. Replace with Pointr Icon Library instances in consuming components.";
@@ -70214,7 +70228,7 @@ async function ensureDefaultIconComponent(variableByName, stats) {
     return existing;
   }
 
-  const page = await ensurePage("Utilities");
+  const page = await ensurePage(UTILITIES_PAGE_NAME);
   await figma.setCurrentPageAsync(page);
   await page.loadAsync();
 
@@ -70247,13 +70261,43 @@ async function resolveDefaultIconSourceComponent(variableByName, stats) {
   return ensureDefaultIconComponent(variableByName, stats);
 }
 
-async function findComponentByName(name) {
-  for (const page of figma.root.children) {
+// Components found by name, kept while each is still in the file under that
+// name. Painters ask for the same icons once per variant; the Tree block alone
+// asks 1,044 times.
+const componentsFoundByName = new Map();
+
+function componentStillNamed(component, name) {
+  return Boolean(
+    component &&
+    !component.removed &&
+    component.type === "COMPONENT" &&
+    component.name === name,
+  );
+}
+
+// A component lives on a known page: icons on Icons, the slot default on
+// Utilities. Read that page first, and every page only when it is not there:
+// a search in page order walks the whole Components page, 27k nodes in the
+// live file, before it reaches Icons.
+async function findComponentByName(name, pageNames = []) {
+  const known = componentsFoundByName.get(name);
+  if (componentStillNamed(known, name)) return known;
+  componentsFoundByName.delete(name);
+
+  const pages = figma.root.children;
+  const ordered = pageNames
+    .map((pageName) => pages.find((page) => page.name === pageName))
+    .filter(Boolean)
+    .concat(pages.filter((page) => pageNames.indexOf(page.name) === -1));
+  for (const page of ordered) {
     await page.loadAsync();
     const component = page.findOne(
       (node) => node.type === "COMPONENT" && node.name === name,
     );
-    if (component) return component;
+    if (component) {
+      componentsFoundByName.set(name, component);
+      return component;
+    }
   }
 
   return null;
@@ -70264,7 +70308,7 @@ function kozmosIconComponentName(name) {
 }
 
 async function findKozmosIconSourceComponent(name) {
-  return findComponentByName(kozmosIconComponentName(name));
+  return findComponentByName(kozmosIconComponentName(name), [ICON_PAGE_NAME]);
 }
 
 async function findKozmosIconSourceComponents() {
@@ -70719,7 +70763,7 @@ async function refreshButtonSlotsIfPresent(page, variableByName, stats) {
 
 async function pruneLegacyGeneratedIconSlotComponents(stats) {
   const utilities = figma.root.children.find(
-    (page) => page.name === "Utilities",
+    (page) => page.name === UTILITIES_PAGE_NAME,
   );
   if (!utilities) return;
 

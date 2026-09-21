@@ -26,6 +26,8 @@ import {
   mockComponentSet,
   mockIconComponent,
   mockVariables,
+  resetSearchStats,
+  searchStats,
 } from "./lib/figma-plugin-harness.mjs";
 
 const ROOT = process.cwd();
@@ -1357,6 +1359,164 @@ section("Typography inference");
     ) && !/browse\.fontName = fonts\.medium/.test(source),
     "FileUpload's browse text takes the Medium label style, no weight override",
   );
+}
+
+// --- Component lookups -------------------------------------------------------------
+
+// Painters ask for an icon once per variant: 1,044 times in the Tree block. A
+// lookup that searched the pages in order walked the whole Components page,
+// 27k nodes in the live file, before it reached Icons, 28.7 million node
+// visits for the three Tree sets, and Update All Core stalled there. An icon
+// is looked up on Icons first and kept while it is still in the file under
+// its name.
+section("Component lookups");
+{
+  const registry = fs.readFileSync(
+    path.join(ROOT, "packages/icons/src/registry.ts"),
+    "utf8",
+  );
+  const iconNames = [
+    ...registry
+      .slice(
+        registry.indexOf("export const kozmosIconNames = ["),
+        registry.indexOf("] as const"),
+      )
+      .matchAll(/^\s+"([a-z0-9-]+)",$/gm),
+  ].map((match) => match[1]);
+  const components = new MockNode("PAGE", "Components");
+  const decoy = mockIconComponent("chevron-down");
+  const decoyHolder = new MockNode("FRAME", "Pasted Example");
+  decoyHolder.appendChild(decoy);
+  components.appendChild(decoyHolder);
+  for (let index = 0; index < 200; index += 1) {
+    components.appendChild(new MockNode("FRAME", `Filler ${index}`));
+  }
+  const elsewhere = new MockNode("PAGE", "Examples");
+  const strayIcon = new MockNode("COMPONENT", "Icon / only-in-examples");
+  elsewhere.appendChild(strayIcon);
+  const icons = new MockNode("PAGE", "Icons");
+  for (const name of iconNames) icons.appendChild(mockIconComponent(name));
+  const lookupFigma = createFigmaMock({ pages: [components, icons, elsewhere] });
+  const lookupPlugin = loadPlugin({ pluginPath: PLUGIN, figma: lookupFigma });
+  const ready =
+    typeof lookupPlugin.findKozmosIconSourceComponent === "function" &&
+    typeof lookupPlugin.treeItemComponentConfig === "function";
+  ok(ready, "the icon lookup and the Tree painter are reachable");
+  if (ready) {
+    const find = lookupPlugin.findKozmosIconSourceComponent;
+    const canonical = icons.findChild(
+      (node) => node.name === "Icon / chevron-down",
+    );
+
+    resetSearchStats();
+    const first = await find("chevron-down");
+    ok(
+      first === canonical,
+      "an icon comes from the Icons page, not a same-named copy on Components",
+    );
+    ok(
+      !searchStats.pageSearches.Components,
+      `an icon on Icons is found without searching Components (searched: ${JSON.stringify(searchStats.pageSearches)})`,
+    );
+
+    resetSearchStats();
+    const again = await find("chevron-down");
+    ok(
+      again === canonical && searchStats.visits === 0,
+      `an icon found once is not searched for again (${searchStats.visits} nodes visited)`,
+    );
+
+    canonical.remove();
+    const replacement = mockIconComponent("chevron-down");
+    icons.appendChild(replacement);
+    const afterRemoval = await find("chevron-down");
+    ok(
+      afterRemoval === replacement,
+      "a removed icon is not handed out; its replacement on Icons is",
+    );
+
+    replacement.name = "Icon / chevron-down-renamed";
+    const afterRename = await find("chevron-down");
+    ok(
+      afterRename !== replacement,
+      "a renamed icon is not handed out under its old name",
+    );
+
+    const stray = await find("only-in-examples");
+    ok(
+      stray === strayIcon,
+      "an icon missing from Icons is still found on another page",
+    );
+
+    const config = lookupPlugin.treeItemComponentConfig();
+    const actionRow = config
+      .combinations()
+      .find(
+        (props) =>
+          props.content === "Actions" &&
+          props.state === "Selected" &&
+          props.type === "Parent",
+      );
+    ok(Boolean(actionRow), "the Tree has a selected parent row with actions");
+    if (actionRow) {
+      resetSearchStats();
+      const row = lookupFigma.createComponent();
+      await config.updateVariant(row, {
+        props: actionRow,
+        variableByName,
+        fonts: FONTS,
+        stats: freshStats(),
+      });
+      const searched = Object.keys(searchStats.pageSearches);
+      ok(
+        searched.every((page) => page === "Icons"),
+        `a Tree row's icons are read from Icons alone (searched: ${searched.join(", ") || "none"})`,
+      );
+      const instances = row.findAll((node) => node.type === "INSTANCE");
+      ok(
+        instances.length >= 3 &&
+          instances.every(
+            (instance) =>
+              instance.mainComponent &&
+              instance.mainComponent.parent === icons,
+          ),
+        `every icon in the row is an instance of an Icons page component (${instances.length} instances)`,
+      );
+    }
+  }
+}
+
+// --- The build a run names ---------------------------------------------------------
+
+// A pasted audit or a panel is only evidence about the build that produced it,
+// and Figma can keep an older import running. The panel asks once it loads and
+// shows the answer; the audit report carries it.
+section("The build a run names");
+{
+  const posted = [];
+  const buildFigma = createFigmaMock({ pages: pages() });
+  buildFigma.ui.postMessage = (message) => posted.push(message);
+  const buildPlugin = loadPlugin({ pluginPath: PLUGIN, figma: buildFigma });
+  const stamp = (fs.readFileSync(PLUGIN, "utf8").match(
+    /const PLUGIN_BUILD = "([0-9a-f]+)";/,
+  ) || [])[1];
+  ok(Boolean(stamp), "the plugin carries a build stamp");
+  const handler = buildFigma.ui.onmessage;
+  ok(typeof handler === "function", "the plugin listens to the panel");
+  if (typeof handler === "function") {
+    await handler({ type: "ui-ready" });
+    const reply = posted.find((message) => message.type === "plugin-build");
+    ok(
+      Boolean(reply) && reply.build === stamp,
+      `the panel's ready message is answered with the build (${reply ? reply.build : "no answer"})`,
+    );
+  }
+  const source = fs.readFileSync(PLUGIN, "utf8");
+  ok(
+    /const audit = \{[\s\S]{0,400}?pluginBuild: PLUGIN_BUILD,/.test(source),
+    "the audit report names the build that wrote it",
+  );
+  ok(Boolean(buildPlugin), "the plugin loads for the build check");
 }
 
 // --- Summary ---------------------------------------------------------------------

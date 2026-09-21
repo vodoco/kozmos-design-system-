@@ -53,6 +53,20 @@ function storePaints(node, paints) {
   });
 }
 
+// Every node a findOne or findAll visits, and the pages searches start on, so
+// a check can hold a painter to the pages it should read: a lookup that walks
+// the Components page costs 27k nodes in the live file.
+export const searchStats = { visits: 0, pageSearches: {} };
+
+export function resetSearchStats() {
+  searchStats.visits = 0;
+  searchStats.pageSearches = {};
+}
+
+function countPageSearch(name) {
+  searchStats.pageSearches[name] = (searchStats.pageSearches[name] || 0) + 1;
+}
+
 export class MockNode {
   constructor(type, name) {
     this.id = `${nextId++}:${nextId}`;
@@ -203,7 +217,9 @@ export class MockNode {
   rescale() {}
 
   findOne(predicate) {
+    if (this.type === "PAGE") countPageSearch(this.name);
     for (const child of this.children) {
+      searchStats.visits += 1;
       if (predicate(child)) return child;
       const nested = child.findOne(predicate);
       if (nested) return nested;
@@ -212,8 +228,10 @@ export class MockNode {
   }
 
   findAll(predicate) {
+    if (this.type === "PAGE") countPageSearch(this.name);
     const out = [];
     for (const child of this.children) {
+      searchStats.visits += 1;
       if (!predicate || predicate(child)) out.push(child);
       out.push(...child.findAll(predicate));
     }

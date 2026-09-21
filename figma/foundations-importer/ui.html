@@ -204,6 +204,14 @@
         line-height: 18px;
       }
 
+      .plugin-build {
+        margin-top: 2px;
+        color: var(--figma-color-text-tertiary);
+        font-size: 11px;
+        line-height: 16px;
+        font-variant-numeric: tabular-nums;
+      }
+
       .app-header {
         position: sticky;
         top: 0;
@@ -829,6 +837,7 @@
               Import foundations, audit readiness, and maintain generated
               components.
             </p>
+            <p id="pluginBuild" class="plugin-build">Build loading…</p>
           </div>
         </div>
       </header>
@@ -2475,6 +2484,12 @@
         const message = event.data.pluginMessage;
         if (!message) return;
 
+        if (message.type === "plugin-build") {
+          const buildLabel = document.getElementById("pluginBuild");
+          if (buildLabel) buildLabel.textContent = `Build ${message.build}`;
+          return;
+        }
+
         if (message.type === "audit-progress") {
           syncAuditProgress(message);
           return;
@@ -2561,6 +2576,8 @@
           hideBootScreen();
         }
       };
+
+      postPluginMessage({ type: "ui-ready" });
 
       function startBootSequence() {
         if (!bootScreen || bootHidden) return;
