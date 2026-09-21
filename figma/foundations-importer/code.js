@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "ed50a03a1912";
+const PLUGIN_BUILD = "314962f54832";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -1179,7 +1179,7 @@ const SURFACE_QA_COMPONENT_GROUPS = [
         },
         {
           componentSetName: "Slider",
-          variantName: "State=Default, Status=Default",
+          variantName: "State=Default, Status=Default, Type=Single",
           text: { "Label Text": "Zoom" },
         },
       ],
@@ -21662,6 +21662,8 @@ function solidPaintToRgba(paint, variableContext, modeName) {
   const boundColor = resolveBoundPaintColor(paint, variableContext, modeName);
   const color = boundColor || paint.color;
   if (!color) return null;
+  // Alpha is the paint's opacity, not the variable's: that is what the file
+  // draws (see paintFromVariable), measured on 2026-09-21.
   return {
     r: color.r,
     g: color.g,
@@ -47335,13 +47337,14 @@ function tokenPaint(token, variableByName, stats) {
 }
 
 /**
- * A bound colour at less than full strength, on a leaf layer. A bound
- * paint's own opacity is not relied on: read over REST on 2026-09-21, the
- * live file held CategoryTile's 5 % selection wash and 20 % ring and
- * DirectionStep's 10 % disc at 1, though CategoryField's 12 % wash, painted
- * by the same helper, kept its 0.12. So the strength goes on the layer: the
- * paint stays bound at full strength and the node carries the opacity. For a
- * layer that draws nothing else; a wash behind content is a layer of its own
+ * A bound colour at less than its token's strength, on a leaf layer. A token's
+ * own alpha rides on the paint (see paintFromVariable), but a strength laid on
+ * top of an opaque token did not hold: read over REST on 2026-09-21, the live
+ * file held CategoryTile's 5 % selection wash and 20 % ring and DirectionStep's
+ * 10 % disc at 1, though CategoryField's 12 % wash, painted by the same
+ * helper, kept its 0.12. So the strength goes on the layer: the paint keeps
+ * its token's own alpha and the node carries the opacity. For a layer that
+ * draws nothing else; a wash behind content is a layer of its own
  * (`insertTranslucentTokenLayer`).
  */
 function setTranslucentTokenPaint(
@@ -73329,15 +73332,14 @@ function paintFromVariable(name, fallback, variableByName, stats) {
 
   if (figma.variables.setBoundVariableForPaint) {
     try {
-      // A bound colour carries its own alpha (Overlay/Scrim is
-      // rgba(0, 0, 0, 0.5)), and a bound paint's own opacity is not relied
-      // on (see setTranslucentTokenPaint), so the paint is bound at 1; the
-      // fallback's alpha serves the unbound paths.
-      return figma.variables.setBoundVariableForPaint(
-        Object.assign({}, paint, { opacity: 1 }),
-        "color",
-        variable,
-      );
+      // The paint's opacity is what the file draws; the variable's own alpha
+      // does not show. Rendered over REST on 2026-09-21: Backdrop's fill,
+      // bound to Overlay/Scrim at paint opacity 0.502, draws at 128/255, not
+      // a quarter, and Button's Glass fill, bound to transparent/inverted/10
+      // at paint opacity 1 (build ed50a03a1912), draws opaque. So a
+      // translucent token's alpha rides on the paint, from the fallback, and
+      // the audit reads the same opacity.
+      return figma.variables.setBoundVariableForPaint(paint, "color", variable);
     } catch (error) {
       stats.warnings.push(`Could not bind "${name}" (${messageFor(error)}).`);
     }

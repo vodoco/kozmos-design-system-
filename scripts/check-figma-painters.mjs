@@ -177,6 +177,9 @@ const variableByName = mockVariables([
   "CategoryTile/label/line-height",
   "LocationPin/label/font-size",
   "LocationPin/label/line-height",
+  "Colors/transparent/inverted/10",
+  "Border/bevel/top",
+  "Overlay/Scrim",
 ]);
 
 const figma = createFigmaMock({ pages: pages() });
@@ -1302,10 +1305,7 @@ section("Icon tint repair");
       boundVariableName(neutralVector.strokes[0]) === neutralToken,
       "an unbound black icon is bound to Colors/foreground/0, though its colour matches the fallback",
     );
-    ok(
-      neutralStats.iconSlotPaintRepairs === 1,
-      "and the repair is counted",
-    );
+    ok(neutralStats.iconSlotPaintRepairs === 1, "and the repair is counted");
 
     const missingToken = "Colors/not-in-this-file/500";
     const missing = { foreground: missingToken, foregroundFallback: "#000000" };
@@ -1323,7 +1323,14 @@ section("Icon tint repair");
       { type: "SOLID", color: { r: 0, g: 0, b: 0 }, opacity: 1, visible: true },
     ];
     const loneStats = freshStats();
-    plugin.syncIconSlotInstance(loneIcon, missing, variableByName, loneStats, 16, null);
+    plugin.syncIconSlotInstance(
+      loneIcon,
+      missing,
+      variableByName,
+      loneStats,
+      16,
+      null,
+    );
     ok(
       !loneStats.iconSlotPaintRepairs && loneStats.iconSlotRetintsSkipped === 1,
       "with its variable missing from the file, the fallback colour is right",
@@ -1369,15 +1376,144 @@ section("Translucent token paints");
     ),
     "BottomSheet's handle is foreground/500 at 36 % by layer opacity",
   );
-  // Every painter above ran against a mock that drops a bound paint's own
-  // opacity, which the live file did not reliably keep; none may rely on it.
+}
+
+section("A translucent token rides on the paint");
+{
+  // What the file draws, rendered over REST on 2026-09-21: a bound paint's
+  // opacity shows and the variable's own alpha does not. Build ed50a03a1912
+  // bound every paint at 1, and Button's Glass came out opaque: a near-white
+  // pill under a near-white label in Dark, 1.03 to 1.
+  const alphaOf = (hex) => Number.parseInt(hex.slice(7, 9), 16) / 255;
+  const near = (a, b) => typeof a === "number" && Math.abs(a - b) < 0.002;
+  const ready =
+    typeof plugin.createButtonVariant === "function" &&
+    typeof plugin.createBackdropVariant === "function" &&
+    typeof plugin.solidPaintToRgba === "function";
+  ok(ready, "Button's and Backdrop's painters and the audit's paint reader");
+  if (ready) {
+    const glass = await plugin.createButtonVariant({
+      variant: "Glass",
+      size: "Default",
+      state: "Default",
+      variableByName,
+      fonts: FONTS,
+      textStyle: null,
+      stats: freshStats(),
+    });
+    const fill = glass.fills[0];
+    const stroke = glass.strokes[0];
+    ok(
+      boundVariableName(fill) === "Colors/transparent/inverted/10" &&
+        near(fill.opacity, alphaOf("#FCFCFD1A")),
+      `Glass's fill is transparent/inverted/10 at its 10 % (${fill && fill.opacity})`,
+    );
+    ok(
+      boundVariableName(stroke) === "Border/bevel/top" &&
+        near(stroke.opacity, alphaOf("#FFFFFF80")),
+      `Glass's bevel is Border/bevel/top at its 50 % (${stroke && stroke.opacity})`,
+    );
+    // The audit, as in Dark: the label (foreground/0, #FFFFFF) on the Glass
+    // fill over Surface/0 (#000000). Its paint reader takes the paint's
+    // opacity, as the file draws.
+    const context = plugin.createVariableContext([], []);
+    const read = plugin.solidPaintToRgba(fill, context, "Dark");
+    const onBlack = {
+      r: read.r * read.a,
+      g: read.g * read.a,
+      b: read.b * read.a,
+    };
+    const lin = (v) =>
+      v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    const lum = (c) =>
+      0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+    const darkRatio = (1 + 0.05) / (lum(onBlack) + 0.05);
+    ok(
+      darkRatio >= 4.5,
+      `the audit reads Glass's label in Dark at 4.5 or more (${darkRatio.toFixed(2)})`,
+    );
+
+    const backdrop = await plugin.createBackdropVariant({
+      props: { visibility: "Visible" },
+      variableByName,
+      stats: freshStats(),
+    });
+    ok(
+      boundVariableName(backdrop.fills[0]) === "Overlay/Scrim" &&
+        near(backdrop.fills[0].opacity, alphaOf("#00000080")),
+      `Backdrop's scrim is Overlay/Scrim at its 50 % (${backdrop.fills[0] && backdrop.fills[0].opacity})`,
+    );
+  }
+
+  // The mock itself: it keeps a bound paint at its token's own alpha and
+  // drops a strength laid on an opaque token, which is what the file did.
+  const before = boundPaintOpacityDrops.length;
+  const probe = figma.createRectangle();
+  probe.name = "Probe";
+  probe.fills = [
+    {
+      type: "SOLID",
+      color: { r: 1, g: 1, b: 1 },
+      opacity: alphaOf("#FCFCFD1A"),
+      boundVariables: {
+        color: {
+          type: "VARIABLE_ALIAS",
+          id: "VariableID:Colors/transparent/inverted/10",
+        },
+      },
+    },
+  ];
+  const keptAlpha = probe.fills[0].opacity;
+  probe.fills = [
+    {
+      type: "SOLID",
+      color: { r: 0, g: 0, b: 0 },
+      opacity: 0.05,
+      boundVariables: {
+        color: { type: "VARIABLE_ALIAS", id: "VariableID:Colors/theme/500" },
+      },
+    },
+  ];
+  const droppedStrength = probe.fills[0].opacity;
+  const recorded = boundPaintOpacityDrops.length - before;
+  boundPaintOpacityDrops.splice(before);
   ok(
-    boundPaintOpacityDrops.length === 0,
-    `no painter relied on a bound paint's own opacity (${boundPaintOpacityDrops
-      .slice(0, 6)
-      .map((drop) => `${drop.node} at ${drop.opacity}`)
-      .join(", ")})`,
+    near(keptAlpha, alphaOf("#FCFCFD1A")) &&
+      droppedStrength === undefined &&
+      recorded === 1,
+    "the mock keeps a token's own alpha on the paint and drops a laid-on strength",
   );
+}
+
+section("Surface QA specs name real variants");
+{
+  const groups = plugin.SURFACE_QA_COMPONENT_GROUPS;
+  const ready =
+    Array.isArray(groups) &&
+    typeof plugin.expectedVariantAxesForComponentSetName === "function";
+  ok(ready, "the Surface QA specs and the expected axes are reachable");
+  if (ready) {
+    const specs = groups.flatMap((group) => group.rows.flat());
+    const wrong = specs.filter((spec) => {
+      const axes = plugin.expectedVariantAxesForComponentSetName(
+        spec.componentSetName,
+      );
+      if (!axes) return true;
+      const pairs = spec.variantName.split(", ").map((pair) => pair.split("="));
+      const named = pairs.map(([key]) => key);
+      return (
+        named.length !== Object.keys(axes).length ||
+        !Object.keys(axes).every((key) => named.includes(key)) ||
+        !pairs.every(([key, value]) => (axes[key] || []).includes(value))
+      );
+    });
+    ok(
+      specs.length > 0 && wrong.length === 0,
+      `every Surface QA instance names a variant its set has (${wrong
+        .map((spec) => `${spec.componentSetName} / ${spec.variantName}`)
+        .join("; ")})`,
+    );
+  }
 }
 
 // --- Typography: the audit's guess follows the field painters -----------------------
@@ -1457,7 +1593,9 @@ section("Component lookups");
   elsewhere.appendChild(strayIcon);
   const icons = new MockNode("PAGE", "Icons");
   for (const name of iconNames) icons.appendChild(mockIconComponent(name));
-  const lookupFigma = createFigmaMock({ pages: [components, icons, elsewhere] });
+  const lookupFigma = createFigmaMock({
+    pages: [components, icons, elsewhere],
+  });
   const lookupPlugin = loadPlugin({ pluginPath: PLUGIN, figma: lookupFigma });
   const ready =
     typeof lookupPlugin.findKozmosIconSourceComponent === "function" &&
@@ -1538,8 +1676,7 @@ section("Component lookups");
         instances.length >= 3 &&
           instances.every(
             (instance) =>
-              instance.mainComponent &&
-              instance.mainComponent.parent === icons,
+              instance.mainComponent && instance.mainComponent.parent === icons,
           ),
         `every icon in the row is an instance of an Icons page component (${instances.length} instances)`,
       );
@@ -1568,7 +1705,8 @@ section("What the audit reads under a wash");
     const white = { r: 1, g: 1, b: 1, a: 1 };
     const rgb = (paint) => ({ ...paint.color, a: 1 });
     const luminance = (c) => {
-      const lin = (v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+      const lin = (v) =>
+        v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
       return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
     };
     const ratio = (a, b) => {
@@ -1614,7 +1752,12 @@ section("What the audit reads under a wash");
     });
     const disc = named(step, "Direction Icon");
     const discWash = named(disc, "Direction Wash");
-    const discRead = plugin.contrastChildBackground(disc, white, context, "Light");
+    const discRead = plugin.contrastChildBackground(
+      disc,
+      white,
+      context,
+      "Light",
+    );
     const discTruth = over(rgb(discWash.fills[0]), discWash.opacity, white);
     ok(
       Math.abs(discRead.r - discTruth.r) < 1e-6 &&
@@ -1801,9 +1944,9 @@ section("The build a run names");
   const buildFigma = createFigmaMock({ pages: pages() });
   buildFigma.ui.postMessage = (message) => posted.push(message);
   const buildPlugin = loadPlugin({ pluginPath: PLUGIN, figma: buildFigma });
-  const stamp = (fs.readFileSync(PLUGIN, "utf8").match(
-    /const PLUGIN_BUILD = "([0-9a-f]+)";/,
-  ) || [])[1];
+  const stamp = (fs
+    .readFileSync(PLUGIN, "utf8")
+    .match(/const PLUGIN_BUILD = "([0-9a-f]+)";/) || [])[1];
   ok(Boolean(stamp), "the plugin carries a build stamp");
   const handler = buildFigma.ui.onmessage;
   ok(typeof handler === "function", "the plugin listens to the panel");
@@ -1822,6 +1965,17 @@ section("The build a run names");
   );
   ok(Boolean(buildPlugin), "the plugin loads for the build check");
 }
+
+section("Bound paint opacities");
+// Every painter above ran against a mock that keeps a bound paint at its
+// token's own alpha and drops any other opacity; a strength goes on the layer.
+ok(
+  boundPaintOpacityDrops.length === 0,
+  `no painter laid a strength on a bound paint (${boundPaintOpacityDrops
+    .slice(0, 6)
+    .map((drop) => `${drop.node}: ${drop.token} at ${drop.opacity}`)
+    .join(", ")})`,
+);
 
 // --- Summary ---------------------------------------------------------------------
 

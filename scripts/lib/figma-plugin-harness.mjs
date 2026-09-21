@@ -19,6 +19,7 @@
  * of the plugin (the painters, the helpers) is reachable by name.
  */
 import fs from "node:fs";
+import path from "node:path";
 import vm from "node:vm";
 
 let nextId = 1;
@@ -26,15 +27,65 @@ let nextId = 1;
 const CHAR_ADVANCE = 0.55;
 
 /**
- * A bound paint's own opacity is not to be relied on. Read over REST on
- * 2026-09-21, the live file held CategoryTile's 5 % selection wash and 20 %
- * ring and DirectionStep's 10 % disc at 1, while CategoryField's 12 % wash,
- * painted by the same helper, kept its 0.12; what dropped the first three is
- * not established. The painters put translucency on layer opacity instead,
- * which does not depend on it. The mock drops a bound paint's opacity below
- * 1 and records each drop, so a check fails on a painter that relies on it.
+ * A bound paint's opacity is what the file draws, and a token's own alpha
+ * rides on it: rendered over REST on 2026-09-21, Backdrop's fill bound to
+ * Overlay/Scrim held 0.502 and drew at 128/255, and IconButton's Glass fill
+ * held 0.102. What the file did not keep is a strength laid on top of an
+ * opaque token: CategoryTile's 5 % selection wash and 20 % ring and
+ * DirectionStep's 10 % disc read back at 1, while CategoryField's 12 % wash,
+ * painted by the same helper, kept its 0.12. So the mock keeps an opacity
+ * equal to the bound token's own alpha, in both modes, and drops any other,
+ * recording each drop: a check fails on a painter that lays a strength on a
+ * bound paint instead of on the layer.
  */
 export const boundPaintOpacityDrops = [];
+
+let tokenAlphaByName = null;
+
+// The alpha each variable's token carries, from the payload the importer
+// writes: the same value in Light and Dark, or null when the modes differ
+// or the token is not in the payload.
+function tokenAlpha(name) {
+  if (!tokenAlphaByName) {
+    tokenAlphaByName = new Map();
+    const payload = JSON.parse(
+      fs.readFileSync(
+        path.join(process.cwd(), "docs/figma-foundations-payload.json"),
+        "utf8",
+      ),
+    );
+    const byCanonical = new Map(
+      payload.variables.map((variable) => [variable.canonicalName, variable]),
+    );
+    const alphaOf = (record, mode, depth = 0) => {
+      if (!record || depth > 8) return null;
+      if (record.kind === "alias") {
+        const target = byCanonical.get(record.path);
+        return target ? alphaOf(target.values[mode], mode, depth + 1) : null;
+      }
+      const raw = String(record.value).trim().toLowerCase();
+      const hex = raw.match(/^#[0-9a-f]{6}([0-9a-f]{2})?$/);
+      if (hex) return hex[1] ? Number.parseInt(hex[1], 16) / 255 : 1;
+      const rgba = raw.match(/^rgba?\(([^)]+)\)$/);
+      if (rgba) {
+        const parts = rgba[1].split(",");
+        return parts[3] === undefined ? 1 : Number.parseFloat(parts[3]);
+      }
+      return null;
+    };
+    for (const variable of payload.variables) {
+      const light = alphaOf(variable.values.light, "light");
+      const dark = alphaOf(variable.values.dark, "dark");
+      tokenAlphaByName.set(
+        variable.figmaName,
+        light !== null && dark !== null && Math.abs(light - dark) < 0.002
+          ? light
+          : null,
+      );
+    }
+  }
+  return tokenAlphaByName.has(name) ? tokenAlphaByName.get(name) : null;
+}
 
 function storePaints(node, paints) {
   if (!Array.isArray(paints)) return paints;
@@ -46,7 +97,20 @@ function storePaints(node, paints) {
       typeof paint.opacity === "number" &&
       paint.opacity < 1
     ) {
-      boundPaintOpacityDrops.push({ node: node.name, opacity: paint.opacity });
+      const token = String(paint.boundVariables.color.id).replace(
+        /^VariableID:/,
+        "",
+      );
+      const alpha = tokenAlpha(token);
+      if (alpha !== null && Math.abs(paint.opacity - alpha) < 0.002) {
+        return paint;
+      }
+      boundPaintOpacityDrops.push({
+        node: node.name,
+        opacity: paint.opacity,
+        token,
+        tokenAlpha: alpha,
+      });
       const kept = { ...paint };
       delete kept.opacity;
       return kept;
@@ -382,7 +446,9 @@ for (const axis of ["layoutSizingHorizontal", "layoutSizingVertical"]) {
   Object.defineProperty(MockNode.prototype, axis, {
     configurable: true,
     get() {
-      return (this[layoutSizingValues] && this[layoutSizingValues][axis]) || "FIXED";
+      return (
+        (this[layoutSizingValues] && this[layoutSizingValues][axis]) || "FIXED"
+      );
     },
     set(value) {
       if (
