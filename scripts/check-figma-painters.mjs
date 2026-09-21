@@ -537,8 +537,8 @@ section("LocationPin");
     );
     const number = named(component, "Number Text");
     ok(
-      number && boundVariableName(number.fills[0]) === "Category/Fill/Blue",
-      "off the floor: the number in the category's fill",
+      number && boundVariableName(number.fills[0]) === "Colors/foreground/0",
+      "off the floor: the number in the foreground on the white disc (Olcay, 2026-09-21)",
     );
   }
 
@@ -717,8 +717,8 @@ section("CategoryField");
       label &&
         label.fontSize === 15 &&
         label.lineHeight.value === 20 &&
-        boundVariableName(label.fills[0]) === "Category/Accent/Yellow",
-      "the label 15/20 in the accent",
+        boundVariableName(label.fills[0]) === "Colors/foreground/0",
+      "the label 15/20 in the foreground (Olcay, 2026-09-21)",
     );
     const pill = named(component, "Count Pill");
     ok(
@@ -748,8 +748,8 @@ section("CategoryField");
       cross &&
         cross.width === 16 &&
         crossVector &&
-        boundVariableName(crossVector.strokes[0]) === "Category/Accent/Yellow",
-      "the clear's cross is a 16 x-close in the accent",
+        boundVariableName(crossVector.strokes[0]) === "Colors/foreground/0",
+      "the clear's cross is a 16 x-close in the foreground",
     );
     ok(
       stats.warnings.length === 0,
@@ -1590,18 +1590,19 @@ section("What the audit reads under a wash");
       stats: freshStats(),
     });
     const wash = named(field, "Tint Wash");
-    const label = named(field, "Label Text");
+    const icon = named(field, "Icon");
+    const glyph = icon && icon.findOne((node) => node.type === "VECTOR");
     const read = plugin.contrastChildBackground(field, white, context, "Light");
     const expected = over(rgb(wash.fills[0]), wash.opacity, white);
-    const measured = ratio(rgb(label.fills[0]), read);
-    const truth = ratio(rgb(label.fills[0]), expected);
     ok(
-      Math.abs(measured - truth) < 0.005 && Math.abs(truth - 1.77) < 0.01,
-      `the audit reads the yellow label on its 12 % wash at ${measured.toFixed(2)} (the wash composited: ${truth.toFixed(2)})`,
+      ["r", "g", "b"].every((k) => Math.abs(read[k] - expected[k]) < 1e-6),
+      "the audit reads the field's content on its 12 % wash, composited",
     );
+    const measured = ratio(rgb(glyph.strokes[0]), read);
     ok(
-      measured < ratio(rgb(label.fills[0]), white) - 0.1,
-      "the wash lowers it below the label on white",
+      Math.abs(measured - 1.77) < 0.01 &&
+        measured < ratio(rgb(glyph.strokes[0]), white) - 0.1,
+      `the yellow icon reads ${measured.toFixed(2)} on the wash, below its ${ratio(rgb(glyph.strokes[0]), white).toFixed(2)} on white`,
     );
 
     const step = figma.createComponent();
@@ -1620,6 +1621,79 @@ section("What the audit reads under a wash");
         Math.abs(discRead.g - discTruth.g) < 1e-6 &&
         Math.abs(discRead.b - discTruth.b) < 1e-6,
       "the direction glyph is read on its disc's 10 % wash",
+    );
+  }
+}
+
+// --- Decorative icons -------------------------------------------------------------------
+
+// The category tile's and field's symbol is named by the label beside it, so
+// WCAG 1.4.11 does not ask 3:1 of it (Olcay, 2026-09-21). The painters mark
+// it; the audit measures it apart and reports a shortfall as an advisory,
+// never as a failure and never silently. A control's glyph stays held to 3:1.
+section("Decorative icons");
+{
+  const ready =
+    typeof plugin.isDecorativeIcon === "function" &&
+    typeof plugin.auditNodeContrast === "function" &&
+    typeof plugin.createContrastAuditResult === "function";
+  ok(ready, "the decorative mark and the audit's traversal are reachable");
+  if (ready) {
+    const tile = figma.createComponent();
+    await plugin.updateCategoryTileVariant(tile, {
+      props: { state: "Default", tint: "Yellow" },
+      variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    const tileIcon = tile.findOne(
+      (node) => node.type === "INSTANCE" && node.name === "Icon",
+    );
+    ok(
+      tileIcon && plugin.isDecorativeIcon(tileIcon),
+      "the tile's category icon is marked decorative",
+    );
+    const field = figma.createComponent();
+    await plugin.updateCategoryFieldVariant(field, {
+      value: "Yellow",
+      variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    const fieldIcon = named(field, "Icon");
+    const clearIcon = named(field, "Clear Icon");
+    ok(
+      fieldIcon &&
+        plugin.isDecorativeIcon(fieldIcon) &&
+        clearIcon &&
+        !plugin.isDecorativeIcon(clearIcon),
+      "the field's category icon is decorative; its clear's cross is not",
+    );
+
+    const context = plugin.createVariableContext([], []);
+    const result = plugin.createContrastAuditResult();
+    plugin.auditNodeContrast(
+      tile,
+      { r: 1, g: 1, b: 1, a: 1 },
+      false,
+      result,
+      context,
+      tile.name,
+      "Light",
+    );
+    ok(
+      result.nonTextFailures === 0 &&
+        result.decorativePairs >= 1 &&
+        result.decorativeBelowThree >= 1 &&
+        result.decorativeShortfalls[0].kind === "decorative",
+      `the yellow tile's icon is measured as decorative: ${result.decorativeBelowThree} below 3:1, ${result.nonTextFailures} failures`,
+    );
+    const source = fs.readFileSync(PLUGIN, "utf8");
+    ok(
+      /record\.contrast\.decorativeBelowThree > 0[\s\S]{0,400}?record\.advisories\.push\(/.test(
+        source,
+      ),
+      "a decorative shortfall is reported as an advisory",
     );
   }
 }

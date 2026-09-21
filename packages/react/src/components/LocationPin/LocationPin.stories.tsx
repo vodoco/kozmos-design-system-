@@ -49,3 +49,17 @@ export const Tinted: Story = {
     },
   },
 };
+
+/** Off the floor: a hollow marker outlined in the fill, the number in the foreground. */
+export const TintedOffFloor: Story = {
+  args: {
+    label: "Gates, on another floor",
+    number: 4,
+    offFloor: true,
+    tint: {
+      accent: "var(--semantics-category-accent-yellow)",
+      fill: "var(--semantics-category-fill-yellow)",
+      onFill: "var(--semantics-category-on-fill-yellow)",
+    },
+  },
+};

@@ -128,7 +128,9 @@ fun KozmosLocationPin(
                     fontSize = (diameter.value * 0.44f).sp,
                     fontWeight = FontWeight.Bold,
                     color = (
-                        if (offFloor) markerColor else (tint?.fill?.ink ?: KozmosColors.primitivesColorsForeground1000)
+                        // Off the floor the number sits on the white disc in the
+                        // foreground; the ring keeps the colour (Olcay, 2026-09-21).
+                        if (offFloor) KozmosColors.primitivesColorsForeground0 else (tint?.fill?.ink ?: KozmosColors.primitivesColorsForeground1000)
                         ).copy(alpha = alpha)
                 )
             }

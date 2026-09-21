@@ -162,11 +162,14 @@ public struct KozmosLocationPin: View {
                 )
                 .frame(width: diameter, height: diameter)
 
+            // Off the floor the number sits on the background in the
+            // foreground: the marker colour on white failed 4.5:1 for six
+            // tints (Olcay, 2026-09-21); the ring keeps the colour.
             if let number {
                 Text("\(number)")
                     .font(.system(size: diameter * 0.44, weight: .bold))
                     .foregroundColor(
-                        offFloor ? markerColor : (tint?.fill.ink ?? KozmosColors.primitivesColorsForeground1000)
+                        offFloor ? KozmosColors.primitivesColorsForeground0 : (tint?.fill.ink ?? KozmosColors.primitivesColorsForeground1000)
                     )
             }
         }

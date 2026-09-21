@@ -70,9 +70,9 @@ describe("LocationPin", () => {
     expect(
       (screen.getByText("3") as HTMLElement).style.getPropertyValue("color"),
     ).toBe("var(--semantics-category-on-fill-red)");
-    expect(marker.style.getPropertyValue("fill")).toContain(
-      "var(--semantics-category-fill-red)",
-    );
+    // Solid in the fill, the number inked for it, the head's dot hidden.
+    expect(marker).toHaveClass("fill-current", "[&_circle]:hidden");
+    expect(marker.style.getPropertyValue("fill")).toBe("");
     rerender(
       <LocationPin
         featured
@@ -89,5 +89,47 @@ describe("LocationPin", () => {
         screen.getByRole("img").querySelector("svg") as SVGElement
       ).style.getPropertyValue("color"),
     ).toBe("");
+  });
+
+  it("inverts off the floor: a hollow marker, the number in the foreground, not dimmed", () => {
+    render(
+      <LocationPin
+        label="Gates, on another floor"
+        number={4}
+        offFloor
+        tint={{
+          accent: "var(--semantics-category-accent-yellow)",
+          fill: "var(--semantics-category-fill-yellow)",
+          onFill: "var(--semantics-category-on-fill-yellow)",
+        }}
+      />,
+    );
+    const pin = screen.getByRole("img", { name: "Gates, on another floor" });
+    expect(pin).toHaveAttribute("data-off-floor", "true");
+    // The yellow fill on white read 1.92:1 as the number's colour; the
+    // foreground reads 21 (Olcay, 2026-09-21). The state is the shape.
+    expect(pin).not.toHaveClass("opacity-50");
+    const marker = pin.querySelector("svg") as SVGElement;
+    expect(marker).toHaveClass("fill-background");
+    expect(marker).not.toHaveClass("fill-current");
+    expect(marker.style.getPropertyValue("color")).toBe(
+      "var(--semantics-category-fill-yellow)",
+    );
+    const number = screen.getByText("4") as HTMLElement;
+    expect(number).toHaveClass("text-foreground");
+    expect(number.style.getPropertyValue("color")).toBe("");
+  });
+
+  it("inks an untinted pin's number for its solid marker, and dims only when disabled", () => {
+    const { rerender } = render(
+      <LocationPin label="Result 1" number={1} variant="primary" />,
+    );
+    let marker = screen.getByRole("img").querySelector("svg") as SVGElement;
+    expect(marker).toHaveClass("text-primary", "fill-current");
+    expect(screen.getByText("1")).toHaveClass("text-primary-foreground");
+    rerender(<LocationPin disabled label="Result 1" number={1} />);
+    expect(screen.getByRole("img")).toHaveClass("opacity-50");
+    marker = screen.getByRole("img").querySelector("svg") as SVGElement;
+    expect(marker).toHaveClass("fill-current");
   });
 });

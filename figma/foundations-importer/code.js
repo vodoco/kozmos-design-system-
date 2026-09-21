@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "ef226bf9cd20";
+const PLUGIN_BUILD = "e6b4f3c52c53";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -435,6 +435,13 @@ const CATEGORY_FIELD_PILL_HEIGHT = 22;
 const CATEGORY_FIELD_CLEAR_SIZE = 32;
 const CATEGORY_FIELD_LABEL_FONT_SIZE = 15;
 const CATEGORY_FIELD_LABEL_LINE_HEIGHT = 20;
+// The field's text and its clear's cross: the foreground, not the category.
+const CATEGORY_FIELD_INK = { name: "Colors/foreground/0", fallback: "#000000" };
+// An off-floor pin's number, on the white disc.
+const LOCATION_PIN_OFF_FLOOR_INK = {
+  name: "Colors/foreground/0",
+  fallback: "#000000",
+};
 const CATEGORY_FIELD_WASH_OPACITY = 0.12;
 /** The symbol a fresh field carries, from the Pointr Icon Library. */
 const CATEGORY_FIELD_DEFAULT_ICON = "bus";
@@ -16390,6 +16397,16 @@ function auditComponentSet(
     );
   }
 
+  if (record.contrast.decorativeBelowThree > 0) {
+    const shortfallDetails = formatContrastFailureDetails(
+      record.contrast.decorativeShortfalls,
+      "decorative",
+    );
+    record.advisories.push(
+      `${record.contrast.decorativeBelowThree} decorative icon pair(s) sit below 3:1. The text beside each names what it shows, so WCAG 1.4.11 does not ask 3:1 of them; keep the icon hidden from assistive technology in code.${shortfallDetails ? ` Details: ${shortfallDetails}` : ""}`,
+    );
+  }
+
   if (iconSlotIntegrity.maskWrappedSlots > 0) {
     record.warnings.push(
       `${iconSlotIntegrity.maskWrappedSlots} generated Icon slot(s) still use the legacy mask wrapper. Run the component updater to migrate them to direct instance-swap slots.`,
@@ -20400,6 +20417,10 @@ function createContrastAuditResult() {
     modesAudited: [],
     byMode: [],
     failures: [],
+    // Icons marked decorative: measured and reported, never a failure.
+    decorativePairs: 0,
+    decorativeBelowThree: 0,
+    decorativeShortfalls: [],
   };
 }
 
@@ -20460,6 +20481,16 @@ function mergeContrastModeResult(result, modeResult) {
   for (const failure of modeResult.failures) {
     if (result.failures.length >= 12) break;
     result.failures.push(failure);
+  }
+
+  result.decorativePairs = Math.max(
+    result.decorativePairs,
+    modeResult.decorativePairs,
+  );
+  result.decorativeBelowThree += modeResult.decorativeBelowThree;
+  for (const shortfall of modeResult.decorativeShortfalls) {
+    if (result.decorativeShortfalls.length >= 12) break;
+    result.decorativeShortfalls.push(shortfall);
   }
 }
 
@@ -20555,6 +20586,19 @@ function auditNodeContrast(
 ) {
   if (node && node.visible === false) return;
   if (isGeneratedNestedComponentInstance(node)) return;
+
+  if (isGeneratedDirectIconSlot(node) && isDecorativeIcon(node)) {
+    auditDecorativeIconPaints(
+      node,
+      background,
+      isDisabled,
+      result,
+      variableContext,
+      ownerName,
+      modeName,
+    );
+    return;
+  }
 
   if (isGeneratedDirectIconSlot(node)) {
     auditActualIconSlotPaints(
@@ -21411,6 +21455,81 @@ function auditActualIconSlotPaints(
       );
     }
 
+    if (current.children) {
+      for (const child of current.children) walk(child);
+    }
+  }
+
+  walk(node);
+}
+
+/**
+ * An icon is decorative when the text beside it names what it shows: the
+ * category tile's and the category field's symbol, the category's label
+ * under or beside it. WCAG 1.4.11 asks 3:1 of graphics needed to understand
+ * the content, not of these, so the audit measures them apart and reports a
+ * shortfall as an advisory. The painters mark them (`markDecorativeIcon`),
+ * matching the code, where each is hidden from assistive technology.
+ */
+const DECORATIVE_ICON_KEY = "decorative";
+
+function markDecorativeIcon(icon) {
+  try {
+    icon.setSharedPluginData(
+      RUN_NAMESPACE,
+      DECORATIVE_ICON_KEY,
+      "label-names-it",
+    );
+  } catch (_error) {
+    // Plugin data is unavailable on some older plugin runtimes.
+  }
+}
+
+function isDecorativeIcon(node) {
+  return Boolean(
+    node &&
+    node.getSharedPluginData &&
+    node.getSharedPluginData(RUN_NAMESPACE, DECORATIVE_ICON_KEY),
+  );
+}
+
+function auditDecorativeIconPaints(
+  node,
+  background,
+  isDisabled,
+  result,
+  variableContext,
+  ownerName,
+  modeName,
+) {
+  function walk(current) {
+    for (const paints of [current.fills, current.strokes]) {
+      const paint = solidPaintToRgba(
+        firstVisibleSolidPaint(paints),
+        variableContext,
+        modeName,
+      );
+      if (!paint) continue;
+      const ratio = contrastRatio(
+        compositeColor(paint, background),
+        background,
+      );
+      result.decorativePairs += 1;
+      if (!isDisabled && ratio < 3) {
+        result.decorativeBelowThree += 1;
+        if (result.decorativeShortfalls.length < 12) {
+          result.decorativeShortfalls.push({
+            mode: modeName,
+            node: ownerName
+              ? `${ownerName} / ${current.name || current.type}`
+              : current.name || current.type,
+            kind: "decorative",
+            ratio: Math.round(ratio * 100) / 100,
+            required: 3,
+          });
+        }
+      }
+    }
     if (current.children) {
       for (const child of current.children) walk(child);
     }
@@ -44286,8 +44405,13 @@ async function updateLocationPinVariant(
     bold: true,
     fontSize: Math.round(diameter * 0.44),
     lineHeight: Math.round(diameter * 0.62),
-    colorToken: offFloor ? markerFill.fill : ink.name,
-    colorFallback: offFloor ? markerFill.fallback : ink.fallback,
+    // Off the floor the number sits on the white disc in the foreground; the
+    // ring keeps the marker colour, so the state stays shape and colour. The
+    // tint's fill on white failed 4.5:1 for six tints (Olcay, 2026-09-21).
+    colorToken: offFloor ? LOCATION_PIN_OFF_FLOOR_INK.name : ink.name,
+    colorFallback: offFloor
+      ? LOCATION_PIN_OFF_FLOOR_INK.fallback
+      : ink.fallback,
     variableByName,
     stats,
   });
@@ -46920,7 +47044,10 @@ async function updateCategoryFieldVariant(
     stats,
     owner: "CategoryField",
   });
-  if (icon) appendWithSizing(component, icon, "FIXED", "FIXED");
+  if (icon) {
+    markDecorativeIcon(icon);
+    appendWithSizing(component, icon, "FIXED", "FIXED");
+  }
 
   const label = await productSdkText({
     name: "Label Text",
@@ -46930,8 +47057,10 @@ async function updateCategoryFieldVariant(
     bold: true,
     fontSize: CATEGORY_FIELD_LABEL_FONT_SIZE,
     lineHeight: CATEGORY_FIELD_LABEL_LINE_HEIGHT,
-    colorToken: tint.accent.name,
-    colorFallback: tint.accent.fallback,
+    // The label in the foreground, as the tile's: the category colour on its
+    // own 12 % wash failed 4.5:1 for seven tints (Olcay, 2026-09-21).
+    colorToken: CATEGORY_FIELD_INK.name,
+    colorFallback: CATEGORY_FIELD_INK.fallback,
     variableByName,
     stats,
     width: 160,
@@ -46996,7 +47125,8 @@ async function updateCategoryFieldVariant(
   pill.appendChild(count);
   appendWithSizing(component, pill, "HUG", "FIXED");
 
-  // The clear: a 32 circle with no fill, its cross in the colour.
+  // The clear: a 32 circle with no fill, its cross in the foreground — a
+  // control's glyph, so it is held to 3:1, unlike the decorative icon.
   const clear = productSdkFrame("Clear Button", {
     direction: "horizontal",
     primarySizing: "FIXED",
@@ -47017,7 +47147,7 @@ async function updateCategoryFieldVariant(
   );
   const cross = await productSdkIconInstance({
     iconName: "x-close",
-    token: tint.accent,
+    token: CATEGORY_FIELD_INK,
     size: 16,
     sizeToken: null,
     variableByName,
@@ -47415,7 +47545,10 @@ async function updateCategoryTileVariant(
     stats,
     owner: "CategoryTile",
   });
-  if (icon) square.appendChild(icon);
+  if (icon) {
+    markDecorativeIcon(icon);
+    square.appendChild(icon);
+  }
 
   if (selected) {
     const selectionRing = figma.createRectangle();

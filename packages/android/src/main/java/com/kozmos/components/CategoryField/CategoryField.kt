@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +35,7 @@ import com.kozmos.components.categorytile.KozmosCategoryTint
 import com.kozmos.components.counter.KozmosInkedFill
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 /**
  * The search field's form once a quick-access category is chosen — the
@@ -73,12 +75,19 @@ fun KozmosCategoryField(
     ) {
         CompositionLocalProvider(LocalContentColor provides tint.accent) {
             if (icon != null) {
-                Box(modifier = Modifier.size(28.dp), contentAlignment = Alignment.Center) { icon() }
+                // Decorative: the name beside it says what it shows.
+                Box(
+                    modifier = Modifier.size(28.dp).clearAndSetSemantics {},
+                    contentAlignment = Alignment.Center
+                ) { icon() }
                 Spacer(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSpacing100))
             }
+            // The name and the clear's cross in the foreground, themed: the
+            // category colour on its own wash failed 4.5:1 for seven tints
+            // (Olcay, 2026-09-21).
             Text(
                 text = label,
-                color = tint.accent,
+                color = KozmosThemeTokens.primitivesColorsForeground0,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
@@ -108,7 +117,7 @@ fun KozmosCategoryField(
                     .semantics { contentDescription = clearLabel },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = null, tint = tint.accent, modifier = Modifier.size(16.dp))
+                Icon(imageVector = Icons.Default.Close, contentDescription = null, tint = KozmosThemeTokens.primitivesColorsForeground0, modifier = Modifier.size(16.dp))
             }
         }
     }

@@ -84,6 +84,21 @@ final class KozmosSearchSheetTests: XCTestCase {
         XCTAssertNil(pixels.boundingBox(in: CGRect(origin: .zero, size: size), where: RenderedPixels.isTheme), "the theme colour is still drawn on a tinted pin")
     }
 
+    /// Off the floor the pin is a hollow ring in its colour on white, and its
+    /// number is dark on the disc (Olcay, 2026-09-21): the yellow fill as
+    /// the number's colour read 1.92:1 on white.
+    @MainActor func testAnOffFloorPinsNumberIsDarkOnTheWhiteDisc() async throws {
+        let view = KozmosLocationPin(size: .lg, number: 4, offFloor: true, tint: KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentYellow, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillYellow, ink: KozmosColors.semanticsCategoryOnfillYellow))).padding(14).background(Color.white)
+        let size = CGSize(width: 68, height: 68)
+        let pixels = try await RenderedPixels.render(view, size: size)
+        let isYellow: (UInt8, UInt8, UInt8) -> Bool = { r, g, b in r > 220 && g > 140 && g < 200 && b < 80 }
+        let ring = try XCTUnwrap(pixels.boundingBox(in: CGRect(origin: .zero, size: size), where: isYellow), "no ring in the colour")
+        XCTAssertEqual(ring.width, 40, accuracy: 2, "the ring is not the 40 large pin: \(ring)")
+        let inside = ring.insetBy(dx: 10, dy: 10)
+        XCTAssertNotNil(pixels.boundingBox(in: inside, where: { r, g, b in r < 70 && g < 70 && b < 70 }), "the number is not dark on the white disc")
+        XCTAssertNil(pixels.boundingBox(in: inside, where: isYellow), "the number is still in the colour")
+    }
+
     /// A counter filled with a category's colour takes that colour's ink:
     /// the dark ink on the taxonomy's yellow, where white would not read.
     @MainActor func testTheCountersFillBringsItsOwnInk() async throws {
@@ -226,6 +241,30 @@ final class KozmosCategoryFieldTests: XCTestCase {
         // The count pill: a solid run of the colour 22 tall, right of the label.
         let pill = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 100, y: 20, width: 80, height: 40), where: Self.isOrange), "no count pill")
         XCTAssertEqual(pill.height, 22, accuracy: 1.5, "the pill is not 22 tall: \(pill)")
+    }
+
+    /// The name and the clear's cross in the foreground, the icon in the
+    /// colour (Olcay, 2026-09-21): the orange name on its own 12 % wash read
+    /// 2.51:1.
+    @MainActor func testTheNameAndTheClearAreInTheForegroundAndTheIconInTheColour() async throws {
+        let view = KozmosCategoryField(label: "Dining", tint: KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentOrange, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillOrange, ink: KozmosColors.semanticsCategoryOnfillOrange)), onClear: {}) {
+            Image(systemName: "fork.knife").font(.system(size: 20))
+        }
+        .frame(width: 254)
+        .padding(16)
+        .background(Color.white)
+        let pixels = try await RenderedPixels.render(view, size: CGSize(width: 286, height: 80))
+        let isDark: (UInt8, UInt8, UInt8) -> Bool = { r, g, b in r < 70 && g < 70 && b < 70 }
+        // The name: after the 12 padding, the 28 icon and the 8 gap.
+        let name = CGRect(x: 66, y: 28, width: 40, height: 24)
+        XCTAssertNotNil(pixels.boundingBox(in: name, where: isDark), "the name is not in the foreground")
+        XCTAssertNil(pixels.boundingBox(in: name, where: Self.isOrange), "the name is still in the category's colour")
+        // The clear's cross, centred in the 32 at the trailing edge.
+        let cross = CGRect(x: 234, y: 30, width: 24, height: 20)
+        XCTAssertNotNil(pixels.boundingBox(in: cross, where: isDark), "the clear's cross is not in the foreground")
+        XCTAssertNil(pixels.boundingBox(in: cross, where: Self.isOrange), "the clear's cross is still in the category's colour")
+        // The icon keeps the colour: decorative, the name says what it shows.
+        XCTAssertNotNil(pixels.boundingBox(in: CGRect(x: 28, y: 26, width: 28, height: 28), where: Self.isOrange), "the icon lost the category's colour")
     }
     #endif
 }

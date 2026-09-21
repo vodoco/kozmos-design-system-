@@ -13,12 +13,17 @@ export interface LocationPinProps extends React.HTMLAttributes<HTMLDivElement> {
   selected?: boolean;
   featured?: boolean;
   disabled?: boolean;
+  /** On another floor: the marker inverts to a hollow outline on the
+   *  background and the number takes the foreground, so shape carries the
+   *  state, as on iOS and Compose. */
   offFloor?: boolean;
   externalLabel?: string;
   labelPlacement?: "top" | "right" | "bottom" | "left";
   resultId?: string;
-  /** A category's colours for the marker — its fill, with its ink for the
-   *  number — over the variant's; a featured pin keeps the alert colour. */
+  /** A category's colours for the marker — its fill, solid, with its ink for
+   *  the number — over the variant's; a featured pin keeps the alert colour.
+   *  Off the floor the fill outlines the marker and the number takes the
+   *  foreground. */
   tint?: CategoryTint;
 }
 
@@ -55,9 +60,20 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
 
     const variantClasses = {
       default: "text-foreground",
-      primary: "text-primary fill-primary/20",
-      secondary: "text-secondary fill-secondary/20",
-      accent: "text-accent fill-accent/20",
+      primary: "text-primary",
+      secondary: "text-secondary",
+      accent: "text-accent",
+    };
+
+    // The ink that reads on each variant's solid marker. The number used to
+    // sit in white on a 20 % wash, and a tint's ink, chosen for its solid
+    // fill, failed on that wash in every tint in one mode or the other, down
+    // to 1.01:1 (2026-09-21).
+    const inkClasses = {
+      default: "text-background",
+      primary: "text-primary-foreground",
+      secondary: "text-secondary-foreground",
+      accent: "text-accent-foreground",
     };
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -85,6 +101,7 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
 
     const isInteractive = Boolean(onClick);
     const visibleContent = markerContent ?? number;
+    const hasContent = visibleContent !== undefined && visibleContent !== null;
     const externalLabelClasses = {
       top: "bottom-full left-1/2 mb-1 -translate-x-1/2",
       right: "left-full top-1/2 ml-1 -translate-y-1/2",
@@ -104,7 +121,6 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
           isInteractive &&
             "cursor-pointer hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           selected && "scale-110",
-          offFloor && "opacity-50",
           disabled && "cursor-not-allowed opacity-50",
           className,
         )}
@@ -118,23 +134,33 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
         {...props}
       >
         <span className="relative flex items-center justify-center">
+          {/* On the floor the marker is solid in its colour and the number is
+              inked for that fill, as on iOS, Compose and in Figma. Off the
+              floor it inverts to a hollow outline on the background with the
+              number in the foreground (Olcay, 2026-09-21). A number takes the
+              place of the head's dot. */}
           <MapPin
             aria-hidden="true"
-            className={cn(sizeClasses[size], variantClasses[variant])}
-            style={
-              tint && !featured
-                ? {
-                    color: tint.fill,
-                    fill: `color-mix(in srgb, ${tint.fill} 20%, transparent)`,
-                  }
-                : undefined
-            }
+            className={cn(
+              sizeClasses[size],
+              variantClasses[variant],
+              offFloor ? "fill-background" : "fill-current",
+              hasContent && "[&_circle]:hidden",
+            )}
+            style={tint && !featured ? { color: tint.fill } : undefined}
           />
-          {visibleContent !== undefined && visibleContent !== null && (
+          {hasContent && (
             <span
               aria-hidden="true"
-              className="absolute inset-x-0 top-[18%] truncate px-1 text-center text-[10px] font-bold leading-none text-primary-foreground"
-              style={tint && !featured ? { color: tint.onFill } : undefined}
+              className={cn(
+                "absolute inset-x-0 top-[18%] truncate px-1 text-center text-[10px] font-bold leading-none",
+                offFloor ? "text-foreground" : inkClasses[variant],
+              )}
+              style={
+                tint && !featured && !offFloor
+                  ? { color: tint.onFill }
+                  : undefined
+              }
             >
               {visibleContent}
             </span>

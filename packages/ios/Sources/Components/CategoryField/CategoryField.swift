@@ -2,10 +2,14 @@ import SwiftUI
 
 /// The search field's form once a quick-access category is chosen — the
 /// prototype's, measured: a 48-tall, control-radius field in the category's
-/// colour at 12 % with a 1-point border of it, the category's icon at 28, its
-/// name at 15 semibold, a 22-tall count pill filled with the colour, and a
-/// 32 clear at the trailing edge. It takes the field's place in the search
-/// row, so its width is the row's to give.
+/// colour at 12 % with a 1-point border of it, the category's icon at 28 in
+/// the colour, its name at 15 semibold in the foreground, a 22-tall count
+/// pill filled with the colour, and a 32 clear at the trailing edge with its
+/// cross in the foreground. It takes the field's place in the search row, so
+/// its width is the row's to give. The name and the cross are in the
+/// foreground because the category colour on its own wash fails 4.5:1 for
+/// seven of the eight tints (Olcay, 2026-09-21); the icon is decorative, the
+/// name says what it shows.
 ///
 /// Mirrors the React `CategoryField`.
 public struct KozmosCategoryField<Icon: View>: View {
@@ -49,7 +53,7 @@ public struct KozmosCategoryField<Icon: View>: View {
                 .accessibilityHidden(true)
             Text(label)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(tint.accent)
+                .foregroundColor(KozmosColors.primitivesColorsForeground0)
                 .lineLimit(1)
             if let count {
                 Text("\(count)")
@@ -64,7 +68,7 @@ public struct KozmosCategoryField<Icon: View>: View {
             Button(action: onClear) {
                 Image(systemName: "xmark")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(tint.accent)
+                    .foregroundColor(KozmosColors.primitivesColorsForeground0)
                     .frame(width: Self.clearSize, height: Self.clearSize)
                     .contentShape(Circle())
             }

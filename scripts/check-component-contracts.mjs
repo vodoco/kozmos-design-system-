@@ -2020,6 +2020,108 @@ assertContains(
     /name: "Tint Wash",\s*token: tint\.accent,\s*opacity: CATEGORY_FIELD_WASH_OPACITY,/,
     "Figma CategoryField wash is a layer at that opacity",
   );
+
+  // Ruled 2026-09-21: the label and the clear's cross in foreground/0; the
+  // icon decorative, hidden from assistive technology.
+  if (field.labelColor === "foreground/0" && field.clearColor === "foreground/0") {
+    assertContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      "rounded-control border pl-3 pr-2 text-foreground",
+      "React CategoryField label and clear in the foreground",
+    );
+    assertNotContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      /color: "var\(--kozmos-category-tint\)",\s*borderColor/,
+      "React CategoryField's text inheriting the category colour",
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      `.font(.system(size: ${field.labelFontSize}, weight: .${field.labelWeight}))\n                .foregroundColor(KozmosColors.primitivesColorsForeground0)`,
+      "iOS CategoryField label in foreground/0",
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      /Image\(systemName: "xmark"\)\s*\.font\([^)]*\)\)\s*\.foregroundColor\(KozmosColors\.primitivesColorsForeground0\)/,
+      "iOS CategoryField clear in foreground/0",
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "color = KozmosThemeTokens.primitivesColorsForeground0,",
+      "Android CategoryField label in foreground/0, themed",
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "tint = KozmosThemeTokens.primitivesColorsForeground0",
+      "Android CategoryField clear in foreground/0, themed",
+    );
+    assertContains(
+      files.figma,
+      source.figma,
+      'const CATEGORY_FIELD_INK = { name: "Colors/foreground/0", fallback: "#000000" };',
+      "Figma CategoryField ink is foreground/0",
+    );
+    assertContains(
+      files.figma,
+      source.figma,
+      /colorToken: CATEGORY_FIELD_INK\.name,[\s\S]{0,4000}?iconName: "x-close",\s*token: CATEGORY_FIELD_INK,/,
+      "Figma CategoryField label and cross take that ink",
+    );
+  }
+  if (field.iconDecorative) {
+    assertContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      /<span\s+aria-hidden="true"\s+className="flex h-7 w-7/,
+      "React CategoryField icon hidden",
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      /\.foregroundColor\(tint\.accent\)\s*\.accessibilityHidden\(true\)/,
+      "iOS CategoryField icon hidden",
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "Modifier.size(28.dp).clearAndSetSemantics {}",
+      "Android CategoryField icon hidden",
+    );
+  }
+}
+
+// CategoryTile's icon is decorative on every platform and in Figma.
+if (categoryTile.content.iconDecorative) {
+  assertContains(
+    files.reactCategoryTile,
+    source.reactCategoryTile,
+    /<span\s+aria-hidden="true"\s+className=\{cn\(\s*"relative flex h-16 w-16/,
+    "React CategoryTile square hidden",
+  );
+  assertContains(
+    files.iosCategoryTile,
+    source.iosCategoryTile,
+    /\.offset\(x: 4, y: -4\)\s*\}\s*\}\s*\.accessibilityHidden\(true\)/,
+    "iOS CategoryTile square hidden",
+  );
+  assertContains(
+    files.androidCategoryTile,
+    source.androidCategoryTile,
+    "primitivesLayoutSizing300).clearAndSetSemantics {}",
+    "Android CategoryTile icon hidden",
+  );
+  assertOccurrenceCount(
+    files.figma,
+    source.figma,
+    /^ {4}markDecorativeIcon\(icon\);$/gm,
+    2,
+    "Figma marks the tile's and the field's icon decorative",
+  );
 }
 
 // The curated icons: the registry, the plugin's definitions and the catalog
@@ -9516,6 +9618,53 @@ if (locationPin.content.tint) {
     source.androidLocationPin,
     /featured -> KozmosColors\.primitivesColorsEmotionalAlert500\s+tint != null -> tint\.fill\.fill/,
     "Android LocationPin tint after featured",
+  );
+}
+
+// LocationPin off the floor: a hollow ring on the background, the number in
+// foreground/0, not dimmed (ruled 2026-09-21).
+if (locationPin.content.offFloorNumberColor === "foreground/0") {
+  assertContains(
+    files.iosLocationPin,
+    source.iosLocationPin,
+    "offFloor ? KozmosColors.primitivesColorsForeground0 : (tint?.fill.ink",
+    "iOS LocationPin off-floor number in foreground/0",
+  );
+  assertContains(
+    files.androidLocationPin,
+    source.androidLocationPin,
+    "if (offFloor) KozmosColors.primitivesColorsForeground0 else (tint?.fill?.ink",
+    "Android LocationPin off-floor number in foreground/0",
+  );
+  assertContains(
+    files.reactLocationPin,
+    source.reactLocationPin,
+    'offFloor ? "fill-background" : "fill-current"',
+    "React LocationPin solid on the floor, hollow off it",
+  );
+  assertContains(
+    files.reactLocationPin,
+    source.reactLocationPin,
+    'offFloor ? "text-foreground" : inkClasses[variant]',
+    "React LocationPin off-floor number in the foreground",
+  );
+  assertNotContains(
+    files.reactLocationPin,
+    source.reactLocationPin,
+    'offFloor && "opacity-50"',
+    "React LocationPin dimming off the floor",
+  );
+  assertContains(
+    files.figma,
+    source.figma,
+    /const LOCATION_PIN_OFF_FLOOR_INK = \{\s*name: "Colors\/foreground\/0",/,
+    "Figma LocationPin off-floor ink is foreground/0",
+  );
+  assertContains(
+    files.figma,
+    source.figma,
+    "colorToken: offFloor ? LOCATION_PIN_OFF_FLOOR_INK.name : ink.name,",
+    "Figma LocationPin off-floor number takes that ink",
   );
 }
 

@@ -16,7 +16,7 @@ export interface CategoryFieldProps extends Omit<
    * as `var(--semantics-data-yellow)`; the theme's colour by default.
    */
   tint?: CategoryTint;
-  /** The category's icon, drawn at 28 in the colour. */
+  /** The category's icon, drawn at 28 in the colour; decorative, since the label names it. */
   icon?: React.ReactNode;
   clearLabel?: string;
   onClear?: () => void;
@@ -26,9 +26,12 @@ export interface CategoryFieldProps extends Omit<
 /**
  * The search field's form once a quick-access category is chosen — the
  * prototype's, measured: 48 tall, the control radius, the category's colour
- * at 12 % with a 1-pixel border of it, the icon at 28, the name at 15
- * semibold, a 22-tall count pill filled with the colour, a 32 clear at the
- * trailing edge. It takes the field's place in the search row.
+ * at 12 % with a 1-pixel border of it, the icon at 28 in the colour, the name
+ * at 15 semibold in the foreground, a 22-tall count pill filled with the
+ * colour, a 32 clear at the trailing edge with its cross in the foreground.
+ * It takes the field's place in the search row. The name and the cross are
+ * in the foreground because the category colour on its own wash fails 4.5:1
+ * for seven of the eight tints (Olcay, 2026-09-21).
  *
  * Mirrors `KozmosCategoryField` on iOS and Compose.
  */
@@ -60,13 +63,12 @@ const CategoryField = React.forwardRef<HTMLDivElement, CategoryFieldProps>(
         count === undefined ? label : `${label}, ${countLabel(count)}`
       }
       className={cn(
-        "kozmos-reset kozmos-category-field flex h-12 min-w-0 items-center gap-2 rounded-control border pl-3 pr-2",
+        "kozmos-reset kozmos-category-field flex h-12 min-w-0 items-center gap-2 rounded-control border pl-3 pr-2 text-foreground",
         className,
       )}
       style={
         {
           "--kozmos-category-tint": tint.accent,
-          color: "var(--kozmos-category-tint)",
           borderColor: "var(--kozmos-category-tint)",
           background:
             "color-mix(in srgb, var(--kozmos-category-tint) 12%, transparent)",
@@ -79,6 +81,7 @@ const CategoryField = React.forwardRef<HTMLDivElement, CategoryFieldProps>(
         <span
           aria-hidden="true"
           className="flex h-7 w-7 shrink-0 items-center justify-center [&>svg]:h-7 [&>svg]:w-7 [&>img]:h-7 [&>img]:w-7"
+          style={{ color: "var(--kozmos-category-tint)" }}
         >
           {icon}
         </span>

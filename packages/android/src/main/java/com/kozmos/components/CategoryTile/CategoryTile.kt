@@ -22,6 +22,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -108,9 +109,10 @@ fun KozmosCategoryTile(
                     contentAlignment = Alignment.Center
                 ) {
                     if (icon != null) {
-                        // The icon in the theme colour, as on the other platforms.
+                        // The icon in the theme colour, as on the other platforms;
+                        // decorative, as there: the label names what it shows.
                         CompositionLocalProvider(LocalContentColor provides (tint?.accent ?: KozmosColors.primitivesColorsTheme500)) {
-                            Box(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300), contentAlignment = Alignment.Center) {
+                            Box(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
                                 icon()
                             }
                         }

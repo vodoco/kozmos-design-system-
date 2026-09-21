@@ -35,6 +35,44 @@ describe("CategoryField", () => {
     expect(onClear).toHaveBeenCalledTimes(1);
   });
 
+  it("draws the name and the clear in the foreground, the colour on the icon, the border and the wash", () => {
+    const { container } = render(
+      <CategoryField
+        label="Gates"
+        tint={{
+          accent: "var(--semantics-category-accent-yellow)",
+          fill: "var(--semantics-category-fill-yellow)",
+          onFill: "var(--semantics-category-on-fill-yellow)",
+        }}
+        onClear={() => undefined}
+        icon={<svg data-testid="category-icon" />}
+      />,
+    );
+    const field = screen.getByRole("group", { name: "Gates" });
+    // The yellow name on its own 12 % wash read 1.77:1; the foreground reads
+    // 19.4 (Olcay, 2026-09-21).
+    expect(field).toHaveClass("text-foreground");
+    expect(field.style.getPropertyValue("color")).toBe("");
+    expect(field.style.getPropertyValue("border-color")).toBe(
+      "var(--kozmos-category-tint)",
+    );
+    expect(field.style.getPropertyValue("background")).toContain(
+      "var(--kozmos-category-tint) 12%",
+    );
+    const iconBox = screen.getByTestId("category-icon")
+      .parentElement as HTMLElement;
+    expect(iconBox).toHaveAttribute("aria-hidden", "true");
+    expect(iconBox.style.getPropertyValue("color")).toBe(
+      "var(--kozmos-category-tint)",
+    );
+    const clear = screen.getByRole("button", { name: "Clear category" });
+    expect(clear).toHaveClass("text-current");
+    expect(clear.style.getPropertyValue("color")).toBe("");
+    expect(container.querySelector("[style*='--kozmos-category-tint']")).toBe(
+      field,
+    );
+  });
+
   it("shows no pill without a count", () => {
     render(<CategoryField label="Bookmarks" onClear={() => undefined} />);
     expect(
