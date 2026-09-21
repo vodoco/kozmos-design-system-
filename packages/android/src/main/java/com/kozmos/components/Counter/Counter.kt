@@ -42,8 +42,8 @@ fun KozmosCounter(
      */
     emotion: KozmosEmotion? = null,
     /** A fill of the host's own — a category's colour — over the tone's and
-     *  the emotion's; the digits go white on it. */
-    fill: Color? = null
+     *  the emotion's, with the ink that reads on it. */
+    fill: KozmosInkedFill? = null
 ) {
     val height = if (size == CounterSize.Sm) 18.dp else 20.dp
     val minWidth = if (size == CounterSize.Sm) 18.dp else 20.dp
@@ -64,8 +64,8 @@ fun KozmosCounter(
         CounterTone.Inverse -> KozmosThemeTokens.primitivesColorsForeground100
     }
 
-    val resolvedContainer = fill ?: emotion?.surface ?: containerColor
-    val resolvedContent = if (fill != null) KozmosThemeTokens.primitivesColorsBackground0 else (emotion?.onSurface ?: contentColor)
+    val resolvedContainer = fill?.fill ?: emotion?.surface ?: containerColor
+    val resolvedContent = fill?.ink ?: emotion?.onSurface ?: contentColor
 
     Box(
         modifier = modifier

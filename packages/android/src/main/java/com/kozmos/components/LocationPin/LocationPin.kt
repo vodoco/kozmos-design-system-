@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kozmos.components.categorytile.KozmosCategoryTint
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
@@ -65,13 +66,13 @@ fun KozmosLocationPin(
     featured: Boolean = false,
     offFloor: Boolean = false,
     enabled: Boolean = true,
-    /** A colour of the host's own — a category's — for the marker, over the
-     *  variant's; a featured pin keeps the alert colour. */
-    tint: Color? = null
+    /** A category's colours for the marker — its fill, with its ink for the
+     *  number — over the variant's; a featured pin keeps the alert colour. */
+    tint: KozmosCategoryTint? = null
 ) {
     val markerColor: Color = when {
         featured -> KozmosColors.primitivesColorsEmotionalAlert500
-        tint != null -> tint
+        tint != null -> tint.fill.fill
         variant == KozmosLocationPinVariant.Default -> KozmosColors.primitivesColorsForeground100
         variant == KozmosLocationPinVariant.Primary -> KozmosColors.primitivesColorsTheme500
         variant == KozmosLocationPinVariant.Secondary -> KozmosColors.primitivesColorsForeground400
@@ -127,7 +128,7 @@ fun KozmosLocationPin(
                     fontSize = (diameter.value * 0.44f).sp,
                     fontWeight = FontWeight.Bold,
                     color = (
-                        if (offFloor) markerColor else KozmosColors.primitivesColorsForeground1000
+                        if (offFloor) markerColor else (tint?.fill?.ink ?: KozmosColors.primitivesColorsForeground1000)
                         ).copy(alpha = alpha)
                 )
             }

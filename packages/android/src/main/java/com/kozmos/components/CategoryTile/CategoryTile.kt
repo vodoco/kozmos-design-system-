@@ -45,8 +45,8 @@ import com.kozmos.tokens.KozmosDimensions
  * supplied by the consuming app through [KozmosCategoryPresentation]. A
  * `resultCount` draws as the system's counter at the icon square's top-right;
  * `resultCountLabel` is its spoken form (the state description) and draws
- * nothing. A `tint` — the category's own colour — takes the icon and the
- * counter's fill; the square stays neutral.
+ * nothing. A `tint` — the category's colours — takes the icon, the selection's
+ * stroke and the counter's fill and ink; the square stays neutral.
  */
 @Composable
 fun KozmosCategoryTile(
@@ -56,7 +56,7 @@ fun KozmosCategoryTile(
     enabled: Boolean = true,
     /** The category's own colour, as the chosen-category field wears it: it
      *  takes the icon and the counter's fill; the square stays neutral. */
-    tint: Color? = null,
+    tint: KozmosCategoryTint? = null,
     icon: (@Composable () -> Unit)? = null
 ) {
     val trackEvent = LocalKozmosAnalytics.current
@@ -97,19 +97,19 @@ fun KozmosCategoryTile(
                         .size(KozmosDimensions.primitivesLayoutSizing800)
                         .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                         .background(
-                            if (category.selected) KozmosColors.primitivesColorsTheme500.copy(alpha = 0.05f)
+                            if (category.selected) (tint?.accent ?: KozmosColors.primitivesColorsTheme500).copy(alpha = 0.05f)
                             else KozmosColors.primitivesColorsBackground0
                         )
                         .border(
                             width = if (category.selected) 2.dp else 1.dp,
-                            color = if (category.selected) KozmosColors.primitivesColorsTheme500 else KozmosColors.semanticsBorderSubtle,
+                            color = if (category.selected) (tint?.accent ?: KozmosColors.primitivesColorsTheme500) else KozmosColors.semanticsBorderSubtle,
                             shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     if (icon != null) {
                         // The icon in the theme colour, as on the other platforms.
-                        CompositionLocalProvider(LocalContentColor provides (tint ?: KozmosColors.primitivesColorsTheme500)) {
+                        CompositionLocalProvider(LocalContentColor provides (tint?.accent ?: KozmosColors.primitivesColorsTheme500)) {
                             Box(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300), contentAlignment = Alignment.Center) {
                                 icon()
                             }
@@ -123,7 +123,7 @@ fun KozmosCategoryTile(
                     KozmosCounter(
                         text = count.toString(),
                         tone = CounterTone.Brand,
-                        fill = tint,
+                        fill = tint?.fill,
                         modifier = Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-4).dp)
                     )
                 }

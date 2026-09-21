@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.Paparazzi
 import com.kozmos.components.aisearchbutton.KozmosAISearchButton
 import com.kozmos.components.categorytile.KozmosCategoryTile
+import com.kozmos.components.counter.KozmosInkedFill
+import com.kozmos.components.categorytile.KozmosCategoryTint
 import com.kozmos.components.locationpin.KozmosLocationPin
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.components.poiresultcard.KozmosPOIResultCard
@@ -52,7 +54,7 @@ class KozmosSearchSheetPaparazziTest {
                                 onSelect = {},
                                 modifier = Modifier.weight(1f),
                                 // Gates in its category's colour: the icon and the counter take it.
-                                tint = if (label == "Gates") KozmosColors.semanticsDataRed else null
+                                tint = if (label == "Gates") KozmosCategoryTint(KozmosColors.semanticsCategoryAccentRed, KozmosInkedFill(KozmosColors.semanticsCategoryFillRed, KozmosColors.semanticsCategoryOnfillRed)) else null
                             ) { Icon(Icons.Default.Restaurant, contentDescription = null) }
                         }
                     }
@@ -61,7 +63,7 @@ class KozmosSearchSheetPaparazziTest {
                     KozmosPOIResultCard(poi = poi.copy(id = "q", name = "Starbucks", floorId = "b:1", floorLabel = "First Floor"), result = KozmosPOIResultPresentation(poiId = "q", resultIndex = 2, selected = false, featured = false, floorId = "b:1"), onSelect = {}, currentFloorId = "b:2")
                     KozmosUserLocationMarker(showHeading = false)
                     // A category's pin: the marker in the category's colour.
-                    KozmosLocationPin(tint = KozmosColors.semanticsDataRed)
+                    KozmosLocationPin(tint = KozmosCategoryTint(KozmosColors.semanticsCategoryAccentRed, KozmosInkedFill(KozmosColors.semanticsCategoryFillRed, KozmosColors.semanticsCategoryOnfillRed)))
                 }
             }
         }

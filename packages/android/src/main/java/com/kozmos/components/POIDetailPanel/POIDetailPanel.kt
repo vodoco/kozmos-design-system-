@@ -106,6 +106,9 @@ fun KozmosPOIDetailPanel(
     presentation: KozmosPOIDetailPanelPresentation = KozmosPOIDetailPanelPresentation.Inline
 ) {
     val radius = KozmosDimensions.semanticsRadiusPanel
+    // An inset block's surface: the muted grey on the panel's own white, and
+    // white on a sheet, whose surface is that grey.
+    val insetSurface = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) KozmosColors.primitivesColorsBackground0 else KozmosColors.primitivesColorsBackground100
     val shape = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) {
         RoundedCornerShape(topStart = radius, topEnd = radius)
     } else {
@@ -144,7 +147,7 @@ fun KozmosPOIDetailPanel(
         val bodyScrollState = rememberScrollState()
 
         Column(modifier = Modifier.fillMaxWidth()) {
-            Header(poi = poi, onClose = onClose, closeLabel = closeLabel)
+            Header(poi = poi, onClose = onClose, closeLabel = closeLabel, surface = insetSurface)
 
             Divider(color = KozmosColors.primitivesColorsForeground300)
 
@@ -227,7 +230,7 @@ fun KozmosPOIDetailPanel(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-                                .background(KozmosColors.primitivesColorsBackground100)
+                                .background(insetSurface)
                                 .padding(
                                     horizontal = KozmosDimensions.primitivesLayoutSpacing150,
                                     vertical = KozmosDimensions.primitivesLayoutSpacing100
@@ -247,7 +250,7 @@ fun KozmosPOIDetailPanel(
                                     "$accessRestrictionsHeading, $accessRestrictionsLabel"
                             },
                         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
-                        color = KozmosColors.primitivesColorsBackground100.copy(alpha = 0.4f),
+                        color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) insetSurface else insetSurface.copy(alpha = 0.4f),
                         border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
                     ) {
                         Text(
@@ -287,7 +290,8 @@ private fun actionIcon(action: KozmosPOIAction): ImageVector = when (action) {
 private fun Header(
     poi: KozmosPOIPresentation,
     onClose: (() -> Unit)?,
-    closeLabel: String
+    closeLabel: String,
+    surface: Color = KozmosColors.primitivesColorsBackground100
 ) {
     Row(
         modifier = Modifier
@@ -296,7 +300,7 @@ private fun Header(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing150)
     ) {
-        POILogo(poi = poi)
+        POILogo(poi = poi, surface = surface)
 
         Column(
             modifier = Modifier.weight(1f),
@@ -412,7 +416,7 @@ private fun Services(
 }
 
 @Composable
-private fun POILogo(poi: KozmosPOIPresentation) {
+private fun POILogo(poi: KozmosPOIPresentation, surface: Color = KozmosColors.primitivesColorsBackground100) {
     val logo = poi.logo
     val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
 
@@ -430,7 +434,7 @@ private fun POILogo(poi: KozmosPOIPresentation) {
             modifier = Modifier
                 .size(48.dp)
                 .clip(shape)
-                .background(KozmosColors.primitivesColorsBackground100),
+                .background(surface),
             contentAlignment = Alignment.Center
         ) {
             Text(

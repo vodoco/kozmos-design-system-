@@ -1,5 +1,7 @@
 package com.kozmos.components.categoryfield
 
+import com.kozmos.components.counter.KozmosInkedFill
+import com.kozmos.components.categorytile.KozmosCategoryTint
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,12 +28,12 @@ class KozmosCategoryFieldPaparazziTest {
             MaterialTheme {
                 Column(modifier = Modifier.padding(16.dp)) {
                     KozmosCategoryField(
-                        label = "Gates", count = 2, tint = KozmosColors.semanticsDataYellow, onClear = {},
+                        label = "Gates", count = 2, tint = KozmosCategoryTint(KozmosColors.semanticsCategoryAccentYellow, KozmosInkedFill(KozmosColors.semanticsCategoryFillYellow, KozmosColors.semanticsCategoryOnfillYellow)), onClear = {},
                         modifier = Modifier.fillMaxWidth(),
                         icon = { Icon(Icons.Default.Flight, contentDescription = null) }
                     )
                     KozmosCategoryField(
-                        label = "Dining", count = 19, tint = KozmosColors.semanticsDataOrange, onClear = {},
+                        label = "Dining", count = 19, tint = KozmosCategoryTint(KozmosColors.semanticsCategoryAccentOrange, KozmosInkedFill(KozmosColors.semanticsCategoryFillOrange, KozmosColors.semanticsCategoryOnfillOrange)), onClear = {},
                         modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                         icon = { Icon(Icons.Default.Restaurant, contentDescription = null) }
                     )

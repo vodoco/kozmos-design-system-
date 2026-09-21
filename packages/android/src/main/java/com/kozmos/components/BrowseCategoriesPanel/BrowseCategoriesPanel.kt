@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.categorytile.KozmosCategoryTile
+import com.kozmos.components.categorytile.KozmosCategoryTint
 import com.kozmos.contracts.KozmosCategoryPresentation
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
@@ -39,8 +40,8 @@ fun KozmosBrowseCategoriesPanel(
     modifier: Modifier = Modifier,
     label: String = "Browse categories",
     renderIcon: (@Composable (KozmosCategoryPresentation) -> Unit)? = null,
-    /** A category's own colour for its tile, or null for the theme's. */
-    tint: (KozmosCategoryPresentation) -> Color? = { null },
+    /** A category's colours for its tile, or null for the theme's. */
+    tint: (KozmosCategoryPresentation) -> KozmosCategoryTint? = { null },
     search: (@Composable () -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
     emptyState: (@Composable () -> Unit)? = null
