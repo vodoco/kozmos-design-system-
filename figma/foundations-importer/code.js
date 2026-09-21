@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "ea2727587227";
+const PLUGIN_BUILD = "8bd825bfc4f2";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -388,6 +388,17 @@ const CATEGORY_TILE_LABEL_FONT_SIZE = 11;
 const CATEGORY_TILE_LABEL_LINE_HEIGHT = 14;
 /** The symbol a fresh tile carries, from the Pointr Icon Library. */
 const CATEGORY_TILE_DEFAULT_ICON = "bus";
+// CategoryField's geometry, the prototype's measured (search-sheet stage,
+// 2026-09-20): 48 tall, a 28 icon, a 15/20 label, a 22 count pill, a 32 clear.
+const CATEGORY_FIELD_WIDTH = 320;
+const CATEGORY_FIELD_HEIGHT = 48;
+const CATEGORY_FIELD_ICON_SIZE = 28;
+const CATEGORY_FIELD_PILL_HEIGHT = 22;
+const CATEGORY_FIELD_CLEAR_SIZE = 32;
+const CATEGORY_FIELD_LABEL_FONT_SIZE = 15;
+const CATEGORY_FIELD_LABEL_LINE_HEIGHT = 20;
+/** The symbol a fresh field carries, from the Pointr Icon Library. */
+const CATEGORY_FIELD_DEFAULT_ICON = "bus";
 const POI_MEDIA_GALLERY_CONTENT = ["Single", "Multiple", "Empty"];
 const POI_RESULT_CARD_STATES = [
   "Default",
@@ -779,6 +790,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   Table: 520,
   AdaptiveMapShell: 520,
   BrowseCategoriesPanel: 460,
+  CategoryField: 260,
   CategoryTile: 420,
   DirectionStep: 260,
   DynamicIsland: 320,
@@ -904,6 +916,7 @@ const COMPONENT_PAGE_LAYOUT_SECTIONS = [
     components: [
       "AdaptiveMapShell",
       "BrowseCategoriesPanel",
+      "CategoryField",
       "CategoryTile",
       "DirectionStep",
       "FloorSelector",
@@ -1310,6 +1323,35 @@ const COMPONENT_DOCS = [
       "Empty replaces the grid, so assistive technology never reads an empty list.",
       "The panel needs an accessible name via label so it reads as one region.",
       "Category selection state belongs to CategoryTile, not to the panel.",
+    ],
+  },
+  {
+    componentName: "CategoryField",
+    componentSetName: "CategoryField",
+    category: "Product / SDK",
+    summary:
+      "CategoryField is the search field's form once a quick-access category is chosen; it takes the field's place in the search row.",
+    usage: [
+      "Use in place of the search field while a category filters the results.",
+      "Use Theme for a field with no category colour; the eight tints are the taxonomy's quick-access colours.",
+      "Clear returns the row to the search field; product code owns the query.",
+    ],
+    api: [
+      "Tint maps to tint (accent, fill, onFill).",
+      "Label Text maps to label; Count Text to count; Show Count to count being set.",
+      "Icon maps to icon, drawn at 28 in the accent.",
+      "clearLabel, onClear and countLabel are product code.",
+    ],
+    properties: [
+      "Tint: Theme, Yellow, Orange, Turquoise, Red, Blue, Navy, Green, Pink",
+      "Label Text",
+      "Count Text",
+      "Show Count",
+      "Icon",
+    ],
+    accessibility: [
+      "The field is a group named by the label and the count's spoken form; the clear is a button named clearLabel.",
+      "The colour is decorative: the label carries the category's name.",
     ],
   },
   {
@@ -4100,7 +4142,10 @@ const COMPONENT_FLOAT_TOKENS = [
   { name: "Button/spinner/size", value: 14, scopes: ["WIDTH_HEIGHT"] },
   { name: "IconButton/size/small", value: 44, scopes: ["WIDTH_HEIGHT"] },
   { name: "IconButton/size/default", value: 44, scopes: ["WIDTH_HEIGHT"] },
-  { name: "IconButton/size/large", value: 44, scopes: ["WIDTH_HEIGHT"] },
+  // The large size is 48: the prototype's Filters and AI search beside a 44
+  // field (`components.iconButton.sizes.large`, 2026-09-21); small and
+  // default stay at the 44 touch target.
+  { name: "IconButton/size/large", value: 48, scopes: ["WIDTH_HEIGHT"] },
   { name: "IconButton/icon/size/small", value: 14, scopes: ["WIDTH_HEIGHT"] },
   {
     name: "IconButton/icon/size/default",
@@ -4893,6 +4938,36 @@ const COMPONENT_FLOAT_TOKENS = [
   {
     name: "CategoryTile/label/line-height",
     value: CATEGORY_TILE_LABEL_LINE_HEIGHT,
+    scopes: ["LINE_HEIGHT"],
+  },
+  {
+    name: "CategoryField/height",
+    value: CATEGORY_FIELD_HEIGHT,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryField/icon/size",
+    value: CATEGORY_FIELD_ICON_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryField/pill/height",
+    value: CATEGORY_FIELD_PILL_HEIGHT,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryField/clear/size",
+    value: CATEGORY_FIELD_CLEAR_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryField/label/font-size",
+    value: CATEGORY_FIELD_LABEL_FONT_SIZE,
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "CategoryField/label/line-height",
+    value: CATEGORY_FIELD_LABEL_LINE_HEIGHT,
     scopes: ["LINE_HEIGHT"],
   },
   { name: "MapView/width/default", value: 480, scopes: ["WIDTH_HEIGHT"] },
@@ -9555,6 +9630,7 @@ const CORE_UPDATE_SEQUENCE = [
 const PRODUCT_SDK_UPDATE_SEQUENCE = [
   ["AdaptiveMapShell", updateAdaptiveMapShellComponent],
   ["BrowseCategoriesPanel", updateBrowseCategoriesPanelComponent],
+  ["CategoryField", updateCategoryFieldComponent],
   ["CategoryTile", updateCategoryTileComponent],
   ["DirectionStep", updateDirectionStepComponent],
   ["FloorSelector", updateFloorSelectorComponent],
@@ -9774,6 +9850,9 @@ function additionalComponentActionHandlers() {
     "build-category-tile": buildCategoryTileComponent,
     "update-category-tile": updateCategoryTileComponent,
     "rebuild-category-tile": rebuildCategoryTileComponent,
+    "build-category-field": buildCategoryFieldComponent,
+    "update-category-field": updateCategoryFieldComponent,
+    "rebuild-category-field": rebuildCategoryFieldComponent,
     "build-poi-media-gallery": buildPOIMediaGalleryComponent,
     "update-poi-media-gallery": updatePOIMediaGalleryComponent,
     "rebuild-poi-media-gallery": rebuildPOIMediaGalleryComponent,
@@ -16429,6 +16508,12 @@ function expectedVariantAxesForComponentSetName(name) {
     };
   }
 
+  if (canonicalName === "CategoryField") {
+    return {
+      Tint: CATEGORY_TINTS,
+    };
+  }
+
   if (canonicalName === "POIMediaGallery") {
     return {
       Content: POI_MEDIA_GALLERY_CONTENT,
@@ -22598,6 +22683,15 @@ function addComponentTextStyleSpecs(specs, fonts) {
     CATEGORY_TILE_LABEL_FONT_SIZE,
     CATEGORY_TILE_LABEL_LINE_HEIGHT,
     "Typography contract for a category tile's caption: 11/14, two lines at most.",
+  );
+  addTextStyleSpec(
+    specs,
+    "categoryFieldLabel",
+    "CategoryField / Label",
+    fonts.medium,
+    CATEGORY_FIELD_LABEL_FONT_SIZE,
+    CATEGORY_FIELD_LABEL_LINE_HEIGHT,
+    "Typography contract for the chosen category's name in the search row: 15/20 semibold.",
   );
   addTextStyleSpec(specs, "cardTitle", "Card / Title", fonts.medium, 24, 24);
   addTextStyleSpec(
@@ -45715,37 +45809,17 @@ async function updatePOIDetailPanelVariant(
   // Sheet is anchored to the bottom edge, so only its top corners round and it
   // carries a grabber. Inline sits in the document flow with no elevation
   // affordance at all. Panel is the free-standing docked card.
-  if (value === "Sheet") {
+  // In a sheet the panel paints no surface, border or shadow of its own: it
+  // sits on the sheet's grey, which draws the handle (2026-09-21,
+  // `components.poiDetailPanel.content.sheetSurface`). Only its top corners
+  // round, at the control radius, as `rounded-t-control` does.
+  const sheet = value === "Sheet";
+  if (sheet) {
+    component.fills = [];
+    component.strokes = [];
     component.cornerRadius = KOZMOS_RADIUS.none;
-    component.topLeftRadius = KOZMOS_RADIUS.container;
-    component.topRightRadius = KOZMOS_RADIUS.container;
-
-    const grabber = productSdkFrame("Grabber", {
-      primarySizing: "FIXED",
-      counterSizing: "FIXED",
-      width: 40,
-      height: 4,
-    });
-    grabber.cornerRadius = 2;
-    grabber.fills = [
-      paintFromVariable(
-        "Colors/background/200",
-        "#C7CAD1",
-        variableByName,
-        stats,
-      ),
-    ];
-    const grabberRow = productSdkFrame("Grabber Row", {
-      direction: "horizontal",
-      primarySizing: "FIXED",
-      counterSizing: "FIXED",
-      primaryAlign: "CENTER",
-      counterAlign: "CENTER",
-      width: contentWidth,
-      height: 12,
-    });
-    grabberRow.appendChild(grabber);
-    appendWithSizing(component, grabberRow, "FILL", "FIXED");
+    component.topLeftRadius = KOZMOS_RADIUS.control;
+    component.topRightRadius = KOZMOS_RADIUS.control;
   } else if (value === "Inline") {
     component.strokes = [];
     component.cornerRadius = KOZMOS_RADIUS.none;
@@ -45787,6 +45861,14 @@ async function updatePOIDetailPanelVariant(
     variableByName,
     stats,
   });
+  // On the sheet's own grey an inset block is white instead of muted.
+  const sheetInset = paintFromVariable(
+    "Colors/background/0",
+    "#FFFFFF",
+    variableByName,
+    stats,
+  );
+  if (sheet) media.fills = [sheetInset];
   appendWithSizing(component, media, "FILL", "FIXED");
 
   const description = await productSdkText({
@@ -45817,6 +45899,7 @@ async function updatePOIDetailPanelVariant(
     stats,
     muted: true,
   });
+  if (sheet) services.fills = [clonePaint(sheetInset)];
   appendWithSizing(component, services, "FILL", "FIXED");
 
   const actions = productSdkFrame("Actions Slot", {
@@ -45871,7 +45954,7 @@ const POI_DETAIL_PANEL_DESCRIPTION = [
   "Title Text maps to poi.name, Subtitle Text to the category, floor, and availability labels.",
   "Description Text maps to poi.description.",
   "Actions Slot maps to poi.actions with actionLabels; actionStates stay product state.",
-  "Sheet rounds only its top corners and shows a grabber; Inline has no surface chrome.",
+  "Sheet paints no surface, border or shadow of its own — it sits on the sheet's grey, which draws the handle — rounds only its top corners at the control radius, and its inset blocks (media, services) go white; Inline has no surface chrome.",
 ];
 
 async function buildPOIDetailPanelComponent() {
@@ -46003,43 +46086,103 @@ async function updateBrowseCategoriesPanelVariant(
     return;
   }
 
+  // The grid is the React's: four across at gap 8, each a live CategoryTile
+  // in its category's colour — the taxonomy's aviation quick access (10.12.0),
+  // one of each of the eight colours — with its count.
   const grid = productSdkFrame("Category Grid", {
     primarySizing: "AUTO",
     counterSizing: "FIXED",
     spacing: 8,
     width: contentWidth,
-    height: 180,
+    height: 220,
   });
-
   for (let rowIndex = 0; rowIndex < 2; rowIndex += 1) {
     const row = productSdkFrame("Category Row " + (rowIndex + 1), {
       direction: "horizontal",
       primarySizing: "FIXED",
-      counterSizing: "FIXED",
+      counterSizing: "AUTO",
       spacing: 8,
       width: contentWidth,
-      height: 84,
+      height: 106,
     });
-
-    for (let columnIndex = 0; columnIndex < 3; columnIndex += 1) {
-      const tile = await productSdkSlot({
-        name: "Category Tile Slot",
-        label: "Tile",
-        width: 106,
-        height: 84,
-        fonts,
-        variableByName,
-        stats,
-      });
-      appendWithSizing(row, tile, "FILL", "FIXED");
+    for (let columnIndex = 0; columnIndex < 4; columnIndex += 1) {
+      const index = rowIndex * 4 + columnIndex;
+      const tile = await browseCategoriesPanelTile(index, stats);
+      appendWithSizing(
+        row,
+        tile,
+        "FILL",
+        tile.type === "INSTANCE" ? null : "FIXED",
+      );
     }
-
-    appendWithSizing(grid, row, "FILL", "FIXED");
+    appendWithSizing(grid, row, "FILL", "HUG");
   }
-
   appendWithSizing(component, grid, "FILL", "HUG");
 }
 
+/** The aviation quick access at 10.12.0, in the sprite's colours. */
+const BROWSE_CATEGORIES_PANEL_TILES = [
+  { label: "Entrances & Exits", tint: "Green", count: "6" },
+  { label: "Check-in & Baggage", tint: "Turquoise", count: "14" },
+  { label: "Security & Immigration", tint: "Red", count: "5" },
+  { label: "Gates", tint: "Yellow", count: "88" },
+  { label: "Customer Service", tint: "Blue", count: "9" },
+  { label: "Parking & Ground Transport", tint: "Navy", count: "22" },
+  { label: "Dining", tint: "Orange", count: "37" },
+  { label: "Shopping", tint: "Pink", count: "41" },
+];
+
+/**
+ * One tile of the browse grid: a live CategoryTile instance in its category's
+ * tint, its label and count set, exposed so the panel's designer reaches the
+ * tile's own properties; a placeholder when CategoryTile has not been built.
+ */
+async function browseCategoriesPanelTile(index, stats) {
+  const spec = BROWSE_CATEGORIES_PANEL_TILES[index];
+  const name = "Category Tile " + (index + 1);
+  const created = await createNestedComponentInstance({
+    componentSetName: "CategoryTile",
+    variantProperties: { State: "Default", Tint: spec.tint },
+    name,
+    stats,
+  });
+  if (!created) {
+    return createMissingNestedComponentNode(
+      name,
+      "Build CategoryTile before updating BrowseCategoriesPanel.",
+      stats,
+    );
+  }
+  const tile = created.instance;
+  setInstanceTextProperty(
+    tile,
+    created.componentSet,
+    "Label Text",
+    spec.label,
+    stats,
+  );
+  markNestedComponentInstance(tile, "CategoryTile", "browse-category-tile");
+  // The count lives on the tile's nested Counter, whose text is the Counter's
+  // own property; an override on that node is how an instance carries it.
+  const digits = tile.findOne(
+    (node) => node.type === "TEXT" && node.name === "Counter Text",
+  );
+  if (digits) {
+    try {
+      digits.characters = spec.count;
+    } catch (error) {
+      stats.warnings.push(
+        `${name}: could not set its count (${messageFor(error)}).`,
+      );
+    }
+  }
+  try {
+    tile.isExposedInstance = true;
+  } catch (_error) {
+    // An older runtime keeps the tile's properties on the tile alone.
+  }
+  return tile;
+}
 function configureBrowseCategoriesPanelProperties(componentSet, stats) {
   configureNamedTextProperty(
     componentSet,
@@ -46052,6 +46195,7 @@ function configureBrowseCategoriesPanelProperties(componentSet, stats) {
 
 const BROWSE_CATEGORIES_PANEL_DESCRIPTION = [
   "Kozmos BrowseCategoriesPanel generated from the React BrowseCategoriesPanel API.",
+  "The grid is four live CategoryTile instances across at gap 8, each in its category's Tint with its label and count — the aviation quick access; tint maps to the panel's tint callback and renderIcon to each tile's Icon.",
   "Content covers the panel with and without the search slot, plus its empty state.",
   "Panel Label Text maps to BrowseCategoriesPanel.label.",
   "Category Tile Slots map to categories rendered through CategoryTile.",
@@ -46101,6 +46245,297 @@ async function rebuildBrowseCategoriesPanelComponent() {
 }
 
 // --- CategoryTile ----------------------------------------------------------
+
+// --- CategoryField ---------------------------------------------------------
+
+/**
+ * The field's tint. Theme is the field with no category: the theme's 500 for
+ * the accent and the themed button's fill and ink for the count pill — the
+ * React, SwiftUI and Compose defaults.
+ */
+function categoryFieldTintTokens(tint) {
+  if (CATEGORY_TINT_FALLBACKS[tint]) return categoryTintTokens(tint);
+  return {
+    accent: { name: "Colors/theme/500", fallback: "#135BEC" },
+    fill: {
+      name: "Primary Buttons/themed/button/background/idle",
+      fallback: "#0D44C2",
+    },
+    onFill: {
+      name: "Primary Buttons/themed/button/foreground/content/idle",
+      fallback: "#FFFFFF",
+    },
+  };
+}
+
+async function createCategoryFieldVariant(args) {
+  const component = figma.createComponent();
+  await updateCategoryFieldVariant(component, args);
+  return component;
+}
+
+function parseCategoryFieldVariantName(name) {
+  return productSdkVariantValues(name, "Tint", CATEGORY_TINTS);
+}
+
+async function updateCategoryFieldVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const tint = categoryFieldTintTokens(value);
+  // The prototype's, measured: 48 tall at the control radius, the colour at
+  // 12 % behind a 1 border of it, the icon at 28, the name at 15 semibold, a
+  // 22 count pill filled with the colour, a 32 clear at the trailing edge.
+  productSdkVariantRoot(component, "CategoryField", `Tint=${value}`, {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "MIN",
+    counterAlign: "CENTER",
+    spacing: 8,
+    paddingLeft: 12,
+    paddingRight: 8,
+    paddingTop: 0,
+    paddingBottom: 0,
+    width: CATEGORY_FIELD_WIDTH,
+    height: CATEGORY_FIELD_HEIGHT,
+  });
+  component.cornerRadius = KOZMOS_RADIUS.control;
+  component.fills = [tokenPaint(tint.accent, variableByName, stats, 0.12)];
+  component.strokes = [tokenPaint(tint.accent, variableByName, stats)];
+  component.strokeWeight = 1;
+  component.strokeAlign = "INSIDE";
+  bindFloatVariable(
+    component,
+    "height",
+    "CategoryField/height",
+    variableByName,
+    stats,
+  );
+
+  const icon = await productSdkIconInstance({
+    iconName: CATEGORY_FIELD_DEFAULT_ICON,
+    token: tint.accent,
+    size: CATEGORY_FIELD_ICON_SIZE,
+    sizeToken: "CategoryField/icon/size",
+    variableByName,
+    stats,
+    owner: "CategoryField",
+  });
+  if (icon) appendWithSizing(component, icon, "FIXED", "FIXED");
+
+  const label = await productSdkText({
+    name: "Label Text",
+    characters: "Gates",
+    styleKey: "categoryFieldLabel",
+    fonts,
+    bold: true,
+    fontSize: CATEGORY_FIELD_LABEL_FONT_SIZE,
+    lineHeight: CATEGORY_FIELD_LABEL_LINE_HEIGHT,
+    colorToken: tint.accent.name,
+    colorFallback: tint.accent.fallback,
+    variableByName,
+    stats,
+    width: 160,
+  });
+  bindFloatVariable(
+    label,
+    "fontSize",
+    "CategoryField/label/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    label,
+    "lineHeight",
+    "CategoryField/label/line-height",
+    variableByName,
+    stats,
+  );
+  appendWithSizing(component, label, "FILL", null);
+
+  // The count: a 22 pill filled with the colour, its digits in the ink.
+  const pill = productSdkFrame("Count Pill", {
+    direction: "horizontal",
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    paddingLeft: 6,
+    paddingRight: 6,
+    width: CATEGORY_FIELD_PILL_HEIGHT,
+    height: CATEGORY_FIELD_PILL_HEIGHT,
+  });
+  pill.cornerRadius = KOZMOS_RADIUS.pill;
+  pill.fills = [tokenPaint(tint.fill, variableByName, stats)];
+  try {
+    pill.minWidth = CATEGORY_FIELD_PILL_HEIGHT;
+  } catch (_error) {
+    // A runtime without min sizes lets the digits set the width.
+  }
+  bindFloatVariable(
+    pill,
+    "height",
+    "CategoryField/pill/height",
+    variableByName,
+    stats,
+  );
+  const count = await productSdkText({
+    name: "Count Text",
+    characters: "12",
+    styleKey: "counterDefault",
+    fonts,
+    bold: true,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken: tint.onFill.name,
+    colorFallback: tint.onFill.fallback,
+    variableByName,
+    stats,
+  });
+  count.textAlignHorizontal = "CENTER";
+  count.textAutoResize = "WIDTH_AND_HEIGHT";
+  pill.appendChild(count);
+  appendWithSizing(component, pill, "HUG", "FIXED");
+
+  // The clear: a 32 circle with no fill, its cross in the colour.
+  const clear = productSdkFrame("Clear Button", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    width: CATEGORY_FIELD_CLEAR_SIZE,
+    height: CATEGORY_FIELD_CLEAR_SIZE,
+  });
+  clear.cornerRadius = KOZMOS_RADIUS.pill;
+  markControlSurface(clear);
+  bindSizeVariables(
+    clear,
+    "CategoryField/clear/size",
+    "CategoryField/clear/size",
+    variableByName,
+    stats,
+  );
+  const cross = await productSdkIconInstance({
+    iconName: "x-close",
+    token: tint.accent,
+    size: 16,
+    sizeToken: null,
+    variableByName,
+    stats,
+    owner: "CategoryField",
+  });
+  if (cross) {
+    cross.name = "Clear Icon";
+    clear.appendChild(cross);
+  }
+  appendWithSizing(component, clear, "FIXED", "FIXED");
+}
+
+async function configureCategoryFieldProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Label Text",
+    "Label Text",
+    "Gates",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Count Text",
+    "Count Text",
+    "12",
+    stats,
+  );
+
+  // Show Count maps to count being set; off hides the pill.
+  const showCount = ensureBooleanProperty(
+    componentSet,
+    "Show Count",
+    true,
+    stats,
+  );
+  const iconSourceComponents = await findKozmosIconSourceComponents();
+  const preferredValues = iconPreferredValues(iconSourceComponents);
+  const defaultIcon =
+    (await findKozmosIconSourceComponent(CATEGORY_FIELD_DEFAULT_ICON)) ||
+    (await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME));
+  const iconProperty = defaultIcon
+    ? ensureInstanceSwapProperty(
+        componentSet,
+        "Icon",
+        defaultIcon.id,
+        stats,
+        preferredValues,
+      )
+    : null;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const pill = directChildNamed(child, "Count Pill");
+    if (pill && showCount) {
+      pill.componentPropertyReferences = Object.assign(
+        {},
+        pill.componentPropertyReferences || {},
+        { visible: showCount },
+      );
+    }
+    const icon = directChildNamed(child, "Icon");
+    if (icon && icon.type === "INSTANCE" && iconProperty) {
+      bindInstanceSwapProperty(icon, iconProperty, stats);
+    }
+  }
+}
+
+const CATEGORY_FIELD_DESCRIPTION = [
+  "Kozmos CategoryField generated from the React CategoryField API — the search field's form once a quick-access category is chosen; it takes the field's place in the search row.",
+  "Tint maps to tint: Theme is the field with no category (the theme's colour, the themed button's fill for the pill); the eight are Semantics.Category, the taxonomy's quick-access colours. The accent takes the icon, the label and the 1 border, and sits at 12 % behind; the inked fill takes the count pill.",
+  "Label Text maps to label; Count Text to count and Show Count to count being set; Icon maps to icon and swaps from the Icons page.",
+  "48 tall at the control radius; the icon 28; the label 15/20; the pill 22; the clear 32 at the trailing edge (clearLabel and onClear are product code).",
+];
+
+async function buildCategoryFieldComponent() {
+  return buildSingleAxisComponent({
+    componentName: "CategoryField",
+    componentSetName: "CategoryField",
+    axisName: "Tint",
+    values: CATEGORY_TINTS,
+    x: 80,
+    y: 14700,
+    xStep: 360,
+    createVariant: createCategoryFieldVariant,
+    configureProperties: configureCategoryFieldProperties,
+    autoReorganize: true,
+    description: CATEGORY_FIELD_DESCRIPTION,
+  });
+}
+
+async function updateCategoryFieldComponent() {
+  return updateSingleAxisComponent({
+    componentName: "CategoryField",
+    componentSetName: "CategoryField",
+    axisName: "Tint",
+    values: CATEGORY_TINTS,
+    xStep: 360,
+    createVariant: createCategoryFieldVariant,
+    updateVariant: updateCategoryFieldVariant,
+    parseVariantName: parseCategoryFieldVariantName,
+    configureProperties: configureCategoryFieldProperties,
+    autoReorganize: true,
+    description: CATEGORY_FIELD_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildCategoryFieldComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "CategoryField",
+    componentSetName: "CategoryField",
+    build: buildCategoryFieldComponent,
+  });
+}
 
 async function createCategoryTileVariant(args) {
   const component = figma.createComponent();

@@ -1153,6 +1153,7 @@
                 <option value="browseCategoriesPanel">
                   BrowseCategoriesPanel
                 </option>
+                <option value="categoryField">CategoryField</option>
                 <option value="categoryTile">CategoryTile</option>
                 <option value="directionStep">DirectionStep</option>
                 <option value="floorSelector">FloorSelector</option>
@@ -1539,6 +1540,13 @@
           rebuild: "rebuild-browse-categories-panel",
           hint: "Build creates BrowseCategoriesPanel with Basic, Search, and Empty content variants; Empty replaces the tile grid rather than sitting beside it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
+        categoryField: {
+          label: "CategoryField",
+          build: "build-category-field",
+          update: "update-category-field",
+          rebuild: "rebuild-category-field",
+          hint: "Build creates CategoryField — the search field's form once a quick-access category is chosen — as Tint: Theme and the taxonomy's eight category colours. 48 tall at the control radius, the colour at 12 % behind a 1 border of it, a 28 icon swapped from the Icons page, a 15/20 label, a 22 count pill (Show Count), a 32 clear. Build Curated Icons first. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
         categoryTile: {
           label: "CategoryTile",
           build: "build-category-tile",
@@ -1656,7 +1664,7 @@
           build: "build-poi-detail-panel",
           update: "update-poi-detail-panel",
           rebuild: "rebuild-poi-detail-panel",
-          hint: "Build creates POIDetailPanel with Inline, Sheet, and Panel presentations; Sheet rounds only its top corners and shows a grabber. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+          hint: "Build creates POIDetailPanel with Inline, Sheet, and Panel presentations; Sheet paints no surface, border or shadow of its own (the sheet draws the handle), rounds only its top corners at the control radius, and its inset blocks go white. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         floorSelector: {
           label: "FloorSelector",

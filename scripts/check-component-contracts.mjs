@@ -194,7 +194,8 @@ const files = {
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
   reactCounterFigma: "packages/react/src/components/Counter/Counter.figma.tsx",
   reactBadge: "packages/react/src/components/Badge/Badge.tsx",
-  reactCategoryTile: "packages/react/src/components/CategoryTile/CategoryTile.tsx",
+  reactCategoryTile:
+    "packages/react/src/components/CategoryTile/CategoryTile.tsx",
   reactLocationPin: "packages/react/src/components/LocationPin/LocationPin.tsx",
   reactPOIDetailCss: "packages/react/src/styles/owned-poi-detail.css",
   reactBadgeFigma: "packages/react/src/components/Badge/Badge.figma.tsx",
@@ -304,9 +305,12 @@ const files = {
   iosIcon: "packages/ios/Sources/Components/Icon/Icon.swift",
   iosIconFigma: "packages/ios/Sources/Components/Icon/Icon.figma.swift",
   iosIconButton: "packages/ios/Sources/Components/IconButton/IconButton.swift",
-  iosCategoryTile: "packages/ios/Sources/Components/CategoryTile/CategoryTile.swift",
-  iosLocationPin: "packages/ios/Sources/Components/LocationPin/LocationPin.swift",
-  iosPOIDetailPanel: "packages/ios/Sources/Components/POIDetailPanel/POIDetailPanel.swift",
+  iosCategoryTile:
+    "packages/ios/Sources/Components/CategoryTile/CategoryTile.swift",
+  iosLocationPin:
+    "packages/ios/Sources/Components/LocationPin/LocationPin.swift",
+  iosPOIDetailPanel:
+    "packages/ios/Sources/Components/POIDetailPanel/POIDetailPanel.swift",
   iosCounter: "packages/ios/Sources/Components/Counter/Counter.swift",
   iosCounterFigma:
     "packages/ios/Sources/Components/Counter/Counter.figma.swift",
@@ -1898,11 +1902,17 @@ for (const tokenName of [
   "Select/trigger/height",
   "Slider/height/default",
 ]) {
+  // The large icon button is the one size above the touch target: 48, the
+  // prototype's Filters and AI search beside a 44 field (2026-09-21).
+  const expected =
+    tokenName === "IconButton/size/large"
+      ? contract.components.iconButton.sizes.large.width
+      : target;
   assertContains(
     files.figma,
     source.figma,
-    tokenValuePattern(tokenName, target),
-    `${tokenName} token at ${target}px`,
+    tokenValuePattern(tokenName, expected),
+    `${tokenName} token at ${expected}px`,
   );
 }
 assertContains(
@@ -9225,41 +9235,130 @@ assertContains(
     [files.iosCategoryTile, source.iosCategoryTile],
     [files.androidCategoryTile, source.androidCategoryTile],
   ]) {
-    if (/resultCountLabel\s*[?!]?\.let\s*\{\s*resultCountLabel|text-muted-foreground|KozmosTypography\.caption\b/.test(content)) {
-      fail(`${file}: draws resultCountLabel as a caption; it is the spoken form only`);
+    if (
+      /resultCountLabel\s*[?!]?\.let\s*\{\s*resultCountLabel|text-muted-foreground|KozmosTypography\.caption\b/.test(
+        content,
+      )
+    ) {
+      fail(
+        `${file}: draws resultCountLabel as a caption; it is the spoken form only`,
+      );
     }
   }
   // The tint: the icon and the counter's fill take it on each platform.
   if (categoryTile.content.tint) {
-    assertContains(files.iosCategoryTile, source.iosCategoryTile, ".foregroundColor(tint?.accent ?? KozmosColors.primitivesColorsTheme500)", "iOS CategoryTile icon in the tint");
-    assertContains(files.reactCategoryTile, source.reactCategoryTile, 'backgroundColor: tint.fill, color: tint.onFill', "React CategoryTile counter in the tint");
-    assertContains(files.reactCategoryTile, source.reactCategoryTile, '"--kozmos-category-tint": tint.accent', "React CategoryTile tint variable");
-    assertContains(files.androidCategoryTile, source.androidCategoryTile, "LocalContentColor provides (tint?.accent ?: KozmosColors.primitivesColorsTheme500)", "Android CategoryTile icon in the tint");
-    assertContains(files.androidCategoryTile, source.androidCategoryTile, "fill = tint?.fill", "Android CategoryTile counter in the tint");
+    assertContains(
+      files.iosCategoryTile,
+      source.iosCategoryTile,
+      ".foregroundColor(tint?.accent ?? KozmosColors.primitivesColorsTheme500)",
+      "iOS CategoryTile icon in the tint",
+    );
+    assertContains(
+      files.reactCategoryTile,
+      source.reactCategoryTile,
+      "backgroundColor: tint.fill, color: tint.onFill",
+      "React CategoryTile counter in the tint",
+    );
+    assertContains(
+      files.reactCategoryTile,
+      source.reactCategoryTile,
+      '"--kozmos-category-tint": tint.accent',
+      "React CategoryTile tint variable",
+    );
+    assertContains(
+      files.androidCategoryTile,
+      source.androidCategoryTile,
+      "LocalContentColor provides (tint?.accent ?: KozmosColors.primitivesColorsTheme500)",
+      "Android CategoryTile icon in the tint",
+    );
+    assertContains(
+      files.androidCategoryTile,
+      source.androidCategoryTile,
+      "fill = tint?.fill",
+      "Android CategoryTile counter in the tint",
+    );
   }
 }
 
 // Counter: an inked fill — the fill and its ink together — on each platform.
 if (counter.fill) {
-  assertContains(files.iosCounter, source.iosCounter, "fill?.fill ?? emotion?.surface ?? backgroundColor", "iOS Counter fill");
-  assertContains(files.iosCounter, source.iosCounter, "fill?.ink ?? emotion?.onSurface ?? foregroundColor", "iOS Counter ink");
-  assertContains(files.androidCounter, source.androidCounter, "fill?.fill ?: emotion?.surface ?: containerColor", "Android Counter fill");
-  assertContains(files.androidCounter, source.androidCounter, "fill?.ink ?: emotion?.onSurface ?: contentColor", "Android Counter ink");
+  assertContains(
+    files.iosCounter,
+    source.iosCounter,
+    "fill?.fill ?? emotion?.surface ?? backgroundColor",
+    "iOS Counter fill",
+  );
+  assertContains(
+    files.iosCounter,
+    source.iosCounter,
+    "fill?.ink ?? emotion?.onSurface ?? foregroundColor",
+    "iOS Counter ink",
+  );
+  assertContains(
+    files.androidCounter,
+    source.androidCounter,
+    "fill?.fill ?: emotion?.surface ?: containerColor",
+    "Android Counter fill",
+  );
+  assertContains(
+    files.androidCounter,
+    source.androidCounter,
+    "fill?.ink ?: emotion?.onSurface ?: contentColor",
+    "Android Counter ink",
+  );
 }
 
 // LocationPin: a tint for the marker, over the variant's colour; featured still wins.
 if (locationPin.content.tint) {
-  assertContains(files.iosLocationPin, source.iosLocationPin, /if featured \{ return KozmosColors\.primitivesColorsEmotionalAlert500 \}\s+if let tint \{ return tint\.fill\.fill \}/, "iOS LocationPin tint after featured");
-  assertContains(files.reactLocationPin, source.reactLocationPin, "tint && !featured", "React LocationPin tint unless featured");
-  assertContains(files.androidLocationPin, source.androidLocationPin, /featured -> KozmosColors\.primitivesColorsEmotionalAlert500\s+tint != null -> tint\.fill\.fill/, "Android LocationPin tint after featured");
+  assertContains(
+    files.iosLocationPin,
+    source.iosLocationPin,
+    /if featured \{ return KozmosColors\.primitivesColorsEmotionalAlert500 \}\s+if let tint \{ return tint\.fill\.fill \}/,
+    "iOS LocationPin tint after featured",
+  );
+  assertContains(
+    files.reactLocationPin,
+    source.reactLocationPin,
+    "tint && !featured",
+    "React LocationPin tint unless featured",
+  );
+  assertContains(
+    files.androidLocationPin,
+    source.androidLocationPin,
+    /featured -> KozmosColors\.primitivesColorsEmotionalAlert500\s+tint != null -> tint\.fill\.fill/,
+    "Android LocationPin tint after featured",
+  );
 }
 
 // POIDetailPanel: in a sheet, no surface of its own.
-if (poiDetailPanel.content.sheetSurface === "none; in a sheet the panel paints no surface, border or shadow of its own and sits on the sheet's") {
-  assertContains(files.iosPOIDetailPanel, source.iosPOIDetailPanel, ".background(presentation == .sheet ? Color.clear : KozmosColors.primitivesColorsBackground0)", "iOS POIDetailPanel sheet surface none");
-  assertContains(files.reactPOIDetailCss, source.reactPOIDetailCss, /\.kozmos-poi-detail\[data-presentation="sheet"\] \{\s+@apply rounded-t-control;\s+background: transparent;\s+border: 0;/, "React POIDetailPanel sheet surface none");
-  assertContains(files.androidPOIDetailPanel, source.androidPOIDetailPanel, "color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) Color.Transparent else KozmosColors.primitivesColorsBackground0", "Android POIDetailPanel sheet surface none");
-  assertContains(files.androidPOIDetailPanel, source.androidPOIDetailPanel, "KozmosPOIDetailPanelPresentation.Sheet -> 0.dp", "Android POIDetailPanel sheet shadow none");
+if (
+  poiDetailPanel.content.sheetSurface ===
+  "none; in a sheet the panel paints no surface, border or shadow of its own and sits on the sheet's"
+) {
+  assertContains(
+    files.iosPOIDetailPanel,
+    source.iosPOIDetailPanel,
+    ".background(presentation == .sheet ? Color.clear : KozmosColors.primitivesColorsBackground0)",
+    "iOS POIDetailPanel sheet surface none",
+  );
+  assertContains(
+    files.reactPOIDetailCss,
+    source.reactPOIDetailCss,
+    /\.kozmos-poi-detail\[data-presentation="sheet"\] \{\s+@apply rounded-t-control;\s+background: transparent;\s+border: 0;/,
+    "React POIDetailPanel sheet surface none",
+  );
+  assertContains(
+    files.androidPOIDetailPanel,
+    source.androidPOIDetailPanel,
+    "color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) Color.Transparent else KozmosColors.primitivesColorsBackground0",
+    "Android POIDetailPanel sheet surface none",
+  );
+  assertContains(
+    files.androidPOIDetailPanel,
+    source.androidPOIDetailPanel,
+    "KozmosPOIDetailPanelPresentation.Sheet -> 0.dp",
+    "Android POIDetailPanel sheet shadow none",
+  );
 }
 
 assertAllVariants(

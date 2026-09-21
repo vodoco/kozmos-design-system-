@@ -122,6 +122,16 @@ const variableByName = mockVariables([
   "Colors/theme/500",
   "Colors/theme/700",
   "Colors/emotional/alert/900",
+  "Colors/background/100",
+  "Colors/background/200",
+  "Primary Buttons/themed/button/background/idle",
+  "Primary Buttons/themed/button/foreground/content/idle",
+  "CategoryField/height",
+  "CategoryField/icon/size",
+  "CategoryField/pill/height",
+  "CategoryField/clear/size",
+  "CategoryField/label/font-size",
+  "CategoryField/label/line-height",
   "Surface/0",
   "Surface/100",
   "Border/Subtle",
@@ -488,6 +498,350 @@ section("LocationPin");
       "theme: the theme's colour, and a selected pin grows by 8",
     );
   }
+}
+
+// --- IconButton ------------------------------------------------------------------
+
+section("IconButton");
+{
+  const large = contract.iconButton.sizes.large;
+  const token = plugin.COMPONENT_FLOAT_TOKENS.find(
+    (entry) => entry.name === "IconButton/size/large",
+  );
+  ok(
+    token && token.value === large.width && token.value === large.height,
+    `the large icon button is ${large.width} (token ${token && token.value})`,
+  );
+  const icon = plugin.COMPONENT_FLOAT_TOKENS.find(
+    (entry) => entry.name === "IconButton/icon/size/large",
+  );
+  ok(
+    icon && icon.value === large.iconSize,
+    `its icon is ${large.iconSize} (token ${icon && icon.value})`,
+  );
+}
+
+// --- POIDetailPanel --------------------------------------------------------------
+
+section("POIDetailPanel");
+{
+  async function paint(value) {
+    const component = figma.createComponent();
+    const stats = freshStats();
+    await plugin.updatePOIDetailPanelVariant(component, {
+      value,
+      variableByName,
+      fonts: FONTS,
+      stats,
+    });
+    return { component, stats };
+  }
+  const { component: sheet } = await paint("Sheet");
+  ok(
+    sheet.fills.length === 0 && sheet.strokes.length === 0,
+    "sheet: no surface or border of its own",
+  );
+  ok(
+    sheet.topLeftRadius === plugin.KOZMOS_RADIUS.control &&
+      sheet.topRightRadius === plugin.KOZMOS_RADIUS.control &&
+      sheet.cornerRadius === plugin.KOZMOS_RADIUS.none,
+    "sheet: only the top corners round, at the control radius",
+  );
+  ok(
+    !named(sheet, "Grabber"),
+    "sheet: no grabber of its own — the sheet draws the handle",
+  );
+  for (const slot of ["Media Slot", "Services Slot"]) {
+    const node = named(sheet, slot);
+    ok(
+      node && boundVariableName(node.fills[0]) === "Colors/background/0",
+      `sheet: ${slot} is white on the sheet's grey`,
+    );
+  }
+  const { component: panel } = await paint("Panel");
+  ok(
+    boundVariableName(panel.fills[0]) === "Surface/0" &&
+      boundVariableName(panel.strokes[0]) === "Border/Subtle",
+    "panel: keeps its surface and border",
+  );
+  const services = named(panel, "Services Slot");
+  ok(
+    services && boundVariableName(services.fills[0]) === "Surface/100",
+    "panel: the services block stays muted",
+  );
+}
+
+// --- CategoryField ---------------------------------------------------------------
+
+section("CategoryField");
+{
+  ok(
+    typeof plugin.updateCategoryFieldVariant === "function" &&
+      typeof plugin.buildCategoryFieldComponent === "function" &&
+      typeof plugin.updateCategoryFieldComponent === "function",
+    "CategoryField has a painter, a Build and an Update",
+  );
+  ok(
+    typeof plugin.expectedVariantAxesForComponentSetName === "function" &&
+      JSON.stringify(
+        plugin.expectedVariantAxesForComponentSetName("CategoryField"),
+      ) === JSON.stringify({ Tint: plugin.CATEGORY_TINTS }),
+    "the set expects Tint",
+  );
+  ok(
+    Array.isArray(plugin.PRODUCT_SDK_UPDATE_SEQUENCE) &&
+      plugin.PRODUCT_SDK_UPDATE_SEQUENCE.some(
+        ([name]) => name === "CategoryField",
+      ),
+    "CategoryField is in the Product / SDK update sequence",
+  );
+
+  async function paint(value) {
+    const component = figma.createComponent();
+    const stats = freshStats();
+    await plugin.updateCategoryFieldVariant(component, {
+      value,
+      variableByName,
+      fonts: FONTS,
+      stats,
+    });
+    return { component, stats };
+  }
+
+  if (typeof plugin.updateCategoryFieldVariant === "function") {
+    const { component, stats } = await paint("Yellow");
+    ok(
+      component.name === "Tint=Yellow",
+      `named by its tint (got "${component.name}")`,
+    );
+    ok(component.height === 48, `48 tall (got ${component.height})`);
+    ok(
+      component.cornerRadius === plugin.KOZMOS_RADIUS.control,
+      "the control radius",
+    );
+    ok(
+      boundVariableName(component.strokes[0]) === "Category/Accent/Yellow" &&
+        component.strokeWeight === 1,
+      "a 1 border in the accent",
+    );
+    ok(
+      boundVariableName(component.fills[0]) === "Category/Accent/Yellow" &&
+        Math.abs(component.fills[0].opacity - 0.12) < 1e-9,
+      "the accent at 12 % behind",
+    );
+    ok(
+      component.paddingLeft === 12 && component.paddingRight === 8,
+      "12 before the icon, 8 after the clear",
+    );
+    const icon = named(component, "Icon");
+    ok(
+      icon && icon.type === "INSTANCE" && icon.width === 28,
+      "a 28 icon instance",
+    );
+    const vector = icon && icon.findOne((node) => node.type === "VECTOR");
+    ok(
+      vector &&
+        boundVariableName(vector.strokes[0]) === "Category/Accent/Yellow" &&
+        Math.abs(vector.strokeWeight - (2 * 28) / 24) < 1e-9,
+      "the icon in the accent, its stroke scaled to 28",
+    );
+    const label = named(component, "Label Text");
+    ok(
+      label &&
+        label.fontSize === 15 &&
+        label.lineHeight.value === 20 &&
+        boundVariableName(label.fills[0]) === "Category/Accent/Yellow",
+      "the label 15/20 in the accent",
+    );
+    const pill = named(component, "Count Pill");
+    ok(
+      pill &&
+        pill.height === 22 &&
+        pill.cornerRadius === plugin.KOZMOS_RADIUS.pill &&
+        boundVariableName(pill.fills[0]) === "Category/Fill/Yellow",
+      "a 22 pill filled with the category's fill",
+    );
+    const count = named(component, "Count Text");
+    ok(
+      count && boundVariableName(count.fills[0]) === "Category/OnFill/Yellow",
+      "the digits in the fill's ink",
+    );
+    const clear = named(component, "Clear Button");
+    ok(
+      clear &&
+        clear.width === 32 &&
+        clear.height === 32 &&
+        clear.fills.length === 0,
+      "a 32 clear with no fill",
+    );
+    const cross = clear && named(clear, "Clear Icon");
+    const crossVector =
+      cross && cross.findOne((node) => node.type === "VECTOR");
+    ok(
+      cross &&
+        cross.width === 16 &&
+        crossVector &&
+        boundVariableName(crossVector.strokes[0]) === "Category/Accent/Yellow",
+      "the clear's cross is a 16 x-close in the accent",
+    );
+    ok(
+      stats.warnings.length === 0,
+      `no warnings (${stats.warnings.join(" | ")})`,
+    );
+  }
+
+  if (typeof plugin.updateCategoryFieldVariant === "function") {
+    const { component } = await paint("Theme");
+    const pill = named(component, "Count Pill");
+    const count = named(component, "Count Text");
+    ok(
+      pill &&
+        boundVariableName(pill.fills[0]) ===
+          "Primary Buttons/themed/button/background/idle" &&
+        count &&
+        boundVariableName(count.fills[0]) ===
+          "Primary Buttons/themed/button/foreground/content/idle",
+      "theme: the pill is the themed button's fill and ink",
+    );
+    ok(
+      boundVariableName(component.strokes[0]) === "Colors/theme/500",
+      "theme: the border in the theme's colour",
+    );
+  }
+
+  if (typeof plugin.configureCategoryFieldProperties === "function") {
+    const variants = [];
+    for (const tint of ["Theme", "Red"]) {
+      const { component } = await paint(tint);
+      variants.push(component);
+    }
+    const set = figma.combineAsVariants(variants, figma.currentPage);
+    set.name = "CategoryField";
+    const stats = freshStats();
+    await plugin.configureCategoryFieldProperties(set, stats);
+    const definitions = set.componentPropertyDefinitions;
+    const byBase = (base, type) =>
+      Object.keys(definitions).find(
+        (key) => key.split("#")[0] === base && definitions[key].type === type,
+      );
+    const showCount = byBase("Show Count", "BOOLEAN");
+    const iconProperty = byBase("Icon", "INSTANCE_SWAP");
+    ok(
+      showCount && definitions[showCount].defaultValue === true,
+      "a Show Count boolean, on by default",
+    );
+    ok(
+      byBase("Label Text", "TEXT") && byBase("Count Text", "TEXT"),
+      "Label Text and Count Text properties",
+    );
+    ok(iconProperty, "an Icon instance-swap property");
+    const pill = named(variants[1], "Count Pill");
+    ok(
+      pill &&
+        pill.componentPropertyReferences &&
+        pill.componentPropertyReferences.visible === showCount,
+      "the pill's visibility is Show Count",
+    );
+    const icon = named(variants[1], "Icon");
+    ok(
+      icon &&
+        icon.componentPropertyReferences &&
+        icon.componentPropertyReferences.mainComponent === iconProperty,
+      "the icon swaps through Icon",
+    );
+    set.remove();
+  }
+}
+
+// --- BrowseCategoriesPanel ----------------------------------------------------
+
+section("BrowseCategoriesPanel");
+{
+  const taxonomy = [
+    ["Entrances & Exits", "Green"],
+    ["Check-in & Baggage", "Turquoise"],
+    ["Security & Immigration", "Red"],
+    ["Gates", "Yellow"],
+    ["Customer Service", "Blue"],
+    ["Parking & Ground Transport", "Navy"],
+    ["Dining", "Orange"],
+    ["Shopping", "Pink"],
+  ];
+  // A CategoryTile set for the panel to instance, painted by the plugin itself.
+  const tiles = [];
+  for (const tint of plugin.CATEGORY_TINTS) {
+    const component = figma.createComponent();
+    await plugin.updateCategoryTileVariant(component, {
+      props: { state: "Default", tint },
+      variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    tiles.push(component);
+  }
+  const tileSet = figma.combineAsVariants(tiles, figma.currentPage);
+  tileSet.name = "CategoryTile";
+  for (const variant of tiles) {
+    variant.variantProperties = Object.fromEntries(
+      variant.name.split(",").map((part) => part.trim().split("=")),
+    );
+  }
+  await plugin.configureCategoryTileProperties(tileSet, freshStats());
+
+  const component = figma.createComponent();
+  const stats = freshStats();
+  await plugin.updateBrowseCategoriesPanelVariant(component, {
+    value: "Basic",
+    variableByName,
+    fonts: FONTS,
+    stats,
+  });
+  const grid = named(component, "Category Grid");
+  ok(grid, "a Category Grid");
+  const rows = grid
+    ? grid.children.filter((row) => row.name.startsWith("Category Row"))
+    : [];
+  ok(
+    rows.length === 2 && rows.every((row) => row.children.length === 4),
+    "two rows of four",
+  );
+  ok(
+    grid &&
+      grid.itemSpacing === 8 &&
+      rows.every((row) => row.itemSpacing === 8),
+    "gap 8 both ways",
+  );
+  const instances = rows.flatMap((row) => row.children);
+  ok(
+    instances.length === 8 &&
+      instances.every((tile) => tile.type === "INSTANCE"),
+    "eight live CategoryTile instances",
+  );
+  taxonomy.forEach(([label, tint], index) => {
+    const tile = instances[index];
+    const labelNode =
+      tile && tile.findOne((node) => node.name === "Label Text");
+    const digits = tile && tile.findOne((node) => node.name === "Counter Text");
+    ok(
+      tile &&
+        tile.mainComponent &&
+        tile.mainComponent.name === `State=Default, Tint=${tint}` &&
+        labelNode &&
+        labelNode.characters === label &&
+        digits &&
+        /^\d+$/.test(digits.characters),
+      `tile ${index + 1} is ${label} in ${tint} with a count`,
+    );
+  });
+  ok(
+    instances.every((tile) => tile.isExposedInstance === true),
+    "each tile is exposed",
+  );
+  ok(
+    stats.warnings.length === 0,
+    `no warnings (${stats.warnings.join(" | ")})`,
+  );
+  tileSet.remove();
 }
 
 // --- Summary ---------------------------------------------------------------------
