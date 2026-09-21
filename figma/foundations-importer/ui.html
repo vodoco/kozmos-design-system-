@@ -1149,6 +1149,7 @@
                 <option value="avatar">Avatar</option>
               </optgroup>
               <optgroup label="Product / SDK">
+                <option value="aiSearchButton">AISearchButton</option>
                 <option value="adaptiveMapShell">AdaptiveMapShell</option>
                 <option value="browseCategoriesPanel">
                   BrowseCategoriesPanel
@@ -1531,7 +1532,7 @@
           build: "build-direction-step",
           update: "update-direction-step",
           rebuild: "rebuild-direction-step",
-          hint: "Build creates DirectionStep with Straight, Left, Right, and Destination turn types plus editable instruction, distance, and duration text. Turn glyphs never auto-mirror in RTL. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+          hint: "Build creates DirectionStep with the fourteen cases of the 20th: Straight, Left, Right and Destination, the lift, escalator and stairs up and down, LevelUp and LevelDown, Transition and TurnBack — each a 24 icon from the Icons page (arrow-up, arrow-down, arrow-left, arrow-right, marker-pin-01, flip-backward) in the theme\'s colour on a 40 disc at 10 %. Run Curated Icons first. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         browseCategoriesPanel: {
           label: "BrowseCategoriesPanel",
@@ -1630,6 +1631,13 @@
           update: "update-feedback-card",
           rebuild: "rebuild-feedback-card",
           hint: "Build creates FeedbackCard with Default, Submitting, and Success states; Success replaces the form rather than disabling it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
+        aiSearchButton: {
+          label: "AISearchButton",
+          build: "build-ai-search-button",
+          update: "update-ai-search-button",
+          rebuild: "rebuild-ai-search-button",
+          hint: "Build creates AISearchButton — the search row's AI search, the prototype's — with Default and Disabled states: a 48 circle whose ring is a 2.5 band of the six data colours around a 43 disc, a 16 icon swapped from the Icons page. Run Curated Icons first (stars-01). Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         adaptiveMapShell: {
           label: "AdaptiveMapShell",

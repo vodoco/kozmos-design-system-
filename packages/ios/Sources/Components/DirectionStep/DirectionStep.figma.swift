@@ -20,7 +20,17 @@ struct KozmosDirectionStepConnect: FigmaConnect {
             "Straight": DirectionType.straight,
             "Left": DirectionType.left,
             "Right": DirectionType.right,
-            "Destination": DirectionType.destination
+            "Destination": DirectionType.destination,
+            "LiftUp": DirectionType.liftUp,
+            "LiftDown": DirectionType.liftDown,
+            "EscalatorUp": DirectionType.escalatorUp,
+            "EscalatorDown": DirectionType.escalatorDown,
+            "StairsUp": DirectionType.stairsUp,
+            "StairsDown": DirectionType.stairsDown,
+            "LevelUp": DirectionType.levelUp,
+            "LevelDown": DirectionType.levelDown,
+            "Transition": DirectionType.transition,
+            "TurnBack": DirectionType.turnBack
         ]
     )
     var type: DirectionType = .straight

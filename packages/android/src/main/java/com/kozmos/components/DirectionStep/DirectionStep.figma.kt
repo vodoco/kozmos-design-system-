@@ -22,7 +22,17 @@ class KozmosDirectionStepConnect {
         "Straight" to DirectionType.Straight,
         "Left" to DirectionType.Left,
         "Right" to DirectionType.Right,
-        "Destination" to DirectionType.Destination
+        "Destination" to DirectionType.Destination,
+        "LiftUp" to DirectionType.LiftUp,
+        "LiftDown" to DirectionType.LiftDown,
+        "EscalatorUp" to DirectionType.EscalatorUp,
+        "EscalatorDown" to DirectionType.EscalatorDown,
+        "StairsUp" to DirectionType.StairsUp,
+        "StairsDown" to DirectionType.StairsDown,
+        "LevelUp" to DirectionType.LevelUp,
+        "LevelDown" to DirectionType.LevelDown,
+        "Transition" to DirectionType.Transition,
+        "TurnBack" to DirectionType.TurnBack
     )
 
     @Composable

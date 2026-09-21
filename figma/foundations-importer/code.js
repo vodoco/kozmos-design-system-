@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "8bd825bfc4f2";
+const PLUGIN_BUILD = "8d1312c6c6af";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -292,7 +292,44 @@ const LIST_DENSITIES = ["Default", "Compact"];
 const TABLE_DENSITIES = ["Default", "Compact"];
 // Product / SDK lane. These compose Core primitives and stay domain-specific;
 // see docs/figma-core-gap-audit.md for why they are not promoted into Core.
-const DIRECTION_STEP_TYPES = ["Straight", "Left", "Right", "Destination"];
+// The fourteen cases of 2026-09-20, the same on every platform: the four
+// turns, the six level changes by lift, escalator and stairs, a plain level
+// change, a transition between buildings, and turning back.
+const DIRECTION_STEP_TYPES = [
+  "Straight",
+  "Left",
+  "Right",
+  "Destination",
+  "LiftUp",
+  "LiftDown",
+  "EscalatorUp",
+  "EscalatorDown",
+  "StairsUp",
+  "StairsDown",
+  "LevelUp",
+  "LevelDown",
+  "Transition",
+  "TurnBack",
+];
+// Each case's symbol from the Pointr Icon Library, as the React draws
+// Lucide's and the native parts their own sets: ups share an arrow up, downs
+// an arrow down, as the code's ArrowUpFromLine and ArrowDownToLine do.
+const DIRECTION_STEP_ICONS = {
+  Straight: "arrow-up",
+  Left: "arrow-left",
+  Right: "arrow-right",
+  Destination: "marker-pin-01",
+  LiftUp: "arrow-up",
+  LiftDown: "arrow-down",
+  EscalatorUp: "arrow-up",
+  EscalatorDown: "arrow-down",
+  StairsUp: "arrow-up",
+  StairsDown: "arrow-down",
+  LevelUp: "arrow-up",
+  LevelDown: "arrow-down",
+  Transition: "arrow-right",
+  TurnBack: "flip-backward",
+};
 const FLOOR_SELECTOR_VARIANTS = [
   "VerticalList",
   "HorizontalList",
@@ -311,6 +348,7 @@ const LOCATION_PIN_SIZES = ["Sm", "Md", "Lg"];
 const LOCATION_PIN_SIZE_DIAMETERS = { Sm: 24, Md: 32, Lg: 40 };
 const POI_CARD_CONTENT = ["Basic", "Media", "Full"];
 const WAYFINDING_CARD_CONTENT = ["Basic", "Titled"];
+const DIRECTION_STEP_ICON_SIZE = 24;
 const ADAPTIVE_MAP_SHELL_PANEL_PLACEMENTS = ["Start", "End"];
 const MAP_CONTROL_BUTTON_PRESENTATIONS = ["IconOnly", "Labelled"];
 
@@ -399,6 +437,15 @@ const CATEGORY_FIELD_LABEL_FONT_SIZE = 15;
 const CATEGORY_FIELD_LABEL_LINE_HEIGHT = 20;
 /** The symbol a fresh field carries, from the Pointr Icon Library. */
 const CATEGORY_FIELD_DEFAULT_ICON = "bus";
+// AISearchButton, the prototype's, measured twice: a 48 circle whose ring is
+// a band 2.5 wide around a 43 disc, with a 16 icon.
+const AI_SEARCH_BUTTON_STATES = ["Default", "Disabled"];
+const AI_SEARCH_BUTTON_SIZE = 48;
+const AI_SEARCH_BUTTON_DISC_SIZE = 43;
+const AI_SEARCH_BUTTON_RING_BAND = 2.5;
+const AI_SEARCH_BUTTON_ICON_SIZE = 16;
+/** The sparkles, from the Pointr Icon Library. */
+const AI_SEARCH_BUTTON_ICON = "stars-01";
 const POI_MEDIA_GALLERY_CONTENT = ["Single", "Multiple", "Empty"];
 const POI_RESULT_CARD_STATES = [
   "Default",
@@ -788,6 +835,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   Stack: 520,
   List: 360,
   Table: 520,
+  AISearchButton: 260,
   AdaptiveMapShell: 520,
   BrowseCategoriesPanel: 460,
   CategoryField: 260,
@@ -914,6 +962,7 @@ const COMPONENT_PAGE_LAYOUT_SECTIONS = [
     // domain-neutral and designers can see the boundary on the page.
     title: "Product / SDK",
     components: [
+      "AISearchButton",
       "AdaptiveMapShell",
       "BrowseCategoriesPanel",
       "CategoryField",
@@ -1323,6 +1372,28 @@ const COMPONENT_DOCS = [
       "Empty replaces the grid, so assistive technology never reads an empty list.",
       "The panel needs an accessible name via label so it reads as one region.",
       "Category selection state belongs to CategoryTile, not to the panel.",
+    ],
+  },
+  {
+    componentName: "AISearchButton",
+    componentSetName: "AISearchButton",
+    category: "Product / SDK",
+    summary:
+      "AISearchButton is the search row's AI search: a 48 circle with a gradient ring that turns.",
+    usage: [
+      "Use beside the search field, 48 to its 44, as the prototype does.",
+      "The ring turns in the product; keep it at rest in a static design.",
+      "Disabled dims the whole button; the ring keeps its colours.",
+    ],
+    api: [
+      "State maps to disabled.",
+      "Icon maps to the 16 symbol in the theme's colour.",
+      "label is what assistive technology hears and draws nothing.",
+    ],
+    properties: ["State: Default, Disabled", "Icon"],
+    accessibility: [
+      "The button shows an icon alone; label names it for assistive technology.",
+      "The turn honours reduced motion in the product; nothing here moves.",
     ],
   },
   {
@@ -3816,6 +3887,14 @@ const KOSMOS_ICON_DEFINITIONS = [
     description: "Triangular warning alert.",
   },
   {
+    name: "arrow-down",
+    figmaName: "arrow-down",
+    category: "Arrows",
+    componentKey: "71dd309b283331f2f7e8f0a81ac5d271f8261a1e",
+    description:
+      "Directional arrow down: a level, lift, escalator or stairs down in a direction step.",
+  },
+  {
     name: "arrow-left",
     figmaName: "arrow-left",
     category: "Arrows",
@@ -3828,6 +3907,14 @@ const KOSMOS_ICON_DEFINITIONS = [
     category: "Arrows",
     componentKey: "1528623f23da482c4fd66789bdbf4a55c1bc59d8",
     description: "Directional arrow right.",
+  },
+  {
+    name: "arrow-up",
+    figmaName: "arrow-up",
+    category: "Arrows",
+    componentKey: "1f94e79365ed691bc3a1366877306673b59fe4ac",
+    description:
+      "Directional arrow up: straight on, or a level, lift, escalator or stairs up in a direction step.",
   },
   {
     name: "bell-01",
@@ -3919,6 +4006,13 @@ const KOSMOS_ICON_DEFINITIONS = [
     category: "General",
     componentKey: "44041483f36de252124b379a891fc00dccb059dd",
     description: "Edit action.",
+  },
+  {
+    name: "flip-backward",
+    figmaName: "flip-backward",
+    category: "Arrows",
+    componentKey: "7ab448945c2c0d2fb297f5af60f2c1db22f90934",
+    description: "Turn back: the direction step that reverses.",
   },
   {
     name: "home-line",
@@ -4017,6 +4111,13 @@ const KOSMOS_ICON_DEFINITIONS = [
     category: "General",
     componentKey: "c2a934a796c047d31d851feee464f4b8beab765a",
     description: "Settings.",
+  },
+  {
+    name: "stars-01",
+    figmaName: "stars-01",
+    category: "Weather",
+    componentKey: "680106b4a77489c9753dffe6f193683c0940f477",
+    description: "Sparkles: the AI search.",
   },
   {
     name: "trash-01",
@@ -4969,6 +5070,16 @@ const COMPONENT_FLOAT_TOKENS = [
     name: "CategoryField/label/line-height",
     value: CATEGORY_FIELD_LABEL_LINE_HEIGHT,
     scopes: ["LINE_HEIGHT"],
+  },
+  {
+    name: "AISearchButton/size",
+    value: AI_SEARCH_BUTTON_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "AISearchButton/icon/size",
+    value: AI_SEARCH_BUTTON_ICON_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
   },
   { name: "MapView/width/default", value: 480, scopes: ["WIDTH_HEIGHT"] },
   { name: "MapView/height/default", value: 320, scopes: ["WIDTH_HEIGHT"] },
@@ -9628,6 +9739,7 @@ const CORE_UPDATE_SEQUENCE = [
 // to any of them makes all of these stale at once — which is exactly the
 // situation that makes updating them one at a time tedious.
 const PRODUCT_SDK_UPDATE_SEQUENCE = [
+  ["AISearchButton", updateAISearchButtonComponent],
   ["AdaptiveMapShell", updateAdaptiveMapShellComponent],
   ["BrowseCategoriesPanel", updateBrowseCategoriesPanelComponent],
   ["CategoryField", updateCategoryFieldComponent],
@@ -9853,6 +9965,9 @@ function additionalComponentActionHandlers() {
     "build-category-field": buildCategoryFieldComponent,
     "update-category-field": updateCategoryFieldComponent,
     "rebuild-category-field": rebuildCategoryFieldComponent,
+    "build-ai-search-button": buildAISearchButtonComponent,
+    "update-ai-search-button": updateAISearchButtonComponent,
+    "rebuild-ai-search-button": rebuildAISearchButtonComponent,
     "build-poi-media-gallery": buildPOIMediaGalleryComponent,
     "update-poi-media-gallery": updatePOIMediaGalleryComponent,
     "rebuild-poi-media-gallery": rebuildPOIMediaGalleryComponent,
@@ -16511,6 +16626,12 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "CategoryField") {
     return {
       Tint: CATEGORY_TINTS,
+    };
+  }
+
+  if (canonicalName === "AISearchButton") {
+    return {
+      State: AI_SEARCH_BUTTON_STATES,
     };
   }
 
@@ -43308,11 +43429,22 @@ async function productSdkText({
 
 // --- DirectionStep ---------------------------------------------------------
 
+// Typed fallbacks for a file without the curated icons.
 const DIRECTION_STEP_GLYPHS = {
   Straight: "↑",
   Left: "←",
   Right: "→",
   Destination: "◉",
+  LiftUp: "↑",
+  LiftDown: "↓",
+  EscalatorUp: "↑",
+  EscalatorDown: "↓",
+  StairsUp: "↑",
+  StairsDown: "↓",
+  LevelUp: "↑",
+  LevelDown: "↓",
+  Transition: "→",
+  TurnBack: "↩",
 };
 
 async function createDirectionStepVariant(args) {
@@ -43357,29 +43489,53 @@ async function updateDirectionStepVariant(
   badge.counterAxisAlignItems = "CENTER";
   badge.resizeWithoutConstraints(40, 40);
   badge.cornerRadius = 20;
+  // The React's `bg-primary/10` behind a `text-primary` symbol.
   badge.fills = [
-    paintFromVariable("Colors/theme/100", "#CAD9FC", variableByName, stats),
+    paintFromVariableWithOpacity(
+      "Colors/theme/500",
+      "#135BEC",
+      0.1,
+      variableByName,
+      stats,
+    ),
   ];
   badge.strokes = [];
 
-  // The turn glyph is intentionally text, not an auto-mirroring icon: a left
-  // turn stays a physical left turn in RTL locales.
-  const glyph = await productSdkText({
-    name: "Direction Glyph",
-    characters: DIRECTION_STEP_GLYPHS[value] || DIRECTION_STEP_GLYPHS.Straight,
-    styleKey: "badgeLabel",
-    fonts,
-    bold: true,
-    fontSize: 18,
-    lineHeight: 24,
-    colorToken: "Colors/theme/700",
-    colorFallback: "#0D44C2",
+  // The symbol is a real icon from the Pointr Icon Library, 24 in the theme's
+  // colour, as the React draws Lucide's; an instance does not mirror, so a
+  // left turn stays a physical left turn in RTL locales. A file without the
+  // curated icons gets the typed glyph.
+  const symbolToken = { name: "Colors/theme/500", fallback: "#135BEC" };
+  const symbol = await productSdkIconInstance({
+    iconName: DIRECTION_STEP_ICONS[value] || DIRECTION_STEP_ICONS.Straight,
+    token: symbolToken,
+    size: DIRECTION_STEP_ICON_SIZE,
+    sizeToken: null,
     variableByName,
     stats,
+    owner: "DirectionStep",
   });
-  glyph.textAlignHorizontal = "CENTER";
-  glyph.textAutoResize = "WIDTH_AND_HEIGHT";
-  badge.appendChild(glyph);
+  if (symbol) {
+    badge.appendChild(symbol);
+  } else {
+    const glyph = await productSdkText({
+      name: "Direction Glyph",
+      characters:
+        DIRECTION_STEP_GLYPHS[value] || DIRECTION_STEP_GLYPHS.Straight,
+      styleKey: "badgeLabel",
+      fonts,
+      bold: true,
+      fontSize: 18,
+      lineHeight: 24,
+      colorToken: symbolToken.name,
+      colorFallback: symbolToken.fallback,
+      variableByName,
+      stats,
+    });
+    glyph.textAlignHorizontal = "CENTER";
+    glyph.textAutoResize = "WIDTH_AND_HEIGHT";
+    badge.appendChild(glyph);
+  }
   appendWithSizing(component, badge, "FIXED", "FIXED");
 
   const copy = figma.createFrame();
@@ -43494,6 +43650,7 @@ function configureDirectionStepProperties(componentSet, stats) {
 
 const DIRECTION_STEP_DESCRIPTION = [
   "Kozmos DirectionStep generated from the React DirectionStep API.",
+  "Type maps to type: the four turns, the six level changes by lift, escalator and stairs, a level change, a transition between buildings, and turning back — each a 24 icon from the Icons page in the theme's colour on a 40 disc at 10 %.",
   "Type maps to DirectionStep.type (straight, left, right, destination).",
   "Instruction Text maps to DirectionStep.instruction.",
   "Distance Text maps to DirectionStep.distance.",
@@ -44932,6 +45089,7 @@ async function fitProductSdkSlotLabel(slot, text, width, height, stats) {
 async function productSdkControlButton({
   name,
   glyph,
+  iconName,
   label,
   pressed,
   fonts,
@@ -44971,23 +45129,46 @@ async function productSdkControlButton({
   ];
   button.strokeWeight = 1;
 
-  const glyphText = await productSdkText({
-    name: name + " Glyph",
-    characters: glyph,
-    styleKey: "badgeLabel",
-    fonts,
-    bold: true,
-    fontSize: 16,
-    lineHeight: 20,
-    colorToken: pressed ? "Colors/theme/700" : "Colors/foreground/0",
-    colorFallback: pressed ? "#0D44C2" : "#000000",
-    variableByName,
-    stats,
-    width: 20,
-  });
-  glyphText.textAlignHorizontal = "CENTER";
-  glyphText.textAutoResize = "WIDTH_AND_HEIGHT";
-  button.appendChild(glyphText);
+  // A real symbol from the Pointr Icon Library when the caller names one and
+  // the file has it — the typed glyph otherwise, so a file without the
+  // curated set still shows a mark. Every glyph the library once typed
+  // (×, ‹, ›, →, ☆, ✎, ◎) has a curated icon now; ⇅ does not.
+  const symbolToken = pressed
+    ? { name: "Colors/theme/700", fallback: "#0D44C2" }
+    : { name: "Colors/foreground/0", fallback: "#000000" };
+  const symbol = iconName
+    ? await productSdkIconInstance({
+        iconName,
+        token: symbolToken,
+        size: 16,
+        sizeToken: null,
+        variableByName,
+        stats,
+        owner: name,
+      })
+    : null;
+  if (symbol) {
+    symbol.name = name + " Icon";
+    button.appendChild(symbol);
+  } else {
+    const glyphText = await productSdkText({
+      name: name + " Glyph",
+      characters: glyph,
+      styleKey: "badgeLabel",
+      fonts,
+      bold: true,
+      fontSize: 16,
+      lineHeight: 20,
+      colorToken: symbolToken.name,
+      colorFallback: symbolToken.fallback,
+      variableByName,
+      stats,
+      width: 20,
+    });
+    glyphText.textAlignHorizontal = "CENTER";
+    glyphText.textAutoResize = "WIDTH_AND_HEIGHT";
+    button.appendChild(glyphText);
+  }
 
   if (labelled) {
     const labelText = await productSdkText({
@@ -45052,6 +45233,7 @@ async function productSdkPanelHeader({
     const close = await productSdkControlButton({
       name: "Close Slot",
       glyph: closeGlyph,
+      iconName: "x-close",
       fonts,
       variableByName,
       stats,
@@ -45580,6 +45762,7 @@ async function updateMapControlsGroupVariant(
   const location = await productSdkControlButton({
     name: "My Location Button",
     glyph: "◎",
+    iconName: "navigation-pointer-01",
     label: labelled ? "My location" : null,
     fonts,
     variableByName,
@@ -45775,6 +45958,11 @@ const POI_DETAIL_PANEL_ACTION_GLYPHS = {
   Save: "☆",
   Share: "↗",
 };
+const POI_DETAIL_PANEL_ACTION_ICONS = {
+  Navigate: "navigation-pointer-01",
+  Save: "bookmark",
+  Share: "share-01",
+};
 
 async function createPOIDetailPanelVariant(args) {
   const component = figma.createComponent();
@@ -45914,6 +46102,7 @@ async function updatePOIDetailPanelVariant(
     const action = await productSdkControlButton({
       name: actionLabel + " Action",
       glyph: POI_DETAIL_PANEL_ACTION_GLYPHS[actionLabel],
+      iconName: POI_DETAIL_PANEL_ACTION_ICONS[actionLabel],
       label: actionLabel,
       fonts,
       variableByName,
@@ -46245,6 +46434,223 @@ async function rebuildBrowseCategoriesPanelComponent() {
 }
 
 // --- CategoryTile ----------------------------------------------------------
+
+// --- AISearchButton --------------------------------------------------------
+
+/**
+ * The ring's colours, in the order the owned CSS runs them: a conic gradient
+ * of the six data colours, red back to red, that turns in the product and
+ * rests here.
+ */
+const AI_SEARCH_BUTTON_RING_STOPS = [
+  { name: "Data/Red", fallback: "#DC2626" },
+  { name: "Data/Yellow", fallback: "#D97706" },
+  { name: "Colors/emotional/success/500", fallback: "#28CC7A" },
+  { name: "Data/Teal", fallback: "#0D9488" },
+  { name: "Data/Blue", fallback: "#2563EB" },
+  { name: "Data/Purple", fallback: "#9333EA" },
+  { name: "Data/Red", fallback: "#DC2626" },
+];
+
+/** An angular gradient whose stops bind to variables where the file has them. */
+function angularGradientFromVariables(stops, variableByName, stats) {
+  const gradientStops = stops.map((stop, index) => {
+    const color = parseColor(stop.fallback);
+    const entry = {
+      position: index / (stops.length - 1),
+      color: { r: color.r, g: color.g, b: color.b, a: 1 },
+    };
+    const variable = variableByName.get(stop.name);
+    if (variable) {
+      entry.boundVariables = {
+        color: { type: "VARIABLE_ALIAS", id: variable.id },
+      };
+    } else {
+      stats.warnings.push(
+        `Missing variable "${stop.name}", used ${stop.fallback}.`,
+      );
+    }
+    return entry;
+  });
+  return {
+    type: "GRADIENT_ANGULAR",
+    gradientTransform: [
+      [1, 0, 0],
+      [0, 1, 0],
+    ],
+    gradientStops,
+  };
+}
+
+async function createAISearchButtonVariant(args) {
+  const component = figma.createComponent();
+  await updateAISearchButtonVariant(component, args);
+  return component;
+}
+
+function parseAISearchButtonVariantName(name) {
+  return productSdkVariantValues(name, "State", AI_SEARCH_BUTTON_STATES);
+}
+
+async function updateAISearchButtonVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const disabled = value === "Disabled";
+  // The prototype's, measured twice: a 48 circle whose gradient gradientRing is a
+  // band two and a half wide around a 43 disc, with a 16 icon in the theme's
+  // colour.
+  productSdkVariantRoot(component, "AISearchButton", `State=${value}`, {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    width: AI_SEARCH_BUTTON_SIZE,
+    height: AI_SEARCH_BUTTON_SIZE,
+  });
+  component.cornerRadius = KOZMOS_RADIUS.pill;
+  component.fills = [];
+  component.strokes = [];
+  component.opacity = disabled ? 0.5 : 1;
+  markControlSurface(component);
+  bindSizeVariables(
+    component,
+    "AISearchButton/size",
+    "AISearchButton/size",
+    variableByName,
+    stats,
+  );
+
+  const gradientRing = figma.createEllipse();
+  gradientRing.name = "Ring";
+  gradientRing.resize(AI_SEARCH_BUTTON_SIZE, AI_SEARCH_BUTTON_SIZE);
+  const gradient = angularGradientFromVariables(
+    AI_SEARCH_BUTTON_RING_STOPS,
+    variableByName,
+    stats,
+  );
+  try {
+    gradientRing.fills = [gradient];
+  } catch (_error) {
+    // A runtime that refuses bound stops takes the plain colours.
+    gradientRing.fills = [
+      Object.assign({}, gradient, {
+        gradientStops: gradient.gradientStops.map((stop) => ({
+          position: stop.position,
+          color: stop.color,
+        })),
+      }),
+    ];
+    stats.warnings.push(
+      "AISearchButton: the gradientRing's stops could not bind to variables; plain colours used.",
+    );
+  }
+  gradientRing.strokes = [];
+  component.appendChild(gradientRing);
+  gradientRing.layoutPositioning = "ABSOLUTE";
+  gradientRing.constraints = { horizontal: "STRETCH", vertical: "STRETCH" };
+  gradientRing.x = 0;
+  gradientRing.y = 0;
+
+  const disc = figma.createEllipse();
+  disc.name = "Disc";
+  disc.resize(AI_SEARCH_BUTTON_DISC_SIZE, AI_SEARCH_BUTTON_DISC_SIZE);
+  disc.fills = [
+    paintFromVariable("Colors/background/0", "#FFFFFF", variableByName, stats),
+  ];
+  disc.strokes = [];
+  component.appendChild(disc);
+  disc.layoutPositioning = "ABSOLUTE";
+  disc.constraints = { horizontal: "CENTER", vertical: "CENTER" };
+  disc.x = AI_SEARCH_BUTTON_RING_BAND;
+  disc.y = AI_SEARCH_BUTTON_RING_BAND;
+
+  const icon = await productSdkIconInstance({
+    iconName: AI_SEARCH_BUTTON_ICON,
+    token: { name: "Colors/theme/500", fallback: "#135BEC" },
+    size: AI_SEARCH_BUTTON_ICON_SIZE,
+    sizeToken: "AISearchButton/icon/size",
+    variableByName,
+    stats,
+    owner: "AISearchButton",
+  });
+  if (icon) appendWithSizing(component, icon, "FIXED", "FIXED");
+}
+
+async function configureAISearchButtonProperties(componentSet, stats) {
+  const iconSourceComponents = await findKozmosIconSourceComponents();
+  const preferredValues = iconPreferredValues(iconSourceComponents);
+  const defaultIcon =
+    (await findKozmosIconSourceComponent(AI_SEARCH_BUTTON_ICON)) ||
+    (await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME));
+  const iconProperty = defaultIcon
+    ? ensureInstanceSwapProperty(
+        componentSet,
+        "Icon",
+        defaultIcon.id,
+        stats,
+        preferredValues,
+      )
+    : null;
+  if (!iconProperty) return;
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const icon = directChildNamed(child, "Icon");
+    if (icon && icon.type === "INSTANCE") {
+      bindInstanceSwapProperty(icon, iconProperty, stats);
+    }
+  }
+}
+
+const AI_SEARCH_BUTTON_DESCRIPTION = [
+  "Kozmos AISearchButton generated from the React AISearchButton API — the search row's AI search, the prototype's.",
+  "State maps to disabled; a disabled button is at 50 %.",
+  "A 48 circle: the ring is a band 2.5 wide around a 43 disc, a conic gradient of the six data colours (red, yellow, success, teal, blue, purple, red) that turns in the product — 3.6 s a turn, still under reduced motion — and rests here; the icon is 16 in the theme's colour.",
+  "Icon swaps from the Icons page; label is what assistive technology hears and draws nothing.",
+];
+
+async function buildAISearchButtonComponent() {
+  return buildSingleAxisComponent({
+    componentName: "AISearchButton",
+    componentSetName: "AISearchButton",
+    axisName: "State",
+    values: AI_SEARCH_BUTTON_STATES,
+    x: 80,
+    y: 14900,
+    xStep: 120,
+    createVariant: createAISearchButtonVariant,
+    configureProperties: configureAISearchButtonProperties,
+    autoReorganize: true,
+    description: AI_SEARCH_BUTTON_DESCRIPTION,
+  });
+}
+
+async function updateAISearchButtonComponent() {
+  return updateSingleAxisComponent({
+    componentName: "AISearchButton",
+    componentSetName: "AISearchButton",
+    axisName: "State",
+    values: AI_SEARCH_BUTTON_STATES,
+    xStep: 120,
+    createVariant: createAISearchButtonVariant,
+    updateVariant: updateAISearchButtonVariant,
+    parseVariantName: parseAISearchButtonVariantName,
+    configureProperties: configureAISearchButtonProperties,
+    autoReorganize: true,
+    description: AI_SEARCH_BUTTON_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildAISearchButtonComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "AISearchButton",
+    componentSetName: "AISearchButton",
+    build: buildAISearchButtonComponent,
+  });
+}
 
 // --- CategoryField ---------------------------------------------------------
 
@@ -47022,6 +47428,7 @@ async function updatePOIMediaGalleryVariant(
   const previous = await productSdkControlButton({
     name: "Previous Button",
     glyph: "‹",
+    iconName: "chevron-left",
     fonts,
     variableByName,
     stats,
@@ -47048,6 +47455,7 @@ async function updatePOIMediaGalleryVariant(
   const next = await productSdkControlButton({
     name: "Next Button",
     glyph: "›",
+    iconName: "chevron-right",
     fonts,
     variableByName,
     stats,
@@ -47798,6 +48206,7 @@ async function updateRoutePreviewPanelVariant(
   const back = await productSdkControlButton({
     name: "Back Button",
     glyph: "‹",
+    iconName: "chevron-left",
     label: "Back",
     fonts,
     variableByName,
@@ -47807,6 +48216,7 @@ async function updateRoutePreviewPanelVariant(
   const proceed = await productSdkControlButton({
     name: "Continue Button",
     glyph: "→",
+    iconName: "arrow-right",
     label: "Continue",
     pressed: ready,
     fonts,
@@ -47973,6 +48383,7 @@ async function updateRouteSummaryVariant(
   const action = await productSdkControlButton({
     name: active ? "End Route Button" : "Start Navigation Button",
     glyph: active ? "×" : "→",
+    iconName: active ? "x-close" : "arrow-right",
     label: active ? "End" : "Start",
     pressed: !active,
     fonts,
@@ -48282,6 +48693,7 @@ async function updateSaveLocationCardVariant(
   const save = await productSdkControlButton({
     name: "Save Toggle Button",
     glyph: saved ? "★" : "☆",
+    iconName: "bookmark",
     label: saved ? "Saved" : "Save",
     pressed: saved,
     fonts,
@@ -48293,6 +48705,7 @@ async function updateSaveLocationCardVariant(
   const route = await productSdkControlButton({
     name: "Route Button",
     glyph: "→",
+    iconName: "arrow-right",
     fonts,
     variableByName,
     stats,
@@ -48302,6 +48715,7 @@ async function updateSaveLocationCardVariant(
   const note = await productSdkControlButton({
     name: "Edit Note Button",
     glyph: "✎",
+    iconName: "edit-01",
     fonts,
     variableByName,
     stats,

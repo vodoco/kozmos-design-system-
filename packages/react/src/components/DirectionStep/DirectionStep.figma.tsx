@@ -6,11 +6,24 @@ const directionStepUrl =
 
 figma.connect(DirectionStep, directionStepUrl, {
   props: {
+    // The fourteen cases of the 20th: the four turns, the six level changes
+    // by lift, escalator and stairs, a plain level change, a transition
+    // between buildings, and turning back.
     type: figma.enum("Type", {
       Straight: "straight",
       Left: "left",
       Right: "right",
       Destination: "destination",
+      LiftUp: "lift-up",
+      LiftDown: "lift-down",
+      EscalatorUp: "escalator-up",
+      EscalatorDown: "escalator-down",
+      StairsUp: "stairs-up",
+      StairsDown: "stairs-down",
+      LevelUp: "level-up",
+      LevelDown: "level-down",
+      Transition: "transition",
+      TurnBack: "turn-back",
     }),
     instruction: figma.string("Instruction Text"),
     distance: figma.string("Distance Text"),

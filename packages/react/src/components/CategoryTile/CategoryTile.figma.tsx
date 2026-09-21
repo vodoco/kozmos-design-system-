@@ -11,13 +11,8 @@ declare const selectCategory: CategoryTileProps["onSelect"];
 
 // The Tint axis: Theme is a tile with no tint; the eight are the taxonomy's
 // quick-access colours as the Semantics.Category tokens' CSS variables — the
-// accent, the fill and the ink that reads on it.
-const tintFor = (name: string) => ({
-  accent: `var(--semantics-category-accent-${name})`,
-  fill: `var(--semantics-category-fill-${name})`,
-  onFill: `var(--semantics-category-on-fill-${name})`,
-});
-
+// accent, the fill and the ink that reads on it. Code Connect takes literals
+// only, so each is written out.
 figma.connect(CategoryTile, categoryTileUrl, {
   props: {
     label: figma.string("Label Text"),
@@ -33,14 +28,46 @@ figma.connect(CategoryTile, categoryTileUrl, {
     }),
     tint: figma.enum("Tint", {
       Theme: undefined,
-      Yellow: tintFor("yellow"),
-      Orange: tintFor("orange"),
-      Turquoise: tintFor("turquoise"),
-      Red: tintFor("red"),
-      Blue: tintFor("blue"),
-      Navy: tintFor("navy"),
-      Green: tintFor("green"),
-      Pink: tintFor("pink"),
+      Yellow: {
+        accent: "var(--semantics-category-accent-yellow)",
+        fill: "var(--semantics-category-fill-yellow)",
+        onFill: "var(--semantics-category-on-fill-yellow)",
+      },
+      Orange: {
+        accent: "var(--semantics-category-accent-orange)",
+        fill: "var(--semantics-category-fill-orange)",
+        onFill: "var(--semantics-category-on-fill-orange)",
+      },
+      Turquoise: {
+        accent: "var(--semantics-category-accent-turquoise)",
+        fill: "var(--semantics-category-fill-turquoise)",
+        onFill: "var(--semantics-category-on-fill-turquoise)",
+      },
+      Red: {
+        accent: "var(--semantics-category-accent-red)",
+        fill: "var(--semantics-category-fill-red)",
+        onFill: "var(--semantics-category-on-fill-red)",
+      },
+      Blue: {
+        accent: "var(--semantics-category-accent-blue)",
+        fill: "var(--semantics-category-fill-blue)",
+        onFill: "var(--semantics-category-on-fill-blue)",
+      },
+      Navy: {
+        accent: "var(--semantics-category-accent-navy)",
+        fill: "var(--semantics-category-fill-navy)",
+        onFill: "var(--semantics-category-on-fill-navy)",
+      },
+      Green: {
+        accent: "var(--semantics-category-accent-green)",
+        fill: "var(--semantics-category-fill-green)",
+        onFill: "var(--semantics-category-on-fill-green)",
+      },
+      Pink: {
+        accent: "var(--semantics-category-accent-pink)",
+        fill: "var(--semantics-category-fill-pink)",
+        onFill: "var(--semantics-category-on-fill-pink)",
+      },
     }),
     // Show Count is category.resultCount being set; the number itself is the
     // nested Counter's text, which is product data.

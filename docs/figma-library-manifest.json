@@ -13948,13 +13948,14 @@
       "stories": 104,
       "tests": 104,
       "exported": 104,
-      "codeConnectFiles": 93,
+      "codeConnectFiles": 95,
       "codeConnectScaffolds": 0,
-      "codeConnectLinked": 93
+      "codeConnectLinked": 95
     },
     "firstBatch": [
       "Accordion",
       "AdaptiveMapShell",
+      "AISearchButton",
       "Alert",
       "Avatar",
       "Backdrop",
@@ -13966,6 +13967,7 @@
       "BrowseCategoriesPanel",
       "Button",
       "Card",
+      "CategoryField",
       "CategoryTile",
       "Checkbox",
       "Chip",
@@ -14140,14 +14142,14 @@
         "test": "packages/react/src/components/AISearchButton/AISearchButton.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/AISearchButton/AISearchButton.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["AISearchButton"],
+          "mappedProps": ["disabled"],
           "unmappedProps": []
         },
         "props": [
@@ -14550,14 +14552,14 @@
         "test": "packages/react/src/components/CategoryField/CategoryField.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/CategoryField/CategoryField.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["CategoryField"],
+          "mappedProps": ["count", "icon", "label", "tint"],
           "unmappedProps": []
         },
         "props": [
@@ -14592,7 +14594,7 @@
           "status": "linked",
           "issues": [],
           "connectedComponents": ["CategoryTile"],
-          "mappedProps": ["category", "icon"],
+          "mappedProps": ["category", "icon", "tint"],
           "unmappedProps": []
         },
         "props": [
@@ -15741,7 +15743,8 @@
             "label",
             "offFloor",
             "selected",
-            "size"
+            "size",
+            "tint"
           ],
           "unmappedProps": []
         },

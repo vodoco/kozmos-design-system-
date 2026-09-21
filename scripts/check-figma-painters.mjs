@@ -107,6 +107,15 @@ function pages() {
     "arrow-right",
     "flip-backward",
     "map-01",
+    "chevron-left",
+    "chevron-right",
+    "chevron-up",
+    "chevron-down",
+    "navigation-pointer-01",
+    "bookmark",
+    "share-01",
+    "edit-01",
+    "stars-01",
   ]) {
     icons.appendChild(mockIconComponent(name));
   }
@@ -132,6 +141,18 @@ const variableByName = mockVariables([
   "CategoryField/clear/size",
   "CategoryField/label/font-size",
   "CategoryField/label/line-height",
+  "AISearchButton/size",
+  "AISearchButton/icon/size",
+  "Data/Red",
+  "Data/Yellow",
+  "Colors/emotional/success/500",
+  "Data/Teal",
+  "Data/Blue",
+  "Data/Purple",
+  "DirectionStep/instruction/font-size",
+  "DirectionStep/instruction/line-height",
+  "DirectionStep/meta/font-size",
+  "DirectionStep/meta/line-height",
   "Surface/0",
   "Surface/100",
   "Border/Subtle",
@@ -769,7 +790,13 @@ section("BrowseCategoriesPanel");
   ];
   // A CategoryTile set for the panel to instance, painted by the plugin itself.
   const tiles = [];
-  for (const tint of plugin.CATEGORY_TINTS) {
+  ok(
+    Array.isArray(plugin.CATEGORY_TINTS) &&
+      typeof plugin.updateCategoryTileVariant === "function" &&
+      typeof plugin.configureCategoryTileProperties === "function",
+    "a CategoryTile with a Tint axis to instance",
+  );
+  for (const tint of plugin.CATEGORY_TINTS || []) {
     const component = figma.createComponent();
     await plugin.updateCategoryTileVariant(component, {
       props: { state: "Default", tint },
@@ -786,7 +813,9 @@ section("BrowseCategoriesPanel");
       variant.name.split(",").map((part) => part.trim().split("=")),
     );
   }
-  await plugin.configureCategoryTileProperties(tileSet, freshStats());
+  if (typeof plugin.configureCategoryTileProperties === "function") {
+    await plugin.configureCategoryTileProperties(tileSet, freshStats());
+  }
 
   const component = figma.createComponent();
   const stats = freshStats();
@@ -842,6 +871,206 @@ section("BrowseCategoriesPanel");
     `no warnings (${stats.warnings.join(" | ")})`,
   );
   tileSet.remove();
+}
+
+// --- DirectionStep ---------------------------------------------------------------
+
+section("DirectionStep");
+{
+  ok(
+    Array.isArray(plugin.DIRECTION_STEP_TYPES) &&
+      plugin.DIRECTION_STEP_TYPES.length === 14 &&
+      plugin.DIRECTION_STEP_TYPES.includes("TurnBack"),
+    "fourteen direction types",
+  );
+  ok(
+    typeof plugin.expectedVariantAxesForComponentSetName === "function" &&
+      JSON.stringify(
+        plugin.expectedVariantAxesForComponentSetName("DirectionStep"),
+      ) === JSON.stringify({ Type: plugin.DIRECTION_STEP_TYPES }),
+    "the set expects the fourteen",
+  );
+  async function paint(value) {
+    const component = figma.createComponent();
+    const stats = freshStats();
+    await plugin.updateDirectionStepVariant(component, {
+      value,
+      variableByName,
+      fonts: FONTS,
+      stats,
+    });
+    return { component, stats };
+  }
+  for (const [type, iconName] of [
+    ["TurnBack", "flip-backward"],
+    ["LiftDown", "arrow-down"],
+    ["Destination", "marker-pin-01"],
+    ["Straight", "arrow-up"],
+  ]) {
+    const { component, stats } = await paint(type);
+    const badge = named(component, "Direction Icon");
+    const icon = badge && badge.findOne((node) => node.type === "INSTANCE");
+    const vector = icon && icon.findOne((node) => node.type === "VECTOR");
+    ok(
+      badge &&
+        badge.width === 40 &&
+        boundVariableName(badge.fills[0]) === "Colors/theme/500" &&
+        Math.abs(badge.fills[0].opacity - 0.1) < 1e-9,
+      `${type}: a 40 disc in the theme's colour at 10 %`,
+    );
+    ok(
+      icon &&
+        icon.width === 24 &&
+        icon.mainComponent.name === `Icon / ${iconName}` &&
+        vector &&
+        boundVariableName(vector.strokes[0]) === "Colors/theme/500",
+      `${type}: a 24 ${iconName} icon in the theme's colour`,
+    );
+    ok(!named(component, "Direction Glyph"), `${type}: no typed glyph`);
+    ok(
+      stats.warnings.length === 0,
+      `${type}: no warnings (${stats.warnings.join(" | ")})`,
+    );
+  }
+}
+
+// --- AISearchButton --------------------------------------------------------------
+
+section("AISearchButton");
+{
+  ok(
+    Array.isArray(plugin.AI_SEARCH_BUTTON_STATES) &&
+      plugin.AI_SEARCH_BUTTON_STATES.join(",") === "Default,Disabled",
+    "Default and Disabled",
+  );
+  ok(
+    typeof plugin.expectedVariantAxesForComponentSetName === "function" &&
+      JSON.stringify(
+        plugin.expectedVariantAxesForComponentSetName("AISearchButton"),
+      ) === JSON.stringify({ State: plugin.AI_SEARCH_BUTTON_STATES }),
+    "the set expects State",
+  );
+  ok(
+    plugin.PRODUCT_SDK_UPDATE_SEQUENCE.some(
+      ([name]) => name === "AISearchButton",
+    ),
+    "AISearchButton is in the Product / SDK update sequence",
+  );
+  async function paint(value) {
+    const component = figma.createComponent();
+    const stats = freshStats();
+    await plugin.updateAISearchButtonVariant(component, {
+      value,
+      variableByName,
+      fonts: FONTS,
+      stats,
+    });
+    return { component, stats };
+  }
+  const painted =
+    typeof plugin.updateAISearchButtonVariant === "function"
+      ? await paint("Default")
+      : { component: figma.createComponent(), stats: freshStats() };
+  const { component, stats } = painted;
+  ok(
+    typeof plugin.updateAISearchButtonVariant === "function",
+    "AISearchButton has a painter",
+  );
+  ok(
+    component.width === 48 &&
+      component.height === 48 &&
+      component.cornerRadius === plugin.KOZMOS_RADIUS.pill,
+    "a 48 circle",
+  );
+  const ring = named(component, "Ring");
+  ok(ring && ring.type === "ELLIPSE" && ring.width === 48, "a 48 ring");
+  const gradient = ring && ring.fills[0];
+  const stops = (gradient && gradient.gradientStops) || [];
+  const stopNames = stops.map((stop) =>
+    boundVariableName({ boundVariables: stop.boundVariables }),
+  );
+  ok(
+    gradient && gradient.type === "GRADIENT_ANGULAR" && stops.length === 7,
+    "the ring is a conic gradient of seven stops",
+  );
+  ok(
+    stopNames.join(",") ===
+      "Data/Red,Data/Yellow,Colors/emotional/success/500,Data/Teal,Data/Blue,Data/Purple,Data/Red",
+    `the stops are the six data colours, red back to red (got ${stopNames.join(",")})`,
+  );
+  const disc = named(component, "Disc");
+  ok(
+    disc &&
+      disc.width === 43 &&
+      disc.x === 2.5 &&
+      disc.y === 2.5 &&
+      boundVariableName(disc.fills[0]) === "Colors/background/0",
+    "a 43 disc inset 2.5, in the background colour",
+  );
+  const icon = named(component, "Icon");
+  const vector = icon && icon.findOne((node) => node.type === "VECTOR");
+  ok(
+    icon &&
+      icon.width === 16 &&
+      icon.mainComponent.name === "Icon / stars-01" &&
+      vector &&
+      boundVariableName(vector.strokes[0]) === "Colors/theme/500",
+    "a 16 sparkles icon in the theme's colour",
+  );
+  ok(
+    stats.warnings.length === 0,
+    `no warnings (${stats.warnings.join(" | ")})`,
+  );
+  if (typeof plugin.updateAISearchButtonVariant === "function") {
+    const { component: disabled } = await paint("Disabled");
+    ok(disabled.opacity === 0.5, "disabled: at 50 %");
+  }
+}
+
+// --- Typed glyphs become icons -----------------------------------------------------
+
+section("Glyphs");
+{
+  const stats = freshStats();
+  const header = await plugin.productSdkPanelHeader({
+    title: "Kozmos Cafe",
+    titleNodeName: "Title Text",
+    closeGlyph: "×",
+    width: 348,
+    fonts: FONTS,
+    variableByName,
+    stats,
+  });
+  const close = named(header, "Close Slot");
+  const icon = close && named(close, "Close Slot Icon");
+  ok(
+    icon &&
+      icon.type === "INSTANCE" &&
+      icon.mainComponent.name === "Icon / x-close",
+    "the panel header's close is an x-close icon",
+  );
+  ok(!named(header, "Close Slot Glyph"), "no typed × remains");
+  const component = figma.createComponent();
+  await plugin.updatePOIDetailPanelVariant(component, {
+    value: "Panel",
+    variableByName,
+    fonts: FONTS,
+    stats: freshStats(),
+  });
+  for (const [action, iconName] of [
+    ["Navigate", "navigation-pointer-01"],
+    ["Save", "bookmark"],
+    ["Share", "share-01"],
+  ]) {
+    const button = named(component, `${action} Action`);
+    const mark = button && named(button, `${action} Action Icon`);
+    ok(
+      mark &&
+        mark.mainComponent.name === `Icon / ${iconName}` &&
+        !named(button, `${action} Action Glyph`),
+      `the POI panel's ${action} is a ${iconName} icon`,
+    );
+  }
 }
 
 // --- Summary ---------------------------------------------------------------------
