@@ -71,9 +71,9 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     /// count live from what this session has marked (`count(of:)`).
     @Published private(set) var tileCounts: [String: Int]?
     private var loggedPlaceCount = -1
-    /// Whether the chosen category's places wear the Kozmos pin on the map,
-    /// through the SDK's per-place styles (`updatePoiStyles`), reset on clear.
-    private var stylesPlaces = false
+    /// Whether the chosen category's places are marked on the map through
+    /// the SDK's per-place styles (`updatePoiStyles`), reset on clear.
+    private var marksPlaces = false
     /// The places opened this session, most recent first, at most three: what
     /// the focused, empty field offers, as the prototype's "Recently visited".
     @Published private(set) var recents: [PTRPoi] = []
@@ -301,33 +301,31 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
             updateLevel(level)
             widget?.mapViewController.showLevel(level, shouldZoomToLevel: true)
         }
-        showPins(at: shown, tint: category.tint.color)
+        markPlaces(shown)
     }
     func clearCategory() {
         category = nil
         widget?.mapViewController.poisToShow = nil
-        clearPins()
+        clearMarks()
     }
 
-    /// Colour-matching markers (Olcay, 21st): each of the category's places
-    /// wears the Kozmos pin in the category's colour as its marker image on
-    /// the map, through the SDK's per-place style — its own marker, restyled,
-    /// not a second one over it — on every level the places are on. The pin
-    /// is rendered once; the SDK's `PTRMapMarker` views were tried first and
-    /// drew nothing, snapshot or not.
-    private func showPins(at places: [PTRPoi], tint: Color) {
-        clearPins()
+    /// The category's places marked on the map (Olcay, 21st): a per-place
+    /// style with nothing set gives each its SDK marker's round form in the
+    /// taxonomy's colour for its type — the SDK's own palette, which is the
+    /// one the category tokens carry for the tiles. The SDK draws no view of
+    /// ours: `PTRMapMarker` views drew nothing and a style's `image` drew the
+    /// SDK's icon, so there is no Kozmos pin on this map (the pin with its
+    /// tint serves the web's and Compose's own map views).
+    private func markPlaces(_ places: [PTRPoi]) {
+        clearMarks()
         guard let map = widget?.mapViewController, !places.isEmpty else { return }
-        let renderer = ImageRenderer(content: KozmosLocationPin(size: .md, tint: tint).padding(6))
-        renderer.scale = UIScreen.main.scale
-        guard let image = renderer.uiImage else { return }
-        let styles = places.compactMap { PTRPoiMapStyle(poi: $0, image: image) }
+        let styles = places.compactMap { PTRPoiMapStyle(poi: $0) }
         map.updatePoiStyles(styles)
-        stylesPlaces = !styles.isEmpty
+        marksPlaces = !styles.isEmpty
     }
-    private func clearPins() {
-        if stylesPlaces { widget?.mapViewController.resetAllPoiStyles() }
-        stylesPlaces = false
+    private func clearMarks() {
+        if marksPlaces { widget?.mapViewController.resetAllPoiStyles() }
+        marksPlaces = false
     }
 
     /// The places a tile shows, on every floor, by name.

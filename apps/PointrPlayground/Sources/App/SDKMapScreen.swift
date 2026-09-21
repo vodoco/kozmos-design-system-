@@ -335,9 +335,9 @@ struct SDKMapScreen: View {
     /// The count's spoken form, on the tiles and the chip alike.
     static func placesLabel(_ count: Int) -> String { count == 1 ? "1 place" : "\(count) places" }
 
-    /// The category's colour: the system's data colour the taxonomy's icon
-    /// name maps onto, the theme's for the personal tiles.
-    private func tint(_ category: QuickAccessCategory) -> Color { category.tint.color }
+    /// The category's colours: the taxonomy's palette from the system's
+    /// category tokens, the theme's for the personal tiles.
+    private func tint(_ category: QuickAccessCategory) -> KozmosCategoryTint { category.tint.kozmos }
 
     /// The taxonomy's published icon, drawn in the theme's colour as the
     /// prototype draws its tiles; the personal tiles use a symbol.
@@ -529,19 +529,21 @@ struct SDKMapHost: UIViewControllerRepresentable {
 }
 
 extension QuickAccessCategory.Tint {
-    /// The system's data colour the taxonomy's icon colour maps onto; the
-    /// theme's for the personal tiles. The tiles, the chosen category's
-    /// field and the map's pins all wear it.
-    var color: Color {
+    /// The category's colours from the system's category tokens — the
+    /// taxonomy's own palette, so the tile, the chosen category's field and
+    /// the map's markers share it — with the fill's ink chosen for contrast.
+    /// The personal tiles wear the theme's, with the themed button's fill.
+    var kozmos: KozmosCategoryTint {
         switch self {
-        case .theme: return KozmosColors.primitivesColorsTheme700
-        case .red: return KozmosColors.semanticsDataRed
-        case .orange: return KozmosColors.semanticsDataOrange
-        case .yellow: return KozmosColors.semanticsDataYellow
-        case .green: return KozmosColors.primitivesColorsEmotionalSuccess500
-        case .teal: return KozmosColors.semanticsDataTeal
-        case .blue: return KozmosColors.semanticsDataBlue
-        case .purple: return KozmosColors.semanticsDataPurple
+        case .theme: return KozmosCategoryTint(accent: KozmosColors.primitivesColorsTheme500, fill: KozmosInkedFill(fill: KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle, ink: KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle))
+        case .yellow: return KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentYellow, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillYellow, ink: KozmosColors.semanticsCategoryOnfillYellow))
+        case .orange: return KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentOrange, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillOrange, ink: KozmosColors.semanticsCategoryOnfillOrange))
+        case .turquoise: return KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentTurquoise, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillTurquoise, ink: KozmosColors.semanticsCategoryOnfillTurquoise))
+        case .red: return KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentRed, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillRed, ink: KozmosColors.semanticsCategoryOnfillRed))
+        case .blue: return KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentBlue, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillBlue, ink: KozmosColors.semanticsCategoryOnfillBlue))
+        case .navy: return KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentNavy, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillNavy, ink: KozmosColors.semanticsCategoryOnfillNavy))
+        case .green: return KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentGreen, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillGreen, ink: KozmosColors.semanticsCategoryOnfillGreen))
+        case .pink: return KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentPink, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillPink, ink: KozmosColors.semanticsCategoryOnfillPink))
         }
     }
 }

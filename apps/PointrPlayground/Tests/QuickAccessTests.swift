@@ -65,7 +65,7 @@ final class QuickAccessTests: XCTestCase {
     func testEveryCategoryIsCountedInOnePassAndAgreesWithTheMatch() {
         let gates = QuickAccessCategory(id: "gates", name: "Gates", icon: .symbol("x"), terms: ["gate"], tint: .theme)
         let dining = QuickAccessCategory(id: "dining", name: "Dining", icon: .symbol("x"), terms: ["restaurant", "coffee shop"], tint: .orange)
-        let lounges = QuickAccessCategory(id: "lounges", name: "Lounges", icon: .symbol("x"), terms: ["lounge"], tint: .purple)
+        let lounges = QuickAccessCategory(id: "lounges", name: "Lounges", icon: .symbol("x"), terms: ["lounge"], tint: .pink)
         let places: [(name: String, freeText: [String])] = [
             ("Gate B22", []), ("Gate C1", ["boarding"]), ("Dunkin'", ["Coffee Shop"]),
             ("Legal Sea Foods", ["restaurant", "seafood"]), ("Restroom", ["gates level"]),

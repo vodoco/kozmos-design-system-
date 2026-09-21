@@ -31,23 +31,25 @@ struct QuickAccessCategory: Identifiable, Hashable {
         case symbol(String)
     }
 
-    /// The taxonomy names its quick-access icons by colour; each maps onto
-    /// the system's data colours, the theme for the personal tiles.
+    /// The taxonomy names its quick-access icons by colour — its eight — and
+    /// the system carries that palette as `Semantics.Category`; the theme's
+    /// colours are the personal tiles'.
     enum Tint: String, Hashable, CaseIterable {
-        case theme, red, orange, yellow, green, teal, blue, purple
+        case theme, yellow, orange, turquoise, red, blue, navy, green, pink
 
         static func from(iconUrl: String) -> Tint {
             let name = iconUrl.split(separator: "/").last.map(String.init) ?? ""
             let stem = name.replacingOccurrences(of: ".png", with: "")
             guard let suffix = stem.split(separator: "-").last.map(String.init) else { return .theme }
             switch suffix {
-            case "red": return .red
-            case "orange": return .orange
             case "yellow": return .yellow
+            case "orange": return .orange
+            case "turquoise", "teal": return .turquoise
+            case "red": return .red
+            case "blue": return .blue
+            case "navy": return .navy
             case "green": return .green
-            case "turquoise", "teal": return .teal
-            case "blue", "navy": return .blue
-            case "pink", "purple": return .purple
+            case "pink", "purple": return .pink
             default: return .theme
             }
         }
