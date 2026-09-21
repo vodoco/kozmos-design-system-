@@ -6,7 +6,7 @@ import Figma
 // packages/ios/figma.linked.config.json. Until then the file is not published.
 struct KozmosCategoryFieldConnect: FigmaConnect {
     let component = KozmosCategoryField<Image>.self
-    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0"
+    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1933-9257"
 
     @FigmaString("Label Text")
     var label: String = "Gates"

@@ -8,7 +8,7 @@ import Figma
 // view takes the environment's `isEnabled`, as every SwiftUI control does.
 struct KozmosAISearchButtonConnect: FigmaConnect {
     let component = KozmosAISearchButton.self
-    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0"
+    let figmaNodeUrl = "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1933-9270"
 
     // The ring turns in the product (3.6 s a turn, still under Reduce Motion);
     // Figma holds it at rest. label is what VoiceOver hears.

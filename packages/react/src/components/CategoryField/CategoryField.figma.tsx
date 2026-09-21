@@ -5,7 +5,7 @@ import { CategoryField, type CategoryFieldProps } from "./CategoryField";
 // the node id its log prints here and add this file and CategoryField.tsx to
 // figma.linked.config.json. Until then the file is not published.
 const categoryFieldUrl =
-  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0";
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1933-9257";
 
 declare const categoryIcon: CategoryFieldProps["icon"];
 declare const clearCategory: CategoryFieldProps["onClear"];

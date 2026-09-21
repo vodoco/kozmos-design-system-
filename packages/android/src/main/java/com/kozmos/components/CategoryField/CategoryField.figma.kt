@@ -13,7 +13,7 @@ import com.kozmos.tokens.KozmosColors
 // the node id its log prints here and add this file and CategoryField.kt to
 // packages/android/figma.linked.config.json. Until then the file is not
 // published.
-@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0")
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1933-9257")
 class KozmosCategoryFieldConnect {
     @FigmaProperty(FigmaType.Text, "Label Text")
     val label: String = "Gates"

@@ -14,13 +14,13 @@
     "publishStatus": "ready",
     "linkedPublishCommand": "pnpm figma:publish:linked:dry",
     "linkedPublishConfig": "figma.linked.config.json",
-    "linkedPublishStatus": "ready for the current 91 Core React component-set mappings",
+    "linkedPublishStatus": "ready for the current 93 Core React component-set mappings",
     "nativeLinkedPublishCommand": "pnpm figma:publish:native:linked:dry",
     "nativeLinkedPublishConfigs": [
       "packages/ios/figma.linked.config.json",
       "packages/android/figma.linked.config.json"
     ],
-    "nativeLinkedPublishStatus": "ready for the current 92 Core SwiftUI and 92 Core Compose component-set mappings"
+    "nativeLinkedPublishStatus": "ready for the current 94 Core SwiftUI and 94 Core Compose component-set mappings"
   },
   "tokens": {
     "summary": {
@@ -14144,7 +14144,7 @@
         "codeConnect": {
           "file": "packages/react/src/components/AISearchButton/AISearchButton.figma.tsx",
           "linked": true,
-          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0",
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1933-9270",
           "needsNodeId": false,
           "status": "linked",
           "issues": [],
@@ -14554,7 +14554,7 @@
         "codeConnect": {
           "file": "packages/react/src/components/CategoryField/CategoryField.figma.tsx",
           "linked": true,
-          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0",
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1933-9257",
           "needsNodeId": false,
           "status": "linked",
           "issues": [],

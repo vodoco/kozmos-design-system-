@@ -10,7 +10,7 @@ import com.figma.code.connect.FigmaType
 // the node id its log prints here and add this file and AISearchButton.kt to
 // packages/android/figma.linked.config.json. Until then the file is not
 // published.
-@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0")
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1933-9270")
 class KozmosAISearchButtonConnect {
     @FigmaProperty(FigmaType.Enum, "State")
     val enabled: Boolean = Figma.mapping(

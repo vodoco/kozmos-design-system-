@@ -5,7 +5,7 @@ import { AISearchButton } from "./AISearchButton";
 // the node id its log prints here and add this file and AISearchButton.tsx to
 // figma.linked.config.json. Until then the file is not published.
 const aiSearchButtonUrl =
-  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=0-0";
+  "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1933-9270";
 
 figma.connect(AISearchButton, aiSearchButtonUrl, {
   props: {
