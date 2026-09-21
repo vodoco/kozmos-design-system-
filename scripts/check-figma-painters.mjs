@@ -1267,6 +1267,67 @@ section("Icon tint repair");
       !again.iconSlotPaintRepairs && again.iconSlotRetintsSkipped === 1,
       "a second Update finds the paint right and skips",
     );
+
+    // The dark-mode failures in the 2026-09-21 audit: Secondary, Glass,
+    // Outline and Ghost take Colors/foreground/0, whose light value is the
+    // Icons page glyph's own black. An unbound black glyph matched the
+    // fallback, passed as right, and stayed black on the dark surfaces (1.0
+    // on Outline and Ghost, 1.61 on Secondary, 1.2 on Glass). A variable in
+    // the file must be bound; the fallback serves only when it is missing.
+    const neutralToken = "Colors/foreground/0";
+    const neutral = { foreground: neutralToken, foregroundFallback: "#000000" };
+    const neutralIcon = plugin.createIconSlotInstance(
+      source,
+      neutralToken,
+      "#000000",
+      variableByName,
+      freshStats(),
+      16,
+      null,
+    );
+    const neutralVector = neutralIcon.findOne((node) => node.type === "VECTOR");
+    neutralVector.strokes = [
+      { type: "SOLID", color: { r: 0, g: 0, b: 0 }, opacity: 1, visible: true },
+    ];
+    const neutralStats = freshStats();
+    plugin.syncIconSlotInstance(
+      neutralIcon,
+      neutral,
+      variableByName,
+      neutralStats,
+      16,
+      null,
+    );
+    ok(
+      boundVariableName(neutralVector.strokes[0]) === neutralToken,
+      "an unbound black icon is bound to Colors/foreground/0, though its colour matches the fallback",
+    );
+    ok(
+      neutralStats.iconSlotPaintRepairs === 1,
+      "and the repair is counted",
+    );
+
+    const missingToken = "Colors/not-in-this-file/500";
+    const missing = { foreground: missingToken, foregroundFallback: "#000000" };
+    const loneIcon = plugin.createIconSlotInstance(
+      source,
+      missingToken,
+      "#000000",
+      variableByName,
+      freshStats(),
+      16,
+      null,
+    );
+    const loneVector = loneIcon.findOne((node) => node.type === "VECTOR");
+    loneVector.strokes = [
+      { type: "SOLID", color: { r: 0, g: 0, b: 0 }, opacity: 1, visible: true },
+    ];
+    const loneStats = freshStats();
+    plugin.syncIconSlotInstance(loneIcon, missing, variableByName, loneStats, 16, null);
+    ok(
+      !loneStats.iconSlotPaintRepairs && loneStats.iconSlotRetintsSkipped === 1,
+      "with its variable missing from the file, the fallback colour is right",
+    );
   }
 }
 

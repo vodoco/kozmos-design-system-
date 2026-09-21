@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "4b34d2e5ce77";
+const PLUGIN_BUILD = "22b3d38b173b";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -70080,7 +70080,18 @@ function iconSlotPaintIsExpected(icon, config, variableByName) {
       seen = true;
       const bound = paint.boundVariables && paint.boundVariables.color;
       if (variable && bound && bound.id === variable.id) continue;
-      if (!bound && paint.color && hexOf(paint.color) === expectedHex) continue;
+      // The fallback colour is right only when the variable is not in the
+      // file. With it there, an unbound paint of the same light colour does
+      // not follow the mode: Colors/foreground/0's light value is the Icons
+      // page glyph's own black, and those icons stayed black in dark mode.
+      if (
+        !variable &&
+        !bound &&
+        paint.color &&
+        hexOf(paint.color) === expectedHex
+      ) {
+        continue;
+      }
       expected = false;
     }
     if (node.children) {
