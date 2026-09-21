@@ -339,7 +339,7 @@ Which build ran is the first thing to read. The panel's header shows it ("Build 
 Audit Library report carries it as `pluginBuild`; a report without it came from a build before
 `50ba616`. Update All Core resumes by build stamp, so after any plugin change it starts again at
 Link: update the sets the change touched, one at a time, instead
-([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `ed50a03a1912`).
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `314962f54832`).
 The painter check also refuses the layout sizing Figma refuses and counts the nodes a lookup
 visits, so a painter that asks for HUG on an icon, FILL before an append, or a whole-file search
 per variant fails there first.
@@ -517,9 +517,12 @@ _Added on the 21st, evening, from the Figma drift
 - A search of `figma.root.children` in order walks the whole Components page (27,459 nodes in
   the live file) before Icons; the Tree block's 1,044 icon lookups stalled Update All Core. Read
   the page a component lives on first.
-- A bound paint's own opacity is not to be relied on: over REST the live file kept
-  CategoryField's 0.12 and lost CategoryTile's and DirectionStep's, from the same helper.
-  Translucency lives on layer opacity, and the audit composites those layers.
+- A strength laid on a bound paint is not to be relied on: over REST the live file kept
+  CategoryField's 0.12 and lost CategoryTile's and DirectionStep's, from the same helper, so a
+  wash's strength lives on layer opacity and the audit composites those layers. A token's own
+  alpha is another matter: it rides on the paint and shows (Overlay/Scrim at 0.502 draws
+  128/255), while the variable's alpha does not; binding a translucent token at 1 drew Button's
+  Glass opaque on `ed50a03a1912`.
 - HUG takes an auto-layout frame or text; FILL takes a child of an auto-layout frame, so set it
   after the append. A refusal is recorded in the run log, not thrown.
 - zsh does not split an unquoted `$VAR` into words; pass a list through `xargs`.

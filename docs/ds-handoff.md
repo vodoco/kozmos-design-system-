@@ -1608,3 +1608,13 @@ publish from `main` before it would put back older mappings and drop the imports
 third round, 23 of SwiftUI's 95 nodes read back clean before Figma's daily limit for the Dev
 Mode server refused the rest; the readback now stops at that refusal, and the remaining pass
 waits for the limit to reset.
+
+Olcay's Audit Library at 19:00 ran on `ed50a03a1912` with one set, Button, painted on it; the
+other 95 still carried this morning's builds, so most warnings were the old drawing again. Two
+were plugin defects. `c28921a` had bound every paint at opacity 1 on the premise that a bound
+colour carries its own alpha; rendered over REST, it does not show — Backdrop's scrim at paint
+opacity 0.502 draws 128/255, and Button's Glass, bound at 1, drew as an opaque near-white pill,
+1.03 against its label in Dark. The token's alpha rides on the paint again, and Surface QA's
+Slider spec names its Type axis, the missing instance on each panel (`aa876ce`, build
+`314962f54832`). The painter check (224) fails exactly those five on the old build. Button needs
+its Update again with the other eighteen.

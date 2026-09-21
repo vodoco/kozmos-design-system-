@@ -208,6 +208,9 @@ _Steps 1 to 5 are done in the live file; §9 has the run for the current build._
 - Figma's Dev Mode MCP server answered no tool call for an hour and a half while Figma sat in the
   background, though it still took the handshake, and answered at once when Figma was brought
   to the front. The readback times each call out and stops.
+- A bound colour's own alpha does not show in this file; the paint's opacity does. Binding a
+  translucent token at opacity 1 drew Button's Glass opaque (`ed50a03a1912`). A token's alpha
+  rides on the paint, from its fallback; a strength laid on an opaque token goes on the layer.
 - The Dev Mode server has a daily limit per account, shared with any other use of it: some 500
   calls into the 21st it answered "Rate limit exceeded, please try again tomorrow". A full
   readback is 285 calls; narrow it with `--label` and `--node`. The readback stops at the first
@@ -262,6 +265,7 @@ memory:
 | Which files Code Connect sends         | the three `figma.linked.config.json` files, which are lists: a new mapping goes in by name beside its source file, and `pnpm components:contract:check` fails on a pinned file left out                                                                                                                                                                                                 |
 | A snippet's import line                | `importPaths`: `src/components/*` → `@kozmos/react` in `figma.linked.config.json` and `packages/react/figma.config.json`; `Sources/Components/` → `import Kozmos` in `packages/ios/figma.linked.config.json`; Compose prints each file's own imports                                                                                                                                    |
 | What Dev Mode shows                    | `pnpm figma:connect:readback`, with Figma desktop open on the Core Library and its Dev Mode MCP server on (Preferences)                                                                                                                                                                                                                                                                 |
+| A translucent token's alpha            | the fallback's alpha in the painter's config (`#FCFCFD1A`), which `paintFromVariable` puts on the bound paint; the harness keeps only that alpha and fails any other opacity on a bound paint                                                                                                                                                                                           |
 
 - An instance's plugin data is a label, not its paint. The Button family's icons carried the
   right `foreground-token` and a black paint; a re-tint decided by the label skips them for
@@ -324,20 +328,24 @@ The CategoryField clear's hit area followed the same night: a 44 target around t
 all three platforms (§5, 5; `701f919`). Code Connect followed on his word, published on all three
 platforms (below).
 
-### The run, with build `ed50a03a1912`
+### The run, with build `314962f54832`
 
-1. Close the plugin and run it again; the header must read **Build ed50a03a1912**.
+Build `ed50a03a1912` drew a translucent token opaque (the audit of 19:00, below): do not Update
+anything on it. `314962f54832` (`aa876ce`) is the build to run.
+
+1. Close the plugin and run it again; the header must read **Build 314962f54832**.
 2. Not Update All Core: its resume stamps are per build, so a new build starts it again at Link.
    **Update**, one at a time, never Rebuild: DirectionStep, CategoryField, CategoryTile,
-   LocationPin, ScrollArea, BottomSheet, FileUpload, Button, IconButton, Badge, SearchBar,
-   BottomNavigation, Slider, NavigationItem; then TreeItem, TreeChildItem, TreeParentItem, Tree
-   and Timeline, which now take seconds.
-3. **Build Surface QA**, then **Audit Library**. Expected: no typography, DirectionStep, Button,
-   IconButton, Badge, CategoryField, LocationPin or surface QA warnings; the category icons
-   below 3:1 as advisories, not warnings — the tile's and the field's yellow, orange and
-   turquoise in Light, the field's navy in Dark.
+   LocationPin, ScrollArea, BottomSheet, FileUpload, Button (again: it was updated on
+   `ed50a03a1912`), IconButton, Badge, SearchBar, BottomNavigation, Slider, NavigationItem;
+   then TreeItem, TreeChildItem, TreeParentItem, Tree and Timeline, which now take seconds.
+3. **Build Surface QA**, then **Audit Library**. Expected: no DirectionStep, Button, IconButton,
+   Badge, CategoryTile, CategoryField, LocationPin or surface QA warnings, 64 of 64 Surface QA
+   instances; the category icons below 3:1 as advisories, not warnings — the tile's and the
+   field's yellow, orange and turquoise in Light, the field's navy in Dark. The report's
+   `pluginBuild` must read `314962f54832`.
 4. From the terminal: `pnpm figma:verify`, and the REST read-back of the washes (layer opacity
-   0.12, 0.05, 0.2, 0.1, 0.32, 0.36).
+   0.12, 0.05, 0.2, 0.1, 0.32, 0.36) and of Glass's fill (paint opacity 0.102).
 
 ### Code Connect, published on his word
 
@@ -397,3 +405,37 @@ to reset: `pnpm figma:connect:readback -- --label SwiftUI` with Figma in front, 
 - Backdrop's old node, 606-4596, is gone from the file, so nothing is left showing on it.
 - EmptyState's and Pagination's React snippets import icons from `lucide-react`, a dependency of
   `@kozmos/react`.
+
+### The audit of 19:00 (build `ed50a03a1912`), and what changed after it
+
+Olcay ran Audit Library at 19:00 with the header on `ed50a03a1912`. Over REST, one set carried
+that build: Button. The other 90 carried `c7d1d88351a7` (`414ba00`'s build, the Update All
+Core of the morning) and the Tree block's five `dd9f78a05cc0`. So most of the warnings were
+the old drawing measured by the new audit, the same as at 14:58: DirectionStep's 28, LocationPin's
+18, CategoryTile's 6, CategoryField's 11 and 4, Badge's 3 dark icons. The typography warning of
+14:58 (160 issues) was gone after Apply Text Styles. Two findings were new, and both were defects
+in the plugin:
+
+1. **Button's Glass failed in Dark at 1.03** (`aa876ce`). `c28921a` had made `paintFromVariable`
+   bind every paint at opacity 1, on the premise that a bound colour carries its own alpha. It
+   does not show in this file. Rendered over REST: Backdrop's fill, bound to `Overlay/Scrim` at
+   paint opacity 0.502, draws at 128/255, not a quarter; Button's Glass fill, bound to
+   `Colors/transparent/inverted/10` at 1, draws opaque — a near-white pill under a near-white
+   label in Dark, which is what the audit measured. The paint takes its token's alpha from the
+   fallback again, as before `c28921a`; the audit, which reads the paint's opacity, reads what the
+   file draws, and its reader says so. Only Button was painted on `ed50a03a1912`, so only Button
+   needs its Update again.
+2. **Surface QA drew 60 of 64** (`aa876ce`). Its spec asked Slider for
+   `State=Default, Status=Default`; Slider has a Type axis, so each of the four panels drew a
+   Missing placeholder. The spec names `Type=Single`.
+
+The harness keeps a bound paint's opacity when it equals its token's own alpha (from the
+importer's payload, the same in both modes) and drops any other, so a strength laid on a bound
+paint still fails the check; that assertion now runs last, over every painter. The painter
+check is 224 assertions; against `ed50a03a1912` exactly the five new ones fail: Glass's fill at
+1, its bevel at 1, the Dark label at 1.03, Backdrop's scrim at 1, the Slider spec.
+
+Also read: IconButton's icons were bound between 14:58 and 19:00 (their bound stroke fields
+went from 90 to 102) while its stamp stayed `c7d1d88351a7`, and the Icons page's 56 sources are
+unbound, so the bindings are overrides on the instances. What wrote them is not established; the
+Update in the run above rewrites them either way.
