@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "8d1312c6c6af";
+const PLUGIN_BUILD = "deab322c9bfc";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -3919,7 +3919,7 @@ const KOSMOS_ICON_DEFINITIONS = [
   {
     name: "bell-01",
     figmaName: "bell-01",
-    category: "General",
+    category: "Alerts & feedback",
     componentKey: "3deb23e1ab8a78324a4272df2d048baa50205f39",
     description: "Notification bell.",
   },
@@ -4024,7 +4024,7 @@ const KOSMOS_ICON_DEFINITIONS = [
   {
     name: "info-circle",
     figmaName: "info-circle",
-    category: "Alerts & feedback",
+    category: "General",
     componentKey: "2bd38fbeca52d383efd64031e70c330c21f1b609",
     description: "Informational message.",
   },
@@ -4120,6 +4120,13 @@ const KOSMOS_ICON_DEFINITIONS = [
     description: "Sparkles: the AI search.",
   },
   {
+    name: "switch-vertical-01",
+    figmaName: "switch-vertical-01",
+    category: "Arrows",
+    componentKey: "c04e199fb5878cb19a545a1e8603a894183ed853",
+    description: "Swap the origin and the destination.",
+  },
+  {
     name: "trash-01",
     figmaName: "trash-01",
     category: "General",
@@ -4160,6 +4167,97 @@ const KOSMOS_ICON_DEFINITIONS = [
     category: "General",
     componentKey: "6c340143b2eb690526e4b6d2c04c6a0a0c03a369",
     description: "Close or dismiss.",
+  },
+  {
+    name: "bookmark",
+    figmaName: "bookmark",
+    category: "General",
+    componentKey: "dbe2f0b1fdf585a1bbbda2f68f0a6394d0635f32",
+    description: "Save for later.",
+  },
+  {
+    name: "calendar-check-01",
+    figmaName: "calendar-check-01",
+    category: "Time",
+    componentKey: "7aad0937de475371115a3b50268e80708d7fec7e",
+    description: "A booked or confirmed date.",
+  },
+  {
+    name: "clock-plus",
+    figmaName: "clock-plus",
+    category: "Time",
+    componentKey: "2bf27d3b826ddaf1357624f9ce4307eca5fc1ca9",
+    description: "Added or extended time, such as a wait.",
+  },
+  {
+    name: "eye",
+    figmaName: "eye",
+    category: "General",
+    componentKey: "603f88cb20da15763ca714a7abb6a0dfc1a4335f",
+    description: "Show or preview.",
+  },
+  {
+    name: "feather",
+    figmaName: "feather",
+    category: "Editor",
+    componentKey: "e44fa9b00228bd94dd6d50466efdddc562b296a7",
+    description: "Compose or write.",
+  },
+  {
+    name: "globe-02",
+    figmaName: "globe-02",
+    category: "Maps & travel",
+    componentKey: "1a81617deeeebf17aba2e2ce9b4fa6579f15736d",
+    description: "A website or the wider web.",
+  },
+  {
+    name: "heart",
+    figmaName: "heart",
+    category: "General",
+    componentKey: "948471806ab3c9b78457c71b416caa975fefd9ee",
+    description: "Favourite.",
+  },
+  {
+    name: "layout-alt-02",
+    figmaName: "layout-alt-02",
+    category: "Layout",
+    componentKey: "5b50f2a76860e5306d2796100a8557c94f628591",
+    description: "A menu or listing laid out in sections.",
+  },
+  {
+    name: "loading-01",
+    figmaName: "loading-01",
+    category: "General",
+    componentKey: "ff1e3d55a7a4f9e6c1738816a85395fe7cf399d4",
+    description: "Work in progress.",
+  },
+  {
+    name: "mail-01",
+    figmaName: "mail-01",
+    category: "Communication",
+    componentKey: "5402327e95bbf34225b021d68efa7911435a9194",
+    description: "Email.",
+  },
+  {
+    name: "phone",
+    figmaName: "phone",
+    category: "Communication",
+    componentKey: "037a30997a778ca6775e488f70c2557a860fcf16",
+    description: "Call.",
+  },
+  {
+    name: "share-01",
+    figmaName: "share-01",
+    category: "General",
+    componentKey: "7d782f8eac64798a17cf169483fa586ac3b22fef",
+    description: "Share.",
+  },
+  {
+    name: "shopping-bag-02",
+    figmaName: "shopping-bag-02",
+    category: "Finance & eCommerce",
+    componentKey: "b2fc5c9bd985d3424e2491074f67e4263bed394f",
+    description: "Order or shop.",
   },
 ];
 const COMPONENT_COLLECTION_NAME = "Kozmos Components";
@@ -31207,6 +31305,7 @@ async function buildCounterComponent() {
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
   applyComponentSetDescription(componentSet, "Counter", false, [
     "Kozmos Counter component set generated from React Counter API.",
+    "fill maps to Counter.fill, a host's inked fill: CategoryTile and CategoryField put a category's on their nested instance as an override, the fill on the pill and its ink on the digits, since no one ink reads on every fill.",
     "Tone maps to Counter.tone.",
     "Size maps to Counter.size.",
     "Counter Text maps to Counter children in Code Connect.",
@@ -31265,6 +31364,7 @@ async function updateCounterComponent() {
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
   applyComponentSetDescription(existing, "Counter", true, [
     "Kozmos Counter component set generated from React Counter API.",
+    "fill maps to Counter.fill, a host's inked fill: CategoryTile and CategoryField put a category's on their nested instance as an override, the fill on the pill and its ink on the digits, since no one ink reads on every fill.",
     "Tone maps to Counter.tone.",
     "Size maps to Counter.size.",
     "Counter Text maps to Counter children in Code Connect.",
@@ -43749,6 +43849,7 @@ async function updateFloorSelectorVariant(
     const up = await floorSelectorStepperGlyph(
       "Stepper Up",
       "↑",
+      "chevron-up",
       fonts,
       variableByName,
       stats,
@@ -43822,6 +43923,7 @@ async function updateFloorSelectorVariant(
     const down = await floorSelectorStepperGlyph(
       "Stepper Down",
       "↓",
+      "chevron-down",
       fonts,
       variableByName,
       stats,
@@ -43833,6 +43935,7 @@ async function updateFloorSelectorVariant(
 async function floorSelectorStepperGlyph(
   name,
   glyph,
+  iconName,
   fonts,
   variableByName,
   stats,
@@ -43849,22 +43952,39 @@ async function floorSelectorStepperGlyph(
   frame.fills = [];
   frame.strokes = [];
 
-  const text = await productSdkText({
-    name: `${name} Glyph`,
-    characters: glyph,
-    styleKey: "controlLabel",
-    fonts,
-    bold: true,
-    fontSize: 14,
-    lineHeight: 20,
-    colorToken: "Colors/foreground/400",
-    colorFallback: "#5D626F",
+  // The chevron from the Icons page, as the React draws Lucide's; the typed
+  // arrow for a file without the curated icons.
+  const symbolToken = { name: "Colors/foreground/400", fallback: "#5D626F" };
+  const symbol = await productSdkIconInstance({
+    iconName,
+    token: symbolToken,
+    size: 16,
+    sizeToken: null,
     variableByName,
     stats,
+    owner: "FloorSelector",
   });
-  text.textAlignHorizontal = "CENTER";
-  text.textAutoResize = "WIDTH_AND_HEIGHT";
-  frame.appendChild(text);
+  if (symbol) {
+    symbol.name = `${name} Icon`;
+    frame.appendChild(symbol);
+  } else {
+    const text = await productSdkText({
+      name: `${name} Glyph`,
+      characters: glyph,
+      styleKey: "controlLabel",
+      fonts,
+      bold: true,
+      fontSize: 14,
+      lineHeight: 20,
+      colorToken: symbolToken.name,
+      colorFallback: symbolToken.fallback,
+      variableByName,
+      stats,
+    });
+    text.textAlignHorizontal = "CENTER";
+    text.textAutoResize = "WIDTH_AND_HEIGHT";
+    frame.appendChild(text);
+  }
   setLayoutSizingHorizontal(frame, "FIXED");
   setLayoutSizingVertical(frame, "FIXED");
   return frame;
@@ -45132,7 +45252,7 @@ async function productSdkControlButton({
   // A real symbol from the Pointr Icon Library when the caller names one and
   // the file has it — the typed glyph otherwise, so a file without the
   // curated set still shows a mark. Every glyph the library once typed
-  // (×, ‹, ›, →, ☆, ✎, ◎) has a curated icon now; ⇅ does not.
+  // (×, ‹, ›, →, ☆, ✎, ◎, ⇅, +, −, ◈, ◌) has a curated icon now.
   const symbolToken = pressed
     ? { name: "Colors/theme/700", fallback: "#0D44C2" }
     : { name: "Colors/foreground/0", fallback: "#000000" };
@@ -45705,9 +45825,9 @@ async function rebuildMapControlButtonComponent() {
 // --- MapControlsGroup ------------------------------------------------------
 
 const MAP_CONTROLS_GROUP_BUTTONS = [
-  { name: "Zoom In Button", glyph: "+" },
-  { name: "Zoom Out Button", glyph: "−" },
-  { name: "Compass Button", glyph: "◈" },
+  { name: "Zoom In Button", glyph: "+", iconName: "plus" },
+  { name: "Zoom Out Button", glyph: "−", iconName: "minus" },
+  { name: "Compass Button", glyph: "◈", iconName: "compass-01" },
 ];
 
 async function createMapControlsGroupVariant(args) {
@@ -45750,6 +45870,7 @@ async function updateMapControlsGroupVariant(
     const button = await productSdkControlButton({
       name: spec.name,
       glyph: spec.glyph,
+      iconName: spec.iconName,
       fonts,
       variableByName,
       stats,
@@ -46721,6 +46842,7 @@ async function updateCategoryFieldVariant(
 
   const icon = await productSdkIconInstance({
     iconName: CATEGORY_FIELD_DEFAULT_ICON,
+    fallbackToDefault: true,
     token: tint.accent,
     size: CATEGORY_FIELD_ICON_SIZE,
     sizeToken: "CategoryField/icon/size",
@@ -47021,8 +47143,12 @@ function tokenPaint(token, variableByName, stats, opacity) {
 }
 
 /**
- * A curated icon instance for a Product / SDK part, in a colour: the
- * requested symbol, or the library's default when the file lacks it.
+ * A curated icon instance for a Product / SDK part, in a colour. A slot whose
+ * symbol is product data — a tile's, a field's — takes the library's default
+ * when the file lacks the one asked for (`fallbackToDefault`); a symbol with
+ * a meaning — a close, an arrow, a chevron — takes nothing, and the caller
+ * draws its typed glyph, because a magnifier where a close belongs is worse
+ * than a character. Either way the warning names the icon to curate.
  */
 async function productSdkIconInstance({
   iconName,
@@ -47032,13 +47158,15 @@ async function productSdkIconInstance({
   variableByName,
   stats,
   owner,
+  fallbackToDefault,
 }) {
-  const source =
-    (await findKozmosIconSourceComponent(iconName)) ||
-    (await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME));
+  let source = await findKozmosIconSourceComponent(iconName);
+  if (!source && fallbackToDefault) {
+    source = await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME);
+  }
   if (!source) {
     stats.warnings.push(
-      `${owner}: neither icon "${iconName}" nor "${DEFAULT_CURATED_ICON_NAME}" was found on the Icons page; run Curated Icons first.`,
+      `${owner}: icon "${iconName}" is not on the Icons page; run Curated Icons → Update first.`,
     );
     return null;
   }
@@ -47150,6 +47278,7 @@ async function updateCategoryTileVariant(
 
   const icon = await productSdkIconInstance({
     iconName: CATEGORY_TILE_DEFAULT_ICON,
+    fallbackToDefault: true,
     token: tint.accent,
     size: CATEGORY_TILE_ICON_SIZE,
     sizeToken: "CategoryTile/icon/size",
@@ -48543,6 +48672,7 @@ async function updateRoutingInputGroupVariant(
   const swap = await productSdkControlButton({
     name: "Swap Button",
     glyph: "⇅",
+    iconName: "switch-vertical-01",
     fonts,
     variableByName,
     stats,
@@ -49212,6 +49342,7 @@ async function updateFeedbackCardVariant(
   const submit = await productSdkControlButton({
     name: "Submit Button",
     glyph: submitting ? "◌" : "→",
+    iconName: submitting ? "loading-01" : "arrow-right",
     label: submitting ? "Sending" : "Send feedback",
     pressed: !submitting,
     fonts,

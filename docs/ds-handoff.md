@@ -1551,3 +1551,12 @@ on the old plugin). Code Connect on all three platforms follows; its dry runs pa
 only the properties the live file lacks until Olcay runs the importer
 (`docs/figma-drift-2026-09-21.md` §4). Rulings the same evening: the personal tiles leave the
 grid while empty; the icon button's large size stays 48; the iPhone 17 Pro simulator is English.
+
+The same night's audit, on Olcay's ask, found two defects and fixed them: the icon helper fell
+back to `search-md` for every caller (now only for the two data slots; symbols fall back to
+their typed glyph), and the plugin's curated definitions lacked the registry's thirteen owned
+outlines (now generated from the registry, held to the catalog by the contract check). The
+last typed glyphs — the floor selector's steppers, the map controls, the submit, the swap
+(switch-vertical-01 curated) — draw icons; CategoryField has a contract entry asserted on
+every platform; CI runs the painter and compatibility checks. One decision for Olcay: the
+field's 32 clear has no 44 hit area on any platform, unlike the search bar's clear beside it.

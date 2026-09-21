@@ -95,15 +95,36 @@
         "counterSize": "default",
         "counterTone": "brand",
         "counterOverhang": 4,
-        "tint": "optional category tint — accent, fill, onFill: the accent takes the icon and the selection's stroke, the inked fill the counter; the square stays neutral"
+        "tint": "optional category tint \u2014 accent, fill, onFill: the accent takes the icon and the selection's stroke, the inked fill the counter; the square stays neutral"
       },
       "notes": "resultCount draws as the system's counter at the icon square's top-right, counterOverhang beyond its top and right edges so the icon stays clear; resultCountLabel is its spoken form and draws nothing. A tint is a category tint (accent, fill, onFill) as the chosen-category field wears it; Semantics.Category carries the taxonomy's eight, each fill's ink held to 4.5:1 by the contrast check."
     },
+    "categoryField": {
+      "content": {
+        "height": 48,
+        "radius": "control",
+        "iconSize": 28,
+        "labelFontSize": 15,
+        "labelLineHeight": 20,
+        "labelWeight": "semibold",
+        "pillHeight": 22,
+        "clearSize": 32,
+        "washOpacity": 0.12,
+        "tint": "the category tint, the theme's by default: the accent takes the icon, the label and the 1 border and sits at washOpacity behind; the inked fill takes the count pill"
+      },
+      "notes": "The search field's form once a quick-access category is chosen \u2014 the prototype's, measured on 2026-09-20 \u2014 in the field's place in the search row. The clear's hit area is clearSize on every platform (a decision for Olcay, 2026-09-21: the search bar's clear beside it sits in a 44 hit area). In Figma the label is drawn Medium, the importer's nearest weight to semibold."
+    },
     "locationPin": {
       "sizes": {
-        "small": { "diameter": 24 },
-        "default": { "diameter": 32 },
-        "large": { "diameter": 40 }
+        "small": {
+          "diameter": 24
+        },
+        "default": {
+          "diameter": 32
+        },
+        "large": {
+          "diameter": 40
+        }
       },
       "content": {
         "tint": "optional category tint: its fill is the marker, its onFill the number's ink, over the variant's; a featured pin keeps the alert colour"
@@ -116,7 +137,7 @@
       }
     },
     "counter": {
-      "fill": "optional inked fill — a fill and the ink that reads on it — over the tone's and the emotion's colours; a host passes both, since no one ink reads on every fill",
+      "fill": "optional inked fill \u2014 a fill and the ink that reads on it \u2014 over the tone's and the emotion's colours; a host passes both, since no one ink reads on every fill",
       "tones": ["neutral", "brand", "destructive", "inverse"],
       "sizes": {
         "small": {

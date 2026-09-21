@@ -108,14 +108,14 @@ arrow-down, flip-backward, stars-01.
 component properties, instance swaps; no layout engine) and evaluates `code.js` in a fresh
 context, so every painter is reachable by name. `scripts/check-figma-painters.mjs`
 (`pnpm figma:painters:check`) paints the variants above and asserts the contract's numbers and
-the bindings: 135 assertions. Against the plugin as it was, 70 fail and none crash. It is a
+the bindings: 144 assertions. Against the plugin as it was, 79 fail and none crash. It is a
 unit test of what a painter writes, not a picture of the file.
 
 ## 3. Verified
 
 | Gate                                                        | Result                                                                                                                                                                                                |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm figma:painters:check`                                 | 135 passed on `8c50b97`; 70 failed on `604730c`'s plugin                                                                                                                                              |
+| `pnpm figma:painters:check`                                 | 144 passed on the audit's commit; 79 failed on `604730c`'s plugin                                                                                                                                     |
 | `pnpm components:contract:check`, `pnpm figma:plugin:check` | ok, ok                                                                                                                                                                                                |
 | `pnpm figma:stamp:check`                                    | current after each commit (the hook re-stamps: `8d1312c6c6af`)                                                                                                                                        |
 | `pnpm figma:verify` against the live file                   | the expected reds: presence 97 expected, 2 missing (CategoryField, AISearchButton); variant drift on CategoryTile, LocationPin and DirectionStep; 0 of 95 sets on the new build — until the run in §4 |
@@ -131,11 +131,14 @@ unit test of what a painter writes, not a picture of the file.
 3. **Update** CategoryTile, LocationPin, DirectionStep, POIDetailPanel, IconButton, then
    BrowseCategoriesPanel (it instances CategoryTile). Update renames the pre-Tint variants in
    place, so the node IDs Code Connect pins survive; never Rebuild.
-4. **Build** CategoryField and AISearchButton. Put the node id each log prints into the three
+4. **Apply Text Styles**: two text styles are new, `CategoryTile / Label` (11/14 Regular) and
+   `CategoryField / Label` (15/20 Medium, the importer's nearest weight to semibold); the
+   library audit reports them until they exist.
+5. **Build** CategoryField and AISearchButton. Put the node id each log prints into the three
    Code Connect files of each (`node-id=0-0` today) and add the files to
    `figma.linked.config.json`, `packages/ios/figma.linked.config.json` and
    `packages/android/figma.linked.config.json`.
-5. From the terminal, with the main checkout's `FIGMA_ACCESS_TOKEN` exported (never printed):
+6. From the terminal, with the main checkout's `FIGMA_ACCESS_TOKEN` exported (never printed):
    `pnpm figma:verify` — presence, drift and the glyph count should clear; then
    `pnpm figma:publish:linked:dry`, `figma:publish:ios:linked:dry`,
    `figma:publish:android:linked:dry`; publishing is Olcay's word.
@@ -151,7 +154,13 @@ unit test of what a painter writes, not a picture of the file.
 4. The 15th–19th drift: Tag's and Counter's `emotion` axis, MapControlButton's toggle axes and
    surface, the POI detail panel's anatomy of the 18th (the plugin's actions are still drawn
    buttons, not nested `Button` instances).
-5. `⇅` on RoutingInputGroup's swap; a curated shape is needed first.
+5. **A decision for Olcay:** the CategoryField's clear is 32 with no larger hit area on any
+   platform (React `h-8 w-8`, SwiftUI `.frame(width: 32, height: 32)`, Compose `.size(32.dp)`)
+   while the search bar's clear beside it sits in a 44 hit area. The prototype measured 32 and
+   the 21st's ruling built it so; the recommendation is a 44 hit area around the 32 visual on
+   all three platforms, as the search bar's, once he says so — not changed here.
+6. Pre-existing `pnpm figma:verify` findings, older than the 20th: DynamicIsland's compact and
+   minimal slots are 26 tall in a 24 box, Dialog's and Drawer's primary-action labels 94 wide in 90. Re-verify after the run in §4; what survives is a painter's to fix.
 
 ## 6. Traps met
 
@@ -168,3 +177,31 @@ unit test of what a painter writes, not a picture of the file.
   `expectedVariantAxesForComponentSetName` table; a new axis needs both.
 - The React `AISearchButton` doc comment names the theme ramp; the owned CSS draws the six data
   colours. The CSS is what renders.
+- A helper that falls back to the library's default icon paints a magnifier where a close
+  belongs. The default is right for a slot whose symbol is product data (a tile's, a field's)
+  and wrong for a symbol with a meaning; `productSdkIconInstance` takes `fallbackToDefault`
+  and a symbol's caller draws its glyph instead.
+- The icon registry (`packages/icons/src/registry.ts`) and the plugin's `KOSMOS_ICON_DEFINITIONS`
+  were hand-kept twins and had drifted by thirteen: the POI card's owned outlines were in the
+  registry, never in the plugin, so `bookmark` and `share-01` could not have reached the Icons
+  page. The definitions are now generated from the registry with the catalog's keys, and
+  `pnpm components:contract:check` holds the three together.
+
+## 7. The audit, the same night
+
+Olcay asked for an adversarial pass before proceeding. Verified against the source, not
+memory:
+
+| Suspicion                                                                           | Finding                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does Update create DirectionStep's ten new variants?                                | Yes: `updateSingleAxisComponent` creates every value it has not seen.                                                                                                                                                                                                                                   |
+| Will the plugin's audits flag the tile's visible Counter or the new icon instances? | No: the hidden-Counter audit is Badge's alone; the icon-slot audit counts nodes named `Icon` and only asks that their paint be tintable, which it is.                                                                                                                                                   |
+| The AI ring's gradient transform                                                    | Identity is the centred default for an angular gradient; the start angle is immaterial for a ring that turns in the product.                                                                                                                                                                            |
+| A missing curated icon                                                              | **Defect.** The helper fell back to `search-md` for every caller, so a file without `x-close` would have drawn a magnifier on the close. Fixed: `fallbackToDefault` for the two data slots only; symbols fall back to the typed glyph and warn.                                                         |
+| The POI panel's `bookmark` and `share-01`                                           | **Defect.** In the registry, not in the plugin's definitions (thirteen owned outlines were), so never on the Icons page. Fixed: the definitions are generated from the registry; a parity check in the contract check.                                                                                  |
+| Glyphs still typed                                                                  | FloorSelector's steppers (chevron-up, chevron-down), MapControlsGroup's zoom and compass (plus, minus, compass-01), FeedbackCard's submit (arrow-right, loading-01) and RoutingInputGroup's swap (switch-vertical-01, curated tonight) now draw icons; no typed glyph remains in the plugin's painters. |
+| CI                                                                                  | `pnpm figma:painters:check` and `figma:plugin:check` run beside the stamp check; the painter check reads the contract with `fs`, not an import attribute, for CI's Node 20.                                                                                                                             |
+| CategoryField and the contract                                                      | Added `components.categoryField` (48, 28, 15/20 semibold, 22, 32, 12 %) and assertions on the React, SwiftUI and Compose sources and on the importer's constants — the same guard the tile has.                                                                                                         |
+| The clear's hit area                                                                | 32 on every platform; the search bar's clear beside it has 44. A decision for Olcay (§5).                                                                                                                                                                                                               |
+| The React AISearchButton comment                                                    | Names the theme ramp; the owned CSS draws the six data colours. The Figma ring follows the CSS; the comment is a one-line fix for the next React commit.                                                                                                                                                |
+| Counter's `fill`                                                                    | Now named in the Counter set's description: a host's inked fill is an override on the nested instance.                                                                                                                                                                                                  |

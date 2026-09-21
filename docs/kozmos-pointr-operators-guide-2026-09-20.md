@@ -465,6 +465,11 @@ _Added on the 21st, evening, from the Figma drift
 - A painter that instances a curated icon needs the icon on the Icons page: add it to
   `packages/icons/src/registry.ts` and `KOSMOS_ICON_DEFINITIONS` (component key from
   `docs/figma-pointr-icon-catalog.json`), then run Curated Icons → Update before the set.
+  The plugin's definitions are generated from the registry (the audit of the 21st found the
+  two had drifted by thirteen); `pnpm components:contract:check` holds both to the catalog.
+- A helper that falls back to the library's default icon paints a magnifier where a close
+  belongs: `productSdkIconInstance` falls back only when told (`fallbackToDefault`, the tile's
+  and the field's data slots); a symbol's caller draws its typed glyph instead.
 
 _Added on the 21st, from the sheet stage:_
 

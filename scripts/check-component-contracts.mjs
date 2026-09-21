@@ -196,6 +196,8 @@ const files = {
   reactBadge: "packages/react/src/components/Badge/Badge.tsx",
   reactCategoryTile:
     "packages/react/src/components/CategoryTile/CategoryTile.tsx",
+  reactCategoryField:
+    "packages/react/src/components/CategoryField/CategoryField.tsx",
   reactLocationPin: "packages/react/src/components/LocationPin/LocationPin.tsx",
   reactPOIDetailCss: "packages/react/src/styles/owned-poi-detail.css",
   reactBadgeFigma: "packages/react/src/components/Badge/Badge.figma.tsx",
@@ -307,6 +309,8 @@ const files = {
   iosIconButton: "packages/ios/Sources/Components/IconButton/IconButton.swift",
   iosCategoryTile:
     "packages/ios/Sources/Components/CategoryTile/CategoryTile.swift",
+  iosCategoryField:
+    "packages/ios/Sources/Components/CategoryField/CategoryField.swift",
   iosLocationPin:
     "packages/ios/Sources/Components/LocationPin/LocationPin.swift",
   iosPOIDetailPanel:
@@ -407,6 +411,8 @@ const files = {
     "packages/android/src/main/java/com/kozmos/components/Counter/Counter.kt",
   androidCategoryTile:
     "packages/android/src/main/java/com/kozmos/components/CategoryTile/CategoryTile.kt",
+  androidCategoryField:
+    "packages/android/src/main/java/com/kozmos/components/CategoryField/CategoryField.kt",
   androidLocationPin:
     "packages/android/src/main/java/com/kozmos/components/LocationPin/LocationPin.kt",
   androidPOIDetailPanel:
@@ -538,6 +544,7 @@ const {
   button,
   iconButton,
   categoryTile,
+  categoryField,
   locationPin,
   poiDetailPanel,
   counter,
@@ -1880,6 +1887,179 @@ assertContains(
   "KozmosIconButton = createVueWrapper(IconButton)",
   "Vue IconButton wraps React IconButton",
 );
+
+// CategoryField: the search field's form once a category is chosen — the
+// contract's numbers on every platform and in the importer.
+{
+  const field = categoryField.content;
+  const twips = (px) => px / 4;
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `flex h-${twips(field.height)} min-w-0 items-center`,
+    `React CategoryField ${field.height} tall`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `flex h-${twips(field.iconSize)} w-${twips(field.iconSize)} shrink-0`,
+    `React CategoryField icon at ${field.iconSize}`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `text-[${field.labelFontSize}px] font-${field.labelWeight}`,
+    `React CategoryField label ${field.labelFontSize} ${field.labelWeight}`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `h-[${field.pillHeight}px] min-w-[${field.pillHeight}px]`,
+    `React CategoryField pill ${field.pillHeight}`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `flex h-${twips(field.clearSize)} w-${twips(field.clearSize)} shrink-0`,
+    `React CategoryField clear ${field.clearSize}`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `${Math.round(field.washOpacity * 100)}%, transparent`,
+    `React CategoryField wash at ${field.washOpacity}`,
+  );
+  for (const [name, value] of [
+    ["height", field.height],
+    ["iconSize", field.iconSize],
+    ["pillHeight", field.pillHeight],
+    ["clearSize", field.clearSize],
+  ]) {
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      `static var ${name}: CGFloat { ${value} }`,
+      `iOS CategoryField ${name} ${value}`,
+    );
+  }
+  assertContains(
+    files.iosCategoryField,
+    source.iosCategoryField,
+    `.font(.system(size: ${field.labelFontSize}, weight: .${field.labelWeight}))`,
+    `iOS CategoryField label ${field.labelFontSize} ${field.labelWeight}`,
+  );
+  assertContains(
+    files.iosCategoryField,
+    source.iosCategoryField,
+    `.background(tint.accent.opacity(${field.washOpacity}))`,
+    `iOS CategoryField wash at ${field.washOpacity}`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `.height(${field.height}.dp)`,
+    `Android CategoryField ${field.height} tall`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `Modifier.size(${field.iconSize}.dp)`,
+    `Android CategoryField icon at ${field.iconSize}`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `fontSize = ${field.labelFontSize}.sp,\n                fontWeight = FontWeight.SemiBold`,
+    `Android CategoryField label ${field.labelFontSize} semibold`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `minWidth = ${field.pillHeight}.dp, minHeight = ${field.pillHeight}.dp`,
+    `Android CategoryField pill ${field.pillHeight}`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `.size(${field.clearSize}.dp)`,
+    `Android CategoryField clear ${field.clearSize}`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `alpha = ${field.washOpacity}f`,
+    `Android CategoryField wash at ${field.washOpacity}`,
+  );
+  for (const [name, value] of [
+    ["HEIGHT", field.height],
+    ["ICON_SIZE", field.iconSize],
+    ["PILL_HEIGHT", field.pillHeight],
+    ["CLEAR_SIZE", field.clearSize],
+    ["LABEL_FONT_SIZE", field.labelFontSize],
+    ["LABEL_LINE_HEIGHT", field.labelLineHeight],
+  ]) {
+    assertContains(
+      files.figma,
+      source.figma,
+      `const CATEGORY_FIELD_${name} = ${value};`,
+      `Figma CategoryField ${name} ${value}`,
+    );
+  }
+  assertContains(
+    files.figma,
+    source.figma,
+    `tokenPaint(tint.accent, variableByName, stats, ${field.washOpacity})`,
+    `Figma CategoryField wash at ${field.washOpacity}`,
+  );
+}
+
+// The curated icons: the registry, the plugin's definitions and the catalog
+// agree, name for name and key for key, so a painter never asks the Icons
+// page for a symbol Curated Icons cannot import.
+{
+  const registry = read("packages/icons/src/registry.ts");
+  const namesBlock = registry.slice(
+    registry.indexOf("export const kozmosIconNames = ["),
+    registry.indexOf("] as const"),
+  );
+  const names = [...namesBlock.matchAll(/^\s+"([a-z0-9-]+)",$/gm)].map(
+    (m) => m[1],
+  );
+  const start = source.figma.indexOf("const KOSMOS_ICON_DEFINITIONS = [");
+  const block = source.figma.slice(start, source.figma.indexOf("\n];", start));
+  const definitions = new Map(
+    [
+      ...block.matchAll(
+        /name: "([a-z0-9-]+)",[\s\S]*?componentKey: "([0-9a-f]+)"/g,
+      ),
+    ].map((m) => [m[1], m[2]]),
+  );
+  const catalog = JSON.parse(read("docs/figma-pointr-icon-catalog.json"));
+  const items = Array.isArray(catalog)
+    ? catalog
+    : catalog.icons || Object.values(catalog);
+  const keyByName = new Map(
+    items.map((item) => [item.name, item.componentKey]),
+  );
+  for (const name of names) {
+    if (!definitions.has(name)) {
+      fail(
+        `figma/foundations-importer/code.js: curated icon "${name}" is in the registry but has no KOSMOS_ICON_DEFINITIONS entry`,
+      );
+    } else if (definitions.get(name) !== keyByName.get(name)) {
+      fail(
+        `figma/foundations-importer/code.js: "${name}" carries a component key the catalog does not`,
+      );
+    }
+  }
+  for (const name of definitions.keys()) {
+    if (!names.includes(name)) {
+      fail(
+        `figma/foundations-importer/code.js: "${name}" is defined but packages/icons/src/registry.ts does not name it`,
+      );
+    }
+  }
+}
 
 // Figma generator parity.
 for (const tokenName of [

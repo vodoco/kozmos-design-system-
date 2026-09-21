@@ -12,6 +12,7 @@
  *
  * Usage: node scripts/check-figma-painters.mjs [path/to/code.js]
  */
+import fs from "node:fs";
 import path from "node:path";
 import {
   FONTS,
@@ -30,12 +31,12 @@ const ROOT = process.cwd();
 const PLUGIN = path.resolve(
   process.argv[2] || "figma/foundations-importer/code.js",
 );
-const contract = (
-  await import(
+const contract = JSON.parse(
+  fs.readFileSync(
     path.join(ROOT, "packages/tokens/src/component-contracts.json"),
-    { with: { type: "json" } }
-  )
-).default.components;
+    "utf8",
+  ),
+).components;
 
 let failures = 0;
 let passes = 0;
@@ -116,6 +117,11 @@ function pages() {
     "share-01",
     "edit-01",
     "stars-01",
+    "plus",
+    "minus",
+    "compass-01",
+    "loading-01",
+    "switch-vertical-01",
   ]) {
     icons.appendChild(mockIconComponent(name));
   }
@@ -1069,6 +1075,107 @@ section("Glyphs");
         mark.mainComponent.name === `Icon / ${iconName}` &&
         !named(button, `${action} Action Glyph`),
       `the POI panel's ${action} is a ${iconName} icon`,
+    );
+  }
+}
+
+// --- Icon fallbacks -----------------------------------------------------------------
+
+section("Icon fallbacks");
+{
+  const token = { name: "Colors/foreground/0", fallback: "#000000" };
+  const stats = freshStats();
+  const helper = typeof plugin.productSdkIconInstance === "function";
+  ok(helper, "the plugin has the curated-icon helper");
+  const symbol = !helper
+    ? undefined
+    : await plugin.productSdkIconInstance({
+        iconName: "no-such-icon",
+        token,
+        size: 16,
+        sizeToken: null,
+        variableByName,
+        stats,
+        owner: "Test",
+      });
+  ok(
+    symbol === null,
+    "a symbol the file lacks draws nothing, never the default",
+  );
+  ok(
+    helper &&
+      stats.warnings.length === 1 &&
+      /Curated Icons/.test(stats.warnings[0]),
+    "and says to run Curated Icons",
+  );
+  const slot = !helper
+    ? null
+    : await plugin.productSdkIconInstance({
+        iconName: "no-such-icon",
+        token,
+        size: 24,
+        sizeToken: null,
+        variableByName,
+        stats: freshStats(),
+        owner: "Test",
+        fallbackToDefault: true,
+      });
+  ok(
+    slot &&
+      slot.mainComponent.name === `Icon / ${plugin.DEFAULT_CURATED_ICON_NAME}`,
+    "a slot whose symbol is product data takes the library's default",
+  );
+}
+
+// --- FloorSelector and MapControlsGroup ----------------------------------------------
+
+section("FloorSelector");
+{
+  const component = figma.createComponent();
+  const stats = freshStats();
+  await plugin.updateFloorSelectorVariant(component, {
+    value: "CompactStepper",
+    variableByName,
+    fonts: FONTS,
+    stats,
+  });
+  for (const [name, iconName] of [
+    ["Stepper Up", "chevron-up"],
+    ["Stepper Down", "chevron-down"],
+  ]) {
+    const stepper = named(component, name);
+    const icon = stepper && named(stepper, `${name} Icon`);
+    ok(
+      icon &&
+        icon.mainComponent.name === `Icon / ${iconName}` &&
+        !named(stepper, `${name} Glyph`),
+      `${name} is a ${iconName} icon`,
+    );
+  }
+}
+
+section("MapControlsGroup");
+{
+  const component = figma.createComponent();
+  const stats = freshStats();
+  await plugin.updateMapControlsGroupVariant(component, {
+    value: "IconOnly",
+    variableByName,
+    fonts: FONTS,
+    stats,
+  });
+  for (const [name, iconName] of [
+    ["Zoom In Button", "plus"],
+    ["Zoom Out Button", "minus"],
+    ["Compass Button", "compass-01"],
+  ]) {
+    const button = named(component, name);
+    const icon = button && named(button, `${name} Icon`);
+    ok(
+      icon &&
+        icon.mainComponent.name === `Icon / ${iconName}` &&
+        !named(button, `${name} Glyph`),
+      `${name} is a ${iconName} icon`,
     );
   }
 }

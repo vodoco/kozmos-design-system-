@@ -107,6 +107,14 @@ jobs:
       - name: Verify Figma Plugin Build Stamp
         run: pnpm figma:stamp:check
 
+      # The importer's painters run against a stand-in for the Plugin API and
+      # what they draw is asserted against the component contract — a 64 square,
+      # a counter 4 beyond its edge, a paint bound to the category's variable —
+      # with no token and no Figma (2026-09-21). The compatibility check keeps
+      # the plugin's syntax and runtime surface honest.
+      - name: Measure Figma Plugin Painters
+        run: pnpm figma:painters:check && pnpm figma:plugin:check
+
       # Reads the live Figma file, so it needs the token and is skipped without
       # it. Switched to --strict on 2026-09-03, the day the backlog reached
       # zero — a gate that is red on purpose is a gate somebody switches off.
