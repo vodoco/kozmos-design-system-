@@ -14,18 +14,18 @@
     "publishStatus": "ready",
     "linkedPublishCommand": "pnpm figma:publish:linked:dry",
     "linkedPublishConfig": "figma.linked.config.json",
-    "linkedPublishStatus": "ready for the current 90 Core React component-set mappings",
+    "linkedPublishStatus": "ready for the current 91 Core React component-set mappings",
     "nativeLinkedPublishCommand": "pnpm figma:publish:native:linked:dry",
     "nativeLinkedPublishConfigs": [
       "packages/ios/figma.linked.config.json",
       "packages/android/figma.linked.config.json"
     ],
-    "nativeLinkedPublishStatus": "ready for the current 91 Core SwiftUI and 91 Core Compose component-set mappings"
+    "nativeLinkedPublishStatus": "ready for the current 92 Core SwiftUI and 92 Core Compose component-set mappings"
   },
   "tokens": {
     "summary": {
-      "light": 641,
-      "dark": 641
+      "light": 670,
+      "dark": 670
     },
     "light": [
       {
@@ -3253,6 +3253,27 @@
         "recommendedFigmaScopes": []
       },
       {
+        "name": "Semantics/Motion/duration/quick",
+        "type": "duration",
+        "value": "150ms",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Motion/duration/standard",
+        "type": "duration",
+        "value": "280ms",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Motion/duration/deliberate",
+        "type": "duration",
+        "value": "460ms",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
         "name": "Semantics/Motion/slide/sm",
         "type": "number",
         "value": 4,
@@ -3263,6 +3284,20 @@
         "name": "Semantics/Motion/slide/md",
         "type": "number",
         "value": 8,
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Motion/easing/standard",
+        "type": "other",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Motion/easing/emphasised",
+        "type": "other",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
         "scopes": [],
         "recommendedFigmaScopes": []
       },
@@ -3307,6 +3342,294 @@
         "value": 0.4000000059604645,
         "scopes": [],
         "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Category/Accent/Yellow",
+        "type": "color",
+        "value": "#F9AC17",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Orange",
+        "type": "color",
+        "value": "#E5801A",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Turquoise",
+        "type": "color",
+        "value": "#37A4A4",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Red",
+        "type": "color",
+        "value": "#D92626",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Blue",
+        "type": "color",
+        "value": "#2080DF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Navy",
+        "type": "color",
+        "value": "#4D4DB2",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Green",
+        "type": "color",
+        "value": "#339933",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Pink",
+        "type": "color",
+        "value": "#B24DB2",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Yellow",
+        "type": "color",
+        "value": "#F9AC17",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Orange",
+        "type": "color",
+        "value": "#E5801A",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Turquoise",
+        "type": "color",
+        "value": "#37A4A4",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Red",
+        "type": "color",
+        "value": "#D92626",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Blue",
+        "type": "color",
+        "value": "#1E77CF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Navy",
+        "type": "color",
+        "value": "#4D4DB2",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Green",
+        "type": "color",
+        "value": "#339933",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Pink",
+        "type": "color",
+        "value": "#B24DB2",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Yellow",
+        "type": "color",
+        "value": "#17191C",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Orange",
+        "type": "color",
+        "value": "#17191C",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Turquoise",
+        "type": "color",
+        "value": "#17191C",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Red",
+        "type": "color",
+        "value": "#FFFFFF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Blue",
+        "type": "color",
+        "value": "#FFFFFF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Navy",
+        "type": "color",
+        "value": "#FFFFFF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Green",
+        "type": "color",
+        "value": "#17191C",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Pink",
+        "type": "color",
+        "value": "#FFFFFF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
       },
       {
         "name": "Components/Primary Buttons/themed/button/foreground/content/idle",
@@ -3491,7 +3814,7 @@
       {
         "name": "Components/Primary Buttons/success/button/background/idle",
         "type": "color",
-        "value": "#1E995B",
+        "value": "{Primitives.Colors.emotional.success.800}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -3515,7 +3838,7 @@
       {
         "name": "Components/Primary Buttons/success/button/background/hover",
         "type": "color",
-        "value": "#23B26B",
+        "value": "{Primitives.Colors.emotional.success.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -3527,7 +3850,7 @@
       {
         "name": "Components/Primary Buttons/success/button/background/pressed",
         "type": "color",
-        "value": "#197F4C",
+        "value": "{Primitives.Colors.emotional.success.1000}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -3539,7 +3862,7 @@
       {
         "name": "Components/Primary Buttons/success/button/background/focus",
         "type": "color",
-        "value": "#23B26B",
+        "value": "{Primitives.Colors.emotional.success.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -3671,7 +3994,7 @@
       {
         "name": "Components/Primary Buttons/alert/button/background/idle",
         "type": "color",
-        "value": "#CD8905",
+        "value": "{Primitives.Colors.emotional.alert.800}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -3695,7 +4018,7 @@
       {
         "name": "Components/Primary Buttons/alert/button/background/hover",
         "type": "color",
-        "value": "#F9A707",
+        "value": "{Primitives.Colors.emotional.alert.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -3707,7 +4030,7 @@
       {
         "name": "Components/Primary Buttons/alert/button/background/pressed",
         "type": "color",
-        "value": "#A06B04",
+        "value": "{Primitives.Colors.emotional.alert.1000}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -3719,7 +4042,7 @@
       {
         "name": "Components/Primary Buttons/alert/button/background/focus",
         "type": "color",
-        "value": "#F9A707",
+        "value": "{Primitives.Colors.emotional.alert.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4055,7 +4378,7 @@
       {
         "name": "Components/Primary Buttons/informative/button/background/hover",
         "type": "color",
-        "value": "#2A92C6",
+        "value": "{Primitives.Colors.emotional.info.800}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4079,7 +4402,7 @@
       {
         "name": "Components/Primary Buttons/informative/button/background/focus",
         "type": "color",
-        "value": "#2A92C6",
+        "value": "{Primitives.Colors.emotional.info.800}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4631,7 +4954,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/foreground/content/idle",
         "type": "color",
-        "value": "#1E995B",
+        "value": "{Primitives.Colors.emotional.success.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4655,7 +4978,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/foreground/content/hover",
         "type": "color",
-        "value": "#23B26B",
+        "value": "{Primitives.Colors.emotional.success.1000}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4667,7 +4990,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/foreground/content/pressed",
         "type": "color",
-        "value": "#197F4C",
+        "value": "{Primitives.Colors.emotional.success.1000}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4679,7 +5002,7 @@
       {
         "name": "Components/Secondary Buttons/success/button/foreground/content/focus",
         "type": "color",
-        "value": "#23B26B",
+        "value": "{Primitives.Colors.emotional.success.1000}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4811,7 +5134,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/foreground/content/idle",
         "type": "color",
-        "value": "#B01736",
+        "value": "{Primitives.Colors.emotional.danger.700}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4835,7 +5158,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/foreground/content/hover",
         "type": "color",
-        "value": "#D41C42",
+        "value": "{Primitives.Colors.emotional.danger.800}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4847,7 +5170,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/foreground/content/pressed",
         "type": "color",
-        "value": "#8C132B",
+        "value": "{Primitives.Colors.emotional.danger.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4859,7 +5182,7 @@
       {
         "name": "Components/Secondary Buttons/danger/button/foreground/content/focus",
         "type": "color",
-        "value": "#D41C42",
+        "value": "{Primitives.Colors.emotional.danger.800}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -4991,7 +5314,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/foreground/content/idle",
         "type": "color",
-        "value": "#CD8905",
+        "value": "{Primitives.Colors.emotional.alert.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5015,7 +5338,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/foreground/content/hover",
         "type": "color",
-        "value": "#F9A707",
+        "value": "{Primitives.Colors.emotional.alert.1000}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5027,7 +5350,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/foreground/content/pressed",
         "type": "color",
-        "value": "#A06B04",
+        "value": "{Primitives.Colors.emotional.alert.1000}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5039,7 +5362,7 @@
       {
         "name": "Components/Secondary Buttons/alert/button/foreground/content/focus",
         "type": "color",
-        "value": "#F9A707",
+        "value": "{Primitives.Colors.emotional.alert.1000}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5171,7 +5494,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/foreground/content/idle",
         "type": "color",
-        "value": "#2379A4",
+        "value": "{Primitives.Colors.emotional.info.800}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5195,7 +5518,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/foreground/content/hover",
         "type": "color",
-        "value": "#2A92C6",
+        "value": "{Primitives.Colors.emotional.info.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5207,7 +5530,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/foreground/content/pressed",
         "type": "color",
-        "value": "#1C6082",
+        "value": "{Primitives.Colors.emotional.info.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5219,7 +5542,7 @@
       {
         "name": "Components/Secondary Buttons/informative/button/foreground/content/focus",
         "type": "color",
-        "value": "#2A92C6",
+        "value": "{Primitives.Colors.emotional.info.900}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5351,7 +5674,7 @@
       {
         "name": "Components/Secondary Buttons/neutral/button/foreground/content/idle",
         "type": "color",
-        "value": "#ABAFBA",
+        "value": "{Primitives.Colors.foreground.400}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5375,7 +5698,7 @@
       {
         "name": "Components/Secondary Buttons/neutral/button/foreground/content/hover",
         "type": "color",
-        "value": "#9095A2",
+        "value": "{Primitives.Colors.foreground.300}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5387,7 +5710,7 @@
       {
         "name": "Components/Secondary Buttons/neutral/button/foreground/content/pressed",
         "type": "color",
-        "value": "#C7CAD1",
+        "value": "{Primitives.Colors.foreground.200}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -5399,7 +5722,7 @@
       {
         "name": "Components/Secondary Buttons/neutral/button/foreground/content/focus",
         "type": "color",
-        "value": "#9095A2",
+        "value": "{Primitives.Colors.foreground.300}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -9887,6 +10210,27 @@
         "recommendedFigmaScopes": []
       },
       {
+        "name": "Semantics/Motion/duration/quick",
+        "type": "duration",
+        "value": "150ms",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Motion/duration/standard",
+        "type": "duration",
+        "value": "280ms",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Motion/duration/deliberate",
+        "type": "duration",
+        "value": "460ms",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
         "name": "Semantics/Motion/slide/sm",
         "type": "number",
         "value": 4,
@@ -9897,6 +10241,20 @@
         "name": "Semantics/Motion/slide/md",
         "type": "number",
         "value": 8,
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Motion/easing/standard",
+        "type": "other",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "scopes": [],
+        "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Motion/easing/emphasised",
+        "type": "other",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
         "scopes": [],
         "recommendedFigmaScopes": []
       },
@@ -9941,6 +10299,294 @@
         "value": 0.4000000059604645,
         "scopes": [],
         "recommendedFigmaScopes": []
+      },
+      {
+        "name": "Semantics/Category/Accent/Yellow",
+        "type": "color",
+        "value": "#F9AC17",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Orange",
+        "type": "color",
+        "value": "#E5801A",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Turquoise",
+        "type": "color",
+        "value": "#37A4A4",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Red",
+        "type": "color",
+        "value": "#D92626",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Blue",
+        "type": "color",
+        "value": "#2080DF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Navy",
+        "type": "color",
+        "value": "#4D4DB2",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Green",
+        "type": "color",
+        "value": "#339933",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Accent/Pink",
+        "type": "color",
+        "value": "#B24DB2",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Yellow",
+        "type": "color",
+        "value": "#F9AC17",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Orange",
+        "type": "color",
+        "value": "#E5801A",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Turquoise",
+        "type": "color",
+        "value": "#37A4A4",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Red",
+        "type": "color",
+        "value": "#D92626",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Blue",
+        "type": "color",
+        "value": "#1E77CF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Navy",
+        "type": "color",
+        "value": "#4D4DB2",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Green",
+        "type": "color",
+        "value": "#339933",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/Fill/Pink",
+        "type": "color",
+        "value": "#B24DB2",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Yellow",
+        "type": "color",
+        "value": "#17191C",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Orange",
+        "type": "color",
+        "value": "#17191C",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Turquoise",
+        "type": "color",
+        "value": "#17191C",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Red",
+        "type": "color",
+        "value": "#FFFFFF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Blue",
+        "type": "color",
+        "value": "#FFFFFF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Navy",
+        "type": "color",
+        "value": "#FFFFFF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Green",
+        "type": "color",
+        "value": "#17191C",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
+      },
+      {
+        "name": "Semantics/Category/OnFill/Pink",
+        "type": "color",
+        "value": "#FFFFFF",
+        "scopes": ["ALL_SCOPES"],
+        "recommendedFigmaScopes": [
+          "FRAME_FILL",
+          "SHAPE_FILL",
+          "TEXT_FILL",
+          "STROKE_COLOR"
+        ]
       },
       {
         "name": "Components/Primary Buttons/themed/button/foreground/content/idle",
@@ -11985,7 +12631,7 @@
       {
         "name": "Components/Secondary Buttons/neutral/button/foreground/content/idle",
         "type": "color",
-        "value": "#5C6069",
+        "value": "{Primitives.Colors.foreground.400}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12009,7 +12655,7 @@
       {
         "name": "Components/Secondary Buttons/neutral/button/foreground/content/hover",
         "type": "color",
-        "value": "#6f6a5d",
+        "value": "{Primitives.Colors.foreground.300}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12021,7 +12667,7 @@
       {
         "name": "Components/Secondary Buttons/neutral/button/foreground/content/pressed",
         "type": "color",
-        "value": "#464A53",
+        "value": "{Primitives.Colors.foreground.200}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -12033,7 +12679,7 @@
       {
         "name": "Components/Secondary Buttons/neutral/button/foreground/content/focus",
         "type": "color",
-        "value": "#6f6a5d",
+        "value": "{Primitives.Colors.foreground.300}",
         "scopes": [],
         "recommendedFigmaScopes": [
           "FRAME_FILL",
@@ -13298,13 +13944,13 @@
   },
   "components": {
     "summary": {
-      "total": 98,
-      "stories": 98,
-      "tests": 98,
-      "exported": 98,
-      "codeConnectFiles": 92,
+      "total": 104,
+      "stories": 104,
+      "tests": 104,
+      "exported": 104,
+      "codeConnectFiles": 93,
       "codeConnectScaffolds": 0,
-      "codeConnectLinked": 92
+      "codeConnectLinked": 93
     },
     "firstBatch": [
       "Accordion",
@@ -13352,6 +13998,7 @@
       "MapOverlay",
       "MapView",
       "Menu",
+      "MetaStrip",
       "MultiSelect",
       "Navbar",
       "NavigationItem",
@@ -13462,18 +14109,60 @@
           "children",
           "collisionInsets",
           "controls",
+          "defaultPanelDetent",
           "id",
           "map",
           "mapLabel",
           "mapStatus",
           "mapStatusContent",
           "panel",
+          "panelDetent",
+          "panelDetents",
+          "panelFraction",
           "panelLabel",
           "panelPlacement",
+          "panelPresentation",
+          "panelSizing",
+          "panelSurface",
+          "role",
+          "safeAreaInsets",
+          "tabIndex",
+          "title",
+          "topBar",
+          "usableRegions"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "AISearchButton",
+        "source": "packages/react/src/components/AISearchButton/AISearchButton.tsx",
+        "story": "packages/react/src/components/AISearchButton/AISearchButton.stories.tsx",
+        "test": "packages/react/src/components/AISearchButton/AISearchButton.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": null,
+          "linked": false,
+          "figmaUrl": null,
+          "needsNodeId": false,
+          "status": "missing",
+          "issues": [],
+          "connectedComponents": [],
+          "mappedProps": [],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "autoFocus",
+          "children",
+          "disabled",
+          "id",
+          "label",
           "role",
           "tabIndex",
           "title",
-          "topBar"
+          "type"
         ],
         "variants": {}
       },
@@ -13773,6 +14462,7 @@
           "role",
           "search",
           "tabIndex",
+          "tint",
           "title"
         ],
         "variants": {}
@@ -13798,7 +14488,6 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
-          "asChild",
           "autoFocus",
           "children",
           "disabled",
@@ -13855,6 +14544,41 @@
         "variants": {}
       },
       {
+        "name": "CategoryField",
+        "source": "packages/react/src/components/CategoryField/CategoryField.tsx",
+        "story": "packages/react/src/components/CategoryField/CategoryField.stories.tsx",
+        "test": "packages/react/src/components/CategoryField/CategoryField.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": null,
+          "linked": false,
+          "figmaUrl": null,
+          "needsNodeId": false,
+          "status": "missing",
+          "issues": [],
+          "connectedComponents": [],
+          "mappedProps": [],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "clearLabel",
+          "count",
+          "countLabel",
+          "icon",
+          "id",
+          "label",
+          "role",
+          "tabIndex",
+          "tint",
+          "title"
+        ],
+        "variants": {}
+      },
+      {
         "name": "CategoryTile",
         "source": "packages/react/src/components/CategoryTile/CategoryTile.tsx",
         "story": "packages/react/src/components/CategoryTile/CategoryTile.stories.tsx",
@@ -13884,6 +14608,7 @@
           "id",
           "role",
           "tabIndex",
+          "tint",
           "title",
           "type"
         ],
@@ -13998,6 +14723,8 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "ariaDescribedBy",
+          "ariaInvalid",
           "autoFocus",
           "children",
           "defaultAlpha",
@@ -14060,7 +14787,11 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "ariaLabel",
+          "ariaLabelledBy",
           "autoFocus",
+          "callerDescribedBy",
+          "callerInvalid",
           "children",
           "clearable",
           "defaultInputValue",
@@ -14129,6 +14860,7 @@
           "aria-invalid",
           "aria-label",
           "children",
+          "emotion",
           "id",
           "role",
           "size",
@@ -14170,6 +14902,8 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "ariaDescribedBy",
+          "ariaInvalid",
           "autoFocus",
           "children",
           "defaultValue",
@@ -14282,6 +15016,7 @@
           "id",
           "modal",
           "open",
+          "portalContainer",
           "role",
           "side",
           "tabIndex",
@@ -14349,6 +15084,7 @@
           "id",
           "modal",
           "open",
+          "portalContainer",
           "role",
           "showClose",
           "side",
@@ -14453,6 +15189,7 @@
           "isSubmitting",
           "role",
           "successMessage",
+          "surface",
           "tabIndex",
           "title"
         ],
@@ -14491,6 +15228,7 @@
           "descriptionId",
           "error",
           "errorId",
+          "group",
           "helperId",
           "helperText",
           "hideLabel",
@@ -14540,7 +15278,10 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "ariaLabel",
+          "ariaLabelledBy",
           "browseLabel",
+          "callerDescribedBy",
           "children",
           "defaultFiles",
           "description",
@@ -14697,9 +15438,7 @@
           "unmappedProps": []
         },
         "props": ["as", "children", "level"],
-        "variants": {
-          "level": ["1", "2", "3", "4", "5", "6"]
-        }
+        "variants": {}
       },
       {
         "name": "Icon",
@@ -14800,6 +15539,8 @@
           "aria-invalid",
           "aria-label",
           "autoFocus",
+          "callerDescribedBy",
+          "callerInvalid",
           "children",
           "defaultValue",
           "disabled",
@@ -14818,6 +15559,41 @@
           "type",
           "value",
           "wrapperClassName"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "Itinerary",
+        "source": "packages/react/src/components/Itinerary/Itinerary.tsx",
+        "story": "packages/react/src/components/Itinerary/Itinerary.stories.tsx",
+        "test": "packages/react/src/components/Itinerary/Itinerary.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": null,
+          "linked": false,
+          "figmaUrl": null,
+          "needsNodeId": false,
+          "status": "missing",
+          "issues": [],
+          "connectedComponents": [],
+          "mappedProps": [],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "destination",
+          "destinationLabel",
+          "id",
+          "label",
+          "origin",
+          "originLabel",
+          "role",
+          "steps",
+          "tabIndex",
+          "title"
         ],
         "variants": {}
       },
@@ -14988,8 +15764,47 @@
           "selected",
           "size",
           "tabIndex",
+          "tint",
           "title",
           "variant"
+        ],
+        "variants": {}
+      },
+      {
+        "name": "ManoeuvreCard",
+        "source": "packages/react/src/components/ManoeuvreCard/ManoeuvreCard.tsx",
+        "story": "packages/react/src/components/ManoeuvreCard/ManoeuvreCard.stories.tsx",
+        "test": "packages/react/src/components/ManoeuvreCard/ManoeuvreCard.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": null,
+          "linked": false,
+          "figmaUrl": null,
+          "needsNodeId": false,
+          "status": "missing",
+          "issues": [],
+          "connectedComponents": [],
+          "mappedProps": [],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "collapseLabel",
+          "detail",
+          "expanded",
+          "expandLabel",
+          "id",
+          "instruction",
+          "manoeuvreLabel",
+          "maxItineraryHeight",
+          "role",
+          "surface",
+          "tabIndex",
+          "title",
+          "type"
         ],
         "variants": {}
       },
@@ -15017,10 +15832,15 @@
           "unmappedProps": ["disabled"]
         },
         "props": [
+          "emphasis",
           "icon",
           "label",
+          "labelPlacement",
           "presentation",
           "pressed",
+          "revealDelay",
+          "revealDuration",
+          "revealOnChange",
           "stateLabel",
           "type",
           "variant"
@@ -15153,6 +15973,7 @@
           "aria-label",
           "children",
           "id",
+          "portalContainer",
           "role",
           "sideOffset",
           "tabIndex",
@@ -15167,14 +15988,14 @@
         "test": "packages/react/src/components/MetaStrip/MetaStrip.test.tsx",
         "exported": true,
         "codeConnect": {
-          "file": null,
-          "linked": false,
-          "figmaUrl": null,
+          "file": "packages/react/src/components/MetaStrip/MetaStrip.figma.tsx",
+          "linked": true,
+          "figmaUrl": "https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1890-8911",
           "needsNodeId": false,
-          "status": "missing",
+          "status": "linked",
           "issues": [],
-          "connectedComponents": [],
-          "mappedProps": [],
+          "connectedComponents": ["MetaStrip"],
+          "mappedProps": ["aria-label"],
           "unmappedProps": []
         },
         "props": [
@@ -15220,6 +16041,10 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "ariaLabel",
+          "ariaLabelledBy",
+          "callerDescribedBy",
+          "callerInvalid",
           "children",
           "clearable",
           "defaultSearchValue",
@@ -15282,6 +16107,7 @@
           "id",
           "logo",
           "navigation",
+          "navigationLabel",
           "primaryAction",
           "role",
           "site",
@@ -15398,6 +16224,8 @@
           "aria-invalid",
           "aria-label",
           "autoFocus",
+          "callerDescribedBy",
+          "callerInvalid",
           "children",
           "defaultValue",
           "disabled",
@@ -15527,6 +16355,8 @@
           "aria-invalid",
           "aria-label",
           "autoFocus",
+          "callerDescribedBy",
+          "callerInvalid",
           "children",
           "defaultValue",
           "defaultVisible",
@@ -15615,20 +16445,30 @@
         "props": [
           "accessRestrictionsHeading",
           "actionLabels",
+          "actionsLabel",
           "actionStates",
           "aria-describedby",
           "aria-invalid",
           "aria-label",
           "children",
           "closeLabel",
+          "details",
           "id",
+          "mediaControlsLabel",
           "mediaLabel",
+          "mediaNextLabel",
           "mediaPositionLabel",
+          "mediaPreviousLabel",
+          "mediaUnavailableLabel",
           "poi",
           "presentation",
+          "readLessLabel",
+          "readMoreLabel",
           "role",
           "servicesHeading",
+          "supplementaryActionStates",
           "tabIndex",
+          "tagsLabel",
           "title",
           "titleLevel"
         ],
@@ -15657,6 +16497,7 @@
           "aria-invalid",
           "aria-label",
           "children",
+          "controlsLabel",
           "defaultActiveIndex",
           "id",
           "label",
@@ -15666,7 +16507,8 @@
           "previousLabel",
           "role",
           "tabIndex",
-          "title"
+          "title",
+          "unavailableLabel"
         ],
         "variants": {}
       },
@@ -15692,6 +16534,7 @@
           "aria-invalid",
           "aria-label",
           "children",
+          "currentFloorId",
           "featuredLabel",
           "id",
           "poi",
@@ -15731,6 +16574,7 @@
           "aria-invalid",
           "aria-label",
           "children",
+          "currentFloorId",
           "emptyState",
           "featuredLabel",
           "id",
@@ -15769,6 +16613,7 @@
           "children",
           "collisionPadding",
           "id",
+          "portalContainer",
           "role",
           "side",
           "sideOffset",
@@ -15957,6 +16802,38 @@
         "variants": {}
       },
       {
+        "name": "RouteProgressRail",
+        "source": "packages/react/src/components/RouteProgressRail/RouteProgressRail.tsx",
+        "story": "packages/react/src/components/RouteProgressRail/RouteProgressRail.stories.tsx",
+        "test": "packages/react/src/components/RouteProgressRail/RouteProgressRail.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": null,
+          "linked": false,
+          "figmaUrl": null,
+          "needsNodeId": false,
+          "status": "missing",
+          "issues": [],
+          "connectedComponents": [],
+          "mappedProps": [],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "label",
+          "progress",
+          "role",
+          "tabIndex",
+          "title",
+          "type"
+        ],
+        "variants": {}
+      },
+      {
         "name": "RouteSummary",
         "source": "packages/react/src/components/RouteSummary/RouteSummary.tsx",
         "story": "packages/react/src/components/RouteSummary/RouteSummary.stories.tsx",
@@ -15982,14 +16859,20 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "arrivalText",
           "children",
+          "destination",
           "distanceText",
+          "durationText",
+          "endLabel",
           "endRouteLabel",
           "etaText",
           "id",
+          "progress",
           "role",
           "startNavigationLabel",
           "state",
+          "surface",
           "tabIndex",
           "title",
           "transportModeIcon"
@@ -16021,6 +16904,7 @@
           "id",
           "points",
           "role",
+          "surface",
           "tabIndex",
           "title"
         ],
@@ -16052,6 +16936,7 @@
           "id",
           "isSaved",
           "role",
+          "surface",
           "tabIndex",
           "title"
         ],
@@ -16085,7 +16970,8 @@
           "role",
           "snap",
           "tabIndex",
-          "title"
+          "title",
+          "viewportProps"
         ],
         "variants": {}
       },
@@ -16240,6 +17126,8 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "ariaDescribedBy",
+          "ariaInvalid",
           "autoFocus",
           "children",
           "defaultOpen",
@@ -16382,6 +17270,10 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "ariaDescribedBy",
+          "ariaInvalid",
+          "ariaLabel",
+          "ariaLabelledBy",
           "children",
           "defaultValue",
           "disabled",
@@ -16536,6 +17428,36 @@
         "variants": {}
       },
       {
+        "name": "Surface",
+        "source": "packages/react/src/components/Surface/Surface.tsx",
+        "story": "packages/react/src/components/Surface/Surface.stories.tsx",
+        "test": "packages/react/src/components/Surface/Surface.test.tsx",
+        "exported": true,
+        "codeConnect": {
+          "file": null,
+          "linked": false,
+          "figmaUrl": null,
+          "needsNodeId": false,
+          "status": "missing",
+          "issues": [],
+          "connectedComponents": [],
+          "mappedProps": [],
+          "unmappedProps": []
+        },
+        "props": [
+          "aria-describedby",
+          "aria-invalid",
+          "aria-label",
+          "children",
+          "id",
+          "role",
+          "tabIndex",
+          "title",
+          "variant"
+        ],
+        "variants": {}
+      },
+      {
         "name": "Switch",
         "source": "packages/react/src/components/Switch/Switch.tsx",
         "story": "packages/react/src/components/Switch/Switch.stories.tsx",
@@ -16657,6 +17579,7 @@
           "aria-invalid",
           "aria-label",
           "children",
+          "emotion",
           "id",
           "role",
           "tabIndex",
@@ -16731,6 +17654,8 @@
           "aria-invalid",
           "aria-label",
           "autoFocus",
+          "callerDescribedBy",
+          "callerInvalid",
           "children",
           "defaultValue",
           "disabled",
@@ -16766,7 +17691,15 @@
           "mappedProps": [],
           "unmappedProps": []
         },
-        "props": ["children", "defaultTheme", "storageKey"],
+        "props": [
+          "children",
+          "defaultSystemTheme",
+          "defaultTheme",
+          "dir",
+          "storageKey",
+          "theme",
+          "tokens"
+        ],
         "variants": {}
       },
       {
@@ -16828,6 +17761,8 @@
           "aria-describedby",
           "aria-invalid",
           "aria-label",
+          "ariaDescribedBy",
+          "ariaInvalid",
           "autoFocus",
           "children",
           "defaultValue",
@@ -16943,6 +17878,7 @@
           "children",
           "collisionPadding",
           "id",
+          "portalContainer",
           "role",
           "side",
           "sideOffset",
@@ -17045,6 +17981,7 @@
           "aria-invalid",
           "aria-label",
           "children",
+          "closeLabel",
           "id",
           "role",
           "tabIndex",

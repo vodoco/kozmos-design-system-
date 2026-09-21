@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-17T23:19:37.961Z",
+  "generatedAt": "2026-09-21T07:20:31.963Z",
   "target": {
     "fileKey": null,
     "fileName": "Kozmos DS - Core Library",
@@ -36,9 +36,9 @@
     "Archive / Legacy Reference"
   ],
   "summary": {
-    "totalTokens": 641,
-    "variableTokens": 597,
-    "styleOnlyTokens": 44,
+    "totalTokens": 670,
+    "variableTokens": 621,
+    "styleOnlyTokens": 49,
     "bySourceType": {
       "borderRadius": 8,
       "dimension": 18,
@@ -46,16 +46,17 @@
       "opacity": 7,
       "number": 60,
       "spacing": 4,
-      "color": 429,
+      "color": 453,
       "fontSizes": 30,
       "letterSpacing": 5,
       "lineHeights": 14,
       "paragraphSpacing": 18,
-      "other": 21,
+      "other": 23,
       "cubicBezier": 5,
       "fontFamilies": 7,
       "fontWeights": 5,
-      "shadow": 6
+      "shadow": 6,
+      "duration": 3
     },
     "note": "Variables REST is unavailable without file_variables:read, so this payload is intended for a Figma plugin/MCP import path."
   },
@@ -7693,6 +7694,582 @@
       }
     },
     {
+      "canonicalName": "Semantics/Category/Accent/Yellow",
+      "figmaName": "Category/Accent/Yellow",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-accent-yellow",
+      "syntax": {
+        "web": "var(--semantics-category-accent-yellow)",
+        "ios": "semanticsCategoryAccentYellow",
+        "android": "semanticsCategoryAccentYellow"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#F9AC17"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#F9AC17"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Accent/Orange",
+      "figmaName": "Category/Accent/Orange",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-accent-orange",
+      "syntax": {
+        "web": "var(--semantics-category-accent-orange)",
+        "ios": "semanticsCategoryAccentOrange",
+        "android": "semanticsCategoryAccentOrange"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#E5801A"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#E5801A"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Accent/Turquoise",
+      "figmaName": "Category/Accent/Turquoise",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-accent-turquoise",
+      "syntax": {
+        "web": "var(--semantics-category-accent-turquoise)",
+        "ios": "semanticsCategoryAccentTurquoise",
+        "android": "semanticsCategoryAccentTurquoise"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#37A4A4"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#37A4A4"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Accent/Red",
+      "figmaName": "Category/Accent/Red",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-accent-red",
+      "syntax": {
+        "web": "var(--semantics-category-accent-red)",
+        "ios": "semanticsCategoryAccentRed",
+        "android": "semanticsCategoryAccentRed"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#D92626"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#D92626"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Accent/Blue",
+      "figmaName": "Category/Accent/Blue",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-accent-blue",
+      "syntax": {
+        "web": "var(--semantics-category-accent-blue)",
+        "ios": "semanticsCategoryAccentBlue",
+        "android": "semanticsCategoryAccentBlue"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#2080DF"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#2080DF"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Accent/Navy",
+      "figmaName": "Category/Accent/Navy",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-accent-navy",
+      "syntax": {
+        "web": "var(--semantics-category-accent-navy)",
+        "ios": "semanticsCategoryAccentNavy",
+        "android": "semanticsCategoryAccentNavy"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#4D4DB2"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#4D4DB2"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Accent/Green",
+      "figmaName": "Category/Accent/Green",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-accent-green",
+      "syntax": {
+        "web": "var(--semantics-category-accent-green)",
+        "ios": "semanticsCategoryAccentGreen",
+        "android": "semanticsCategoryAccentGreen"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#339933"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#339933"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Accent/Pink",
+      "figmaName": "Category/Accent/Pink",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-accent-pink",
+      "syntax": {
+        "web": "var(--semantics-category-accent-pink)",
+        "ios": "semanticsCategoryAccentPink",
+        "android": "semanticsCategoryAccentPink"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#B24DB2"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#B24DB2"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Fill/Yellow",
+      "figmaName": "Category/Fill/Yellow",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-fill-yellow",
+      "syntax": {
+        "web": "var(--semantics-category-fill-yellow)",
+        "ios": "semanticsCategoryFillYellow",
+        "android": "semanticsCategoryFillYellow"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#F9AC17"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#F9AC17"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Fill/Orange",
+      "figmaName": "Category/Fill/Orange",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-fill-orange",
+      "syntax": {
+        "web": "var(--semantics-category-fill-orange)",
+        "ios": "semanticsCategoryFillOrange",
+        "android": "semanticsCategoryFillOrange"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#E5801A"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#E5801A"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Fill/Turquoise",
+      "figmaName": "Category/Fill/Turquoise",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-fill-turquoise",
+      "syntax": {
+        "web": "var(--semantics-category-fill-turquoise)",
+        "ios": "semanticsCategoryFillTurquoise",
+        "android": "semanticsCategoryFillTurquoise"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#37A4A4"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#37A4A4"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Fill/Red",
+      "figmaName": "Category/Fill/Red",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-fill-red",
+      "syntax": {
+        "web": "var(--semantics-category-fill-red)",
+        "ios": "semanticsCategoryFillRed",
+        "android": "semanticsCategoryFillRed"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#D92626"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#D92626"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Fill/Blue",
+      "figmaName": "Category/Fill/Blue",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-fill-blue",
+      "syntax": {
+        "web": "var(--semantics-category-fill-blue)",
+        "ios": "semanticsCategoryFillBlue",
+        "android": "semanticsCategoryFillBlue"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#1E77CF"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#1E77CF"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Fill/Navy",
+      "figmaName": "Category/Fill/Navy",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-fill-navy",
+      "syntax": {
+        "web": "var(--semantics-category-fill-navy)",
+        "ios": "semanticsCategoryFillNavy",
+        "android": "semanticsCategoryFillNavy"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#4D4DB2"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#4D4DB2"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Fill/Green",
+      "figmaName": "Category/Fill/Green",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-fill-green",
+      "syntax": {
+        "web": "var(--semantics-category-fill-green)",
+        "ios": "semanticsCategoryFillGreen",
+        "android": "semanticsCategoryFillGreen"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#339933"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#339933"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/Fill/Pink",
+      "figmaName": "Category/Fill/Pink",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-fill-pink",
+      "syntax": {
+        "web": "var(--semantics-category-fill-pink)",
+        "ios": "semanticsCategoryFillPink",
+        "android": "semanticsCategoryFillPink"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#B24DB2"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#B24DB2"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/OnFill/Yellow",
+      "figmaName": "Category/OnFill/Yellow",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-on-fill-yellow",
+      "syntax": {
+        "web": "var(--semantics-category-on-fill-yellow)",
+        "ios": "semanticsCategoryOnfillYellow",
+        "android": "semanticsCategoryOnfillYellow"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#17191C"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#17191C"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/OnFill/Orange",
+      "figmaName": "Category/OnFill/Orange",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-on-fill-orange",
+      "syntax": {
+        "web": "var(--semantics-category-on-fill-orange)",
+        "ios": "semanticsCategoryOnfillOrange",
+        "android": "semanticsCategoryOnfillOrange"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#17191C"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#17191C"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/OnFill/Turquoise",
+      "figmaName": "Category/OnFill/Turquoise",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-on-fill-turquoise",
+      "syntax": {
+        "web": "var(--semantics-category-on-fill-turquoise)",
+        "ios": "semanticsCategoryOnfillTurquoise",
+        "android": "semanticsCategoryOnfillTurquoise"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#17191C"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#17191C"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/OnFill/Red",
+      "figmaName": "Category/OnFill/Red",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-on-fill-red",
+      "syntax": {
+        "web": "var(--semantics-category-on-fill-red)",
+        "ios": "semanticsCategoryOnfillRed",
+        "android": "semanticsCategoryOnfillRed"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#FFFFFF"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#FFFFFF"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/OnFill/Blue",
+      "figmaName": "Category/OnFill/Blue",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-on-fill-blue",
+      "syntax": {
+        "web": "var(--semantics-category-on-fill-blue)",
+        "ios": "semanticsCategoryOnfillBlue",
+        "android": "semanticsCategoryOnfillBlue"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#FFFFFF"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#FFFFFF"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/OnFill/Navy",
+      "figmaName": "Category/OnFill/Navy",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-on-fill-navy",
+      "syntax": {
+        "web": "var(--semantics-category-on-fill-navy)",
+        "ios": "semanticsCategoryOnfillNavy",
+        "android": "semanticsCategoryOnfillNavy"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#FFFFFF"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#FFFFFF"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/OnFill/Green",
+      "figmaName": "Category/OnFill/Green",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-on-fill-green",
+      "syntax": {
+        "web": "var(--semantics-category-on-fill-green)",
+        "ios": "semanticsCategoryOnfillGreen",
+        "android": "semanticsCategoryOnfillGreen"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#17191C"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#17191C"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Category/OnFill/Pink",
+      "figmaName": "Category/OnFill/Pink",
+      "collection": "Kozmos Semantics",
+      "sourceType": "color",
+      "figmaType": "COLOR",
+      "cssVariable": "--semantics-category-on-fill-pink",
+      "syntax": {
+        "web": "var(--semantics-category-on-fill-pink)",
+        "ios": "semanticsCategoryOnfillPink",
+        "android": "semanticsCategoryOnfillPink"
+      },
+      "suggestedScopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "#FFFFFF"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "#FFFFFF"
+        }
+      }
+    },
+    {
       "canonicalName": "Components/Primary Buttons/themed/button/foreground/content/idle",
       "figmaName": "Primary Buttons/themed/button/foreground/content/idle",
       "collection": "Kozmos Components",
@@ -15275,6 +15852,126 @@
         "dark": {
           "kind": "raw",
           "value": "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Motion/duration/quick",
+      "figmaName": "Motion/duration/quick",
+      "collection": "Kozmos Semantics",
+      "sourceType": "duration",
+      "figmaType": null,
+      "cssVariable": "--semantics-motion-duration-quick",
+      "syntax": {
+        "web": "var(--semantics-motion-duration-quick)",
+        "ios": "semanticsMotionDurationQuick",
+        "android": "semanticsMotionDurationQuick"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "150ms"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "150ms"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Motion/duration/standard",
+      "figmaName": "Motion/duration/standard",
+      "collection": "Kozmos Semantics",
+      "sourceType": "duration",
+      "figmaType": null,
+      "cssVariable": "--semantics-motion-duration-standard",
+      "syntax": {
+        "web": "var(--semantics-motion-duration-standard)",
+        "ios": "semanticsMotionDurationStandard",
+        "android": "semanticsMotionDurationStandard"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "280ms"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "280ms"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Motion/duration/deliberate",
+      "figmaName": "Motion/duration/deliberate",
+      "collection": "Kozmos Semantics",
+      "sourceType": "duration",
+      "figmaType": null,
+      "cssVariable": "--semantics-motion-duration-deliberate",
+      "syntax": {
+        "web": "var(--semantics-motion-duration-deliberate)",
+        "ios": "semanticsMotionDurationDeliberate",
+        "android": "semanticsMotionDurationDeliberate"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "460ms"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "460ms"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Motion/easing/standard",
+      "figmaName": "Motion/easing/standard",
+      "collection": "Kozmos Semantics",
+      "sourceType": "other",
+      "figmaType": null,
+      "cssVariable": "--semantics-motion-easing-standard",
+      "syntax": {
+        "web": "var(--semantics-motion-easing-standard)",
+        "ios": "semanticsMotionEasingStandard",
+        "android": "semanticsMotionEasingStandard"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "cubic-bezier(0.4, 0, 0.2, 1)"
+        }
+      }
+    },
+    {
+      "canonicalName": "Semantics/Motion/easing/emphasised",
+      "figmaName": "Motion/easing/emphasised",
+      "collection": "Kozmos Semantics",
+      "sourceType": "other",
+      "figmaType": null,
+      "cssVariable": "--semantics-motion-easing-emphasised",
+      "syntax": {
+        "web": "var(--semantics-motion-easing-emphasised)",
+        "ios": "semanticsMotionEasingEmphasised",
+        "android": "semanticsMotionEasingEmphasised"
+      },
+      "suggestedScopes": [],
+      "values": {
+        "light": {
+          "kind": "raw",
+          "value": "cubic-bezier(0.34, 1.56, 0.64, 1)"
+        },
+        "dark": {
+          "kind": "raw",
+          "value": "cubic-bezier(0.34, 1.56, 0.64, 1)"
         }
       }
     },
