@@ -1559,7 +1559,8 @@ outlines (now generated from the registry, held to the catalog by the contract c
 last typed glyphs — the floor selector's steppers, the map controls, the submit, the swap
 (switch-vertical-01 curated) — draw icons; CategoryField has a contract entry asserted on
 every platform; CI runs the painter and compatibility checks. One decision for Olcay: the
-field's 32 clear has no 44 hit area on any platform, unlike the search bar's clear beside it.
+field's 32 clear has no 44 hit area on any platform, unlike the search bar's clear beside it
+(ruled the same night: a 44 target around the 32 circle, `701f919`).
 
 Olcay's first audit in Figma the same night reported the Button family's icons failing 3:1.
 Read over REST: the icons were plain black with the right token in their plugin data, and an
@@ -1587,4 +1588,7 @@ and recommendations in `docs/figma-drift-2026-09-21.md` §9. Olcay took all four
 `Colors/foreground/0` on every platform and in Figma; the category icons decorative, hidden
 from assistive technology, and reported by the audit as advisories; React's pin solid, hollow
 off the floor. The contract records each and its check holds every platform to it. The run
-for build `e6b4f3c52c53`, nineteen sets, is in §9.
+for build `ed50a03a1912`, nineteen sets, is in §9. He then took the clear's 44 target too
+(`701f919`): a 32 circle in a 44 button on all three platforms, the trailing padding 2 so the
+circle stays 8 from the edge; Compose's clear, which a weighted spacer had floated inward, now
+sits at the edge, as on React and iOS.

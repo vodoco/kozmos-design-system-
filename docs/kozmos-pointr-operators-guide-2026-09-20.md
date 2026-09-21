@@ -320,7 +320,7 @@ Which build ran is the first thing to read. The panel's header shows it ("Build 
 Audit Library report carries it as `pluginBuild`; a report without it came from a build before
 `50ba616`. Update All Core resumes by build stamp, so after any plugin change it starts again at
 Link: update the sets the change touched, one at a time, instead
-([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `e6b4f3c52c53`).
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `ed50a03a1912`).
 The painter check also refuses the layout sizing Figma refuses and counts the nodes a lookup
 visits, so a painter that asks for HUG on an icon, FILL before an append, or a whole-file search
 per variant fails there first.
@@ -448,7 +448,8 @@ recommended ([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9, `ce6e80
 CategoryField's name and clear in `Colors/foreground/0`; the off-floor pin number in
 `Colors/foreground/0` on the white disc; the category icons decorative, hidden from assistive
 technology and reported by the Figma audit as advisories; React's pin solid, hollow off the
-floor. Code Connect publishing for CategoryField and AISearchButton stays his._
+floor. The CategoryField clear became a 32 circle in a 44 target, as the search bar's (`701f919`).
+Code Connect publishing for CategoryField and AISearchButton stays his._
 
 ## 8. What the design system still lacks, from the prototype
 
@@ -506,6 +507,9 @@ _Added on the 21st, evening, from the Figma drift
   no surface under it renders on that dark window, which hid that its light-mode text was not
   meant for it; draw such a part on its host's surface, and snapshot Dark with
   `LocalKozmosUseDarkTokens provides true`.
+- In a Compose `Row`, a child weighted with `fill = false` beside a weighted `Spacer` does not
+  hand its unused share to the spacer: the space is left at the row's end. CategoryField's clear
+  floated inward so; put the shrinking content in an inner `Row` with `Modifier.weight(1f)`.
 - `assertOccurrenceCount` in the contract check calls `String.match`, which turns a string
   pattern into a regular expression (`(icon)` becomes a group); pass a global `RegExp`.
 
