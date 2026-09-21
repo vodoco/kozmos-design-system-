@@ -147,11 +147,12 @@ public struct KozmosPOIDetailPanel: View {
                        let label = poi.accessRestrictionsLabel {
                         Text(label).font(KozmosTypography.subheadline)
                             .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                            .background(KozmosColors.primitivesColorsBackground100)
+                            .background(insetSurface)
                             .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                             .accessibilityLabel("\(accessRestrictionsHeading), \(label)")
                     }
                     KozmosPOIMediaGallery(
+                        surface: insetSurface,
                         media: poi.media, label: mediaLabel, positionLabel: mediaPositionLabel,
                         previousLabel: mediaPreviousLabel, nextLabel: mediaNextLabel,
                         controlsLabel: mediaControlsLabel, unavailableLabel: mediaUnavailableLabel,
@@ -182,6 +183,12 @@ public struct KozmosPOIDetailPanel: View {
         .accessibilityLabel(poi.name)
     }
 
+    /// An inset block's surface: the muted grey on the panel's own white, and
+    /// white on a sheet, whose surface is that grey.
+    private var insetSurface: Color {
+        presentation == .sheet ? KozmosColors.primitivesColorsBackground0 : KozmosColors.primitivesColorsBackground100
+    }
+
     private var panelShape: KozmosPanelShape {
         KozmosPanelShape(radius: KozmosDimensions.semanticsRadiusControl, roundsBottom: presentation != .sheet)
     }
@@ -210,7 +217,7 @@ public struct KozmosPOIDetailPanel: View {
                     } else {
                         Text(poi.logoFallbackInitial).font(KozmosTypography.headline)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(KozmosColors.primitivesColorsBackground100)
+                            .background(insetSurface)
                     }
                 }
                 .frame(width: 48, height: 48)
@@ -302,7 +309,7 @@ public struct KozmosPOIDetailPanel: View {
                         ? KozmosColors.primitivesColorsEmotionalDanger600
                         : KozmosColors.primitivesColorsForeground100)
                     .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(KozmosColors.primitivesColorsBackground100)
+                    .background(insetSurface)
                     .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                     .padding(.horizontal, 16).padding(.bottom, 12)
                     .accessibilityAddTraits(.updatesFrequently)

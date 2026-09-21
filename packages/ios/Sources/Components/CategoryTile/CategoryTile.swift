@@ -7,20 +7,21 @@ import SwiftUI
 /// supplied by the consuming app through `KozmosCategoryPresentation`. A
 /// `resultCount` draws as the system's counter at the icon square's
 /// top-right; `resultCountLabel` is its spoken form and draws nothing. A
-/// `tint` — the category's own colour, as the chosen-category field wears
-/// it — takes the icon and the counter's fill; the square stays neutral.
+/// `tint` — the category's colours, as the chosen-category field wears
+/// them — takes the icon, the selection's stroke and the counter's fill and
+/// ink; the square stays neutral.
 public struct KozmosCategoryTile<Icon: View>: View {
     @Environment(\.kozmosAnalytics) private var trackEvent
 
     private let category: KozmosCategoryPresentation
-    private let tint: Color?
+    private let tint: KozmosCategoryTint?
     private let isDisabled: Bool
     private let onSelect: (String) -> Void
     private let icon: Icon
 
     public init(
         category: KozmosCategoryPresentation,
-        tint: Color? = nil,
+        tint: KozmosCategoryTint? = nil,
         isDisabled: Bool = false,
         onSelect: @escaping (String) -> Void,
         @ViewBuilder icon: () -> Icon
@@ -50,18 +51,18 @@ public struct KozmosCategoryTile<Icon: View>: View {
                 // the selection shows on it. The label sits under it.
                 icon
                     .frame(width: KozmosDimensions.primitivesLayoutSizing300, height: KozmosDimensions.primitivesLayoutSizing300)
-                    .foregroundColor(tint ?? KozmosColors.primitivesColorsTheme500)
+                    .foregroundColor(tint?.accent ?? KozmosColors.primitivesColorsTheme500)
                     .frame(width: KozmosDimensions.primitivesLayoutSizing800, height: KozmosDimensions.primitivesLayoutSizing800)
                     .background(
                         category.selected
-                            ? KozmosColors.primitivesColorsTheme500.opacity(0.05)
+                            ? (tint?.accent ?? KozmosColors.primitivesColorsTheme500).opacity(0.05)
                             : KozmosColors.primitivesColorsBackground0
                     )
                     .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
                             .stroke(
-                                category.selected ? KozmosColors.primitivesColorsTheme500 : KozmosColors.semanticsBorderSubtle,
+                                category.selected ? (tint?.accent ?? KozmosColors.primitivesColorsTheme500) : KozmosColors.semanticsBorderSubtle,
                                 lineWidth: category.selected ? 2 : 1
                             )
                     )
@@ -71,7 +72,7 @@ public struct KozmosCategoryTile<Icon: View>: View {
                     // `resultCountLabel`, the tile's accessibility value.
                     .overlay(alignment: .topTrailing) {
                         if let count = category.resultCount {
-                            KozmosCounter("\(count)", tone: .brand, fill: tint)
+                            KozmosCounter("\(count)", tone: .brand, fill: tint?.fill)
                                 .offset(x: 4, y: -4)
                         }
                     }
@@ -100,7 +101,7 @@ public struct KozmosCategoryTile<Icon: View>: View {
 public extension KozmosCategoryTile where Icon == EmptyView {
     init(
         category: KozmosCategoryPresentation,
-        tint: Color? = nil,
+        tint: KozmosCategoryTint? = nil,
         isDisabled: Bool = false,
         onSelect: @escaping (String) -> Void
     ) {

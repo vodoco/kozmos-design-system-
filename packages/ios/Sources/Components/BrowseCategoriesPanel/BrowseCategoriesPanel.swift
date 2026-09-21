@@ -20,8 +20,8 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
     private let label: String
     private let onSelect: (String) -> Void
     private let renderIcon: (KozmosCategoryPresentation) -> Icon
-    /// A category's own colour for its tile, or nil for the theme's.
-    private let tint: (KozmosCategoryPresentation) -> Color?
+    /// A category's colours for its tile, or nil for the theme's.
+    private let tint: (KozmosCategoryPresentation) -> KozmosCategoryTint?
     private let search: Search
     private let actions: Actions
     private let emptyState: EmptyStateContent
@@ -42,7 +42,7 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
         presentation: Presentation = .panel,
         onSelect: @escaping (String) -> Void,
         @ViewBuilder renderIcon: @escaping (KozmosCategoryPresentation) -> Icon,
-        tint: @escaping (KozmosCategoryPresentation) -> Color? = { _ in nil },
+        tint: @escaping (KozmosCategoryPresentation) -> KozmosCategoryTint? = { _ in nil },
         @ViewBuilder search: () -> Search,
         @ViewBuilder actions: () -> Actions,
         @ViewBuilder emptyState: () -> EmptyStateContent
@@ -125,7 +125,7 @@ public extension KozmosBrowseCategoriesPanel where Search == EmptyView, Actions 
         presentation: Presentation = .panel,
         onSelect: @escaping (String) -> Void,
         @ViewBuilder renderIcon: @escaping (KozmosCategoryPresentation) -> Icon,
-        tint: @escaping (KozmosCategoryPresentation) -> Color? = { _ in nil },
+        tint: @escaping (KozmosCategoryPresentation) -> KozmosCategoryTint? = { _ in nil },
         @ViewBuilder emptyState: () -> EmptyStateContent
     ) {
         self.init(

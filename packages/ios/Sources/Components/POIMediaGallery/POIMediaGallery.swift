@@ -16,6 +16,8 @@ import SwiftUI
 /// does on the web. Brand artwork belongs in the POI's `logo`, which is never
 /// cropped; nothing here guesses an image's role from its content or name.
 public struct KozmosPOIMediaGallery: View {
+    /// The tile's own surface behind an image or its placeholder.
+    private let surface: Color
     private let media: [KozmosPOIMediaPresentation]
     private let label: String
     private let activeIndex: Int?
@@ -39,6 +41,7 @@ public struct KozmosPOIMediaGallery: View {
     @State private var stripWidth: CGFloat = 0
 
     public init(
+        surface: Color = KozmosColors.primitivesColorsBackground100,
         media: [KozmosPOIMediaPresentation],
         label: String,
         positionLabel: @escaping (Int, Int) -> String,
@@ -53,6 +56,7 @@ public struct KozmosPOIMediaGallery: View {
         onActiveIndexChange: ((Int) -> Void)? = nil
     ) {
         self.media = media
+        self.surface = surface
         self.label = label
         self.positionLabel = positionLabel
         self.activeIndex = activeIndex
@@ -155,7 +159,7 @@ public struct KozmosPOIMediaGallery: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: POIMediaGalleryGeometry.spacing) {
                             ForEach(Array(media.enumerated()), id: \.element.id) { index, item in
-                                POIMediaTile(
+                                POIMediaTile(surface: surface, 
                                     item: item,
                                     unavailableLabel: unavailableLabel,
                                     loadingLabel: loadingLabel,
@@ -270,6 +274,8 @@ struct POIMediaTileFramesKey: PreferenceKey {
 /// One tile: loading, loaded, or unavailable — three states the old
 /// placeholder showed as one grey box.
 struct POIMediaTile: View {
+    /// The tile's own surface behind an image or its placeholder.
+    var surface: Color = KozmosColors.primitivesColorsBackground100
     let item: KozmosPOIMediaPresentation
     let unavailableLabel: String
     let loadingLabel: String
@@ -295,7 +301,7 @@ struct POIMediaTile: View {
         // filled image larger than the tile cannot resize it. A flexible
         // frame around the image did: it grows to max(child, proposal), and
         // the tile became as wide as the scaled image.
-        KozmosColors.primitivesColorsBackground100
+        surface
             .overlay(content)
             .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous))
     }

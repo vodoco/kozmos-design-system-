@@ -13,7 +13,7 @@ public struct KozmosCategoryField<Icon: View>: View {
     private let count: Int?
     /// The count's spoken form; the host pluralises and localises it.
     private let countLabel: (Int) -> String
-    private let tint: Color
+    private let tint: KozmosCategoryTint
     private let clearLabel: String
     private let onClear: () -> Void
     private let icon: Icon
@@ -22,7 +22,7 @@ public struct KozmosCategoryField<Icon: View>: View {
         label: String,
         count: Int? = nil,
         countLabel: @escaping (Int) -> String = { "\($0) places" },
-        tint: Color = KozmosColors.primitivesColorsTheme500,
+        tint: KozmosCategoryTint = KozmosCategoryTint(accent: KozmosColors.primitivesColorsTheme500, fill: KozmosInkedFill(fill: KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle, ink: KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle)),
         clearLabel: String = "Clear category",
         onClear: @escaping () -> Void,
         @ViewBuilder icon: () -> Icon
@@ -45,26 +45,26 @@ public struct KozmosCategoryField<Icon: View>: View {
         HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
             icon
                 .frame(width: Self.iconSize, height: Self.iconSize)
-                .foregroundColor(tint)
+                .foregroundColor(tint.accent)
                 .accessibilityHidden(true)
             Text(label)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(tint)
+                .foregroundColor(tint.accent)
                 .lineLimit(1)
             if let count {
                 Text("\(count)")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(KozmosColors.primitivesColorsBackground0)
+                    .foregroundColor(tint.fill.ink)
                     .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing75)
                     .frame(minWidth: Self.pillHeight, minHeight: Self.pillHeight)
-                    .background(Capsule().fill(tint))
+                    .background(Capsule().fill(tint.fill.fill))
                     .accessibilityLabel(countLabel(count))
             }
             Spacer(minLength: 0)
             Button(action: onClear) {
                 Image(systemName: "xmark")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(tint)
+                    .foregroundColor(tint.accent)
                     .frame(width: Self.clearSize, height: Self.clearSize)
                     .contentShape(Circle())
             }
@@ -74,11 +74,11 @@ public struct KozmosCategoryField<Icon: View>: View {
         .padding(.leading, KozmosDimensions.primitivesLayoutSpacing150)
         .padding(.trailing, KozmosDimensions.primitivesLayoutSpacing100)
         .frame(height: Self.height)
-        .background(tint.opacity(0.12))
+        .background(tint.accent.opacity(0.12))
         .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
-                .strokeBorder(tint, lineWidth: 1)
+                .strokeBorder(tint.accent, lineWidth: 1)
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel(count.map { "\(label), \(countLabel($0))" } ?? label)

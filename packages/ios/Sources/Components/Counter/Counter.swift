@@ -21,15 +21,15 @@ public struct KozmosCounter: View {
     /// treatment rather than two.
     let emotion: KozmosEmotion?
     /// A fill of the host's own — a category's colour — over the tone's and
-    /// the emotion's; the digits go white on it.
-    let fill: Color?
+    /// the emotion's, with the ink that reads on it.
+    let fill: KozmosInkedFill?
 
     public init(
         _ text: String,
         tone: KozmosCounterTone = .neutral,
         size: KozmosCounterSize = .default,
         emotion: KozmosEmotion? = nil,
-        fill: Color? = nil
+        fill: KozmosInkedFill? = nil
     ) {
         self.text = text
         self.tone = tone
@@ -45,8 +45,8 @@ public struct KozmosCounter: View {
             .lineLimit(1)
             .padding(.horizontal, horizontalPadding)
             .frame(minWidth: minWidth, minHeight: height)
-            .background(fill ?? emotion?.surface ?? backgroundColor)
-            .foregroundColor(fill != nil ? KozmosColors.primitivesColorsBackground0 : (emotion?.onSurface ?? foregroundColor))
+            .background(fill?.fill ?? emotion?.surface ?? backgroundColor)
+            .foregroundColor(fill?.ink ?? emotion?.onSurface ?? foregroundColor)
             .clipShape(Capsule())
     }
 
