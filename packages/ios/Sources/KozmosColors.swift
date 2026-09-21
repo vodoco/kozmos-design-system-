@@ -2123,6 +2123,318 @@ public class KozmosColors {
         return Color.clear
         #endif
     }
+    public static var semanticsCategoryAccentYellow: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#F9AC17") : UIColor(hex: "#F9AC17")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#F9AC17") : NSColor(hex: "#F9AC17")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentOrange: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E5801A") : UIColor(hex: "#E5801A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#E5801A") : NSColor(hex: "#E5801A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentTurquoise: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#37A4A4") : UIColor(hex: "#37A4A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#37A4A4") : NSColor(hex: "#37A4A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentRed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#D92626") : UIColor(hex: "#D92626")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#D92626") : NSColor(hex: "#D92626")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentBlue: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2080DF") : UIColor(hex: "#2080DF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2080DF") : NSColor(hex: "#2080DF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentNavy: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4D4DB2") : UIColor(hex: "#4D4DB2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4D4DB2") : NSColor(hex: "#4D4DB2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentGreen: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#339933") : UIColor(hex: "#339933")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#339933") : NSColor(hex: "#339933")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentPink: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#B24DB2") : UIColor(hex: "#B24DB2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#B24DB2") : NSColor(hex: "#B24DB2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillYellow: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#F9AC17") : UIColor(hex: "#F9AC17")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#F9AC17") : NSColor(hex: "#F9AC17")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillOrange: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E5801A") : UIColor(hex: "#E5801A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#E5801A") : NSColor(hex: "#E5801A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillTurquoise: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#37A4A4") : UIColor(hex: "#37A4A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#37A4A4") : NSColor(hex: "#37A4A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillRed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#D92626") : UIColor(hex: "#D92626")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#D92626") : NSColor(hex: "#D92626")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillBlue: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1E77CF") : UIColor(hex: "#1E77CF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#1E77CF") : NSColor(hex: "#1E77CF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillNavy: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4D4DB2") : UIColor(hex: "#4D4DB2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4D4DB2") : NSColor(hex: "#4D4DB2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillGreen: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#339933") : UIColor(hex: "#339933")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#339933") : NSColor(hex: "#339933")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillPink: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#B24DB2") : UIColor(hex: "#B24DB2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#B24DB2") : NSColor(hex: "#B24DB2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillYellow: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillOrange: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillTurquoise: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillRed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillBlue: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillNavy: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillGreen: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillPink: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
     public static var componentsPrimaryButtonsThemedButtonForegroundContentIdle: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in

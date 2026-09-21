@@ -123,6 +123,16 @@ for (const alias of contract.runtimeAliases ?? []) {
 for (const mode of modes) {
   const variables = readCssVariables(mode);
 
+  // A category's count pill or counter: the ink on the fill reaches 4.5:1 in
+  // both modes (the palette is the taxonomy's, the same in light and dark).
+  for (const name of ["yellow", "orange", "turquoise", "red", "blue", "navy", "green", "pink"]) {
+    contract.pairs.push({
+      name: `category ${name} fill / on-fill`,
+      background: `semantics-category-fill-${name}`,
+      foreground: `semantics-category-on-fill-${name}`,
+      minimum: 4.5,
+    });
+  }
   for (const pair of contract.pairs) {
     const background = colorFor(variables, pair.background, mode, pair.name);
     const foreground = colorFor(variables, pair.foreground, mode, pair.name);

@@ -9199,7 +9199,7 @@ assertContains(
   assertContains(
     files.iosCategoryTile,
     source.iosCategoryTile,
-    `KozmosCounter("\\(count)", tone: .${tone}, fill: tint)`,
+    `KozmosCounter("\\(count)", tone: .${tone}, fill: tint?.fill)`,
     `iOS CategoryTile counter, ${tone} tone, the tint as its fill`,
   );
   assertContains(
@@ -9231,19 +9231,27 @@ assertContains(
   }
   // The tint: the icon and the counter's fill take it on each platform.
   if (categoryTile.content.tint) {
-    assertContains(files.iosCategoryTile, source.iosCategoryTile, ".foregroundColor(tint ?? KozmosColors.primitivesColorsTheme500)", "iOS CategoryTile icon in the tint");
-    assertContains(files.reactCategoryTile, source.reactCategoryTile, 'backgroundColor: "var(--kozmos-category-tint)"', "React CategoryTile counter in the tint");
-    assertContains(files.reactCategoryTile, source.reactCategoryTile, '"--kozmos-category-tint": tint', "React CategoryTile tint variable");
-    assertContains(files.androidCategoryTile, source.androidCategoryTile, "LocalContentColor provides (tint ?: KozmosColors.primitivesColorsTheme500)", "Android CategoryTile icon in the tint");
-    assertContains(files.androidCategoryTile, source.androidCategoryTile, "fill = tint", "Android CategoryTile counter in the tint");
+    assertContains(files.iosCategoryTile, source.iosCategoryTile, ".foregroundColor(tint?.accent ?? KozmosColors.primitivesColorsTheme500)", "iOS CategoryTile icon in the tint");
+    assertContains(files.reactCategoryTile, source.reactCategoryTile, 'backgroundColor: tint.fill, color: tint.onFill', "React CategoryTile counter in the tint");
+    assertContains(files.reactCategoryTile, source.reactCategoryTile, '"--kozmos-category-tint": tint.accent', "React CategoryTile tint variable");
+    assertContains(files.androidCategoryTile, source.androidCategoryTile, "LocalContentColor provides (tint?.accent ?: KozmosColors.primitivesColorsTheme500)", "Android CategoryTile icon in the tint");
+    assertContains(files.androidCategoryTile, source.androidCategoryTile, "fill = tint?.fill", "Android CategoryTile counter in the tint");
   }
+}
+
+// Counter: an inked fill — the fill and its ink together — on each platform.
+if (counter.fill) {
+  assertContains(files.iosCounter, source.iosCounter, "fill?.fill ?? emotion?.surface ?? backgroundColor", "iOS Counter fill");
+  assertContains(files.iosCounter, source.iosCounter, "fill?.ink ?? emotion?.onSurface ?? foregroundColor", "iOS Counter ink");
+  assertContains(files.androidCounter, source.androidCounter, "fill?.fill ?: emotion?.surface ?: containerColor", "Android Counter fill");
+  assertContains(files.androidCounter, source.androidCounter, "fill?.ink ?: emotion?.onSurface ?: contentColor", "Android Counter ink");
 }
 
 // LocationPin: a tint for the marker, over the variant's colour; featured still wins.
 if (locationPin.content.tint) {
-  assertContains(files.iosLocationPin, source.iosLocationPin, /if featured \{ return KozmosColors\.primitivesColorsEmotionalAlert500 \}\s+if let tint \{ return tint \}/, "iOS LocationPin tint after featured");
+  assertContains(files.iosLocationPin, source.iosLocationPin, /if featured \{ return KozmosColors\.primitivesColorsEmotionalAlert500 \}\s+if let tint \{ return tint\.fill\.fill \}/, "iOS LocationPin tint after featured");
   assertContains(files.reactLocationPin, source.reactLocationPin, "tint && !featured", "React LocationPin tint unless featured");
-  assertContains(files.androidLocationPin, source.androidLocationPin, /featured -> KozmosColors\.primitivesColorsEmotionalAlert500\s+tint != null -> tint/, "Android LocationPin tint after featured");
+  assertContains(files.androidLocationPin, source.androidLocationPin, /featured -> KozmosColors\.primitivesColorsEmotionalAlert500\s+tint != null -> tint\.fill\.fill/, "Android LocationPin tint after featured");
 }
 
 // POIDetailPanel: in a sheet, no surface of its own.

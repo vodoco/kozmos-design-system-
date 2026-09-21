@@ -95,9 +95,9 @@
         "counterSize": "default",
         "counterTone": "brand",
         "counterOverhang": 4,
-        "tint": "optional; the category's own colour takes the icon and the counter's fill, the square stays neutral"
+        "tint": "optional category tint — accent, fill, onFill: the accent takes the icon and the selection's stroke, the inked fill the counter; the square stays neutral"
       },
-      "notes": "resultCount draws as the system's counter at the icon square's top-right, counterOverhang beyond its top and right edges so the icon stays clear; resultCountLabel is its spoken form and draws nothing. A tint — the category's colour, as the chosen-category field wears it — takes the icon and the counter's fill."
+      "notes": "resultCount draws as the system's counter at the icon square's top-right, counterOverhang beyond its top and right edges so the icon stays clear; resultCountLabel is its spoken form and draws nothing. A tint is a category tint (accent, fill, onFill) as the chosen-category field wears it; Semantics.Category carries the taxonomy's eight, each fill's ink held to 4.5:1 by the contrast check."
     },
     "locationPin": {
       "sizes": {
@@ -106,7 +106,7 @@
         "large": { "diameter": 40 }
       },
       "content": {
-        "tint": "optional; a colour of the host's own for the marker, over the variant's; a featured pin keeps the alert colour"
+        "tint": "optional category tint: its fill is the marker, its onFill the number's ink, over the variant's; a featured pin keeps the alert colour"
       }
     },
     "poiDetailPanel": {
@@ -116,6 +116,7 @@
       }
     },
     "counter": {
+      "fill": "optional inked fill — a fill and the ink that reads on it — over the tone's and the emotion's colours; a host passes both, since no one ink reads on every fill",
       "tones": ["neutral", "brand", "destructive", "inverse"],
       "sizes": {
         "small": {
