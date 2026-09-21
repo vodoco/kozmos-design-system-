@@ -987,6 +987,18 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   block-size: calc(var(--primitives-layout-sizing-600) * 1px);
 }
 
+/* A stage for pins, which position themselves (LocationPin is absolute, tip
+   on its anchor): tall enough for a large pin, or one with a label above. */
+.site-demo-pins {
+  position: relative;
+  inline-size: 100%;
+  block-size: 6rem;
+}
+
+.site-demo-pins-tall {
+  block-size: 9rem;
+}
+
 /* The map shell needs a height to lay out in; the layer fills MapView's inset
    region so pins can sit at percentages, as the venue example's does. */
 .site-demo-shell {

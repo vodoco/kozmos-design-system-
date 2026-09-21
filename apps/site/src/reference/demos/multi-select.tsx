@@ -17,7 +17,15 @@ function Cities() {
         onValueChange={(next) => setValue(next)}
       />
       <Text size="sm" color="muted" aria-live="polite">
-        {value.length ? value.join(", ") : "None chosen."}
+        {value.length
+          ? value
+              .map(
+                (chosen) =>
+                  comboboxOptions.find((option) => option.value === chosen)
+                    ?.label ?? chosen,
+              )
+              .join(", ")
+          : "None chosen."}
       </Text>
     </Box>
   );

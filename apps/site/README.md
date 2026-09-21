@@ -519,6 +519,15 @@ Measured while building the site; none of it is the site's to fix.
   Compose module has no Maven publishing configured.
 - **17 of 103 component docs have no SwiftUI or Compose snippet**, so those
   reference pages will show React only until the docs carry the others.
+- **37 of 104 component docs open with the placeholder "Displays the X
+  interface topology natively."** (Backdrop, BottomNavigation, BottomSheet,
+  Box, Breadcrumb, Container, FileUpload, FloatingActionButton,
+  FloorSelector, Grid, Heading, Icon, Link, List, LocationPin, MapView, Menu,
+  OTPInput, Pagination, POICard, Popover, Rating, Search, SearchBar,
+  Separator, Skeleton, Spinner, SplitButton, Stack, Stepper, Table, Tabs, Tag,
+  Text, Textarea, ThemeProvider, ToggleButton). The reference shows the docs'
+  own words, so those pages and index cards open with it; the fix is one
+  sentence per `.mdx`, and `pnpm generate` picks it up.
 
 ## Troubleshooting
 
