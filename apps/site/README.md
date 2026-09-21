@@ -31,7 +31,7 @@ nothing outside `apps/site` except `pnpm-lock.yaml`.
 | ----------------- | --------------------------------------------------------------- |
 | Working copy      | `/Volumes/4TB Depo/development/K/kozmos-design-system-site`     |
 | Branch            | `claude/kozmos-site` (local; not pushed)                        |
-| Based on          | `claude/pointr-browse-repairs` at `ef1b68b`                     |
+| Based on          | `claude/pointr-browse-repairs` at `f30c0f9`                     |
 | The site          | `apps/site` in that working copy                                |
 | Gaps it found     | [`GAPS.md`](./GAPS.md)                                          |
 | The main checkout | `…/kozmos-design-system-dev`, on `main` — the site is not there |

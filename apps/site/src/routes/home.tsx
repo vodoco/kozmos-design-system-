@@ -58,7 +58,7 @@ const features: {
     icon: "feather",
     title: "Linked to Figma",
     description:
-      "Code Connect maps the components in the Figma library to their React, SwiftUI and Compose code, for Figma's Dev Mode.",
+      "Code Connect is published for the Figma library, so Dev Mode shows a component's React, SwiftUI and Compose code beside its design.",
   },
   {
     icon: "settings-01",

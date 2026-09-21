@@ -5,7 +5,8 @@ The site is built from `@kozmos/react` and its tokens only (see README.md,
 being worked around, following the method in `docs/ds-handoff.md` §11: the
 component and the part, what was tried, the lane, and the evidence. Every entry
 was measured on `claude/pointr-browse-repairs` at `ef1b68b` (2026-09-21), the
-branch the site is built on.
+branch the site is built on; its packages are unchanged at `f30c0f9`, the
+site's current base.
 
 **Lanes** are the handoff's: Core (domain-neutral components), Product / SDK,
 or Site (a need of this website, not of a product).
