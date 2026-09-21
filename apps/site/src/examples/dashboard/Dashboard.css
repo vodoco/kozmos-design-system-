@@ -1,0 +1,58 @@
+/* Dashboard: the console's frame — a Navbar, a Sidebar and the content — and
+   the toolbar's row. Layout only. */
+
+.ex-dash {
+  min-block-size: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--primitives-colors-background-50);
+}
+
+.ex-dash-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-block-size: 0;
+}
+
+/* The content on a solid surface: the emotion colours (a Live tag, a
+   success alert) are tuned to it, and fall under 4.5:1 on the muted
+   background around it (GAPS.md, GAP-31). */
+.ex-dash-main {
+  min-inline-size: 0;
+  margin: var(--site-space-300);
+  padding: var(--site-space-400) var(--site-space-400) var(--site-space-900);
+  border-radius: var(--site-radius-container);
+}
+
+.ex-dash-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--site-space-200);
+}
+
+.ex-dash-city {
+  inline-size: 14rem;
+}
+
+/* A loading row: one line per cell, the row's own height. */
+.ex-dash-skeleton {
+  block-size: calc(var(--primitives-layout-sizing-200) * 1px);
+  inline-size: 100%;
+}
+
+.ex-dash-form {
+  display: grid;
+  gap: var(--site-space-300);
+}
+
+/* Below a tablet's width the sidebar goes; the navbar's items remain. */
+@media (max-width: 64rem) {
+  .ex-dash-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ex-dash-body > :first-child {
+    display: none;
+  }
+}

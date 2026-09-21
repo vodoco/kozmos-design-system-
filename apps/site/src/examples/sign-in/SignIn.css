@@ -1,0 +1,18 @@
+/* Sign in: one card in the middle of the page. Layout only. */
+
+.ex-signin {
+  min-block-size: 100%;
+  display: grid;
+  place-items: center;
+  padding: var(--site-space-600) var(--site-space-300);
+  background: var(--primitives-colors-background-50);
+}
+
+.ex-signin-card {
+  inline-size: min(100%, 26rem);
+}
+
+.ex-signin-form {
+  display: grid;
+  gap: var(--site-space-300);
+}

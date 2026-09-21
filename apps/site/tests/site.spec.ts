@@ -22,6 +22,11 @@ const pages = [
   { path: "/examples/wayfinding", title: "Wayfinding" },
   { path: "/examples/phone-search", title: "Phone search sheet" },
   { path: "/examples/kiosk-directory", title: "Kiosk directory" },
+  { path: "/examples/sign-in", title: "Sign in" },
+  { path: "/examples/dashboard", title: "Operations dashboard" },
+  { path: "/examples/booking", title: "Room booking" },
+  { path: "/examples/notifications", title: "Notifications inbox" },
+  { path: "/examples/onboarding", title: "First-run onboarding" },
   { path: "/foundations", title: "Foundations" },
   { path: "/foundations/colour", title: "Colour" },
   { path: "/foundations/typography", title: "Typography" },
@@ -98,6 +103,9 @@ const knownViolations: Record<string, readonly KnownViolation[]> = {
   "/examples/venue-explorer": ["landmark-complementary-is-top-level"],
   "/examples/wayfinding": ["landmark-complementary-is-top-level"],
   "/examples/phone-search": ["landmark-complementary-is-top-level"],
+  // Not a gap: the dashboard's Sidebar is an aside by nature, shown inside
+  // the page's main like every example.
+  "/examples/dashboard": ["landmark-complementary-is-top-level"],
   "/": ["landmark-complementary-is-top-level"],
   "/components/adaptive-map-shell": [
     "landmark-complementary-is-top-level",
@@ -908,6 +916,212 @@ test.describe("kiosk directory example", () => {
     await expect(
       example.getByRole("button", { name: "Shops 3 places" }),
     ).toBeVisible();
+  });
+});
+
+test.describe("sign-in example", () => {
+  test("refuses a bad email and a short password, then a wrong code, then signs in", async ({
+    page,
+  }) => {
+    await page.goto("/examples/sign-in");
+    await hydrated(page);
+    const example = page.getByRole("region", { name: "Sign in example" });
+    const email = example.getByLabel("Email");
+    const password = example.getByLabel("Password", { exact: true });
+    await email.fill("not-an-email");
+    await password.fill("short");
+    await example.getByRole("button", { name: "Continue" }).click();
+    await expect(
+      example.getByText("Enter an email address, like name@example.com."),
+    ).toBeVisible();
+    await expect(
+      example.getByText("Use at least 12 characters."),
+    ).toBeVisible();
+    await email.fill("sam@example.com");
+    await password.fill("correct horse battery");
+    await example.getByRole("button", { name: "Continue" }).click();
+    await expect(example.getByText("Check your phone")).toBeVisible();
+
+    const enterCode = async (code: string) => {
+      for (const [index, digit] of [...code].entries()) {
+        await example
+          .getByRole("textbox", { name: `Digit ${index + 1} of 6` })
+          .fill(digit);
+      }
+    };
+    await enterCode("000000");
+    await example.getByRole("button", { name: "Verify" }).click();
+    await expect(
+      example.getByText(
+        "That code did not match. Check the message and try again.",
+      ),
+    ).toBeVisible();
+    await enterCode("123456");
+    await example.getByRole("button", { name: "Verify" }).click();
+    await expect(example.getByText("Welcome back")).toBeVisible();
+    await expect(
+      example.getByText("You are signed in as sam@example.com."),
+    ).toBeVisible();
+    await hydrated(page);
+    expect(await axeViolations(page)).toEqual([]);
+    await example.getByRole("button", { name: "Sign out" }).click();
+    await expect(example.getByText("Sign in to Venue Manager")).toBeVisible();
+  });
+});
+
+test.describe("dashboard example", () => {
+  test("pages, filters, searches, archives a venue and adds one", async ({
+    page,
+  }) => {
+    await page.goto("/examples/dashboard");
+    await hydrated(page);
+    const example = page.getByRole("region", {
+      name: "Operations dashboard example",
+    });
+    await expect(example.getByText("12 venues · page 1 of 3")).toBeVisible();
+    await example.getByRole("link", { name: /next page/i }).click();
+    await expect(example.getByText("12 venues · page 2 of 3")).toBeVisible();
+
+    const status = example.getByRole("group", { name: "Status" });
+    await status.getByRole("button", { name: "Draft" }).click();
+    await expect(example.getByText("2 venues")).toBeVisible();
+    await status.getByRole("button", { name: "All" }).click();
+    await example
+      .getByRole("searchbox", { name: "Search venues" })
+      .fill("harbour");
+    await expect(example.getByText("1 venue")).toBeVisible();
+    await example
+      .getByRole("button", { name: "Actions for Harbour Terminal" })
+      .click();
+    await page.getByRole("menuitem", { name: "Archive" }).click();
+    await expect(
+      example.getByText("Harbour Terminal is now archived."),
+    ).toBeVisible();
+    await expect(example.getByRole("cell", { name: "Archived" })).toBeVisible();
+
+    await example.getByRole("searchbox", { name: "Search venues" }).fill("");
+    await example.getByRole("button", { name: "Add venue" }).first().click();
+    const dialog = page.getByRole("dialog", { name: "Add a venue" });
+    await dialog.getByRole("button", { name: "Add venue" }).click();
+    await expect(dialog.getByText("Give the venue a name.")).toBeVisible();
+    await dialog.getByLabel("Name").fill("Pier Market");
+    await dialog.getByRole("button", { name: "Add venue" }).click();
+    await expect(
+      example.getByText("Pier Market was added as a draft."),
+    ).toBeVisible();
+    await expect(example.getByText("13 venues · page 1 of 3")).toBeVisible();
+    await hydrated(page);
+    expect(await axeViolations(page)).toEqual([]);
+  });
+});
+
+test.describe("booking example", () => {
+  test("checks each step before the next, then books", async ({ page }) => {
+    await page.goto("/examples/booking");
+    await hydrated(page);
+    const example = page.getByRole("region", { name: "Room booking example" });
+    await example.getByRole("button", { name: "Next" }).click();
+    await expect(example.getByText("Choose a date.")).toBeVisible();
+    await expect(example.getByText("Choose a start time.")).toBeVisible();
+    await example.getByLabel("Date").fill("2026-10-05");
+    await example.getByLabel("Start").fill("14:00");
+    await example.getByRole("radio", { name: /Boardroom/ }).click();
+    await example.getByRole("button", { name: "Next" }).click();
+    await expect(
+      example.getByRole("heading", { level: 3, name: "Details" }),
+    ).toBeVisible();
+
+    await example.getByRole("button", { name: "Next" }).click();
+    await expect(example.getByText("Enter your name.")).toBeVisible();
+    await expect(
+      example.getByText("The room policy has to be accepted."),
+    ).toBeVisible();
+    await example.getByLabel("Your name").fill("Sam Rivera");
+    await example.getByLabel("Email").fill("sam@example.com");
+    await example.getByRole("checkbox", { name: /room policy/ }).click();
+    await example.getByRole("button", { name: "Next" }).click();
+    await expect(
+      example.getByRole("heading", { level: 3, name: "Confirm" }),
+    ).toBeVisible();
+    await expect(example.getByText("Monday 5 October")).toBeVisible();
+    await hydrated(page);
+    expect(await axeViolations(page)).toEqual([]);
+    await example.getByRole("button", { name: "Confirm booking" }).click();
+    await expect(example.getByText("Booked.", { exact: true })).toBeVisible();
+    await expect(
+      example.getByText(/Boardroom on Monday 5 October at 14:00/),
+    ).toBeVisible();
+  });
+});
+
+test.describe("notifications example", () => {
+  test("marks one read, shows only unread, marks all read and undoes it", async ({
+    page,
+  }) => {
+    await page.goto("/examples/notifications");
+    await hydrated(page);
+    const example = page.getByRole("region", {
+      name: "Notifications inbox example",
+    });
+    await expect(example.getByLabel("4 unread")).toBeVisible();
+    await example
+      .getByRole("button", {
+        name: "Mark “Lift 3 is out of service at Riverside Centre” as read",
+      })
+      .click();
+    await expect(
+      example.getByText("1 notification marked as read."),
+    ).toBeVisible();
+    await expect(example.getByLabel("3 unread")).toBeVisible();
+
+    await example.getByRole("switch", { name: "Only unread" }).click();
+    await expect(example.getByRole("button", { name: /^Mark “/ })).toHaveCount(
+      3,
+    );
+    await example.getByRole("tab", { name: "System" }).click();
+    await expect(example.getByRole("button", { name: /^Mark “/ })).toHaveCount(
+      1,
+    );
+    await example.getByRole("button", { name: "Mark all as read" }).click();
+    await expect(
+      example.getByText("3 notifications marked as read."),
+    ).toBeVisible();
+    await expect(example.getByText("You are all caught up")).toBeVisible();
+    await hydrated(page);
+    expect(await axeViolations(page)).toEqual([]);
+    await example.getByRole("button", { name: "Undo" }).click();
+    await expect(example.getByLabel("3 unread")).toBeVisible();
+  });
+});
+
+test.describe("onboarding example", () => {
+  test("walks the five steps and sums them up", async ({ page }) => {
+    await page.goto("/examples/onboarding");
+    await hydrated(page);
+    const example = page.getByRole("region", {
+      name: "First-run onboarding example",
+    });
+    await example.getByRole("button", { name: "Let’s go" }).click();
+    await example
+      .getByRole("group", { name: "Distances" })
+      .getByRole("radio", { name: "Feet" })
+      .click();
+    await example.getByRole("button", { name: "Next" }).click();
+    await example
+      .getByRole("group", { name: "Interests" })
+      .getByRole("button", { name: "Events" })
+      .click();
+    await expect(example.getByText("2 picked.")).toBeVisible();
+    await example.getByRole("button", { name: "Next" }).click();
+    await example.getByRole("radio", { name: /^Always/ }).click();
+    await hydrated(page);
+    expect(await axeViolations(page)).toEqual([]);
+    await example.getByRole("button", { name: "Next" }).click();
+    await expect(example.getByText(/Distances in feet/)).toBeVisible();
+    await expect(example.getByText("Interests: Shops, Events.")).toBeVisible();
+    await expect(example.getByText("Location: always.")).toBeVisible();
+    await example.getByRole("button", { name: "Start exploring" }).click();
+    await expect(example.getByText("You are set")).toBeVisible();
   });
 });
 

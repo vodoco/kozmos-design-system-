@@ -1,0 +1,17 @@
+/* Notifications: a column of items, each an icon, the words and one action.
+   Layout only. */
+
+.ex-inbox {
+  min-block-size: 100%;
+  padding: var(--site-space-600) var(--site-space-300) var(--site-space-900);
+  max-inline-size: 48rem;
+  margin-inline: auto;
+}
+
+.ex-inbox-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--site-space-200);
+  padding-block: var(--site-space-100);
+}

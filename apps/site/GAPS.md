@@ -52,6 +52,7 @@ purpose, because hiding it would hide the evidence).
 | GAP-33 | No token for the route line on the map                        | Product / SDK          | composed     |
 | GAP-34 | `Backdrop` pins itself to the viewport                        | Core                   | composed     |
 | GAP-35 | `BrowseCategoriesPanel` is four columns at any width          | Product / SDK          | composed     |
+| GAP-36 | `ToastViewport` pins itself to the viewport                   | Core                   | composed     |
 
 ---
 
@@ -442,8 +443,11 @@ purpose, because hiding it would hide the evidence).
   `Alert`'s warning variant, an outlined `Tag` with `emotion="alert"`, and
   every field message with `status="warning"` (`Input`, `DatePicker`,
   `TimePicker`, `Textarea`…) fail on a card, where alerts and forms usually
-  sit. The contrast contract's 22 pairs do not
-  include the emotion text roles on the card.
+  sit. The success text (`#197f4c`, success 800) has the same edge:
+  4.57:1 on white, 4.48:1 on the muted background (`#f1f2f4`), so a Live
+  tag or a success alert on a page's muted canvas fails too. The contrast
+  contract's 22 pairs do not include the emotion text roles on the card or
+  the muted background.
 - **Now:** the Alert, Tag, Input and DatePicker pages show the state and
   carry the finding, with the numbers, in `knownViolations`.
 - **Lane:** Core.
@@ -497,3 +501,16 @@ purpose, because hiding it would hide the evidence).
 - **Lane:** Product / SDK.
 - **Fix in Kozmos:** `repeat(auto-fill, minmax(5.5rem, 1fr))`, or a
   `columns` prop, so a narrow host gets three columns.
+
+## GAP-36 · `ToastViewport` pins itself to the viewport
+
+- **What:** `ToastViewport` renders `fixed` at the browser window's corner.
+  A page shown in a frame — an example on this site, a module in a larger
+  product, a preview — cannot keep its toasts inside itself: they appear
+  outside it, over whatever the host is showing.
+- **Now:** the dashboard and the inbox confirm with an inline `Alert`
+  (`role="status"`), with the undo beside it.
+- **Lane:** Core.
+- **Fix in Kozmos:** a `placement` prop (`viewport` | `container`), as for
+  `Backdrop` (GAP-34), `BottomNavigation` (GAP-29) and `DynamicIsland`
+  (GAP-24) — the same family.

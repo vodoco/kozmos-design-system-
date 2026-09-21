@@ -12,6 +12,11 @@ export const exampleComponents: Record<string, ComponentType> = {
   wayfinding: lazy(() => import("./wayfinding/Wayfinding")),
   "phone-search": lazy(() => import("./phone-search/PhoneSearch")),
   "kiosk-directory": lazy(() => import("./kiosk-directory/KioskDirectory")),
+  "sign-in": lazy(() => import("./sign-in/SignIn")),
+  dashboard: lazy(() => import("./dashboard/Dashboard")),
+  booking: lazy(() => import("./booking/Booking")),
+  notifications: lazy(() => import("./notifications/Notifications")),
+  onboarding: lazy(() => import("./onboarding/Onboarding")),
 };
 
 /** The canvas an example is drawn on when shown small. */
