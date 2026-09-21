@@ -115,7 +115,7 @@ unit test of what a painter writes, not a picture of the file.
 
 | Gate                                                        | Result                                                                                                                                                                                                |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm figma:painters:check`                                 | 149 passed on the audit's commits; 81 failed on `604730c`'s plugin                                                                                                                                    |
+| `pnpm figma:painters:check`                                 | 149 passed on the audit's commits; 81 failed on `604730c`'s plugin. 211 pass at `c28921a` (§9): lookups, the build, icon binding, layout sizing, the audit's wash                                     |
 | `pnpm components:contract:check`, `pnpm figma:plugin:check` | ok, ok                                                                                                                                                                                                |
 | `pnpm figma:stamp:check`                                    | current after each commit (the hook re-stamps: `8d1312c6c6af`)                                                                                                                                        |
 | `pnpm figma:verify` against the live file                   | the expected reds: presence 97 expected, 2 missing (CategoryField, AISearchButton); variant drift on CategoryTile, LocationPin and DirectionStep; 0 of 95 sets on the new build — until the run in §4 |
@@ -125,6 +125,8 @@ unit test of what a painter writes, not a picture of the file.
 | `pnpm --filter @kozmos/react typecheck` and `lint`          | ok, ok (the Code Connect files are in the package's source tree); `@kozmos/icons` builds with the four new entries                                                                                    |
 
 ## 4. The run in Figma, in order (no importer access from a chat)
+
+_Steps 1 to 5 are done in the live file; §9 has the run for the current build._
 
 1. `pnpm figma:foundations` is committed (`docs/figma-foundations-payload.json`): run **Import
    Foundations** so the 24 category variables exist.
@@ -188,6 +190,18 @@ unit test of what a painter writes, not a picture of the file.
   page. The definitions are now generated from the registry with the catalog's keys, and
   `pnpm components:contract:check` holds the three together.
 
+- A lookup that searches `figma.root.children` in order walks the whole Components page before
+  Icons. Read the page a component lives on first (`findComponentByName(name, [page])`).
+- Update All Core resumes by build stamp. A new build makes every set unfinished, so after a
+  plugin change update the sets that changed, one at a time.
+- A pasted report is evidence about the build that wrote it. Read `pluginBuild` in the report and
+  the build in the panel's header before trusting it.
+- HUG takes an auto-layout frame or text; FILL a child of an auto-layout frame, after the
+  append. A refused sizing is recorded in the run log, not thrown; the harness now refuses what
+  Figma refuses.
+- An unbound paint equal to a token's light value is not bound: it does not follow the mode.
+- zsh does not split an unquoted `$VAR` into words; pipe a list through `xargs`.
+
 ## 7. The audit, the same night
 
 Olcay asked for an adversarial pass before proceeding. Verified against the source, not
@@ -228,7 +242,76 @@ memory:
 | Read the live file                     | `pnpm figma:verify` with `FIGMA_ACCESS_TOKEN` exported from the main checkout's `.env` (the guide §4 has the line)                                                                                                                                                                        |
 | Code Connect for a tinted part         | the three `.figma.*` files beside each component; React takes literal objects per tint; the node id of a new set comes from Build's log                                                                                                                                                   |
 | The four rulings and the open decision | the handoff's §7                                                                                                                                                                                                                                                                          |
+| Where a component is looked up         | `findComponentByName(name, pageNames)`: the named pages first, then every page; found components are kept in `componentsFoundByName` while each is still in the file under its name; icons use `ICON_PAGE_NAME`, the slot default `UTILITIES_PAGE_NAME`                                   |
+| HUG and FILL                           | `setHugChildSizing` gives HUG only to an auto-layout frame or text (`canHugContent`); set FILL after the node is appended; the painter check's "Layout sizing Figma accepts" measures every config painter                                                                                |
+| What the audit reads under content     | `contrastChildBackground`: a frame's fill, then each `translucent-token-layer` child at paint alpha × layer opacity                                                                                                                                                                       |
+| The build a run names                  | `PLUGIN_BUILD` (stamped by `pnpm figma:stamp`); the panel asks with `ui-ready` and shows `plugin-build`; the audit report's `pluginBuild`                                                                                                                                                 |
+| An icon's re-tint                      | `iconSlotPaintIsExpected`: bound to the token, or the fallback colour only when the token's variable is missing from the file                                                                                                                                                             |
 
 - An instance's plugin data is a label, not its paint. The Button family's icons carried the
   right `foreground-token` and a black paint; a re-tint decided by the label skips them for
   ever. Decide by the paint, and count the repairs so a run says what it mended.
+
+## 9. The audit of 14:58, and what changed after it
+
+Olcay pasted a full Audit Library report at 14:58. It named no build; its typography rule
+dated it before `fc3e915`. Read against the source and, where it could be, the live file over
+REST. Nothing in the file changed after 14:56 until the run below.
+
+| Finding                                                                                             | What it was, and what was done                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Update All Core stalled at the Tree block                                                           | **Defect** (`50ba616`). Every Tree row looked up its icons by searching the pages in order, through the whole Components page (27,459 nodes), before Icons: 1,044 lookups, 28.7 million node visits in one blocking stretch, measured in the harness with pages of the live file's size. Icons are read from Icons first and kept while each is still in the file under its name: 506 visits. The slot default is read from Utilities first.                                                        |
+| The report named no build                                                                           | **Fixed** (`50ba616`). The panel's header shows the build; the report carries `pluginBuild`.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Typography: 160 stale, FormField's Required Mark expected Regular                                   | The rule `fc3e915` replaced; the painter draws it Medium. The live file has none stale under the current rule.                                                                                                                                                                                                                                                                                                                                                                                      |
+| Dark mode: icons at 1.0 on Badge Outline and Ghost, 1.61 on Secondary, 1.2 on Glass                 | **Defect in `414ba00`** (`3b1d226`). Those variants take `Colors/foreground/0`, whose light value is the Icons page glyph's own black; the paint check passed any unbound paint equal to the fallback, so a black glyph was never bound and stayed black in Dark. The fallback now counts only when the variable is missing. Update Button, IconButton and Badge, then Build Surface QA (the one surface QA issue is IconButton Glass).                                                             |
+| DirectionStep: 28 icons at 1.0                                                                      | The disc's 10 % paint is stored at 1 in the live file. Fixed by `e070cef` (the disc is a wash layer at 0.1); Update DirectionStep.                                                                                                                                                                                                                                                                                                                                                                  |
+| e070cef's premise, "Figma drops a bound paint's opacity"                                            | **Wrong as stated.** Over REST: CategoryField's 12 % wash is a bound paint that kept its opacity 0.12; CategoryTile's 5 % and 20 % and DirectionStep's 10 %, from the same helper, are stored at 1. What dropped those three is not established. Layer opacity does not depend on it, so the painters stand; the comments now say what was measured (`c28921a`).                                                                                                                                    |
+| After an Update, the audit would miss the wash                                                      | **Defect** (`c28921a`). It composited only a frame's own fill; a wash is now a layer of its own. It composites each translucent-token layer at paint alpha × layer opacity: the yellow label reads 1.77, not 1.92.                                                                                                                                                                                                                                                                                  |
+| FileUpload: 32 text nodes without a style                                                           | The browse text; `fc3e915` gives it the label style. Update FileUpload.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 319 layout sizing refusals in the earlier Fix Audit Issues log                                      | **Defect** (`07a28e7`). 306 were HUG on nodes that cannot hug (NavigationItem's icons, BottomSheet's handle), which stayed FIXED anyway. The rest mis-sized: FILL on the Slider track under a control without auto layout, FILL on BottomSheet's hidden Form slot. A sweep of every config painter in a harness that now refuses what Figma refuses found the same in BottomNavigation, Navbar, Sidebar, SearchBar, Tag, MetaStrip and Timeline. HUG goes only where it can; FILL after the append. |
+| CategoryField, AISearchButton had placeholder Code Connect pins                                     | **Pinned** (`9edcbe1`): 1933-9257 and 1933-9270 in the six files and the three linked configs; the dry runs validate on all three platforms. Publishing is Olcay's word.                                                                                                                                                                                                                                                                                                                            |
+| CategoryField: 11 text and 4 icon failures; CategoryTile: 6 icon; LocationPin: 18 off-floor numbers | **Design, not paint.** Computed from the token files, they match the audit to the hundredth. The painters draw what the code draws. Decisions for Olcay below.                                                                                                                                                                                                                                                                                                                                      |
+| React's pin number                                                                                  | **Defect, found here, not in the audit.** React draws the pin as an outline with a 20 % wash and inks the number with `onFill`, the ink for the solid fill: every tint fails in one mode or the other, 1.01 to 1.37, and the untinted pin's white number on a 20 % primary wash is illegible too. Native and Figma fill the pin solid, where the ink passes. A decision for Olcay below.                                                                                                            |
+
+### The category colours, measured
+
+From `packages/tokens/src/tokens-*.json`; a ✗ fails the threshold named.
+
+| Tint      | Off-floor number, fill on surface (4.5) Light / Dark | React number, onFill on 20 % fill (4.5) Light / Dark | Tile icon, accent on surface (3.0) Light | Field label, accent on 12 % wash (4.5) Light / Dark | Field label as foreground/0 |
+| --------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------- | --------------------------------------------------- | --------------------------- |
+| Yellow    | 1.92 ✗ / 10.94                                       | 15.43 / 1.15 ✗                                       | 1.92 ✗                                   | 1.77 ✗ / 9.43                                       | 19.40 / 18.09               |
+| Orange    | 2.82 ✗ / 7.43                                        | 14.47 / 1.06 ✗                                       | 2.82 ✗                                   | 2.51 ✗ / 6.64                                       | 18.69 / 18.76               |
+| Turquoise | 3.00 ✗ / 7.01                                        | 14.43 / 1.05 ✗                                       | 3.00 ✗                                   | 2.66 ✗ / 6.28                                       | 18.65 / 18.81               |
+| Red       | 4.93 / 4.26 ✗                                        | 1.37 ✗ / 18.41                                       | 4.93                                     | 4.09 ✗ / 3.99 ✗                                     | 17.42 / 19.70               |
+| Blue      | 4.57 / 4.59                                          | 1.30 ✗ / 17.96                                       | 4.03                                     | 3.48 ✗ / 4.78                                       | 18.14 / 19.25               |
+| Navy      | 6.95 / 3.02 ✗                                        | 1.36 ✗ / 18.81                                       | 6.95                                     | 5.81 / 2.84 ✗                                       | 17.54 / 19.75               |
+| Green     | 3.66 ✗ / 5.75                                        | 13.99 / 1.01 ✗                                       | 3.66                                     | 3.19 ✗ / 5.23                                       | 18.32 / 19.10               |
+| Pink      | 4.57 / 4.60                                          | 1.30 ✗ / 17.96                                       | 4.57                                     | 3.91 ✗ / 4.24 ✗                                     | 17.97 / 19.37               |
+
+### Decisions for Olcay (nothing changed until he says)
+
+1. **CategoryField's label** — recommended: `Colors/foreground/0`, as CategoryTile's label is
+   (17.4 to 19.8 everywhere); the wash, the border and the icon keep the category colour.
+2. **LocationPin's off-floor number** — recommended: `Colors/foreground/0` on the white disc on
+   all three platforms and in Figma; the ring keeps the category colour, so the state stays
+   shape-and-colour.
+3. **The category icons on light surfaces** (tile and field, Yellow, Orange, Turquoise) —
+   recommended: decorative. The label names the category beside each, so WCAG 1.4.11 does not
+   ask 3:1 of them; the audit would then need to know they are decorative.
+4. **React's pin** — recommended: fill the pin solid in the tint's fill, as native and Figma do,
+   so `onFill` inks the number on the colour it was chosen for.
+5. The CategoryField clear's hit area (§5, 5) and Code Connect publishing for the two new sets
+   stay his.
+
+### The run, with build `ef226bf9cd20`
+
+1. Close the plugin and run it again; the header must read **Build ef226bf9cd20**.
+2. Not Update All Core: its resume stamps are per build, so a new build starts it again at Link.
+   **Update**, one at a time, never Rebuild: DirectionStep, CategoryField, CategoryTile,
+   ScrollArea, BottomSheet, FileUpload, Button, IconButton, Badge, SearchBar, BottomNavigation,
+   Slider, NavigationItem; then TreeItem, TreeChildItem, TreeParentItem, Tree and Timeline, which
+   now take seconds.
+3. **Build Surface QA**, then **Audit Library**. Expected: no typography, DirectionStep, Button,
+   IconButton, Badge or surface QA warnings; the category colours above until he decides.
+4. From the terminal: `pnpm figma:verify`, and the REST read-back of the washes (layer opacity
+   0.12, 0.05, 0.2, 0.1, 0.32, 0.36).

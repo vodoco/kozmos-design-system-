@@ -1567,3 +1567,20 @@ Update deciding by the label would have skipped them. The plugin's re-tint now f
 paint (`414ba00`); the check proves the repair. His file is otherwise untouched by the new
 build: the Icons page holds 38, every set is on `dd9f78a05cc0`, the two new sets are absent —
 the run is still ahead.
+
+Olcay ran the importer on the 21st and pasted a second full audit at 14:58. It carried no
+build; its typography rule dated it before `fc3e915`. Update All Core had stalled at the Tree
+block: each Tree row searched the pages in order for its icons, through the whole Components
+page, 28.7 million node visits for 1,044 lookups; icons are now read from Icons first and kept,
+506 visits (`50ba616`, which also shows the build in the panel and the report). The dark-mode
+icon failures on Button, IconButton and Badge were unbound black glyphs that the re-tint check
+of `414ba00` passed because their colour matched the light fallback (`3b1d226`). The 319
+layout-sizing refusals of an earlier run were HUG on leaves and FILL before an append or under
+a frame without auto layout, in eleven painters (`07a28e7`). Over REST, CategoryField's bound
+12 % wash kept its opacity while CategoryTile's and DirectionStep's lost theirs, so `e070cef`'s
+"Figma drops a bound paint's opacity" was wrong as stated; the washes stay layers and the audit
+now composites them (`c28921a`). CategoryField and AISearchButton are pinned in Code Connect
+(`9edcbe1`). What the audit still flags is design: the category colours on light surfaces and
+the off-floor pin number, and React's pin inks its number for a fill it does not draw — numbers
+and recommendations in `docs/figma-drift-2026-09-21.md` §9, all Olcay's to decide. The run for
+build `ef226bf9cd20` is there too.

@@ -29,7 +29,7 @@ in the host, no JavaScript evaluation in native code, never traverse the SDK's p
 subviews; preserve handoff docs before any `/tmp` cleanup; never delete project directories; a
 metadata row at most three cells; never label fixture or simulator wayfinding as live
 navigation. Git: stage by file, never `git add -A` or a directory, never bare `git stash`;
-commit messages end with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`; ask before a
+commit messages end with the attribution the session's system reminder gives (`Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>` at the end of the 21st); ask before a
 push to a new branch (pushes to this branch were authorised and are the practice).
 
 ### Exact working state
@@ -37,7 +37,7 @@ push to a new branch (pushes to this branch were authorised and are the practice
 | What                   | Where / value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Worktree               | `/private/tmp/kozmos-browser-compat.uqPMBD` (a git worktree of `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`; the main checkout stays on `main`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Branch                 | `claude/pointr-browse-repairs`, pushed to `origin`, **nothing merged**. `414ba00` is the last change commit (the Figma drift, its audit, and the re-tint fix from Olcay's first audit in Figma, the evening of the 21st); every commit after it is documentation only, so the log after it lists docs alone                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Branch                 | `claude/pointr-browse-repairs`, pushed to `origin`, **nothing merged**. `c28921a` is the last change commit; plugin build **`ef226bf9cd20`**. After `414ba00` (the Figma drift, its audit, the re-tint fix): the panel's progress line `fdb88cc`, Backdrop's pins `dd37134`, washes as layers `e070cef`, the typography guess `fc3e915`, then from Olcay's second audit (14:58) the Icons-first lookup that ends the Tree stall and the build in the panel and the report `50ba616`, dark-mode icon binding `3b1d226`, Code Connect pins for CategoryField and AISearchButton `9edcbe1`, layout sizing Figma accepts `07a28e7`, and the audit reading content on its wash `c28921a` (`docs/figma-drift-2026-09-21.md` §9)                                                                                                                                                                                                                                        |
 | Commits since the 20th | 27 from `e2d5afd`: the category-state batch `7598786`…`5631b3f`; the tile batch `07aba83`…`4880f35`; the colours batch `bb13a15`…`6b58c87`; the audit batch `537a4cb`…`5d1760a`; the fill correction `8ac3616` + `52ab955`; the evening's Figma drift `c9a2f31`, `184ad22`, `6006614`, `8c50b97`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Tree                   | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Gates, all green       | iOS package 130 tests on iOS 26.5 (the button image snapshots skipped there, as CI does), 132 on iOS 18.4, 91 on macOS; CI's simulator step 52; the playground builds; the QA app's unit tests 48+8+8, both UI tests; web 548 unit tests, lint, typecheck, search-sheet 6/6 and map-sheet on chromium, firefox and webkit, navigation 20/20, poi-details (its two webkit dark-1280 stories time out on `page.goto` only when the machine is under full load, and pass alone every time); Android every Paparazzi golden verified + unit tests; contract parity, classes, owned CSS, raw values, contrast (218 pairs), motion parity, snippets, docs typecheck; and from the evening, `pnpm figma:painters:check` 149 (81 red on the plugin as it was), `figma:plugin:check`, `figma:stamp:check`, the Code Connect dry runs on three platforms parsing, `@kozmos/icons` typecheck and build, the React package's typecheck and lint after the Code Connect files |
@@ -215,16 +215,24 @@ ADAPTIVE_BROWSER=<chromium|firefox|webkit> pnpm test:search-sheet` (and `test:ma
 - **Found by the same night's audit, a decision:** the CategoryField's 32 clear has no 44 hit
   area on any platform, while the search bar's clear beside it has one. Recommended: a 44 hit
   area around the 32 visual on all three, as the search bar's — not changed without his word.
+- **Found in the second audit, 14:58, decisions** (numbers in `docs/figma-drift-2026-09-21.md` §9):
+  CategoryField's label in the category colour fails 4.5:1 for seven tints (recommended:
+  `Colors/foreground/0`, as the tile's label); LocationPin's off-floor number in the tint's fill
+  fails for six (recommended: `Colors/foreground/0` on the white disc); the yellow, orange and
+  turquoise icons on light surfaces (recommended: decorative, the label names the category);
+  React's pin inks its number for a solid fill it does not draw (recommended: fill it solid, as
+  native and Figma do). Code Connect for the two new sets publishes on his word.
 - The AI companion: the device floor (iOS 26 on Apple Intelligence-capable iPhones), Apple
   Intelligence on in his Mac's System Settings for the simulators, and the companion surface the
   DS lacks (the prototype's chat is measured).
 
 ## 8. Open, in order
 
-1. **The run in Figma** that lands the evening's work (`docs/figma-drift-2026-09-21.md` §4):
-   Import Foundations, Curated Icons → Update, Update the seven changed sets, Apply Text Styles,
-   Build CategoryField and AISearchButton, fill their Code Connect node ids and linked-config entries, then
-   `pnpm figma:verify` and the three dry runs; publishing on Olcay's word.
+1. **The run in Figma** with build `ef226bf9cd20` (`docs/figma-drift-2026-09-21.md` §9): relaunch
+   and read the build in the panel's header; Update, one at a time, the eighteen sets listed
+   there (not Update All Core, which a new build restarts at Link); Build Surface QA; Audit
+   Library; then `pnpm figma:verify` and the REST read-back of the washes. The §4 steps before
+   it are done; the Code Connect pins are in (`9edcbe1`); publishing on Olcay's word.
 2. **The Figma remainder** (stage doc §5): `Surface` and its axis on five sets; ManoeuvreCard,
    Itinerary and RouteProgressRail as sets; the shell's phone sheet (a decision); the 15th–19th
    drift — Tag's and Counter's `emotion`, MapControlButton's axes, the POI panel's anatomy; `⇅`.
@@ -247,6 +255,14 @@ counts from inside the border. A fast second `git add` after a hook-run commit c
 `index.lock`. A "harmless" SDK side effect shows only on the kind of place you did not test —
 test a room and a point.
 
+From the second audit: a search of the pages in order walks the whole Components page before
+Icons, so read a component's own page first; a new build restarts Update All Core, so update the
+changed sets; a pasted report is evidence about its own build (`pluginBuild`, and the panel's
+header); an unbound paint equal to a token's light value does not follow the mode; HUG takes
+only an auto-layout frame or text, FILL only after the append; a bound paint's own opacity was
+kept on one set and lost on three, so translucency lives on layer opacity; zsh does not split
+an unquoted `$VAR`.
+
 ## 10. The documents
 
 | Document                                            | What it holds                                                                                         |
@@ -263,7 +279,7 @@ test a room and a point.
 ## 11. To resume in a new chat
 
 1. `cd /private/tmp/kozmos-browser-compat.uqPMBD && git status && git log --oneline -8` — expect a
-   clean tree with `414ba00` as the last change commit on `claude/pointr-browse-repairs`. If the worktree is gone, check it
+   clean tree with `c28921a` as the last change commit on `claude/pointr-browse-repairs`. If the worktree is gone, check it
    out again from `origin/claude/pointr-browse-repairs`; the SDK frameworks and `QAConfig.json`
    must then be restored from Olcay (they are ignored files, never in git).
 2. Read `docs/initial-sheet-2026-09-20.md` (its last three sections first) and the guide.

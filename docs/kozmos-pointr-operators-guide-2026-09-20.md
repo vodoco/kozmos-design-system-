@@ -316,6 +316,15 @@ The same export runs `pnpm figma:publish:linked:dry`, `figma:publish:ios:linked:
 importer has been run for that set. The plugin's commit hook re-stamps `code.js`; commit it by
 name, never a directory.
 
+Which build ran is the first thing to read. The panel's header shows it ("Build …"), and an
+Audit Library report carries it as `pluginBuild`; a report without it came from a build before
+`50ba616`. Update All Core resumes by build stamp, so after any plugin change it starts again at
+Link: update the sets the change touched, one at a time, instead
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `ef226bf9cd20`).
+The painter check also refuses the layout sizing Figma refuses and counts the nodes a lookup
+visits, so a painter that asks for HUG on an icon, FILL before an append, or a whole-file search
+per variant fails there first.
+
 ## 5. Where each behaviour lives
 
 The QA app (`apps/PointrPlayground/Sources/App`):
@@ -434,6 +443,11 @@ item; the personal tiles leave the grid while empty, as built; the icon button's
 stays 48; the iPhone 17 Pro simulator is reset to English (`AppleLanguages (en-GB)`,
 `AppleLocale en_GB`, read back). The AI companion's decisions (§7 of the handoff) stay open._
 
+_From the second audit in Figma (14:58 on the 21st), open for Olcay with numbers in
+[figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9: CategoryField's label colour, the
+off-floor pin number's colour, whether the light-surface category icons are decorative, and
+React's pin fill; Code Connect publishing for CategoryField and AISearchButton._
+
 ## 8. What the design system still lacks, from the prototype
 
 The collapsible level
@@ -474,6 +488,18 @@ _Added on the 21st, evening, from the Figma drift
   right token and were plain black, and an Update that trusted the label skipped them. The
   re-tint is decided by the paint now (`iconSlotPaintIsExpected`); read a paint over REST
   before believing a label.
+- An unbound paint that equals a token's light value is not the token: it stays that colour in
+  Dark. The Secondary, Glass, Outline and Ghost icons were unbound black and read 1.0 to 1.61 on
+  dark surfaces; the fallback now counts only when the variable is missing from the file.
+- A search of `figma.root.children` in order walks the whole Components page (27,459 nodes in
+  the live file) before Icons; the Tree block's 1,044 icon lookups stalled Update All Core. Read
+  the page a component lives on first.
+- A bound paint's own opacity is not to be relied on: over REST the live file kept
+  CategoryField's 0.12 and lost CategoryTile's and DirectionStep's, from the same helper.
+  Translucency lives on layer opacity, and the audit composites those layers.
+- HUG takes an auto-layout frame or text; FILL takes a child of an auto-layout frame, so set it
+  after the append. A refusal is recorded in the run log, not thrown.
+- zsh does not split an unquoted `$VAR` into words; pass a list through `xargs`.
 
 _Added on the 21st, from the sheet stage:_
 
