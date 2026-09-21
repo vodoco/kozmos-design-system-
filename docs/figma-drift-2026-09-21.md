@@ -368,9 +368,10 @@ library until the audit below is clean.
    MultiSelect, PasswordInput, FormField, DatePicker, DateRangePicker, TimePicker, ColorPicker,
    Alert, Toast, EmptyState, Avatar.
 
-4. **Build Surface QA**, then **Audit Library**. Expected: no warning; 53 advisories, the 51 of
-   20:38 and one each for CategoryTile and CategoryField, their category symbols below 3:1
-   measured as decorative — the tile's 7 (Light: the Default tile's yellow 1.92, orange 2.82 and
+4. **Build Surface QA**, then **Audit Library**. Expected: no warning. The advisories gain three
+   from the four replayed sets, 54 if the other thirteen Updates keep theirs: CategoryField's
+   host-surface one (it paints no fill of its own now, as ruled) and one each for CategoryTile
+   and CategoryField, their category symbols below 3:1 measured as decorative — the tile's 7 (Light: the Default tile's yellow 1.92, orange 2.82 and
    turquoise 3.00, under 3 before rounding; the Selected tile's 1.86, 2.69 and 2.85; Dark: the
    Selected navy 2.94) and the field's 4 (Light: yellow 1.77, orange 2.51, turquoise 2.66;
    Dark: navy 2.84); 64 of 64 Surface QA instances; `pluginBuild` `01f3be6891dc`. An audit

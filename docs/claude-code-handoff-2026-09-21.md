@@ -236,7 +236,7 @@ ADAPTIVE_BROWSER=<chromium|firefox|webkit> pnpm test:search-sheet` (and `test:ma
    seventeen sets listed there (Button and Badge were updated at 20:38 on `314962f54832`, which
    paints the same) — or, with no version to restore, Update All Core and then Update All
    Product / SDK, which draw the 46 touched sets again as well; Build Surface QA; Audit Library,
-   expected with no warning and 53 advisories; then `pnpm figma:verify`, the REST read-back of
+   expected with no warning (54 advisories if the thirteen sets not replayed keep theirs); then `pnpm figma:verify`, the REST read-back of
    the text bindings and the washes, and renders of DirectionStep and a Selected CategoryTile.
    Do not run Apply Text Styles on the file as it is, nor publish the library before the audit
    is clean. The §4 steps before it are done. Code Connect is published (drift §9); publish again only from this branch or
