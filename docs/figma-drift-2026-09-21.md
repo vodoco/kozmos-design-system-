@@ -200,6 +200,13 @@ _Steps 1 to 5 are done in the live file; §9 has the run for the current build._
   Figma refuses.
 - An unbound paint equal to a token's light value is not bound: it does not follow the mode.
 - zsh does not split an unquoted `$VAR` into words; pipe a list through `xargs`.
+- The linked Code Connect configs are lists, not globs. A mapping left off is never validated
+  and never published, and the dry run still ends "All Code Connect files are valid"; four were
+  off from the start. The contract check now refuses it.
+- `figma connect publish` reports what it sent. Read it back (`pnpm figma:connect:readback`)
+  before saying what Dev Mode shows.
+- Figma's Dev Mode MCP server stopped answering tool calls while Figma sat idle in the
+  background, though it still took the handshake. The readback times each call out and stops.
 
 ## 7. The audit, the same night
 
@@ -247,6 +254,9 @@ memory:
 | The build a run names                  | `PLUGIN_BUILD` (stamped by `pnpm figma:stamp`); the panel asks with `ui-ready` and shows `plugin-build`; the audit report's `pluginBuild`                                                                                                                                                                                                                                               |
 | An icon's re-tint                      | `iconSlotPaintIsExpected`: bound to the token, or the fallback colour only when the token's variable is missing from the file                                                                                                                                                                                                                                                           |
 | The field's clear target               | `categoryField.content.clearHitArea` (44) and `clearSize` (32) in the contract; React's `h-11 w-11` button around the `h-8 w-8` circle with the field's `pr-0.5`; SwiftUI's `clearHitArea` frame around the `clearSize` frame with `.padding(.trailing, …Spacing25)`; Compose's 44 `Box` around the 32 circle with `end = …Spacing25` and the name and count in an inner weighted `Row` |
+| Which files Code Connect sends         | the three `figma.linked.config.json` files, which are lists: a new mapping goes in by name beside its source file, and `pnpm components:contract:check` fails on a pinned file left out                                                                                                                                                                                                 |
+| A snippet's import line                | `importPaths`: `src/components/*` → `@kozmos/react` in `figma.linked.config.json` and `packages/react/figma.config.json`; `Sources/Components/` → `import Kozmos` in `packages/ios/figma.linked.config.json`; Compose prints each file's own imports                                                                                                                                    |
+| What Dev Mode shows                    | `pnpm figma:connect:readback`, with Figma desktop open on the Core Library and its Dev Mode MCP server on (Preferences)                                                                                                                                                                                                                                                                 |
 
 - An instance's plugin data is a label, not its paint. The Button family's icons carried the
   right `foreground-token` and a black paint; a re-tint decided by the label skips them for
@@ -269,7 +279,7 @@ REST. Nothing in the file changed after 14:56 until the run below.
 | After an Update, the audit would miss the wash                                                      | **Defect** (`c28921a`). It composited only a frame's own fill; a wash is now a layer of its own. It composites each translucent-token layer at paint alpha × layer opacity: the yellow label reads 1.77, not 1.92.                                                                                                                                                                                                                                                                                  |
 | FileUpload: 32 text nodes without a style                                                           | The browse text; `fc3e915` gives it the label style. Update FileUpload.                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | 319 layout sizing refusals in the earlier Fix Audit Issues log                                      | **Defect** (`07a28e7`). 306 were HUG on nodes that cannot hug (NavigationItem's icons, BottomSheet's handle), which stayed FIXED anyway. The rest mis-sized: FILL on the Slider track under a control without auto layout, FILL on BottomSheet's hidden Form slot. A sweep of every config painter in a harness that now refuses what Figma refuses found the same in BottomNavigation, Navbar, Sidebar, SearchBar, Tag, MetaStrip and Timeline. HUG goes only where it can; FILL after the append. |
-| CategoryField, AISearchButton had placeholder Code Connect pins                                     | **Pinned** (`9edcbe1`): 1933-9257 and 1933-9270 in the six files and the three linked configs; the dry runs validate on all three platforms. Publishing is Olcay's word.                                                                                                                                                                                                                                                                                                                            |
+| CategoryField, AISearchButton had placeholder Code Connect pins                                     | **Pinned** (`9edcbe1`): 1933-9257 and 1933-9270 in the six files and the three linked configs; the dry runs validate on all three platforms. Published on his word the same evening (below).                                                                                                                                                                                                                                                                                                        |
 | CategoryField: 11 text and 4 icon failures; CategoryTile: 6 icon; LocationPin: 18 off-floor numbers | **Design, not paint.** Computed from the token files, they match the audit to the hundredth. The painters draw what the code draws. Decisions for Olcay below.                                                                                                                                                                                                                                                                                                                                      |
 | React's pin number                                                                                  | **Defect, found here, not in the audit.** React draws the pin as an outline with a 20 % wash and inks the number with `onFill`, the ink for the solid fill: every tint fails in one mode or the other, 1.01 to 1.37, and the untinted pin's white number on a 20 % primary wash is illegible too. Native and Figma fill the pin solid, where the ink passes. A decision for Olcay below.                                                                                                            |
 
@@ -306,7 +316,8 @@ From `packages/tokens/src/tokens-*.json`; a ✗ fails the threshold named.
 The contract records them (`labelColor`, `clearColor`, `iconDecorative`,
 `offFloorNumberColor`), and the contract check holds every platform and the painters to them.
 The CategoryField clear's hit area followed the same night: a 44 target around the 32 circle on
-all three platforms (§5, 5; `701f919`). Still his: Code Connect publishing for the two new sets.
+all three platforms (§5, 5; `701f919`). Code Connect followed on his word, published on all three
+platforms (below).
 
 ### The run, with build `ed50a03a1912`
 
@@ -322,3 +333,59 @@ all three platforms (§5, 5; `701f919`). Still his: Code Connect publishing for 
    turquoise in Light, the field's navy in Dark.
 4. From the terminal: `pnpm figma:verify`, and the REST read-back of the washes (layer opacity
    0.12, 0.05, 0.2, 0.1, 0.32, 0.36).
+
+### Code Connect, published on his word
+
+Olcay, late on the 21st: _"go ahead and publish Code Connect too"_. Each round went out from
+`claude/pointr-browse-repairs`, clean and pushed, with only `FIGMA_ACCESS_TOKEN` taken from the
+main checkout's `.env` and never printed. A publish sends a platform's whole linked set, so every
+round re-sent everything, not only the two new sets.
+
+| Round (UTC) | At        | React                    | SwiftUI   | Compose                 |
+| ----------- | --------- | ------------------------ | --------- | ----------------------- |
+| 16:43–16:44 | `45b06f0` | 116 mappings on 93 nodes | 115 on 94 | 110 on 94               |
+| 16:51–16:52 | `9c6687d` | 118 on 95                | 116 on 95 | 111 on 95               |
+| 17:09       | `ef1b68b` | 118 on 95                | 116 on 95 | not re-sent (unchanged) |
+
+Reading the first round back found two things, fixed before the next rounds:
+
+1. **Four mappings had never been in the linked configs** (`a534276`). Backdrop's on all three
+   platforms and React's Icon were pinned to live nodes (613-4791, 15-2) but missing from the
+   three `figma.linked.config.json` files, which are lists: no dry run had validated them, the
+   first round did not send them, and the manifest counted them as linked. Backdrop read back
+   empty on every platform. `components:contract:check` now fails when a pinned
+   `*.figma.{tsx,swift,kt}` is missing from its platform's config or a listed file does not
+   exist; against the old configs it names exactly those four.
+2. **The import lines** (`ef1b68b`). No config set `importPaths`, so every React snippet imported
+   from the mapping file's own relative path (`import { CategoryField } from "./CategoryField"`,
+   131 imports over 118 mappings) and no SwiftUI snippet imported anything; `PROJECT_SCOPE.md`
+   §6.2 meant them to import the package. The React configs now map `src/components/*` to
+   `@kozmos/react` and the SwiftUI config maps `Sources/Components/` to `import Kozmos`; Compose
+   already printed each file's package import. The contract check holds both to the package's
+   name and the Swift library's, and each assertion fails with its mapping removed.
+
+Compared with what a publish from `main` would send, Dev Mode now also shows CategoryField and
+AISearchButton, the tint mappings of CategoryTile, DirectionStep and LocationPin, Backdrop and
+React's Icon, and the import lines.
+
+**Read back** through Figma desktop's Dev Mode MCP server (`get_code_connect_map`, read-only), now
+`pnpm figma:connect:readback` (`98cb9de`). After the second round every linked node showed a
+snippet on every platform: 95 nodes each, 1,760 variant or instance nodes carrying one on each
+(SwiftUI's Sidebar failed once and read back whole when asked again). After the third, React's 95
+again (1,760, every import `@kozmos/react`), and SwiftUI's CategoryField, Backdrop, Icon and Card
+with `import Kozmos`. SwiftUI's whole pass after the third round counted 1,738, 22 fewer than
+after the second; the run then hung in the Compose pass before printing which nodes fell short,
+so that count is unexplained. With Figma in front,
+`pnpm figma:connect:readback -- --label SwiftUI` settles it.
+
+**Mind:**
+
+- Publish from this branch, or from `main` after the merge, never from `main` before it: that
+  would put back main's older CategoryTile, DirectionStep and LocationPin mappings and drop the
+  import lines. CI only dry-runs.
+- React's source links point at `main` on GitHub, so CategoryField's and AISearchButton's are
+  dead until the merge. SwiftUI's generic components (`KozmosCategoryField<Image>`,
+  `KozmosCard<AnyView>`) and every Compose mapping carry no source link; the parsers give none.
+- Backdrop's old node, 606-4596, is gone from the file, so nothing is left showing on it.
+- EmptyState's and Pagination's React snippets import icons from `lucide-react`, a dependency of
+  `@kozmos/react`.

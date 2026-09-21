@@ -56,11 +56,14 @@ After code merges, regenerate the manifest, update the Figma component, then upd
 2. Reviewer checks whether the change is visual-only, token-level, or API-level.
 3. If visual-only, merge into the canonical component set and keep the same node ID.
 4. If token-level, update `packages/tokens/src/tokens-light.json` and `packages/tokens/src/tokens-dark.json`, run `pnpm tokens:build`, then re-import foundations.
-5. If API-level, update React first, then iOS/Android as needed, then rebuild/update the Figma component.
+5. If API-level, update React first, then iOS/Android as needed, then Update the Figma component in the importer, never Rebuild: Rebuild mints new node IDs, and Code Connect is pinned to the old ones.
 6. Run `pnpm figma:manifest` and `pnpm exec tsx scripts/skills/check-completion.ts --check`.
 7. Run `pnpm figma:publish:linked:dry` for the currently linked React library components.
 8. Run `pnpm figma:publish:native:linked:dry` for the SwiftUI and Compose linked mappings.
 9. Use root `pnpm figma:publish:dry` only after non-core scaffold mappings have real node IDs.
+10. A new `.figma.*` file goes into its platform's `figma.linked.config.json` by name, beside its source file. The configs are lists, not globs: a file left off is never validated or published, and `pnpm components:contract:check` fails on it.
+11. Publish only when asked: `pnpm figma:publish:linked` and `pnpm figma:publish:native:linked`, from a clean, pushed branch that holds every mapping `main` has, or from `main` after the merge. Each publish sends its platform's whole linked set.
+12. Then `pnpm figma:connect:readback`, with Figma desktop open on the Core Library and its Dev Mode MCP server on: every linked node must show a snippet on every platform, with imports a consumer can use (`@kozmos/react`, `import Kozmos`, the Compose package).
 
 ## Current Plugin Scope
 

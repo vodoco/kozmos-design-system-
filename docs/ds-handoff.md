@@ -1592,3 +1592,16 @@ for build `ed50a03a1912`, nineteen sets, is in §9. He then took the clear's 44 
 (`701f919`): a 32 circle in a 44 button on all three platforms, the trailing padding 2 so the
 circle stays 8 from the edge; Compose's clear, which a weighted spacer had floated inward, now
 sits at the edge, as on React and iOS.
+
+Late on the 21st Olcay said to publish Code Connect, and it went out on all three platforms from
+`claude/pointr-browse-repairs`, in three rounds (numbers in `docs/figma-drift-2026-09-21.md` §9).
+Reading the first round back found what no dry run had: Backdrop's mappings on all three
+platforms and React's Icon had never been in the linked configs, which are lists, so they had
+never been validated or sent while the manifest counted them linked; and every React snippet
+imported the mapping file's relative path (`from "./CategoryField"`) while no SwiftUI snippet
+imported anything. The configs now list the four (`a534276`) and map the imports to
+`@kozmos/react` and `import Kozmos` (`ef1b68b`), and the contract check refuses either gap
+again. `pnpm figma:connect:readback` (`98cb9de`) reads Dev Mode back through Figma desktop's
+Dev Mode MCP server: after the second round, 95 linked nodes on each platform, every one
+showing a snippet. Publish again only from this branch or from `main` after the merge; a
+publish from `main` before it would put back older mappings and drop the imports.

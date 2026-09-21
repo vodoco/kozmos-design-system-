@@ -316,6 +316,23 @@ The same export runs `pnpm figma:publish:linked:dry`, `figma:publish:ios:linked:
 importer has been run for that set. The plugin's commit hook re-stamps `code.js`; commit it by
 name, never a directory.
 
+The publishes themselves (`figma:publish:linked`, `figma:publish:ios:linked`,
+`figma:publish:android:linked`) take the same export and send each platform's whole linked set,
+so run them only from a clean, pushed branch that holds every mapping `main` has, or from `main`
+after the merge; the 21st's rounds are in [figma-drift-2026-09-21.md](figma-drift-2026-09-21.md)
+§9. The linked configs are lists: a new `.figma.*` file goes into its platform's
+`figma.linked.config.json` by name, beside its source file, and `pnpm components:contract:check`
+fails on one left out. Then read Dev Mode back, with Figma desktop open on the Core Library and
+its Dev Mode MCP server on (Preferences):
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm figma:connect:readback
+```
+
+It asks the server, read-only, for every linked node on React, SwiftUI and Compose, and fails on
+a node that shows nothing or a snippet whose import a consumer cannot use
+(`-- --label SwiftUI --node 1933:9257` narrows it).
+
 Which build ran is the first thing to read. The panel's header shows it ("Build …"), and an
 Audit Library report carries it as `pluginBuild`; a report without it came from a build before
 `50ba616`. Update All Core resumes by build stamp, so after any plugin change it starts again at
@@ -449,7 +466,8 @@ CategoryField's name and clear in `Colors/foreground/0`; the off-floor pin numbe
 `Colors/foreground/0` on the white disc; the category icons decorative, hidden from assistive
 technology and reported by the Figma audit as advisories; React's pin solid, hollow off the
 floor. The CategoryField clear became a 32 circle in a 44 target, as the search bar's (`701f919`).
-Code Connect publishing for CategoryField and AISearchButton stays his._
+Code Connect was published on his word the same night, on all three platforms
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9)._
 
 ## 8. What the design system still lacks, from the prototype
 
@@ -577,3 +595,13 @@ building.site)` is the whole site's (1196 at Boston Logan). Search and the tiles
 - zsh: a pipe followed by a heredoc concatenates; `echo ===` fails; quote `--include='*.swift'`.
 - The XCUITest runner stays installed after a run and crashes if launched by hand.
 - Prettier reflows Markdown tables on commit; the committed file is the source of truth.
+- The Code Connect linked configs are lists, not globs: a mapping left off is never validated
+  or published, and the dry run still says every file is valid. Backdrop and React's Icon were
+  off from the start; `components:contract:check` now refuses it.
+- `figma connect publish` reports what it sent, not what Dev Mode shows. Read it back with
+  `pnpm figma:connect:readback`.
+- Figma's Dev Mode MCP server stopped answering tool calls while Figma sat idle in the
+  background (the handshake still worked). The readback times each call out after 90 s and
+  stops after eight in a row.
+- The worktree's publish and verify scripts look for `.env` above the worktree and find none;
+  export only `FIGMA_ACCESS_TOKEN` from the main checkout's, never print it.
