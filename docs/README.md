@@ -6,7 +6,11 @@ these files honest are listed in its §7.
 
 ## Start here
 
-Latest native continuation: [Claude Code handoff after Pass 3 —
+Latest handoff: [Claude Code handoff — the initial sheet, the category state, the colours, and
+the audit (2026-09-21)](claude-code-handoff-2026-09-21.md): the exact working state on
+`claude/pointr-browse-repairs`, what Olcay asked for on the 20th and 21st and what was done, the
+parts' new parameters on three platforms, the QA app and the SDK as they stand, the commands,
+the decisions still his, and how to resume. Before it, the native continuation: [Claude Code handoff after Pass 3 —
 2026-09-19](claude-code-handoff-2026-09-19-pass3.md), the state of the Pointr iOS work after the
 three passes of [Astra's handoff to Claude Code](claude-code-handoff-2026-09-19.md): routing
 between two named places, measured on the simulator, and what a new session does next — updated

@@ -1335,6 +1335,8 @@ sheet driven by a UI test.
 
 ### 2026-09-21 · The category state, the ring, the motion tokens (Claude Code)
 
+**The handoff for the next chat is [claude-code-handoff-2026-09-21.md](claude-code-handoff-2026-09-21.md).**
+
 `initial-sheet-2026-09-20.md`, its later sections. Olcay's screenshots of the QA app, one after
 another: the tiles' squares dropping beside a two-line label (the grid now aligns its cells at the
 top); the AI ring as a thick collar (the prototype re-measured — a 48 circle with a 2.5 band, the
