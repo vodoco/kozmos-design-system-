@@ -234,10 +234,9 @@ quick search results should be site wide. not per level."_
 - **The map's markers.** The SDK's map draws its own markers and no view of ours: `PTRMapMarker`
   views (a hosted SwiftUI pin, then a rendered `UIImageView`) added through `addMarkers` drew
   nothing on any level, and `PTRPoiMapStyle(poi:image:)` through `updatePoiStyles` restyled the
-  category's places but drew the SDK's own icon, not the image. What does work is that restyle:
-  a chosen category's places wear the SDK's round quick-access marker with the category's icon
-  and name, in the taxonomy's colour — `updatePoiStyles` on choosing, `resetAllPoiStyles` on
-  clear — and the map **follows the category**: when none of its places is on the level shown,
+  category's places but drew the SDK's own icon, not the image. That restyle also painted every room's fill black (seen on the restrooms), so it is gone too:
+  a chosen category's places show through `poisToShow` alone — the SDK's own icon markers, no
+  fill layer touched — and the map **follows the category**: when none of its places is on the level shown,
   the level of the first, zoomed to it, as opening a place does (Gates: L0 → L2, Terminal A).
   Measured on the iPhone: the SDK's gate marker is `#ECA71E` (236, 167, 30); the tile and the
   chip wear the system's data yellow `#D97706` — the same name, not the same colour. **For
@@ -288,9 +287,11 @@ have done better. No hacks - no cheats."_ Ten findings, each measured, each fixe
    rendered image, before and after a level switch, one reuse identifier each);
    `showQuickAccessPois` draws numbered theme-blue pins at any zoom, not colour-matched;
    `PTRPoiMapStyle(poi:)` with nothing set gives the round type marker in the taxonomy's
-   per-type colour (gates `#ECA71E`). The app keeps the last, without the pointless image it
-   carried, under an honest name (`markPlaces`). The atlas shows why the map can never match a
-   tile exactly: the SDK's per-type bubbles are one palette (restroom `#1D95EC`, blue) and its
+   per-type colour (gates `#ECA71E`). The app kept the last for an hour, until Olcay's screenshot of the restrooms showed every
+   room's fill painted black: a style with nothing set is an unset, black fill for the
+   place's polygon, invisible on a point like a gate, plain on a room. So no style at all: a
+   chosen category's places show through `poisToShow` alone, the SDK's own icon markers, and no
+   fill layer is touched. The atlas shows why the map can never match a tile exactly: the SDK's per-type bubbles are one palette (restroom `#1D95EC`, blue) and its
    quick-access sections another (turquoise) — a note for Pointr, not a thing to fake here.
 6. **A selected tinted tile kept a blue stroke.** The selection's stroke and 5 % fill now take
    the accent, on all three platforms.

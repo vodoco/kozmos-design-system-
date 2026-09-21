@@ -462,8 +462,9 @@ _Added on the 21st, from the sheet stage:_
 - The SDK's map draws its own markers only: `PTRMapMarker` views through `addMarkers` (a hosted
   SwiftUI pin, then a rendered image view, before and after a level switch, one reuse
   identifier each) drew nothing, and a `PTRPoiMapStyle` image through `updatePoiStyles` drew the
-  SDK's icon. The restyle itself works: the category's places take the SDK's round quick-access
-  marker in the taxonomy's colour; `resetAllPoiStyles` clears it.
+  SDK's icon. The restyle also paints the place's polygon fill black — a style with nothing set is an unset
+  fill — which a room shows and a gate does not. Do not restyle: `poisToShow` alone gives the
+  SDK's own icon markers for the category's places and touches no fill.
 - `pois(for: building)` is the loaded building's places, delivered in steps; `pois(for:
 building.site)` is the whole site's (1196 at Boston Logan). Search and the tiles count the
   site.

@@ -1369,8 +1369,7 @@ black in dark mode and white fails contrast on half the taxonomy's colours (a fi
 its ink, `KozmosInkedFill` / `CategoryTint.onFill`); the tiles wore the chart palette (the
 taxonomy's eight quick-access colours, measured from the published sprite atlas, are
 `Semantics.Category.{Accent,Fill,OnFill}`, the eight pairs held to 4.5:1 by the contrast check);
-the web panel never had its tint callback; the SDK's markers were measured three ways and the
-app keeps the honest one; a selected tinted tile's stroke, the POI panel's inset blocks on the
+the web panel never had its tint callback; the SDK's markers were measured three ways and none is kept — the per-place style painted room fills black, so the map shows a category's places through `poisToShow` alone; a selected tinted tile's stroke, the POI panel's inset blocks on the
 sheet, stories, notes and the contract followed.
 
 ## 11 · The work now: the SDK's components, rebuilt as examples
