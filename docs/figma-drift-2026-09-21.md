@@ -288,30 +288,37 @@ From `packages/tokens/src/tokens-*.json`; a ✗ fails the threshold named.
 | Green     | 3.66 ✗ / 5.75                                        | 13.99 / 1.01 ✗                                       | 3.66                                     | 3.19 ✗ / 5.23                                       | 18.32 / 19.10               |
 | Pink      | 4.57 / 4.60                                          | 1.30 ✗ / 17.96                                       | 4.57                                     | 3.91 ✗ / 4.24 ✗                                     | 17.97 / 19.37               |
 
-### Decisions for Olcay (nothing changed until he says)
+### Ruled by Olcay, the same evening: all four as recommended (`ce6e807`)
 
-1. **CategoryField's label** — recommended: `Colors/foreground/0`, as CategoryTile's label is
-   (17.4 to 19.8 everywhere); the wash, the border and the icon keep the category colour.
-2. **LocationPin's off-floor number** — recommended: `Colors/foreground/0` on the white disc on
-   all three platforms and in Figma; the ring keeps the category colour, so the state stays
-   shape-and-colour.
-3. **The category icons on light surfaces** (tile and field, Yellow, Orange, Turquoise) —
-   recommended: decorative. The label names the category beside each, so WCAG 1.4.11 does not
-   ask 3:1 of them; the audit would then need to know they are decorative.
-4. **React's pin** — recommended: fill the pin solid in the tint's fill, as native and Figma do,
-   so `onFill` inks the number on the colour it was chosen for.
-5. The CategoryField clear's hit area (§5, 5) and Code Connect publishing for the two new sets
-   stay his.
+1. **CategoryField's label** is `Colors/foreground/0` on React, SwiftUI, Compose and in Figma,
+   and so is its clear's cross, a control's glyph held to 3:1. The icon, the border, the wash and
+   the count pill keep the category colour. Compose takes the themed token, as the field has no
+   surface of its own.
+2. **LocationPin's off-floor number** is `Colors/foreground/0` on the white disc on SwiftUI,
+   Compose, React and in Figma; the ring keeps the colour.
+3. **The category icons** on the tile and the field are decorative: hidden from assistive
+   technology on every platform (Compose's gained `clearAndSetSemantics`), marked by the
+   painters (`markDecorativeIcon`), and measured apart by the audit, which reports a shortfall
+   below 3:1 as an advisory with its reason, never as a failure.
+4. **React's pin** is solid in its colour with the fill's ink on the number; off the floor it is
+   a hollow outline with the number in the foreground and is no longer dimmed.
 
-### The run, with build `ef226bf9cd20`
+The contract records them (`labelColor`, `clearColor`, `iconDecorative`,
+`offFloorNumberColor`), and the contract check holds every platform and the painters to them.
+Still his: the CategoryField clear's hit area (§5, 5) and Code Connect publishing for the two new
+sets.
 
-1. Close the plugin and run it again; the header must read **Build ef226bf9cd20**.
+### The run, with build `e6b4f3c52c53`
+
+1. Close the plugin and run it again; the header must read **Build e6b4f3c52c53**.
 2. Not Update All Core: its resume stamps are per build, so a new build starts it again at Link.
    **Update**, one at a time, never Rebuild: DirectionStep, CategoryField, CategoryTile,
-   ScrollArea, BottomSheet, FileUpload, Button, IconButton, Badge, SearchBar, BottomNavigation,
-   Slider, NavigationItem; then TreeItem, TreeChildItem, TreeParentItem, Tree and Timeline, which
-   now take seconds.
+   LocationPin, ScrollArea, BottomSheet, FileUpload, Button, IconButton, Badge, SearchBar,
+   BottomNavigation, Slider, NavigationItem; then TreeItem, TreeChildItem, TreeParentItem, Tree
+   and Timeline, which now take seconds.
 3. **Build Surface QA**, then **Audit Library**. Expected: no typography, DirectionStep, Button,
-   IconButton, Badge or surface QA warnings; the category colours above until he decides.
+   IconButton, Badge, CategoryField, LocationPin or surface QA warnings; the category icons
+   below 3:1 as advisories, not warnings — the tile's and the field's yellow, orange and
+   turquoise in Light, the field's navy in Dark.
 4. From the terminal: `pnpm figma:verify`, and the REST read-back of the washes (layer opacity
    0.12, 0.05, 0.2, 0.1, 0.32, 0.36).

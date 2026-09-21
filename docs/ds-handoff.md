@@ -1582,5 +1582,9 @@ a frame without auto layout, in ten painters (`07a28e7`). Over REST, CategoryFie
 now composites them (`c28921a`). CategoryField and AISearchButton are pinned in Code Connect
 (`9edcbe1`). What the audit still flags is design: the category colours on light surfaces and
 the off-floor pin number, and React's pin inks its number for a fill it does not draw — numbers
-and recommendations in `docs/figma-drift-2026-09-21.md` §9, all Olcay's to decide. The run for
-build `ef226bf9cd20` is there too.
+and recommendations in `docs/figma-drift-2026-09-21.md` §9. Olcay took all four the same night
+(`ce6e807`): CategoryField's name and clear, and the off-floor pin number, in
+`Colors/foreground/0` on every platform and in Figma; the category icons decorative, hidden
+from assistive technology, and reported by the audit as advisories; React's pin solid, hollow
+off the floor. The contract records each and its check holds every platform to it. The run
+for build `e6b4f3c52c53`, nineteen sets, is in §9.

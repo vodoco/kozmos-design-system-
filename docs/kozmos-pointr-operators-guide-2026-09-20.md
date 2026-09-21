@@ -320,7 +320,7 @@ Which build ran is the first thing to read. The panel's header shows it ("Build 
 Audit Library report carries it as `pluginBuild`; a report without it came from a build before
 `50ba616`. Update All Core resumes by build stamp, so after any plugin change it starts again at
 Link: update the sets the change touched, one at a time, instead
-([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `ef226bf9cd20`).
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `e6b4f3c52c53`).
 The painter check also refuses the layout sizing Figma refuses and counts the nodes a lookup
 visits, so a painter that asks for HUG on an icon, FILL before an append, or a whole-file search
 per variant fails there first.
@@ -443,10 +443,12 @@ item; the personal tiles leave the grid while empty, as built; the icon button's
 stays 48; the iPhone 17 Pro simulator is reset to English (`AppleLanguages (en-GB)`,
 `AppleLocale en_GB`, read back). The AI companion's decisions (§7 of the handoff) stay open._
 
-_From the second audit in Figma (14:58 on the 21st), open for Olcay with numbers in
-[figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9: CategoryField's label colour, the
-off-floor pin number's colour, whether the light-surface category icons are decorative, and
-React's pin fill; Code Connect publishing for CategoryField and AISearchButton._
+_From the second audit in Figma (14:58 on the 21st), ruled by Olcay the same night, all four as
+recommended ([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9, `ce6e807`):
+CategoryField's name and clear in `Colors/foreground/0`; the off-floor pin number in
+`Colors/foreground/0` on the white disc; the category icons decorative, hidden from assistive
+technology and reported by the Figma audit as advisories; React's pin solid, hollow off the
+floor. Code Connect publishing for CategoryField and AISearchButton stays his._
 
 ## 8. What the design system still lacks, from the prototype
 
@@ -500,6 +502,12 @@ _Added on the 21st, evening, from the Figma drift
 - HUG takes an auto-layout frame or text; FILL takes a child of an auto-layout frame, so set it
   after the append. A refusal is recorded in the run log, not thrown.
 - zsh does not split an unquoted `$VAR` into words; pass a list through `xargs`.
+- Paparazzi's own window is dark. A translucent part (the category field's wash) snapshotted with
+  no surface under it renders on that dark window, which hid that its light-mode text was not
+  meant for it; draw such a part on its host's surface, and snapshot Dark with
+  `LocalKozmosUseDarkTokens provides true`.
+- `assertOccurrenceCount` in the contract check calls `String.match`, which turns a string
+  pattern into a regular expression (`(icon)` becomes a group); pass a global `RegExp`.
 
 _Added on the 21st, from the sheet stage:_
 
