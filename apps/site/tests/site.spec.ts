@@ -19,6 +19,9 @@ const pages = [
   { path: "/examples", title: "Examples" },
   { path: "/examples/account-settings", title: "Account settings" },
   { path: "/examples/venue-explorer", title: "Venue explorer" },
+  { path: "/examples/wayfinding", title: "Wayfinding" },
+  { path: "/examples/phone-search", title: "Phone search sheet" },
+  { path: "/examples/kiosk-directory", title: "Kiosk directory" },
   { path: "/foundations", title: "Foundations" },
   { path: "/foundations/colour", title: "Colour" },
   { path: "/foundations/typography", title: "Typography" },
@@ -93,6 +96,8 @@ type KnownViolation = string | { id: string; only: RegExp };
 const knownViolations: Record<string, readonly KnownViolation[]> = {
   // GAP-17: AdaptiveMapShell's panel is an <aside>, nested in the page's main.
   "/examples/venue-explorer": ["landmark-complementary-is-top-level"],
+  "/examples/wayfinding": ["landmark-complementary-is-top-level"],
+  "/examples/phone-search": ["landmark-complementary-is-top-level"],
   "/": ["landmark-complementary-is-top-level"],
   "/components/adaptive-map-shell": [
     "landmark-complementary-is-top-level",
@@ -760,6 +765,152 @@ test.describe("venue explorer example", () => {
   });
 });
 
+test.describe("wayfinding example", () => {
+  function app(page: Page) {
+    return page.getByRole("region", { name: "Wayfinding example" });
+  }
+
+  test("choose a place, compare the routes, walk the step-free one and rate it", async ({
+    page,
+  }) => {
+    await page.goto("/examples/wayfinding");
+    await hydrated(page);
+    const example = app(page);
+
+    // Plan: every place is offered, and typing narrows the list.
+    await expect(example.getByText("11 places")).toBeVisible();
+    await example.getByPlaceholder("Where to?").fill("book");
+    await expect(example.getByText("1 place")).toBeVisible();
+    await example
+      .getByRole("button", { name: /Bookshop/ })
+      .first()
+      .click();
+
+    // Preview: quickest and step-free, and one route that is not available.
+    await expect(example.getByText("Via the terrace")).toBeVisible();
+    await expect(
+      example.getByText("The terrace is closed for the season."),
+    ).toBeVisible();
+    await example.getByText("Step-free", { exact: true }).click();
+    await expect(example.getByText("Step-free selected")).toBeAttached();
+    await example.getByRole("button", { name: "Start" }).click();
+
+    // Walking: the manoeuvre card, the summary with its rail, the announcer.
+    await expect(
+      example.getByText("Head towards the atrium").first(),
+    ).toBeVisible();
+    await expect(example.getByLabel("Step 1 of 5")).toBeAttached();
+    await expect(example.getByRole("button", { name: "End" })).toBeVisible();
+    const next = example.getByRole("button", { name: "Next step" });
+    await next.click();
+    await expect(
+      example.getByText("Turn left for the lifts").first(),
+    ).toBeVisible();
+    await next.click();
+    await expect(
+      example.getByText("Take the lift to the first floor").first(),
+    ).toBeVisible();
+    await next.click();
+    // Up the lift: the map follows the visitor to the first floor.
+    await expect(
+      example.getByRole("button", { name: "First floor", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(example.getByLabel("Step 4 of 5")).toBeAttached();
+    expect(await axeViolations(page)).toEqual([]);
+    await next.click();
+    await next.click();
+
+    // Arrived: the feedback card, then back to the start.
+    await expect(example.getByText("You have arrived")).toBeVisible();
+    await example.getByRole("button", { name: "Plan another route" }).click();
+    await expect(example.getByPlaceholder("Where to?")).toHaveValue("");
+    await expect(example.getByText("11 places")).toBeVisible();
+  });
+});
+
+test.describe("phone search example", () => {
+  test("browse a category, open a place in the sheet, turn its photos, and set the sheet's height", async ({
+    page,
+  }) => {
+    await page.goto("/examples/phone-search");
+    await hydrated(page);
+    const example = page.getByRole("region", {
+      name: "Phone search sheet example",
+    });
+
+    await example.getByRole("button", { name: "Shops 3 places" }).click();
+    await expect(
+      example.getByRole("button", { name: "Clear Shops" }),
+    ).toBeVisible();
+    await example
+      .getByRole("button", { name: /Bookshop/ })
+      .first()
+      .click();
+    await expect(
+      example.getByRole("heading", { level: 2, name: "Bookshop" }),
+    ).toBeVisible();
+    await example.getByRole("button", { name: "Next image" }).click();
+    await expect(example.getByText("Image 2 of 3")).toBeVisible();
+
+    // The sheet grows to the full detent from the toolbar.
+    const sheet = example.getByRole("complementary", { name: "Bookshop" });
+    const half = await sheet.boundingBox();
+    await example
+      .getByRole("group", { name: "Sheet" })
+      .getByRole("radio", { name: "Full" })
+      .click();
+    await expect
+      .poll(async () => (await sheet.boundingBox())?.height ?? 0)
+      .toBeGreaterThan((half?.height ?? 0) + 50);
+    expect(await axeViolations(page)).toEqual([]);
+
+    await example.getByRole("button", { name: "Back to the list" }).click();
+    await example.getByRole("button", { name: "Clear Shops" }).click();
+    await example
+      .getByRole("searchbox", { name: "Search Riverside Centre" })
+      .fill("bus");
+    await expect(example.getByText("1 place")).toBeVisible();
+  });
+});
+
+test.describe("kiosk directory example", () => {
+  test("browse a category, read a place, take the route and send it, then rest", async ({
+    page,
+  }) => {
+    await page.goto("/examples/kiosk-directory");
+    await hydrated(page);
+    const example = page.getByRole("region", {
+      name: "Kiosk directory example",
+    });
+
+    await example.getByRole("button", { name: "Shops 3 places" }).click();
+    await example
+      .getByRole("button", { name: /Bookshop/ })
+      .first()
+      .click();
+    await expect(
+      example.getByRole("heading", { level: 2, name: "Bookshop" }),
+    ).toBeVisible();
+    await example.getByRole("button", { name: "Take me there" }).click();
+    await expect(example.getByText("Head towards the atrium")).toBeVisible();
+    await example.getByRole("button", { name: "Send to my phone" }).click();
+    const dialog = page.getByRole("dialog", {
+      name: "Take the route with you",
+    });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("4821")).toBeVisible();
+    await dialog.getByRole("button", { name: "Done" }).click();
+    await expect(dialog).toBeHidden();
+    expect(await axeViolations(page)).toEqual([]);
+
+    await example.getByRole("button", { name: "Start over" }).click();
+    await example.getByRole("button", { name: "Touch to start" }).click();
+    await expect(
+      example.getByRole("button", { name: "Shops 3 places" }),
+    ).toBeVisible();
+  });
+});
+
 test.describe("component reference", () => {
   const total = componentIndex.components.length;
 
@@ -861,11 +1012,9 @@ test.describe("component reference", () => {
     await expect(page.getByRole("region", { name: "Button.kt" })).toBeVisible();
 
     const props = page.getByRole("table", { name: "Button props" });
-    const variant = props
-      .getByRole("row")
-      .filter({
-        has: page.getByRole("cell", { name: "variant", exact: true }),
-      });
+    const variant = props.getByRole("row").filter({
+      has: page.getByRole("cell", { name: "variant", exact: true }),
+    });
     await expect(variant).toContainText("default");
     await expect(
       page.getByRole("table", { name: "AdaptiveMapShell props" }),

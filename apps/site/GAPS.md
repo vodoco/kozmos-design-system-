@@ -49,6 +49,9 @@ purpose, because hiding it would hide the evidence).
 | GAP-30 | `Sidebar`'s navigation landmark cannot be named               | Core                   | left visible |
 | GAP-31 | The alert emotion's text reads 4.29:1 on a card               | Core                   | left visible |
 | GAP-32 | `ChipGroup` carries no role                                   | Core                   | composed     |
+| GAP-33 | No token for the route line on the map                        | Product / SDK          | composed     |
+| GAP-34 | `Backdrop` pins itself to the viewport                        | Core                   | composed     |
+| GAP-35 | `BrowseCategoriesPanel` is four columns at any width          | Product / SDK          | composed     |
 
 ---
 
@@ -454,3 +457,43 @@ purpose, because hiding it would hide the evidence).
 - **Now:** the components index passes `role="group"` to it.
 - **Lane:** Core.
 - **Fix in Kozmos:** `role="group"` on the wrapper.
+
+## GAP-33 · No token for the route line on the map
+
+- **What:** a wayfinding product draws the route on the map — a line the map
+  engine renders in a colour the design system should own, as it owns the
+  category tints and the emotion colours. The tokens carry no route, path or
+  wayfinding role (`variables-light.css` has none), so every product picks
+  its own.
+- **Now:** the wayfinding example draws its stand-in route in dots coloured
+  with the theme's 600, and says so.
+- **Lane:** Product / SDK.
+- **Fix in Kozmos:** a `semantics-map-route` role (line, casing, and the
+  walked part), in both themes, with its contrast on the map's own surface
+  in the contract.
+
+## GAP-34 · `Backdrop` pins itself to the viewport
+
+- **What:** `Backdrop` renders `fixed inset-0`, so it can only ever cover the
+  browser window. A scrim over one module — a kiosk's attract screen, a map
+  panel while it loads, a card while a dialog inside it is open — cannot use
+  it; like `DynamicIsland` (GAP-24) and `BottomNavigation` (GAP-29), the host
+  cannot decide where it goes.
+- **Now:** the kiosk directory's attract screen is a glass `Surface` laid over
+  the directory by the example's own CSS.
+- **Lane:** Core.
+- **Fix in Kozmos:** a `placement` prop (`viewport` | `container`), fixed by
+  default, with the scrim colour and blur unchanged.
+
+## GAP-35 · `BrowseCategoriesPanel` is four columns at any width
+
+- **What:** the panel lays its tiles out with `grid-cols-4`, whatever its
+  width. In a column narrower than about 22rem — a kiosk's directory rail, a
+  tablet's side panel — each tile is under 5rem and a one-word name such as
+  "Information" is cut ("Informatio"): `CategoryTile` clamps its label to two
+  lines, and a single word cannot wrap.
+- **Now:** the kiosk directory keeps its directory column at 22–24rem, so
+  the names fit.
+- **Lane:** Product / SDK.
+- **Fix in Kozmos:** `repeat(auto-fill, minmax(5.5rem, 1fr))`, or a
+  `columns` prop, so a narrow host gets three columns.

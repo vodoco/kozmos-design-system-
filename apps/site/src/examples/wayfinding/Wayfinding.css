@@ -1,0 +1,60 @@
+/* Wayfinding: layout only. AdaptiveMapShell lays out the map, the manoeuvre
+   card, the controls and the panel; this places what stands in for the map
+   engine's drawing: the route's dots, the pins and the visitor's marker. */
+
+.ex-way {
+  block-size: 100%;
+}
+
+/* The layer keeps clear of the top bar, the controls and the panel with the
+   insets the shell measures, as the venue explorer's does. Physical offsets:
+   a map does not mirror in a right-to-left layout. */
+.ex-way-layer {
+  position: absolute;
+  top: var(--kozmos-map-inset-top, 0px);
+  right: var(--kozmos-map-inset-right, 0px);
+  bottom: var(--kozmos-map-inset-bottom, 0px);
+  left: var(--kozmos-map-inset-left, 0px);
+}
+
+.ex-way-pin {
+  position: absolute;
+  left: var(--pin-x);
+  top: var(--pin-y);
+  transform: translate(-50%, -100%);
+}
+
+.ex-way-user {
+  position: absolute;
+  left: var(--pin-x);
+  top: var(--pin-y);
+  transform: translate(-50%, -50%);
+}
+
+/* A map engine draws the route as a line; Kozmos has no token for it
+   (GAPS.md, GAP-33), so the dots take the theme's colour. */
+.ex-way-dot {
+  position: absolute;
+  left: var(--dot-x);
+  top: var(--dot-y);
+  inline-size: calc(var(--primitives-layout-sizing-100) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-100) * 1px);
+  border-radius: var(--site-radius-pill);
+  background: var(--primitives-colors-theme-600);
+  transform: translate(-50%, -50%);
+}
+
+.ex-way-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: var(--site-space-150);
+}
+
+/* The navigation and arrival panels: the summary or the feedback card, then
+   the example's own controls, with the panel's padding. */
+.ex-way-stack {
+  display: grid;
+  gap: var(--site-space-300);
+  padding: var(--site-space-300);
+}

@@ -1,0 +1,53 @@
+/* Phone search: a phone-sized frame on the canvas, with the sheet's detents
+   driven from a toolbar above it. Inside the frame, AdaptiveMapShell lays
+   out the map, the search bar, the controls and the bottom sheet. */
+
+.ex-phone-stage {
+  block-size: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  justify-items: center;
+  gap: var(--site-space-300);
+  padding: var(--site-space-300);
+  background: var(--primitives-colors-background-50);
+}
+
+.ex-phone-toolbar {
+  display: grid;
+  gap: var(--site-space-150);
+  justify-items: center;
+  max-inline-size: 36rem;
+}
+
+/* A phone's width; the height is what the canvas leaves. */
+.ex-phone {
+  position: relative;
+  inline-size: min(100%, 24.375rem);
+  block-size: 100%;
+  overflow: hidden;
+  border-radius: var(--site-radius-panel);
+  border: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
+  background: var(--primitives-colors-background-0);
+}
+
+.ex-phone-layer {
+  position: absolute;
+  top: var(--kozmos-map-inset-top, 0px);
+  right: var(--kozmos-map-inset-right, 0px);
+  bottom: var(--kozmos-map-inset-bottom, 0px);
+  left: var(--kozmos-map-inset-left, 0px);
+}
+
+.ex-phone-pin {
+  position: absolute;
+  left: var(--pin-x);
+  top: var(--pin-y);
+  transform: translate(-50%, -100%);
+}
+
+.ex-phone-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: var(--site-space-150);
+}

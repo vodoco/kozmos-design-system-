@@ -9,6 +9,9 @@ import { lazy, type ComponentType } from "react";
 export const exampleComponents: Record<string, ComponentType> = {
   "account-settings": lazy(() => import("./account-settings/AccountSettings")),
   "venue-explorer": lazy(() => import("./venue-explorer/VenueExplorer")),
+  wayfinding: lazy(() => import("./wayfinding/Wayfinding")),
+  "phone-search": lazy(() => import("./phone-search/PhoneSearch")),
+  "kiosk-directory": lazy(() => import("./kiosk-directory/KioskDirectory")),
 };
 
 /** The canvas an example is drawn on when shown small. */

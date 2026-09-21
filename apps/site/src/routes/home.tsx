@@ -159,42 +159,44 @@ export default function Home() {
               }
             >
               <Box className="site-grid site-grid-wide">
-                {examples.map((example) => {
-                  const Example = exampleComponents[example.slug];
-                  const size = miniatureSize[example.kind];
-                  return (
-                    <Card key={example.slug} className="site-example-card">
-                      {Example ? (
-                        <ExampleMiniature
-                          label={`${example.title} example, shown small`}
-                          width={size.width}
-                          height={size.height}
-                        >
-                          <Example />
-                        </ExampleMiniature>
-                      ) : null}
-                      <CardHeader>
-                        <Stack
-                          direction="row"
-                          align="center"
-                          justify="between"
-                          gap={2}
-                        >
-                          <CardTitle>{example.title}</CardTitle>
-                          <Tag variant="secondary">
-                            {exampleKindLabel[example.kind]}
-                          </Tag>
-                        </Stack>
-                        <CardDescription>{example.summary}</CardDescription>
-                        <Text size="sm">
-                          <SiteLink to={`/examples/${example.slug}`}>
-                            Open {example.title}
-                          </SiteLink>
-                        </Text>
-                      </CardHeader>
-                    </Card>
-                  );
-                })}
+                {examples
+                  .filter((example) => example.featured)
+                  .map((example) => {
+                    const Example = exampleComponents[example.slug];
+                    const size = miniatureSize[example.kind];
+                    return (
+                      <Card key={example.slug} className="site-example-card">
+                        {Example ? (
+                          <ExampleMiniature
+                            label={`${example.title} example, shown small`}
+                            width={size.width}
+                            height={size.height}
+                          >
+                            <Example />
+                          </ExampleMiniature>
+                        ) : null}
+                        <CardHeader>
+                          <Stack
+                            direction="row"
+                            align="center"
+                            justify="between"
+                            gap={2}
+                          >
+                            <CardTitle>{example.title}</CardTitle>
+                            <Tag variant="secondary">
+                              {exampleKindLabel[example.kind]}
+                            </Tag>
+                          </Stack>
+                          <CardDescription>{example.summary}</CardDescription>
+                          <Text size="sm">
+                            <SiteLink to={`/examples/${example.slug}`}>
+                              Open {example.title}
+                            </SiteLink>
+                          </Text>
+                        </CardHeader>
+                      </Card>
+                    );
+                  })}
               </Box>
             </Section>
           </Reveal>
