@@ -17,6 +17,7 @@ import path from "node:path";
 import {
   FONTS,
   MockNode,
+  boundPaintOpacityDrops,
   boundVariableName,
   createFigmaMock,
   freshStats,
@@ -132,6 +133,7 @@ const variableByName = mockVariables([
   "Colors/background/0",
   "Colors/foreground/0",
   "Colors/foreground/400",
+  "Colors/foreground/500",
   "Colors/foreground/1000",
   "Colors/theme/100",
   "Colors/theme/500",
@@ -179,6 +181,27 @@ const figma = createFigmaMock({ pages: pages() });
 const plugin = loadPlugin({ pluginPath: PLUGIN, figma });
 
 const named = (node, name) => node.findOne((child) => child.name === name);
+
+// Figma keeps no paint opacity on a bound colour, so a translucent token wash
+// is a layer of its own: the paint bound at full strength, the layer at the
+// wash's opacity, first in its parent so the content sits on it, absolute and
+// stretched with the parent.
+function isWash(parent, name, variable, opacity, width, height) {
+  const wash = parent && named(parent, name);
+  return Boolean(
+    wash &&
+    parent.children[0] === wash &&
+    wash.fills.length === 1 &&
+    boundVariableName(wash.fills[0]) === variable &&
+    (wash.fills[0].opacity ?? 1) === 1 &&
+    Math.abs(wash.opacity - opacity) < 1e-9 &&
+    wash.width === width &&
+    wash.height === height &&
+    wash.layoutPositioning === "ABSOLUTE" &&
+    wash.constraints.horizontal === "STRETCH" &&
+    wash.constraints.vertical === "STRETCH",
+  );
+}
 
 // --- CategoryTile --------------------------------------------------------------
 
@@ -238,11 +261,20 @@ section("CategoryTile");
         "selected: a 1 stroke bound to the category's accent",
       );
       ok(
-        square.fills.length === 2 &&
-          boundVariableName(square.fills[0]) === "Colors/background/0" &&
-          boundVariableName(square.fills[1]) === "Category/Accent/Yellow" &&
-          Math.abs(square.fills[1].opacity - 0.05) < 1e-9,
-        "selected: the background with the accent at 5 % over it",
+        square.fills.length === 1 &&
+          boundVariableName(square.fills[0]) === "Colors/background/0",
+        "selected: the square keeps its background",
+      );
+      ok(
+        isWash(
+          square,
+          "Selection Wash",
+          "Category/Accent/Yellow",
+          0.05,
+          tile.squareSize,
+          tile.squareSize,
+        ),
+        "selected: the accent at 5 % over it, as a wash layer",
       );
       ok(square.clipsContent === false, "the square does not clip its counter");
       const ring = named(square, "Selection Ring");
@@ -258,9 +290,10 @@ section("CategoryTile");
         );
         ok(
           boundVariableName(ring.strokes[0]) === "Category/Accent/Yellow" &&
-            Math.abs(ring.strokes[0].opacity - 0.2) < 1e-9 &&
+            (ring.strokes[0].opacity ?? 1) === 1 &&
+            Math.abs(ring.opacity - 0.2) < 1e-9 &&
             ring.fills.length === 0,
-          "the ring is the accent at 20 %, no fill",
+          "the ring is the accent at 20 % by layer opacity, no fill",
         );
       }
       const icon = named(square, "Icon");
@@ -340,7 +373,10 @@ section("CategoryTile");
       "default: the subtle border",
     );
     ok(
-      square && square.fills.length === 1 && !named(square, "Selection Ring"),
+      square &&
+        square.fills.length === 1 &&
+        !named(square, "Selection Wash") &&
+        !named(square, "Selection Ring"),
       "default: no accent wash, no ring",
     );
     const icon = square && named(square, "Icon");
@@ -651,10 +687,12 @@ section("CategoryField");
         component.strokeWeight === 1,
       "a 1 border in the accent",
     );
+    ok(component.fills.length === 0, "the field paints no fill of its own");
     ok(
-      boundVariableName(component.fills[0]) === "Category/Accent/Yellow" &&
-        Math.abs(component.fills[0].opacity - 0.12) < 1e-9,
-      "the accent at 12 % behind",
+      isWash(component, "Tint Wash", "Category/Accent/Yellow", 0.12, 320, 48) &&
+        named(component, "Tint Wash").cornerRadius ===
+          plugin.KOZMOS_RADIUS.control,
+      "the accent at 12 % behind, as a wash layer at the control radius",
     );
     ok(
       component.paddingLeft === 12 && component.paddingRight === 8,
@@ -920,9 +958,10 @@ section("DirectionStep");
     ok(
       badge &&
         badge.width === 40 &&
-        boundVariableName(badge.fills[0]) === "Colors/theme/500" &&
-        Math.abs(badge.fills[0].opacity - 0.1) < 1e-9,
-      `${type}: a 40 disc in the theme's colour at 10 %`,
+        badge.fills.length === 0 &&
+        isWash(badge, "Direction Wash", "Colors/theme/500", 0.1, 40, 40) &&
+        named(badge, "Direction Wash").type === "ELLIPSE",
+      `${type}: a 40 disc in the theme's colour at 10 %, as a wash layer`,
     );
     ok(
       icon &&
@@ -1227,6 +1266,55 @@ section("Icon tint repair");
       "a second Update finds the paint right and skips",
     );
   }
+}
+
+// --- Translucent token paints ---------------------------------------------------
+
+section("Translucent token paints");
+{
+  const frame = figma.createFrame();
+  frame.layoutMode = "VERTICAL";
+  frame.resize(320, 240);
+  const ready = typeof plugin.appendScrollAreaScrollbar === "function";
+  ok(ready, "ScrollArea's scrollbar helper");
+  if (ready) {
+    plugin.appendScrollAreaScrollbar({
+      component: frame,
+      name: "Vertical Scrollbar",
+      vertical: true,
+      metrics: { width: 320, height: 240 },
+      variableByName,
+      stats: freshStats(),
+    });
+    const track = named(frame, "Vertical Scrollbar");
+    ok(
+      track &&
+        boundVariableName(track.fills[0]) === "Colors/foreground/500" &&
+        (track.fills[0].opacity ?? 1) === 1 &&
+        Math.abs(track.opacity - 0.32) < 1e-9,
+      "ScrollArea's track is foreground/500 at 32 % by layer opacity",
+    );
+  }
+  const source = fs.readFileSync(PLUGIN, "utf8");
+  ok(
+    !/paintFromVariableWithOpacity/.test(source),
+    "no helper gives a bound paint an opacity",
+  );
+  ok(
+    /setTranslucentTokenPaint\(\s*handle,\s*"fills",\s*\{ name: "Colors\/foreground\/500", fallback: "#747B8B" \},\s*0\.36,/.test(
+      source,
+    ),
+    "BottomSheet's handle is foreground/500 at 36 % by layer opacity",
+  );
+  // Every painter above ran against a mock that drops a bound paint's
+  // opacity as Figma does; none may have relied on one.
+  ok(
+    boundPaintOpacityDrops.length === 0,
+    `no painter relied on a paint opacity Figma drops (${boundPaintOpacityDrops
+      .slice(0, 6)
+      .map((drop) => `${drop.node} at ${drop.opacity}`)
+      .join(", ")})`,
+  );
 }
 
 // --- Summary ---------------------------------------------------------------------

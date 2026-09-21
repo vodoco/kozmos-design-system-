@@ -25,6 +25,34 @@ let nextId = 1;
 
 const CHAR_ADVANCE = 0.55;
 
+/**
+ * Figma stores a paint whose colour is bound to a variable without its own
+ * opacity: the paint renders at the variable's alpha, whatever the plugin
+ * set. Measured on 2026-09-21 over REST — six translucent token paints read
+ * back at 1. The mock does the same and records each drop, so a check can
+ * fail on a painter that relies on a paint opacity Figma will not keep.
+ */
+export const boundPaintOpacityDrops = [];
+
+function storePaints(node, paints) {
+  if (!Array.isArray(paints)) return paints;
+  return paints.map((paint) => {
+    if (
+      paint &&
+      paint.boundVariables &&
+      paint.boundVariables.color &&
+      typeof paint.opacity === "number" &&
+      paint.opacity < 1
+    ) {
+      boundPaintOpacityDrops.push({ node: node.name, opacity: paint.opacity });
+      const kept = { ...paint };
+      delete kept.opacity;
+      return kept;
+    }
+    return paint;
+  });
+}
+
 export class MockNode {
   constructor(type, name) {
     this.id = `${nextId++}:${nextId}`;
@@ -91,6 +119,22 @@ export class MockNode {
       this.mainComponent = null;
       this.isExposedInstance = false;
     }
+  }
+
+  get fills() {
+    return this._fills;
+  }
+
+  set fills(value) {
+    this._fills = storePaints(this, value);
+  }
+
+  get strokes() {
+    return this._strokes;
+  }
+
+  set strokes(value) {
+    this._strokes = storePaints(this, value);
   }
 
   get characters() {

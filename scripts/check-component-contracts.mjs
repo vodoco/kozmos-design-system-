@@ -2005,11 +2005,19 @@ assertContains(
       `Figma CategoryField ${name} ${value}`,
     );
   }
+  // Figma drops a bound paint's opacity, so the wash is a layer of its own
+  // at the contract's opacity (2026-09-21).
   assertContains(
     files.figma,
     source.figma,
-    `tokenPaint(tint.accent, variableByName, stats, ${field.washOpacity})`,
+    `const CATEGORY_FIELD_WASH_OPACITY = ${field.washOpacity};`,
     `Figma CategoryField wash at ${field.washOpacity}`,
+  );
+  assertContains(
+    files.figma,
+    source.figma,
+    /name: "Tint Wash",\s*token: tint\.accent,\s*opacity: CATEGORY_FIELD_WASH_OPACITY,/,
+    "Figma CategoryField wash is a layer at that opacity",
   );
 }
 

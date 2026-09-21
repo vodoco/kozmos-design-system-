@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "c7d1d88351a7";
+const PLUGIN_BUILD = "40f659a4091b";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -435,6 +435,7 @@ const CATEGORY_FIELD_PILL_HEIGHT = 22;
 const CATEGORY_FIELD_CLEAR_SIZE = 32;
 const CATEGORY_FIELD_LABEL_FONT_SIZE = 15;
 const CATEGORY_FIELD_LABEL_LINE_HEIGHT = 20;
+const CATEGORY_FIELD_WASH_OPACITY = 0.12;
 /** The symbol a fresh field carries, from the Pointr Icon Library. */
 const CATEGORY_FIELD_DEFAULT_ICON = "bus";
 // AISearchButton, the prototype's, measured twice: a 48 circle whose ring is
@@ -41963,15 +41964,14 @@ function appendScrollAreaScrollbar({
     vertical ? metrics.height - 32 : 6,
   );
   track.cornerRadius = KOZMOS_RADIUS.pill;
-  track.fills = [
-    paintFromVariableWithOpacity(
-      "Colors/foreground/500",
-      "#747B8B",
-      0.32,
-      variableByName,
-      stats,
-    ),
-  ];
+  setTranslucentTokenPaint(
+    track,
+    "fills",
+    { name: "Colors/foreground/500", fallback: "#747B8B" },
+    0.32,
+    variableByName,
+    stats,
+  );
   track.strokes = [];
   track.setSharedPluginData(RUN_NAMESPACE, "kind", "scrollarea-scrollbar");
   component.appendChild(track);
@@ -43589,17 +43589,18 @@ async function updateDirectionStepVariant(
   badge.counterAxisAlignItems = "CENTER";
   badge.resizeWithoutConstraints(40, 40);
   badge.cornerRadius = 20;
-  // The React's `bg-primary/10` behind a `text-primary` symbol.
-  badge.fills = [
-    paintFromVariableWithOpacity(
-      "Colors/theme/500",
-      "#135BEC",
-      0.1,
-      variableByName,
-      stats,
-    ),
-  ];
+  // The React's `bg-primary/10` behind a `text-primary` symbol: the disc is a
+  // wash layer of its own, so the icon on it stays at full strength.
+  badge.fills = [];
   badge.strokes = [];
+  insertTranslucentTokenLayer(badge, {
+    name: "Direction Wash",
+    token: { name: "Colors/theme/500", fallback: "#135BEC" },
+    opacity: 0.1,
+    shape: "ellipse",
+    variableByName,
+    stats,
+  });
 
   // The symbol is a real icon from the Pointr Icon Library, 24 in the theme's
   // colour, as the React draws Lucide's; an instance does not mirror, so a
@@ -46828,7 +46829,15 @@ async function updateCategoryFieldVariant(
     height: CATEGORY_FIELD_HEIGHT,
   });
   component.cornerRadius = KOZMOS_RADIUS.control;
-  component.fills = [tokenPaint(tint.accent, variableByName, stats, 0.12)];
+  component.fills = [];
+  insertTranslucentTokenLayer(component, {
+    name: "Tint Wash",
+    token: tint.accent,
+    opacity: CATEGORY_FIELD_WASH_OPACITY,
+    cornerRadius: KOZMOS_RADIUS.control,
+    variableByName,
+    stats,
+  });
   component.strokes = [tokenPaint(tint.accent, variableByName, stats)];
   component.strokeWeight = 1;
   component.strokeAlign = "INSIDE";
@@ -47129,17 +47138,68 @@ function categoryTintTokens(tint) {
   };
 }
 
-function tokenPaint(token, variableByName, stats, opacity) {
-  if (typeof opacity === "number") {
-    return paintFromVariableWithOpacity(
-      token.name,
-      token.fallback,
-      opacity,
-      variableByName,
-      stats,
-    );
-  }
+function tokenPaint(token, variableByName, stats) {
   return paintFromVariable(token.name, token.fallback, variableByName, stats);
+}
+
+/**
+ * A bound colour at less than full strength, on a leaf layer. Figma drops a
+ * paint's own opacity once its colour is bound to a variable and stores the
+ * paint opaque — measured on 2026-09-21: DirectionStep's 10 % disc,
+ * CategoryField's 12 % wash, CategoryTile's 5 % selection wash and 20 % ring,
+ * ScrollArea's 32 % track and BottomSheet's 36 % handle all read back at 1 —
+ * so the strength goes on the layer: the paint stays bound at full strength
+ * and the node carries the opacity. For a layer that draws nothing else; a
+ * wash behind content is a layer of its own (`insertTranslucentTokenLayer`).
+ */
+function setTranslucentTokenPaint(
+  node,
+  key,
+  token,
+  opacity,
+  variableByName,
+  stats,
+) {
+  node[key] = [
+    paintFromVariable(token.name, token.fallback, variableByName, stats),
+  ];
+  node.opacity = opacity;
+}
+
+/**
+ * A translucent wash of a bound colour behind a frame's content: a layer of
+ * its own at the back, absolute, stretched to the frame, at the given layer
+ * opacity. The frame paints nothing itself, so its content stays at full
+ * strength — the way `bg-primary/10` and `color-mix(… 12%, transparent)`
+ * draw in the code.
+ */
+function insertTranslucentTokenLayer(
+  parent,
+  { name, token, opacity, shape, cornerRadius, variableByName, stats },
+) {
+  const layer =
+    shape === "ellipse" ? figma.createEllipse() : figma.createRectangle();
+  layer.name = name;
+  layer.resize(parent.width, parent.height);
+  if (shape !== "ellipse") layer.cornerRadius = cornerRadius || 0;
+  layer.strokes = [];
+  setTranslucentTokenPaint(
+    layer,
+    "fills",
+    token,
+    opacity,
+    variableByName,
+    stats,
+  );
+  layer.setSharedPluginData(RUN_NAMESPACE, "role", "translucent-token-layer");
+  parent.insertChild(0, layer);
+  if (parent.layoutMode && parent.layoutMode !== "NONE") {
+    layer.layoutPositioning = "ABSOLUTE";
+  }
+  layer.x = 0;
+  layer.y = 0;
+  layer.constraints = { horizontal: "STRETCH", vertical: "STRETCH" };
+  return layer;
 }
 
 /**
@@ -47257,9 +47317,17 @@ async function updateCategoryTileVariant(
     variableByName,
     stats,
   );
-  square.fills = selected
-    ? [background, tokenPaint(tint.accent, variableByName, stats, 0.05)]
-    : [background];
+  square.fills = [background];
+  if (selected) {
+    insertTranslucentTokenLayer(square, {
+      name: "Selection Wash",
+      token: tint.accent,
+      opacity: 0.05,
+      cornerRadius: KOZMOS_RADIUS.control,
+      variableByName,
+      stats,
+    });
+  }
   square.strokes = [
     selected
       ? tokenPaint(tint.accent, variableByName, stats)
@@ -47294,9 +47362,8 @@ async function updateCategoryTileVariant(
     selectionRing.resize(CATEGORY_TILE_SQUARE + 2, CATEGORY_TILE_SQUARE + 2);
     selectionRing.cornerRadius = KOZMOS_RADIUS.control + 1;
     selectionRing.fills = [];
-    selectionRing.strokes = [
-      tokenPaint(tint.accent, variableByName, stats, 0.2),
-    ];
+    selectionRing.strokes = [tokenPaint(tint.accent, variableByName, stats)];
+    selectionRing.opacity = 0.2;
     selectionRing.strokeWeight = 1;
     selectionRing.strokeAlign = "INSIDE";
     square.appendChild(selectionRing);
@@ -59454,15 +59521,14 @@ async function syncBottomSheetVariantChildren({
   handle.name = "Drag Handle";
   handle.resizeWithoutConstraints(48, 5);
   handle.cornerRadius = KOZMOS_RADIUS.pill;
-  handle.fills = [
-    paintFromVariableWithOpacity(
-      "Colors/foreground/500",
-      "#747B8B",
-      0.36,
-      variableByName,
-      stats,
-    ),
-  ];
+  setTranslucentTokenPaint(
+    handle,
+    "fills",
+    { name: "Colors/foreground/500", fallback: "#747B8B" },
+    0.36,
+    variableByName,
+    stats,
+  );
   handle.strokes = [];
   handle.setSharedPluginData(RUN_NAMESPACE, "kind", "bottom-sheet-handle");
   component.appendChild(handle);
@@ -73004,26 +73070,20 @@ function paintFromVariable(name, fallback, variableByName, stats) {
 
   if (figma.variables.setBoundVariableForPaint) {
     try {
-      return figma.variables.setBoundVariableForPaint(paint, "color", variable);
+      // A bound colour carries its own alpha (Overlay/Scrim is
+      // rgba(0, 0, 0, 0.5)) and Figma drops a bound paint's opacity, so the
+      // paint is bound at 1; the fallback's alpha serves the unbound paths.
+      return figma.variables.setBoundVariableForPaint(
+        Object.assign({}, paint, { opacity: 1 }),
+        "color",
+        variable,
+      );
     } catch (error) {
       stats.warnings.push(`Could not bind "${name}" (${messageFor(error)}).`);
     }
   }
 
   return paint;
-}
-
-function paintFromVariableWithOpacity(
-  name,
-  fallback,
-  opacity,
-  variableByName,
-  stats,
-) {
-  const paint = paintFromVariable(name, fallback, variableByName, stats);
-  const tinted = clonePaint(paint);
-  tinted.opacity = opacity;
-  return tinted;
 }
 
 function nodeIdForUrl(id) {
