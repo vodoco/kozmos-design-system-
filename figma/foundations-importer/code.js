@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "314962f54832";
+const PLUGIN_BUILD = "778f8e068ba8";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -15647,11 +15647,7 @@ function auditSurfaceQaPanelContrast(panel, variableContext) {
 }
 
 function surfaceQaPanelBackground(panel, variableContext, modeName) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(panel.fills),
-    variableContext,
-    modeName,
-  );
+  const fill = visibleSolidPaintsToRgba(panel.fills, variableContext, modeName);
 
   if (fill) return compositeColor(fill, { r: 1, g: 1, b: 1, a: 1 });
 
@@ -15994,23 +15990,15 @@ function auditComponentSet(
     );
   }
 
-  if (
-    shouldAuditTypographyBindings(record.name) &&
-    boundVariableFields.textNodesWithoutTextStyle > 0
-  ) {
+  // Every set's text carries a shared text style, whichever set it is: a list
+  // of the sets to hold to it fell behind the painters, and FileUpload's 32
+  // browse labels, detached from their style on c7d1d88351a7, drew no warning
+  // in any audit because FileUpload was not on it (2026-09-21). A second rule
+  // here, for text with neither a style nor bound typography, could only fire
+  // alongside this one and said the same thing twice.
+  if (boundVariableFields.textNodesWithoutTextStyle > 0) {
     record.warnings.push(
       `${boundVariableFields.textNodesWithoutTextStyle} text node(s) are missing Figma text styles. Run Apply Text Styles or the component updater to attach the shared typography styles.`,
-    );
-  }
-
-  if (
-    shouldAuditTypographyBindings(record.name) &&
-    boundVariableFields.textNodes > 0 &&
-    boundVariableFields.typographyFieldCount === 0 &&
-    boundVariableFields.textStyleNodes < boundVariableFields.textNodes
-  ) {
-    record.warnings.push(
-      `${boundVariableFields.textNodes - boundVariableFields.textStyleNodes} text node(s) are missing typography token bindings or Figma text styles.`,
     );
   }
 
@@ -16534,56 +16522,6 @@ function shouldRequireDisabledState(name) {
       "SearchBar",
       "Select",
       "Slider",
-    ].indexOf(name) !== -1
-  );
-}
-
-function shouldAuditTypographyBindings(name) {
-  return (
-    [
-      "Link",
-      "Box",
-      "Container",
-      "Breadcrumb",
-      "Pagination",
-      "Accordion",
-      "Button",
-      "ToggleButton",
-      "SplitButton",
-      "Counter",
-      "Badge",
-      "Tag",
-      "Chip",
-      "SegmentedControl",
-      "Card",
-      "List",
-      "TreeParentItem",
-      "TreeChildItem",
-      "TreeItem",
-      "Tree",
-      "Table",
-      "Timeline",
-      "BottomNavigation",
-      "NavigationItem",
-      "Navbar",
-      "Sidebar",
-      "Tabs",
-      "Tooltip",
-      "Checkbox",
-      "Radio",
-      "Switch",
-      "Input",
-      "PasswordInput",
-      "Combobox",
-      "MultiSelect",
-      "Listbox",
-      "Textarea",
-      "Search",
-      "SearchBar",
-      "Select",
-      "Slider",
-      "Avatar",
-      "Alert",
     ].indexOf(name) !== -1
   );
 }
@@ -20556,8 +20494,8 @@ function auditComponentContrastForMode(
     }
 
     const isDisabled = props.state === "Disabled";
-    const bgPaint = solidPaintToRgba(
-      firstVisibleSolidPaint(component.fills),
+    const bgPaint = visibleSolidPaintsToRgba(
+      component.fills,
       variableContext,
       modeName,
     );
@@ -20780,8 +20718,8 @@ function auditNodeContrast(
   }
 
   if (node.type === "TEXT") {
-    const paint = solidPaintToRgba(
-      firstVisibleSolidPaint(node.fills),
+    const paint = visibleSolidPaintsToRgba(
+      node.fills,
       variableContext,
       modeName,
     );
@@ -20811,13 +20749,13 @@ function auditNodeContrast(
     }
   } else if (isLikelyNonTextIndicator(node)) {
     const paints = [];
-    const fill = solidPaintToRgba(
-      firstVisibleSolidPaint(node.fills),
+    const fill = visibleSolidPaintsToRgba(
+      node.fills,
       variableContext,
       modeName,
     );
-    const stroke = solidPaintToRgba(
-      firstVisibleSolidPaint(node.strokes),
+    const stroke = visibleSolidPaintsToRgba(
+      node.strokes,
       variableContext,
       modeName,
     );
@@ -20859,11 +20797,7 @@ function auditNodeContrast(
 }
 
 function contrastChildBackground(node, background, variableContext, modeName) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
   let childBackground = fill ? compositeColor(fill, background) : background;
 
   // A translucent wash is a layer of its own at the back of the frame, its
@@ -20872,8 +20806,8 @@ function contrastChildBackground(node, background, variableContext, modeName) {
   // times the layer's opacity.
   for (const child of node.children || []) {
     if (!isTranslucentTokenLayer(child) || child.visible === false) continue;
-    const wash = solidPaintToRgba(
-      firstVisibleSolidPaint(child.fills),
+    const wash = visibleSolidPaintsToRgba(
+      child.fills,
       variableContext,
       modeName,
     );
@@ -21049,11 +20983,7 @@ function auditSegmentedControlSegmentPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
   const nextBackground = fill ? compositeColor(fill, background) : background;
 
   if (node.children) {
@@ -21080,11 +21010,7 @@ function auditGeneratedFilledChildSurfacePaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
   const nextBackground = fill ? compositeColor(fill, background) : background;
   const unavailable =
     node.getSharedPluginData &&
@@ -21115,13 +21041,9 @@ function auditCheckboxControlPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -21215,13 +21137,9 @@ function auditSliderTrackPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -21264,13 +21182,9 @@ function auditSliderThumbPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -21313,13 +21227,9 @@ function auditCardActionPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -21362,13 +21272,9 @@ function auditInputFieldPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -21421,13 +21327,13 @@ function auditActualIconSlotPaints(
   modeName,
 ) {
   function walk(current) {
-    const fill = solidPaintToRgba(
-      firstVisibleSolidPaint(current.fills),
+    const fill = visibleSolidPaintsToRgba(
+      current.fills,
       variableContext,
       modeName,
     );
-    const stroke = solidPaintToRgba(
-      firstVisibleSolidPaint(current.strokes),
+    const stroke = visibleSolidPaintsToRgba(
+      current.strokes,
       variableContext,
       modeName,
     );
@@ -21505,11 +21411,7 @@ function auditDecorativeIconPaints(
 ) {
   function walk(current) {
     for (const paints of [current.fills, current.strokes]) {
-      const paint = solidPaintToRgba(
-        firstVisibleSolidPaint(paints),
-        variableContext,
-        modeName,
-      );
+      const paint = visibleSolidPaintsToRgba(paints, variableContext, modeName);
       if (!paint) continue;
       const ratio = contrastRatio(
         compositeColor(paint, background),
@@ -21669,6 +21571,41 @@ function solidPaintToRgba(paint, variableContext, modeName) {
     g: color.g,
     b: color.b,
     a: paint.opacity === undefined ? 1 : paint.opacity,
+  };
+}
+
+// A node's visible solid paints read as the one colour they draw. Figma paints
+// the array bottom to top, so a second fill covers the first: CategoryTile's
+// Selected square on c7d1d88351a7 is white under an opaque tint, and reading
+// only the first fill measured its icon on white (1.92) where the render shows
+// the icon drawn on its own colour, unseen (REST render, 2026-09-21). One
+// paint reads as solidPaintToRgba reads it; no solid paint reads null.
+function visibleSolidPaintsToRgba(paints, variableContext, modeName) {
+  if (!Array.isArray(paints)) return null;
+  let stack = null;
+  for (const paint of paints) {
+    if (!paint || paint.visible === false || paint.type !== "SOLID") continue;
+    const color = solidPaintToRgba(paint, variableContext, modeName);
+    if (!color) continue;
+    stack = stack ? colorOver(color, stack) : color;
+  }
+  return stack;
+}
+
+// One colour over another, both with alpha: what the pair draws, before the
+// surface under both is known.
+function colorOver(top, bottom) {
+  const topAlpha = top.a === undefined ? 1 : top.a;
+  const bottomAlpha = bottom.a === undefined ? 1 : bottom.a;
+  const alpha = topAlpha + bottomAlpha * (1 - topAlpha);
+  if (alpha <= 0) return { r: top.r, g: top.g, b: top.b, a: 0 };
+  const mix = (t, b) =>
+    (t * topAlpha + b * bottomAlpha * (1 - topAlpha)) / alpha;
+  return {
+    r: mix(top.r, bottom.r),
+    g: mix(top.g, bottom.g),
+    b: mix(top.b, bottom.b),
+    a: alpha,
   };
 }
 

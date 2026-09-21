@@ -26,6 +26,7 @@ import {
   mockComponentSet,
   mockIconComponent,
   mockVariables,
+  payloadVariables,
   resetSearchStats,
   searchStats,
 } from "./lib/figma-plugin-harness.mjs";
@@ -1730,18 +1731,27 @@ section("What the audit reads under a wash");
     const wash = named(field, "Tint Wash");
     const icon = named(field, "Icon");
     const glyph = icon && icon.findOne((node) => node.type === "VECTOR");
-    const read = plugin.contrastChildBackground(field, white, context, "Light");
-    const expected = over(rgb(wash.fills[0]), wash.opacity, white);
-    ok(
-      ["r", "g", "b"].every((k) => Math.abs(read[k] - expected[k]) < 1e-6),
-      "the audit reads the field's content on its 12 % wash, composited",
-    );
-    const measured = ratio(rgb(glyph.strokes[0]), read);
-    ok(
-      Math.abs(measured - 1.77) < 0.01 &&
-        measured < ratio(rgb(glyph.strokes[0]), white) - 0.1,
-      `the yellow icon reads ${measured.toFixed(2)} on the wash, below its ${ratio(rgb(glyph.strokes[0]), white).toFixed(2)} on white`,
-    );
+    // A build without the wash layer fails here rather than stopping the run.
+    ok(wash && glyph, "the field draws its wash layer and an icon glyph");
+    if (wash && glyph) {
+      const read = plugin.contrastChildBackground(
+        field,
+        white,
+        context,
+        "Light",
+      );
+      const expected = over(rgb(wash.fills[0]), wash.opacity, white);
+      ok(
+        ["r", "g", "b"].every((k) => Math.abs(read[k] - expected[k]) < 1e-6),
+        "the audit reads the field's content on its 12 % wash, composited",
+      );
+      const measured = ratio(rgb(glyph.strokes[0]), read);
+      ok(
+        Math.abs(measured - 1.77) < 0.01 &&
+          measured < ratio(rgb(glyph.strokes[0]), white) - 0.1,
+        `the yellow icon reads ${measured.toFixed(2)} on the wash, below its ${ratio(rgb(glyph.strokes[0]), white).toFixed(2)} on white`,
+      );
+    }
 
     const step = figma.createComponent();
     await plugin.updateDirectionStepVariant(step, {
@@ -1751,20 +1761,23 @@ section("What the audit reads under a wash");
       stats: freshStats(),
     });
     const disc = named(step, "Direction Icon");
-    const discWash = named(disc, "Direction Wash");
-    const discRead = plugin.contrastChildBackground(
-      disc,
-      white,
-      context,
-      "Light",
-    );
-    const discTruth = over(rgb(discWash.fills[0]), discWash.opacity, white);
-    ok(
-      Math.abs(discRead.r - discTruth.r) < 1e-6 &&
-        Math.abs(discRead.g - discTruth.g) < 1e-6 &&
-        Math.abs(discRead.b - discTruth.b) < 1e-6,
-      "the direction glyph is read on its disc's 10 % wash",
-    );
+    const discWash = disc && named(disc, "Direction Wash");
+    ok(disc && discWash, "the step draws its disc's wash layer");
+    if (disc && discWash) {
+      const discRead = plugin.contrastChildBackground(
+        disc,
+        white,
+        context,
+        "Light",
+      );
+      const discTruth = over(rgb(discWash.fills[0]), discWash.opacity, white);
+      ok(
+        Math.abs(discRead.r - discTruth.r) < 1e-6 &&
+          Math.abs(discRead.g - discTruth.g) < 1e-6 &&
+          Math.abs(discRead.b - discTruth.b) < 1e-6,
+        "the direction glyph is read on its disc's 10 % wash",
+      );
+    }
   }
 }
 
@@ -1838,6 +1851,258 @@ section("Decorative icons");
       ),
       "a decorative shortfall is reported as an advisory",
     );
+  }
+}
+
+// --- The audit reads every fill ----------------------------------------------------
+
+// Figma paints a node's fills bottom to top, so a second fill covers the first.
+// c7d1d88351a7 drew each Selected CategoryTile square white under an opaque
+// tint, its icon in the tint: rendered over REST the icon is not there to see,
+// while the audit, reading the first fill alone, measured it on white at 1.92
+// and passed six of the nine tints (2026-09-21).
+section("The audit reads every fill");
+{
+  const ready =
+    typeof plugin.auditNodeContrast === "function" &&
+    typeof plugin.createContrastAuditResult === "function" &&
+    typeof plugin.createVariableContext === "function";
+  ok(ready, "the audit's traversal is reachable");
+  if (ready) {
+    const context = plugin.createVariableContext([], []);
+    const white = { r: 1, g: 1, b: 1 };
+    const black = { r: 0, g: 0, b: 0 };
+    const yellow = { r: 0xf9 / 255, g: 0xac / 255, b: 0x17 / 255 };
+    const solid = (color, opacity = 1) => ({
+      type: "SOLID",
+      color,
+      opacity,
+      visible: true,
+    });
+    const luminance = (c) => {
+      const lin = (v) =>
+        v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+    };
+    const ratio = (a, b) => {
+      const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);
+      return (x + 0.05) / (y + 0.05);
+    };
+    const audit = (frame) => {
+      const result = plugin.createContrastAuditResult();
+      plugin.auditNodeContrast(
+        frame,
+        { ...white, a: 1 },
+        false,
+        result,
+        context,
+        "Stacked",
+        "Light",
+      );
+      return result;
+    };
+    const square = (fills, glyphColor) => {
+      const frame = new MockNode("FRAME", "Icon Square");
+      frame.fills = fills;
+      const glyph = new MockNode("VECTOR", "Glyph");
+      glyph.strokes = [solid(glyphColor)];
+      frame.appendChild(glyph);
+      return frame;
+    };
+
+    const covered = audit(square([solid(white), solid(yellow)], yellow));
+    ok(
+      covered.nonTextFailures === 1 &&
+        Math.abs(covered.minNonTextContrast - 1) < 1e-9,
+      `a glyph in the colour of the fill on top reads 1:1 (read ${covered.minNonTextContrast && covered.minNonTextContrast.toFixed(2)})`,
+    );
+    const tint = 0.2;
+    const washed = audit(square([solid(white), solid(yellow, tint)], yellow));
+    const under = {
+      r: yellow.r * tint + white.r * (1 - tint),
+      g: yellow.g * tint + white.g * (1 - tint),
+      b: yellow.b * tint + white.b * (1 - tint),
+    };
+    ok(
+      Math.abs(washed.minNonTextContrast - ratio(yellow, under)) < 1e-9,
+      `a translucent fill on top is composited: ${washed.minNonTextContrast && washed.minNonTextContrast.toFixed(2)}, expected ${ratio(yellow, under).toFixed(2)}`,
+    );
+
+    const panel = new MockNode("FRAME", "Panel");
+    panel.fills = [solid(white), solid(black)];
+    const label = new MockNode("TEXT", "Label Text");
+    label.characters = "Label";
+    label.fills = [solid(white)];
+    panel.appendChild(label);
+    const text = audit(panel);
+    ok(
+      text.textFailures === 0 && Math.abs(text.minTextContrast - 21) < 1e-9,
+      `white text on a black fill over white reads 21:1 (read ${text.minTextContrast && text.minTextContrast.toFixed(2)})`,
+    );
+  }
+}
+
+// --- Every set's text carries a style ------------------------------------------------
+
+// The audit held a hand-kept list of the sets to hold to their text styles, and
+// FileUpload was not on it: its 32 browse labels lost their style on
+// c7d1d88351a7, a weight set after the style detaching it, and no audit said
+// so (2026-09-21).
+section("Every set's text carries a style");
+{
+  const ready =
+    typeof plugin.auditComponentSet === "function" &&
+    typeof plugin.createAuditPerformance === "function";
+  ok(ready, "the set audit is reachable");
+  if (ready) {
+    const textWarnings = (name, withUnstyled) => {
+      const set = mockComponentSet(name, [
+        {
+          properties: { State: "Default" },
+          build: (variant) => {
+            variant.resize(320, 48);
+            const styled = new MockNode("TEXT", "Label Text");
+            styled.characters = "Label";
+            styled.textStyleId = "S:field-label,";
+            variant.appendChild(styled);
+            if (withUnstyled) {
+              const bare = new MockNode("TEXT", "Browse Text");
+              bare.characters = "Click to upload";
+              variant.appendChild(bare);
+            }
+          },
+        },
+      ]);
+      const record = plugin.auditComponentSet(
+        set,
+        "Components",
+        plugin.createVariableContext([], []),
+        plugin.createAuditPerformance(),
+      );
+      return record.warnings.filter((warning) =>
+        /text style|typography/i.test(warning),
+      );
+    };
+    const fileUpload = textWarnings("FileUpload", true);
+    ok(
+      fileUpload.length === 1 &&
+        /^1 text node\(s\) are missing Figma text styles/.test(fileUpload[0]),
+      `FileUpload's unstyled label is reported: ${JSON.stringify(fileUpload)}`,
+    );
+    const button = textWarnings("Button", true);
+    ok(
+      button.length === 1,
+      `a set with no bound typography reports its unstyled text once, not twice (${button.length})`,
+    );
+    ok(
+      textWarnings("FileUpload", false).length === 0,
+      "a set whose text all carries styles reports nothing",
+    );
+  }
+}
+
+// --- The product sets audit clean ------------------------------------------------------
+
+// Every variant of the four sets the audit of 2026-09-21 20:38 warned on,
+// painted as Update paints it and audited in Light and Dark with the token
+// values the importer writes: no text below 4.5:1, no control below 3:1, and
+// the category symbols, named by their labels, measured apart as decorative.
+// Their c7d1d88351a7 drawings read five warnings live; replayed through this
+// build's Update, none.
+section("The product sets audit clean");
+{
+  const painters = [
+    "updateDirectionStepVariant",
+    "updateLocationPinVariant",
+    "updateCategoryTileVariant",
+    "updateCategoryFieldVariant",
+  ];
+  const ready =
+    painters.every((name) => typeof plugin[name] === "function") &&
+    typeof plugin.auditComponentContrast === "function";
+  ok(ready, "the four painters and the contrast audit are reachable");
+  if (ready) {
+    const tokens = payloadVariables([...variableByName.keys()]);
+    const context = plugin.createVariableContext(
+      tokens.collections,
+      tokens.variables,
+    );
+    const tints = plugin.CATEGORY_TINTS;
+    const sets = [
+      [
+        "DirectionStep",
+        plugin.DIRECTION_STEP_TYPES.map((value) => [
+          "updateDirectionStepVariant",
+          { value },
+        ]),
+      ],
+      [
+        "LocationPin",
+        plugin.LOCATION_PIN_STATES.flatMap((state) =>
+          plugin.LOCATION_PIN_SIZES.flatMap((size) =>
+            tints.map((tint) => [
+              "updateLocationPinVariant",
+              { props: { state, size, tint } },
+            ]),
+          ),
+        ),
+      ],
+      [
+        "CategoryTile",
+        plugin.CATEGORY_TILE_STATES.flatMap((state) =>
+          tints.map((tint) => [
+            "updateCategoryTileVariant",
+            { props: { state, tint } },
+          ]),
+        ),
+      ],
+      [
+        "CategoryField",
+        tints.map((value) => ["updateCategoryFieldVariant", { value }]),
+      ],
+    ];
+    for (const [name, variants] of sets) {
+      const set = new MockNode("COMPONENT_SET", name);
+      for (const [painter, args] of variants) {
+        const component = figma.createComponent();
+        await plugin[painter](component, {
+          ...args,
+          variableByName: tokens.variableByName,
+          fonts: FONTS,
+          stats: freshStats(),
+        });
+        set.appendChild(component);
+      }
+      const contrast = plugin.auditComponentContrast(
+        set,
+        set.children,
+        context,
+      );
+      const modes = contrast.byMode
+        .map(
+          (mode) =>
+            `${mode.mode} text ${mode.minTextContrast}, non-text ${mode.minNonTextContrast}`,
+        )
+        .join("; ");
+      ok(
+        contrast.byMode.length === 2 &&
+          contrast.textFailures === 0 &&
+          contrast.nonTextFailures === 0,
+        `${name}: ${variants.length} variants, no failure in Light or Dark (${modes}; ${contrast.failures
+          .slice(0, 3)
+          .map((f) => `${f.mode} ${f.node} ${f.ratio}`)
+          .join(", ")})`,
+      );
+      if (name === "CategoryTile" || name === "CategoryField") {
+        ok(
+          contrast.decorativeBelowThree > 0 &&
+            contrast.decorativeShortfalls.every(
+              (shortfall) => shortfall.kind === "decorative",
+            ),
+          `${name}: the category symbols below 3:1 are measured as decorative (${contrast.decorativeBelowThree})`,
+        );
+      }
+    }
   }
 }
 

@@ -587,6 +587,90 @@ export function mockVariables(names) {
   return byName;
 }
 
+/**
+ * The variables the importer writes, from docs/figma-foundations-payload.json,
+ * for a painter and for the audit together: `variableByName` holds every
+ * payload variable (ids as `mockVariables` makes them) plus `extraNames` the
+ * payload does not carry, such as component size variables; `collections` and
+ * `variables` feed the plugin's `createVariableContext`, each colour with its
+ * Light and Dark value and an alias kept as an alias. A painted node then
+ * resolves in either mode the way Audit Library resolves it in the file.
+ */
+export function payloadVariables(extraNames = []) {
+  const payload = JSON.parse(
+    fs.readFileSync(
+      path.join(process.cwd(), "docs/figma-foundations-payload.json"),
+      "utf8",
+    ),
+  );
+  const byCanonical = new Map(
+    payload.variables.map((variable) => [variable.canonicalName, variable]),
+  );
+  const parseColor = (raw) => {
+    const value = String(raw).trim().toLowerCase();
+    const hex = value.match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/);
+    if (hex) {
+      const channel = (i) => Number.parseInt(hex[1].slice(i, i + 2), 16) / 255;
+      return {
+        r: channel(0),
+        g: channel(2),
+        b: channel(4),
+        a: hex[2] ? Number.parseInt(hex[2], 16) / 255 : 1,
+      };
+    }
+    const rgba = value.match(/^rgba?\(([^)]+)\)$/);
+    if (rgba) {
+      const [r, g, b, a] = rgba[1].split(",").map(Number);
+      return { r: r / 255, g: g / 255, b: b / 255, a: a === undefined ? 1 : a };
+    }
+    return null;
+  };
+  const collections = payload.collections.map((collection) => ({
+    id: collection.name,
+    name: collection.name,
+    modes: collection.modes.map((mode) => ({
+      modeId: mode.toLowerCase(),
+      name: mode,
+    })),
+  }));
+  const variables = [];
+  const variableByName = new Map();
+  for (const variable of payload.variables) {
+    const record = {
+      id: `VariableID:${variable.figmaName}`,
+      name: variable.figmaName,
+      resolvedType: variable.figmaType,
+      variableCollectionId: variable.collection,
+      valuesByMode: {},
+    };
+    for (const mode of ["light", "dark"]) {
+      const value = variable.values[mode];
+      if (value.kind === "alias") {
+        const target = byCanonical.get(value.path);
+        record.valuesByMode[mode] = target
+          ? { type: "VARIABLE_ALIAS", id: `VariableID:${target.figmaName}` }
+          : null;
+      } else {
+        record.valuesByMode[mode] =
+          variable.figmaType === "COLOR"
+            ? parseColor(value.value)
+            : value.value;
+      }
+    }
+    variables.push(record);
+    variableByName.set(variable.figmaName, {
+      id: record.id,
+      name: variable.figmaName,
+    });
+  }
+  for (const name of extraNames) {
+    if (!variableByName.has(name)) {
+      variableByName.set(name, { id: `VariableID:${name}`, name });
+    }
+  }
+  return { collections, variables, variableByName };
+}
+
 export const FONTS = {
   regular: { family: "Inter", style: "Regular" },
   medium: { family: "Inter", style: "Medium" },
