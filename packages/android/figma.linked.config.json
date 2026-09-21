@@ -76,6 +76,8 @@
       "src/main/java/com/kozmos/components/Stepper/Stepper.kt",
       "src/main/java/com/kozmos/components/Tooltip/Tooltip.figma.kt",
       "src/main/java/com/kozmos/components/Tooltip/Tooltip.kt",
+      "src/main/java/com/kozmos/components/Backdrop/Backdrop.figma.kt",
+      "src/main/java/com/kozmos/components/Backdrop/Backdrop.kt",
       "src/main/java/com/kozmos/components/Dialog/Dialog.figma.kt",
       "src/main/java/com/kozmos/components/Dialog/Dialog.kt",
       "src/main/java/com/kozmos/components/Drawer/Drawer.figma.kt",

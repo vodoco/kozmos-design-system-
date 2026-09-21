@@ -77,6 +77,8 @@
       "Sources/Components/Stepper/Stepper.swift",
       "Sources/Components/Tooltip/Tooltip.figma.swift",
       "Sources/Components/Tooltip/Tooltip.swift",
+      "Sources/Components/Backdrop/Backdrop.figma.swift",
+      "Sources/Components/Backdrop/Backdrop.swift",
       "Sources/Components/Dialog/Dialog.figma.swift",
       "Sources/Components/Dialog/Dialog.swift",
       "Sources/Components/Drawer/Drawer.figma.swift",

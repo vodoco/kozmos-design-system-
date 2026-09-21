@@ -1757,6 +1757,63 @@ assertContains(
   "PopupPositionProvider",
   "Android Tooltip measured popup positioning",
 );
+// Every Code Connect file pinned to a node must be listed in its platform's
+// linked config. The configs are explicit file lists, not globs: a file left
+// off is never validated by the dry runs and never sent by publish, and nothing
+// says so. Backdrop on all three platforms and React's Icon sat outside them
+// from the start, found only when the 2026-09-21 publish did not name them.
+{
+  const unlisted = [];
+  for (const { config, sourceRoot, packageRoot, extension } of [
+    {
+      config: files.figmaLinked,
+      sourceRoot: "packages/react/src",
+      packageRoot: "packages/react",
+      extension: ".figma.tsx",
+    },
+    {
+      config: files.iosFigmaLinked,
+      sourceRoot: "packages/ios/Sources",
+      packageRoot: "packages/ios",
+      extension: ".figma.swift",
+    },
+    {
+      config: files.androidFigmaLinked,
+      sourceRoot: "packages/android/src",
+      packageRoot: "packages/android",
+      extension: ".figma.kt",
+    },
+  ]) {
+    const listed = new Set();
+    for (const includePath of JSON.parse(read(config)).codeConnect.include) {
+      const candidates = [
+        path.join(path.dirname(config), includePath),
+        includePath,
+        path.join(packageRoot, includePath),
+      ].map((candidate) => path.normalize(candidate));
+      const found = candidates.find((candidate) =>
+        fs.existsSync(path.join(root, candidate)),
+      );
+      if (!found) unlisted.push(`${config} lists ${includePath}, which does not exist`);
+      else listed.add(found);
+    }
+    for (const filePath of listFilesRecursive(sourceRoot, (candidate) =>
+      candidate.endsWith(extension),
+    )) {
+      const placeholder = /node-id=TBD|nodeId\s*=\s*["']TBD["']|node-id%3DTBD/i.test(
+        read(filePath),
+      );
+      if (!placeholder && !listed.has(path.normalize(filePath))) {
+        unlisted.push(`${config} does not list ${filePath}`);
+      }
+    }
+  }
+  if (unlisted.length > 0) {
+    fail(
+      `The linked Code Connect configs and the files disagree (an unlisted file is never validated or published):\n  ${unlisted.join("\n  ")}`,
+    );
+  }
+}
 assertContains(
   files.figmaLinked,
   source.figmaLinked,
