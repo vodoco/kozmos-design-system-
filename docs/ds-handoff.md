@@ -1364,6 +1364,15 @@ ours; the tile's data yellow and the marker's yellow differ, a token decision fo
 panel paints no surface of its own in a sheet on any platform; the session's places are the
 site's. `initial-sheet-2026-09-20.md`, its last sections, have the numbers and the decisions.
 
+The audit Olcay asked for the same day found ten things and fixed them: digits on a fill went
+black in dark mode and white fails contrast on half the taxonomy's colours (a fill now comes with
+its ink, `KozmosInkedFill` / `CategoryTint.onFill`); the tiles wore the chart palette (the
+taxonomy's eight quick-access colours, measured from the published sprite atlas, are
+`Semantics.Category.{Accent,Fill,OnFill}`, the eight pairs held to 4.5:1 by the contrast check);
+the web panel never had its tint callback; the SDK's markers were measured three ways and the
+app keeps the honest one; a selected tinted tile's stroke, the POI panel's inset blocks on the
+sheet, stories, notes and the contract followed.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:

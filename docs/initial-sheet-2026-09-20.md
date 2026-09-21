@@ -257,6 +257,57 @@ quick search results should be site wide. not per level."_
   counts and a category's list cover the whole site; each row says its floor and building, and
   the map follows a chosen category to its first place's level.
 
+### The audit of the 21st: what was mis-implemented, missed, or could be better
+
+Olcay: _"analyse extensively to see if anything is overlooked, missed, mis-implemented or could
+have done better. No hacks - no cheats."_ Ten findings, each measured, each fixed the same day.
+
+1. **Digits on a colour went black in dark mode.** The counter's fill and the chip's pill drew
+   their digits in `primitivesColorsBackground0` — white in light, `#000000` in dark — on
+   colours that do not change with the mode. Now a fill comes with its ink: `KozmosInkedFill`
+   (iOS, Compose) and `CategoryTint.onFill` (web), a literal per colour in both modes.
+2. **White digits fail contrast on half the palette.** Measured against the taxonomy's eight
+   colours: white reads on red 4.93, navy 6.95 and pink 4.57 but fails on yellow 1.92, orange
+   2.82, turquoise 3.00 and green 3.66; the dark ink `#17191C` reads on those four (9.18, 6.24,
+   5.88, 4.82) but fails on red, navy and pink; blue fails both (4.03 / 4.37). So the tokens
+   carry three sets — `Semantics.Category.Accent` (the taxonomy's value), `Fill` (the accent,
+   blue alone darkened 7 % to `#1E77CF` so white reaches 4.57) and `OnFill` (white or the dark
+   ink) — and `pnpm tokens:contrast:check` holds the eight fill/ink pairs to 4.5:1 (218 pairs
+   in all).
+3. **The tiles wore a chart palette.** The system's data colours (yellow `#D97706`) stood in for
+   the taxonomy's. The taxonomy's eight quick-access colours were measured from the published
+   10.12.0 sprite atlas — its section markers, identical in the light and dark themes — and are
+   now `Semantics.Category.Accent.*`: yellow `#F9AC17`, orange `#E5801A`, turquoise `#37A4A4`,
+   red `#D92626`, blue `#2080DF`, navy `#4D4DB2`, green `#339933`, pink `#B24DB2`. The QA app's
+   tint names are those eight; navy and pink are no longer collapsed into blue and purple.
+   Tile and chip now share one value by construction.
+4. **The web panel never had the tint callback.** The morning's commit said it did; the patch
+   had stopped at an earlier assertion and nothing on the web passed a tint per category. Added,
+   with a test that the tile receives it.
+5. **The SDK's markers, three ways, measured.** `PTRMapMarker` views drew nothing (hosted pin,
+   rendered image, before and after a level switch, one reuse identifier each);
+   `showQuickAccessPois` draws numbered theme-blue pins at any zoom, not colour-matched;
+   `PTRPoiMapStyle(poi:)` with nothing set gives the round type marker in the taxonomy's
+   per-type colour (gates `#ECA71E`). The app keeps the last, without the pointless image it
+   carried, under an honest name (`markPlaces`). The atlas shows why the map can never match a
+   tile exactly: the SDK's per-type bubbles are one palette (restroom `#1D95EC`, blue) and its
+   quick-access sections another (turquoise) — a note for Pointr, not a thing to fake here.
+6. **A selected tinted tile kept a blue stroke.** The selection's stroke and 5 % fill now take
+   the accent, on all three platforms.
+7. **Inset blocks vanished on the sheet.** The POI panel's restrictions, action message, logo
+   fallback and media placeholder were the sheet's own grey; in the sheet presentation they are
+   white now, on all three (the Compose golden reads the grey at the panel's edge, white inside).
+8. **Two things that read as done and were not.** The pin's tint patch had stopped at an
+   anchor, and the test run afterwards was green because the pin test was never in the file —
+   caught by grepping the test's name; and the field's tint on Compose was the raw colour.
+9. **Stories and notes.** Tinted stories for the tile, the pin and the panel; the tint, fill
+   and sheet-surface notes in the components' MDX; the contract names the category tint, the
+   counter's inked fill and the pin's fill.
+10. **Left as it is, on purpose.** `showQuickAccessPois` stays an option when every place must
+    show at any zoom; the SDK offers no fit-to-many camera (`focusPoi`, `zoomToCoordinate`), so
+    the map follows a category by showing its first place's level; the personal tiles leave
+    while empty.
+
 ## 3. The QA app's sheet
 
 [SDKMapScreen.swift](../apps/PointrPlayground/Sources/App/SDKMapScreen.swift) `searchSheet`:
@@ -338,31 +389,34 @@ recorded focus transition's frames.
 
 ## 6. Change it yourself
 
-| What                                             | Where                                                                                                                                                                                               |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The numbers, on any platform                     | iOS `KozmosMapPanelDetent.height(in:)`; web `PANEL_DETENT_RULES`; Compose `KozmosMapPanelDetent.Companion`                                                                                          |
-| The drag rule                                    | iOS `KozmosPanelDragKind.decide`; web `decidePanelDrag`; Compose `decidePanelDrag` and the `NestedScrollConnection`                                                                                 |
-| A sheet's peek                                   | iOS `.kozmosPanelPeekAnchor()`; web `{...panelPeekAnchorProps}`; Compose `Modifier.kozmosPanelPeekAnchor()`                                                                                         |
-| Content that scrolls in a sheet (iOS)            | `KozmosPanelScrollView` in place of `ScrollView`; a plain `ScrollView` scrolls at every detent and never hands off                                                                                  |
-| The QA app's tiles and their words               | `apps/PointrPlayground/Sources/App/Model/QuickAccess.swift`; the vendored file and icons in `Sources/App/Resources/QuickAccess`                                                                     |
-| The QA app's sheet and its detent memory         | `SDKMapScreen.swift`: `searchSheet`, `searchRow`, the three `onChange`s                                                                                                                             |
-| Drive the web sheet                              | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:map-sheet` (`ADAPTIVE_BROWSER=firefox\|webkit`), on a served Storybook build                                                                         |
-| Measure the web's tiles and the AI ring          | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:search-sheet`, the same way                                                                                                                          |
-| Drive the QA app's sheet                         | the `KozmosPointrQAUI` scheme, `-only-testing:KozmosPointrQAUITests/BrowseSheetUITests`, with the two `TEST_RUNNER_KOZMOS_QA_*` names                                                               |
-| Re-drive the prototype                           | `node scripts/measure-prototype-sheet.cjs <out-dir>`                                                                                                                                                |
-| The motion tokens and their native files         | `packages/tokens/src/tokens*.json` `Semantics.Motion`; `build.mjs` `ios-swift/motion`, `android-compose/motion`; `pnpm tokens:build`, copy `KozmosMotion.swift` / `.kt`; `pnpm tokens:motion:check` |
-| The transitions                                  | iOS `KozmosTransitions.swift`; web `owned-components.css` (`pop`, `reveal`, `crossfade`); Compose `Motion/Transitions.kt`                                                                           |
-| The quick-access words                           | `node scripts/sync-ios-quick-access.mjs --fetch --write`; `Resources/QuickAccess/aviation-terms-10.12.0.json`; `Model/QuickAccessTerms.swift`                                                       |
-| The category field                               | `CategoryField/` on each platform; the QA app's `searchRow`; `scripts/check-search-sheet.mjs`                                                                                                       |
-| Re-record the Compose goldens                    | `ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew --no-daemon -q recordPaparazziDebug --tests "*KozmosAdaptiveMapShellPaparazziTest*"` in `packages/android`                                      |
-| The tile's count                                 | `CategoryTile` on each platform (`Counter`, brand tone, offset 4); `components.categoryTile` in the contract; `check-search-sheet.mjs`                                                              |
-| The QA app's tile counts and the empty-tile rule | `SDKSession.countTiles()` / `count(of:)` / `visibleTiles`; `QuickAccess.counts(of:places:)` / `visibleTiles(counts:)`                                                                               |
-| The venue's own words                            | the `QA-DATA` log lines (the command in the guide)                                                                                                                                                  |
-| On-device Apple Intelligence                     | `scripts/check-foundation-models.swift`                                                                                                                                                             |
-| A tile's or a pin's tint                         | `CategoryTile` / `LocationPin` `tint` on each platform; `Counter` `fill`; the QA app's `QuickAccessCategory.Tint.color`                                                                             |
-| The category's places on the map                 | `SDKSession.showPins(at:tint:)` (`updatePoiStyles`) and the map following the category in `choose(category:)`                                                                                       |
-| The POI panel's sheet surface                    | `POIDetailPanel` sheet presentation on each platform; `owned-poi-detail.css`; the Sheet story                                                                                                       |
-| Site-wide places                                 | `SDKSession.refreshPOIs()` (`pois(for: building.site)`)                                                                                                                                             |
+| What                                             | Where                                                                                                                                                                                                                                |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| The numbers, on any platform                     | iOS `KozmosMapPanelDetent.height(in:)`; web `PANEL_DETENT_RULES`; Compose `KozmosMapPanelDetent.Companion`                                                                                                                           |
+| The drag rule                                    | iOS `KozmosPanelDragKind.decide`; web `decidePanelDrag`; Compose `decidePanelDrag` and the `NestedScrollConnection`                                                                                                                  |
+| A sheet's peek                                   | iOS `.kozmosPanelPeekAnchor()`; web `{...panelPeekAnchorProps}`; Compose `Modifier.kozmosPanelPeekAnchor()`                                                                                                                          |
+| Content that scrolls in a sheet (iOS)            | `KozmosPanelScrollView` in place of `ScrollView`; a plain `ScrollView` scrolls at every detent and never hands off                                                                                                                   |
+| The QA app's tiles and their words               | `apps/PointrPlayground/Sources/App/Model/QuickAccess.swift`; the vendored file and icons in `Sources/App/Resources/QuickAccess`                                                                                                      |
+| The QA app's sheet and its detent memory         | `SDKMapScreen.swift`: `searchSheet`, `searchRow`, the three `onChange`s                                                                                                                                                              |
+| Drive the web sheet                              | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:map-sheet` (`ADAPTIVE_BROWSER=firefox\|webkit`), on a served Storybook build                                                                                                          |
+| Measure the web's tiles and the AI ring          | `STORYBOOK_URL=http://127.0.0.1:6012 pnpm test:search-sheet`, the same way                                                                                                                                                           |
+| Drive the QA app's sheet                         | the `KozmosPointrQAUI` scheme, `-only-testing:KozmosPointrQAUITests/BrowseSheetUITests`, with the two `TEST_RUNNER_KOZMOS_QA_*` names                                                                                                |
+| Re-drive the prototype                           | `node scripts/measure-prototype-sheet.cjs <out-dir>`                                                                                                                                                                                 |
+| The motion tokens and their native files         | `packages/tokens/src/tokens*.json` `Semantics.Motion`; `build.mjs` `ios-swift/motion`, `android-compose/motion`; `pnpm tokens:build`, copy `KozmosMotion.swift` / `.kt`; `pnpm tokens:motion:check`                                  |
+| The transitions                                  | iOS `KozmosTransitions.swift`; web `owned-components.css` (`pop`, `reveal`, `crossfade`); Compose `Motion/Transitions.kt`                                                                                                            |
+| The quick-access words                           | `node scripts/sync-ios-quick-access.mjs --fetch --write`; `Resources/QuickAccess/aviation-terms-10.12.0.json`; `Model/QuickAccessTerms.swift`                                                                                        |
+| The category field                               | `CategoryField/` on each platform; the QA app's `searchRow`; `scripts/check-search-sheet.mjs`                                                                                                                                        |
+| Re-record the Compose goldens                    | `ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew --no-daemon -q recordPaparazziDebug --tests "*KozmosAdaptiveMapShellPaparazziTest*"` in `packages/android`                                                                       |
+| The tile's count                                 | `CategoryTile` on each platform (`Counter`, brand tone, offset 4); `components.categoryTile` in the contract; `check-search-sheet.mjs`                                                                                               |
+| The QA app's tile counts and the empty-tile rule | `SDKSession.countTiles()` / `count(of:)` / `visibleTiles`; `QuickAccess.counts(of:places:)` / `visibleTiles(counts:)`                                                                                                                |
+| The venue's own words                            | the `QA-DATA` log lines (the command in the guide)                                                                                                                                                                                   |
+| On-device Apple Intelligence                     | `scripts/check-foundation-models.swift`                                                                                                                                                                                              |
+| A tile's or a pin's tint                         | `CategoryTile` / `LocationPin` `tint` on each platform; `Counter` `fill`; the QA app's `QuickAccessCategory.Tint.color`                                                                                                              |
+| The category's places on the map                 | `SDKSession.showPins(at:tint:)` (`updatePoiStyles`) and the map following the category in `choose(category:)`                                                                                                                        |
+| The POI panel's sheet surface                    | `POIDetailPanel` sheet presentation on each platform; `owned-poi-detail.css`; the Sheet story                                                                                                                                        |
+| Site-wide places                                 | `SDKSession.refreshPOIs()` (`pois(for: building.site)`)                                                                                                                                                                              |
+| The taxonomy's palette                           | `Semantics.Category.{Accent,Fill,OnFill}` in `packages/tokens/src/tokens*.json`; `pnpm tokens:build`, copy `dist/ios/KozmosColors.swift` and `dist/android/…/KozmosColors*.kt` into the packages; `pnpm tokens:contrast:check`       |
+| A category tint on a part                        | iOS `KozmosCategoryTint(accent:fill:)` + `KozmosInkedFill(fill:ink:)`; web `CategoryTint { accent, fill, onFill }`; Compose `KozmosCategoryTint(accent, KozmosInkedFill(fill, ink))`; the QA app's `QuickAccessCategory.Tint.kozmos` |
+| Measure the SDK's sprite colours                 | the guide's browser snippet on `mapscdn.pointr.tech/sprite/<version>/<theme>/sprite@2x`                                                                                                                                              |
 
 ## 7. Left as found, and for Olcay
 
@@ -383,6 +437,5 @@ recorded focus transition's frames.
   Intelligence-capable iPhone, iPhone 15 Pro and later, so the QA app needs a fallback or a floor),
   and what the DS lacks for it — a companion surface (the prototype's chat, its listening and
   thinking states) — which the prototype measurement names.
-- **The category palette.** Tile, chip and the SDK's marker share a colour name, not a value
-  (data yellow `#D97706` against the marker's `#ECA71E`). The taxonomy's eight icon colours as
-  `Semantics.Category` tokens would make them one; Olcay's call, since it is a token set.
+- **The category palette** is done: tile and chip share the taxonomy's value; the SDK's map draws
+  its own two palettes (per-type bubbles, quick-access sections), a note for Pointr.

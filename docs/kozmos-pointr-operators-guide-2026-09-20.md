@@ -71,6 +71,49 @@ is a build setting, not environment:
 cd /private/tmp/kozmos-browser-compat.uqPMBD/apps/PointrPlayground && TEST_RUNNER_KOZMOS_QA_DESTINATION="Airport Shuttles" TEST_RUNNER_KOZMOS_QA_ORIGIN="Dunkin" xcodebuild -project KozmosPointrQA.xcodeproj -scheme KozmosPointrQAUI -destination "platform=iOS Simulator,id=51937B59-CEAE-4BC7-BC34-FEB17E28FAE7" -derivedDataPath /private/tmp/kozmos-pointr-qa-xcode -resultBundlePath /private/tmp/kozmos-pointr-ui.xcresult CODE_SIGNING_ALLOWED=NO test 2>&1 | grep -E "QA-FLOW|Test Case .* (passed|failed)|TEST (SUCCEEDED|FAILED)"
 ```
 
+**Adding a colour token, end to end.** Edit `packages/tokens/src/tokens.json`, `tokens-light.json`
+and `tokens-dark.json` alike (a DTCG group: `{"$value": "#F9AC17", "$type": "color", "$description":
+"…"}`), then:
+
+```bash
+cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm tokens:build && cp packages/tokens/dist/ios/KozmosColors.swift packages/ios/Sources/KozmosColors.swift && cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColors.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColors.kt && cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt && pnpm tokens:contrast:check && pnpm tokens:raw:check && pnpm tokens:motion:check
+```
+
+The web reads `packages/tokens/dist/css/variables-*.css` at build; nothing to copy. A group named
+`OnFill` becomes `semanticsCategoryOnfillRed` in Swift and Kotlin (one capital) and
+`--semantics-category-on-fill-red` in CSS. A fill/ink pair goes into `scripts/check-token-contrast.mjs`'s
+`contract.pairs` so the check holds it (the eight category pairs are there).
+
+**Measuring the SDK's sprite colours.** The sandbox has no network; the browser pane does. Open
+`https://mapscdn.pointr.tech/sprite/10.12.0/light/sprite@2x.json` there and run, in its page:
+
+```js
+const json = await (await fetch(location.href)).json();
+const bmp = await createImageBitmap(
+  await (await fetch(location.href.replace(".json", ".png"))).blob(),
+);
+const c = Object.assign(document.createElement("canvas"), {
+  width: bmp.width,
+  height: bmp.height,
+});
+const ctx = c.getContext("2d");
+ctx.drawImage(bmp, 0, 0);
+const s = json["gates-section"],
+  d = ctx.getImageData(s.x, s.y, s.width, s.height).data,
+  counts = {};
+for (let i = 0; i < d.length; i += 4)
+  if (d[i + 3] > 250) {
+    const k = ((d[i] << 16) | (d[i + 1] << 8) | d[i + 2])
+      .toString(16)
+      .padStart(6, "0");
+    counts[k] = (counts[k] || 0) + 1;
+  }
+Object.entries(counts).sort((a, b) => b[1] - a[1])[0]; // the sprite's dominant opaque colour
+```
+
+The `-section` sprites carry the quick-access palette; the per-type bubbles (`boarding-gate`,
+`restroom`, …) carry another. The dark theme's sprites are the same colours.
+
 The venue's own words — every distinct tag and keyword its places carry, the material a
 companion could filter on — are logged once per load as `QA-DATA` lines (the session's
 `countTiles()`); read them from the simulator after any launch:
@@ -424,6 +467,12 @@ _Added on the 21st, from the sheet stage:_
 - `pois(for: building)` is the loaded building's places, delivered in steps; `pois(for:
 building.site)` is the whole site's (1196 at Boston Logan). Search and the tiles count the
   site.
+- A fill needs its ink. `primitivesColorsBackground0` is white in light and black in dark; on a
+  colour that does not change with the mode it is the wrong ink half the time, and white fails
+  4.5:1 on four of the taxonomy's eight colours anyway. Pass `KozmosInkedFill` / `onFill` with any
+  fill, from the `Semantics.Category.OnFill` tokens.
+- A blind edit of a Kotlin signature that contains a function type (`onClose: (() -> Unit)?`)
+  finds the wrong `)`. Read the signature, then edit it by its exact text.
 
 - The iPhone 17 Pro simulator speaks Arabic first; `defaults read -g AppleLanguages` before
   concluding anything about a backend's language.
