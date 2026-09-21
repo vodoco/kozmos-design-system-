@@ -1547,6 +1547,98 @@ section("Component lookups");
   }
 }
 
+// --- Layout sizing Figma accepts ---------------------------------------------------
+
+// A run on 2026-09-21 logged 319 layout sizing calls Figma refused: HUG on
+// icon instances and a rectangle, which have no content to hug, and FILL on
+// a node outside an auto-layout parent or before it was appended. The harness
+// refuses what Figma refuses; every config painter, and the Slider, must ask
+// for sizing Figma accepts.
+section("Layout sizing Figma accepts");
+{
+  const sizingIcons = new MockNode("PAGE", "Icons");
+  const registry = fs.readFileSync(
+    path.join(ROOT, "packages/icons/src/registry.ts"),
+    "utf8",
+  );
+  for (const match of registry
+    .slice(
+      registry.indexOf("export const kozmosIconNames = ["),
+      registry.indexOf("] as const"),
+    )
+    .matchAll(/^\s+"([a-z0-9-]+)",$/gm)) {
+    sizingIcons.appendChild(mockIconComponent(match[1]));
+  }
+  const sizingFigma = createFigmaMock({
+    pages: [new MockNode("PAGE", "Components"), sizingIcons],
+  });
+  const sizingPlugin = loadPlugin({ pluginPath: PLUGIN, figma: sizingFigma });
+  const ready =
+    Array.isArray(sizingPlugin.layoutSizingFailures) &&
+    typeof sizingPlugin.resetLayoutSizingFailures === "function";
+  ok(ready, "the plugin records the sizing Figma refuses");
+  const source = fs.readFileSync(PLUGIN, "utf8");
+  const configNames = [
+    ...source.matchAll(/^function ([a-zA-Z]+ComponentConfig)\(\)/gm),
+  ].map((match) => match[1]);
+  const painters = configNames
+    .filter((name) => typeof sizingPlugin[name] === "function")
+    .map((name) => {
+      const config = sizingPlugin[name]();
+      return {
+        name: config.componentName || name,
+        variants: config.combinations(),
+        paint: (component, props) =>
+          config.updateVariant(component, {
+            props,
+            variableByName,
+            fonts: FONTS,
+            stats: freshStats(),
+          }),
+      };
+    });
+  if (typeof sizingPlugin.updateSliderVariant === "function") {
+    const variants = [];
+    for (const state of sizingPlugin.SLIDER_STATES) {
+      for (const status of sizingPlugin.SLIDER_STATUSES) {
+        for (const type of sizingPlugin.SLIDER_TYPES) {
+          variants.push({ state, status, type });
+        }
+      }
+    }
+    painters.push({
+      name: "Slider",
+      variants,
+      paint: (component, props) =>
+        sizingPlugin.updateSliderVariant(component, {
+          ...props,
+          variableByName,
+          fonts: FONTS,
+          stats: freshStats(),
+        }),
+    });
+  }
+  ok(painters.length >= 19, `${painters.length} painters are measured`);
+  for (const painter of ready ? painters : []) {
+    sizingPlugin.resetLayoutSizingFailures();
+    for (const props of painter.variants) {
+      await painter.paint(sizingFigma.createComponent(), props);
+    }
+    const refused = sizingPlugin.layoutSizingFailures.slice();
+    ok(
+      refused.length === 0,
+      `${painter.name} asks only for sizing Figma accepts${
+        refused.length
+          ? ` (${refused.length} refused, e.g. ${refused
+              .slice(0, 2)
+              .map((f) => `${f.node} ${f.axis}=${f.value}`)
+              .join("; ")})`
+          : ""
+      }`,
+    );
+  }
+}
+
 // --- The build a run names ---------------------------------------------------------
 
 // A pasted audit or a panel is only evidence about the build that produced it,

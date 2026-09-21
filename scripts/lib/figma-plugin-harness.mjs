@@ -367,6 +367,42 @@ export function mockIconComponent(name) {
   return component;
 }
 
+// Figma's rules for layout sizing, with its own messages, so a painter that
+// asks for one Figma refuses is caught here rather than in the live file's
+// run log: HUG takes an auto-layout frame, or text inside one; FILL takes a
+// child of an auto-layout frame. The plugin's setters catch and record a
+// refusal, as they do in Figma.
+const layoutSizingValues = Symbol("layoutSizing");
+function isAutoLayoutNode(node) {
+  return Boolean(node && node.layoutMode && node.layoutMode !== "NONE");
+}
+for (const axis of ["layoutSizingHorizontal", "layoutSizingVertical"]) {
+  Object.defineProperty(MockNode.prototype, axis, {
+    configurable: true,
+    get() {
+      return (this[layoutSizingValues] && this[layoutSizingValues][axis]) || "FIXED";
+    },
+    set(value) {
+      if (
+        value === "HUG" &&
+        !isAutoLayoutNode(this) &&
+        !(this.type === "TEXT" && isAutoLayoutNode(this.parent))
+      ) {
+        throw new Error(
+          `in set_${axis}: HUG can only be set on auto-layout frames or text children of auto-layout frames`,
+        );
+      }
+      if (value === "FILL" && !isAutoLayoutNode(this.parent)) {
+        throw new Error(
+          `in set_${axis}: node must be an auto-layout frame or a child of an auto-layout frame`,
+        );
+      }
+      if (!this[layoutSizingValues]) this[layoutSizingValues] = {};
+      this[layoutSizingValues][axis] = value;
+    },
+  });
+}
+
 export function createFigmaMock({ pages }) {
   const root = new MockNode("DOCUMENT", "Document");
   for (const page of pages) root.appendChild(page);

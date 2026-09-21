@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "22b3d38b173b";
+const PLUGIN_BUILD = "45c49b3b1b83";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -39113,6 +39113,14 @@ async function updateBottomNavigationVariant(
       stats,
     });
     component.appendChild(item);
+    // Each item shares the bar's width. FILL needs the item inside the bar's
+    // auto layout, so it is set after the append; before it, Figma refused it.
+    setLayoutSizingHorizontal(item, "FILL");
+    try {
+      item.layoutGrow = 1;
+    } catch (_error) {
+      // layoutGrow is unavailable on older plugin runtimes.
+    }
   }
 }
 
@@ -39471,7 +39479,9 @@ async function createNavigationItemLeadingIconFrame({
   );
   icon.name = "Leading Icon";
   frame.appendChild(icon);
-  setHugChildSizing(icon);
+  // An icon instance is sized, not hugged: HUG takes only an auto-layout frame
+  // or text, and Figma refused it 240 times across NavigationItem's rows.
+  setFixedChildSizing(icon);
   return frame;
 }
 
@@ -39560,7 +39570,7 @@ async function createNavigationItemTrailingSlot({
   );
   icon.name = "Trailing Icon";
   slot.appendChild(icon);
-  setHugChildSizing(icon);
+  setFixedChildSizing(icon);
   return slot;
 }
 
@@ -40966,9 +40976,11 @@ async function updateSearchBarVariant(
     ),
   ];
   text.textAlignVertical = "CENTER";
+  // FILL needs the text inside the bar's auto layout first; set before the
+  // append, Figma refused it and the text kept its creation width.
+  component.appendChild(text);
   setHorizontalFillTextSizing(text);
   setTextAutoResize(text, "TRUNCATE");
-  component.appendChild(text);
 
   if (filled) {
     const clearIcon = await createFixedIconInstance(
@@ -42300,12 +42312,6 @@ async function createBottomNavigationItem({
   item.fills = [];
   item.strokes = [];
   item.setSharedPluginData(RUN_NAMESPACE, "kind", "bottom-navigation-item");
-  setLayoutSizingHorizontal(item, "FILL");
-  try {
-    item.layoutGrow = 1;
-  } catch (_error) {
-    // layoutGrow is unavailable on older plugin runtimes.
-  }
 
   const foreground = active ? "Colors/theme/600" : "Colors/foreground/400";
   const foregroundFallback = active ? "#1051E8" : "#5D626F";
@@ -59558,7 +59564,8 @@ async function syncBottomSheetVariantChildren({
   handle.strokes = [];
   handle.setSharedPluginData(RUN_NAMESPACE, "kind", "bottom-sheet-handle");
   component.appendChild(handle);
-  setHugChildSizing(handle);
+  // A rectangle has no content to hug; the handle keeps its 48 by 5.
+  setFixedChildSizing(handle);
 
   const header = figma.createFrame();
   header.name = "BottomSheet Header";
@@ -59703,8 +59710,10 @@ async function syncBottomSheetVariantChildren({
     reusableSlot: reusableContentSlot,
     stats,
   });
-  contentSlot.visible = content !== "Form";
+  // Sized while visible, then hidden in Form: FILL asked of the hidden slot
+  // read back without it, the one Content Slot refusal in the 2026-09-21 log.
   setVerticalStackChildSizing(contentSlot);
+  contentSlot.visible = content !== "Form";
   if (
     Array.from(body.children || []).some((child) => child.visible !== false)
   ) {
@@ -68582,7 +68591,6 @@ async function syncSliderVariantChildren({
   }
 
   root.layoutMode = "NONE";
-  setVerticalFixedFillChildSizing(root);
   root.resizeWithoutConstraints(320, 44);
   root.fills = [];
   root.strokes = [];
@@ -68663,7 +68671,8 @@ async function syncSliderVariantChildren({
   range.setSharedPluginData(RUN_NAMESPACE, "kind", "slider-range");
   track.appendChild(range);
   root.appendChild(track);
-  setLayoutSizingHorizontal(track, "FILL");
+  // The control is not auto layout, so FILL cannot apply here; the track's
+  // STRETCH constraint carries it to the control's width.
 
   const thumbSpecs = isRange
     ? [
@@ -68807,6 +68816,10 @@ async function syncSliderVariantChildren({
 
   component.appendChild(label);
   component.appendChild(root);
+  // The control fills the Slider's width, so a resized instance stretches
+  // it. FILL needs the control inside the component's auto layout, so it is
+  // set after the append: before it, Figma refused it for a new control.
+  setVerticalFixedFillChildSizing(root);
   normalizeInputFamilyChildSizing(component);
 }
 
@@ -69925,9 +69938,21 @@ function setFixedChildSizing(node) {
   }
 }
 
+// HUG takes an auto-layout frame or text. A leaf, an icon instance or a
+// rectangle, has no content to hug; its size is its content, so it stays
+// FIXED, which is what a refused HUG left anyway. Asking for HUG on it put
+// 306 refusals in one run log, burying the ones that mis-size a node.
+function canHugContent(node) {
+  return Boolean(
+    node &&
+    (node.type === "TEXT" || (node.layoutMode && node.layoutMode !== "NONE")),
+  );
+}
+
 function setHugChildSizing(node) {
-  setLayoutSizingHorizontal(node, "HUG");
-  setLayoutSizingVertical(node, "HUG");
+  const sizing = canHugContent(node) ? "HUG" : "FIXED";
+  setLayoutSizingHorizontal(node, sizing);
+  setLayoutSizingVertical(node, sizing);
 
   try {
     node.layoutAlign = "CENTER";
