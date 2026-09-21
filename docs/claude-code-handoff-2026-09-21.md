@@ -235,7 +235,9 @@ ADAPTIVE_BROWSER=<chromium|firefox|webkit> pnpm test:search-sheet` (and `test:ma
    there (not Update All Core, which a new build restarts at Link); Build Surface QA; Audit
    Library; then `pnpm figma:verify` and the REST read-back of the washes. The §4 steps before
    it are done. Code Connect is published (drift §9); publish again only from this branch or
-   from `main` after the merge, then `pnpm figma:connect:readback` with Figma in front.
+   from `main` after the merge, then `pnpm figma:connect:readback` with Figma in front. Still to
+   read back: 72 of SwiftUI's 95 nodes, refused by Figma's daily Dev Mode limit on the 21st —
+   `pnpm figma:connect:readback -- --label SwiftUI` once it resets.
 2. **The Figma remainder** (stage doc §5): `Surface` and its axis on five sets; ManoeuvreCard,
    Itinerary and RouteProgressRail as sets; the shell's phone sheet (a decision); the 15th–19th
    drift — Tag's and Counter's `emotion`, MapControlButton's axes, the POI panel's anatomy; `⇅`.
@@ -269,8 +271,9 @@ an unquoted `$VAR`.
 From the Code Connect publish: the linked configs are lists, not globs, so a mapping left off is
 never validated or sent while the dry run still says every file is valid (the contract check
 now refuses it); a publish reports what it sent, so read Dev Mode back; Figma's Dev Mode server
-stopped answering tool calls while Figma sat idle in the background, and the readback now
-times out and says so; the worktree's publish scripts look for `.env` above the worktree and
+answers nothing while Figma sits in the background (an hour and a half, until it was brought to
+the front) and has a daily limit per account (some 500 calls on the 21st), and the readback now
+times out and stops at the first refusal; the worktree's publish scripts look for `.env` above the worktree and
 find none, so export only `FIGMA_ACCESS_TOKEN` from the main checkout's.
 
 ## 10. The documents

@@ -331,7 +331,9 @@ cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm figma:connect:readback
 
 It asks the server, read-only, for every linked node on React, SwiftUI and Compose, and fails on
 a node that shows nothing or a snippet whose import a consumer cannot use
-(`-- --label SwiftUI --node 1933:9257` narrows it).
+(`-- --label SwiftUI --node 1933:9257` narrows it). Keep Figma in front while it runs. Each call
+counts against Figma's daily limit for your account's Dev Mode server, which any other use of the
+server shares; a full pass is 285 calls.
 
 Which build ran is the first thing to read. The panel's header shows it ("Build …"), and an
 Audit Library report carries it as `pluginBuild`; a report without it came from a build before
@@ -600,8 +602,10 @@ building.site)` is the whole site's (1196 at Boston Logan). Search and the tiles
   off from the start; `components:contract:check` now refuses it.
 - `figma connect publish` reports what it sent, not what Dev Mode shows. Read it back with
   `pnpm figma:connect:readback`.
-- Figma's Dev Mode MCP server stopped answering tool calls while Figma sat idle in the
-  background (the handshake still worked). The readback times each call out after 90 s and
-  stops after eight in a row.
+- Figma's Dev Mode MCP server answered no tool call for an hour and a half while Figma sat in
+  the background (the handshake still worked), and at once when Figma was brought to the front.
+  The readback times each call out after 90 s and stops after eight in a row.
+- The Dev Mode server has a daily limit per account: some 500 calls into the 21st it answered
+  "Rate limit exceeded, please try again tomorrow". The readback stops at the first refusal.
 - The worktree's publish and verify scripts look for `.env` above the worktree and find none;
   export only `FIGMA_ACCESS_TOKEN` from the main checkout's, never print it.

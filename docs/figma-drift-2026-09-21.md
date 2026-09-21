@@ -205,8 +205,13 @@ _Steps 1 to 5 are done in the live file; §9 has the run for the current build._
   off from the start. The contract check now refuses it.
 - `figma connect publish` reports what it sent. Read it back (`pnpm figma:connect:readback`)
   before saying what Dev Mode shows.
-- Figma's Dev Mode MCP server stopped answering tool calls while Figma sat idle in the
-  background, though it still took the handshake. The readback times each call out and stops.
+- Figma's Dev Mode MCP server answered no tool call for an hour and a half while Figma sat in the
+  background, though it still took the handshake, and answered at once when Figma was brought
+  to the front. The readback times each call out and stops.
+- The Dev Mode server has a daily limit per account, shared with any other use of it: some 500
+  calls into the 21st it answered "Rate limit exceeded, please try again tomorrow". A full
+  readback is 285 calls; narrow it with `--label` and `--node`. The readback stops at the first
+  refusal.
 
 ## 7. The audit, the same night
 
@@ -374,9 +379,12 @@ snippet on every platform: 95 nodes each, 1,760 variant or instance nodes carryi
 (SwiftUI's Sidebar failed once and read back whole when asked again). After the third, React's 95
 again (1,760, every import `@kozmos/react`), and SwiftUI's CategoryField, Backdrop, Icon and Card
 with `import Kozmos`. SwiftUI's whole pass after the third round counted 1,738, 22 fewer than
-after the second; the run then hung in the Compose pass before printing which nodes fell short,
-so that count is unexplained. With Figma in front,
-`pnpm figma:connect:readback -- --label SwiftUI` settles it.
+after the second, and hung in the Compose pass before printing which nodes fell short. Asked again
+at 18:51 with Figma brought to the front (in the background it had answered nothing for an hour
+and a half), 23 of the 95 nodes answered, 504 snippets, every one with `import Kozmos`, before
+Figma's daily limit for the Dev Mode server refused the rest: "Rate limit exceeded, please try
+again tomorrow", after some 500 calls in the day. The other 72, and the 22, wait for the limit
+to reset: `pnpm figma:connect:readback -- --label SwiftUI` with Figma in front, 95 calls.
 
 **Mind:**
 

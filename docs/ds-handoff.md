@@ -1604,4 +1604,7 @@ imported anything. The configs now list the four (`a534276`) and map the imports
 again. `pnpm figma:connect:readback` (`98cb9de`) reads Dev Mode back through Figma desktop's
 Dev Mode MCP server: after the second round, 95 linked nodes on each platform, every one
 showing a snippet. Publish again only from this branch or from `main` after the merge; a
-publish from `main` before it would put back older mappings and drop the imports.
+publish from `main` before it would put back older mappings and drop the imports. After the
+third round, 23 of SwiftUI's 95 nodes read back clean before Figma's daily limit for the Dev
+Mode server refused the rest; the readback now stops at that refusal, and the remaining pass
+waits for the limit to reset.
