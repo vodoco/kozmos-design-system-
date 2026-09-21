@@ -227,6 +227,11 @@ _Steps 1 to 5 are done in the live file; §9 has the run for the current build._
   warning tells the reader to run, and what that does, before shipping it.
 - A literal written to a field bound to a variable drops the binding. Apply Text Styles wrote
   each text's size and leading before attaching the style; a painter binds after it writes.
+- A plugin that never yields inside a long set freezes the panel and saves nothing until the set
+  ends: the panel read NavigationItem while the file had reached SearchBar. Read the stamps over
+  REST, not the panel, to see where a run is; the plugin now reports and yields as it goes.
+- A new build restarts Update All Core from its first set. After a plugin change mid-run, update
+  the sets left one at a time.
 
 ## 7. The audit, the same night
 
@@ -340,47 +345,34 @@ The CategoryField clear's hit area followed the same night: a 44 target around t
 all three platforms (§5, 5; `701f919`). Code Connect followed on his word, published on all three
 platforms (below).
 
-### The run, with build `01f3be6891dc`
+### The run, with build `1001317b6546`
 
-`01f3be6891dc` (`bd4afde`) paints exactly as `314962f54832` (`aa876ce`); since then only what the
-audit reads and what Apply Text Styles does have changed (the audit of 20:38 and Apply Text
-Styles at 21:36, below). Build `ed50a03a1912` drew a translucent token opaque: do not Update
-anything on it. Do not run Apply Text Styles on the file as it is, and do not publish the
-library until the audit below is clean.
+`1001317b6546` (`b1d7702`) paints exactly as `314962f54832` (`aa876ce`); since then only what the
+audit reads, what Apply Text Styles does, and how a run reports and guards itself have changed
+(below). The repair of 21:36 is done and read back: every text is bound and sized as at 20:55
+(Update All Core at 22:32, below). Do not run Apply Text Styles on this file, and do not publish
+the library until the audit below is clean.
 
-1. **Undo 21:36.** In Figma, File › Show version history: restore the last version saved before
-   21:36 on the 21st, after 20:42 if one is listed. That brings back the 9,914 size and leading
-   bindings and the 656 sizes exactly. From a version before about 20:35, Button and Badge are
-   back on their old drawings too: add them to step 3.
-2. Close the plugin and run it again; the header must read **Build 01f3be6891dc**.
-3. **Update**, one at a time, never Rebuild, the seventeen not yet run: DirectionStep,
-   CategoryField, CategoryTile, LocationPin, ScrollArea, BottomSheet, FileUpload, IconButton,
-   SearchBar, BottomNavigation, Slider, NavigationItem; then TreeItem, TreeChildItem,
-   TreeParentItem, Tree and Timeline, which now take seconds.
-
-   With no version before 21:36 to restore, run **Update All Core**, then **Update All
-   Product / SDK**, instead: a new build restarts both from their first set, and together they
-   redraw the 46 sets Apply Text Styles touched — each painter attaches its style and binds the
-   size and leading again — as well as the seventeen. The 41 of the 46 outside the seventeen:
-   Link, Button, Badge, Counter, Chip, SegmentedControl, Card, List, Table, Breadcrumb, Tabs,
-   Pagination, Navbar, Sidebar, Accordion, POICard, MapControlButton, Dialog, Drawer, Menu,
-   Popover, Tooltip, Checkbox, Radio, Switch, Input, Search, Select, Textarea, NumberInput,
-   MultiSelect, PasswordInput, FormField, DatePicker, DateRangePicker, TimePicker, ColorPicker,
-   Alert, Toast, EmptyState, Avatar.
-
+1. Open Figma again and run the plugin; the header must read **Build 1001317b6546**.
+2. **Update All Product / SDK**: its 26 sets, the four with warnings among them. The Activity
+   line names each set and, in a long one, "variant n of N" and each phase; the bulk buttons
+   stay disabled until it ends.
+3. **Update**, one at a time from the component list, never Rebuild: TreeItem, TreeChildItem,
+   TreeParentItem, Tree, Timeline. Not Update All Core: a new build restarts it from Link, and it
+   would redo the 66 sets it finished at 22:32. TreeItem is the largest set in the file; let it
+   run while "variant n of 216" moves. If it stops moving for minutes, press Copy Log and paste
+   it; do not quit Figma first.
 4. **Build Surface QA**, then **Audit Library**. Expected: no warning. The advisories gain three
-   from the four replayed sets, 54 if the other thirteen Updates keep theirs: CategoryField's
-   host-surface one (it paints no fill of its own now, as ruled) and one each for CategoryTile
-   and CategoryField, their category symbols below 3:1 measured as decorative — the tile's 7 (Light: the Default tile's yellow 1.92, orange 2.82 and
-   turquoise 3.00, under 3 before rounding; the Selected tile's 1.86, 2.69 and 2.85; Dark: the
-   Selected navy 2.94) and the field's 4 (Light: yellow 1.77, orange 2.51, turquoise 2.66;
-   Dark: navy 2.84); 64 of 64 Surface QA instances; `pluginBuild` `01f3be6891dc`. An audit
-   before a set's Update reads its old drawing: CategoryTile then fails 21 pairs at 1.00, and
-   FileUpload reports 32 text nodes without a style — Update FileUpload for that.
-5. From the terminal: `pnpm figma:verify`, the REST read-back of the text bindings against the
-   Components page as it stood at 20:55, of the washes (layer opacity 0.12, 0.05, 0.2, 0.1,
-   0.32, 0.36), and a render of DirectionStep and of a Selected CategoryTile, whose glyph and
-   icon the old drawings do not show.
+   from the four replayed sets, 54 if the other sets keep theirs: CategoryField's host-surface
+   one (it paints no fill of its own now, as ruled) and one each for CategoryTile and
+   CategoryField, their category symbols below 3:1 measured as decorative — the tile's 7 (Light:
+   the Default tile's yellow 1.92, orange 2.82 and turquoise 3.00, under 3 before rounding; the
+   Selected tile's 1.86, 2.69 and 2.85; Dark: the Selected navy 2.94) and the field's 4 (Light:
+   yellow 1.77, orange 2.51, turquoise 2.66; Dark: navy 2.84); 64 of 64 Surface QA instances;
+   `pluginBuild` `1001317b6546`.
+5. From the terminal: `pnpm figma:verify`, the REST read-back of the text bindings and the washes
+   (layer opacity 0.12, 0.05, 0.2, 0.1, 0.32, 0.36), and a render of DirectionStep and of a
+   Selected CategoryTile.
 
 ### Code Connect, published on his word
 
@@ -591,3 +583,38 @@ the two remedies — and nothing else does.
 one, the two update sequences, which draw every touched set again. Whether the library was
 published after 21:36 cannot be read with this token (403); if it was, publish again once the
 audit is clean.
+
+### Update All Core at 22:32, and the Tree block
+
+The Product/SDK sets read exactly as at 20:55 afterwards, so the version before 21:36 was
+restored first; then Update All Core ran on `01f3be6891dc`. Over REST at 22:37:
+
+- **It finished 66 of the 71 Core sets on the page**, Link through SearchBar (Text, Heading and
+  Label have no set), and the typography is whole again: 5,932 texts with a bound size against
+  5,900 at 20:55, FileUpload's 32 browse labels now among them, and the 656 readouts at 12/16.
+- **It stopped in TreeItem.** None of its 216 variants had changed, the file was last saved at
+  22:32:50, and Figma's renderer ran at 100 % for over ten minutes until Figma was quit, so
+  nothing of TreeItem reached the file. The Tree block's five sets are still on `dd9f78a05cc0`.
+- **The panel was behind the file**: it read "Updating NavigationItem — 64 of 74" while the file
+  had reached SearchBar, 69.
+
+Found in the plugin:
+
+1. **No yield inside a set.** A set's variants ran without one real yield, so Figma neither
+   redrew the panel nor saved the file until the set was done, and a quit mid-set lost all of it.
+2. **Two runs at once.** The panel left Update All Core and Update All Product / SDK enabled
+   during a run, and the plugin had no guard, so a press during a run started a second sequence
+   alongside the first, sharing its flags. Whether that happened tonight is not established.
+3. **TreeItem is three times NavigationItem's work.** Counted in the harness: 3,672 bindings,
+   2,322 appends, 522 instances, 954 property references, 15 property edits and 34 reads of the
+   set's definitions, against 1,150, 810, 150, 360, 3 and 16. Whether it would have finished is
+   not established; a comment in `updateRepairableTreeItemMatrixComponent` records a TreeItem
+   update that sat until morning at the definitions read on 2026-09-07.
+
+**Fixed** (`b1d7702`, build `1001317b6546`; painters unchanged): the two update paths report
+"variant n of N" at most four times a second and every phase after the variants, and yield each
+time; a bulk run names its place, and its result names the slowest sets with their times; the
+panel disables both bulk buttons while busy; the plugin refuses a second run with a notice. The
+painter check is 267; on `01f3be6891dc` the five new assertions fail, and nothing else does. The
+next TreeItem run says where its time goes; if it is the definitions read or the property pass,
+that is the next change.

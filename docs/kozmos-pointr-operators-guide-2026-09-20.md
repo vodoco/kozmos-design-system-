@@ -339,7 +339,7 @@ Which build ran is the first thing to read. The panel's header shows it ("Build 
 Audit Library report carries it as `pluginBuild`; a report without it came from a build before
 `50ba616`. Update All Core resumes by build stamp, so after any plugin change it starts again at
 Link: update the sets the change touched, one at a time, instead
-([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `01f3be6891dc`).
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `1001317b6546`).
 The painter check also refuses the layout sizing Figma refuses and counts the nodes a lookup
 visits, so a painter that asks for HUG on an icon, FILL before an append, or a whole-file search
 per variant fails there first.
@@ -637,3 +637,12 @@ _Added on the 21st, from Apply Text Styles at 21:36:_
   write, as the painters do.
 - An accidental bulk change in the file is undone from its version history; an Update redraws
   one set, and the two update sequences redraw them all.
+
+_Added on the 21st, from Update All Core at 22:32:_
+
+- The panel is not where a run is: it froze on NavigationItem while the file had reached
+  SearchBar. Read the sets' stamps over REST. Since `b1d7702` a long set reports each variant
+  and phase and yields, so the panel moves and the file saves as it goes.
+- Do not press a bulk button twice: a second press used to start a second run alongside the
+  first. The panel disables them while busy now, and the plugin refuses a second run.
+- A new build restarts Update All Core from Link; update what is left one set at a time.

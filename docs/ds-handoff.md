@@ -1644,3 +1644,13 @@ and is corrected. Apply Text Styles now styles only unstyled text and binds its 
 guess agrees with every styled text as the painters left them, and the audit and the panel name
 the set's Update (`bd4afde`, build `01f3be6891dc`, no painter changes; the painter check is 261).
 The repair is Olcay's: the version from before 21:36, or the two update sequences (drift §9).
+
+Update All Core then ran on `01f3be6891dc` after the version from before 21:36 was restored: it
+finished 66 Core sets and every text is bound and sized as at 20:55 again, but it stopped in
+TreeItem, the largest set (216 variants), with Figma's renderer at 100 % and no save for over
+ten minutes until Figma was quit, while the panel still read NavigationItem. The update paths had
+no yield inside a set, and the bulk buttons stayed enabled during a run with no guard in the
+plugin. A long set now reports each variant and phase and yields, the bulk buttons are disabled
+while busy, the plugin refuses a second run, and a run's result names its slowest sets
+(`b1d7702`, build `1001317b6546`, painters unchanged; the painter check is 267). Left: Update All
+Product / SDK, then the Tree block one set at a time (drift §9).
