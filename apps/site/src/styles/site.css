@@ -1,0 +1,252 @@
+/*
+ * The site's own stylesheet: page layout only.
+ *
+ * Every colour, radius, shadow and piece of typography comes from a Kozmos
+ * component or a Kozmos token. This file arranges components on the page —
+ * widths, gaps, grids — and every rule that exists because Kozmos cannot
+ * express it names the gap in GAPS.md. `pnpm --filter @kozmos/site lint`
+ * enforces the rules (scripts/check-ds-only.mjs).
+ */
+
+/* Spacing aliases: the layout spacing tokens are unitless, like the semantic
+   radii, so they are converted once here. */
+:root {
+  --site-space-100: calc(var(--primitives-layout-spacing-100) * 1px);
+  --site-space-150: calc(var(--primitives-layout-spacing-150) * 1px);
+  --site-space-200: calc(var(--primitives-layout-spacing-200) * 1px);
+  --site-space-300: calc(var(--primitives-layout-spacing-300) * 1px);
+  --site-space-400: calc(var(--primitives-layout-spacing-400) * 1px);
+  --site-space-600: calc(var(--primitives-layout-spacing-600) * 1px);
+  --site-space-700: calc(var(--primitives-layout-spacing-700) * 1px);
+  --site-space-900: calc(var(--primitives-layout-spacing-900) * 1px);
+}
+
+/* The document sits outside every ThemeProvider. root.tsx mirrors the
+   resolved theme onto <html data-theme>, which the tokens' dark stylesheet
+   keys on. */
+html {
+  color-scheme: light;
+  background: var(--primitives-colors-background-0);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+}
+
+/* ---- Shell ------------------------------------------------------------ */
+
+.site-shell {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+  background: var(--primitives-colors-background-0);
+}
+
+.site-main {
+  flex: 1 0 auto;
+}
+
+.site-main:focus {
+  outline: none;
+}
+
+/* GAP-06: Kozmos has no skip link or visually-hidden primitive. The link is
+   a Kozmos Link; this only keeps it off-screen until it has focus. */
+.site-skip-link {
+  position: absolute;
+  inset-inline-start: var(--site-space-200);
+  inset-block-start: var(--site-space-200);
+  z-index: 1;
+  transform: translateY(-200%);
+}
+
+.site-skip-link:focus {
+  transform: none;
+}
+
+.site-header-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-100);
+}
+
+/* ---- Page structure --------------------------------------------------- */
+
+.site-page {
+  padding-block: var(--site-space-700);
+}
+
+.site-page-header {
+  display: grid;
+  gap: var(--site-space-200);
+  max-inline-size: 48rem;
+  margin-block-end: var(--site-space-600);
+}
+
+.site-section {
+  display: grid;
+  gap: var(--site-space-300);
+}
+
+.site-section + .site-section {
+  margin-block-start: var(--site-space-900);
+}
+
+.site-section-header {
+  display: grid;
+  gap: var(--site-space-100);
+  max-inline-size: 48rem;
+}
+
+.site-prose {
+  display: grid;
+  gap: var(--site-space-200);
+  max-inline-size: 48rem;
+}
+
+/* GAP-04: Grid takes a fixed column count, with no responsive or auto-fit
+   axis, and a caller's class cannot replace its template: its utilities are
+   scoped as `:scope .grid-cols-none`, which outranks any single class. So the
+   site's card grids are a Box laid out here. */
+.site-grid {
+  display: grid;
+  gap: var(--site-space-200);
+}
+
+.site-grid-auto {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+/* Lists that grow one card at a time keep their card width: auto-fill leaves
+   the empty tracks in place instead of stretching a lone card. */
+.site-grid-wide {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+}
+
+.site-card-fill {
+  block-size: 100%;
+}
+
+/* ---- Home ------------------------------------------------------------- */
+
+.site-hero {
+  display: grid;
+  gap: var(--site-space-600);
+  align-items: center;
+  padding-block: var(--site-space-700) var(--site-space-900);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+}
+
+.site-hero-copy {
+  display: grid;
+  gap: var(--site-space-300);
+  justify-items: start;
+}
+
+.site-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-150);
+}
+
+.site-demo {
+  display: grid;
+  gap: var(--site-space-200);
+  padding: var(--site-space-300);
+}
+
+.site-demo-surface {
+  padding: var(--site-space-300);
+  border-radius: calc(var(--semantics-radius-container) * 1px);
+}
+
+.site-demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-200);
+  align-items: end;
+}
+
+.site-demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-100);
+  align-items: center;
+}
+
+/* ---- Code ------------------------------------------------------------- */
+
+/* GAP-05: there is no code block in Kozmos. This is a Surface holding a
+   ScrollArea and a <pre>; the monospace family comes from the provider's
+   own scoped preflight. */
+.site-code {
+  display: grid;
+  min-inline-size: 0;
+  border-radius: calc(var(--semantics-radius-container) * 1px);
+  overflow: hidden;
+}
+
+.site-code-bar {
+  padding-block: var(--site-space-100);
+  padding-inline: var(--site-space-200) var(--site-space-100);
+}
+
+.site-code-body {
+  max-block-size: 32rem;
+}
+
+.site-code-pre {
+  padding: var(--site-space-200);
+}
+
+/* ---- Footer ----------------------------------------------------------- */
+
+/* GAP-08: Kozmos has no footer; this one is Container, Stack, Text and Link. */
+.site-footer {
+  padding-block: var(--site-space-400);
+}
+
+.site-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-300);
+}
+
+/* ---- Examples --------------------------------------------------------- */
+
+.site-example-intro {
+  display: grid;
+  gap: var(--site-space-200);
+  padding-block: var(--site-space-400) var(--site-space-300);
+}
+
+/* The example is drawn on its own canvas, edge to edge. */
+.site-example-canvas {
+  border-block: var(--primitives-border-width-sm) solid
+    var(--semantics-border-subtle);
+}
+
+/* An app fills a definite height, as AdaptiveMapShell requires. */
+.site-example-canvas[data-kind="app"] {
+  block-size: min(56rem, calc(100dvh - var(--site-space-900)));
+  min-block-size: 36rem;
+}
+
+.site-example-details {
+  display: grid;
+  gap: var(--site-space-600);
+  padding-block: var(--site-space-600) var(--site-space-900);
+}
+
+/* ---- Status pages ----------------------------------------------------- */
+
+.site-status {
+  display: grid;
+  place-items: center;
+  min-block-size: 50dvh;
+  padding-block: var(--site-space-700);
+}

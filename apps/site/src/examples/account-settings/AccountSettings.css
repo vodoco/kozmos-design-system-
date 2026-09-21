@@ -1,0 +1,49 @@
+/* Account settings: page layout only. Every visible part is a Kozmos
+   component; this arranges them. */
+
+.ex-settings {
+  background: var(--primitives-colors-background-25);
+}
+
+.ex-settings-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-100);
+}
+
+.ex-settings-page {
+  display: grid;
+  gap: var(--site-space-300);
+  max-inline-size: 48rem;
+  padding-block: var(--site-space-600) var(--site-space-900);
+}
+
+.ex-settings-heading {
+  display: grid;
+  gap: var(--site-space-100);
+}
+
+.ex-settings-panel {
+  display: grid;
+  gap: var(--site-space-300);
+  padding-block-start: var(--site-space-300);
+}
+
+.ex-settings-fields {
+  display: grid;
+  gap: var(--site-space-300);
+}
+
+/* Two fields side by side where there is room. */
+.ex-settings-pair {
+  display: grid;
+  gap: var(--site-space-300);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
+.ex-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--site-space-150);
+}
