@@ -215,6 +215,13 @@ _Steps 1 to 5 are done in the live file; §9 has the run for the current build._
   calls into the 21st it answered "Rate limit exceeded, please try again tomorrow". A full
   readback is 285 calls; narrow it with `--label` and `--node`. The readback stops at the first
   refusal.
+- An audit reads the file as it is. At 20:38 two of the run's nineteen sets had been updated;
+  `pnpm figma:verify`'s build coverage says which sets carry which build. Read it before reading
+  a warning as the code's.
+- A render is the truth. DirectionStep's 1.00 was a glyph not drawn; the Selected tile's 1.92
+  was an icon not drawn, measured on the fill beneath the one that shows.
+- The audit's variant parsers run in a chain, and the Label parser claims any name with
+  `State=Default`: a branch on a later parser's field can be dead. The Glass skip was.
 
 ## 7. The audit, the same night
 
@@ -328,24 +335,31 @@ The CategoryField clear's hit area followed the same night: a 44 target around t
 all three platforms (§5, 5; `701f919`). Code Connect followed on his word, published on all three
 platforms (below).
 
-### The run, with build `314962f54832`
+### The run, with build `53ac76afe679`
 
-Build `ed50a03a1912` drew a translucent token opaque (the audit of 19:00, below): do not Update
-anything on it. `314962f54832` (`aa876ce`) is the build to run.
+`53ac76afe679` (`5639895`) paints exactly as `314962f54832` (`aa876ce`); what changed is what the
+audit reads (the audit of 20:38, below). Button and Badge, updated on `314962f54832` at 20:38,
+stay as they are. Build `ed50a03a1912` drew a translucent token opaque: do not Update anything
+on it.
 
-1. Close the plugin and run it again; the header must read **Build 314962f54832**.
+1. Close the plugin and run it again; the header must read **Build 53ac76afe679**.
 2. Not Update All Core: its resume stamps are per build, so a new build starts it again at Link.
-   **Update**, one at a time, never Rebuild: DirectionStep, CategoryField, CategoryTile,
-   LocationPin, ScrollArea, BottomSheet, FileUpload, Button (again: it was updated on
-   `ed50a03a1912`), IconButton, Badge, SearchBar, BottomNavigation, Slider, NavigationItem;
-   then TreeItem, TreeChildItem, TreeParentItem, Tree and Timeline, which now take seconds.
-3. **Build Surface QA**, then **Audit Library**. Expected: no DirectionStep, Button, IconButton,
-   Badge, CategoryTile, CategoryField, LocationPin or surface QA warnings, 64 of 64 Surface QA
-   instances; the category icons below 3:1 as advisories, not warnings — the tile's and the
-   field's yellow, orange and turquoise in Light, the field's navy in Dark. The report's
-   `pluginBuild` must read `314962f54832`.
-4. From the terminal: `pnpm figma:verify`, and the REST read-back of the washes (layer opacity
-   0.12, 0.05, 0.2, 0.1, 0.32, 0.36) and of Glass's fill (paint opacity 0.102).
+   **Update**, one at a time, never Rebuild, the seventeen not yet run: DirectionStep,
+   CategoryField, CategoryTile, LocationPin, ScrollArea, BottomSheet, FileUpload, IconButton,
+   SearchBar, BottomNavigation, Slider, NavigationItem; then TreeItem, TreeChildItem,
+   TreeParentItem, Tree and Timeline, which now take seconds.
+3. **Build Surface QA**, then **Audit Library**. Expected: no warning; 53 advisories, the 51 of
+   20:38 and one each for CategoryTile and CategoryField, their category symbols below 3:1
+   measured as decorative — the tile's 7 (Light: the Default tile's yellow 1.92, orange 2.82 and
+   turquoise 3.00, under 3 before rounding; the Selected tile's 1.86, 2.69 and 2.85; Dark: the
+   Selected navy 2.94) and the field's 4 (Light: yellow 1.77, orange 2.51, turquoise 2.66;
+   Dark: navy 2.84); 64 of 64 Surface QA instances; `pluginBuild` `53ac76afe679`. An audit
+   before a set's Update reads its old drawing: CategoryTile then fails 21 pairs at 1.00, and
+   FileUpload reports 32 text nodes without a style.
+4. From the terminal: `pnpm figma:verify` (17 sets on `53ac76afe679`, Button and Badge on
+   `314962f54832`, the other 78 on `c7d1d88351a7`), the REST read-back of the washes (layer
+   opacity 0.12, 0.05, 0.2, 0.1, 0.32, 0.36), and a render of DirectionStep and of a Selected
+   CategoryTile, whose glyph and icon the old drawings do not show.
 
 ### Code Connect, published on his word
 
@@ -439,3 +453,78 @@ Also read: IconButton's icons were bound between 14:58 and 19:00 (their bound st
 went from 90 to 102) while its stamp stayed `c7d1d88351a7`, and the Icons page's 56 sources are
 unbound, so the bindings are overrides on the instances. What wrote them is not established; the
 Update in the run above rewrites them either way.
+
+### The audit of 20:38 (build `314962f54832`), and what changed after it
+
+Olcay ran Audit Library at 20:38 with the header on `314962f54832`: 5 warnings, 51 advisories.
+Over REST two sets carried that build, Button and Badge; the other seventeen of the run's
+nineteen still carried `c7d1d88351a7` (twelve) and `dd9f78a05cc0` (the Tree block's five). What
+the two Updates showed:
+
+- **Glass is translucent.** Its fill is bound to `Colors/transparent/inverted/10` at paint
+  opacity 0.102; rendered over REST it draws (140, 140, 140) at alpha 49, the same pixels as
+  IconButton's Glass, which was always right. On `ed50a03a1912` it drew (252, 252, 252) at 255.
+  Button's text reads 6.95 in Light and 8.05 in Dark at the least.
+- **Badge's dark icons pass**: 6.17, where they read 1.00, 1.61 and 1.00.
+- **Surface QA draws 64 of 64**, no issue; its text reads 6.1 or more and its controls 3.08 or
+  more.
+
+The five warnings are the four sets not yet updated — DirectionStep's 28, LocationPin's 18,
+CategoryTile's 6, CategoryField's 11 and 4 — and two of those drawings are worse than the audit
+said. Rendered over REST:
+
+- **DirectionStep draws no glyph**, in any of its 14 types. `c7d1d88351a7` laid the disc's 10 %
+  on the bound paint, the file dropped it, and the disc is solid theme blue under a theme-blue
+  glyph. The audit's 1.00 was the drawing.
+- **CategoryTile's nine Selected tiles draw no icon.** Each square is white under an opaque
+  tint, its 5 % lost the same way, and the icon is in that tint. The audit read only a node's
+  first fill, so it measured the icon on the white: 1.92, 2.82 and 3.00 for three tints, a pass
+  for the other six. These nine squares are the only nodes on the Components page that stack
+  two visible solid fills (the Docs page's Selected preview follows its component).
+
+**Replayed without Figma, the Update clears all four.** Each variant is painted by
+`c7d1d88351a7`'s painter, then by this build's over the same node, as Update does, and audited in
+Light and Dark with the payload's token values. The old drawing alone reproduces the live audit
+failure for failure — DirectionStep and CategoryTile with their strengths dropped, CategoryField
+with its 12 % kept, LocationPin either way — and after the Update all four read clean:
+DirectionStep's glyphs 4.85 in Light and 3.54 in Dark, LocationPin's text 4.57 or more, and the
+category symbols as decorative advisories. The painter check now holds this (below).
+
+**Fixed in the audit** (`45e4b0f` and `5639895`, build `53ac76afe679`; no painter changes):
+
+1. **Every fill a node stacks.** The 22 colour reads — backgrounds, text, controls, the Surface
+   QA panels — flatten a node's visible solid paints bottom to top, as Figma paints them
+   (`visibleSolidPaintsToRgba`); one paint reads as before. On the old CategoryTile drawing the
+   audit now fails 21 pairs at 1.00 where it failed 6. `pnpm figma:verify` took a text's
+   background from the first fill too; it takes the topmost opaque one.
+2. **Every set's text is held to a style.** FileUpload's 32 "Click to upload" labels have had no
+   text style since `c7d1d88351a7` — a Medium weight set after the field text style detaches
+   it; `fc3e915` fixed the painter — and no audit said so: the rule held a list of 43 sets, and
+   40 of the 80 sets with text were outside it (FileUpload, the date, time, colour, number and
+   OTP fields, FormField, the overlays, the Product/SDK sets). All are held now, and only
+   FileUpload has such text, until its Update. A second rule, for text with neither a style nor
+   bound typography, could only fire with the first and said it twice; it is gone.
+3. **Glass is measured on purpose.** The contrast audit skipped a variant parsed as Glass, but
+   the Label parser, earlier in the chain, claims every name with `State=Default`, so no Button
+   reached the skip: Glass was always measured on Surface/0, and that reading caught the 1.03.
+   The dead skip would have dropped Glass the day the chain's order changed; it is gone.
+
+The painter check is 242 assertions. On `314962f54832` the three stacked-fill and two typography
+assertions fail and nothing else does. A new section paints all 185 variants of the four sets
+with the payload's tokens and audits them in both modes: it passes on `314962f54832` (the same
+painters) and fails on `c7d1d88351a7` (`git show 414ba00:figma/foundations-importer/code.js`) on
+exactly the live failures. A Glass button's label must be measured in both modes; with the
+parser chain reordered on the old build, that assertion fails. The wash section reports a
+missing layer on an old build instead of stopping the run.
+
+**Not changed, for Olcay:** the focus-ring audit still holds a list of 26 sets. The seven form
+sets outside it (NumberInput, OTPInput, DatePicker, DateRangePicker, TimePicker, FileUpload,
+ColorPicker) carry fully bound Focus Visible rings and would pass. Interactive sets with no
+Focus Visible property at all — Core's Accordion, Breadcrumb, Pagination, BottomNavigation, Menu
+and Rating, and Product/SDK sets that draw their own controls, CategoryTile, CategoryField's
+clear, AISearchButton, FloorSelector, POIResultCard and RouteOptionCard among them — are a
+design decision, not an audit fix.
+
+Also read: the file's `lastModified` moved to 20:42:52Z after the audit with no set's stamp
+moving; the token cannot read the version history (403), so what changed is not established.
+`pnpm figma:verify` found the structure current and only the two report-only findings of §5, 6.

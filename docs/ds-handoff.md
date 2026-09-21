@@ -1618,3 +1618,18 @@ opacity 0.502 draws 128/255, and Button's Glass, bound at 1, drew as an opaque n
 Slider spec names its Type axis, the missing instance on each panel (`aa876ce`, build
 `314962f54832`). The painter check (224) fails exactly those five on the old build. Button needs
 its Update again with the other eighteen.
+
+Olcay's Audit Library at 20:38 ran on `314962f54832` with two sets updated on it, Button and
+Badge: Glass draws translucent (over REST, paint opacity 0.102 and rendered alpha 49, like
+IconButton's), Badge's dark icons pass, and Surface QA draws 64 of 64. The five warnings are
+the four sets not yet updated, and rendered over REST two are worse than the audit read:
+DirectionStep's discs are solid under a glyph of their colour, so no glyph shows in any type,
+and the nine Selected CategoryTiles are white under an opaque tint with the icon unseen, which
+the audit measured on the white because it read a node's first fill only. Replayed without
+Figma — the old painter, then this build's over the same node, then the audit with the
+payload's tokens — the old drawing reproduces the live audit failure for failure and the Update
+reads clean. The audit now reads every fill a node stacks, holds every set's text to a style
+(FileUpload's 32 browse labels had none, and FileUpload was off the rule's list of 43), and
+measures Glass on purpose (`45e4b0f`, `5639895`, build `53ac76afe679`, no painter changes); the
+painter check (242) audits all 185 variants of the four sets in both modes. The seventeen
+remaining Updates are the run (drift §9).

@@ -339,7 +339,7 @@ Which build ran is the first thing to read. The panel's header shows it ("Build 
 Audit Library report carries it as `pluginBuild`; a report without it came from a build before
 `50ba616`. Update All Core resumes by build stamp, so after any plugin change it starts again at
 Link: update the sets the change touched, one at a time, instead
-([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `314962f54832`).
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `53ac76afe679`).
 The painter check also refuses the layout sizing Figma refuses and counts the nodes a lookup
 visits, so a painter that asks for HUG on an icon, FILL before an append, or a whole-file search
 per variant fails there first.
@@ -612,3 +612,17 @@ building.site)` is the whole site's (1196 at Boston Logan). Search and the tiles
   "Rate limit exceeded, please try again tomorrow". The readback stops at the first refusal.
 - The worktree's publish and verify scripts look for `.env` above the worktree and find none;
   export only `FIGMA_ACCESS_TOKEN` from the main checkout's, never print it.
+
+_Added on the 21st, from the audit of 20:38:_
+
+- An audit reads the file as it is: two of the run's nineteen sets had been updated. Read
+  `pnpm figma:verify`'s build coverage before reading a warning as the code's.
+- A render is the truth: DirectionStep's 1.00 was a glyph not drawn, and the Selected
+  CategoryTile's 1.92 an icon not drawn, measured on the fill under the one that shows. The
+  audit now reads every fill a node stacks.
+- A list of the sets a rule applies to falls behind the painters: the typography rule held 43
+  of the 80 sets with text. The audit's variant parsers run in a chain whose Label parser claims
+  any `State=Default` name, so a branch on a later parser's field can be dead; the Glass skip
+  was.
+- A check that throws on an old build hides everything after it: report a missing node as a
+  failure and go on.
