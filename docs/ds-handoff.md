@@ -1576,7 +1576,7 @@ page, 28.7 million node visits for 1,044 lookups; icons are now read from Icons 
 icon failures on Button, IconButton and Badge were unbound black glyphs that the re-tint check
 of `414ba00` passed because their colour matched the light fallback (`3b1d226`). The 319
 layout-sizing refusals of an earlier run were HUG on leaves and FILL before an append or under
-a frame without auto layout, in eleven painters (`07a28e7`). Over REST, CategoryField's bound
+a frame without auto layout, in ten painters (`07a28e7`). Over REST, CategoryField's bound
 12 % wash kept its opacity while CategoryTile's and DirectionStep's lost theirs, so `e070cef`'s
 "Figma drops a bound paint's opacity" was wrong as stated; the washes stay layers and the audit
 now composites them (`c28921a`). CategoryField and AISearchButton are pinned in Code Connect
