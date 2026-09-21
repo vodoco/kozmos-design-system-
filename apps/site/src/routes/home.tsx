@@ -94,7 +94,10 @@ export default function Home() {
               <ButtonLink to="/get-started" size="lg">
                 Get started
               </ButtonLink>
-              <ButtonLink to="/foundations" variant="outline" size="lg">
+              <ButtonLink to="/components" variant="outline" size="lg">
+                Components
+              </ButtonLink>
+              <ButtonLink to="/foundations" variant="ghost" size="lg">
                 Foundations
               </ButtonLink>
               <ButtonLink to="/examples" variant="ghost" size="lg">

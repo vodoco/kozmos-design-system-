@@ -42,6 +42,13 @@ purpose, because hiding it would hide the evidence).
 | GAP-23 | Component-layer colours are baked values, not ramp aliases    | Core                   | left visible |
 | GAP-24 | `DynamicIsland` pins itself to the viewport                   | Platform / form factor | open         |
 | GAP-25 | `MapView` insists on 400px of height                          | Product / SDK          | composed     |
+| GAP-26 | `Text` cannot inherit its colour                              | Core                   | composed     |
+| GAP-27 | `useTheme` does not report the direction                      | Core                   | composed     |
+| GAP-28 | `SearchBar`'s search landmark cannot be named                 | Product / SDK          | left visible |
+| GAP-29 | `BottomNavigation` is always fixed to the viewport            | Core                   | composed     |
+| GAP-30 | `Sidebar`'s navigation landmark cannot be named               | Core                   | left visible |
+| GAP-31 | The alert emotion's text reads 4.29:1 on a card               | Core                   | left visible |
+| GAP-32 | `ChipGroup` carries no role                                   | Core                   | composed     |
 
 ---
 
@@ -363,3 +370,87 @@ purpose, because hiding it would hide the evidence).
 - **Now:** the hero scene and the adaptive tile give their frames 400px or
   more.
 - **Lane:** Product / SDK.
+
+## GAP-26 · `Text` cannot inherit its colour
+
+- **What:** every `Text` sets a colour class (`kozmos-text-default` by
+  default), so it cannot take the colour of an inverted host. `DynamicIsland`
+  paints the foreground colour as its background and expects its content to
+  be the background colour; a `Text` inside it disappears in the light theme.
+  The same holds for anything on a filled button or a tinted category fill.
+- **Now:** the `DynamicIsland` demo puts plain strings and a `Box` in the
+  island's slots, without `Text`'s sizes and weights.
+- **Lane:** Core.
+- **Fix in Kozmos:** a `color="inherit"` value (or no colour class when
+  `color` is not given), so `Text` can sit on any surface a component paints.
+
+## GAP-27 · `useTheme` does not report the direction
+
+- **What:** `ThemeProvider` takes `dir`, and `useTheme()` returns `theme`,
+  `resolvedTheme` and `setTheme` only. A component that must know whether it
+  sits in a right-to-left subtree — to mirror an icon, order a pair of
+  buttons — cannot ask the provider and has to read the DOM.
+- **Now:** the `ThemeProvider` demo passes the direction it set to the sample
+  beside the provider.
+- **Lane:** Core.
+- **Fix in Kozmos:** return `dir` from `useTheme()`, resolved from the
+  nearest provider.
+
+## GAP-28 · `SearchBar`'s search landmark cannot be named
+
+- **What:** `SearchBar` wraps its field in `role="search"`, a landmark, and
+  gives the landmark no name: `aria-label` goes to the input. Two search bars
+  on one page — a venue search in the top bar and a search inside a browse
+  sheet, or the reference's inline and floating examples — are two search
+  landmarks a screen reader lists as the same thing (axe `landmark-unique`).
+- **Now:** the SearchBar and AdaptiveMapShell pages carry the violation, named
+  in `knownViolations` in `tests/site.spec.ts`.
+- **Lane:** Product / SDK.
+- **Fix in Kozmos:** a `landmarkLabel` prop on the wrapper, or name the
+  landmark from the field's label.
+
+## GAP-29 · `BottomNavigation` is always fixed to the viewport
+
+- **What:** `BottomNavigation` renders `fixed bottom-0 left-0 right-0`, as
+  `DynamicIsland` does at the top (GAP-24). It cannot sit in a phone frame,
+  a card or an example, and two of them overlap.
+- **Now:** its demo mounts one bar on request, over the site's footer, and
+  says so.
+- **Lane:** Core.
+- **Fix in Kozmos:** a `placement` prop as `FloatingActionButton` has, fixed
+  by default.
+
+## GAP-30 · `Sidebar`'s navigation landmark cannot be named
+
+- **What:** `Sidebar` puts its `navigation` slot in a `<nav>` with no way to
+  name it; only the `<aside>` takes `aria-label`. A page with the site's own
+  sidebar and a demoed one has two unnamed navigation landmarks (axe
+  `landmark-unique`); `Navbar` has `navigationLabel` for exactly this.
+- **Now:** the Sidebar page carries the violation, named in
+  `knownViolations`.
+- **Lane:** Core.
+- **Fix in Kozmos:** a `navigationLabel` prop, as `Navbar` has.
+
+## GAP-31 · The alert emotion's text reads 4.29:1 on a card
+
+- **What:** `--semantics-emotion-alert-text` is `#a06b04` (alert 800), chosen
+  because the ramp reaches 4.5:1 there — on the app background: 4.57:1 on
+  white. On the card (`#f7f8fa`) it measures 4.29:1, under WCAG's 4.5:1, so
+  `Alert`'s warning variant, an outlined `Tag` with `emotion="alert"`, and
+  every field message with `status="warning"` (`Input`, `DatePicker`,
+  `TimePicker`, `Textarea`…) fail on a card, where alerts and forms usually
+  sit. The contrast contract's 22 pairs do not
+  include the emotion text roles on the card.
+- **Now:** the Alert, Tag, Input and DatePicker pages show the state and
+  carry the finding, with the numbers, in `knownViolations`.
+- **Lane:** Core.
+- **Fix in Kozmos:** a darker step for the alert text role (alert 900, or a
+  tuned value), and the card pairs added to the contract so CI measures them.
+
+## GAP-32 · `ChipGroup` carries no role
+
+- **What:** `ChipGroup` is a plain `div`; an `aria-label` on it names
+  nothing, so a group of filter chips has no name a screen reader can read.
+- **Now:** the components index passes `role="group"` to it.
+- **Lane:** Core.
+- **Fix in Kozmos:** `role="group"` on the wrapper.

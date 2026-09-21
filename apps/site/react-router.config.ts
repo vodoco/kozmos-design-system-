@@ -1,4 +1,4 @@
-import { copyFile } from "node:fs/promises";
+import { copyFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Config } from "@react-router/dev/config";
 
@@ -8,9 +8,17 @@ export default {
   // in the browser. Nothing runs on a server after the build.
   ssr: false,
   async prerender({ getStaticPaths }) {
-    // "/404" matches the catch-all route, so the not-found page is drawn at
-    // build time like every other page.
-    return [...getStaticPaths(), "/404"];
+    // The component pages come from the generated index (pnpm generate runs
+    // before the build); "/404" matches the catch-all route, so the not-found
+    // page is drawn at build time like every other page.
+    const index = JSON.parse(
+      await readFile(path.join("src", "generated", "components.json"), "utf8"),
+    ) as { components: { slug: string }[] };
+    return [
+      ...getStaticPaths(),
+      ...index.components.map((component) => `/components/${component.slug}`),
+      "/404",
+    ];
   },
   // Static hosts answer an unknown address with /404.html and a 404 status.
   async buildEnd({ reactRouterConfig }) {

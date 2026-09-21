@@ -1,5 +1,17 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+
+/** The generated index: the walk over every component page needs no list of its own. */
+const componentIndex = JSON.parse(
+  readFileSync(
+    new URL("../src/generated/components.json", import.meta.url),
+    "utf8",
+  ),
+) as {
+  lanes: Record<string, string>;
+  components: { slug: string; name: string; lane: string }[];
+};
 
 const pages = [
   { path: "/", title: "The design system for the Pointr SDK" },
@@ -15,13 +27,23 @@ const pages = [
   { path: "/foundations/motion", title: "Motion" },
   { path: "/foundations/icons", title: "Icons" },
   { path: "/foundations/theming", title: "Theming" },
+  { path: "/components", title: "Components" },
+  // One page per lane and per kind of demo: a control, a tree, a picker, the
+  // shell, a product panel. Every other page is walked in Chromium below.
+  { path: "/components/button", title: "Button" },
+  { path: "/components/tree", title: "Tree" },
+  { path: "/components/date-range-picker", title: "DateRangePicker" },
+  { path: "/components/adaptive-map-shell", title: "AdaptiveMapShell" },
+  { path: "/components/poi-detail-panel", title: "POIDetailPanel" },
 ] as const;
 
 /** Console errors and uncaught exceptions, which a clean page has none of. */
 function collectErrors(page: Page) {
   const errors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
+    // A failed request's message names no address; its location does.
+    if (message.type() === "error")
+      errors.push(`${message.text()} (${message.location().url})`);
   });
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;
@@ -66,10 +88,37 @@ async function scrolled(page: Page) {
  * GAPS.md. The tests expect exactly these: a new violation fails, and so does
  * one that has gone away, so the gap gets closed when Kozmos fixes it.
  */
-const knownViolations: Record<string, readonly string[]> = {
+type KnownViolation = string | { id: string; only: RegExp };
+
+const knownViolations: Record<string, readonly KnownViolation[]> = {
   // GAP-17: AdaptiveMapShell's panel is an <aside>, nested in the page's main.
   "/examples/venue-explorer": ["landmark-complementary-is-top-level"],
   "/": ["landmark-complementary-is-top-level"],
+  "/components/adaptive-map-shell": [
+    "landmark-complementary-is-top-level",
+    // GAP-28: SearchBar's search landmark cannot be named; three shells, three.
+    { id: "landmark-unique", only: /role="search"/ },
+  ],
+  "/components/search-bar": [{ id: "landmark-unique", only: /role="search"/ }],
+  "/components/sidebar": [
+    // Not a gap: a Sidebar is a complementary landmark by nature, and a page
+    // that shows one inside its own content cannot make it top-level.
+    "landmark-complementary-is-top-level",
+    // GAP-30: Sidebar's navigation cannot be named; the page's own has one too.
+    { id: "landmark-unique", only: /sidebar-navigation/ },
+  ],
+  "/components/alert": [
+    // GAP-31: the warning text reads 4.29:1 on the card.
+    { id: "color-contrast", only: /border-warning/ },
+    // GAP-12: AlertTitle is always an h5, under the demo card's h3.
+    { id: "heading-order", only: /<h5/ },
+  ],
+  "/components/input": [{ id: "color-contrast", only: /kozmos-field-warning/ }],
+  // GAP-31 again: the alert emotion as an outlined Tag's text.
+  "/components/tag": [{ id: "color-contrast", only: /kz-emotion-text/ }],
+  "/components/date-picker": [
+    { id: "color-contrast", only: /kozmos-field-warning/ },
+  ],
 };
 
 async function axeViolations(page: Page) {
@@ -83,20 +132,46 @@ async function axeViolations(page: Page) {
       "best-practice",
     ])
     .analyze();
-  const known = knownViolations[new URL(page.url()).pathname] ?? [];
-  const missing = known.filter(
-    (id) => !results.violations.some((violation) => violation.id === id),
+  const known = (knownViolations[new URL(page.url()).pathname] ?? []).map(
+    (entry) => (typeof entry === "string" ? { id: entry } : entry),
   );
+  // A known violation covers a rule on the page, or only the nodes it names.
+  const isKnown = (violation: (typeof results.violations)[number]) =>
+    known.some(
+      (entry) =>
+        entry.id === violation.id &&
+        (!("only" in entry) ||
+          violation.nodes.every((node) =>
+            entry.only.test(`${node.target.join(" ")} ${node.html}`),
+          )),
+    );
+  const missing = known.filter(
+    (entry) =>
+      !results.violations.some((violation) => violation.id === entry.id),
+  );
+  // Contrast findings carry their numbers, so a failure names the colours.
+  const measured = (
+    node: (typeof results.violations)[number]["nodes"][number],
+  ) => {
+    const data = [...node.any, ...node.all]
+      .map((check) => check.data as Record<string, unknown> | null)
+      .find((entry) => entry && "contrastRatio" in entry);
+    return data
+      ? ` ${String(data.fgColor)} on ${String(data.bgColor)} = ${String(data.contrastRatio)}:1`
+      : "";
+  };
   return [
     ...results.violations
-      .filter((violation) => !known.includes(violation.id))
+      .filter((violation) => !isKnown(violation))
       .map(
         (violation) =>
           `${violation.id} (${violation.impact}): ${violation.nodes
-            .map((node) => node.target.join(" "))
+            .map((node) => `${node.target.join(" ")}${measured(node)}`)
             .join(" | ")}`,
       ),
-    ...missing.map((id) => `${id} no longer occurs: close its gap in GAPS.md`),
+    ...missing.map(
+      (entry) => `${entry.id} no longer occurs: close its gap in GAPS.md`,
+    ),
   ];
 }
 
@@ -157,6 +232,25 @@ test.describe("on a narrow phone", () => {
     await drawer.getByRole("link", { name: "Motion" }).click();
     await expect(page).toHaveURL(/\/foundations\/motion$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Motion");
+    await expect(drawer).toBeHidden();
+  });
+
+  test("a component page offers the reference in a drawer, grouped by lane", async ({
+    page,
+  }) => {
+    await page.goto("/components/button");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Components" }).click();
+    const drawer = page.getByRole("dialog", { name: "Components" });
+    await expect(drawer).toBeVisible();
+    await expect(
+      drawer.getByText(componentIndex.lanes["product-sdk"]),
+    ).toBeVisible();
+    await drawer.getByRole("link", { name: "Checkbox" }).click();
+    await expect(page).toHaveURL(/\/components\/checkbox$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Checkbox",
+    );
     await expect(drawer).toBeHidden();
   });
 });
@@ -664,4 +758,182 @@ test.describe("venue explorer example", () => {
     ).toHaveAttribute("aria-pressed", "true");
     await expect(app.getByLabel("You are here")).toBeVisible();
   });
+});
+
+test.describe("component reference", () => {
+  const total = componentIndex.components.length;
+
+  test("the index searches, filters by lane, and previews each component live but inert", async ({
+    page,
+  }) => {
+    await page.goto("/components");
+    await hydrated(page);
+    await expect(page.getByText(`${total} of ${total} shown`)).toBeVisible();
+
+    // A preview mounts as its card comes near, and stays out of the
+    // accessibility tree: real controls inside, none reachable.
+    const first = page.locator(".site-preview").first();
+    await first.scrollIntoViewIfNeeded();
+    await expect(first).toHaveAttribute("aria-hidden", "true");
+    await expect(first).toHaveAttribute("inert", "");
+    await expect(first.locator("button, input, a").first()).toBeAttached();
+    await expect(first.getByRole("button")).toHaveCount(0);
+
+    const search = page.getByRole("searchbox", { name: "Search components" });
+    await search.fill("otp");
+    await expect(page.getByText(`1 of ${total} shown`)).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Open OTPInput" }),
+    ).toBeVisible();
+    await search.fill("zzzz");
+    await expect(page.getByText("No component matches")).toBeVisible();
+    await search.fill("");
+
+    const platform = componentIndex.components.filter(
+      (component) => component.lane === "platform-form-factor",
+    );
+    await page
+      .getByRole("group", { name: "Lanes" })
+      .getByRole("button", {
+        name: componentIndex.lanes["platform-form-factor"],
+      })
+      .click();
+    await expect(
+      page.getByText(`${platform.length} of ${total} shown`),
+    ).toBeVisible();
+    for (const component of platform) {
+      await expect(
+        page.getByRole("link", { name: `Open ${component.name}` }),
+      ).toBeVisible();
+    }
+    await page
+      .getByRole("group", { name: "Lanes" })
+      .getByRole("button", { name: "All" })
+      .click();
+    await expect(page.getByText(`${total} of ${total} shown`)).toBeVisible();
+  });
+
+  test("the sidebar and the neighbour links move between components in the page", async ({
+    page,
+  }) => {
+    await page.goto("/components");
+    await hydrated(page);
+    await page.evaluate(() => {
+      (window as unknown as { sameDocument: boolean }).sameDocument = true;
+    });
+    const sidebar = page.getByRole("complementary", { name: "Components" });
+    await sidebar.getByRole("link", { name: "Tree" }).click();
+    await expect(page).toHaveURL(/\/components\/tree$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Tree");
+    await expect(page.locator("main#main")).toBeFocused();
+    await expect(sidebar.getByRole("link", { name: "Tree" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    const neighbours = page.getByRole("navigation", {
+      name: "Neighbouring components",
+    });
+    const previous = neighbours.getByRole("link", { name: /^← / });
+    const name = ((await previous.textContent()) ?? "").replace("← ", "");
+    await previous.click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { sameDocument?: boolean }).sameDocument,
+      ),
+    ).toBe(true);
+  });
+
+  test("a page shows the examples' source, the three platforms' code and the props", async ({
+    page,
+  }) => {
+    await page.goto("/components/button");
+    await hydrated(page);
+    await expect(
+      page.getByRole("region", { name: "button.tsx" }),
+    ).toContainText("export const demos");
+    await page.getByRole("tab", { name: "SwiftUI" }).click();
+    await expect(
+      page.getByRole("region", { name: "Button.swift" }),
+    ).toContainText("KozmosButton");
+    await page.getByRole("tab", { name: "Compose" }).click();
+    await expect(page.getByRole("region", { name: "Button.kt" })).toBeVisible();
+
+    const props = page.getByRole("table", { name: "Button props" });
+    const variant = props
+      .getByRole("row")
+      .filter({
+        has: page.getByRole("cell", { name: "variant", exact: true }),
+      });
+    await expect(variant).toContainText("default");
+    await expect(
+      page.getByRole("table", { name: "AdaptiveMapShell props" }),
+    ).toHaveCount(0);
+  });
+
+  test("the demos respond: the tree selects, the gallery turns, the island appears on request", async ({
+    page,
+  }) => {
+    // The demos' source is on the page too (the "Examples" code tab), so the
+    // words a demo shows are looked for among the demos only.
+    const demos = () => page.locator(".site-demos");
+    await page.goto("/components/tree");
+    await hydrated(page);
+    await demos()
+      .getByRole("treeitem", { name: /Bookshop/ })
+      .click();
+    await expect(demos().getByText("Selected: Bookshop")).toBeVisible();
+
+    await page.goto("/components/poi-media-gallery");
+    await hydrated(page);
+    await demos().getByRole("button", { name: "Next image" }).first().click();
+    await expect(
+      demos().getByText("Showing the counter with a stack of books."),
+    ).toBeVisible();
+
+    await page.goto("/components/dynamic-island");
+    await hydrated(page);
+    const island = page.getByText("3 min to the bookshop", { exact: true });
+    await expect(island).toHaveCount(0);
+    await demos().getByRole("button", { name: "Show the island" }).click();
+    await expect(island).toBeVisible();
+    await demos().getByRole("button", { name: "Hide the island" }).click();
+    await expect(island).toHaveCount(0);
+  });
+});
+
+// Every component page, once, in one browser: the sampled pages above run in
+// all three. Each page must answer, name itself, show a live example, pass
+// axe and log nothing.
+test.describe("every component page", () => {
+  test.skip(
+    ({ browserName }) => browserName !== "chromium",
+    "one browser walks all the pages",
+  );
+
+  for (const { slug, name } of componentIndex.components) {
+    test(`/components/${slug} shows ${name} live and passes axe`, async ({
+      page,
+    }) => {
+      const errors = collectErrors(page);
+      const response = await page.goto(`/components/${slug}`);
+      expect(response?.status()).toBe(200);
+      await hydrated(page);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
+      const stage = page.locator(".site-demo-stage").first();
+      await expect(stage).toBeVisible();
+      expect(
+        await stage.evaluate((element) => element.childElementCount),
+      ).toBeGreaterThan(0);
+      await expect(page.getByRole("tab", { name: "SwiftUI" })).toBeVisible();
+      await scrolled(page);
+      expect(await axeViolations(page)).toEqual([]);
+      // The gallery's second example asks for an image that does not exist,
+      // on purpose; the browser logs that request and nothing else may fail.
+      expect(
+        errors.filter((error) => !error.includes("does-not-exist.svg")),
+      ).toEqual([]);
+    });
+  }
 });

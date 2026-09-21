@@ -5,6 +5,7 @@ import { ThemeSwitcher } from "./ThemeSwitcher";
 
 export const primaryNavigation = [
   { to: "/foundations", label: "Foundations" },
+  { to: "/components", label: "Components" },
   { to: "/examples", label: "Examples" },
   { to: "/get-started", label: "Get started" },
 ] as const;

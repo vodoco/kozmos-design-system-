@@ -201,6 +201,12 @@ body {
   margin-block-end: var(--site-space-600);
 }
 
+/* A component's name is one word ("AdaptiveMapShell"); at 320px it is wider
+   than the column, so it may break rather than widen the page. */
+.site-page-header .site-title {
+  overflow-wrap: anywhere;
+}
+
 .site-section {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -836,4 +842,182 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   place-items: center;
   min-block-size: 50dvh;
   padding-block: var(--site-space-700);
+}
+
+/* ---- Component reference ---------------------------------------------- */
+
+.site-docs-group {
+  padding-inline: var(--site-space-150);
+  padding-block-start: var(--site-space-100);
+}
+
+.site-docs-drawer-nav {
+  padding: 0 var(--site-space-300) var(--site-space-300);
+  overflow-y: auto;
+}
+
+.site-demos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-300);
+}
+
+.site-demo-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+/* The stage an example is drawn on: the muted background, so a component's
+   own surface reads against it. */
+.site-demo-stage {
+  padding: var(--site-space-300);
+  background: var(--primitives-colors-background-25);
+  border-block-start: var(--primitives-border-width-sm) solid
+    var(--semantics-border-subtle);
+  min-inline-size: 0;
+  overflow-x: auto;
+}
+
+.site-demo-stage-tall {
+  min-block-size: 30rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.site-demo-loading {
+  block-size: calc(var(--primitives-layout-sizing-1000) * 1px);
+  inline-size: 100%;
+}
+
+/* The index's preview: a component's first example, small and inert. */
+.site-preview {
+  block-size: 12rem;
+  overflow: hidden;
+  padding: var(--site-space-300);
+  background: var(--primitives-colors-background-25);
+  pointer-events: none;
+  user-select: none;
+}
+
+.site-prev-next {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--site-space-300);
+  margin-block-start: var(--site-space-700);
+}
+
+/* A row of parts in a demo, wrapping; a column of them; a bounded box. */
+.site-demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--site-space-150);
+}
+
+.site-demo-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200);
+  max-inline-size: 28rem;
+}
+
+.site-demo-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200);
+}
+
+.site-demo-phone {
+  inline-size: min(100%, 24rem);
+  block-size: 30rem;
+  margin-inline: auto;
+  border-radius: var(--site-radius-panel);
+  overflow: hidden;
+  border: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
+  background: var(--primitives-colors-background-0);
+}
+
+.site-demo-map {
+  position: relative;
+  block-size: 100%;
+  min-block-size: 26rem;
+}
+
+.site-demo-pin {
+  position: absolute;
+  left: var(--pin-x);
+  top: var(--pin-y);
+  transform: translate(-50%, -100%);
+}
+
+.site-demo-scroll {
+  block-size: 12rem;
+}
+
+/* Shapes for the skeleton demo, and a row tall enough for a vertical rule. */
+.site-skeleton-disc {
+  inline-size: calc(var(--primitives-layout-sizing-600) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-600) * 1px);
+  border-radius: var(--site-radius-pill);
+  flex-shrink: 0;
+}
+
+.site-skeleton-lines {
+  flex: 1;
+}
+
+.site-skeleton-line {
+  block-size: calc(var(--primitives-layout-sizing-200) * 1px);
+  inline-size: 100%;
+  border-radius: calc(var(--semantics-radius-marker) * 1px);
+}
+
+.site-skeleton-line-short {
+  inline-size: 60%;
+}
+
+.site-skeleton-block {
+  block-size: calc(var(--primitives-layout-sizing-800) * 2px);
+  inline-size: 100%;
+  border-radius: var(--site-radius-control);
+}
+
+.site-demo-scroll-row {
+  block-size: calc(var(--primitives-layout-sizing-600) * 1px);
+}
+
+/* The map shell needs a height to lay out in; the layer fills MapView's inset
+   region so pins can sit at percentages, as the venue example's does. */
+.site-demo-shell {
+  position: relative;
+  block-size: 34rem;
+}
+
+.site-demo-layer {
+  position: absolute;
+  top: var(--kozmos-map-inset-top, 0px);
+  right: var(--kozmos-map-inset-right, 0px);
+  bottom: var(--kozmos-map-inset-bottom, 0px);
+  left: var(--kozmos-map-inset-left, 0px);
+}
+
+.site-demo-centred {
+  display: grid;
+  place-items: center;
+  padding: var(--site-space-300);
+}
+
+.site-demo-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: var(--site-space-150);
+}
+
+.site-demo-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--site-space-150);
+  inline-size: 100%;
 }

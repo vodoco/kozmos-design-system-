@@ -279,6 +279,9 @@ export function PlatformsTile() {
           </TabsContent>
         ))}
       </Tabs>
+      <Text size="sm">
+        <SiteLink to="/components/button">The Button, in full</SiteLink>
+      </Text>
     </Tile>
   );
 }

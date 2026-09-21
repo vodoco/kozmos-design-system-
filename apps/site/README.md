@@ -15,6 +15,7 @@ touches nothing outside `apps/site` except `pnpm-lock.yaml`.
 - [How it is built](#how-it-is-built)
 - [The pages](#the-pages)
 - [Add an example](#add-an-example)
+- [Add or change a component demo](#add-or-change-a-component-demo)
 - [Add a foundations page](#add-a-foundations-page)
 - [Add or change a page](#add-or-change-a-page)
 - [Styling](#styling)
@@ -159,8 +160,14 @@ generate` runs before dev, build and typecheck):
     under `packages/react/src/components`, its lane from the sets in
     `scripts/skills/check-completion.ts` (the same ones that build
     `STATUS.md`), its description and its React, Vue, SwiftUI and Compose
-    snippets from its `.mdx`, and its props from the TypeScript source
-    through `react-docgen-typescript` (as the Storybook docs do).
+    snippets from its `.mdx`, and its parts and props read from the
+    TypeScript source with the compiler API: every component the package
+    exports from that folder (re-exports followed), its props type resolved
+    through `forwardRef`, `React.FC`, function parameters and aliases, unions
+    merged, and only the props declared in this repository or by a Radix
+    primitive (those carry `source`), with defaults from destructuring and
+    `cva`'s `defaultVariants`. `react-docgen-typescript` was tried first and
+    read the wrong symbols (`Surface`'s "props" came out as string methods).
   - `contrast-contract.json`: a copy of `packages/tokens/src/contrast-contract.json`,
     so the colour page can measure the same pairs CI does.
 - **Tokens at runtime.** `src/lib/tokens.ts` imports the tokens package's
@@ -176,6 +183,7 @@ apps/site/
 ├── turbo.json               the site's build and test inputs for Turbo's cache
 ├── eslint.config.js
 ├── GAPS.md                  what Kozmos cannot do yet, measured
+├── public/media/            three colour-free illustrations the gallery demos show
 ├── scripts/
 │   ├── check-ds-only.mjs    the one rule, enforced (+ its tests)
 │   ├── generate-reference.mjs  the generated data (+ its tests)
@@ -187,7 +195,8 @@ apps/site/
     ├── root.tsx             document, stylesheets, ThemeProvider, error page
     ├── routes.ts            the route table: plain pages, examples, foundations
     ├── routes/              home, get-started, examples, not-found, the two layouts,
-    │                          foundations/ (one file per page)
+    │                          foundations/ (one file per page), components/ (the
+    │                          index and the page for one component)
     ├── site/                the frames (SiteShell, DocsShell), header, footer, links,
     │                          code block, copy button, reveal, miniature, example page
     ├── home/                the hero scene, the live tiles, make it yours, the pipeline
@@ -195,6 +204,9 @@ apps/site/
     │                          the motion, glass and direction demos
     ├── examples/            manifest.ts (data, no React), registry.tsx (lazy components),
     │                          one folder per example
+    ├── reference/           the component reference: types, the demo registry, the
+    │                          sidebar's sections (nav.ts), the generated-data loader,
+    │                          the shared sample data, demos/ (one file per component)
     ├── snippets/            the code Get started shows, type-checked
     ├── lib/                 site facts, tokens, contrast, brand overrides, CI gates,
     │                          the import parser, CSS custom-property typing
@@ -209,6 +221,12 @@ tokens package's own light and dark stylesheets and mirrors the resolved theme
 onto `<html data-theme>`, so the page canvas and scrollbars follow too. A
 pre-rendered page starts light for a dark-mode visitor until it hydrates —
 GAP-03.
+
+**Lazy demos are cached per slug.** `src/reference/registry.ts` makes one
+`React.lazy` component per slug and keeps it. A lazy component made during a
+render (`useMemo(() => lazy(…))`) is thrown away when that render suspends,
+so a same-route navigation — Tree to Tooltip — made a new one on every retry
+and never settled: the address changed and the page did not.
 
 **Nested providers paint nothing.** A `ThemeProvider` is `display: contents`;
 put a `Surface` inside a nested provider, or its content sits on the outer
@@ -232,12 +250,13 @@ and rise on the motion tokens as they come into view, only after hydration
 
 ## The pages
 
-| Page           | What it shows                                                                                                                                                                                                                                                                                                  |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`            | A hero scene made of map parts in its own theme; twelve live tiles (tokens, type, emotions, the adaptive shell under a slider, three-platform code, themes, contrast, motion, direction, glass, icons, Figma); "Make it yours"; the examples as live miniatures; the platforms; the CI pipeline as a Timeline. |
-| `/get-started` | Install, set-up, dark mode, right to left, button-styled links, tokens, analytics, browser support, iOS and Android.                                                                                                                                                                                           |
-| `/foundations` | Seven pages, each drawn from the tokens: colour (every ramp and role, the contrast contract measured in both themes, the component layer), typography, layout, elevation and effects, motion, icons, theming.                                                                                                  |
-| `/examples`    | The index; each example on its own canvas with its source, its Kozmos parts and its gaps.                                                                                                                                                                                                                      |
+| Page           | What it shows                                                                                                                                                                                                                                                                                                                                                   |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`            | A hero scene made of map parts in its own theme; twelve live tiles (tokens, type, emotions, the adaptive shell under a slider, three-platform code, themes, contrast, motion, direction, glass, icons, Figma); "Make it yours"; the examples as live miniatures; the platforms; the CI pipeline as a Timeline.                                                  |
+| `/get-started` | Install, set-up, dark mode, right to left, button-styled links, tokens, analytics, browser support, iOS and Android.                                                                                                                                                                                                                                            |
+| `/foundations` | Seven pages, each drawn from the tokens: colour (every ramp and role, the contrast contract measured in both themes, the component layer), typography, layout, elevation and effects, motion, icons, theming.                                                                                                                                                   |
+| `/components`  | The reference: 104 pages, one per component, in four lanes. Each page has live examples with their source, the React, SwiftUI and Compose code from the component's docs, and a props table per part read from the TypeScript source. The index searches and filters by lane and shows each component's first example, live but inert, as it scrolls into view. |
+| `/examples`    | The index; each example on its own canvas with its source, its Kozmos parts and its gaps.                                                                                                                                                                                                                                                                       |
 
 ## Add an example
 
@@ -270,6 +289,43 @@ canvas with its source, the components it uses and the gaps it hit.
 
 Data in examples is invented and must look it (`sam.rivera@example.com`);
 nothing submits anywhere.
+
+## Add or change a component demo
+
+A component's page comes from two places: the generated data (name, lane,
+description, parts, props, snippets — nothing to write) and its demo file.
+
+- **The file** is `src/reference/demos/<slug>.tsx`, where the slug is the
+  component folder's name in kebab case (`POIDetailPanel` →
+  `poi-detail-panel`). It exports `demos: DemoModule["demos"]`, a list of
+  `{ title, description?, Component, tall? }`. A component without a file
+  still gets its page, with the props and code and a note that no example
+  has been written; `pnpm generate` does not care either way. The registry
+  (`src/reference/registry.ts`) finds the files with `import.meta.glob`, so a
+  new file is a new set of examples, and the file's source is what the
+  "Examples" code tab shows, so write it as you would want it read.
+- **A demo is a small component**, built from Kozmos parts and the site's
+  layout classes only (the one rule applies; `pnpm lint` runs it). The stage
+  is a `Card`; `tall: true` gives it room for a map, a sheet or a shell.
+  `src/reference/sample-data.ts` has the venue, places, categories, floors,
+  routes and an itinerary, all invented, so demos agree with one another.
+- **The first demo is also the preview** on `/components`: it mounts inside
+  an `aria-hidden`, `inert` frame as the card scrolls into view. So the first
+  demo must not mount anything fixed to the viewport (a toast viewport, a
+  fixed action button, `DynamicIsland`), must not need a click to show
+  something, and should be the plainest state — put the interactive or
+  fixed things in a later demo, behind a button.
+- **Several of one landmark on a page** need different names: three
+  `AdaptiveMapShell`s each name their map region and their panel with the
+  demo's name, or axe's `landmark-unique` fails the page (the tests run axe
+  on every component page).
+- **Status text** beside a demo uses `Text` with `aria-live="polite"`, so a
+  screen reader hears what a click did.
+- **Props tables** show what the TypeScript source declares in this
+  repository, plus a Radix primitive's own props (marked as such). Native
+  HTML attributes are left out on purpose: they are the element's, not the
+  component's. If a prop looks wrong, the reader is
+  `scripts/generate-reference.mjs` (`readParts`), with tests beside it.
 
 ## Add a foundations page
 
@@ -330,12 +386,12 @@ nothing submits anywhere.
 
 ## Testing
 
-| Layer         | Command                    | What it proves                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Types         | `typecheck`                | Pages, examples, tiles and every snippet compile against the built packages and the generated data.                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Lint and rule | `lint`                     | ESLint with the React hooks rules; the one rule.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Unit          | `test`                     | The token parser, the contrast maths, the brand override's matching, the generator's parsers (slugs, lanes, descriptions, snippets, prop types), the import parser; the checker refuses what it should.                                                                                                                                                                                                                                                                                               |
-| End to end    | `test:e2e` (after `build`) | Every page in both themes: status, one `h1`, `noindex`, axe (WCAG 2.2 AA and best practices) after a full scroll, no console errors, no sideways scroll at 320px; the drawer navigation on a phone; 404; theme kept across a reload; in-app navigation and focus through the header, an example and the sidebar; the skip link; the hero scene; the tiles; the brand override; miniatures inert; the colour contract; icons search and copy; the measured type scale; the motion race; both examples. |
+| Layer         | Command                    | What it proves                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Types         | `typecheck`                | Pages, examples, tiles and every snippet compile against the built packages and the generated data.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Lint and rule | `lint`                     | ESLint with the React hooks rules; the one rule.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Unit          | `test`                     | The token parser, the contrast maths, the brand override's matching, the generator's parsers (slugs, lanes, descriptions, snippets, prop types), the import parser; the checker refuses what it should.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| End to end    | `test:e2e` (after `build`) | Every page in both themes: status, one `h1`, `noindex`, axe (WCAG 2.2 AA and best practices) after a full scroll, no console errors, no sideways scroll at 320px; the drawer navigation on a phone; 404; theme kept across a reload; in-app navigation and focus through the header, an example and the sidebar; the skip link; the hero scene; the tiles; the brand override; miniatures inert; the colour contract; icons search and copy; the measured type scale; the motion race; both examples; the component index (search, lanes, previews), six sampled component pages in every browser, and every component page in Chromium (status, name, a live example, axe, no console errors), with the sidebar, the drawer, the prev/next links, the code tabs and a few demos driven. |
 
 The e2e tests wait for the page to hydrate **and** for finite animations to
 finish before measuring: a dark-mode page animates from light (GAP-03), and
@@ -343,9 +399,14 @@ axe would otherwise measure contrast mid-transition. The location marker's
 pulse never ends and is ignored.
 
 A violation that comes from inside a Kozmos component is listed, with its
-gap, in `knownViolations` in `tests/site.spec.ts` (today: GAP-17 on the
-venue explorer and the home page, where the adaptive tile has the same
-panel). The tests expect exactly those, so a new violation fails — and so
+gap, in `knownViolations` in `tests/site.spec.ts`: a rule id for the whole
+page, or `{ id, only }` where `only` is a pattern every flagged node must
+match, so the known finding cannot hide a new one under the same rule (the
+warning colour on a field message, GAP-31, does not excuse a contrast failure
+elsewhere on the page). A contrast finding is reported with its colours and
+ratio. Today: GAP-17 on the venue explorer, the home page and the
+`AdaptiveMapShell` page; GAP-28, GAP-30, GAP-31 and GAP-12 on the pages that
+show them. The tests expect exactly those, so a new violation fails — and so
 does a known one that disappears, which is the signal to close its gap. The
 same holds for GAP-20: the search-field test is marked `test.fail` in WebKit
 only, so Playwright reports it the day Kozmos fixes the field.

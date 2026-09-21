@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  generate,
   isComponentName,
   laneOf,
   readDescription,
   readLaneSets,
   readSnippets,
   slugOf,
-  typeText,
 } from "./generate-reference.mjs";
 
 test("slugs keep acronyms whole", () => {
@@ -93,12 +93,42 @@ test("helpers and constants are not components", () => {
   assert.equal(isComponentName("POIDetailPanel"), true);
 });
 
-test("prop types read as one line", () => {
-  assert.equal(
-    typeText({ name: "enum", value: [{ value: '"sm"' }, { value: '"lg"' }] }),
-    '"sm" | "lg"',
+/**
+ * The real thing: the generator over the repository. Slow (a TypeScript
+ * program over every component), so one test checks several known facts.
+ */
+test("the generator reads the repository's components as they are", async () => {
+  const { index, components } = await generate();
+  const byName = new Map(components.map((component) => [component.name, component]));
+  assert.ok(index.components.length >= 100, `only ${index.components.length} components`);
+
+  // A cva-driven part: its own members plus the variants, with defaults.
+  const button = byName.get("Button").parts.find((part) => part.name === "Button");
+  const names = button.props.map((prop) => prop.name);
+  assert.deepEqual(names, ["emotion", "isLoading", "size", "variant"]);
+  assert.equal(button.props.find((p) => p.name === "variant").defaultValue, "default");
+  assert.match(button.props.find((p) => p.name === "variant").type, /"outline"/);
+  assert.match(button.props.find((p) => p.name === "emotion").description, /What the button means/);
+
+  // An alias to a union of literals is spelled out.
+  const surface = byName.get("Surface").parts.find((part) => part.name === "Surface");
+  assert.equal(surface.props.find((p) => p.name === "variant").type, '"solid" | "glass"');
+  assert.equal(surface.props.find((p) => p.name === "variant").defaultValue, '"solid"');
+
+  // Omit<> hides the element's attributes from docgen; not from this reader.
+  const island = byName.get("DynamicIsland").parts.find((part) => part.name === "DynamicIsland");
+  assert.deepEqual(
+    island.props.map((prop) => prop.name),
+    ["compactLeading", "compactTrailing", "expandedContent", "islandState", "minimalContent"],
   );
-  assert.equal(typeText({ name: "boolean" }), "boolean");
-  assert.equal(typeText({ name: "signature", raw: "(value: string) => void" }), "(value: string) => void");
-  assert.equal(typeText(undefined), "");
+
+  // Required props and sub-parts.
+  const metaStrip = byName.get("MetaStrip");
+  const item = metaStrip.parts.find((part) => part.name === "MetaStripItem");
+  assert.equal(item.props.find((p) => p.name === "label").required, true);
+  assert.equal(item.props.find((p) => p.name === "showLabel").type, "boolean");
+
+  // Only what the package exports is a part.
+  assert.ok(!byName.get("Dialog").parts.some((part) => part.name === "ThemePortal"));
+  assert.ok(byName.get("Card").parts.some((part) => part.name === "CardTitle"));
 });

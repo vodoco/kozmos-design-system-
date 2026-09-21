@@ -26,5 +26,9 @@ export default [
     ...foundationPages.map((page) =>
       route(`foundations/${page.slug}`, `routes/foundations/${page.slug}.tsx`),
     ),
+    route("components", "routes/components/index.tsx"),
+    // One page per component, from the generated data; every slug is
+    // pre-rendered (react-router.config.ts).
+    route("components/:slug", "routes/components/component.tsx"),
   ]),
 ] satisfies RouteConfig;

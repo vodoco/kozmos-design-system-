@@ -1,8 +1,8 @@
 import { test } from "@playwright/test";
 
 /**
- * Full-page pictures of every page, light and dark, desktop and phone, for a
- * person to look at. Not assertions: run with SCREENSHOTS=1, Chromium only.
+ * Full-page pictures of the main pages, light and dark, desktop and phone, for
+ * a person to look at. Not assertions: run with SCREENSHOTS=1, Chromium only.
  *   SCREENSHOTS=1 pnpm test:e2e --project=chromium tests/screenshots.spec.ts
  */
 const paths = [
@@ -11,6 +11,12 @@ const paths = [
   ["examples", "/examples"],
   ["account-settings", "/examples/account-settings"],
   ["venue-explorer", "/examples/venue-explorer"],
+  ["foundations-colour", "/foundations/colour"],
+  ["components", "/components"],
+  ["component-button", "/components/button"],
+  ["component-adaptive-map-shell", "/components/adaptive-map-shell"],
+  ["component-poi-detail-panel", "/components/poi-detail-panel"],
+  ["component-tree", "/components/tree"],
   ["not-found", "/no-such-page"],
 ] as const;
 
@@ -33,10 +39,23 @@ for (const colorScheme of ["light", "dark"] as const) {
         await page.waitForFunction(() =>
           Boolean(document.documentElement.dataset.theme),
         );
+        // Lazy examples mount as they scroll into view; walk the page first.
+        await page.evaluate(async () => {
+          for (let y = 0; y < document.body.scrollHeight; y += 500) {
+            window.scrollTo(0, y);
+            await new Promise((resolve) => setTimeout(resolve, 60));
+          }
+          window.scrollTo(0, 0);
+        });
+        // The location marker's pulse never ends; wait for the finite ones.
         await page.waitForFunction(() =>
           document
             .getAnimations()
-            .every((animation) => animation.playState !== "running"),
+            .every(
+              (animation) =>
+                animation.playState !== "running" ||
+                animation.effect?.getTiming().iterations === Infinity,
+            ),
         );
         await page.screenshot({
           path: `screenshots/${name}-${colorScheme}-${sizeName}.png`,

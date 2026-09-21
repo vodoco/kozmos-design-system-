@@ -19,11 +19,20 @@ import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import { useFocusMainOnNavigate } from "./SiteShell";
 
+export interface DocsPageLink {
+  to: string;
+  title: string;
+  end?: boolean;
+}
+
 export interface DocsSection {
   title: string;
   /** One line under the title in the navigation. */
   summary: string;
-  pages: readonly { to: string; title: string; end?: boolean }[];
+  /** Pages before any group. */
+  pages: readonly DocsPageLink[];
+  /** Pages under a small heading each, for a long section. */
+  groups?: readonly { title: string; pages: readonly DocsPageLink[] }[];
 }
 
 /**
@@ -43,18 +52,35 @@ export function DocsShell({
   const [drawerOpen, setDrawerOpen] = useState(false);
   useFocusMainOnNavigate(main);
 
+  const items = (pages: readonly DocsPageLink[], onNavigate?: () => void) =>
+    pages.map((page) => (
+      <SiteNavItem
+        key={page.to}
+        to={page.to}
+        end={page.end ?? true}
+        placement="side"
+        onNavigate={onNavigate}
+      >
+        {page.title}
+      </SiteNavItem>
+    ));
+
   const navigation = (onNavigate?: () => void) => (
-    <Stack gap={1}>
-      {section.pages.map((page) => (
-        <SiteNavItem
-          key={page.to}
-          to={page.to}
-          end={page.end ?? true}
-          placement="side"
-          onNavigate={onNavigate}
-        >
-          {page.title}
-        </SiteNavItem>
+    <Stack gap={4}>
+      <Stack gap={1}>{items(section.pages, onNavigate)}</Stack>
+      {section.groups?.map((group) => (
+        <Stack key={group.title} gap={1}>
+          <Text
+            as="span"
+            size="xs"
+            weight="semibold"
+            color="muted"
+            className="site-docs-group"
+          >
+            {group.title}
+          </Text>
+          {items(group.pages, onNavigate)}
+        </Stack>
       ))}
     </Stack>
   );
@@ -97,7 +123,9 @@ export function DocsShell({
                   <DrawerTitle>{section.title}</DrawerTitle>
                   <DrawerDescription>{section.summary}</DrawerDescription>
                 </DrawerHeader>
-                {navigation(() => setDrawerOpen(false))}
+                <Box className="site-docs-drawer-nav">
+                  {navigation(() => setDrawerOpen(false))}
+                </Box>
               </DrawerContent>
             </Drawer>
           </Box>
