@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "e6b4f3c52c53";
+const PLUGIN_BUILD = "ed50a03a1912";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -1430,7 +1430,8 @@ const COMPONENT_DOCS = [
     ],
     accessibility: [
       "The field is a group named by the label and the count's spoken form; the clear is a button named clearLabel.",
-      "The colour is decorative: the label carries the category's name.",
+      "The clear is a 32 circle to see in a 44 target to hit, as the search bar's; the target is code's, the library draws the circle.",
+      "The name and the clear's cross are in the foreground; the icon, the border and the wash carry the colour, which is decorative: the label carries the category's name.",
     ],
   },
   {

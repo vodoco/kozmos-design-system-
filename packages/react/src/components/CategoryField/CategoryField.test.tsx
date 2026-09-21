@@ -73,6 +73,25 @@ describe("CategoryField", () => {
     );
   });
 
+  it("puts the 32 clear in a 44 hit area, as the search bar's", () => {
+    render(<CategoryField label="Gates" onClear={() => undefined} />);
+    const clear = screen.getByRole("button", { name: "Clear category" });
+    // The button is the target, 44; the circle inside it is what shows, 32,
+    // and carries the focus ring (Olcay, 2026-09-21).
+    expect(clear).toHaveClass("h-11", "w-11");
+    expect(clear).not.toHaveClass("focus-visible:ring-2");
+    const circle = clear.firstElementChild as HTMLElement;
+    expect(circle).toHaveClass(
+      "h-8",
+      "w-8",
+      "rounded-pill",
+      "group-focus-visible:ring-2",
+    );
+    // The trailing padding gives back the 6 the target adds on each side, so
+    // the circle stays 8 from the field's edge.
+    expect(screen.getByRole("group", { name: "Gates" })).toHaveClass("pr-0.5");
+  });
+
   it("shows no pill without a count", () => {
     render(<CategoryField label="Bookmarks" onClear={() => undefined} />);
     expect(

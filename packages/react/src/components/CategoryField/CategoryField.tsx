@@ -28,7 +28,8 @@ export interface CategoryFieldProps extends Omit<
  * prototype's, measured: 48 tall, the control radius, the category's colour
  * at 12 % with a 1-pixel border of it, the icon at 28 in the colour, the name
  * at 15 semibold in the foreground, a 22-tall count pill filled with the
- * colour, a 32 clear at the trailing edge with its cross in the foreground.
+ * colour, a 32 clear at the trailing edge with its cross in the foreground, in
+ * a 44 hit area as the search bar's clear is.
  * It takes the field's place in the search row. The name and the cross are
  * in the foreground because the category colour on its own wash fails 4.5:1
  * for seven of the eight tints (Olcay, 2026-09-21).
@@ -63,7 +64,7 @@ const CategoryField = React.forwardRef<HTMLDivElement, CategoryFieldProps>(
         count === undefined ? label : `${label}, ${countLabel(count)}`
       }
       className={cn(
-        "kozmos-reset kozmos-category-field flex h-12 min-w-0 items-center gap-2 rounded-control border pl-3 pr-2 text-foreground",
+        "kozmos-reset kozmos-category-field flex h-12 min-w-0 items-center gap-2 rounded-control border pl-3 pr-0.5 text-foreground",
         className,
       )}
       style={
@@ -99,13 +100,22 @@ const CategoryField = React.forwardRef<HTMLDivElement, CategoryFieldProps>(
         </span>
       )}
       <span className="flex-1" />
+      {/* The clear: a 32 circle to see, the 44 button around it to hit, as
+          the search bar's (Olcay, 2026-09-21). The field's trailing padding
+          is 2, so the circle sits 8 from the edge, where the prototype
+          measured it; the focus ring is the circle's. */}
       <button
         type="button"
         aria-label={clearLabel}
         onClick={onClear}
-        className="kozmos-reset flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-pill bg-transparent p-0 text-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="kozmos-reset group flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-pill bg-transparent p-0 text-current focus-visible:outline-none"
       >
-        <X aria-hidden="true" className="h-4 w-4" />
+        <span
+          aria-hidden="true"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-pill group-focus-visible:ring-2 group-focus-visible:ring-ring"
+        >
+          <X aria-hidden="true" className="h-4 w-4" />
+        </span>
       </button>
     </div>
   ),

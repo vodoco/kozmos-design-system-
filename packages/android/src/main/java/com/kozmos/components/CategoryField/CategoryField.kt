@@ -2,7 +2,10 @@ package com.kozmos.components.categoryfield
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +22,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,7 +71,7 @@ fun KozmosCategoryField(
             .clip(shape)
             .background(tint.accent.copy(alpha = 0.12f))
             .border(1.dp, tint.accent, shape)
-            .padding(start = KozmosDimensions.primitivesLayoutSpacing150, end = KozmosDimensions.primitivesLayoutSpacing100)
+            .padding(start = KozmosDimensions.primitivesLayoutSpacing150, end = KozmosDimensions.primitivesLayoutSpacing25)
             .semantics(mergeDescendants = false) {
                 contentDescription = if (count == null) label else "$label, ${countLabel(count)}"
             },
@@ -82,42 +86,65 @@ fun KozmosCategoryField(
                 ) { icon() }
                 Spacer(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSpacing100))
             }
-            // The name and the clear's cross in the foreground, themed: the
-            // category colour on its own wash failed 4.5:1 for seven tints
-            // (Olcay, 2026-09-21).
-            Text(
-                text = label,
-                color = KozmosThemeTokens.primitivesColorsForeground0,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false)
-            )
-            if (count != null) {
-                Spacer(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSpacing100))
-                Box(
-                    modifier = Modifier
-                        .defaultMinSize(minWidth = 22.dp, minHeight = 22.dp)
-                        .clip(CircleShape)
-                        .background(tint.fill.fill)
-                        .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing75)
-                        .semantics { contentDescription = countLabel(count) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = count.toString(), color = tint.fill.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            // The name and its count take what the icon and the clear leave:
+            // the name shrinks first, the pill follows it, and the clear stays
+            // at the trailing edge, as on React and iOS. A spacer weighted
+            // against the weighted, non-filling name left the name's unused
+            // share after the clear, so the clear floated inward (2026-09-21).
+            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                // The name and the clear's cross in the foreground, themed:
+                // the category colour on its own wash failed 4.5:1 for seven
+                // tints (Olcay, 2026-09-21).
+                Text(
+                    text = label,
+                    color = KozmosThemeTokens.primitivesColorsForeground0,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (count != null) {
+                    Spacer(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSpacing100))
+                    Box(
+                        modifier = Modifier
+                            .defaultMinSize(minWidth = 22.dp, minHeight = 22.dp)
+                            .clip(CircleShape)
+                            .background(tint.fill.fill)
+                            .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing75)
+                            .semantics { contentDescription = countLabel(count) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = count.toString(), color = tint.fill.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
-            Spacer(modifier = Modifier.weight(1f))
+            // The clear: a 32 circle to see, the 44 target around it to hit,
+            // as the search bar's (Olcay, 2026-09-21). The row's end padding
+            // is 2, so the circle sits 8 from the edge; the press shows on
+            // the circle.
+            val clearInteraction = remember { MutableInteractionSource() }
             Box(
                 modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .clickable(role = Role.Button, onClick = onClear)
+                    .size(44.dp)
+                    .clickable(
+                        interactionSource = clearInteraction,
+                        indication = null,
+                        role = Role.Button,
+                        onClick = onClear
+                    )
                     .semantics { contentDescription = clearLabel },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = null, tint = KozmosThemeTokens.primitivesColorsForeground0, modifier = Modifier.size(16.dp))
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .indication(clearInteraction, LocalIndication.current),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = null, tint = KozmosThemeTokens.primitivesColorsForeground0, modifier = Modifier.size(16.dp))
+                }
             }
         }
     }

@@ -1969,7 +1969,7 @@ assertContains(
   assertContains(
     files.androidCategoryField,
     source.androidCategoryField,
-    `fontSize = ${field.labelFontSize}.sp,\n                fontWeight = FontWeight.SemiBold`,
+    new RegExp(`fontSize = ${field.labelFontSize}\\.sp,\\s*fontWeight = FontWeight\\.SemiBold`),
     `Android CategoryField label ${field.labelFontSize} semibold`,
   );
   assertContains(
@@ -2027,7 +2027,7 @@ assertContains(
     assertContains(
       files.reactCategoryField,
       source.reactCategoryField,
-      "rounded-control border pl-3 pr-2 text-foreground",
+      "rounded-control border pl-3 pr-0.5 text-foreground",
       "React CategoryField label and clear in the foreground",
     );
     assertNotContains(
@@ -2073,6 +2073,62 @@ assertContains(
       "Figma CategoryField label and cross take that ink",
     );
   }
+  // Ruled 2026-09-21: the clear's circle to see in a 44 target to hit, as
+  // the search bar's; the trailing padding gives back the 6 the target adds
+  // on each side, so the circle stays 8 from the edge.
+  if (field.clearHitArea) {
+    const hit = field.clearHitArea;
+    const inset = (field.clearHitArea - field.clearSize) / 2;
+    assertContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      `group flex h-${twips(hit)} w-${twips(hit)} shrink-0`,
+      `React CategoryField clear target ${hit}`,
+    );
+    assertContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      `pl-3 pr-${twips(8 - inset)} `,
+      `React CategoryField trailing padding ${8 - inset}`,
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      `static var clearHitArea: CGFloat { ${hit} }`,
+      `iOS CategoryField clearHitArea ${hit}`,
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      /\.frame\(width: Self\.clearSize, height: Self\.clearSize\)\s*\.frame\(width: Self\.clearHitArea, height: Self\.clearHitArea\)\s*\.contentShape\(Rectangle\(\)\)/,
+      "iOS CategoryField clear circle inside its target",
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      ".padding(.trailing, KozmosDimensions.primitivesLayoutSpacing25)",
+      `iOS CategoryField trailing padding ${8 - inset}`,
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      new RegExp(`\\.size\\(${hit}\\.dp\\)\\s*\\.clickable\\(`),
+      `Android CategoryField clear target ${hit}`,
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "end = KozmosDimensions.primitivesLayoutSpacing25",
+      `Android CategoryField trailing padding ${8 - inset}`,
+    );
+    assertNotContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "Spacer(modifier = Modifier.weight(1f))",
+      "Android CategoryField spacer weighted against the name, which floated the clear inward",
+    );
+  }
+
   if (field.iconDecorative) {
     assertContains(
       files.reactCategoryField,

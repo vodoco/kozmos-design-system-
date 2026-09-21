@@ -263,6 +263,12 @@ final class KozmosCategoryFieldTests: XCTestCase {
         let cross = CGRect(x: 234, y: 30, width: 24, height: 20)
         XCTAssertNotNil(pixels.boundingBox(in: cross, where: isDark), "the clear's cross is not in the foreground")
         XCTAssertNil(pixels.boundingBox(in: cross, where: Self.isOrange), "the clear's cross is still in the category's colour")
+        // The cross stays centred where the 32 circle was measured, 8 from the
+        // field's edge: the 44 target around it (Olcay, 2026-09-21) moved
+        // nothing. The field spans 16 to 270; 270 - 8 - 16 = 246.
+        let crossBox = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 200, y: 20, width: 80, height: 40), where: isDark), "no cross at the trailing edge")
+        XCTAssertEqual(crossBox.midX, 246, accuracy: 1.5, "the clear's cross moved: \(crossBox)")
+        XCTAssertEqual(crossBox.midY, 40, accuracy: 1.5, "the clear's cross is off the field's centre: \(crossBox)")
         // The icon keeps the colour: decorative, the name says what it shows.
         XCTAssertNotNil(pixels.boundingBox(in: CGRect(x: 28, y: 26, width: 28, height: 28), where: Self.isOrange), "the icon lost the category's colour")
     }

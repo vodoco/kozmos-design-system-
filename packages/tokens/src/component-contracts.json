@@ -114,9 +114,10 @@
         "tint": "the category tint, the theme's by default: the accent takes the icon and the 1 border and sits at washOpacity behind; the inked fill takes the count pill",
         "labelColor": "foreground/0",
         "clearColor": "foreground/0",
-        "iconDecorative": true
+        "iconDecorative": true,
+        "clearHitArea": 44
       },
-      "notes": "The search field's form once a quick-access category is chosen — the prototype's, measured on 2026-09-20 — in the field's place in the search row. The clear's hit area is clearSize on every platform (a decision for Olcay, 2026-09-21: the search bar's clear beside it sits in a 44 hit area). In Figma the label is drawn Medium, the importer's nearest weight to semibold. Ruled by Olcay on 2026-09-21: the label and the clear's cross take foreground/0, since the category colour on its own wash failed 4.5:1 for seven of the eight tints; the icon is decorative (the label names what it shows) and hidden from assistive technology on every platform."
+      "notes": "The search field's form once a quick-access category is chosen — the prototype's, measured on 2026-09-20 — in the field's place in the search row. The clear is a clearSize circle to see in a clearHitArea target to hit, as the search bar's clear beside it (ruled by Olcay, 2026-09-21); the field's trailing padding is 2, so the circle sits 8 from the edge, where the prototype measured it. In Figma the label is drawn Medium, the importer's nearest weight to semibold. Ruled by Olcay on 2026-09-21: the label and the clear's cross take foreground/0, since the category colour on its own wash failed 4.5:1 for seven of the eight tints; the icon is decorative (the label names what it shows) and hidden from assistive technology on every platform."
     },
     "locationPin": {
       "sizes": {
