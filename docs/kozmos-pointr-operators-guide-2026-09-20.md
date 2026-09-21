@@ -470,6 +470,10 @@ _Added on the 21st, evening, from the Figma drift
 - A helper that falls back to the library's default icon paints a magnifier where a close
   belongs: `productSdkIconInstance` falls back only when told (`fallbackToDefault`, the tile's
   and the field's data slots); a symbol's caller draws its typed glyph instead.
+- An icon instance's plugin data is a label, not its paint: the Button family's icons read the
+  right token and were plain black, and an Update that trusted the label skipped them. The
+  re-tint is decided by the paint now (`iconSlotPaintIsExpected`); read a paint over REST
+  before believing a label.
 
 _Added on the 21st, from the sheet stage:_
 

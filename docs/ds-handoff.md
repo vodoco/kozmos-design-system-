@@ -1560,3 +1560,10 @@ last typed glyphs — the floor selector's steppers, the map controls, the submi
 (switch-vertical-01 curated) — draw icons; CategoryField has a contract entry asserted on
 every platform; CI runs the painter and compatibility checks. One decision for Olcay: the
 field's 32 clear has no 44 hit area on any platform, unlike the search bar's clear beside it.
+
+Olcay's first audit in Figma the same night reported the Button family's icons failing 3:1.
+Read over REST: the icons were plain black with the right token in their plugin data, and an
+Update deciding by the label would have skipped them. The plugin's re-tint now follows the
+paint (`414ba00`); the check proves the repair. His file is otherwise untouched by the new
+build: the Icons page holds 38, every set is on `dd9f78a05cc0`, the two new sets are absent —
+the run is still ahead.
