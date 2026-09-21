@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "778f8e068ba8";
+const PLUGIN_BUILD = "53ac76afe679";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -20488,11 +20488,13 @@ function auditComponentContrastForMode(
       parseEmptyStateVariantName(component.name) ||
       parseSegmentedControlVariantName(component.name) ||
       {};
-    if (props.variant === "Glass") {
-      result.surfaceDependent = true;
-      continue;
-    }
-
+    // A Glass variant is measured like any other, on Surface/0 in each mode;
+    // Surface QA puts it on the other surfaces. The skip for Glass that stood
+    // here never ran: the Label parser above claims every name with a
+    // "State=Default" first, so no Button reached it with its variant, and
+    // measuring Glass on Surface/0 is what caught ed50a03a1912's opaque Glass
+    // at 1.03 (2026-09-21). It is gone, so an order change above cannot drop
+    // Glass from the audit.
     const isDisabled = props.state === "Disabled";
     const bgPaint = visibleSolidPaintsToRgba(
       component.fills,

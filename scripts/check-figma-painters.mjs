@@ -1433,6 +1433,37 @@ section("A translucent token rides on the paint");
       darkRatio >= 4.5,
       `the audit reads Glass's label in Dark at 4.5 or more (${darkRatio.toFixed(2)})`,
     );
+    // And the audit's traversal measures a Glass variant, in both modes,
+    // rather than passing over it: that reading caught ed50a03a1912's Glass.
+    if (typeof plugin.auditComponentContrast === "function") {
+      const tokens = payloadVariables([...variableByName.keys()]);
+      const painted = await plugin.createButtonVariant({
+        variant: "Glass",
+        size: "Default",
+        state: "Default",
+        variableByName: tokens.variableByName,
+        fonts: FONTS,
+        textStyle: null,
+        stats: freshStats(),
+      });
+      painted.name = "Variant=Glass, Size=Default, State=Default";
+      const glassSet = new MockNode("COMPONENT_SET", "Button");
+      glassSet.appendChild(painted);
+      const measured = plugin.auditComponentContrast(
+        glassSet,
+        glassSet.children,
+        plugin.createVariableContext(tokens.collections, tokens.variables),
+      );
+      ok(
+        measured.byMode.length === 2 &&
+          measured.byMode.every(
+            (mode) => mode.textPairs >= 1 && mode.minTextContrast >= 4.5,
+          ),
+        `the audit measures a Glass variant's label in Light and Dark (${measured.byMode
+          .map((mode) => `${mode.mode} ${mode.minTextContrast}`)
+          .join(", ")})`,
+      );
+    }
 
     const backdrop = await plugin.createBackdropVariant({
       props: { visibility: "Visible" },
