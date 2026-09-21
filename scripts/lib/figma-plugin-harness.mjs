@@ -217,6 +217,28 @@ export class MockNode {
     this._strokes = storePaints(this, value);
   }
 
+  // A text's size and leading, as Figma keeps them: a literal written to a
+  // field bound to a variable drops the binding. Apply Text Styles wrote
+  // literals before attaching a style and unbound 4,957 texts in the live
+  // file on 2026-09-21; a painter binds after it writes.
+  get fontSize() {
+    return this._fontSize;
+  }
+
+  set fontSize(value) {
+    this._fontSize = value;
+    if (this.boundVariables) delete this.boundVariables.fontSize;
+  }
+
+  get lineHeight() {
+    return this._lineHeight;
+  }
+
+  set lineHeight(value) {
+    this._lineHeight = value;
+    if (this.boundVariables) delete this.boundVariables.lineHeight;
+  }
+
   get characters() {
     return this._characters || "";
   }

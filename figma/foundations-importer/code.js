@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "53ac76afe679";
+const PLUGIN_BUILD = "01f3be6891dc";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -14836,7 +14836,7 @@ async function auditLibrary() {
   audit.typography = typography;
   if (typography.issueCount > 0) {
     audit.warnings.push(
-      `Typography: ${typography.issueCount} font config issue(s) found. Run Apply Text Styles, then update any component sets that still report stale generated text.${formatTypographyIssueDetails(typography)}`,
+      `Typography: ${typography.issueCount} font config issue(s) found. Update the component sets named below (never Rebuild); Apply Text Styles styles only text that has no style.${formatTypographyIssueDetails(typography)}`,
     );
   }
   recordAuditTiming(performance, "typography", phaseStartedAt, {
@@ -15998,7 +15998,7 @@ function auditComponentSet(
   // alongside this one and said the same thing twice.
   if (boundVariableFields.textNodesWithoutTextStyle > 0) {
     record.warnings.push(
-      `${boundVariableFields.textNodesWithoutTextStyle} text node(s) are missing Figma text styles. Run Apply Text Styles or the component updater to attach the shared typography styles.`,
+      `${boundVariableFields.textNodesWithoutTextStyle} text node(s) are missing Figma text styles. Update this set (never Rebuild) to attach its text styles and bind their sizes.`,
     );
   }
 
@@ -21922,43 +21922,6 @@ function auditBoundVariableFields(root) {
     }
   }
 
-  function hasTextStyle(node) {
-    const directStyleId = node.textStyleId;
-    if (
-      typeof directStyleId === "string" &&
-      directStyleId.length > 0 &&
-      directStyleId !== figma.mixed
-    ) {
-      return true;
-    }
-
-    if (
-      node.getRangeTextStyleId &&
-      typeof node.characters === "string" &&
-      node.characters.length > 0
-    ) {
-      try {
-        const rangeStyleId = node.getRangeTextStyleId(
-          0,
-          node.characters.length,
-        );
-        return (
-          typeof rangeStyleId === "string" &&
-          rangeStyleId.length > 0 &&
-          rangeStyleId !== figma.mixed
-        );
-      } catch (_error) {
-        return false;
-      }
-    }
-
-    return (
-      typeof directStyleId === "string" &&
-      directStyleId.length > 0 &&
-      directStyleId !== figma.mixed
-    );
-  }
-
   function walk(node) {
     if (isGeneratedNestedComponentInstance(node)) return;
 
@@ -21968,7 +21931,7 @@ function auditBoundVariableFields(root) {
 
     if (node.type === "TEXT") {
       usage.textNodes += 1;
-      if (hasTextStyle(node)) {
+      if (textNodeHasTextStyle(node)) {
         usage.textStyleNodes += 1;
       } else {
         usage.textNodesWithoutTextStyle += 1;
@@ -23364,12 +23327,93 @@ async function applyTextStyleToNodeAsync(text, key, stats) {
   return applied;
 }
 
+// Whether a text node carries a text style: its own, or one style across its
+// whole range. Shared by the audit's count and by Apply Text Styles, which
+// leaves styled text alone.
+function textNodeHasTextStyle(node) {
+  const directStyleId = node.textStyleId;
+  if (
+    typeof directStyleId === "string" &&
+    directStyleId.length > 0 &&
+    directStyleId !== figma.mixed
+  ) {
+    return true;
+  }
+
+  if (
+    node.getRangeTextStyleId &&
+    typeof node.characters === "string" &&
+    node.characters.length > 0
+  ) {
+    try {
+      const rangeStyleId = node.getRangeTextStyleId(0, node.characters.length);
+      return (
+        typeof rangeStyleId === "string" &&
+        rangeStyleId.length > 0 &&
+        rangeStyleId !== figma.mixed
+      );
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
+// The variables a text's size and leading are bound to, by field. A literal
+// write to either drops its binding in Figma, and applying a style writes them.
+function typographyVariableBindings(text) {
+  const bindings = {};
+  const bound = text && text.boundVariables;
+  for (const field of ["fontSize", "lineHeight"]) {
+    const value = bound && bound[field];
+    const aliases = (Array.isArray(value) ? value : [value]).filter(
+      (alias) => alias && alias.id,
+    );
+    const ids = aliases
+      .map((alias) => alias.id)
+      .filter((id, index, all) => all.indexOf(id) === index);
+    // One variable across the node binds back whole; mixed ranges do not.
+    if (ids.length === 1) bindings[field] = ids[0];
+  }
+  return bindings;
+}
+
+async function restoreTypographyVariableBindings(text, bindings, stats) {
+  for (const field of Object.keys(bindings)) {
+    try {
+      const variable = await figma.variables.getVariableByIdAsync(
+        bindings[field],
+      );
+      if (!variable) {
+        incrementStat(stats, "typographyBindingsLost");
+        pushUniqueWarning(
+          stats,
+          `typography-binding-missing:${bindings[field]}`,
+          `A text's ${field} was bound to a variable the file no longer has (${bindings[field]}); it keeps the style's value.`,
+        );
+        continue;
+      }
+      text.setBoundVariable(field, variable);
+      incrementStat(stats, "typographyBindingsKept");
+    } catch (error) {
+      incrementStat(stats, "typographyBindingsLost");
+      pushUniqueWarning(
+        stats,
+        `typography-binding:${field}`,
+        `Could not bind a text's ${field} back to its variable (${messageFor(error)}).`,
+      );
+    }
+  }
+}
+
 async function applyTextStylesToComponentLibrary() {
   const stats = {
     updated: false,
     componentSetsVisited: 0,
     textNodesVisited: 0,
     textNodesStyled: 0,
+    textNodesAlreadyStyled: 0,
     textNodesSkippedInInstances: 0,
     textNodesUnmatched: 0,
     warnings: [],
@@ -23395,8 +23439,21 @@ async function applyTextStylesToComponentLibrary() {
         continue;
       }
 
+      // A styled text carries the style its painter chose, which a guess
+      // from the node's name can miss, and restyling writes its size and
+      // leading, dropping their variables: run on the live file on
+      // 2026-09-21, this unbound 4,957 texts in 46 sets and set 656 of the
+      // pickers' 12/16 texts at 14/20. Only text without a style is styled
+      // here, and its bindings are put back; an Update restyles a whole set.
+      if (textNodeHasTextStyle(text)) {
+        stats.textNodesAlreadyStyled += 1;
+        continue;
+      }
+
       const key = inferTextStyleKeyForComponentText(text, componentSet);
+      const bindings = typographyVariableBindings(text);
       if (key && (await applyTextStyleToNodeAsync(text, key, stats))) {
+        await restoreTypographyVariableBindings(text, bindings, stats);
         stats.textNodesStyled += 1;
       } else {
         stats.textNodesUnmatched += 1;
@@ -23410,7 +23467,7 @@ async function applyTextStylesToComponentLibrary() {
   }
 
   stats.updated = true;
-  stats.message = `Applied text styles to ${stats.textNodesStyled} component text node(s).`;
+  stats.message = `Applied text styles to ${stats.textNodesStyled} component text node(s) that had none; ${stats.textNodesAlreadyStyled} styled node(s) left as drawn.`;
   return stats;
 }
 
@@ -23638,6 +23695,25 @@ function inferTextStyleKeyForComponentText(text, componentSet) {
       textName === "Browse Text"
     ) {
       return "fieldLabel";
+    }
+    // The small readouts the painters draw with the 12/16 meta style: the
+    // calendar's weekdays, FileUpload's description and file meta, and
+    // ColorPicker's channel, alpha, mode and hex values. Guessed as field
+    // text, 656 of them were restyled at 14/20 in the live file (2026-09-21).
+    if (
+      textName === "Weekday Text" ||
+      (setName === "FileUpload" &&
+        (textName === "Description Text" ||
+          /^File Meta Text( \d+)?$/.test(textName))) ||
+      (setName === "ColorPicker" &&
+        (/ Value Text$/.test(textName) ||
+          textName === "Alpha Unit Text" ||
+          textName === "Mode Text" ||
+          (textName === "Value Text" &&
+            Boolean(text.parent) &&
+            text.parent.name === "ColorPicker Hex Field")))
+    ) {
+      return "fieldMeta";
     }
     return "fieldText";
   }

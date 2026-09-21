@@ -1566,19 +1566,39 @@ section("Typography inference");
     ["Input", "Label Text", "fieldLabel"],
     ["Input", "Optional Text", "fieldMeta"],
     ["Input", "Value Text", "fieldText"],
+    // The 12/16 readouts, which the guess called field text until Apply Text
+    // Styles restyled 656 of them at 14/20 in the live file (2026-09-21).
+    ["DatePicker", "Weekday Text", "fieldMeta"],
+    ["DateRangePicker", "Weekday Text", "fieldMeta"],
+    ["FileUpload", "Description Text", "fieldMeta"],
+    ["FileUpload", "File Meta Text", "fieldMeta"],
+    ["FileUpload", "File Meta Text 2", "fieldMeta"],
+    ["ColorPicker", "Hue Value Text", "fieldMeta"],
+    ["ColorPicker", "Alpha Value Text", "fieldMeta"],
+    ["ColorPicker", "Alpha Unit Text", "fieldMeta"],
+    ["ColorPicker", "Mode Text", "fieldMeta"],
+    ["ColorPicker", "Value Text", "fieldMeta", "ColorPicker Hex Field"],
+    ["ColorPicker", "Value Text", "fieldText", "ColorPicker Field"],
+    ["FormField", "Description Text", "fieldText"],
   ];
   const ready = typeof plugin.inferTextStyleKeyForComponentText === "function";
   ok(ready, "the audit's style guess is reachable");
-  for (const [setName, textName, expected] of ready ? cases : []) {
+  for (const [setName, textName, expected, parentName] of ready ? cases : []) {
     const set = new MockNode("COMPONENT_SET", setName);
     const component = new MockNode("COMPONENT", "State=Default");
     const text = new MockNode("TEXT", textName);
-    component.appendChild(text);
+    if (parentName) {
+      const parent = new MockNode("FRAME", parentName);
+      parent.appendChild(text);
+      component.appendChild(parent);
+    } else {
+      component.appendChild(text);
+    }
     set.appendChild(component);
     const key = plugin.inferTextStyleKeyForComponentText(text, set);
     ok(
       key === expected,
-      `${setName} · ${textName} is ${expected} (got ${key})`,
+      `${setName} · ${textName}${parentName ? ` in ${parentName}` : ""} is ${expected} (got ${key})`,
     );
   }
   const source = fs.readFileSync(PLUGIN, "utf8");
@@ -2135,6 +2155,141 @@ section("The product sets audit clean");
       }
     }
   }
+}
+
+// --- Apply Text Styles leaves styled text alone ------------------------------------
+
+// Run on the live file on 2026-09-21, after the audit named FileUpload's 32
+// unstyled labels and the panel's next step said to run it, Apply Text Styles
+// restyled every text it could guess a style for: it wrote each one's size and
+// leading, which dropped their variables (4,957 texts in 46 sets), and it set
+// 656 of the pickers' 12/16 readouts at 14/20. It now styles only text without
+// a style and binds its size and leading back; the audit and the panel name
+// the set's Update, which draws both.
+section("Apply Text Styles leaves styled text alone");
+{
+  // Figma's own rule, which the mock keeps: a literal drops a binding.
+  const probe = new MockNode("TEXT", "Probe");
+  probe.setBoundVariable("fontSize", { id: "VariableID:Probe/size" });
+  probe.fontSize = 14;
+  ok(
+    probe.boundVariables.fontSize === undefined,
+    "the mock drops a text's size variable when a literal size is written",
+  );
+
+  const pagesForRun = () => {
+    const components = new MockNode("PAGE", "Components");
+    const icons = new MockNode("PAGE", "Icons");
+    return [components, icons];
+  };
+  const runFigma = createFigmaMock({ pages: pagesForRun() });
+  const runPlugin = loadPlugin({ pluginPath: PLUGIN, figma: runFigma });
+  let styleIds = 0;
+  runFigma.createTextStyle = () => ({ id: `S:created-${(styleIds += 1)}` });
+  runFigma.variables.getVariableByIdAsync = async (id) => ({
+    id,
+    name: String(id).replace(/^VariableID:/, ""),
+  });
+  const ready =
+    typeof runPlugin.applyTextStylesToComponentLibrary === "function" &&
+    typeof runPlugin.resetTextStyleCache === "function";
+  ok(ready, "Apply Text Styles runs in the harness");
+  if (ready) {
+    runPlugin.resetTextStyleCache();
+    const bound = (text, prefix) => {
+      text.setBoundVariable("fontSize", {
+        id: `VariableID:${prefix}/font-size`,
+      });
+      text.setBoundVariable("lineHeight", {
+        id: `VariableID:${prefix}/line-height`,
+      });
+    };
+    const components = runFigma.root.children.find(
+      (page) => page.name === "Components",
+    );
+    const picker = mockComponentSet("DatePicker", [
+      {
+        properties: { State: "Default" },
+        build: (variant) => {
+          const weekdays = new MockNode("FRAME", "DatePicker Weekdays");
+          const weekday = new MockNode("TEXT", "Weekday Text");
+          weekday.characters = "Mo";
+          weekday.fontSize = 12;
+          weekday.lineHeight = { unit: "PIXELS", value: 16 };
+          weekday.textStyleId = "S:field-meta-as-drawn";
+          bound(weekday, "DatePicker/weekday");
+          weekdays.appendChild(weekday);
+          variant.appendChild(weekdays);
+        },
+      },
+    ]);
+    const upload = mockComponentSet("FileUpload", [
+      {
+        properties: { State: "Default" },
+        build: (variant) => {
+          const browse = new MockNode("TEXT", "Browse Text");
+          browse.characters = "Click to upload";
+          browse.fontSize = 14;
+          browse.lineHeight = { unit: "PIXELS", value: 20 };
+          bound(browse, "FileUpload/label");
+          variant.appendChild(browse);
+        },
+      },
+    ]);
+    components.appendChild(picker);
+    components.appendChild(upload);
+    const result = await runPlugin.applyTextStylesToComponentLibrary();
+    const weekday = picker.findOne((node) => node.name === "Weekday Text");
+    const browse = upload.findOne((node) => node.name === "Browse Text");
+    ok(
+      weekday.textStyleId === "S:field-meta-as-drawn" &&
+        weekday.fontSize === 12 &&
+        weekday.boundVariables.fontSize &&
+        weekday.boundVariables.fontSize.id ===
+          "VariableID:DatePicker/weekday/font-size" &&
+        weekday.boundVariables.lineHeight &&
+        weekday.boundVariables.lineHeight.id ===
+          "VariableID:DatePicker/weekday/line-height",
+      `a styled text keeps its style, its 12 and its variables (style ${weekday.textStyleId}, ${weekday.fontSize}, size variable ${weekday.boundVariables.fontSize && weekday.boundVariables.fontSize.id})`,
+    );
+    ok(
+      /^S:created-/.test(browse.textStyleId) &&
+        browse.boundVariables.fontSize &&
+        browse.boundVariables.fontSize.id ===
+          "VariableID:FileUpload/label/font-size" &&
+        browse.boundVariables.lineHeight &&
+        browse.boundVariables.lineHeight.id ===
+          "VariableID:FileUpload/label/line-height",
+      `an unstyled text is styled and keeps its variables (style ${browse.textStyleId || "none"}, size variable ${browse.boundVariables.fontSize && browse.boundVariables.fontSize.id})`,
+    );
+    ok(
+      result.textNodesStyled === 1 && result.textNodesAlreadyStyled === 1,
+      `it counts one styled and one left as drawn (${result.textNodesStyled}, ${result.textNodesAlreadyStyled})`,
+    );
+    runPlugin.resetTextStyleCache();
+  }
+
+  const source = fs.readFileSync(PLUGIN, "utf8");
+  const ui = fs.readFileSync(
+    path.join(path.dirname(PLUGIN), "ui.html"),
+    "utf8",
+  );
+  const missingStyles = source.match(
+    /text node\(s\) are missing Figma text styles\.[^`]*`/,
+  );
+  ok(
+    missingStyles &&
+      /Update this set/.test(missingStyles[0]) &&
+      !/Apply Text Styles/.test(missingStyles[0]),
+    "the audit names the set's Update for text without a style, not Apply Text Styles",
+  );
+  const nextStep = ui.match(
+    /warning\.includes\("missing Figma text styles"\)[\s\S]{0,200}?return "([^"]+)"/,
+  );
+  ok(
+    nextStep && !/Apply Text Styles/.test(nextStep[1]),
+    `the panel's next step for it is not Apply Text Styles (${nextStep && nextStep[1]})`,
+  );
 }
 
 // --- Layout sizing Figma accepts ---------------------------------------------------
