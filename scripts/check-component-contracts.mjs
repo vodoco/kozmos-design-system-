@@ -1794,15 +1794,17 @@ assertContains(
       const found = candidates.find((candidate) =>
         fs.existsSync(path.join(root, candidate)),
       );
-      if (!found) unlisted.push(`${config} lists ${includePath}, which does not exist`);
+      if (!found)
+        unlisted.push(`${config} lists ${includePath}, which does not exist`);
       else listed.add(found);
     }
     for (const filePath of listFilesRecursive(sourceRoot, (candidate) =>
       candidate.endsWith(extension),
     )) {
-      const placeholder = /node-id=TBD|nodeId\s*=\s*["']TBD["']|node-id%3DTBD/i.test(
-        read(filePath),
-      );
+      const placeholder =
+        /node-id=TBD|nodeId\s*=\s*["']TBD["']|node-id%3DTBD/i.test(
+          read(filePath),
+        );
       if (!placeholder && !listed.has(path.normalize(filePath))) {
         unlisted.push(`${config} does not list ${filePath}`);
       }
@@ -2026,7 +2028,9 @@ assertContains(
   assertContains(
     files.androidCategoryField,
     source.androidCategoryField,
-    new RegExp(`fontSize = ${field.labelFontSize}\\.sp,\\s*fontWeight = FontWeight\\.SemiBold`),
+    new RegExp(
+      `fontSize = ${field.labelFontSize}\\.sp,\\s*fontWeight = FontWeight\\.SemiBold`,
+    ),
     `Android CategoryField label ${field.labelFontSize} semibold`,
   );
   assertContains(
@@ -2080,7 +2084,10 @@ assertContains(
 
   // Ruled 2026-09-21: the label and the clear's cross in foreground/0; the
   // icon decorative, hidden from assistive technology.
-  if (field.labelColor === "foreground/0" && field.clearColor === "foreground/0") {
+  if (
+    field.labelColor === "foreground/0" &&
+    field.clearColor === "foreground/0"
+  ) {
     assertContains(
       files.reactCategoryField,
       source.reactCategoryField,
