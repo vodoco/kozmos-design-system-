@@ -1317,6 +1317,48 @@ section("Translucent token paints");
   );
 }
 
+// --- Typography: the audit's guess follows the field painters -----------------------
+
+section("Typography inference");
+{
+  // Each field painter draws its label-like texts with the Medium label style;
+  // the audit guesses a style from the set and the node's name. On 2026-09-21
+  // the guess called 160 of those texts stale in the live file.
+  const cases = [
+    ["DateRangePicker", "Start Label Text", "fieldLabel"],
+    ["DateRangePicker", "End Label Text", "fieldLabel"],
+    ["DateRangePicker", "Start Month Text", "fieldLabel"],
+    ["DatePicker", "Month Text", "fieldLabel"],
+    ["FormField", "Required Mark", "fieldLabel"],
+    ["FileUpload", "Browse Text", "fieldLabel"],
+    ["FileUpload", "Drop Text", "fieldText"],
+    ["Input", "Label Text", "fieldLabel"],
+    ["Input", "Optional Text", "fieldMeta"],
+    ["Input", "Value Text", "fieldText"],
+  ];
+  const ready = typeof plugin.inferTextStyleKeyForComponentText === "function";
+  ok(ready, "the audit's style guess is reachable");
+  for (const [setName, textName, expected] of ready ? cases : []) {
+    const set = new MockNode("COMPONENT_SET", setName);
+    const component = new MockNode("COMPONENT", "State=Default");
+    const text = new MockNode("TEXT", textName);
+    component.appendChild(text);
+    set.appendChild(component);
+    const key = plugin.inferTextStyleKeyForComponentText(text, set);
+    ok(
+      key === expected,
+      `${setName} · ${textName} is ${expected} (got ${key})`,
+    );
+  }
+  const source = fs.readFileSync(PLUGIN, "utf8");
+  ok(
+    /browse\.name = "Browse Text";[\s\S]{0,400}?applyFieldLabelTypography\(\s*browse,/.test(
+      source,
+    ) && !/browse\.fontName = fonts\.medium/.test(source),
+    "FileUpload's browse text takes the Medium label style, no weight override",
+  );
+}
+
 // --- Summary ---------------------------------------------------------------------
 
 console.log(

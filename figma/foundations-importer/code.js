@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "40f659a4091b";
+const PLUGIN_BUILD = "8d58fb10708d";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -23523,7 +23523,21 @@ function inferTextStyleKeyForComponentText(text, componentSet) {
     setName === "Slider"
   ) {
     if (textName === "Optional Text") return "fieldMeta";
-    return textName === "Label Text" ? "fieldLabel" : "fieldText";
+    // The field painters draw every label-like text with
+    // applyFieldLabelTypography: a range's Start and End labels, the
+    // calendar's month titles, the required mark inside the label, and
+    // FileUpload's browse action (semibold in the code; Medium is the
+    // importer's nearest weight). The guess follows the painters, so the
+    // audit reports a real drift rather than 160 false ones (2026-09-21).
+    if (
+      /Label Text$/.test(textName) ||
+      /Month Text$/.test(textName) ||
+      textName === "Required Mark" ||
+      textName === "Browse Text"
+    ) {
+      return "fieldLabel";
+    }
+    return "fieldText";
   }
 
   return null;
@@ -66681,14 +66695,16 @@ async function syncFileUploadVariantChildren({
 
   const browse = figma.createText();
   browse.name = "Browse Text";
-  await applyFieldTextTypography(
+  // The code draws it semibold; the Medium label style is the importer's
+  // nearest, attached rather than a Regular text style with its weight
+  // overridden.
+  await applyFieldLabelTypography(
     browse,
     fonts,
     "FileUpload",
     variableByName,
     stats,
   );
-  browse.fontName = fonts.medium;
   browse.characters = preservedText["Browse Text"] || "Click to upload";
   browse.fills = [
     paintFromVariable(
