@@ -295,6 +295,27 @@ in both themes ([glass-surface-2026-09-20.md](glass-surface-2026-09-20.md)):
 cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm tokens:glass:check
 ```
 
+The Figma importer's painters are measured without Figma
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §2): a stand-in for the Plugin API runs
+each painter and asserts the contract's numbers and the variable bindings. After any change under
+`figma/foundations-importer/`:
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm figma:painters:check && pnpm figma:plugin:check && pnpm components:contract:check
+```
+
+The live file is read over REST with the main checkout's token, exported and never printed
+(the worktree has no `.env`):
+
+```sh
+cd /private/tmp/kozmos-browser-compat.uqPMBD && FIGMA_ACCESS_TOKEN="$(grep '^FIGMA_ACCESS_TOKEN=' "/Volumes/4TB Depo/development/K/kozmos-design-system-dev/.env" | cut -d= -f2- | tr -d '"')" node scripts/verify-figma-library.mjs
+```
+
+The same export runs `pnpm figma:publish:linked:dry`, `figma:publish:ios:linked:dry` and
+`figma:publish:android:linked:dry`; a property "does not exist on the Figma component" until the
+importer has been run for that set. The plugin's commit hook re-stamps `code.js`; commit it by
+name, never a directory.
+
 ## 5. Where each behaviour lives
 
 The QA app (`apps/PointrPlayground/Sources/App`):
@@ -408,6 +429,11 @@ glass stage's decisions: the default is solid and glass an option, built as a su
 all three platforms; the shell's sheet takes the surface style with the compact detent; the
 Button's glass variant moves onto the token ([glass-surface-2026-09-20.md](glass-surface-2026-09-20.md) §6)._
 
+_On the 21st, evening, Olcay ruled on the sheet stage's four: the Figma drift is the first open
+item; the personal tiles leave the grid while empty, as built; the icon button's large size
+stays 48; the iPhone 17 Pro simulator is reset to English (`AppleLanguages (en-GB)`,
+`AppleLocale en_GB`, read back). The AI companion's decisions (§7 of the handoff) stay open._
+
 ## 8. What the design system still lacks, from the prototype
 
 The collapsible level
@@ -423,6 +449,22 @@ built ([initial-sheet-2026-09-20.md](initial-sheet-2026-09-20.md)): the three sh
 drag and anchored peek, and the QA app's sheet on the taxonomy's tiles.
 
 ## 9. Traps met, for the next reader
+
+_Added on the 21st, evening, from the Figma drift
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §6):_
+
+- A read that strips blank lines is not the file: exact-match patch anchors taken from it fail.
+  Print the region verbatim with `sed -n`, or splice by index between two unique markers.
+- The contract check compares the first `ring.layoutPositioning = "ABSOLUTE"` with the first
+  `target.appendChild(ring);`; a painter variable named `ring` earlier in `code.js` breaks it.
+- Code Connect's React parser takes literals in `figma.enum`; a helper call is an "Unknown
+  intrinsic". The Swift and Kotlin parsers accept expressions.
+- `pnpm figma:verify` reads expected axes from the plugin's `const X = [...]` arrays and its
+  `expectedVariantAxesForComponentSetName` table; a new axis needs both, and a new set needs its
+  name in `COMPONENT_PAGE_LAYOUT_SECTIONS`.
+- A painter that instances a curated icon needs the icon on the Icons page: add it to
+  `packages/icons/src/registry.ts` and `KOSMOS_ICON_DEFINITIONS` (component key from
+  `docs/figma-pointr-icon-catalog.json`), then run Curated Icons → Update before the set.
 
 _Added on the 21st, from the sheet stage:_
 

@@ -1532,3 +1532,22 @@ Straight from the scan, so an example that needs one of these will stop at the s
 | An in-surface status message         | Core          | the eight parts; the map toggle's "Calculating…" |
 
 Everything verified by running it; nothing here is recalled.
+
+## 12 · The Figma drift, 2026-09-21 (evening)
+
+Olcay's order for the open items: the Figma drift first. The importer had not changed since the
+14th (`604730c`). Four commits on `claude/pointr-browse-repairs` — `c9a2f31`, `184ad22`,
+`6006614`, `8c50b97` — bring it to the parts: the manifests regenerated (the glass, motion and
+category tokens in the payload); a `Tint` axis, Theme and the taxonomy's eight, on
+CategoryTile (27), LocationPin (135) and the new CategoryField (9), each variant binding
+`Category/Accent`, `/Fill` and `/OnFill`; the tile on the 20th's geometry with the system's
+Counter nested at its corner and `Show Count`; the panel's grid of eight live tiles in the
+aviation quick access's colours; the POI panel surfaceless in a sheet; IconButton large 48;
+DirectionStep's fourteen cases as curated icons; the new AISearchButton with a conic gradient
+bound to the six data colours; the library's typed glyphs drawn from the Icons page; arrow-up,
+arrow-down, flip-backward and stars-01 curated. `scripts/lib/figma-plugin-harness.mjs` stands in
+for the Plugin API and `pnpm figma:painters:check` measures the painters (135 assertions; 70 red
+on the old plugin). Code Connect on all three platforms follows; its dry runs parse and report
+only the properties the live file lacks until Olcay runs the importer
+(`docs/figma-drift-2026-09-21.md` §4). Rulings the same evening: the personal tiles leave the
+grid while empty; the icon button's large size stays 48; the iPhone 17 Pro simulator is English.

@@ -1,4 +1,4 @@
-# Claude Code handoff — the initial sheet, the category state, the colours, and the audit (2026-09-21)
+# Claude Code handoff — the initial sheet, the category state, the colours, the audit, and the Figma drift (2026-09-21)
 
 For the next chat. Everything below is on disk or in git; nothing depends on this conversation.
 Read section 1, then open `docs/initial-sheet-2026-09-20.md` and
@@ -34,15 +34,15 @@ push to a new branch (pushes to this branch were authorised and are the practice
 
 ### Exact working state
 
-| What                   | Where / value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Worktree               | `/private/tmp/kozmos-browser-compat.uqPMBD` (a git worktree of `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`; the main checkout stays on `main`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Branch                 | `claude/pointr-browse-repairs`, pushed to `origin`, **nothing merged**. `52ab955` is the last change commit; every commit after it is documentation only (this handoff and its index), so `git log --oneline 52ab955..HEAD` lists docs alone                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Commits since the 20th | 27 from `e2d5afd`: the category-state batch `7598786`…`5631b3f`; the tile batch `07aba83`…`4880f35`; the colours batch `bb13a15`…`6b58c87`; the audit batch `537a4cb`…`5d1760a`; the fill correction `8ac3616` + `52ab955`                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Tree                   | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Gates, all green       | iOS package 130 tests on iOS 26.5 (the button image snapshots skipped there, as CI does), 132 on iOS 18.4, 91 on macOS; CI's simulator step 52; the playground builds; the QA app's unit tests 48+8+8, both UI tests; web 548 unit tests, lint, typecheck, search-sheet 6/6 and map-sheet on chromium, firefox and webkit, navigation 20/20, poi-details (its two webkit dark-1280 stories time out on `page.goto` only when the machine is under full load, and pass alone every time); Android every Paparazzi golden verified + unit tests; contract parity, classes, owned CSS, raw values, contrast (218 pairs), motion parity, snippets, docs typecheck |
-| Ignored files there    | `apps/PointrPlayground/.local/PointrKit.xcframework` (the SDK; its `Modules/…swiftinterface` and `Headers/` are the API reference), `apps/PointrPlayground/QAConfig.json` (0600), the generated `KozmosPointrQA.xcodeproj` — ask before any cleanup, preserve first                                                                                                                                                                                                                                                                                                                                                                                           |
-| Simulators             | iPhone 17 Pro `51937B59-CEAE-4BC7-BC34-FEB17E28FAE7` (iOS 26.5; **Arabic-first**, `AppleLanguages (ar, en-GB)`, a device setting nobody recorded — reset only on Olcay's word); iPad Pro 11 `1CB35135-48B2-407B-8515-C8C6EFC1D963` (app unit tests); iPhone 16 iOS 18.4 (package tests, button baselines)                                                                                                                                                                                                                                                                                                                                                     |
+| What                   | Where / value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Worktree               | `/private/tmp/kozmos-browser-compat.uqPMBD` (a git worktree of `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`; the main checkout stays on `main`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Branch                 | `claude/pointr-browse-repairs`, pushed to `origin`, **nothing merged**. `8c50b97` is the last change commit (the Figma drift, the evening of the 21st); every commit after it is documentation only, so `git log --oneline 8c50b97..HEAD` lists docs alone                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Commits since the 20th | 27 from `e2d5afd`: the category-state batch `7598786`…`5631b3f`; the tile batch `07aba83`…`4880f35`; the colours batch `bb13a15`…`6b58c87`; the audit batch `537a4cb`…`5d1760a`; the fill correction `8ac3616` + `52ab955`; the evening's Figma drift `c9a2f31`, `184ad22`, `6006614`, `8c50b97`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Tree                   | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Gates, all green       | iOS package 130 tests on iOS 26.5 (the button image snapshots skipped there, as CI does), 132 on iOS 18.4, 91 on macOS; CI's simulator step 52; the playground builds; the QA app's unit tests 48+8+8, both UI tests; web 548 unit tests, lint, typecheck, search-sheet 6/6 and map-sheet on chromium, firefox and webkit, navigation 20/20, poi-details (its two webkit dark-1280 stories time out on `page.goto` only when the machine is under full load, and pass alone every time); Android every Paparazzi golden verified + unit tests; contract parity, classes, owned CSS, raw values, contrast (218 pairs), motion parity, snippets, docs typecheck; and from the evening, `pnpm figma:painters:check` 135, `figma:plugin:check`, `figma:stamp:check`, the Code Connect dry runs on three platforms parsing, `@kozmos/icons` typecheck and build, the React package's typecheck and lint after the Code Connect files |
+| Ignored files there    | `apps/PointrPlayground/.local/PointrKit.xcframework` (the SDK; its `Modules/…swiftinterface` and `Headers/` are the API reference), `apps/PointrPlayground/QAConfig.json` (0600), the generated `KozmosPointrQA.xcodeproj` — ask before any cleanup, preserve first                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Simulators             | iPhone 17 Pro `51937B59-CEAE-4BC7-BC34-FEB17E28FAE7` (iOS 26.5; **English since the evening of the 21st** — `AppleLanguages (en-GB)`, `AppleLocale en_GB`, reset on Olcay's word and read back; it was Arabic-first, `(ar, en-GB)`, until then); iPad Pro 11 `1CB35135-48B2-407B-8515-C8C6EFC1D963` (app unit tests); iPhone 16 iOS 18.4 (package tests, button baselines)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## 2. What Olcay asked for on the 20th and 21st, and what was done
 
@@ -98,6 +98,15 @@ In order, each measured against the prototype and closed with proofs on all thre
 10. **The fill correction.** The per-place SDK style kept for a rounder marker painted every
     room's fill black. Removed: a chosen category's places show through `poisToShow` alone, the
     SDK's own icon markers, no fill layer touched.
+11. **The Figma drift** (the evening; `docs/figma-drift-2026-09-21.md`). The importer had not
+    changed since the 14th. Now: the manifests regenerated; a `Tint` axis (Theme + the taxonomy's
+    eight) on CategoryTile, LocationPin and the new CategoryField set, each binding the category
+    tokens; the tile on the 20th's geometry with its nested Counter; the panel's grid of eight
+    live tiles; the POI panel surfaceless in a sheet; IconButton large 48; DirectionStep's
+    fourteen cases as curated icons; the new AISearchButton set with its bound conic gradient;
+    the library's typed glyphs drawn as icons; four icons curated. Painters are measured without
+    Figma (`pnpm figma:painters:check`, 135). Code Connect follows on three platforms. The run in
+    Figma is Olcay's (§4 of the stage doc); the file still shows the old sets until then.
 
 ## 3. The design system as it stands (the parts touched)
 
@@ -201,22 +210,27 @@ ADAPTIVE_BROWSER=<chromium|firefox|webkit> pnpm test:search-sheet` (and `test:ma
 
 ## 7. Decisions still Olcay's
 
-- The personal tiles (Favourites, Bookmarks) leave the grid while empty, like any tile; the
-  prototype keeps a Bookmarks chip with its count.
+- **Ruled on the 21st, evening:** the personal tiles leave the grid while empty, as built; the
+  icon button's large size stays 48; the iPhone 17 Pro simulator is English.
 - The AI companion: the device floor (iOS 26 on Apple Intelligence-capable iPhones), Apple
   Intelligence on in his Mac's System Settings for the simulators, and the companion surface the
   DS lacks (the prototype's chat is measured).
-- The icon button's large size 48.
-- The iPhone 17 Pro simulator's Arabic-first language.
 
 ## 8. Open, in order
 
-1. Figma drift for every part since the 20th (no importer access; `pnpm figma:manifest` not run).
-2. The prototype's rubber band on the sheet is not drawn; Firefox ignores `pan-down`.
-3. Chromatic and Android-on-device not run.
-4. The earlier handoff's items F (search and selection lifecycle), G (floor correctness) and
+1. **The run in Figma** that lands the evening's work (`docs/figma-drift-2026-09-21.md` §4):
+   Import Foundations, Curated Icons → Update, Update the six changed sets, Build CategoryField
+   and AISearchButton, fill their Code Connect node ids and linked-config entries, then
+   `pnpm figma:verify` and the three dry runs; publishing on Olcay's word.
+2. **The Figma remainder** (stage doc §5): `Surface` and its axis on five sets; ManoeuvreCard,
+   Itinerary and RouteProgressRail as sets; the shell's phone sheet (a decision); the 15th–19th
+   drift — Tag's and Counter's `emotion`, MapControlButton's axes, the POI panel's anatomy; `⇅`.
+3. The prototype's rubber band on the sheet is not drawn; Firefox ignores `pan-down`.
+4. Chromatic (a CI secret, Olcay's) and Android on the `pointr-a16` or `outdoor3d` emulator
+   (`apps/playground-android`) not run.
+5. The earlier handoff's items F (search and selection lifecycle), G (floor correctness) and
    Pass 4; MAP-595 is parked and complete.
-5. A note for Pointr: the SDK draws no host view on its map and its two marker palettes differ.
+6. A note for Pointr: the SDK draws no host view on its map and its two marker palettes differ.
 
 ## 9. Traps met today (all in the guide's list, with the fix for each)
 
@@ -232,22 +246,25 @@ test a room and a point.
 
 ## 10. The documents
 
-| Document                                            | What it holds                                                                                    |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `docs/initial-sheet-2026-09-20.md`                  | The stage report: the rules, the proofs, every number, the audit, the "change it yourself" table |
-| `docs/kozmos-pointr-operators-guide-2026-09-20.md`  | Every command, gate, procedure and trap                                                          |
-| `docs/pointr-prototype-initial-sheet-2026-09-20.md` | The prototype's sheet, driven (`scripts/measure-prototype-sheet.cjs`)                            |
-| `docs/pointr-prototype-ai-companion-2026-09-21.md`  | The prototype's AI flow, driven (`scripts/measure-prototype-ai.cjs`)                             |
-| `docs/pointr-prototype-screen-states-2026-09-20.md` | The prototype's static measurements                                                              |
-| `docs/ds-handoff.md`                                | The running log, its 2026-09-21 entry the latest                                                 |
-| `docs/claude-code-handoff-2026-09-19.md`            | The previous handoff (items F, G, Pass 4 live there)                                             |
+| Document                                            | What it holds                                                                                         |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `docs/initial-sheet-2026-09-20.md`                  | The stage report: the rules, the proofs, every number, the audit, the "change it yourself" table      |
+| `docs/kozmos-pointr-operators-guide-2026-09-20.md`  | Every command, gate, procedure and trap                                                               |
+| `docs/pointr-prototype-initial-sheet-2026-09-20.md` | The prototype's sheet, driven (`scripts/measure-prototype-sheet.cjs`)                                 |
+| `docs/pointr-prototype-ai-companion-2026-09-21.md`  | The prototype's AI flow, driven (`scripts/measure-prototype-ai.cjs`)                                  |
+| `docs/figma-drift-2026-09-21.md`                    | The Figma drift: the inventory, the Tint model, the sets, the harness, the run in Figma, what is left |
+| `docs/pointr-prototype-screen-states-2026-09-20.md` | The prototype's static measurements                                                                   |
+| `docs/ds-handoff.md`                                | The running log, its 2026-09-21 entry the latest                                                      |
+| `docs/claude-code-handoff-2026-09-19.md`            | The previous handoff (items F, G, Pass 4 live there)                                                  |
 
 ## 11. To resume in a new chat
 
-1. `cd /private/tmp/kozmos-browser-compat.uqPMBD && git status && git log --oneline -5` — expect a
-   clean tree at `52ab955` on `claude/pointr-browse-repairs`. If the worktree is gone, check it
+1. `cd /private/tmp/kozmos-browser-compat.uqPMBD && git status && git log --oneline -8` — expect a
+   clean tree with `8c50b97` as the last change commit on `claude/pointr-browse-repairs`. If the worktree is gone, check it
    out again from `origin/claude/pointr-browse-repairs`; the SDK frameworks and `QAConfig.json`
    must then be restored from Olcay (they are ignored files, never in git).
 2. Read `docs/initial-sheet-2026-09-20.md` (its last three sections first) and the guide.
-3. Run one gate per platform before touching anything, so the first red is yours.
-4. Ask Olcay which of §7's decisions and §8's items comes first.
+3. Run one gate per platform before touching anything, so the first red is yours;
+   `pnpm figma:painters:check` is the Figma side's.
+4. §8 item 1 is Olcay's run in Figma; ask whether it has happened, then take §8 item 2 or
+   whatever he names.
