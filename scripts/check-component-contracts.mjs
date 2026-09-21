@@ -2005,8 +2005,9 @@ assertContains(
       `Figma CategoryField ${name} ${value}`,
     );
   }
-  // Figma drops a bound paint's opacity, so the wash is a layer of its own
-  // at the contract's opacity (2026-09-21).
+  // A bound paint's own opacity is not relied on (the live file lost three
+  // of four on 2026-09-21), so the wash is a layer of its own at the
+  // contract's opacity.
   assertContains(
     files.figma,
     source.figma,

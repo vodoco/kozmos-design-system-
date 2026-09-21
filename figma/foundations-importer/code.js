@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "45c49b3b1b83";
+const PLUGIN_BUILD = "ef226bf9cd20";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -20819,8 +20819,37 @@ function contrastChildBackground(node, background, variableContext, modeName) {
     variableContext,
     modeName,
   );
+  let childBackground = fill ? compositeColor(fill, background) : background;
 
-  return fill ? compositeColor(fill, background) : background;
+  // A translucent wash is a layer of its own at the back of the frame, its
+  // paint at full strength and its strength on the layer: what the content
+  // sits on is the frame's fill with the wash over it, at the paint's alpha
+  // times the layer's opacity.
+  for (const child of node.children || []) {
+    if (!isTranslucentTokenLayer(child) || child.visible === false) continue;
+    const wash = solidPaintToRgba(
+      firstVisibleSolidPaint(child.fills),
+      variableContext,
+      modeName,
+    );
+    if (!wash) continue;
+    const layerOpacity = typeof child.opacity === "number" ? child.opacity : 1;
+    childBackground = compositeColor(
+      Object.assign({}, wash, { a: wash.a * layerOpacity }),
+      childBackground,
+    );
+  }
+
+  return childBackground;
+}
+
+function isTranslucentTokenLayer(node) {
+  return Boolean(
+    node &&
+    node.getSharedPluginData &&
+    node.getSharedPluginData(RUN_NAMESPACE, "role") ===
+      "translucent-token-layer",
+  );
 }
 
 function isGeneratedCheckboxControl(node) {
@@ -47175,14 +47204,14 @@ function tokenPaint(token, variableByName, stats) {
 }
 
 /**
- * A bound colour at less than full strength, on a leaf layer. Figma drops a
- * paint's own opacity once its colour is bound to a variable and stores the
- * paint opaque — measured on 2026-09-21: DirectionStep's 10 % disc,
- * CategoryField's 12 % wash, CategoryTile's 5 % selection wash and 20 % ring,
- * ScrollArea's 32 % track and BottomSheet's 36 % handle all read back at 1 —
- * so the strength goes on the layer: the paint stays bound at full strength
- * and the node carries the opacity. For a layer that draws nothing else; a
- * wash behind content is a layer of its own (`insertTranslucentTokenLayer`).
+ * A bound colour at less than full strength, on a leaf layer. A bound
+ * paint's own opacity is not relied on: read over REST on 2026-09-21, the
+ * live file held CategoryTile's 5 % selection wash and 20 % ring and
+ * DirectionStep's 10 % disc at 1, though CategoryField's 12 % wash, painted
+ * by the same helper, kept its 0.12. So the strength goes on the layer: the
+ * paint stays bound at full strength and the node carries the opacity. For a
+ * layer that draws nothing else; a wash behind content is a layer of its own
+ * (`insertTranslucentTokenLayer`).
  */
 function setTranslucentTokenPaint(
   node,
@@ -73167,8 +73196,9 @@ function paintFromVariable(name, fallback, variableByName, stats) {
   if (figma.variables.setBoundVariableForPaint) {
     try {
       // A bound colour carries its own alpha (Overlay/Scrim is
-      // rgba(0, 0, 0, 0.5)) and Figma drops a bound paint's opacity, so the
-      // paint is bound at 1; the fallback's alpha serves the unbound paths.
+      // rgba(0, 0, 0, 0.5)), and a bound paint's own opacity is not relied
+      // on (see setTranslucentTokenPaint), so the paint is bound at 1; the
+      // fallback's alpha serves the unbound paths.
       return figma.variables.setBoundVariableForPaint(
         Object.assign({}, paint, { opacity: 1 }),
         "color",

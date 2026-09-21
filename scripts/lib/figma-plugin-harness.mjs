@@ -26,11 +26,13 @@ let nextId = 1;
 const CHAR_ADVANCE = 0.55;
 
 /**
- * Figma stores a paint whose colour is bound to a variable without its own
- * opacity: the paint renders at the variable's alpha, whatever the plugin
- * set. Measured on 2026-09-21 over REST — six translucent token paints read
- * back at 1. The mock does the same and records each drop, so a check can
- * fail on a painter that relies on a paint opacity Figma will not keep.
+ * A bound paint's own opacity is not to be relied on. Read over REST on
+ * 2026-09-21, the live file held CategoryTile's 5 % selection wash and 20 %
+ * ring and DirectionStep's 10 % disc at 1, while CategoryField's 12 % wash,
+ * painted by the same helper, kept its 0.12; what dropped the first three is
+ * not established. The painters put translucency on layer opacity instead,
+ * which does not depend on it. The mock drops a bound paint's opacity below
+ * 1 and records each drop, so a check fails on a painter that relies on it.
  */
 export const boundPaintOpacityDrops = [];
 

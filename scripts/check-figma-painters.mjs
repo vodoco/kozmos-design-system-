@@ -1369,11 +1369,11 @@ section("Translucent token paints");
     ),
     "BottomSheet's handle is foreground/500 at 36 % by layer opacity",
   );
-  // Every painter above ran against a mock that drops a bound paint's
-  // opacity as Figma does; none may have relied on one.
+  // Every painter above ran against a mock that drops a bound paint's own
+  // opacity, which the live file did not reliably keep; none may rely on it.
   ok(
     boundPaintOpacityDrops.length === 0,
-    `no painter relied on a paint opacity Figma drops (${boundPaintOpacityDrops
+    `no painter relied on a bound paint's own opacity (${boundPaintOpacityDrops
       .slice(0, 6)
       .map((drop) => `${drop.node} at ${drop.opacity}`)
       .join(", ")})`,
@@ -1544,6 +1544,83 @@ section("Component lookups");
         `every icon in the row is an instance of an Icons page component (${instances.length} instances)`,
       );
     }
+  }
+}
+
+// --- What the audit reads under a wash ----------------------------------------------
+
+// A translucent wash is a layer of its own at the back of the frame. The
+// contrast audit composites it, at the paint's alpha times the layer's
+// opacity, into what the frame's content sits on: CategoryField's yellow
+// label on its 12 % wash is 1.77, not the 1.92 of the label on white the
+// audit would read if it skipped the layer, nor 1.0 if it took the layer
+// opaque.
+section("What the audit reads under a wash");
+{
+  const ready =
+    typeof plugin.contrastChildBackground === "function" &&
+    typeof plugin.createVariableContext === "function" &&
+    typeof plugin.updateCategoryFieldVariant === "function" &&
+    typeof plugin.updateDirectionStepVariant === "function";
+  ok(ready, "the audit's background and the two painters are reachable");
+  if (ready) {
+    const context = plugin.createVariableContext([], []);
+    const white = { r: 1, g: 1, b: 1, a: 1 };
+    const rgb = (paint) => ({ ...paint.color, a: 1 });
+    const luminance = (c) => {
+      const lin = (v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+      return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+    };
+    const ratio = (a, b) => {
+      const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);
+      return (x + 0.05) / (y + 0.05);
+    };
+    const over = (top, alpha, under) => ({
+      r: top.r * alpha + under.r * (1 - alpha),
+      g: top.g * alpha + under.g * (1 - alpha),
+      b: top.b * alpha + under.b * (1 - alpha),
+      a: 1,
+    });
+
+    const field = figma.createComponent();
+    await plugin.updateCategoryFieldVariant(field, {
+      value: "Yellow",
+      variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    const wash = named(field, "Tint Wash");
+    const label = named(field, "Label Text");
+    const read = plugin.contrastChildBackground(field, white, context, "Light");
+    const expected = over(rgb(wash.fills[0]), wash.opacity, white);
+    const measured = ratio(rgb(label.fills[0]), read);
+    const truth = ratio(rgb(label.fills[0]), expected);
+    ok(
+      Math.abs(measured - truth) < 0.005 && Math.abs(truth - 1.77) < 0.01,
+      `the audit reads the yellow label on its 12 % wash at ${measured.toFixed(2)} (the wash composited: ${truth.toFixed(2)})`,
+    );
+    ok(
+      measured < ratio(rgb(label.fills[0]), white) - 0.1,
+      "the wash lowers it below the label on white",
+    );
+
+    const step = figma.createComponent();
+    await plugin.updateDirectionStepVariant(step, {
+      value: "Straight",
+      variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    const disc = named(step, "Direction Icon");
+    const discWash = named(disc, "Direction Wash");
+    const discRead = plugin.contrastChildBackground(disc, white, context, "Light");
+    const discTruth = over(rgb(discWash.fills[0]), discWash.opacity, white);
+    ok(
+      Math.abs(discRead.r - discTruth.r) < 1e-6 &&
+        Math.abs(discRead.g - discTruth.g) < 1e-6 &&
+        Math.abs(discRead.b - discTruth.b) < 1e-6,
+      "the direction glyph is read on its disc's 10 % wash",
+    );
   }
 }
 
