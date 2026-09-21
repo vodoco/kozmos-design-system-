@@ -3840,9 +3840,17 @@
           auditProgressState.title,
         );
 
-        if (busy && busyMode === "audit") {
-          setActivity(auditProgressState.detail);
-          renderAuditProgress();
+        // A bulk update posts the same message for every set it starts, and
+        // the Activity line is the only place a designer can watch a run that
+        // takes many minutes; until 2026-09-21 it showed only during an audit,
+        // so Update All Core looked frozen for its whole length.
+        if (busy) {
+          setActivity(
+            busyMode === "audit"
+              ? auditProgressState.detail
+              : `${auditProgressState.title} — ${auditProgressState.detail}`,
+          );
+          if (busyMode === "audit") renderAuditProgress();
         }
       }
 
