@@ -1,3 +1,4 @@
+import type { CategoryTint } from "../CategoryTile/CategoryTint";
 import React from "react";
 import { X } from "lucide-react";
 import { cn } from "../../utils";
@@ -14,7 +15,7 @@ export interface CategoryFieldProps extends Omit<
    * The category's colour as a CSS colour, normally a token variable such
    * as `var(--semantics-data-yellow)`; the theme's colour by default.
    */
-  tint?: string;
+  tint?: CategoryTint;
   /** The category's icon, drawn at 28 in the colour. */
   icon?: React.ReactNode;
   clearLabel?: string;
@@ -37,7 +38,12 @@ const CategoryField = React.forwardRef<HTMLDivElement, CategoryFieldProps>(
       className,
       label,
       count,
-      tint = "var(--primitives-colors-theme-500)",
+      tint = {
+        accent: "var(--primitives-colors-theme-500)",
+        fill: "var(--components-primary-buttons-themed-button-background-idle)",
+        onFill:
+          "var(--components-primary-buttons-themed-button-foreground-content-idle)",
+      },
       icon,
       clearLabel = "Clear category",
       onClear,
@@ -59,7 +65,7 @@ const CategoryField = React.forwardRef<HTMLDivElement, CategoryFieldProps>(
       )}
       style={
         {
-          "--kozmos-category-tint": tint,
+          "--kozmos-category-tint": tint.accent,
           color: "var(--kozmos-category-tint)",
           borderColor: "var(--kozmos-category-tint)",
           background:
@@ -82,8 +88,8 @@ const CategoryField = React.forwardRef<HTMLDivElement, CategoryFieldProps>(
       </span>
       {count !== undefined && (
         <span
-          className="inline-flex h-[22px] min-w-[22px] shrink-0 items-center justify-center rounded-pill px-1.5 text-xs font-semibold text-background"
-          style={{ background: "var(--kozmos-category-tint)" }}
+          className="inline-flex h-[22px] min-w-[22px] shrink-0 items-center justify-center rounded-pill px-1.5 text-xs font-semibold"
+          style={{ background: tint.fill, color: tint.onFill }}
           aria-label={countLabel(count)}
         >
           {count}

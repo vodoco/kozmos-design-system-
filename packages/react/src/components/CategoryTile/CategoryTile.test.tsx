@@ -84,19 +84,26 @@ describe("CategoryTile", () => {
         }}
         icon={<svg />}
         onSelect={() => {}}
-        tint="var(--semantics-data-red)"
+        tint={{
+          accent: "var(--semantics-category-accent-red)",
+          fill: "var(--semantics-category-fill-red)",
+          onFill: "var(--semantics-category-on-fill-red)",
+        }}
       />,
     );
     const counter = screen.getByText("3");
     const square = counter.parentElement as HTMLElement;
     expect(square.style.getPropertyValue("--kozmos-category-tint")).toBe(
-      "var(--semantics-data-red)",
+      "var(--semantics-category-accent-red)",
     );
     expect(square.style.getPropertyValue("color")).toBe(
       "var(--kozmos-category-tint)",
     );
     expect(counter.style.getPropertyValue("background-color")).toBe(
-      "var(--kozmos-category-tint)",
+      "var(--semantics-category-fill-red)",
+    );
+    expect(counter.style.getPropertyValue("color")).toBe(
+      "var(--semantics-category-on-fill-red)",
     );
   });
 

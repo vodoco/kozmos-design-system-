@@ -9,7 +9,11 @@ describe("CategoryField", () => {
       <CategoryField
         label="Gates"
         count={2}
-        tint="var(--semantics-data-yellow)"
+        tint={{
+          accent: "var(--semantics-category-accent-yellow)",
+          fill: "var(--semantics-category-fill-yellow)",
+          onFill: "var(--semantics-category-on-fill-yellow)",
+        }}
         onClear={onClear}
         icon={<svg />}
       />,
@@ -17,7 +21,14 @@ describe("CategoryField", () => {
     const field = screen.getByRole("group", { name: "Gates, 2 places" });
     expect(field).toHaveClass("h-12", "rounded-control", "border");
     expect(field.style.getPropertyValue("--kozmos-category-tint")).toBe(
-      "var(--semantics-data-yellow)",
+      "var(--semantics-category-accent-yellow)",
+    );
+    const pill = screen.getByLabelText("2 places");
+    expect(pill.style.getPropertyValue("background")).toBe(
+      "var(--semantics-category-fill-yellow)",
+    );
+    expect(pill.style.getPropertyValue("color")).toBe(
+      "var(--semantics-category-on-fill-yellow)",
     );
     expect(screen.getByLabelText("2 places")).toHaveTextContent("2");
     fireEvent.click(screen.getByRole("button", { name: "Clear category" }));

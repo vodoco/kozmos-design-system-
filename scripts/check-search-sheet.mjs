@@ -160,20 +160,22 @@ try {
         icon: icon ? icon.offsetWidth : null,
       };
     });
-    // The data yellow, #d97706, as the border and the pill; a 12 % tint as the fill.
-    assert.equal(styles.border, "1px rgb(217, 119, 6)", `the border is not the category's colour: ${styles.border}`);
-    assert.equal(styles.color, "rgb(217, 119, 6)", `the text is not the category's colour: ${styles.color}`);
+    // The taxonomy's yellow, #f9ac17, as the border and the pill; a 12 % tint as the fill;
+    // the dark ink, #17191c, on the pill, where white would read at 1.92:1.
+    assert.equal(styles.border, "1px rgb(249, 172, 23)", `the border is not the category's colour: ${styles.border}`);
+    assert.equal(styles.color, "rgb(249, 172, 23)", `the text is not the category's colour: ${styles.color}`);
     // color-mix resolves to rgba() on some engines and color(srgb …) on others.
     const fill = /rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/.exec(styles.background) ?? (() => {
       const m = /color\(srgb ([\d.]+) ([\d.]+) ([\d.]+) \/ ([\d.]+)\)/.exec(styles.background);
       return m ? [m[0], String(Math.round(m[1] * 255)), String(Math.round(m[2] * 255)), String(Math.round(m[3] * 255)), m[4]] : null;
     })();
     assert.ok(fill, `the fill is not a colour with alpha: ${styles.background}`);
-    assert.deepEqual(fill.slice(1, 4).map(Number), [217, 119, 6], `the fill is not the category's colour: ${styles.background}`);
+    assert.deepEqual(fill.slice(1, 4).map(Number), [249, 172, 23], `the fill is not the category's colour: ${styles.background}`);
     near(Number(fill[4]), 0.12, 0.01, "the fill is not at 12 %");
     assert.equal(styles.radius, "16px", `the radius is not the control's: ${styles.radius}`);
     assert.equal(styles.pill?.height, 22, `the pill is not 22 tall: ${JSON.stringify(styles.pill)}`);
-    assert.equal(styles.pill?.background, "rgb(217, 119, 6)", `the pill is not filled with the colour: ${JSON.stringify(styles.pill)}`);
+    assert.equal(styles.pill?.background, "rgb(249, 172, 23)", `the pill is not filled with the colour: ${JSON.stringify(styles.pill)}`);
+    assert.equal(styles.pill?.color, "rgb(23, 25, 28)", `the pill's digits are not the fill's ink: ${JSON.stringify(styles.pill)}`);
     assert.equal(styles.clear, "32x32", `the clear is not 32: ${styles.clear}`);
     assert.equal(styles.icon, 28, `the icon is not 28: ${styles.icon}`);
     // The row: the field, Filters at 48 and the AI search at 48, all one height band.

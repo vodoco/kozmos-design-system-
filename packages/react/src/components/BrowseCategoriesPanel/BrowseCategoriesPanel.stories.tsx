@@ -72,3 +72,32 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+const categoryPalette = [
+  "yellow",
+  "orange",
+  "turquoise",
+  "red",
+  "blue",
+  "navy",
+  "green",
+  "pink",
+];
+
+/** Each tile in a category colour of its own, from the taxonomy's palette. */
+export const Tinted: Story = {
+  args: {
+    tint: (category) => {
+      const name =
+        categoryPalette[
+          [...category.id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) %
+            categoryPalette.length
+        ];
+      return {
+        accent: `var(--semantics-category-accent-${name})`,
+        fill: `var(--semantics-category-fill-${name})`,
+        onFill: `var(--semantics-category-on-fill-${name})`,
+      };
+    },
+  },
+};

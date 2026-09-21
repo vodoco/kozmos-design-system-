@@ -1,6 +1,7 @@
 import React from "react";
 import type { CategoryPresentation } from "@kozmos/product-contracts";
 import { Counter } from "../Counter";
+import type { CategoryTint } from "./CategoryTint";
 import { cn } from "../../utils";
 
 export interface CategoryTileProps extends Omit<
@@ -10,9 +11,10 @@ export interface CategoryTileProps extends Omit<
   category: CategoryPresentation;
   icon: React.ReactNode;
   onSelect: (categoryId: string) => void;
-  /** The category's own colour, as the chosen-category field wears it: it
-   *  takes the icon and the counter's fill; the square stays neutral. */
-  tint?: string;
+  /** The category's colours, as the chosen-category field wears them: the
+   *  accent takes the icon and the selection's stroke, the inked fill the
+   *  counter; the square stays neutral. */
+  tint?: CategoryTint;
 }
 
 const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
@@ -32,8 +34,15 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
     const disabled = category.disabled || disabledProp;
     const tinted = tint
       ? ({
-          "--kozmos-category-tint": tint,
+          "--kozmos-category-tint": tint.accent,
           color: "var(--kozmos-category-tint)",
+          ...(category.selected
+            ? {
+                borderColor: "var(--kozmos-category-tint)",
+                backgroundColor:
+                  "color-mix(in srgb, var(--kozmos-category-tint) 5%, transparent)",
+              }
+            : {}),
         } as React.CSSProperties)
       : undefined;
 
@@ -73,7 +82,7 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
               className="absolute -right-[5px] -top-[5px]"
               style={
                 tint
-                  ? { backgroundColor: "var(--kozmos-category-tint)" }
+                  ? { backgroundColor: tint.fill, color: tint.onFill }
                   : undefined
               }
               tone="brand"

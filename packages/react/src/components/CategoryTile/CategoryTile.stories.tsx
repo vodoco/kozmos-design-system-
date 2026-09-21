@@ -35,3 +35,15 @@ export const Selected: Story = {
     },
   },
 };
+
+/** A tile in its category's colours: the accent on the icon, the inked fill
+ *  on the counter. The taxonomy's palette lives in the category tokens. */
+export const Tinted: Story = {
+  args: {
+    tint: {
+      accent: "var(--semantics-category-accent-red)",
+      fill: "var(--semantics-category-fill-red)",
+      onFill: "var(--semantics-category-on-fill-red)",
+    },
+  },
+};

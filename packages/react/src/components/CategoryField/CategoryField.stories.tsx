@@ -12,7 +12,11 @@ const meta = {
   args: {
     label: "Gates",
     count: 2,
-    tint: "var(--semantics-data-yellow)",
+    tint: {
+      accent: "var(--semantics-category-accent-yellow)",
+      fill: "var(--semantics-category-fill-yellow)",
+      onFill: "var(--semantics-category-on-fill-yellow)",
+    },
     icon: <Plane />,
     onClear: () => undefined,
   },
@@ -43,7 +47,11 @@ export const Dining: Story = {
   args: {
     label: "Dining",
     count: 19,
-    tint: "var(--semantics-data-orange)",
+    tint: {
+      accent: "var(--semantics-category-accent-orange)",
+      fill: "var(--semantics-category-fill-orange)",
+      onFill: "var(--semantics-category-on-fill-orange)",
+    },
     icon: <UtensilsCrossed />,
   },
 };
@@ -53,7 +61,12 @@ export const Bookmarks: Story = {
   args: {
     label: "Bookmarks",
     count: 1,
-    tint: "var(--primitives-colors-theme-700)",
+    tint: {
+      accent: "var(--primitives-colors-theme-700)",
+      fill: "var(--components-primary-buttons-themed-button-background-idle)",
+      onFill:
+        "var(--components-primary-buttons-themed-button-foreground-content-idle)",
+    },
     icon: <Bookmark />,
   },
 };

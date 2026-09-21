@@ -1,3 +1,4 @@
+import type { CategoryTint } from "../CategoryTile/CategoryTint";
 import React from "react";
 import { MapPin, Star } from "lucide-react";
 import { cn } from "../../utils";
@@ -16,9 +17,9 @@ export interface LocationPinProps extends React.HTMLAttributes<HTMLDivElement> {
   externalLabel?: string;
   labelPlacement?: "top" | "right" | "bottom" | "left";
   resultId?: string;
-  /** A colour of the host's own — a category's — for the marker, over the
-   *  variant's; a featured pin keeps the alert colour. */
-  tint?: string;
+  /** A category's colours for the marker — its fill, with its ink for the
+   *  number — over the variant's; a featured pin keeps the alert colour. */
+  tint?: CategoryTint;
 }
 
 const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
@@ -123,8 +124,8 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
             style={
               tint && !featured
                 ? {
-                    color: tint,
-                    fill: `color-mix(in srgb, ${tint} 20%, transparent)`,
+                    color: tint.fill,
+                    fill: `color-mix(in srgb, ${tint.fill} 20%, transparent)`,
                   }
                 : undefined
             }
@@ -133,6 +134,7 @@ const LocationPin = React.forwardRef<HTMLDivElement, LocationPinProps>(
             <span
               aria-hidden="true"
               className="absolute inset-x-0 top-[18%] truncate px-1 text-center text-[10px] font-bold leading-none text-primary-foreground"
+              style={tint && !featured ? { color: tint.onFill } : undefined}
             >
               {visibleContent}
             </span>

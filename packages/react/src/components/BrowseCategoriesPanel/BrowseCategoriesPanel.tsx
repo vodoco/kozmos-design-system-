@@ -2,6 +2,7 @@ import React from "react";
 import type { CategoryPresentation } from "@kozmos/product-contracts";
 import { cn } from "../../utils";
 import { CategoryTile } from "../CategoryTile";
+import type { CategoryTint } from "../CategoryTile/CategoryTint";
 
 export interface BrowseCategoriesPanelProps extends Omit<
   React.HTMLAttributes<HTMLElement>,
@@ -10,6 +11,8 @@ export interface BrowseCategoriesPanelProps extends Omit<
   categories: readonly CategoryPresentation[];
   onSelect: (categoryId: string) => void;
   renderIcon: (category: CategoryPresentation) => React.ReactNode;
+  /** A category's colours for its tile, or undefined for the theme's. */
+  tint?: (category: CategoryPresentation) => CategoryTint | undefined;
   label?: string;
   search?: React.ReactNode;
   actions?: React.ReactNode;
@@ -26,6 +29,7 @@ const BrowseCategoriesPanel = React.forwardRef<
       categories,
       onSelect,
       renderIcon,
+      tint,
       label = "Browse categories",
       search,
       actions,
@@ -63,6 +67,7 @@ const BrowseCategoriesPanel = React.forwardRef<
                     category={category}
                     icon={renderIcon(category)}
                     onSelect={onSelect}
+                    tint={tint?.(category)}
                   />
                 </li>
               ))}

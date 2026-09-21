@@ -12,3 +12,7 @@ labels, an optional count drawn as the system's counter at the icon square's top
 <Canvas of={Stories.Default} />
 <Canvas of={Stories.Selected} />
 <Controls />
+
+## A category's colours
+
+A `tint` — `{ accent, fill, onFill }` — puts the category's accent on the icon and the selection's stroke, and its inked fill on the counter; the square stays neutral. The taxonomy's eight quick-access colours are the `--semantics-category-accent-*`, `-fill-*` and `-on-fill-*` variables, each fill's ink held to 4.5:1 by `pnpm tokens:contrast:check`.

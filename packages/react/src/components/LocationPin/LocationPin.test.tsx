@@ -53,17 +53,36 @@ describe("LocationPin", () => {
 
   it("takes a tint for the marker; a featured pin keeps the alert colour", () => {
     const { rerender } = render(
-      <LocationPin label="Dining" tint="var(--semantics-data-red)" />,
+      <LocationPin
+        label="Dining"
+        number={3}
+        tint={{
+          accent: "var(--semantics-category-accent-red)",
+          fill: "var(--semantics-category-fill-red)",
+          onFill: "var(--semantics-category-on-fill-red)",
+        }}
+      />,
     );
     const marker = screen.getByRole("img").querySelector("svg") as SVGElement;
     expect(marker.style.getPropertyValue("color")).toBe(
-      "var(--semantics-data-red)",
+      "var(--semantics-category-fill-red)",
     );
+    expect(
+      (screen.getByText("3") as HTMLElement).style.getPropertyValue("color"),
+    ).toBe("var(--semantics-category-on-fill-red)");
     expect(marker.style.getPropertyValue("fill")).toContain(
-      "var(--semantics-data-red)",
+      "var(--semantics-category-fill-red)",
     );
     rerender(
-      <LocationPin featured label="Dining" tint="var(--semantics-data-red)" />,
+      <LocationPin
+        featured
+        label="Dining"
+        tint={{
+          accent: "var(--semantics-category-accent-red)",
+          fill: "var(--semantics-category-fill-red)",
+          onFill: "var(--semantics-category-on-fill-red)",
+        }}
+      />,
     );
     expect(
       (

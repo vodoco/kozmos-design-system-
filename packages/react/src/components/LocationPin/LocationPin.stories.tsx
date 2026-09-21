@@ -36,3 +36,16 @@ export const ExternalLabel: Story = {
     labelPlacement: "bottom",
   },
 };
+
+/** A pin in a category's colours: the fill as the marker, its ink on the number. */
+export const Tinted: Story = {
+  args: {
+    label: "Dining",
+    number: 3,
+    tint: {
+      accent: "var(--semantics-category-accent-red)",
+      fill: "var(--semantics-category-fill-red)",
+      onFill: "var(--semantics-category-on-fill-red)",
+    },
+  },
+};
