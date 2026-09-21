@@ -5,6 +5,9 @@ import com.figma.code.connect.Figma
 import com.figma.code.connect.FigmaConnect
 import com.figma.code.connect.FigmaProperty
 import com.figma.code.connect.FigmaType
+import com.kozmos.components.categorytile.KozmosCategoryTint
+import com.kozmos.components.counter.KozmosInkedFill
+import com.kozmos.tokens.KozmosColors
 
 @FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=1340-6847")
 class KozmosLocationPinConnect {
@@ -42,6 +45,23 @@ class KozmosLocationPinConnect {
         "OffFloor" to true, "Disabled" to false
     )
 
+    // The Tint axis: Theme is a pin with no tint; the eight are the
+    // taxonomy's quick-access colours as the Semantics.Category tokens — the
+    // fill is the marker, its ink the number; a featured pin keeps the alert
+    // colour.
+    @FigmaProperty(FigmaType.Enum, "Tint")
+    val tint: KozmosCategoryTint? = Figma.mapping(
+        "Theme" to null,
+        "Yellow" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentYellow, KozmosInkedFill(KozmosColors.semanticsCategoryFillYellow, KozmosColors.semanticsCategoryOnfillYellow)),
+        "Orange" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentOrange, KozmosInkedFill(KozmosColors.semanticsCategoryFillOrange, KozmosColors.semanticsCategoryOnfillOrange)),
+        "Turquoise" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentTurquoise, KozmosInkedFill(KozmosColors.semanticsCategoryFillTurquoise, KozmosColors.semanticsCategoryOnfillTurquoise)),
+        "Red" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentRed, KozmosInkedFill(KozmosColors.semanticsCategoryFillRed, KozmosColors.semanticsCategoryOnfillRed)),
+        "Blue" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentBlue, KozmosInkedFill(KozmosColors.semanticsCategoryFillBlue, KozmosColors.semanticsCategoryOnfillBlue)),
+        "Navy" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentNavy, KozmosInkedFill(KozmosColors.semanticsCategoryFillNavy, KozmosColors.semanticsCategoryOnfillNavy)),
+        "Green" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentGreen, KozmosInkedFill(KozmosColors.semanticsCategoryFillGreen, KozmosColors.semanticsCategoryOnfillGreen)),
+        "Pink" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentPink, KozmosInkedFill(KozmosColors.semanticsCategoryFillPink, KozmosColors.semanticsCategoryOnfillPink))
+    )
+
     // variant is a per-venue colour role and labelPlacement belongs to the map
     // renderer, so neither is a Figma variant axis.
     @Composable
@@ -52,7 +72,8 @@ class KozmosLocationPinConnect {
             selected = selected,
             featured = featured,
             offFloor = offFloor,
-            enabled = enabled
+            enabled = enabled,
+            tint = tint
         )
     }
 }

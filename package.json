@@ -84,6 +84,7 @@
     "prepare": "husky",
     "figma:stamp": "node scripts/stamp-figma-plugin.mjs",
     "figma:stamp:check": "node scripts/stamp-figma-plugin.mjs --check",
+    "figma:painters:check": "node scripts/check-figma-painters.mjs",
     "tokens:elevation:check": "node scripts/check-elevation-parity.mjs",
     "tokens:glass:check": "node scripts/check-glass-parity.mjs",
     "tokens:motion:check": "node scripts/check-motion-parity.mjs",

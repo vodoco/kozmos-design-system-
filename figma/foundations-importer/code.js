@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "dd9f78a05cc0";
+const PLUGIN_BUILD = "ea2727587227";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -343,6 +343,51 @@ const MAP_OVERLAY_WIDTH_SIZES = {
 const POI_DETAIL_PANEL_PRESENTATIONS = ["Inline", "Sheet", "Panel"];
 const BROWSE_CATEGORIES_PANEL_CONTENT = ["Basic", "Search", "Empty"];
 const CATEGORY_TILE_STATES = ["Default", "Selected", "Disabled"];
+// The taxonomy's eight quick-access colours, as `Semantics.Category` carries
+// them, and the theme's own for a part with no category: the Tint axis on
+// CategoryTile, LocationPin and CategoryField. A tint is three variables —
+// the accent for the icon and the strokes, the fill for a count pill or a
+// marker, and the ink that reads on that fill (`pnpm tokens:contrast:check`
+// holds each pair to 4.5:1, which is why blue's fill is darker than its
+// accent). The order is the sprite atlas's.
+const CATEGORY_TINTS = [
+  "Theme",
+  "Yellow",
+  "Orange",
+  "Turquoise",
+  "Red",
+  "Blue",
+  "Navy",
+  "Green",
+  "Pink",
+];
+// Fallbacks for a file whose foundations predate the category tokens; the
+// values are `packages/tokens/src/tokens-light.json` Semantics.Category, the
+// same in both themes.
+const CATEGORY_TINT_FALLBACKS = {
+  Yellow: { accent: "#F9AC17", fill: "#F9AC17", onFill: "#17191C" },
+  Orange: { accent: "#E5801A", fill: "#E5801A", onFill: "#17191C" },
+  Turquoise: { accent: "#37A4A4", fill: "#37A4A4", onFill: "#17191C" },
+  Red: { accent: "#D92626", fill: "#D92626", onFill: "#FFFFFF" },
+  Blue: { accent: "#2080DF", fill: "#1E77CF", onFill: "#FFFFFF" },
+  Navy: { accent: "#4D4DB2", fill: "#4D4DB2", onFill: "#FFFFFF" },
+  Green: { accent: "#339933", fill: "#339933", onFill: "#17191C" },
+  Pink: { accent: "#B24DB2", fill: "#B24DB2", onFill: "#FFFFFF" },
+};
+// CategoryTile's geometry: the prototype's, measured, and the contract's
+// (`components.categoryTile`) — a 64 square at the control radius, a 24 icon,
+// an 11/14 caption of two lines, the counter 4 beyond the square's edges.
+// The width is four across at gap 8 in a 376 grid.
+const CATEGORY_TILE_WIDTH = 88;
+const CATEGORY_TILE_PADDING = 4;
+const CATEGORY_TILE_GAP = 6;
+const CATEGORY_TILE_SQUARE = 64;
+const CATEGORY_TILE_ICON_SIZE = 24;
+const CATEGORY_TILE_COUNTER_OVERHANG = 4;
+const CATEGORY_TILE_LABEL_FONT_SIZE = 11;
+const CATEGORY_TILE_LABEL_LINE_HEIGHT = 14;
+/** The symbol a fresh tile carries, from the Pointr Icon Library. */
+const CATEGORY_TILE_DEFAULT_ICON = "bus";
 const POI_MEDIA_GALLERY_CONTENT = ["Single", "Multiple", "Empty"];
 const POI_RESULT_CARD_STATES = [
   "Default",
@@ -734,7 +779,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   Table: 520,
   AdaptiveMapShell: 520,
   BrowseCategoriesPanel: 460,
-  CategoryTile: 260,
+  CategoryTile: 420,
   DirectionStep: 260,
   DynamicIsland: 320,
   FeedbackCard: 360,
@@ -752,7 +797,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   RoutingInputGroup: 320,
   SaveLocationCard: 300,
   UserLocationMarker: 260,
-  LocationPin: 320,
+  LocationPin: 3000,
   MapView: 520,
   POICard: 620,
   WayfindingCard: 420,
@@ -4830,6 +4875,26 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   { name: "LocationPin/label/font-size", value: 12, scopes: ["FONT_SIZE"] },
   { name: "LocationPin/label/line-height", value: 16, scopes: ["LINE_HEIGHT"] },
+  {
+    name: "CategoryTile/square/size",
+    value: CATEGORY_TILE_SQUARE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryTile/icon/size",
+    value: CATEGORY_TILE_ICON_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryTile/label/font-size",
+    value: CATEGORY_TILE_LABEL_FONT_SIZE,
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "CategoryTile/label/line-height",
+    value: CATEGORY_TILE_LABEL_LINE_HEIGHT,
+    scopes: ["LINE_HEIGHT"],
+  },
   { name: "MapView/width/default", value: 480, scopes: ["WIDTH_HEIGHT"] },
   { name: "MapView/height/default", value: 320, scopes: ["WIDTH_HEIGHT"] },
   {
@@ -16360,6 +16425,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "CategoryTile") {
     return {
       State: CATEGORY_TILE_STATES,
+      Tint: CATEGORY_TINTS,
     };
   }
 
@@ -16445,6 +16511,7 @@ function expectedVariantAxesForComponentSetName(name) {
     return {
       State: LOCATION_PIN_STATES,
       Size: LOCATION_PIN_SIZES,
+      Tint: CATEGORY_TINTS,
     };
   }
 
@@ -22522,6 +22589,15 @@ function addComponentTextStyleSpecs(specs, fonts) {
     12,
     16,
     "Typography contract for default Kozmos counters.",
+  );
+  addTextStyleSpec(
+    specs,
+    "categoryTileLabel",
+    "CategoryTile / Label",
+    fonts.regular,
+    CATEGORY_TILE_LABEL_FONT_SIZE,
+    CATEGORY_TILE_LABEL_LINE_HEIGHT,
+    "Typography contract for a category tile's caption: 11/14, two lines at most.",
   );
   addTextStyleSpec(specs, "cardTitle", "Card / Title", fonts.medium, 24, 24);
   addTextStyleSpec(
@@ -36552,12 +36628,7 @@ function parseMetaStripVariantName(name) {
   return { label: values.Label, icon: values.Icon };
 }
 
-async function createMetaStripVariant({
-  props,
-  variableByName,
-  fonts,
-  stats,
-}) {
+async function createMetaStripVariant({ props, variableByName, fonts, stats }) {
   const component = figma.createComponent();
   await updateMetaStripVariant(component, {
     props,
@@ -43634,14 +43705,16 @@ function locationPinVariantCombinations() {
   const combinations = [];
   for (const state of LOCATION_PIN_STATES) {
     for (const size of LOCATION_PIN_SIZES) {
-      combinations.push({ state, size });
+      for (const tint of CATEGORY_TINTS) {
+        combinations.push({ state, size, tint });
+      }
     }
   }
   return combinations;
 }
 
 function locationPinVariantKey(props) {
-  return `${props.state}/${props.size}`;
+  return `${props.state}/${props.size}/${props.tint}`;
 }
 
 function parseLocationPinVariantName(name) {
@@ -43652,7 +43725,12 @@ function parseLocationPinVariantName(name) {
   ) {
     return null;
   }
-  return { state: values.State, size: values.Size };
+  // A pin from before the Tint axis (2026-09-21) is named by state and size
+  // alone. It is the theme's, and Update renames it in place, so the fifteen
+  // original variants keep their node IDs.
+  const tint = values.Tint === undefined ? "Theme" : values.Tint;
+  if (CATEGORY_TINTS.indexOf(tint) === -1) return null;
+  return { state: values.State, size: values.Size, tint };
 }
 
 function layoutLocationPinVariants(componentSet) {
@@ -43662,8 +43740,11 @@ function layoutLocationPinVariants(componentSet) {
     if (child.type !== "COMPONENT") continue;
     const props = parseLocationPinVariantName(child.name);
     if (!props) continue;
+    // One State × Size block per tint, stacked: the theme's first.
     child.x = LOCATION_PIN_STATES.indexOf(props.state) * 160;
-    child.y = LOCATION_PIN_SIZES.indexOf(props.size) * 110;
+    child.y =
+      CATEGORY_TINTS.indexOf(props.tint) * (LOCATION_PIN_SIZES.length * 110) +
+      LOCATION_PIN_SIZES.indexOf(props.size) * 110;
   }
 
   resizeComponentSetToContainChildren(componentSet);
@@ -43685,8 +43766,19 @@ async function updateLocationPinVariant(
   // selection is never carried by colour alone.
   const diameter = selected ? base + 8 : base;
   const palette = locationPinPalette(props.state);
+  // A category's colours over the variant's: its fill is the marker (the
+  // ring's stroke off the floor), its ink the number; a featured pin keeps
+  // the alert colour.
+  const tint = categoryTintTokens(props.tint);
+  const marked = Boolean(tint.fill) && props.state !== "Featured";
+  const markerFill = marked
+    ? { fill: tint.fill.name, fallback: tint.fill.fallback }
+    : palette;
+  const ink = marked
+    ? tint.onFill
+    : { name: "Colors/foreground/1000", fallback: "#FFFFFF" };
 
-  component.name = `State=${props.state}, Size=${props.size}`;
+  component.name = `State=${props.state}, Size=${props.size}, Tint=${props.tint}`;
   component.layoutMode = "VERTICAL";
   component.primaryAxisSizingMode = "AUTO";
   component.counterAxisSizingMode = "AUTO";
@@ -43729,15 +43821,20 @@ async function updateLocationPinVariant(
           stats,
         )
       : paintFromVariable(
-          palette.fill,
-          palette.fallback,
+          markerFill.fill,
+          markerFill.fallback,
           variableByName,
           stats,
         ),
   ];
   marker.strokes = [
     offFloor
-      ? paintFromVariable(palette.fill, palette.fallback, variableByName, stats)
+      ? paintFromVariable(
+          markerFill.fill,
+          markerFill.fallback,
+          variableByName,
+          stats,
+        )
       : paintFromVariable(
           "Colors/foreground/1000",
           "#FFFFFF",
@@ -43756,8 +43853,8 @@ async function updateLocationPinVariant(
     bold: true,
     fontSize: Math.round(diameter * 0.44),
     lineHeight: Math.round(diameter * 0.62),
-    colorToken: offFloor ? palette.fill : "Colors/foreground/1000",
-    colorFallback: offFloor ? palette.fallback : "#FFFFFF",
+    colorToken: offFloor ? markerFill.fill : ink.name,
+    colorFallback: offFloor ? markerFill.fallback : ink.fallback,
     variableByName,
     stats,
   });
@@ -43819,6 +43916,7 @@ const LOCATION_PIN_DESCRIPTION = [
   "Kozmos LocationPin generated from the React LocationPin API.",
   "State maps to the selected, featured, offFloor, and disabled props.",
   "Size maps to LocationPin.size (sm, md, lg).",
+  "Tint maps to tint: Theme is a pin without one; the eight are Semantics.Category, the taxonomy's quick-access colours. A tint's fill is the marker and its ink the number; a featured pin keeps the alert colour.",
   "Label Text maps to LocationPin.label or externalLabel.",
   "Number Text maps to LocationPin.number.",
   "Off-floor pins use an outline treatment so state is not colour-only.",
@@ -46010,127 +46108,403 @@ async function createCategoryTileVariant(args) {
   return component;
 }
 
+function categoryTileVariantCombinations() {
+  const combinations = [];
+  for (const state of CATEGORY_TILE_STATES) {
+    for (const tint of CATEGORY_TINTS) {
+      combinations.push({ state, tint });
+    }
+  }
+  return combinations;
+}
+
+function categoryTileVariantKey(props) {
+  return `${props.state}/${props.tint}`;
+}
+
 function parseCategoryTileVariantName(name) {
-  return productSdkVariantValues(name, "State", CATEGORY_TILE_STATES);
+  const values = parseVariantValueMap(name);
+  if (CATEGORY_TILE_STATES.indexOf(values.State) === -1) return null;
+  // A tile from before the Tint axis (2026-09-21) is named by its state
+  // alone. It is the theme's, and Update renames it in place, so the three
+  // original variants keep their node IDs.
+  const tint = values.Tint === undefined ? "Theme" : values.Tint;
+  if (CATEGORY_TINTS.indexOf(tint) === -1) return null;
+  return { state: values.State, tint };
+}
+
+function layoutCategoryTileVariants(componentSet) {
+  if (!componentSet || !componentSet.children) return;
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const props = parseCategoryTileVariantName(child.name);
+    if (!props) continue;
+    child.x = CATEGORY_TINTS.indexOf(props.tint) * 120;
+    child.y = CATEGORY_TILE_STATES.indexOf(props.state) * 130;
+  }
+  resizeComponentSetToContainChildren(componentSet);
+}
+
+/**
+ * The three tokens of a tint. Theme is a part with no category — the
+ * theme's 500 where the accent goes, and no fill, so a nested Counter keeps
+ * its own tone — which leaves a tile without a tint looking as it did.
+ */
+function categoryTintTokens(tint) {
+  const fallback = CATEGORY_TINT_FALLBACKS[tint];
+  if (!fallback) {
+    return {
+      accent: { name: "Colors/theme/500", fallback: "#135BEC" },
+      fill: null,
+      onFill: null,
+    };
+  }
+  return {
+    accent: { name: `Category/Accent/${tint}`, fallback: fallback.accent },
+    fill: { name: `Category/Fill/${tint}`, fallback: fallback.fill },
+    onFill: { name: `Category/OnFill/${tint}`, fallback: fallback.onFill },
+  };
+}
+
+function tokenPaint(token, variableByName, stats, opacity) {
+  if (typeof opacity === "number") {
+    return paintFromVariableWithOpacity(
+      token.name,
+      token.fallback,
+      opacity,
+      variableByName,
+      stats,
+    );
+  }
+  return paintFromVariable(token.name, token.fallback, variableByName, stats);
+}
+
+/**
+ * A curated icon instance for a Product / SDK part, in a colour: the
+ * requested symbol, or the library's default when the file lacks it.
+ */
+async function productSdkIconInstance({
+  iconName,
+  token,
+  size,
+  sizeToken,
+  variableByName,
+  stats,
+  owner,
+}) {
+  const source =
+    (await findKozmosIconSourceComponent(iconName)) ||
+    (await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME));
+  if (!source) {
+    stats.warnings.push(
+      `${owner}: neither icon "${iconName}" nor "${DEFAULT_CURATED_ICON_NAME}" was found on the Icons page; run Curated Icons first.`,
+    );
+    return null;
+  }
+  const icon = createIconSlotInstance(
+    source,
+    token.name,
+    token.fallback,
+    variableByName,
+    stats,
+    size,
+    sizeToken,
+  );
+  scaleIconStrokes(icon, size);
+  return icon;
+}
+
+/** Figma keeps a resized icon's 2 stroke at 2; the code draws 2 × size / 24. */
+function scaleIconStrokes(icon, size) {
+  const weight = (2 * size) / 24;
+  const walk = (node) => {
+    if (
+      node.type === "VECTOR" &&
+      Array.isArray(node.strokes) &&
+      node.strokes.length > 0 &&
+      typeof node.strokeWeight === "number"
+    ) {
+      try {
+        node.strokeWeight = weight;
+      } catch (_error) {
+        // A locked or mixed stroke keeps its weight.
+      }
+    }
+    if (node.children) for (const child of node.children) walk(child);
+  };
+  walk(icon);
 }
 
 async function updateCategoryTileVariant(
   component,
-  { value, variableByName, fonts, stats },
+  { props, variableByName, fonts, stats },
 ) {
-  const selected = value === "Selected";
-  const disabled = value === "Disabled";
-  productSdkVariantRoot(component, "CategoryTile", "State=" + value, {
+  const selected = props.state === "Selected";
+  const disabled = props.state === "Disabled";
+  const tint = categoryTintTokens(props.tint);
+  productSdkVariantRoot(
+    component,
+    "CategoryTile",
+    `State=${props.state}, Tint=${props.tint}`,
+    {
+      primarySizing: "AUTO",
+      counterSizing: "FIXED",
+      primaryAlign: "MIN",
+      counterAlign: "CENTER",
+      spacing: CATEGORY_TILE_GAP,
+      padding: CATEGORY_TILE_PADDING,
+      width: CATEGORY_TILE_WIDTH,
+      height:
+        CATEGORY_TILE_PADDING * 2 +
+        CATEGORY_TILE_SQUARE +
+        CATEGORY_TILE_GAP +
+        CATEGORY_TILE_LABEL_LINE_HEIGHT * 2,
+    },
+  );
+  component.fills = [];
+  component.strokes = [];
+  component.cornerRadius = KOZMOS_RADIUS.control;
+  // The whole tile fades when disabled, as `disabled:opacity-50` does.
+  component.opacity = disabled ? 0.5 : 1;
+
+  // The icon's square: 64 at the control radius with the container edge,
+  // neutral whatever the tint. The selection shows on it — the accent as the
+  // stroke, at 5 % behind, and as a 1 ring at 20 % outside — never on the
+  // tile's own frame.
+  const square = productSdkFrame("Icon Square", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
     primaryAlign: "CENTER",
     counterAlign: "CENTER",
-    spacing: 8,
-    padding: 12,
-    width: 120,
-    height: 104,
+    width: CATEGORY_TILE_SQUARE,
+    height: CATEGORY_TILE_SQUARE,
   });
-  component.cornerRadius = KOZMOS_RADIUS.container;
-  component.fills = [
-    paintFromVariable(
-      selected ? "Colors/theme/100" : "Surface/0",
-      selected ? "#CAD9FC" : "#FFFFFF",
-      variableByName,
-      stats,
-    ),
-  ];
-  component.strokes = [
-    paintFromVariable(
-      selected ? "Colors/theme/500" : "Border/Subtle",
-      selected ? "#135BEC" : "#C7CAD1",
-      variableByName,
-      stats,
-    ),
-  ];
-  // Selection thickens the border as well as recolouring it, so it survives a
-  // theme where the two colours are close.
-  component.strokeWeight = selected ? 2 : 1;
-  component.opacity = disabled ? 0.4 : 1;
-
-  const icon = await productSdkSlot({
-    name: "Icon Slot",
-    label: "Icon",
-    width: 40,
-    height: 40,
-    fonts,
+  square.cornerRadius = KOZMOS_RADIUS.control;
+  square.clipsContent = false;
+  const background = paintFromVariable(
+    "Colors/background/0",
+    "#FFFFFF",
     variableByName,
     stats,
-    muted: true,
-  });
-  icon.cornerRadius = 20;
-  appendWithSizing(component, icon, "FIXED", "FIXED");
+  );
+  square.fills = selected
+    ? [background, tokenPaint(tint.accent, variableByName, stats, 0.05)]
+    : [background];
+  square.strokes = [
+    selected
+      ? tokenPaint(tint.accent, variableByName, stats)
+      : paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
+  ];
+  square.strokeWeight = 1;
+  square.strokeAlign = "INSIDE";
+  bindSizeVariables(
+    square,
+    "CategoryTile/square/size",
+    "CategoryTile/square/size",
+    variableByName,
+    stats,
+  );
+  appendWithSizing(component, square, "FIXED", "FIXED");
 
+  const icon = await productSdkIconInstance({
+    iconName: CATEGORY_TILE_DEFAULT_ICON,
+    token: tint.accent,
+    size: CATEGORY_TILE_ICON_SIZE,
+    sizeToken: "CategoryTile/icon/size",
+    variableByName,
+    stats,
+    owner: "CategoryTile",
+  });
+  if (icon) square.appendChild(icon);
+
+  if (selected) {
+    const selectionRing = figma.createRectangle();
+    selectionRing.name = "Selection Ring";
+    selectionRing.resize(CATEGORY_TILE_SQUARE + 2, CATEGORY_TILE_SQUARE + 2);
+    selectionRing.cornerRadius = KOZMOS_RADIUS.control + 1;
+    selectionRing.fills = [];
+    selectionRing.strokes = [
+      tokenPaint(tint.accent, variableByName, stats, 0.2),
+    ];
+    selectionRing.strokeWeight = 1;
+    selectionRing.strokeAlign = "INSIDE";
+    square.appendChild(selectionRing);
+    selectionRing.layoutPositioning = "ABSOLUTE";
+    selectionRing.constraints = { horizontal: "STRETCH", vertical: "STRETCH" };
+    selectionRing.x = -1;
+    selectionRing.y = -1;
+  }
+
+  // The count: the system's Counter in the brand tone, four beyond the
+  // square's top and right edges so the icon stays clear. A tint puts its
+  // inked fill on the instance — the fill on the pill, the ink on the digits.
+  const created = await createNestedComponentInstance({
+    componentSetName: "Counter",
+    variantProperties: { Tone: "Brand", Size: "Default" },
+    name: "Counter",
+    stats,
+  });
+  let counter;
+  if (created) {
+    counter = created.instance;
+    setInstanceTextProperty(
+      counter,
+      created.componentSet,
+      "Counter Text",
+      "12",
+      stats,
+    );
+    markNestedComponentInstance(counter, "Counter", "category-tile-count");
+    if (tint.fill) {
+      counter.fills = [tokenPaint(tint.fill, variableByName, stats)];
+      const digits = counter.findOne((node) => node.type === "TEXT");
+      if (digits) {
+        digits.fills = [tokenPaint(tint.onFill, variableByName, stats)];
+      }
+    }
+  } else {
+    counter = createMissingNestedComponentNode(
+      "Counter",
+      "Build Counter before updating CategoryTile.",
+      stats,
+    );
+  }
+  square.appendChild(counter);
+  counter.layoutPositioning = "ABSOLUTE";
+  counter.constraints = { horizontal: "MAX", vertical: "MIN" };
+  counter.x =
+    CATEGORY_TILE_SQUARE + CATEGORY_TILE_COUNTER_OVERHANG - counter.width;
+  counter.y = -CATEGORY_TILE_COUNTER_OVERHANG;
+  if (counter.type === "INSTANCE") exposeNestedCounterInstance(counter, stats);
+
+  // The caption: 11/14, the foreground colour under every tint, two lines
+  // at most, as `line-clamp-2`.
   const label = await productSdkText({
     name: "Label Text",
-    characters: "Food",
-    styleKey: "controlLabel",
+    characters: "Transport",
+    styleKey: "categoryTileLabel",
     fonts,
-    bold: selected,
-    fontSize: 14,
-    lineHeight: 20,
-    colorToken: selected ? "Colors/theme/700" : "Colors/foreground/0",
-    colorFallback: selected ? "#0B357F" : "#000000",
+    bold: false,
+    fontSize: CATEGORY_TILE_LABEL_FONT_SIZE,
+    lineHeight: CATEGORY_TILE_LABEL_LINE_HEIGHT,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
     variableByName,
     stats,
-    width: 96,
+    width: CATEGORY_TILE_WIDTH - CATEGORY_TILE_PADDING * 2,
+    wrap: true,
   });
   label.textAlignHorizontal = "CENTER";
+  if ("maxLines" in label) {
+    try {
+      label.textTruncation = "ENDING";
+      label.maxLines = 2;
+    } catch (_error) {
+      // A runtime without line limits shows every line.
+    }
+  }
+  bindFloatVariable(
+    label,
+    "fontSize",
+    "CategoryTile/label/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    label,
+    "lineHeight",
+    "CategoryTile/label/line-height",
+    variableByName,
+    stats,
+  );
   appendWithSizing(component, label, "FILL", null);
 }
 
-function configureCategoryTileProperties(componentSet, stats) {
+async function configureCategoryTileProperties(componentSet, stats) {
   configureNamedTextProperty(
     componentSet,
     "Label Text",
     "Label Text",
-    "Food",
+    "Transport",
     stats,
   );
+
+  // Show Count maps to category.resultCount being set: on by default, since
+  // a tile in the product carries its count; off hides the Counter.
+  const showCount = ensureBooleanProperty(
+    componentSet,
+    "Show Count",
+    true,
+    stats,
+  );
+  const iconSourceComponents = await findKozmosIconSourceComponents();
+  const preferredValues = iconPreferredValues(iconSourceComponents);
+  const defaultIcon =
+    (await findKozmosIconSourceComponent(CATEGORY_TILE_DEFAULT_ICON)) ||
+    (await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME));
+  const iconProperty = defaultIcon
+    ? ensureInstanceSwapProperty(
+        componentSet,
+        "Icon",
+        defaultIcon.id,
+        stats,
+        preferredValues,
+      )
+    : null;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const square = directChildNamed(child, "Icon Square");
+    if (!square) continue;
+    const counter = directChildNamed(square, "Counter");
+    if (counter && showCount) {
+      counter.componentPropertyReferences = Object.assign(
+        {},
+        counter.componentPropertyReferences || {},
+        { visible: showCount },
+      );
+    }
+    const icon = directChildNamed(square, "Icon");
+    if (icon && icon.type === "INSTANCE" && iconProperty) {
+      bindInstanceSwapProperty(icon, iconProperty, stats);
+    }
+  }
 }
 
 const CATEGORY_TILE_DESCRIPTION = [
   "Kozmos CategoryTile generated from the React CategoryTile API.",
-  "State maps to category.selected and category.disabled.",
-  "Label Text maps to category.label; Icon Slot maps to renderIcon(category).",
-  "Selection thickens the border as well as recolouring it, so it is not colour-only.",
-  "resultCountLabel is announced by product code and has no visual slot here.",
+  "State maps to category.selected and category.disabled; a disabled tile is at 50 %.",
+  "Tint maps to tint: Theme is a tile without one; the eight are Semantics.Category, the taxonomy's quick-access colours. The accent takes the icon and the selection's stroke, the inked fill the counter; the square stays neutral.",
+  "Label Text maps to category.label, 11/14 and two lines at most; Icon maps to icon and swaps from the Icons page.",
+  "Counter is the system's Counter in the brand tone at the square's top-right, 4 beyond its top and right edges; Show Count maps to category.resultCount being set, and the count is edited on the nested instance.",
+  "The square is 64 at the control radius with the container edge; the icon is 24.",
+  "resultCountLabel is the count's spoken form and draws nothing here.",
 ];
 
-async function buildCategoryTileComponent() {
-  return buildSingleAxisComponent({
+function categoryTileComponentConfig() {
+  return {
     componentName: "CategoryTile",
     componentSetName: "CategoryTile",
-    axisName: "State",
-    values: CATEGORY_TILE_STATES,
     x: 80,
     y: 14200,
-    xStep: 180,
+    combinations: categoryTileVariantCombinations,
+    keyForProps: categoryTileVariantKey,
+    parseVariantName: parseCategoryTileVariantName,
     createVariant: createCategoryTileVariant,
+    updateVariant: updateCategoryTileVariant,
+    layoutVariants: layoutCategoryTileVariants,
     configureProperties: configureCategoryTileProperties,
-    autoReorganize: true,
     description: CATEGORY_TILE_DESCRIPTION,
-  });
+  };
+}
+
+async function buildCategoryTileComponent() {
+  return buildPlannedMatrixComponent(categoryTileComponentConfig());
 }
 
 async function updateCategoryTileComponent() {
-  return updateSingleAxisComponent({
-    componentName: "CategoryTile",
-    componentSetName: "CategoryTile",
-    axisName: "State",
-    values: CATEGORY_TILE_STATES,
-    xStep: 180,
-    createVariant: createCategoryTileVariant,
-    updateVariant: updateCategoryTileVariant,
-    parseVariantName: parseCategoryTileVariantName,
-    configureProperties: configureCategoryTileProperties,
-    autoReorganize: true,
-    description: CATEGORY_TILE_DESCRIPTION.concat([
-      "Updated in place to preserve the Code Connect node ID.",
-    ]),
-  });
+  return updatePlannedMatrixComponent(categoryTileComponentConfig());
 }
 
 async function rebuildCategoryTileComponent() {
