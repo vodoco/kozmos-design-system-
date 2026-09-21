@@ -71,9 +71,6 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
     /// count live from what this session has marked (`count(of:)`).
     @Published private(set) var tileCounts: [String: Int]?
     private var loggedPlaceCount = -1
-    /// Whether the chosen category's places are marked on the map through
-    /// the SDK's per-place styles (`updatePoiStyles`), reset on clear.
-    private var marksPlaces = false
     /// The places opened this session, most recent first, at most three: what
     /// the focused, empty field offers, as the prototype's "Recently visited".
     @Published private(set) var recents: [PTRPoi] = []
@@ -291,42 +288,27 @@ final class SDKSession: NSObject, ObservableObject, PointrStateChangeListener, P
         self.category = category
         // The prototype fades the map's other pins to 22 %; the SDK offers to
         // show a set of places, so the map shows the category's alone.
+        // The map shows the category's places alone, as the SDK's own icon
+        // markers — nothing else is touched. A per-place style was tried for
+        // a rounder marker and repainted every room's fill black (Olcay,
+        // 21st: "no need to alter fill layers"); the SDK draws no view of
+        // ours (`PTRMapMarker`), so the markers are the SDK's, in its palette.
         let shown = places(in: category)
         widget?.mapViewController.poisToShow = shown.isEmpty ? nil : Set(shown)
         // The map follows the category: the places are site-wide, so when
         // none is on the level shown, the level of the first — zoomed to it —
-        // as opening a place does. Then the pins, on the level now shown.
+        // as opening a place does.
         if !shown.contains(where: { SDKPOIAdapter.floorId($0.position.level) == selectedFloorId }),
            let level = shown.first?.position.level {
             updateLevel(level)
             widget?.mapViewController.showLevel(level, shouldZoomToLevel: true)
         }
-        markPlaces(shown)
     }
     func clearCategory() {
         category = nil
         widget?.mapViewController.poisToShow = nil
-        clearMarks()
     }
 
-    /// The category's places marked on the map (Olcay, 21st): a per-place
-    /// style with nothing set gives each its SDK marker's round form in the
-    /// taxonomy's colour for its type — the SDK's own palette, which is the
-    /// one the category tokens carry for the tiles. The SDK draws no view of
-    /// ours: `PTRMapMarker` views drew nothing and a style's `image` drew the
-    /// SDK's icon, so there is no Kozmos pin on this map (the pin with its
-    /// tint serves the web's and Compose's own map views).
-    private func markPlaces(_ places: [PTRPoi]) {
-        clearMarks()
-        guard let map = widget?.mapViewController, !places.isEmpty else { return }
-        let styles = places.compactMap { PTRPoiMapStyle(poi: $0) }
-        map.updatePoiStyles(styles)
-        marksPlaces = !styles.isEmpty
-    }
-    private func clearMarks() {
-        if marksPlaces { widget?.mapViewController.resetAllPoiStyles() }
-        marksPlaces = false
-    }
 
     /// The places a tile shows, on every floor, by name.
     func places(in category: QuickAccessCategory) -> [PTRPoi] {
