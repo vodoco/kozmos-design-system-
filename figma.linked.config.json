@@ -1,6 +1,9 @@
 {
   "codeConnect": {
     "parser": "react",
+    "importPaths": {
+      "src/components/*": "@kozmos/react"
+    },
     "include": [
       "src/components/Button/Button.figma.tsx",
       "src/components/Button/Button.tsx",

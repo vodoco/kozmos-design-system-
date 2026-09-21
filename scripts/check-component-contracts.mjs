@@ -1816,6 +1816,35 @@ assertContains(
     );
   }
 }
+// Dev Mode shows each snippet's import line. Without importPaths the React
+// parser prints the mapping file's own relative import ("./CategoryField"),
+// which no consumer can use, and SwiftUI snippets print no import at all.
+{
+  const reactPackage = JSON.parse(read("packages/react/package.json")).name;
+  for (const config of [
+    files.figmaLinked,
+    "packages/react/figma.config.json",
+  ]) {
+    const mapped = JSON.parse(read(config)).codeConnect.importPaths?.[
+      "src/components/*"
+    ];
+    if (mapped !== reactPackage) {
+      fail(
+        `${config}: React snippets must import from ${reactPackage} (importPaths "src/components/*"), not ${mapped ?? "their relative path"}`,
+      );
+    }
+  }
+  const swiftLibrary = read("packages/ios/Package.swift").match(
+    /\.library\(\s*name:\s*"([^"]+)"/,
+  )?.[1];
+  const swiftImport = JSON.parse(read(files.iosFigmaLinked)).codeConnect
+    .importPaths?.["Sources/Components/"];
+  if (!swiftLibrary || swiftImport !== `import ${swiftLibrary}`) {
+    fail(
+      `${files.iosFigmaLinked}: SwiftUI snippets must carry "import ${swiftLibrary}" (importPaths "Sources/Components/"), not ${swiftImport ?? "none"}`,
+    );
+  }
+}
 assertContains(
   files.figmaLinked,
   source.figmaLinked,

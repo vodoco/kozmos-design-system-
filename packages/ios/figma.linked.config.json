@@ -4,6 +4,9 @@
     "label": "SwiftUI",
     "language": "swift",
     "swiftPackagePath": "Package.swift",
+    "importPaths": {
+      "Sources/Components/": "import Kozmos"
+    },
     "include": [
       "Sources/Components/Link/Link.figma.swift",
       "Sources/Components/Link/Link.swift",
