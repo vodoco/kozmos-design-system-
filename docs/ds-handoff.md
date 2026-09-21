@@ -1633,3 +1633,14 @@ reads clean. The audit now reads every fill a node stacks, holds every set's tex
 measures Glass on purpose (`45e4b0f`, `5639895`, build `53ac76afe679`, no painter changes); the
 painter check (242) audits all 185 variants of the four sets in both modes. The seventeen
 remaining Updates are the run (drift §9).
+
+At 21:36, after that audit's FileUpload warning and the panel's next step, Apply Text Styles ran
+on the live file and restyled every text it could guess a style for: it writes a literal size and
+leading before attaching the style, so 4,957 texts in 46 sets lost their size and leading
+variables, and its guess set 656 of the pickers' 12/16 readouts at 14/20. The file's typography
+had not changed all day before that (11,186 bound fields at 14:58, 19:00 and 20:38), so the
+drift doc's earlier line crediting Apply Text Styles with the 14:58 typography warning was wrong
+and is corrected. Apply Text Styles now styles only unstyled text and binds its sizes back, its
+guess agrees with every styled text as the painters left them, and the audit and the panel name
+the set's Update (`bd4afde`, build `01f3be6891dc`, no painter changes; the painter check is 261).
+The repair is Olcay's: the version from before 21:36, or the two update sequences (drift §9).

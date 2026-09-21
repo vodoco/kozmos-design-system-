@@ -222,6 +222,11 @@ _Steps 1 to 5 are done in the live file; §9 has the run for the current build._
   was an icon not drawn, measured on the fill beneath the one that shows.
 - The audit's variant parsers run in a chain, and the Label parser claims any name with
   `State=Default`: a branch on a later parser's field can be dead. The Glass skip was.
+- A warning's remedy is part of the warning. Surfacing FileUpload's unstyled labels put the
+  panel's next step on Apply Text Styles, and it restyled the whole library. Read what a new
+  warning tells the reader to run, and what that does, before shipping it.
+- A literal written to a field bound to a variable drops the binding. Apply Text Styles wrote
+  each text's size and leading before attaching the style; a painter binds after it writes.
 
 ## 7. The audit, the same night
 
@@ -335,31 +340,46 @@ The CategoryField clear's hit area followed the same night: a 44 target around t
 all three platforms (§5, 5; `701f919`). Code Connect followed on his word, published on all three
 platforms (below).
 
-### The run, with build `53ac76afe679`
+### The run, with build `01f3be6891dc`
 
-`53ac76afe679` (`5639895`) paints exactly as `314962f54832` (`aa876ce`); what changed is what the
-audit reads (the audit of 20:38, below). Button and Badge, updated on `314962f54832` at 20:38,
-stay as they are. Build `ed50a03a1912` drew a translucent token opaque: do not Update anything
-on it.
+`01f3be6891dc` (`bd4afde`) paints exactly as `314962f54832` (`aa876ce`); since then only what the
+audit reads and what Apply Text Styles does have changed (the audit of 20:38 and Apply Text
+Styles at 21:36, below). Build `ed50a03a1912` drew a translucent token opaque: do not Update
+anything on it. Do not run Apply Text Styles on the file as it is, and do not publish the
+library until the audit below is clean.
 
-1. Close the plugin and run it again; the header must read **Build 53ac76afe679**.
-2. Not Update All Core: its resume stamps are per build, so a new build starts it again at Link.
-   **Update**, one at a time, never Rebuild, the seventeen not yet run: DirectionStep,
+1. **Undo 21:36.** In Figma, File › Show version history: restore the last version saved before
+   21:36 on the 21st, after 20:42 if one is listed. That brings back the 9,914 size and leading
+   bindings and the 656 sizes exactly. From a version before about 20:35, Button and Badge are
+   back on their old drawings too: add them to step 3.
+2. Close the plugin and run it again; the header must read **Build 01f3be6891dc**.
+3. **Update**, one at a time, never Rebuild, the seventeen not yet run: DirectionStep,
    CategoryField, CategoryTile, LocationPin, ScrollArea, BottomSheet, FileUpload, IconButton,
    SearchBar, BottomNavigation, Slider, NavigationItem; then TreeItem, TreeChildItem,
    TreeParentItem, Tree and Timeline, which now take seconds.
-3. **Build Surface QA**, then **Audit Library**. Expected: no warning; 53 advisories, the 51 of
+
+   With no version before 21:36 to restore, run **Update All Core**, then **Update All
+   Product / SDK**, instead: a new build restarts both from their first set, and together they
+   redraw the 46 sets Apply Text Styles touched — each painter attaches its style and binds the
+   size and leading again — as well as the seventeen. The 41 of the 46 outside the seventeen:
+   Link, Button, Badge, Counter, Chip, SegmentedControl, Card, List, Table, Breadcrumb, Tabs,
+   Pagination, Navbar, Sidebar, Accordion, POICard, MapControlButton, Dialog, Drawer, Menu,
+   Popover, Tooltip, Checkbox, Radio, Switch, Input, Search, Select, Textarea, NumberInput,
+   MultiSelect, PasswordInput, FormField, DatePicker, DateRangePicker, TimePicker, ColorPicker,
+   Alert, Toast, EmptyState, Avatar.
+
+4. **Build Surface QA**, then **Audit Library**. Expected: no warning; 53 advisories, the 51 of
    20:38 and one each for CategoryTile and CategoryField, their category symbols below 3:1
    measured as decorative — the tile's 7 (Light: the Default tile's yellow 1.92, orange 2.82 and
    turquoise 3.00, under 3 before rounding; the Selected tile's 1.86, 2.69 and 2.85; Dark: the
    Selected navy 2.94) and the field's 4 (Light: yellow 1.77, orange 2.51, turquoise 2.66;
-   Dark: navy 2.84); 64 of 64 Surface QA instances; `pluginBuild` `53ac76afe679`. An audit
+   Dark: navy 2.84); 64 of 64 Surface QA instances; `pluginBuild` `01f3be6891dc`. An audit
    before a set's Update reads its old drawing: CategoryTile then fails 21 pairs at 1.00, and
-   FileUpload reports 32 text nodes without a style.
-4. From the terminal: `pnpm figma:verify` (17 sets on `53ac76afe679`, Button and Badge on
-   `314962f54832`, the other 78 on `c7d1d88351a7`), the REST read-back of the washes (layer
-   opacity 0.12, 0.05, 0.2, 0.1, 0.32, 0.36), and a render of DirectionStep and of a Selected
-   CategoryTile, whose glyph and icon the old drawings do not show.
+   FileUpload reports 32 text nodes without a style — Update FileUpload for that.
+5. From the terminal: `pnpm figma:verify`, the REST read-back of the text bindings against the
+   Components page as it stood at 20:55, of the washes (layer opacity 0.12, 0.05, 0.2, 0.1,
+   0.32, 0.36), and a render of DirectionStep and of a Selected CategoryTile, whose glyph and
+   icon the old drawings do not show.
 
 ### Code Connect, published on his word
 
@@ -427,8 +447,10 @@ that build: Button. The other 90 carried `c7d1d88351a7` (`414ba00`'s build, the 
 Core of the morning) and the Tree block's five `dd9f78a05cc0`. So most of the warnings were
 the old drawing measured by the new audit, the same as at 14:58: DirectionStep's 28, LocationPin's
 18, CategoryTile's 6, CategoryField's 11 and 4, Badge's 3 dark icons. The typography warning of
-14:58 (160 issues) was gone after Apply Text Styles. Two findings were new, and both were defects
-in the plugin:
+14:58 (160 issues) was gone because the audit's guess was fixed (`fc3e915`); the file's text did
+not change — 11,186 bound size and leading fields and 6,752 styled texts at 14:58, 19:00 and
+20:38 alike. (This said "after Apply Text Styles" until the 21:36 read-back below; it had not
+run.) Two findings were new, and both were defects in the plugin:
 
 1. **Button's Glass failed in Dark at 1.03** (`aa876ce`). `c28921a` had made `paintFromVariable`
    bind every paint at opacity 1, on the premise that a bound colour carries its own alpha. It
@@ -528,3 +550,43 @@ design decision, not an audit fix.
 Also read: the file's `lastModified` moved to 20:42:52Z after the audit with no set's stamp
 moving; the token cannot read the version history (403), so what changed is not established.
 `pnpm figma:verify` found the structure current and only the two report-only findings of §5, 6.
+
+### Apply Text Styles at 21:36, and the repair
+
+After the audit on `53ac76afe679` named FileUpload's 32 unstyled labels — a warning `45e4b0f`
+added — the panel's next step said to run Apply Text Styles, and it ran on the live file at 21:36.
+Read back over REST against the Components page as it stood at 20:55:
+
+- **4,957 texts in 46 sets lost their size and leading variables**, 9,914 of the 11,186 bound
+  typography fields. Apply Text Styles restyled every text it could guess a style for, and it
+  writes a literal size and leading before attaching the style; a literal drops a variable
+  binding in Figma.
+- **656 texts went from 12/16 to 14/20**: DatePicker's and DateRangePicker's weekdays (in fixed
+  cells), FileUpload's description and file meta (its frames grew; 128 boxes moved), and
+  ColorPicker's channel, alpha, mode and hex readouts (truncating). The guess called them field
+  text; the painters draw them with the meta style.
+- FileUpload's 32 browse labels took the label style, the one thing asked for.
+- No set's stamp moved and none of the four warned sets' drawings changed: the audit after it read
+  the same five warnings, CategoryTile's now 21 as the fixed audit reads its old squares.
+
+That typography had not changed all day before: 11,186 bound fields and 6,752 styled texts at
+14:58, 19:00 and 20:38 alike (corrected in the audit of 19:00, above).
+
+**Fixed** (`bd4afde`, build `01f3be6891dc`; no painter changes):
+
+1. Apply Text Styles leaves styled text as its painter drew it, styles only text without a style,
+   and binds that text's size and leading back to the variables they had.
+2. The guess follows the painters: measured against every styled text as the painters left it at
+   20:38, it agrees on all 5,512 it can guess and differs on none, where it differed on 656.
+3. The audit's warning for unstyled text and the panel's next step name the set's Update, which
+   attaches the style and binds the sizes; neither sends anyone to Apply Text Styles for it.
+
+The harness drops a text's size variable when a literal size is written, as Figma did. The
+painter check is 261; on `53ac76afe679` the 15 new assertions fail — the ten guesses, the three
+Apply Text Styles outcomes, its styled 12/16 text coming out 14 and unbound as in the file, and
+the two remedies — and nothing else does.
+
+**The repair** is step 1 of the run above: restore the version from before 21:36, or, failing
+one, the two update sequences, which draw every touched set again. Whether the library was
+published after 21:36 cannot be read with this token (403); if it was, publish again once the
+audit is clean.

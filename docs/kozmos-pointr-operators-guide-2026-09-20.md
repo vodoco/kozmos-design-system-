@@ -339,7 +339,7 @@ Which build ran is the first thing to read. The panel's header shows it ("Build 
 Audit Library report carries it as `pluginBuild`; a report without it came from a build before
 `50ba616`. Update All Core resumes by build stamp, so after any plugin change it starts again at
 Link: update the sets the change touched, one at a time, instead
-([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `53ac76afe679`).
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `01f3be6891dc`).
 The painter check also refuses the layout sizing Figma refuses and counts the nodes a lookup
 visits, so a painter that asks for HUG on an icon, FILL before an append, or a whole-file search
 per variant fails there first.
@@ -626,3 +626,14 @@ _Added on the 21st, from the audit of 20:38:_
   was.
 - A check that throws on an old build hides everything after it: report a missing node as a
   failure and go on.
+
+_Added on the 21st, from Apply Text Styles at 21:36:_
+
+- A warning's remedy is part of the warning. Surfacing FileUpload's unstyled labels put the
+  panel's next step on Apply Text Styles, which restyled the whole library: 4,957 texts lost
+  their size and leading variables and 656 went from 12/16 to 14/20. Read what a new warning
+  tells the reader to run, and what that does, before shipping it.
+- A literal written to a field bound to a variable drops the binding in Figma. Bind after you
+  write, as the painters do.
+- An accidental bulk change in the file is undone from its version history; an Update redraws
+  one set, and the two update sequences redraw them all.
