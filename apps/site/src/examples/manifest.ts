@@ -21,6 +21,19 @@ export interface ExampleEntry {
 
 export const examples: readonly ExampleEntry[] = [
   {
+    slug: "venue-explorer",
+    title: "Venue explorer",
+    kind: "app",
+    summary:
+      "Search a shopping centre, browse it by category, pick a place from the results or the map, and read its details, across three floors. The map is a stand-in: Kozmos lays out around a map engine and does not draw one.",
+    gaps: [
+      "GAP-15 · Food and drink, toilets, accessible facilities, parking and first aid are left out: Kozmos has no icon for them.",
+      "GAP-17 · The map shell's panel is an aside, a landmark that should not sit inside the page's main.",
+      "GAP-18 · The place details use the sheet presentation; on the shell's panel, the action message's block loses its background.",
+      "GAP-20 · In Safari and other WebKit browsers, the search field is drawn as a small native field: Kozmos's styles do not reach it there.",
+    ],
+  },
+  {
     slug: "account-settings",
     title: "Account settings",
     kind: "page",

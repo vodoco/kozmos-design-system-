@@ -14,22 +14,28 @@ or Site (a need of this website, not of a product).
 from Kozmos parts and says so), _left visible_ (the defect shows on the page on
 purpose, because hiding it would hide the evidence).
 
-| ID     | What                                                          | Lane | Status       |
-| ------ | ------------------------------------------------------------- | ---- | ------------ |
-| GAP-01 | `NavigationItem` `asChild` throws                             | Core | open         |
-| GAP-02 | `reset.css` ships raw Tailwind `theme()` calls                | Core | open         |
-| GAP-03 | A pre-rendered page starts in the light theme                 | Core | left visible |
-| GAP-04 | `Grid` cannot reflow, and a caller cannot make it             | Core | composed     |
-| GAP-05 | No code block; `Text` has no monospace option                 | Core | composed     |
-| GAP-06 | No skip link or visually-hidden text                          | Core | composed     |
-| GAP-07 | Icons a website needs: theme, copy, external link             | Core | open         |
-| GAP-08 | No footer                                                     | Core | composed     |
-| GAP-09 | `buttonVariants` on a link keeps the link's underline         | Core | left visible |
-| GAP-10 | No brand mark                                                 | Site | open         |
-| GAP-11 | `EmptyState`'s title is not a heading                         | Core | open         |
-| GAP-12 | `Alert` is always `role="alert"`, `AlertTitle` always an `h5` | Core | composed     |
-| GAP-13 | `SelectTrigger` has no label; `Textarea` no helper text       | Core | composed     |
-| GAP-14 | `CardTitle` is always an `h3`                                 | Core | composed     |
+| ID     | What                                                          | Lane          | Status       |
+| ------ | ------------------------------------------------------------- | ------------- | ------------ |
+| GAP-01 | `NavigationItem` `asChild` throws                             | Core          | open         |
+| GAP-02 | `reset.css` ships raw Tailwind `theme()` calls                | Core          | open         |
+| GAP-03 | A pre-rendered page starts in the light theme                 | Core          | left visible |
+| GAP-04 | `Grid` cannot reflow, and a caller cannot make it             | Core          | composed     |
+| GAP-05 | No code block; `Text` has no monospace option                 | Core          | composed     |
+| GAP-06 | No skip link or visually-hidden text                          | Core          | composed     |
+| GAP-07 | Icons a website needs: theme, copy, external link             | Core          | open         |
+| GAP-08 | No footer                                                     | Core          | composed     |
+| GAP-09 | `buttonVariants` on a link keeps the link's underline         | Core          | left visible |
+| GAP-10 | No brand mark                                                 | Site          | open         |
+| GAP-11 | `EmptyState`'s title is not a heading                         | Core          | open         |
+| GAP-12 | `Alert` is always `role="alert"`, `AlertTitle` always an `h5` | Core          | composed     |
+| GAP-13 | `SelectTrigger` has no label; `Textarea` no helper text       | Core          | composed     |
+| GAP-14 | `CardTitle` is always an `h3`                                 | Core          | composed     |
+| GAP-15 | No icons for a venue's everyday categories                    | Product / SDK | open         |
+| GAP-16 | `TabsList` neither wraps nor scrolls                          | Core          | composed     |
+| GAP-17 | `AdaptiveMapShell`'s panel is an `<aside>`                    | Product / SDK | open         |
+| GAP-18 | `POIDetailPanel` has no presentation for the shell's panel    | Product / SDK | left visible |
+| GAP-19 | `Navbar` is always sticky                                     | Core          | composed     |
+| GAP-20 | `SearchBar`'s field is unstyled in WebKit (Safari, iOS)       | Product / SDK | left visible |
 
 ---
 
@@ -101,8 +107,8 @@ purpose, because hiding it would hide the evidence).
   Container, Card and more): a caller's class cannot change any property the
   component's own utilities set. The README says only the migrated components
   accept overrides.
-- **Now:** the site's card grids are a `Box` with `repeat(auto-fit | auto-fill,
-minmax(…))` in `site.css`.
+- **Now:** the site's card grids are a `Box` laid out in `site.css`, with
+  auto-fit or auto-fill columns of a minimum width.
 - **Fix in Kozmos:** a `minColumnWidth` (auto-fit) axis on `Grid`, or responsive
   `cols`.
 
@@ -199,3 +205,81 @@ minmax(…))` in `site.css`.
   axe reports `heading-order` on the examples index.
 - **Now:** the index puts its cards under an `h2` ("Pages and apps").
 - **Lane:** Core. (Same shape as GAP-12's `AlertTitle`.)
+
+## GAP-15 · No icons for a venue's everyday categories
+
+- **What:** the icon set's 56 glyphs have nothing for food and drink, toilets,
+  accessible facilities, parking or first aid — the categories an indoor map
+  shows first. The accessibility glyph is already on record as missing
+  (`docs/ds-handoff.md` §6.5: drawn 1,213 times across 7 surfaces).
+- **Now (venue explorer):** those categories are left out rather than drawn
+  with a stand-in icon. The six it has (shops, information, transport, events,
+  offices, Wi-Fi) use Kozmos icons.
+- **Lane:** Product / SDK (icons; the Pointr taxonomy's own sprites may be the
+  source).
+
+## GAP-16 · `TabsList` neither wraps nor scrolls
+
+- **What:** `TabsList` is a fixed `inline-flex` row. Three file names overflow a
+  320-pixel phone and push the whole page sideways.
+- **Now:** `src/site/ExamplePage.tsx` puts the list in a horizontal
+  `ScrollArea`.
+- **Lane:** Core.
+
+## GAP-17 · `AdaptiveMapShell`'s panel is an `<aside>`
+
+- **What:** the shell renders its panel as `<aside aria-label>`, a
+  complementary landmark. A shell placed in a page's `<main>` — a module in a
+  larger app, or this site — nests it there, and axe reports
+  `landmark-complementary-is-top-level` (best practice, moderate).
+- **Evidence:** axe on `/examples/venue-explorer`, in both themes and all three
+  engines. The site's tests expect exactly this violation there, so they will
+  fail — and point here — once Kozmos changes it.
+- **Lane:** Product / SDK.
+- **Fix in Kozmos:** a `section` with the same label (a region landmark), or an
+  option for hosts that embed the shell.
+
+## GAP-18 · `POIDetailPanel` has no presentation for the shell's panel
+
+- **What:** `presentation="panel"` draws its own card, which sits inside
+  `AdaptiveMapShell`'s panel as a second surface. `presentation="sheet"` paints
+  none, as documented, but is designed for a grey sheet: on the shell's
+  page-coloured panel, its inset blocks (the action message) lose their
+  container — white on white, or black on black.
+- **Now (venue explorer):** `sheet`, the documented pairing. The message text
+  stays readable and is announced; only its block is invisible.
+- **Lane:** Product / SDK.
+
+## GAP-19 · `Navbar` is always sticky
+
+- **What:** `.kozmos-navbar` is `position: sticky; top: 0`, with no option. A
+  second Navbar in a page — an embedded module's, or the account settings
+  example's inside this site — sticks over the first while the page scrolls.
+- **Now:** every example sits in a frame of definite height that scrolls
+  inside (`.site-example-canvas`), so an example's Navbar sticks within its
+  frame.
+- **Lane:** Core.
+
+## GAP-20 · `SearchBar`'s field is unstyled in WebKit (Safari, iOS)
+
+- **What:** in WebKit, `SearchBar`'s `<input>` gets none of its classes: native
+  search-field appearance, 11px text, a 2px border and a filled background,
+  148px wide inside the bar. Chromium and Firefox draw it as designed (15px,
+  no border, transparent, filling the bar).
+- **Evidence:** measured in Playwright's WebKit 26.0 against Chromium and
+  Firefox. The same classes on a `<div>` in the same place compute correctly in
+  WebKit; on an `<input>` (search or text) they do not. So WebKit is not
+  applying the `@scope`-d utilities to form controls — the regression CI already
+  names ("Keep the original WebKit form regression"), and why `Input`,
+  `Textarea`, `PasswordInput` and `NumberInput` were moved to component-owned
+  CSS (the React README lists them). `SearchBar` was not moved. The account
+  settings fields, which are migrated, render correctly in WebKit.
+- **Why it matters:** Safari and iOS web views are WebKit, and the Pointr SDK's
+  iOS hosts are among them. Visible on the home page's demo and in the venue
+  explorer.
+- **Now:** left visible. `tests/site.spec.ts` expects the field's style to fail
+  in WebKit only, so the test tells us when it is fixed.
+- **Lane:** Product / SDK (`SearchBar`).
+- **Fix in Kozmos:** move `SearchBar`'s field to component-owned CSS like
+  `Input`, and add it to the WebKit form-compatibility checks. Confirm in a real
+  Safari too.

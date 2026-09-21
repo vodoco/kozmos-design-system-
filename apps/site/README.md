@@ -116,11 +116,14 @@ When Kozmos cannot express something:
   no equivalent and they carry meaning: `main`, `section`, `article`, `aside`,
   `header`, `footer`, `nav`, `form`, `pre`, `code`, `kbd`, `strong`, `em`,
   `br`, `time`, `abbr` (and the document's `html`/`head`/`body`/`meta`/`link`).
-- **`style`** may only pass CSS custom properties (how data reaches CSS).
+- **`style`** may only pass CSS custom properties — how data reaches CSS,
+  such as a pin's position on the map. `src/lib/css-custom-properties.d.ts`
+  lets TypeScript accept them without a cast.
 - **Strings** may not hold a colour (`#1051e8`, `rgb(…)` and the like).
 - **CSS:** no colour literals or named colours, no `!important`, no typography
   (it comes from `Text` and `Heading`), radii and shadows only from tokens,
-  spacing (`gap`, `margin`, `padding`, `inset`) only from tokens, and no
+  fixed spacing (`gap`, `margin`, `padding`, `inset`) only from tokens —
+  percentages are allowed, since they place rather than space — and no
   selector that reaches into Kozmos (`.kozmos-*`, `[data-slot]`).
 
 The checker has its own tests (`scripts/check-ds-only.test.mjs`) that feed it
@@ -150,16 +153,17 @@ apps/site/
 │   ├── check-ds-only.mjs    the one rule, enforced (+ its tests)
 │   └── serve-static.mjs     `preview` and the e2e tests' server
 ├── tests/
-│   ├── site.spec.ts         end-to-end: axe, themes, navigation, forms, 404
+│   ├── site.spec.ts         end-to-end: axe, themes, navigation, both examples, 404
 │   └── screenshots.spec.ts  pictures for people (SCREENSHOTS=1)
 └── src/
     ├── root.tsx             document, stylesheets, ThemeProvider, error page
     ├── routes.ts            the route table (one route per example, from the manifest)
     ├── routes/              home, get-started, examples, not-found, site-layout
     ├── site/                the frame: header, footer, links, code block, example page
-    ├── examples/            manifest.ts + one folder per example
+    ├── examples/            manifest.ts + one folder per example:
+    │                          account-settings (a page), venue-explorer (an app)
     ├── snippets/            the code Get started shows, type-checked
-    ├── lib/                 site facts (site.ts), the import parser
+    ├── lib/                 site facts (site.ts), the import parser, CSS custom-property typing
     └── styles/site.css      page layout only, from tokens
 ```
 
@@ -234,19 +238,32 @@ nothing submits anywhere.
   outranks your class (GAP-04). Adding a property the component does not set
   (say `block-size` on a Card) is fine.
 - Never select into a Kozmos component; the checker refuses it.
+- **Single-column grids say `grid-template-columns: minmax(0, 1fr)`.** An
+  implicit column grows to its widest child's minimum width — a row of tabs,
+  a line of code — and pushes the page sideways on a phone.
+- **Examples sit in a frame** (`.site-example-canvas`) of definite height that
+  scrolls inside. An app needs the height; a page needs the frame, because its
+  own Navbar is always sticky (GAP-19).
 
 ## Testing
 
-| Layer         | Command                    | What it proves                                                                                                                                                                                                                                                |
-| ------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Types         | `typecheck`                | Pages, examples and every snippet compile against the built packages.                                                                                                                                                                                         |
-| Lint and rule | `lint`                     | ESLint with the React hooks rules; the one rule.                                                                                                                                                                                                              |
-| Unit          | `test`                     | The import parser; the checker refuses what it should.                                                                                                                                                                                                        |
-| End to end    | `test:e2e` (after `build`) | Every page in both themes: status, one `h1`, axe (WCAG 2.2 AA and best practices), no console errors, no sideways scroll at 375px; 404; theme kept across a reload; in-app navigation and focus; the skip link; the demo's scoped theme; the example's forms. |
+| Layer         | Command                    | What it proves                                                                                                                                                                                                                                                                                                                                       |
+| ------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Types         | `typecheck`                | Pages, examples and every snippet compile against the built packages.                                                                                                                                                                                                                                                                                |
+| Lint and rule | `lint`                     | ESLint with the React hooks rules; the one rule.                                                                                                                                                                                                                                                                                                     |
+| Unit          | `test`                     | The import parser; the checker refuses what it should.                                                                                                                                                                                                                                                                                               |
+| End to end    | `test:e2e` (after `build`) | Every page in both themes: status, one `h1`, `noindex`, axe (WCAG 2.2 AA and best practices), no console errors, no sideways scroll at 320px; 404; theme kept across a reload; in-app navigation and focus; the skip link; the demo's scoped theme; the settings forms; the venue explorer's categories, search, details, floors, zoom and location. |
 
 The e2e tests wait for the page to hydrate **and** for running animations to
 finish before measuring: a dark-mode page animates from light (GAP-03), and
 axe would otherwise measure contrast mid-transition.
+
+A violation that comes from inside a Kozmos component is listed, with its
+gap, in `knownViolations` in `tests/site.spec.ts` (today: GAP-17 on the venue
+explorer). The tests expect exactly those, so a new violation fails — and so
+does a known one that disappears, which is the signal to close its gap.
+The same holds for GAP-20: the search-field test is marked `test.fail` in
+WebKit only, so Playwright reports it the day Kozmos fixes the field.
 
 **In CI, once merged:** the workflow runs `pnpm lint`, `pnpm build` and
 `pnpm test` across the workspace, so the site's lint (with the rule), build
@@ -369,6 +386,10 @@ Measured while building the site; none of it is the site's to fix.
   `eslint-plugin-react-hooks` 7.x; the site's config must use 5.x.
 - **A class on a Kozmos component does nothing** — GAP-04: wrap in a `Box`
   and style that.
+- **A phone scrolls sideways** — a grid's implicit column grew to a wide
+  child; give the grid `grid-template-columns: minmax(0, 1fr)` and let the
+  wide child scroll in a `ScrollArea`. `pnpm test:e2e` checks every page at
+  320px.
 - **Port 5180 or 5181 is in use** — another dev server; stop it or change the
   port in `vite.config.ts` and `playwright.config.ts`.
 - **A change in `src` does not show in a Turbo build** — the site's inputs are

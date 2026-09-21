@@ -1,0 +1,40 @@
+/* Venue explorer: layout only. AdaptiveMapShell lays out the map, its
+   controls and the panel; this places the pins on the illustrative map. */
+
+.ex-venue {
+  block-size: 100%;
+}
+
+/* Kozmos hosts a map engine and does not draw one; in a product, the engine's
+   own markers carry the pins. Here the pins sit on MapView at percentages,
+   spread from the centre by the zoom.
+
+   The layer keeps clear of the search bar, the controls and the panel with
+   the insets AdaptiveMapShell measures and publishes — the padding a real
+   engine would take as its camera padding. A map does not mirror in a
+   right-to-left layout, so these are physical, not logical, offsets. */
+.ex-venue-layer {
+  position: absolute;
+  top: var(--kozmos-map-inset-top, 0px);
+  right: var(--kozmos-map-inset-right, 0px);
+  bottom: var(--kozmos-map-inset-bottom, 0px);
+  left: var(--kozmos-map-inset-left, 0px);
+}
+
+.ex-venue-pin {
+  position: absolute;
+  left: calc(50% + (var(--pin-x) - 50%) * var(--zoom, 1));
+  top: calc(50% + (var(--pin-y) - 50%) * var(--zoom, 1));
+  transform: translate(-50%, -100%);
+}
+
+.ex-venue-user {
+  transform: translate(-50%, -50%);
+}
+
+.ex-venue-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: var(--site-space-150);
+}

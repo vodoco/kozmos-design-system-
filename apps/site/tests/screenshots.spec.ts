@@ -10,6 +10,7 @@ const paths = [
   ["get-started", "/get-started"],
   ["examples", "/examples"],
   ["account-settings", "/examples/account-settings"],
+  ["venue-explorer", "/examples/venue-explorer"],
   ["not-found", "/no-such-page"],
 ] as const;
 
@@ -17,8 +18,6 @@ const sizes = [
   ["desktop", { width: 1280, height: 800 }],
   ["phone", { width: 375, height: 812 }],
 ] as const;
-
-test.skip(!process.env.SCREENSHOTS, "set SCREENSHOTS=1 to take the pictures");
 
 for (const colorScheme of ["light", "dark"] as const) {
   for (const [sizeName, viewport] of sizes) {

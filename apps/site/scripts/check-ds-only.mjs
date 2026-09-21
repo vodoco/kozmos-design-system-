@@ -213,9 +213,11 @@ export function checkCss(source, file = "input.css") {
         report(at, "shadow", `${property}: ${value} — use an elevation token.`);
       }
       if (SPACING_PROPERTY.test(property)) {
+        // Percentages are relative positions (centring, a pin on a map), which
+        // a spacing scale cannot express; fixed lengths must be tokens.
         const bare = withoutVars(value).replace(/\*\s*1px/g, "");
         const length = bare.match(
-          /(?<![\w-])-?(?:\d*\.)?\d+(?:px|rem|em|%|vh|vw|dvh|svh|lvh|ch|ex)\b/,
+          /(?<![\w-])-?(?:\d*\.)?\d+(?:px|rem|em|vh|vw|dvh|svh|lvh|ch|ex)\b/,
         );
         if (length && !/^-?0(?:\.0+)?[a-z%]*$/.test(length[0])) {
           report(at, "spacing", `${property}: ${value} — use a spacing token.`);

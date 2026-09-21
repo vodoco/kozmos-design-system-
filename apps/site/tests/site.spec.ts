@@ -6,6 +6,7 @@ const pages = [
   { path: "/get-started", title: "Get started" },
   { path: "/examples", title: "Examples" },
   { path: "/examples/account-settings", title: "Account settings" },
+  { path: "/examples/venue-explorer", title: "Venue explorer" },
 ] as const;
 
 /** Console errors and uncaught exceptions, which a clean page has none of. */
@@ -35,6 +36,16 @@ async function hydrated(page: Page) {
   );
 }
 
+/**
+ * Violations that come from inside a Kozmos component and are recorded in
+ * GAPS.md. The tests expect exactly these: a new violation fails, and so does
+ * one that has gone away, so the gap gets closed when Kozmos fixes it.
+ */
+const knownViolations: Record<string, readonly string[]> = {
+  // GAP-17: AdaptiveMapShell's panel is an <aside>, nested in the page's main.
+  "/examples/venue-explorer": ["landmark-complementary-is-top-level"],
+};
+
 async function axeViolations(page: Page) {
   const results = await new AxeBuilder({ page })
     .withTags([
@@ -46,12 +57,21 @@ async function axeViolations(page: Page) {
       "best-practice",
     ])
     .analyze();
-  return results.violations.map(
-    (violation) =>
-      `${violation.id} (${violation.impact}): ${violation.nodes
-        .map((node) => node.target.join(" "))
-        .join(" | ")}`,
+  const known = knownViolations[new URL(page.url()).pathname] ?? [];
+  const missing = known.filter(
+    (id) => !results.violations.some((violation) => violation.id === id),
   );
+  return [
+    ...results.violations
+      .filter((violation) => !known.includes(violation.id))
+      .map(
+        (violation) =>
+          `${violation.id} (${violation.impact}): ${violation.nodes
+            .map((node) => node.target.join(" "))
+            .join(" | ")}`,
+      ),
+    ...missing.map((id) => `${id} no longer occurs: close its gap in GAPS.md`),
+  ];
 }
 
 for (const colorScheme of ["light", "dark"] as const) {
@@ -84,8 +104,9 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
-test.describe("on a phone", () => {
-  test.use({ viewport: { width: 375, height: 812 } });
+// 320 CSS pixels is the width WCAG's reflow criterion (1.4.10) measures at.
+test.describe("on a narrow phone", () => {
+  test.use({ viewport: { width: 320, height: 700 } });
 
   for (const { path } of pages) {
     test(`${path} has no sideways scroll`, async ({ page }) => {
@@ -273,5 +294,142 @@ test.describe("account settings example", () => {
       example.getByText("The two new passwords do not match."),
     ).toBeVisible();
     expect(await axeViolations(page)).toEqual([]);
+  });
+});
+
+test.describe("venue explorer example", () => {
+  function explorer(page: Page) {
+    return page.getByRole("region", { name: "Venue explorer example" });
+  }
+
+  function mapPins(page: Page) {
+    return explorer(page)
+      .getByRole("region", { name: /Illustrative map$/ })
+      .getByRole("button");
+  }
+
+  test("browse a category, open a place, act on it and come back", async ({
+    page,
+  }) => {
+    await page.goto("/examples/venue-explorer");
+    await hydrated(page);
+    const app = explorer(page);
+    await expect(mapPins(page)).toHaveCount(4);
+
+    await app.getByRole("button", { name: "Transport 2 places" }).click();
+    // The category takes the search field's place, with a way to clear it.
+    await expect(app.getByRole("searchbox")).toHaveCount(0);
+    await expect(
+      app.getByRole("button", { name: "Clear Transport" }),
+    ).toBeVisible();
+    await expect(app.getByText("2 places").first()).toBeVisible();
+    await expect(mapPins(page)).toHaveCount(2);
+
+    await app
+      .getByRole("button", { name: /Bus interchange/ })
+      .first()
+      .click();
+    await expect(
+      app.getByRole("heading", { level: 2, name: "Bus interchange" }),
+    ).toBeVisible();
+    await app.getByRole("button", { name: "Directions" }).click();
+    await expect(
+      app.getByText("Directions need a routing service"),
+    ).toBeVisible();
+    const favourite = app.getByRole("button", { name: "Favourite" });
+    await favourite.click();
+    await expect(favourite).toHaveAttribute("aria-pressed", "true");
+    expect(await axeViolations(page)).toEqual([]);
+
+    await app.getByRole("button", { name: "Back to the list" }).click();
+    await expect(
+      app.getByRole("heading", { level: 2, name: "Bus interchange" }),
+    ).toHaveCount(0);
+    await app.getByRole("button", { name: "Clear Transport" }).click();
+    await expect(
+      app.getByRole("searchbox", { name: "Search Riverside Centre" }),
+    ).toBeVisible();
+    await expect(
+      app.getByRole("button", { name: "Shops 3 places" }),
+    ).toBeVisible();
+  });
+
+  test("search finds a place on another floor and goes to that floor", async ({
+    page,
+  }) => {
+    await page.goto("/examples/venue-explorer");
+    await hydrated(page);
+    const app = explorer(page);
+    await app
+      .getByRole("searchbox", { name: "Search Riverside Centre" })
+      .fill("book");
+    await app
+      .getByRole("button", { name: /Bookshop/ })
+      .first()
+      .click();
+    await expect(
+      app.getByRole("heading", { level: 2, name: "Bookshop" }),
+    ).toBeVisible();
+    await expect(
+      app.getByRole("button", { name: "First floor", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(mapPins(page)).toHaveCount(1);
+  });
+
+  test("the search field is drawn as Kozmos draws it", async ({
+    page,
+    browserName,
+  }) => {
+    // GAP-20: WebKit does not apply Kozmos's @scope-d utilities to <input>, and
+    // SearchBar's field is one. Expected to fail there until Kozmos moves it to
+    // component-owned CSS, as it did Input's; a pass then fails this test.
+    test.fail(
+      browserName === "webkit",
+      "GAP-20: SearchBar's input is unstyled in WebKit",
+    );
+    await page.goto("/examples/venue-explorer");
+    await hydrated(page);
+    const field = explorer(page).getByRole("searchbox", {
+      name: "Search Riverside Centre",
+    });
+    const style = await field.evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return {
+        fontSize: computed.fontSize,
+        borderTopWidth: computed.borderTopWidth,
+      };
+    });
+    expect(style).toEqual({ fontSize: "15px", borderTopWidth: "0px" });
+  });
+
+  test("floors, zoom and my location", async ({ page }) => {
+    await page.goto("/examples/venue-explorer");
+    await hydrated(page);
+    const app = explorer(page);
+    await app
+      .getByRole("button", { name: "Second floor", exact: true })
+      .click();
+    await expect(
+      app.getByRole("region", {
+        name: "Riverside Centre, Second floor. Illustrative map",
+      }),
+    ).toBeVisible();
+    await expect(mapPins(page)).toHaveCount(4);
+
+    const pin = mapPins(page).first();
+    const before = await pin.boundingBox();
+    await app.getByRole("button", { name: "Zoom in" }).click();
+    const after = await pin.boundingBox();
+    expect(
+      before &&
+        after &&
+        Math.abs(after.x - before.x) + Math.abs(after.y - before.y),
+    ).toBeGreaterThan(1);
+
+    await app.getByRole("button", { name: "Show my location" }).click();
+    await expect(
+      app.getByRole("button", { name: "Ground floor", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(app.getByLabel("You are here")).toBeVisible();
   });
 });

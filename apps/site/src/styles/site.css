@@ -76,12 +76,18 @@ body {
 
 /* ---- Page structure --------------------------------------------------- */
 
+/* Every single-column grid below says minmax(0, 1fr): an implicit column
+   grows to its widest child's minimum width (a row of tabs, a line of code),
+   pushing the whole page sideways on a phone. With it, wide children scroll
+   inside their own ScrollArea instead. */
+
 .site-page {
   padding-block: var(--site-space-700);
 }
 
 .site-page-header {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-200);
   max-inline-size: 48rem;
   margin-block-end: var(--site-space-600);
@@ -89,6 +95,7 @@ body {
 
 .site-section {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-300);
 }
 
@@ -98,12 +105,14 @@ body {
 
 .site-section-header {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-100);
   max-inline-size: 48rem;
 }
 
 .site-prose {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-200);
   max-inline-size: 48rem;
 }
@@ -143,6 +152,7 @@ body {
 
 .site-hero-copy {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-300);
   justify-items: start;
 }
@@ -155,6 +165,7 @@ body {
 
 .site-demo {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-200);
   padding: var(--site-space-300);
 }
@@ -185,6 +196,7 @@ body {
    own scoped preflight. */
 .site-code {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-inline-size: 0;
   border-radius: calc(var(--semantics-radius-container) * 1px);
   overflow: hidden;
@@ -220,24 +232,32 @@ body {
 
 .site-example-intro {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-200);
   padding-block: var(--site-space-400) var(--site-space-300);
 }
 
-/* The example is drawn on its own canvas, edge to edge. */
+/* The example is drawn on its own canvas, edge to edge: a frame of definite
+   height that scrolls inside, like a device preview. An app needs the height
+   (AdaptiveMapShell fills its parent), and a page needs the frame: its own
+   Navbar is always sticky (GAP-19) and would otherwise stick over the site's
+   header while the page scrolls past the example. */
 .site-example-canvas {
+  block-size: min(56rem, calc(100dvh - var(--site-space-900)));
+  min-block-size: 32rem;
+  overflow: auto;
   border-block: var(--primitives-border-width-sm) solid
     var(--semantics-border-subtle);
 }
 
-/* An app fills a definite height, as AdaptiveMapShell requires. */
 .site-example-canvas[data-kind="app"] {
-  block-size: min(56rem, calc(100dvh - var(--site-space-900)));
   min-block-size: 36rem;
+  overflow: hidden;
 }
 
 .site-example-details {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-600);
   padding-block: var(--site-space-600) var(--site-space-900);
 }

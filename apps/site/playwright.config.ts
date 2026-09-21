@@ -8,6 +8,8 @@ const PORT = 5181;
  */
 export default defineConfig({
   testDir: "tests",
+  // The screenshot run is for people, on demand (tests/screenshots.spec.ts).
+  testIgnore: process.env.SCREENSHOTS ? [] : ["**/screenshots.spec.ts"],
   outputDir: "test-results",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),

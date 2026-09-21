@@ -101,6 +101,7 @@ test("CSS: tokens pass, including the unit conversion", () => {
       border-block: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
       max-inline-size: 48rem;
     }
+    .pin { left: calc(50% + (var(--x) - 50%) * var(--zoom)); top: 50%; }
   `);
   assert.deepEqual(findings, []);
 });

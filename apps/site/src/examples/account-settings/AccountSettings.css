@@ -13,6 +13,7 @@
 
 .ex-settings-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-300);
   max-inline-size: 48rem;
   padding-block: var(--site-space-600) var(--site-space-900);
@@ -20,17 +21,20 @@
 
 .ex-settings-heading {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-100);
 }
 
 .ex-settings-panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-300);
   padding-block-start: var(--site-space-300);
 }
 
 .ex-settings-fields {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--site-space-300);
 }
 
