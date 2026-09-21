@@ -108,14 +108,14 @@ arrow-down, flip-backward, stars-01.
 component properties, instance swaps; no layout engine) and evaluates `code.js` in a fresh
 context, so every painter is reachable by name. `scripts/check-figma-painters.mjs`
 (`pnpm figma:painters:check`) paints the variants above and asserts the contract's numbers and
-the bindings: 144 assertions. Against the plugin as it was, 79 fail and none crash. It is a
+the bindings: 149 assertions. Against the plugin as it was, 81 fail and none crash. It is a
 unit test of what a painter writes, not a picture of the file.
 
 ## 3. Verified
 
 | Gate                                                        | Result                                                                                                                                                                                                |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm figma:painters:check`                                 | 144 passed on the audit's commit; 79 failed on `604730c`'s plugin                                                                                                                                     |
+| `pnpm figma:painters:check`                                 | 149 passed on the audit's commits; 81 failed on `604730c`'s plugin                                                                                                                                    |
 | `pnpm components:contract:check`, `pnpm figma:plugin:check` | ok, ok                                                                                                                                                                                                |
 | `pnpm figma:stamp:check`                                    | current after each commit (the hook re-stamps: `8d1312c6c6af`)                                                                                                                                        |
 | `pnpm figma:verify` against the live file                   | the expected reds: presence 97 expected, 2 missing (CategoryField, AISearchButton); variant drift on CategoryTile, LocationPin and DirectionStep; 0 of 95 sets on the new build — until the run in §4 |

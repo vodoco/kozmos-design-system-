@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "deab322c9bfc";
+const PLUGIN_BUILD = "c7d1d88351a7";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -69958,6 +69958,45 @@ function removeGeneratedButtonChild(component, name, shouldRemove) {
   }
 }
 
+/**
+ * Whether every visible solid paint inside an icon instance is the expected
+ * one — bound to the foreground variable, or, unbound, the fallback colour.
+ * An instance with no visible solid paint at all is not expected either.
+ */
+function iconSlotPaintIsExpected(icon, config, variableByName) {
+  const variable = variableByName.get(config.foreground);
+  const expectedHex = String(config.foregroundFallback || "").toUpperCase();
+  const hexOf = (color) =>
+    "#" +
+    ["r", "g", "b"]
+      .map((key) =>
+        Math.round((color[key] || 0) * 255)
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+      .toUpperCase();
+  let seen = false;
+  let expected = true;
+  function walk(node) {
+    for (const paints of [node.fills, node.strokes]) {
+      if (!Array.isArray(paints)) continue;
+      const paint = firstVisibleSolidPaint(paints);
+      if (!paint) continue;
+      seen = true;
+      const bound = paint.boundVariables && paint.boundVariables.color;
+      if (variable && bound && bound.id === variable.id) continue;
+      if (!bound && paint.color && hexOf(paint.color) === expectedHex) continue;
+      expected = false;
+    }
+    if (node.children) {
+      for (const child of node.children) walk(child);
+    }
+  }
+  walk(icon);
+  return seen && expected;
+}
+
 function syncIconSlotInstance(
   icon,
   config,
@@ -69973,9 +70012,19 @@ function syncIconSlotInstance(
   const existingFallback = icon.getSharedPluginData
     ? icon.getSharedPluginData(RUN_NAMESPACE, "foreground-fallback")
     : "";
+  // The label an instance carries is not its paint: on 2026-09-21 the Button
+  // family's icons read the right token and were plain black (an instance
+  // reset had dropped the override while the plugin data stayed), and an
+  // Update that trusted the label skipped them. The paint decides.
+  const paintRepair =
+    existingToken === config.foreground &&
+    existingFallback === config.foregroundFallback &&
+    !iconSlotPaintIsExpected(icon, config, variableByName);
   const shouldRetint =
     existingToken !== config.foreground ||
-    existingFallback !== config.foregroundFallback;
+    existingFallback !== config.foregroundFallback ||
+    paintRepair;
+  if (paintRepair) incrementStat(stats, "iconSlotPaintRepairs");
 
   icon.resize(size, size);
   if (iconSizeToken) {

@@ -1180,6 +1180,55 @@ section("MapControlsGroup");
   }
 }
 
+// --- An icon that lost its tint is repaired on Update -----------------------------
+
+section("Icon tint repair");
+{
+  const token = "Primary Buttons/themed/button/foreground/content/idle";
+  const config = { foreground: token, foregroundFallback: "#FFFFFF" };
+  const source = figma.root.findOne(
+    (node) => node.type === "COMPONENT" && node.name === "Icon / search-md",
+  );
+  const ready =
+    source &&
+    typeof plugin.createIconSlotInstance === "function" &&
+    typeof plugin.syncIconSlotInstance === "function";
+  ok(ready, "the icon slot helpers and a source icon");
+  if (ready) {
+    const icon = plugin.createIconSlotInstance(
+      source,
+      token,
+      "#FFFFFF",
+      variableByName,
+      freshStats(),
+      16,
+      null,
+    );
+    const vector = icon.findOne((node) => node.type === "VECTOR");
+    ok(
+      vector && boundVariableName(vector.strokes[0]) === token,
+      "a fresh icon is bound to its token",
+    );
+    // What the file held on 2026-09-21: the right label, a plain black paint.
+    vector.strokes = [
+      { type: "SOLID", color: { r: 0, g: 0, b: 0 }, opacity: 1, visible: true },
+    ];
+    const stats = freshStats();
+    plugin.syncIconSlotInstance(icon, config, variableByName, stats, 16, null);
+    ok(
+      boundVariableName(vector.strokes[0]) === token,
+      "Update re-binds a black icon whose label was already right",
+    );
+    ok(stats.iconSlotPaintRepairs === 1, "and counts the repair");
+    const again = freshStats();
+    plugin.syncIconSlotInstance(icon, config, variableByName, again, 16, null);
+    ok(
+      !again.iconSlotPaintRepairs && again.iconSlotRetintsSkipped === 1,
+      "a second Update finds the paint right and skips",
+    );
+  }
+}
+
 // --- Summary ---------------------------------------------------------------------
 
 console.log(
