@@ -1,0 +1,248 @@
+// Read published Code Connect back from Figma desktop's Dev Mode MCP server.
+//
+// `figma connect publish` reports what it sent, not what Dev Mode shows. This
+// asks the Dev Mode server for every linked node on every platform, through its
+// read-only get_code_connect_map tool, and fails when a node shows nothing or a
+// snippet imports something a consumer cannot use. It needs Figma desktop with
+// Preferences → Enable Dev Mode MCP Server, and the Kozmos DS - Core Library
+// file open: node ids resolve in the file in front. On 2026-09-21 the server
+// stopped answering tool calls while Figma sat idle in the background; the
+// script then stops and says so instead of waiting for ever.
+//
+//   pnpm figma:connect:readback
+//   pnpm figma:connect:readback -- --label React --node 1933:9257
+import fs from "node:fs";
+import path from "node:path";
+
+const ROOT = process.cwd();
+const SERVER =
+  process.env.FIGMA_DEV_MODE_MCP_URL || "http://127.0.0.1:3845/mcp";
+const CONCURRENCY = 4;
+const REQUEST_TIMEOUT_MS = Number(
+  process.env.FIGMA_DEV_MODE_TIMEOUT_MS || 90_000,
+);
+// This many unanswered calls in a row means the server has stopped answering.
+const MAX_CONSECUTIVE_TIMEOUTS = 8;
+
+const PLATFORMS = [
+  {
+    label: "React",
+    config: "figma.linked.config.json",
+    packageRoot: "packages/react",
+    extension: ".figma.tsx",
+    // Relative imports are the mapping file's own; no consumer can use them.
+    importProblem: (imports) =>
+      imports.find((line) => /from\s+['"]\./.test(line)),
+  },
+  {
+    label: "SwiftUI",
+    config: "packages/ios/figma.linked.config.json",
+    packageRoot: "packages/ios",
+    extension: ".figma.swift",
+    importProblem: (imports, config) => {
+      const expected = Object.values(config.codeConnect.importPaths || {});
+      const missing = expected.filter((line) => !imports.includes(line));
+      return missing.length ? `missing ${missing.join(", ")}` : null;
+    },
+  },
+  {
+    label: "Compose",
+    config: "packages/android/figma.linked.config.json",
+    packageRoot: "packages/android",
+    extension: ".figma.kt",
+    importProblem: (imports) =>
+      imports.length === 0 ? "no import at all" : null,
+  },
+];
+
+function argValues(flag) {
+  const values = [];
+  process.argv.forEach((arg, index) => {
+    if (arg === flag && process.argv[index + 1]) {
+      values.push(process.argv[index + 1]);
+    }
+  });
+  return values;
+}
+
+function linkedNodes({ config, packageRoot, extension }) {
+  const nodes = new Set();
+  for (const includePath of JSON.parse(
+    fs.readFileSync(path.join(ROOT, config), "utf8"),
+  ).codeConnect.include) {
+    if (!includePath.endsWith(extension)) continue;
+    const filePath = [
+      path.join(ROOT, path.dirname(config), includePath),
+      path.join(ROOT, includePath),
+      path.join(ROOT, packageRoot, includePath),
+    ].find((candidate) => fs.existsSync(candidate));
+    if (!filePath) continue;
+    for (const match of fs
+      .readFileSync(filePath, "utf8")
+      .matchAll(/node-id=(\d+)-(\d+)/g)) {
+      nodes.add(`${match[1]}:${match[2]}`);
+    }
+  }
+  return [...nodes];
+}
+
+let session = null;
+let nextId = 1;
+
+async function rpc(method, params, notification = false) {
+  const headers = {
+    "content-type": "application/json",
+    accept: "application/json, text/event-stream",
+  };
+  if (session) headers["mcp-session-id"] = session;
+  const body = notification
+    ? { jsonrpc: "2.0", method, params }
+    : { jsonrpc: "2.0", id: nextId++, method, params };
+  const response = await fetch(SERVER, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  session = response.headers.get("mcp-session-id") || session;
+  const text = await response.text();
+  if (notification) return null;
+  const events = text
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.slice(5).trim());
+  return JSON.parse(events.length ? events[events.length - 1] : text);
+}
+
+let consecutiveTimeouts = 0;
+
+async function readMapping(nodeId, label) {
+  let lastError = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS) {
+      return { error: "not asked: the server had stopped answering" };
+    }
+    try {
+      const reply = await rpc("tools/call", {
+        name: "get_code_connect_map",
+        arguments: { nodeId, codeConnectLabel: label },
+      });
+      const text = (reply.result?.content || [])
+        .map((part) => part.text || "")
+        .join("");
+      consecutiveTimeouts = 0;
+      if (reply.error || reply.result?.isError) {
+        lastError = JSON.stringify(reply.error || text).slice(0, 200);
+        continue;
+      }
+      return { map: JSON.parse(text || "{}") };
+    } catch (error) {
+      if (error.name === "TimeoutError") {
+        consecutiveTimeouts += 1;
+        lastError = `no answer in ${REQUEST_TIMEOUT_MS / 1000} s`;
+      } else {
+        lastError = String(error.message || error).slice(0, 200);
+      }
+    }
+  }
+  return { error: lastError };
+}
+
+async function inBatches(items, worker) {
+  const results = [];
+  for (let index = 0; index < items.length; index += CONCURRENCY) {
+    results.push(
+      ...(await Promise.all(
+        items.slice(index, index + CONCURRENCY).map(worker),
+      )),
+    );
+  }
+  return results;
+}
+
+try {
+  const init = await rpc("initialize", {
+    protocolVersion: "2025-03-26",
+    capabilities: {},
+    clientInfo: { name: "kozmos-code-connect-readback", version: "1.0.0" },
+  });
+  if (!init.result) throw new Error(JSON.stringify(init).slice(0, 200));
+  await rpc("notifications/initialized", {}, true);
+} catch (error) {
+  console.error(
+    `Cannot reach the Dev Mode MCP server at ${SERVER} (${error.message}).`,
+  );
+  console.error(
+    "Open Figma desktop, enable Preferences → Enable Dev Mode MCP Server, and open the Kozmos DS - Core Library file.",
+  );
+  process.exit(1);
+}
+
+const onlyLabels = argValues("--label");
+const onlyNodes = argValues("--node").map((node) => node.replace("-", ":"));
+const problems = [];
+const report = (problem) => {
+  if (problems.includes(problem)) return;
+  problems.push(problem);
+  console.error(`  ${problem}`);
+};
+
+for (const platform of PLATFORMS) {
+  if (onlyLabels.length && !onlyLabels.includes(platform.label)) continue;
+  const config = JSON.parse(
+    fs.readFileSync(path.join(ROOT, platform.config), "utf8"),
+  );
+  const nodes = linkedNodes(platform).filter(
+    (node) => !onlyNodes.length || onlyNodes.includes(node),
+  );
+  let withSnippet = 0;
+  const results = await inBatches(nodes, async (nodeId) => ({
+    nodeId,
+    ...(await readMapping(nodeId, platform.label)),
+  }));
+  for (const { nodeId, map, error } of results) {
+    if (error) {
+      report(`${platform.label} ${nodeId}: no mapping read (${error})`);
+      continue;
+    }
+    const entries = Object.values(map);
+    withSnippet += entries.length;
+    if (entries.length === 0) {
+      report(`${platform.label} ${nodeId}: nothing published reads back`);
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry.label && entry.label !== platform.label) {
+        report(
+          `${platform.label} ${nodeId}: ${entry.componentName} reads back under ${entry.label}`,
+        );
+      }
+      const problem = platform.importProblem(
+        entry.snippetImports || [],
+        config,
+      );
+      if (problem) {
+        report(
+          `${platform.label} ${nodeId}: ${entry.componentName} import: ${problem}`,
+        );
+      }
+    }
+  }
+  console.log(
+    `${platform.label}: ${nodes.length} linked node(s) asked, ${withSnippet} variant or instance node(s) carry a snippet`,
+  );
+  if (consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS) {
+    console.error(
+      "The Dev Mode server stopped answering. Bring Figma to the front, or restart it, and run again.",
+    );
+    process.exit(1);
+  }
+}
+
+if (problems.length) {
+  console.error(`${problems.length} problem(s), listed above.`);
+  process.exit(1);
+}
+console.log(
+  "Every linked node reads back on every platform, with imports a consumer can use.",
+);

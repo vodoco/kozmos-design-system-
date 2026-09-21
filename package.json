@@ -62,6 +62,7 @@
     "figma:parse:native:linked": "pnpm figma:parse:ios:linked && pnpm figma:parse:android:linked",
     "figma:publish:native:linked": "pnpm figma:publish:ios:linked && pnpm figma:publish:android:linked",
     "figma:publish:native:linked:dry": "pnpm figma:publish:ios:linked:dry && pnpm figma:publish:android:linked:dry",
+    "figma:connect:readback": "node scripts/figma-connect-readback.mjs",
     "components:contract:check": "node scripts/check-component-contracts.mjs",
     "docs:snippets:check": "node scripts/check-doc-snippets.mjs",
     "docs:snippets:compile": "node scripts/check-package-install.mjs",
