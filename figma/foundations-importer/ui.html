@@ -3798,6 +3798,10 @@
           busy || !libraryState.audited || knownNoComponents;
         reorganizeComponentsButton.disabled =
           busy || !libraryState.audited || knownNoComponents;
+        // The bulk runs too: pressed during a run, they started a second
+        // sequence alongside the first (2026-09-21).
+        updateAllProductSdkButton.disabled = busy;
+        updateAllCoreButton.disabled = busy;
         const examplesDisabled =
           busy || !libraryState.audited || knownNoComponents;
         exampleDashboardButton.disabled = examplesDisabled;

@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "01f3be6891dc";
+const PLUGIN_BUILD = "1001317b6546";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -8545,7 +8545,7 @@ function postResultToUi(message) {
   figma.ui.postMessage(message);
 }
 
-figma.ui.onmessage = async (message) => {
+async function handlePluginMessage(message) {
   resetLayoutSizingFailures();
 
   try {
@@ -9756,7 +9756,55 @@ figma.ui.onmessage = async (message) => {
       stack: error instanceof Error ? error.stack : undefined,
     });
   }
+}
+
+// One run at a time. The panel sends one action and waits for its result, but
+// it left the two bulk buttons enabled during a run, and a run yields between
+// sets and now inside long ones: a second press started a second sequence
+// alongside the first, sharing its flags (2026-09-21). A press during a run is
+// refused with a notice, which leaves the panel waiting on the run it started.
+let activePluginRun = null;
+
+figma.ui.onmessage = async (message) => {
+  const type = message && message.type;
+  const exclusive = type !== "ui-ready" && type !== "close";
+  if (exclusive && activePluginRun) {
+    figma.notify(
+      `Kozmos DS: "${activePluginRun}" is still running. Wait for it to finish, then try again.`,
+    );
+    return;
+  }
+  if (exclusive) activePluginRun = type;
+  try {
+    await handlePluginMessage(message);
+  } finally {
+    if (exclusive) activePluginRun = null;
+  }
 };
+
+// Where a bulk run is, for the progress a long set reports.
+let sequenceProgress = null;
+let lastSetProgressAt = 0;
+
+// A long set paints for minutes, and until the plugin yields Figma neither
+// redraws the panel nor saves the file: on 2026-09-21 the panel sat on
+// "Updating NavigationItem" while the file had reached SearchBar, and TreeItem
+// ran for over ten minutes without a save before Figma was quit. A set reports
+// where it is and yields, at most a few times a second, and at every phase.
+async function reportSetProgress(setName, detail, force) {
+  const now = Date.now();
+  if (!force && now - lastSetProgressAt < 250) return;
+  lastSetProgressAt = now;
+  const where = sequenceProgress
+    ? `${sequenceProgress.index} of ${sequenceProgress.total} · `
+    : "";
+  postAuditProgress(
+    sequenceProgress ? sequenceProgress.index : 1,
+    `Updating ${setName}`,
+    `${where}${detail}`,
+  );
+  await yieldToFigma();
+}
 
 function postAuditProgress(step, title, detail) {
   postResultToUi({
@@ -9920,6 +9968,19 @@ function markComponentSetCompleted(page, name) {
   }
 }
 
+// The three slowest sets of a run, so a long one is named with its time.
+function slowestSetsText(perComponent) {
+  const timed = perComponent
+    .filter((record) => typeof record.seconds === "number")
+    .sort((a, b) => b.seconds - a.seconds)
+    .slice(0, 3)
+    .filter((record) => record.seconds > 0);
+  if (timed.length === 0) return "";
+  return ` Slowest: ${timed
+    .map((record) => `${record.name} ${record.seconds} s`)
+    .join(", ")}.`;
+}
+
 async function runUpdateSequence(sequence, kindLabel) {
   const stats = {
     updatedComponents: 0,
@@ -9973,6 +10034,8 @@ async function runUpdateSequence(sequence, kindLabel) {
         `Updating ${name}`,
         `${index + 1} of ${sequence.length}`,
       );
+      sequenceProgress = { index: index + 1, total: sequence.length };
+      const startedAt = Date.now();
 
       try {
         const result = await entry[1]();
@@ -9980,7 +10043,11 @@ async function runUpdateSequence(sequence, kindLabel) {
         // updated:false, and stamping that as finished would make the next run
         // skip a set it never touched.
         if (result.updated) markComponentSetCompleted(page, name);
-        const record = { name, variants: result.variants || 0 };
+        const record = {
+          name,
+          variants: result.variants || 0,
+          seconds: Math.round((Date.now() - startedAt) / 1000),
+        };
         if (result.updated) stats.updatedComponents += 1;
         else stats.skipped.push(name);
         if (Array.isArray(result.warnings) && result.warnings.length > 0) {
@@ -9994,13 +10061,18 @@ async function runUpdateSequence(sequence, kindLabel) {
         // One failing set must not strand the rest of the sequence.
         const message = error instanceof Error ? error.message : String(error);
         stats.failures.push(`${name}: ${message}`);
-        stats.perComponent.push({ name, failed: message });
+        stats.perComponent.push({
+          name,
+          failed: message,
+          seconds: Math.round((Date.now() - startedAt) / 1000),
+        });
       }
 
       await yieldToFigma();
     }
   } finally {
     suppressAutoReorganize = false;
+    sequenceProgress = null;
   }
 
   stats.layout = await reorganizeComponentsPage();
@@ -10012,7 +10084,8 @@ async function runUpdateSequence(sequence, kindLabel) {
     (stats.failures.length > 0 ? ` ${stats.failures.length} failed.` : "") +
     (stats.skipped.length > 0
       ? ` ${stats.skipped.length} not present and skipped.`
-      : "");
+      : "") +
+    slowestSetsText(stats.perComponent);
   return stats;
 }
 
@@ -36656,6 +36729,7 @@ async function updatePlannedMatrixComponent(config) {
   // set was gone before the first replacement could be appended.
   const pendingRemoval = [];
   const existingChildren = Array.from(existing.children || []);
+  const variantTotal = existingChildren.length;
   for (const child of existingChildren) {
     if (child.type !== "COMPONENT") continue;
 
@@ -36689,6 +36763,11 @@ async function updatePlannedMatrixComponent(config) {
     }
 
     seenKeys[key] = true;
+    await reportSetProgress(
+      config.componentSetName,
+      `variant ${stats.variantsUpdated + 1} of ${variantTotal}`,
+      stats.variantsUpdated === 0,
+    );
     await config.updateVariant(child, {
       props,
       variableByName,
@@ -36702,6 +36781,11 @@ async function updatePlannedMatrixComponent(config) {
     const key = config.keyForProps(props);
     if (seenKeys[key]) continue;
 
+    await reportSetProgress(
+      config.componentSetName,
+      `new variant ${stats.variantsCreated + 1}`,
+      stats.variantsCreated === 0,
+    );
     const component = await config.createVariant({
       props,
       variableByName,
@@ -36732,18 +36816,26 @@ async function updatePlannedMatrixComponent(config) {
   stats.updated = true;
   stats.componentSetId = existing.id;
   stats.urlNodeId = nodeIdForUrl(existing.id);
+  await reportSetProgress(config.componentSetName, "variant properties", true);
   normalizeComponentSetVariantProperties(
     existing,
     expectedVariantAxesForComponentSetName(existing.name),
     stats,
   );
+  await reportSetProgress(
+    config.componentSetName,
+    "component properties",
+    true,
+  );
   await config.configureProperties(existing, stats, variableByName);
   reportUnboundComponentProperties(existing, stats);
+  await reportSetProgress(config.componentSetName, "maintenance", true);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
     config.componentName,
     stats,
   );
+  await reportSetProgress(config.componentSetName, "layout", true);
   await reorganizeAfterGeneratedComponentMutation(stats);
   await runGeneratedComponentPostLayoutMaintenance({
     componentName: config.componentName,
@@ -49864,6 +49956,11 @@ async function updateSingleAxisComponent(config) {
     }
 
     seenValues[props.value] = true;
+    await reportSetProgress(
+      config.componentSetName,
+      `variant ${stats.variantsUpdated + 1} of ${existing.children.length}`,
+      stats.variantsUpdated === 0,
+    );
     await config.updateVariant(child, {
       value: props.value,
       variableByName,
@@ -49892,18 +49989,26 @@ async function updateSingleAxisComponent(config) {
   stats.updated = true;
   stats.componentSetId = existing.id;
   stats.urlNodeId = nodeIdForUrl(existing.id);
+  await reportSetProgress(config.componentSetName, "variant properties", true);
   normalizeComponentSetVariantProperties(
     existing,
     expectedVariantAxesForComponentSetName(existing.name),
     stats,
   );
+  await reportSetProgress(
+    config.componentSetName,
+    "component properties",
+    true,
+  );
   await config.configureProperties(existing, stats, variableByName);
   reportUnboundComponentProperties(existing, stats);
+  await reportSetProgress(config.componentSetName, "maintenance", true);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
     config.componentName,
     stats,
   );
+  await reportSetProgress(config.componentSetName, "layout", true);
   await reorganizeAfterGeneratedComponentMutation(stats);
   await runGeneratedComponentPostLayoutMaintenance({
     componentName: config.componentName,

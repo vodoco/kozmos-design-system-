@@ -2292,6 +2292,169 @@ section("Apply Text Styles leaves styled text alone");
   );
 }
 
+// --- One run at a time, and a long set says where it is ------------------------------
+
+// On 2026-09-21 Update All Core ran with the panel frozen on "Updating
+// NavigationItem" while the file had reached SearchBar: a set's variants ran
+// without one real yield, so Figma neither redrew the panel nor saved the file,
+// and TreeItem went over ten minutes without a save before Figma was quit. The
+// two bulk buttons also stayed enabled during a run, and a press then started a
+// second sequence alongside the first. A long set now reports each variant and
+// phase and yields; the panel disables the bulk buttons while busy; the plugin
+// refuses a second run.
+section("One run at a time, and a long set says where it is");
+{
+  const ui = fs.readFileSync(
+    path.join(path.dirname(PLUGIN), "ui.html"),
+    "utf8",
+  );
+  const controls = ui.match(/function renderControls\(\) \{[\s\S]*?\n {6}\}/);
+  ok(
+    controls &&
+      /updateAllProductSdkButton\.disabled = busy/.test(controls[0]) &&
+      /updateAllCoreButton\.disabled = busy/.test(controls[0]),
+    "the panel disables both bulk updates while a run is busy",
+  );
+
+  // A file for the run: the Icons the Tree rows use, and stand-ins for the
+  // variable and text-style API a Build creates on demand.
+  const runPages = () => {
+    const components = new MockNode("PAGE", "Components");
+    const icons = new MockNode("PAGE", "Icons");
+    for (const name of [
+      "chevron-down",
+      "chevron-right",
+      "map-01",
+      "marker-pin-01",
+      "edit-01",
+      "lock-01",
+      "trash-01",
+      "download-01",
+      "settings-01",
+      "x-close",
+      "eye",
+    ]) {
+      icons.appendChild(mockIconComponent(name));
+    }
+    return [components, icons, new MockNode("PAGE", "Utilities")];
+  };
+  const runFigma = createFigmaMock({ pages: runPages() });
+  const withPluginData = (extra) =>
+    Object.assign(
+      {
+        data: {},
+        setSharedPluginData(_namespace, key, value) {
+          this.data[key] = value;
+        },
+        getSharedPluginData(_namespace, key) {
+          return this.data[key] || "";
+        },
+      },
+      extra,
+    );
+  const collections = [];
+  const variables = [];
+  runFigma.variables.getLocalVariableCollectionsAsync = async () => collections;
+  runFigma.variables.getLocalVariablesAsync = async () => variables;
+  runFigma.variables.getVariableByIdAsync = async (id) =>
+    variables.find((variable) => variable.id === id) || null;
+  runFigma.variables.createVariableCollection = (name) => {
+    const collection = withPluginData({
+      id: `VariableCollectionId:${name}`,
+      name,
+      modes: [{ modeId: "m1", name: "Mode 1" }],
+      renameMode(id, next) {
+        const mode = this.modes.find((m) => m.modeId === id);
+        if (mode) mode.name = next;
+      },
+      addMode(next) {
+        const id = `m${this.modes.length + 1}`;
+        this.modes.push({ modeId: id, name: next });
+        return id;
+      },
+    });
+    collections.push(collection);
+    return collection;
+  };
+  runFigma.variables.createVariable = (name, collection, type) => {
+    const variable = withPluginData({
+      id: `VariableID:${name}`,
+      name,
+      resolvedType: type,
+      variableCollectionId:
+        typeof collection === "string" ? collection : collection.id,
+      valuesByMode: {},
+      scopes: [],
+      codeSyntax: {},
+      setValueForMode(mode, value) {
+        this.valuesByMode[mode] = value;
+      },
+      setVariableCodeSyntax(platform, value) {
+        this.codeSyntax[platform] = value;
+      },
+    });
+    variables.push(variable);
+    return variable;
+  };
+  let styleCount = 0;
+  runFigma.createTextStyle = () => ({ id: `S:run-${(styleCount += 1)}` });
+  const notices = [];
+  runFigma.notify = (text) => notices.push(String(text));
+  const posted = [];
+  runFigma.ui.postMessage = (message) => posted.push(message);
+  const runPlugin = loadPlugin({ pluginPath: PLUGIN, figma: runFigma });
+
+  const ready =
+    typeof runPlugin.buildTreeItemComponent === "function" &&
+    typeof runPlugin.updateTreeItemComponent === "function" &&
+    typeof runPlugin.reportSetProgress === "function";
+  ok(
+    ready,
+    "TreeItem's Build and Update and the progress report are reachable",
+  );
+  if (ready) {
+    await runPlugin.buildTreeItemComponent();
+    posted.length = 0;
+    await runPlugin.updateTreeItemComponent();
+    const progress = posted
+      .filter((message) => message && message.type === "audit-progress")
+      .map((message) => `${message.title} — ${message.detail}`);
+    ok(
+      progress.some((line) =>
+        /Updating TreeItem — variant 1 of 216$/.test(line),
+      ) &&
+        progress.some((line) =>
+          /Updating TreeItem — component properties$/.test(line),
+        ) &&
+        progress.some((line) => /Updating TreeItem — layout$/.test(line)),
+      `TreeItem's Update reports its variants and phases (${progress.length} reports: ${progress.slice(0, 3).join("; ")})`,
+    );
+  }
+
+  ok(
+    typeof runPlugin.slowestSetsText === "function" &&
+      runPlugin.slowestSetsText([
+        { name: "Link", seconds: 2 },
+        { name: "TreeItem", seconds: 842 },
+        { name: "Tag", failed: "x", seconds: 0 },
+        { name: "NavigationItem", seconds: 371 },
+      ]) === " Slowest: TreeItem 842 s, NavigationItem 371 s, Link 2 s.",
+    "a run's result names its slowest sets with their times",
+  );
+
+  // Two presses: the second, while the first runs, is refused with a notice.
+  const first = runFigma.ui.onmessage({ type: "update-all-product-sdk" });
+  const second = runFigma.ui.onmessage({ type: "update-all-core" });
+  await second;
+  await first;
+  ok(
+    notices.length === 1 && /still running/.test(notices[0]),
+    `a second run during the first is refused (${notices.join(" | ") || "no notice"})`,
+  );
+  await runFigma.ui.onmessage({ type: "update-all-product-sdk" });
+  ok(notices.length === 1, "a run after the first has finished is not refused");
+}
+
 // --- Layout sizing Figma accepts ---------------------------------------------------
 
 // A run on 2026-09-21 logged 319 layout sizing calls Figma refused: HUG on
