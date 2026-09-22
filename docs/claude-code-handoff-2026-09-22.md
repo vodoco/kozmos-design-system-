@@ -392,13 +392,27 @@ Read over REST with the tools in `scripts/figma-rest/` (read-only; the token is 
 ## 6. Decisions still Olcay's
 
 1. **The Figma run, then the library publish** — his actions; the steps are §7 item 1.
-2. **The POI sheet's "Open"** — 3.95:1 on the sheet's grey, the one story-audit failure left. A
-   colour ruling; the site session brings it to him. Nothing to do here until he rules.
+2. **The POI sheet's "Open"** — the one story-audit failure left: `text-success`
+   (`emotional-success-800`, `#197F4C`) at 12px semibold reads 3.95:1 on the sheet's
+   `background/100`. It is not one label. Measured on the 22nd, four of the five emotion text
+   tokens fail on the grey surfaces in the light theme — success, alert, informative and danger
+   read 3.59–4.09:1 on `background/100`, and all but danger stay under 4.5 on `background/50` —
+   because they were calibrated on white only; every dark value passes. **Recommended:** one step
+   darker in the light theme, which passes on all three neutral backgrounds in both themes —
+   success and alert 800 → 900 (5.59 and 5.89 on the grey), informative 700 → 800 (5.43), danger
+   600 → 700 (5.47); themed passes as it is — with Tailwind's status colours read from the
+   semantic text tokens (today each reads its primitive step directly) and
+   `scripts/check-token-contrast.mjs` holding every emotion's text on `background/0`, `/50` and
+   `/100`. The narrow alternative is the "Open" alone at `success-900`. (The prototype's own green,
+   `#23B26B`, reads 2.74:1 on white.) The site session brings the ruling to him.
 3. **The bundle budget** — 321.02 KB raw against 300, gzip 70.79 against 70, grown by real
    features (the adaptive shell, the POI anatomy, the navigation parts). Recommended: subpath
    exports for the Product / SDK layer before the first npm release, while the import paths are
-   still free to change, measured by the same script; raising the budget alone makes every
-   consumer carry the SDK parts. Neither session raises it.
+   still free to change; raising the budget alone makes every consumer carry the SDK parts. The
+   check measures `dist/kozmos-react.mjs`, the whole library in one file — an app that imports a
+   few parts through a bundler pays less, since the package declares its side effects — so
+   measure the split first: build a core entry and an SDK entry and read both. Neither session
+   raises it.
 4. **Chromatic's first baselines** — accept the 276 snapshots of build 269 in Chromatic (the
    project's setup was never finished), or say which to reject.
 5. **Merging #56** — his word. Then #55: GitHub does not retarget a stacked PR while its base
@@ -406,8 +420,11 @@ Read over REST with the tools in `scripts/figma-rest/` (read-only; the token is 
    branch (memory `kozmos-stacked-pr-runs-only-ci`).
 6. **The browser range for `@scope`** — WebKit before Safari 26.4 drops `@scope` rules on inputs
    (`docs/browser-compatibility-2026-09-17.md`; `WayfindingInputRow.spec.tsx` pins it with
-   `test.fail`). Either state a modern-only range for 0.1.0, or remove `@scope` from the inputs
-   first.
+   `test.fail`). The 17th's recommendation stands: ask Pointr for its minimum Safari / iOS and
+   Android WebView / Chrome versions; if they include any Safari before 26.4 — every iPhone not
+   on iOS 26.4 or later — finish moving the components off `@scope`
+   (`docs/component-owned-css-2026-09-17.md` is the migration) before 0.1.0. A modern-only range
+   is the fast path only if Pointr's hosts guarantee current engines.
 7. **The npm first release** — claim the `@kozmos` scope; a minor changeset per package for 0.1.0
    for the packages that lack one — the eleven pending changesets bump `@kozmos/react` (two minors,
    nine patches) and `@kozmos/product-contracts` (three minors), so both reach 0.1.0, while
@@ -416,11 +433,16 @@ Read over REST with the tools in `scripts/figma-rest/` (read-only; the token is 
    skips publishing without it). Mechanics: `docs/ds-handoff.md` §4.5.
 8. **The stepper's pending number and label colours** — they differ four ways (React muted,
    Figma the ink, SwiftUI and Compose each their own). A small ruling.
-9. **Native releases** — none exist: no `maven-publish`, no tags for SwiftPM.
-10. **Two tasks flagged as separate sessions** (offered as chips on the 22nd; whether he started
-    them is unknown): `task_4270cdfe` — fills fixed across themes (theme/500) under inks that flip,
-    about 3.7:1 in the dark on both natives; `task_d0f28ad7` — a Compose glass card shows its
-    elevation shadow through the tint, and iOS may.
+9. **Native releases** — none exist: no `maven-publish`, no tags for SwiftPM. SwiftPM installs a
+   package from a repository's root `Package.swift`, and this one is in `packages/ios`, so a Swift
+   release needs a root manifest or a mirror repository; Compose needs `maven-publish` (GitHub
+   Packages is the simplest channel). Recommended after npm.
+10. **Two tasks offered as separate sessions** (chips in the desktop app): `task_66e62865` — fills
+    fixed across themes (theme/500) under inks that flip, about 3.7:1 in the dark on both natives;
+    `task_92e3c39c` — a Compose glass card shows its elevation shadow through the tint, and iOS
+    may. They replace `task_4270cdfe` and `task_d0f28ad7`, whose prompts sent a new session into
+    this worktree and branch; the new ones work in their own worktree and branch, from `main` once
+    #56 has merged (from this branch before). Recommended: start both after the merge.
 11. **The AI companion** (carried): the device floor (iOS 26 on Apple Intelligence-capable
     iPhones), Apple Intelligence on in his Mac's System Settings for the simulators, and the
     companion surface the design system lacks (`docs/pointr-prototype-ai-companion-2026-09-21.md`).
