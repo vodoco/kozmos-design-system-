@@ -251,6 +251,24 @@
       var(--semantics-data-red)
     );
     animation: ai-search-spin 3.6s linear infinite;
+    /* The band is cut out of this one element, not left over between two.
+       Stacked as a 43 disc inside a 48 circle it measured 1.83 to 3.14 wide
+       around the turn in Chromium — the disc's rounded rect painting 0.44px
+       right and down of the ring's, at every pixel ratio, animated or not,
+       while `getBoundingClientRect` swore they were concentric. WebKit and
+       Firefox drew it evenly, so it looked like nothing. Cut by a radial mask
+       the band is 2.5 in all three. The disc behind is inset 2, inside the
+       band, so its edge never decides where the ring ends. */
+    -webkit-mask: radial-gradient(
+      farthest-side,
+      #0000 calc(100% - 2.5px),
+      #000 calc(100% - 2.5px)
+    );
+    mask: radial-gradient(
+      farthest-side,
+      #0000 calc(100% - 2.5px),
+      #000 calc(100% - 2.5px)
+    );
   }
   /* The build prefixes keyframe names with kozmos-: this becomes kozmos-ai-search-spin. */
   @keyframes ai-search-spin {

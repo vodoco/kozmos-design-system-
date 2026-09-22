@@ -21,6 +21,7 @@ import {
   Heading,
   POIDetailPanel,
   Spinner,
+  AISearchButton,
 } from "@kozmos/react";
 
 function Controls({ id }: { id: string }) {
@@ -87,6 +88,10 @@ function Controls({ id }: { id: string }) {
       </Button>
       <Spinner data-testid={`${id}-spinner`} />
       <Spinner size="xl" data-testid={`${id}-spinner-xl`} />
+      <AISearchButton
+        data-testid={`${id}-ai-search`}
+        label={`${id} AI search`}
+      />
       <Button data-testid={`${id}-icon-label`}>
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" />
         Navigate
