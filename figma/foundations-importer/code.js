@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "c35a625c8160";
+const PLUGIN_BUILD = "b3257790f931";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -13898,6 +13898,15 @@ function createSurfaceQaText(
   setLayoutSizingHorizontal(text, "FILL");
   text.characters = characters;
   return text;
+}
+
+// A node, and what it holds, in the Dark mode of every Kozmos collection: the
+// Figma form of a subtree with a theme of its own.
+async function applyKozmosDarkMode(node, stats) {
+  const collections = (
+    await figma.variables.getLocalVariableCollectionsAsync()
+  ).filter((collection) => collection.name.startsWith("Kozmos "));
+  applySurfaceQaVariableMode(node, collections, "Dark", stats);
 }
 
 function applySurfaceQaVariableMode(node, collections, modeName, stats) {
@@ -49264,9 +49273,13 @@ async function updateRouteSummaryVariant(
     width,
     height: 76,
   });
-  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
+  // The panel role, 24, as SwiftUI and Compose draw these cards, and React
+  // since 2026-09-22 (the 2xl primitive, 32, before). It was the container,
+  // 20, here; the slots nest in the panel.
+  productSdkSurface(component, KOZMOS_RADIUS.panel, variableByName, stats);
 
   const mode = await productSdkSlot({
+    parentRadius: KOZMOS_RADIUS.panel,
     name: "Transport Mode Slot",
     label: "Mode",
     width: 44,
@@ -49447,7 +49460,10 @@ async function updateRoutingInputGroupVariant(
     width,
     height: pointCount * 52 + 24,
   });
-  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
+  // The panel role, 24, as SwiftUI and Compose draw these cards, and React
+  // since 2026-09-22 (the 2xl primitive, 32, before). It was the container,
+  // 20, here; the slots nest in the panel.
+  productSdkSurface(component, KOZMOS_RADIUS.panel, variableByName, stats);
 
   const fields = productSdkFrame("Point Fields", {
     primarySizing: "AUTO",
@@ -49468,6 +49484,7 @@ async function updateRoutingInputGroupVariant(
         ? ROUTING_INPUT_GROUP_POINTS[index]
         : ROUTING_INPUT_GROUP_POINTS[index === 0 ? 0 : 2];
     const field = await productSdkSlot({
+      parentRadius: KOZMOS_RADIUS.panel,
       name: point.slot,
       label: point.label,
       width: fieldWidth,
@@ -49587,7 +49604,10 @@ async function updateSaveLocationCardVariant(
     width,
     height: 160,
   });
-  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
+  // The panel role, 24, as SwiftUI and Compose draw these cards, and React
+  // since 2026-09-22 (the 2xl primitive, 32, before). It was the container,
+  // 20, here; the slots nest in the panel.
+  productSdkSurface(component, KOZMOS_RADIUS.panel, variableByName, stats);
 
   const title = await productSdkText({
     name: "Title Text",
@@ -49924,16 +49944,17 @@ async function updateDynamicIslandVariant(
   // its tighter side — unlike a Product / SDK card, whose 1px border counts.
   const insetAround = (slotHeight) =>
     expanded ? 16 : (geometry.height - slotHeight) / 2;
-  // The island is a black pill on the device bezel, not a themed surface, so
-  // it uses the inverse foreground rather than a Surface token.
+  // The island is black in both themes, as the device's is, and what sits in
+  // it reads the dark theme: the set takes the Kozmos collections' Dark mode —
+  // as React nests a dark provider, SwiftUI scopes the dark scheme and Compose
+  // the dark palette — and the pill is that theme's page surface. Until
+  // 2026-09-22 it bound Colors/foreground/1000, which is white in the Kozmos
+  // light ramp (LocationPin's white ring binds the same variable), with a
+  // near-black fallback.
   component.cornerRadius = geometry.radius;
+  await applyKozmosDarkMode(component, stats);
   component.fills = [
-    paintFromVariable(
-      "Colors/foreground/1000",
-      "#0B0D12",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Surface/0", "#000000", variableByName, stats),
   ];
   component.strokes = [];
 
@@ -50081,7 +50102,10 @@ async function updateFeedbackCardVariant(
     width,
     height: 240,
   });
-  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
+  // The panel role, 24, as SwiftUI and Compose draw these cards, and React
+  // since 2026-09-22 (the 2xl primitive, 32, before). It was the container,
+  // 20, here; the slots nest in the panel.
+  productSdkSurface(component, KOZMOS_RADIUS.panel, variableByName, stats);
 
   // Success replaces the form outright. Leaving a disabled form behind the
   // confirmation would suggest the rating is still editable.
@@ -50139,6 +50163,7 @@ async function updateFeedbackCardVariant(
   appendWithSizing(component, description, "FILL", "HUG");
 
   const rating = await productSdkSlot({
+    parentRadius: KOZMOS_RADIUS.panel,
     name: "Rating Slot",
     label: "Rating slot",
     width: contentWidth,
@@ -50151,6 +50176,7 @@ async function updateFeedbackCardVariant(
   appendWithSizing(component, rating, "FILL", "FIXED");
 
   const comment = await productSdkSlot({
+    parentRadius: KOZMOS_RADIUS.panel,
     name: "Comment Slot",
     label: "Textarea slot",
     width: contentWidth,
@@ -58098,18 +58124,22 @@ async function createStepperStepItem({
   indicator.resizeWithoutConstraints(32, 32);
   indicator.cornerRadius = KOZMOS_RADIUS.pill;
   indicator.clipsContent = false;
+  // The accent is React's primary, theme/600, on every platform; it was
+  // theme/500 here and on the natives until 2026-09-22. A completed step's
+  // ring is its fill's colour, as React and the natives draw it — it was
+  // foreground/500 here, a grey ring around the blue.
   indicator.fills = [
     paintFromVariable(
-      completed ? "Colors/theme/500" : "Surface/0",
-      completed ? "#135BEC" : "#FFFFFF",
+      completed ? "Colors/theme/600" : "Surface/0",
+      completed ? "#1051E8" : "#FFFFFF",
       variableByName,
       stats,
     ),
   ];
   indicator.strokes = [
     paintFromVariable(
-      current ? "Colors/theme/500" : "Colors/foreground/500",
-      current ? "#135BEC" : "#747B8B",
+      current || completed ? "Colors/theme/600" : "Colors/foreground/500",
+      current || completed ? "#1051E8" : "#747B8B",
       variableByName,
       stats,
     ),
@@ -58179,16 +58209,18 @@ function createStepperConnector({ index, active, variableByName, stats }) {
   connector.name = `Step ${index + 1} Connector`;
   connector.resizeWithoutConstraints(92, 2);
   connector.cornerRadius = KOZMOS_RADIUS.pill;
+  // The accent, or the border role at its own strength, as React and the
+  // natives draw it; the pending connector was faded to 32 % until 2026-09-22.
   connector.fills = [
     paintFromVariable(
-      active ? "Colors/theme/500" : "Border/Subtle",
-      active ? "#135BEC" : "#C7CAD1",
+      active ? "Colors/theme/600" : "Border/Subtle",
+      active ? "#1051E8" : "#C7CAD1",
       variableByName,
       stats,
     ),
   ];
   connector.strokes = [];
-  connector.opacity = active ? 1 : 0.32;
+  connector.opacity = 1;
   connector.setSharedPluginData(RUN_NAMESPACE, "kind", "stepper-connector");
   return connector;
 }

@@ -36,7 +36,8 @@ const fail = (m) => {
 // Counts as they stood on 2026-09-09. Lower these as they are fixed.
 const BASELINE = {
   colour: { total: 19, components: 6 },
-  radius: { total: 6, components: 5 },
+  // 6 across 5 until 2026-09-22, when the four map cards took the panel role.
+  radius: { total: 2, components: 1 },
 };
 
 console.log("Raw values that bypass a role\n");

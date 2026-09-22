@@ -3,7 +3,6 @@ package com.kozmos.components.feedbackcard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.button.KozmosButton
 import com.kozmos.components.rating.KozmosRating
-import com.kozmos.components.textarea.KozmosTextarea
+import com.kozmos.components.input.KozmosWashedField
 import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
 import com.kozmos.tokens.KozmosThemeTokens
@@ -99,11 +98,14 @@ fun KozmosFeedbackCard(
 
                 KozmosRating(value = rating, onValueChange = { rating = it })
 
-                KozmosTextarea(
+                // Washed, as React's comment box is, not the outlined text
+                // area: it was the standard one, 96 high, until 2026-09-22.
+                KozmosWashedField(
                     value = comment,
                     onValueChange = { comment = it },
                     placeholder = "Tell us more about your experience...",
-                    modifier = Modifier.heightIn(min = 96.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    multiline = true
                 )
 
                 KozmosButton(

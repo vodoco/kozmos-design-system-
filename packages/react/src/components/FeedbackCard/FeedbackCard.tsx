@@ -45,7 +45,7 @@ const FeedbackCard = React.forwardRef<HTMLDivElement, FeedbackCardProps>(
       <div
         ref={ref}
         className={cn(
-          `${surfaceClass(surface)} shadow-overlay rounded-[var(--primitives-radius-2xl)] p-6 flex flex-col gap-4 transition-all duration-300`,
+          `${surfaceClass(surface)} shadow-overlay rounded-panel p-6 flex flex-col gap-4 transition-all duration-300`,
           className,
         )}
         {...props}

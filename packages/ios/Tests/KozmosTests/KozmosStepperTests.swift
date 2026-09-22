@@ -56,5 +56,30 @@ final class KozmosStepperTests: XCTestCase {
         XCTAssertEqual(current.ring, 2, accuracy: 0.75, "the current step's ring is \(current.ring)")
         XCTAssertEqual(pendingStep.ring, 1, accuracy: 0.75, "the pending step's ring is \(pendingStep.ring)")
     }
+
+    /// The accent is React's primary pair: theme/600 — #1051E8 on light,
+    /// #5887F3 on dark — with foreground/1000 on it. It was theme/500, the same
+    /// #135BEC in both themes, with background/0 on it: black on the saturated
+    /// blue in the dark.
+    @MainActor func testTheAccentIsReactsPrimaryPairInBothThemes() async throws {
+        for (scheme, want) in [(ColorScheme.light, (0x10, 0x51, 0xE8)), (.dark, (0x58, 0x87, 0xF3))] {
+            let size = CGSize(width: 320, height: 90)
+            let view = ZStack(alignment: .topLeading) {
+                KozmosColors.semanticsSurface0
+                KozmosStepper(steps: ["Search", "Route", "Go"], currentStep: 1)
+                    .frame(width: 300)
+                    .padding(10)
+            }
+            .environment(\.colorScheme, scheme)
+            let pixels = try await RenderedPixels.render(view, size: size)
+            let blue = { (r: UInt8, g: UInt8, b: UInt8) in Int(b) > Int(r) + 60 && Int(b) > 150 }
+            let circle = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 0, y: 0, width: 70, height: 60), where: blue))
+            // Inside the completed step's fill, clear of its check.
+            let fill = pixels.color(at: CGPoint(x: circle.minX + 6, y: circle.midY))
+            for (channel, got, expected) in [("r", Int(fill.r), want.0), ("g", Int(fill.g), want.1), ("b", Int(fill.b), want.2)] {
+                XCTAssertEqual(got, expected, accuracy: 3, "\(scheme): the completed step is \(fill) (\(channel))")
+            }
+        }
+    }
     #endif
 }

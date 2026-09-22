@@ -48,7 +48,7 @@ public struct KozmosRoutingInputGroup: View {
             VStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
                 ForEach(Array(points.enumerated()), id: \.element.id) { index, point in
                     HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
-                        KozmosRoutingField(
+                        KozmosWashedField(
                             text: Binding(
                                 get: { point.value },
                                 set: { onPointChange(point.id, $0) }
@@ -160,46 +160,5 @@ public struct KozmosRoutingInputGroup: View {
 
     private func canRemove(index: Int) -> Bool {
         points.count > 2 && index > 0 && index < points.count - 1
-    }
-}
-
-/// One route point's field, as React's: 40 high, the control radius, 12 in, no
-/// edge at rest but a wash — black at 5 % on light, white at 10 % on dark,
-/// doubled while focused — and the standard focus ring, 2 pt in the ring role,
-/// 2 pt out. Until 2026-09-22 the wash was foreground/900 at 5 %, which is a
-/// pale grey on light and near-black on dark and so showed on neither, and
-/// focus drew nothing.
-private struct KozmosRoutingField: View {
-    @Environment(\.colorScheme) private var colorScheme
-    @Binding var text: String
-    let placeholder: String
-    @FocusState private var focused: Bool
-
-    var body: some View {
-        let radius = KozmosDimensions.semanticsRadiusControl
-        let wash = (colorScheme == .dark ? 0.10 : 0.05) * (focused ? 2 : 1)
-        TextField(
-            "",
-            text: $text,
-            prompt: Text(placeholder).foregroundColor(KozmosColors.primitivesColorsForeground400)
-        )
-        .textFieldStyle(.plain)
-        .font(KozmosTypography.subheadline)
-        .foregroundColor(KozmosColors.primitivesColorsForeground0)
-        .tint(KozmosColors.primitivesColorsTheme600)
-        .focused($focused)
-        .accessibilityLabel(placeholder)
-        .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing150)
-        .frame(height: 40)
-        .background(
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .fill(KozmosColors.primitivesColorsForeground0.opacity(wash))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: radius + 3, style: .continuous)
-                .stroke(KozmosColors.primitivesColorsTheme600, lineWidth: 2)
-                .padding(-3)
-                .opacity(focused ? 1 : 0)
-        )
     }
 }

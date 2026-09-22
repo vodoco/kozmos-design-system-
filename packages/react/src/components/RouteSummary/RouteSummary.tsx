@@ -40,7 +40,7 @@ export type RouteSummaryProps =
   | RouteSummaryNavigationProps;
 
 const LAYOUT =
-  "flex w-full flex-col rounded-[var(--primitives-radius-2xl)] p-4 text-foreground shadow-overlay transition-all duration-300";
+  "flex w-full flex-col rounded-panel p-4 text-foreground shadow-overlay transition-all duration-300";
 
 const RouteSummaryNavigation = React.forwardRef<
   HTMLDivElement,

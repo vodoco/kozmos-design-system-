@@ -66,7 +66,9 @@ public struct KozmosFeedbackCard: View {
 
                 KozmosRating(value: $rating)
 
-                KozmosTextarea(text: $comment, placeholder: "Tell us more about your experience...")
+                // Washed, as React's comment box is, not the outlined text
+                // area: it was the standard one until 2026-09-22.
+                KozmosWashedField(text: $comment, placeholder: "Tell us more about your experience...", multiline: true)
                     .frame(minHeight: 96)
 
                 KozmosButton(

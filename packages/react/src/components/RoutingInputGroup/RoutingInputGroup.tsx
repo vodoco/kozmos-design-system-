@@ -60,7 +60,7 @@ const RoutingInputGroup = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          `flex items-start gap-3 w-full ${surfaceClass(surface)} p-4 rounded-[var(--primitives-radius-2xl)] shadow-overlay transition-all duration-300`,
+          `flex items-start gap-3 w-full ${surfaceClass(surface)} p-4 rounded-panel shadow-overlay transition-all duration-300`,
           className,
         )}
         {...props}

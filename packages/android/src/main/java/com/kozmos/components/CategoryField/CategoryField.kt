@@ -55,28 +55,32 @@ fun KozmosCategoryField(
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
     count: Int? = null,
-    tint: KozmosCategoryTint = KozmosCategoryTint(
-        KozmosThemeTokens.primitivesColorsTheme500,
-        KozmosInkedFill(KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle, KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle)
-    ),
+    // null is the field with no category, the theme's own tint, as the
+    // tile's and the pin's are and React's undefined; it could not be null
+    // until 2026-09-22, so Code Connect's Theme had to spell light colours out.
+    tint: KozmosCategoryTint? = null,
     clearLabel: String = "Clear category",
     countLabel: (Int) -> String = { "$it places" },
     icon: (@Composable () -> Unit)? = null
 ) {
+    val categoryTint = tint ?: KozmosCategoryTint(
+        KozmosThemeTokens.primitivesColorsTheme500,
+        KozmosInkedFill(KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle, KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle)
+    )
     val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
     Row(
         modifier = modifier
             .height(48.dp)
             .clip(shape)
-            .background(tint.accent.copy(alpha = 0.12f))
-            .border(1.dp, tint.accent, shape)
+            .background(categoryTint.accent.copy(alpha = 0.12f))
+            .border(1.dp, categoryTint.accent, shape)
             .padding(start = KozmosDimensions.primitivesLayoutSpacing150, end = KozmosDimensions.primitivesLayoutSpacing25)
             .semantics(mergeDescendants = false) {
                 contentDescription = if (count == null) label else "$label, ${countLabel(count)}"
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        CompositionLocalProvider(LocalContentColor provides tint.accent) {
+        CompositionLocalProvider(LocalContentColor provides categoryTint.accent) {
             if (icon != null) {
                 // Decorative: the name beside it says what it shows.
                 Box(
@@ -109,12 +113,12 @@ fun KozmosCategoryField(
                         modifier = Modifier
                             .defaultMinSize(minWidth = 22.dp, minHeight = 22.dp)
                             .clip(CircleShape)
-                            .background(tint.fill.fill)
+                            .background(categoryTint.fill.fill)
                             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing75)
                             .semantics { contentDescription = countLabel(count) },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = count.toString(), color = tint.fill.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(text = count.toString(), color = categoryTint.fill.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

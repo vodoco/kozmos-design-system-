@@ -260,6 +260,8 @@ export class MockNode {
     this.pluginData = {};
     this.componentPropertyReferences = null;
     this.boundVariables = {};
+    // Collection id to mode id, as setExplicitVariableModeForCollection sets it.
+    this.explicitVariableModes = {};
     if (type === "TEXT") {
       this.characters = "";
       this.fontName = { family: "Inter", style: "Regular" };
@@ -403,6 +405,11 @@ export class MockNode {
     this.height = height;
     this.requestedSize = { width, height };
     this.holdAutoLayoutMinimum();
+  }
+
+  setExplicitVariableModeForCollection(collection, modeId) {
+    const id = typeof collection === "string" ? collection : collection.id;
+    this.explicitVariableModes = { ...this.explicitVariableModes, [id]: modeId };
   }
 
   resizeWithoutConstraints(width, height) {
@@ -701,7 +708,7 @@ for (const axis of ["layoutSizingHorizontal", "layoutSizingVertical"]) {
  * `library` maps a component key to the component `importComponentByKeyAsync`
  * returns for it, standing in for a team library.
  */
-export function createFigmaMock({ pages, library }) {
+export function createFigmaMock({ pages, library, collections = [] }) {
   const root = new MockNode("DOCUMENT", "Document");
   for (const page of pages) root.appendChild(page);
   const figma = {
@@ -795,7 +802,7 @@ export function createFigmaMock({ pages, library }) {
         },
       }),
       getLocalVariablesAsync: async () => [],
-      getLocalVariableCollectionsAsync: async () => [],
+      getLocalVariableCollectionsAsync: async () => collections,
       getVariableByIdAsync: async () => null,
       createVariable: () => {
         throw new Error("the harness does not create variables");

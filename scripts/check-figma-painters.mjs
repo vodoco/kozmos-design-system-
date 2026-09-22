@@ -1424,6 +1424,109 @@ section("DynamicIsland");
   );
 }
 
+// --- The decisions of 2026-09-22: panels, the island's theme, the stepper --------
+
+// The four cards that float over the map are the panel role, 24, as SwiftUI and
+// Compose draw them and React since the same day; they were the container, 20.
+// Their slots nest in the panel: 24 less the 13 a slot sits in by, not 7.
+section("Map cards on the panel radius");
+{
+  const cards = [
+    ["RouteSummary", "updateRouteSummaryVariant", "Preview"],
+    ["RoutingInputGroup", "updateRoutingInputGroupVariant", "TwoPoints"],
+    ["SaveLocationCard", "updateSaveLocationCardVariant", "Default"],
+    ["FeedbackCard", "updateFeedbackCardVariant", "Default"],
+  ];
+  const tokens = payloadVariables([...variableByName.keys()]);
+  const panel = plugin.KOZMOS_RADIUS.panel;
+  const slotRadius = plugin.nestedRadius(panel, plugin.PRODUCT_SDK_CARD_INSET);
+  const stale = plugin.nestedRadius(plugin.KOZMOS_RADIUS.container, plugin.PRODUCT_SDK_CARD_INSET);
+  for (const [name, painter, value] of cards) {
+    const component = figma.createComponent();
+    await plugin[painter](component, {
+      value,
+      variableByName: tokens.variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    const radii = component.findAll((node) => node !== component && node.cornerRadius > 0).map((node) => node.cornerRadius);
+    ok(
+      component.cornerRadius === panel && !radii.includes(stale),
+      `${name}: the card at ${component.cornerRadius} (panel ${panel}), no slot left at the container's ${stale}${radii.includes(slotRadius) ? `; slots at ${slotRadius}` : ""}`,
+    );
+  }
+}
+
+// The island is black in both themes, as the device's is, and what sits in it
+// reads the dark theme: the set takes the Dark mode of every Kozmos collection
+// and no other, and the pill is Surface/0. It bound Colors/foreground/1000 —
+// white in the Kozmos light ramp — with a near-black fallback.
+section("DynamicIsland's own theme");
+{
+  const tokens = payloadVariables([...variableByName.keys()]);
+  const product = { id: "Primitive Tokens", name: "Primitive Tokens", modes: [{ modeId: "product-dark", name: "Dark" }] };
+  const themedFigma = createFigmaMock({ pages: pages(), collections: [...tokens.collections, product] });
+  const themed = loadPlugin({ pluginPath: PLUGIN, figma: themedFigma });
+  const island = themedFigma.createComponent();
+  await themed.updateDynamicIslandVariant(island, {
+    value: "Compact",
+    variableByName: tokens.variableByName,
+    fonts: FONTS,
+    stats: freshStats(),
+  });
+  const kozmos = tokens.collections.map((collection) => collection.id);
+  const modes = island.explicitVariableModes;
+  ok(
+    kozmos.every((id) => modes[id] === "dark") && !(product.id in modes),
+    `the island takes Dark in every Kozmos collection and no other (${JSON.stringify(modes)})`,
+  );
+  ok(
+    boundVariableName(island.fills[0]) === "Surface/0",
+    `the pill is Surface/0 (${boundVariableName(island.fills[0])})`,
+  );
+}
+
+// The stepper's accent is React's primary, theme/600, as the natives draw it
+// since the same day, and a completed step's ring is its fill's colour; the
+// pending connector is the border role at its own strength.
+section("Stepper accent");
+{
+  const tokens = payloadVariables([...variableByName.keys()]);
+  const step = async (index) =>
+    plugin.createStepperStepItem({
+      index,
+      label: "Step",
+      currentIndex: 1,
+      variableByName: tokens.variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+  const indicator = (item) => item.findOne((node) => node.name.endsWith("Indicator"));
+  const [completed, current, pending] = [await step(0), await step(1), await step(2)].map(indicator);
+  ok(
+    boundVariableName(completed.fills[0]) === "Colors/theme/600" &&
+      boundVariableName(completed.strokes[0]) === "Colors/theme/600",
+    `a completed step is theme/600, ring and fill (${boundVariableName(completed.fills[0])}, ${boundVariableName(completed.strokes[0])})`,
+  );
+  ok(
+    boundVariableName(current.strokes[0]) === "Colors/theme/600" && current.strokeWeight === 2,
+    `the current step's ring is theme/600 at 2 (${boundVariableName(current.strokes[0])} at ${current.strokeWeight})`,
+  );
+  ok(
+    boundVariableName(pending.strokes[0]) === "Colors/foreground/500" && pending.strokeWeight === 1,
+    `a pending step's ring is foreground/500 at 1 (${boundVariableName(pending.strokes[0])} at ${pending.strokeWeight})`,
+  );
+  const connector = (active) =>
+    plugin.createStepperConnector({ index: 0, active, variableByName: tokens.variableByName, stats: freshStats() });
+  const [done, ahead] = [connector(true), connector(false)];
+  ok(
+    boundVariableName(done.fills[0]) === "Colors/theme/600" &&
+      boundVariableName(ahead.fills[0]) === "Border/Subtle" &&
+      ahead.opacity === 1,
+    `the connectors are theme/600 and Border/Subtle at full strength (${boundVariableName(ahead.fills[0])} at ${ahead.opacity})`,
+  );
+}
+
 // --- Every frame keeps the size it was drawn at -----------------------------------
 
 // The runtime grows an auto-layout frame its padding and stroke outgrow, and

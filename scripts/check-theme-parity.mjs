@@ -9,7 +9,8 @@
  * `KozmosColors` 272 times and drew light in dark mode. `KozmosThemeTokens` is
  * generated for every colour of both palettes. This asserts the palettes name
  * the same colours, the accessor wraps each of them and nothing else, and no
- * Compose source outside the token files reads a one-theme palette;
+ * Compose source outside the token files reads a one-theme palette — a Code
+ * Connect file only for a colour that is the same in both themes;
  * `pnpm tokens:copies:check` holds the package's copies to the build. It also holds the places that scope a theme on
  * purpose: the island reads dark in both themes, only the theme provider sets
  * a window's scheme, and every scrim is the scrim role.
@@ -133,30 +134,34 @@ console.log("themed accessor");
   else ok("accessor: the theme comes from LocalKozmosUseDarkTokens, then the system");
 }
 
-// 3. No Compose source reads a one-theme palette. Code Connect files are
-//    counted, not held: their mapping values are class initialisers, where a
-//    composable getter cannot be read, and what they show changes only with a
-//    Code Connect republish.
+// 3. No Compose source reads a one-theme palette. A Code Connect file may read
+//    KozmosColors for a colour that is the same in both themes, and only that:
+//    its mapping values are class initialisers, where a composable getter
+//    cannot be read, and the category colours it maps are theme-invariant.
 console.log("Compose sources");
 {
   const sources = walk("packages/android/src/main/java/com/kozmos", (p) => p.endsWith(".kt") && !p.startsWith(`${TOKENS}/`));
-  const onePalette = /\bKozmos(Colors|ColorsDark|DesignTokens)\b/g;
+  const onePalette = /\bKozmos(Colors|ColorsDark|DesignTokens)\b(?:\.(\w+))?/g;
   let offenders = 0;
-  const connect = [];
+  let invariant = 0;
   for (const file of sources) {
-    const code = blankComments(read(file));
+    const code = blankComments(read(file)).replace(/^import .*$/gm, "");
     const lines = code.split("\n");
     const hits = [];
+    const connect = file.endsWith(".figma.kt");
     lines.forEach((line, i) => {
-      for (const m of line.matchAll(onePalette)) hits.push(`${i + 1}: ${m[0]}`);
+      for (const m of line.matchAll(onePalette)) {
+        const same = m[1] === "Colors" && m[2] && light.has(m[2]) && light.get(m[2]) === dark.get(m[2]);
+        if (connect && same) { invariant++; continue; }
+        hits.push(`${i + 1}: ${m[0]}`);
+      }
     });
     if (!hits.length) continue;
-    if (file.endsWith(".figma.kt")) { connect.push(`${path.basename(file)} ${hits.length}`); continue; }
     offenders++;
-    fail(`${file}: reads a one-theme palette at ${hits.slice(0, 6).join(", ")}${hits.length > 6 ? ` and ${hits.length - 6} more` : ""}; read KozmosThemeTokens`);
+    const remedy = connect ? "a Code Connect file may read KozmosColors only for a colour the same in both themes" : "read KozmosThemeTokens";
+    fail(`${file}: reads a one-theme palette at ${hits.slice(0, 6).join(", ")}${hits.length > 6 ? ` and ${hits.length - 6} more` : ""}; ${remedy}`);
   }
-  if (!offenders) ok(`Compose: ${sources.length} sources read colours through KozmosThemeTokens`);
-  if (connect.length) info(`Code Connect still shows the light palette: ${connect.join(", ")}`);
+  if (!offenders) ok(`Compose: ${sources.length} sources read colours through KozmosThemeTokens (Code Connect: ${invariant} theme-invariant reads)`);
 }
 
 // 4. The places that scope a theme on purpose.
