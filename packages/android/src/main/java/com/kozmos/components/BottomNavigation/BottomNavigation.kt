@@ -7,7 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 data class BottomNavigationItem(
     val title: String,
@@ -24,7 +24,7 @@ fun KozmosBottomNavigation(
 ) {
     NavigationBar(
         modifier = modifier,
-        containerColor = KozmosColors.primitivesColorsBackground0
+        containerColor = KozmosThemeTokens.primitivesColorsBackground0
     ) {
         items.forEach { item ->
             NavigationBarItem(

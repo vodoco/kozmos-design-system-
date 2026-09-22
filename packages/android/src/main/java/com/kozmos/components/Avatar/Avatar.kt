@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosAvatar(
@@ -28,7 +28,7 @@ fun KozmosAvatar(
         modifier = modifier
             .size(KozmosDimensions.primitivesLayoutSizing500)
             .clip(CircleShape)
-            .background(KozmosColors.primitivesColorsBackground300),
+            .background(KozmosThemeTokens.primitivesColorsBackground300),
         contentAlignment = Alignment.Center
     ) {
         if (imageUrl != null) {
@@ -42,7 +42,7 @@ fun KozmosAvatar(
             Text(
                 text = fallbackText,
                 style = MaterialTheme.typography.titleMedium,
-                color = KozmosColors.primitivesColorsForeground500
+                color = KozmosThemeTokens.primitivesColorsForeground500
             )
         }
     }

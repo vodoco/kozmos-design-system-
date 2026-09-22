@@ -9772,7 +9772,7 @@ assertContains(
     assertContains(
       files.androidCategoryTile,
       source.androidCategoryTile,
-      "LocalContentColor provides (tint?.accent ?: KozmosColors.primitivesColorsTheme500)",
+      "LocalContentColor provides (tint?.accent ?: KozmosThemeTokens.primitivesColorsTheme500)",
       "Android CategoryTile icon in the tint",
     );
     assertContains(
@@ -9829,7 +9829,7 @@ if (locationPin.content.tint) {
   assertContains(
     files.androidLocationPin,
     source.androidLocationPin,
-    /featured -> KozmosColors\.primitivesColorsEmotionalAlert500\s+tint != null -> tint\.fill\.fill/,
+    /featured -> KozmosThemeTokens\.primitivesColorsEmotionalAlert500\s+tint != null -> tint\.fill\.fill/,
     "Android LocationPin tint after featured",
   );
 }
@@ -9846,7 +9846,7 @@ if (locationPin.content.offFloorNumberColor === "foreground/0") {
   assertContains(
     files.androidLocationPin,
     source.androidLocationPin,
-    "if (offFloor) KozmosColors.primitivesColorsForeground0 else (tint?.fill?.ink",
+    "if (offFloor) KozmosThemeTokens.primitivesColorsForeground0 else (tint?.fill?.ink",
     "Android LocationPin off-floor number in foreground/0",
   );
   assertContains(
@@ -9901,7 +9901,7 @@ if (
   assertContains(
     files.androidPOIDetailPanel,
     source.androidPOIDetailPanel,
-    "color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) Color.Transparent else KozmosColors.primitivesColorsBackground0",
+    "color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) Color.Transparent else KozmosThemeTokens.primitivesColorsBackground0",
     "Android POIDetailPanel sheet surface none",
   );
   assertContains(

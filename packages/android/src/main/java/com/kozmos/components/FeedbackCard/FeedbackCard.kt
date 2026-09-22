@@ -27,14 +27,20 @@ import com.kozmos.components.rating.KozmosRating
 import com.kozmos.components.textarea.KozmosTextarea
 import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.components.surface.KozmosSurfaceDefaults
 import com.kozmos.components.surface.KozmosSurfaceStyle
 
+/**
+ * [surface] is what the card is made of, as React's `surface` prop:
+ * [KozmosSurfaceStyle.Solid] (the default) or [KozmosSurfaceStyle.Glass], for a
+ * card over the map. Until 2026-09-22 Compose drew it solid only.
+ */
 @Composable
 fun KozmosFeedbackCard(
     modifier: Modifier = Modifier,
+    surface: KozmosSurfaceStyle = KozmosSurfaceStyle.Solid,
     title: String = "Rate your experience",
     description: String = "How was your navigation today?",
     isSubmitting: Boolean = false,
@@ -52,10 +58,10 @@ fun KozmosFeedbackCard(
         // The solid surface React's card sits on by default, themed: the
         // background with the subtle border. It was the background at 90 %
         // under a near-black hairline at 8 % until 2026-09-22.
-        color = KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Solid),
+        color = KozmosSurfaceDefaults.tint(surface),
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,
-        border = KozmosSurfaceDefaults.border(KozmosSurfaceStyle.Solid)
+        border = KozmosSurfaceDefaults.border(surface)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -68,26 +74,26 @@ fun KozmosFeedbackCard(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = KozmosColors.primitivesColorsEmotionalSuccess600,
+                    tint = KozmosThemeTokens.primitivesColorsEmotionalSuccess600,
                     modifier = Modifier.size(48.dp)
                 )
                 Text(
                     text = successMessage,
                     style = MaterialTheme.typography.titleMedium,
-                    color = KozmosColors.primitivesColorsForeground100,
+                    color = KozmosThemeTokens.primitivesColorsForeground100,
                     textAlign = TextAlign.Center
                 )
             } else {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = KozmosColors.primitivesColorsForeground100,
+                    color = KozmosThemeTokens.primitivesColorsForeground100,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = KozmosColors.primitivesColorsForeground500,
+                    color = KozmosThemeTokens.primitivesColorsForeground500,
                     textAlign = TextAlign.Center
                 )
 

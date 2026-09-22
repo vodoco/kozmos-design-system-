@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
 import com.kozmos.tokens.KozmosShadows
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 /** Layout of the floor selector, mirroring the React `FloorSelector.variant`. */
@@ -77,7 +77,7 @@ fun KozmosFloorSelector(
                 .size(KozmosDimensions.primitivesLayoutSizing500)
                 .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel))
                 .background(
-                    if (isSelected) KozmosColors.primitivesColorsTheme500 else Color.Transparent
+                    if (isSelected) KozmosThemeTokens.primitivesColorsTheme500 else Color.Transparent
                 )
                 .clickable { select(floor) }
                 .semantics {
@@ -89,9 +89,9 @@ fun KozmosFloorSelector(
             Text(
                 text = floor,
                 color = if (isSelected) {
-                    KozmosColors.primitivesColorsBackground0
+                    KozmosThemeTokens.primitivesColorsBackground0
                 } else {
-                    KozmosColors.primitivesColorsForeground100
+                    KozmosThemeTokens.primitivesColorsForeground100
                 },
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
             )
@@ -118,7 +118,7 @@ fun KozmosFloorSelector(
                     Icons.Default.KeyboardArrowDown
                 },
                 contentDescription = null,
-                tint = KozmosColors.primitivesColorsForeground500
+                tint = KozmosThemeTokens.primitivesColorsForeground500
             )
         }
     }
@@ -126,7 +126,7 @@ fun KozmosFloorSelector(
     val rootModifier = modifier
         .shadow(KozmosShadows.semanticsElevationFloating, RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel))
         .background(
-            KozmosColors.primitivesColorsBackground0,
+            KozmosThemeTokens.primitivesColorsBackground0,
             RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel)
         )
         .padding(KozmosDimensions.primitivesLayoutSpacing50)

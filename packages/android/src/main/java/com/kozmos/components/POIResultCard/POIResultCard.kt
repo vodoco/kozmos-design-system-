@@ -38,7 +38,6 @@ import com.kozmos.contracts.KozmosPOIPresentation
 import com.kozmos.contracts.KozmosPOIResultPresentation
 import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 
@@ -118,11 +117,11 @@ fun KozmosPOIResultCard(
             },
         enabled = available,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
-        color = KozmosColors.primitivesColorsBackground0,
+        color = KozmosThemeTokens.primitivesColorsBackground0,
         border = BorderStroke(
             width = if (result.selected) 2.dp else 1.dp,
             color = if (result.selected) {
-                KozmosColors.primitivesColorsTheme500
+                KozmosThemeTokens.primitivesColorsTheme500
             } else {
                 KozmosThemeTokens.semanticsBorderSubtle
             }
@@ -137,7 +136,7 @@ fun KozmosPOIResultCard(
                             top = KozmosDimensions.primitivesLayoutSpacing100
                         )
                         .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-                        .background(KozmosColors.componentsPrimaryButtonsAlertButtonBackgroundIdle)
+                        .background(KozmosThemeTokens.componentsPrimaryButtonsAlertButtonBackgroundIdle)
                         .padding(
                             horizontal = KozmosDimensions.primitivesLayoutSpacing100,
                             vertical = KozmosDimensions.primitivesLayoutSpacing50
@@ -150,14 +149,14 @@ fun KozmosPOIResultCard(
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = null,
-                        tint = KozmosColors.componentsPrimaryButtonsAlertButtonForegroundContentIdle,
+                        tint = KozmosThemeTokens.componentsPrimaryButtonsAlertButtonForegroundContentIdle,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = featuredLabel,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = KozmosColors.componentsPrimaryButtonsAlertButtonForegroundContentIdle
+                        color = KozmosThemeTokens.componentsPrimaryButtonsAlertButtonForegroundContentIdle
                     )
                 }
             }
@@ -183,7 +182,7 @@ fun KozmosPOIResultCard(
                         text = poi.name,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Normal,
-                        color = KozmosColors.primitivesColorsForeground100,
+                        color = KozmosThemeTokens.primitivesColorsForeground100,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -192,7 +191,7 @@ fun KozmosPOIResultCard(
                         Text(
                             text = categoryLabel,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = KozmosColors.primitivesColorsForeground500,
+                            color = KozmosThemeTokens.primitivesColorsForeground500,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -210,13 +209,13 @@ fun KozmosPOIResultCard(
                                 modifier = Modifier
                                     .size(KozmosDimensions.primitivesLayoutSpacing75)
                                     .clip(CircleShape)
-                                    .background(KozmosColors.primitivesColorsTheme500)
+                                    .background(KozmosThemeTokens.primitivesColorsTheme500)
                             )
                         }
                         Text(
                             text = poi.locationLabel,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = KozmosColors.primitivesColorsForeground500,
+                            color = KozmosThemeTokens.primitivesColorsForeground500,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -228,9 +227,9 @@ fun KozmosPOIResultCard(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = if (poi.availability == KozmosPOIAvailability.Open) {
-                                KozmosColors.componentsPrimaryButtonsSuccessButtonBackgroundIdle
+                                KozmosThemeTokens.componentsPrimaryButtonsSuccessButtonBackgroundIdle
                             } else {
-                                KozmosColors.primitivesColorsForeground500
+                                KozmosThemeTokens.primitivesColorsForeground500
                             }
                         )
                     }
@@ -248,7 +247,7 @@ fun KozmosPOIResultCard(
                         Text(
                             text = travelEstimate.durationLabel,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = KozmosColors.primitivesColorsForeground100
+                            color = KozmosThemeTokens.primitivesColorsForeground100
                         )
                     }
                 }
@@ -260,7 +259,7 @@ fun KozmosPOIResultCard(
                 Text(
                     text = result.unavailableReason,
                     style = MaterialTheme.typography.bodySmall,
-                    color = KozmosColors.primitivesColorsForeground500,
+                    color = KozmosThemeTokens.primitivesColorsForeground500,
                     modifier = Modifier.padding(
                         horizontal = KozmosDimensions.primitivesLayoutSpacing200,
                         vertical = KozmosDimensions.primitivesLayoutSpacing100

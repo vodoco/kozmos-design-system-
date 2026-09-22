@@ -35,7 +35,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.providers.LocalKozmosAnalytics
 
 @Composable
@@ -51,7 +51,7 @@ fun KozmosPOICard(
     Card(
         modifier = modifier.width(300.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = KozmosShadows.semanticsElevationFloating),
-        colors = CardDefaults.cardColors(containerColor = KozmosColors.primitivesColorsBackground0)
+        colors = CardDefaults.cardColors(containerColor = KozmosThemeTokens.primitivesColorsBackground0)
     ) {
         Column {
             if (imageContent != null) {
@@ -71,7 +71,7 @@ fun KozmosPOICard(
                             Text(
                                 text = category,
                                 style = MaterialTheme.typography.labelMedium,
-                                color = KozmosColors.primitivesColorsForeground500
+                                color = KozmosThemeTokens.primitivesColorsForeground500
                             )
                         }
                     }

@@ -27,7 +27,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kozmos.contracts.KozmosRouteOptionPresentation
 import com.kozmos.contracts.KozmosRoutePreference
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 
@@ -65,14 +64,14 @@ fun KozmosRouteOptionCard(
         enabled = isEnabled,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
         color = if (option.selected) {
-            KozmosColors.primitivesColorsTheme500.copy(alpha = 0.05f)
+            KozmosThemeTokens.primitivesColorsTheme500.copy(alpha = 0.05f)
         } else {
-            KozmosColors.primitivesColorsBackground0
+            KozmosThemeTokens.primitivesColorsBackground0
         },
         border = BorderStroke(
             width = if (option.selected) 2.dp else 1.dp,
             color = if (option.selected) {
-                KozmosColors.primitivesColorsTheme500
+                KozmosThemeTokens.primitivesColorsTheme500
             } else {
                 KozmosThemeTokens.semanticsBorderSubtle
             }
@@ -96,7 +95,7 @@ fun KozmosRouteOptionCard(
                             KozmosRoutePreference.Custom -> Icons.Default.Tune
                         },
                         contentDescription = null,
-                        tint = KozmosColors.primitivesColorsTheme500
+                        tint = KozmosThemeTokens.primitivesColorsTheme500
                     )
                 }
 
@@ -104,7 +103,7 @@ fun KozmosRouteOptionCard(
                     text = option.label,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = KozmosColors.primitivesColorsForeground100,
+                    color = KozmosThemeTokens.primitivesColorsForeground100,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -119,13 +118,13 @@ fun KozmosRouteOptionCard(
                     text = option.durationLabel,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = KozmosColors.primitivesColorsForeground100
+                    color = KozmosThemeTokens.primitivesColorsForeground100
                 )
 
                 Text(
                     text = option.distanceLabel,
                     style = MaterialTheme.typography.bodySmall,
-                    color = KozmosColors.primitivesColorsForeground500
+                    color = KozmosThemeTokens.primitivesColorsForeground500
                 )
             }
 
@@ -133,7 +132,7 @@ fun KozmosRouteOptionCard(
                 Text(
                     text = warning,
                     style = MaterialTheme.typography.bodySmall,
-                    color = KozmosColors.primitivesColorsEmotionalAlert600
+                    color = KozmosThemeTokens.primitivesColorsEmotionalAlert600
                 )
             }
         }

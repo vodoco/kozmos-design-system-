@@ -2,10 +2,14 @@ package com.kozmos.components.routinginputgroup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -13,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -20,24 +25,28 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.components.surface.KozmosSurfaceDefaults
 import com.kozmos.components.surface.KozmosSurfaceStyle
-import androidx.compose.ui.graphics.Color
 
 data class KozmosRoutePoint(
     val id: String,
@@ -45,11 +54,17 @@ data class KozmosRoutePoint(
     val placeholder: String? = null
 )
 
+/**
+ * [surface] is what the group is made of, as React's `surface` prop:
+ * [KozmosSurfaceStyle.Solid] (the default) or [KozmosSurfaceStyle.Glass], for a
+ * card over the map. Until 2026-09-22 Compose drew it solid only.
+ */
 @Composable
 fun KozmosRoutingInputGroup(
     points: List<KozmosRoutePoint>,
     onPointChange: (String, String) -> Unit,
     modifier: Modifier = Modifier,
+    surface: KozmosSurfaceStyle = KozmosSurfaceStyle.Solid,
     onSwap: (() -> Unit)? = null,
     onAddPoint: (() -> Unit)? = null,
     onRemovePoint: ((String) -> Unit)? = null
@@ -62,10 +77,10 @@ fun KozmosRoutingInputGroup(
         // The solid surface React's card sits on by default, themed: the
         // background with the subtle border. It was the background at 90 %
         // under a near-black hairline at 8 % until 2026-09-22.
-        color = KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Solid),
+        color = KozmosSurfaceDefaults.tint(surface),
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,
-        border = KozmosSurfaceDefaults.border(KozmosSurfaceStyle.Solid)
+        border = KozmosSurfaceDefaults.border(surface)
     ) {
         Row(
             modifier = Modifier
@@ -85,66 +100,54 @@ fun KozmosRoutingInputGroup(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100)
                     ) {
-                        OutlinedTextField(
+                        RoutingField(
                             value = point.value,
                             onValueChange = { onPointChange(point.id, it) },
-                            placeholder = { Text(point.placeholder ?: defaultPlaceholder(index)) },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
-                            // No edge at rest, a wash instead, as React's field
-                            // (border-transparent, bg-black/5) and SwiftUI's are;
-                            // the theme's edge stays to mark focus. It was
-                            // outlined in foreground/300 until 2026-09-22.
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = KozmosColors.primitivesColorsTheme500,
-                                unfocusedBorderColor = Color.Transparent,
-                                focusedContainerColor = KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = 0.05f),
-                                unfocusedContainerColor = KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = 0.05f)
-                            )
+                            placeholder = point.placeholder ?: defaultPlaceholder(index),
+                            modifier = Modifier.weight(1f)
                         )
 
                         if (points.size > 2 && index > 0 && index < points.lastIndex && onRemovePoint != null) {
-                            IconButton(
-                                onClick = {
-                                    trackEvent(KozmosAnalyticsEvent(component = "RoutingInputGroup", eventName = "point_removed", properties = mapOf("pointId" to point.id)))
-                                    onRemovePoint(point.id)
-                                },
-                                modifier = Modifier.semantics { contentDescription = "Remove route point" }
+                            RoutingAction(
+                                icon = Icons.Default.Close,
+                                label = "Remove ${point.placeholder ?: point.value.ifEmpty { "route point" }}",
+                                filled = false
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = null,
-                                    tint = KozmosColors.primitivesColorsEmotionalDanger600
-                                )
+                                trackEvent(KozmosAnalyticsEvent(component = "RoutingInputGroup", eventName = "point_removed", properties = mapOf("pointId" to point.id)))
+                                onRemovePoint(point.id)
                             }
                         }
                     }
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100)) {
-                if (points.size == 2 && onSwap != null) {
-                    IconButton(
-                        onClick = {
-                            trackEvent(KozmosAnalyticsEvent(component = "RoutingInputGroup", eventName = "points_swapped"))
-                            onSwap()
-                        },
-                        modifier = Modifier.semantics { contentDescription = "Swap route points" }
+            // React's action column: with two points the swap sits 24 down,
+            // between the fields, in the secondary fill, and the add 20 below
+            // it (8 apart and its own 20); with more, the add is at the top.
+            // They were 48 Material icon buttons with no fill until 2026-09-22.
+            Column {
+                val swaps = points.size == 2 && onSwap != null
+                if (swaps) {
+                    RoutingAction(
+                        icon = Icons.Default.SwapVert,
+                        label = "Swap route points",
+                        filled = true,
+                        modifier = Modifier.padding(top = 24.dp)
                     ) {
-                        Icon(Icons.Default.SwapVert, contentDescription = null)
+                        trackEvent(KozmosAnalyticsEvent(component = "RoutingInputGroup", eventName = "points_swapped"))
+                        onSwap?.invoke()
                     }
                 }
 
                 if (onAddPoint != null) {
-                    IconButton(
-                        onClick = {
-                            trackEvent(KozmosAnalyticsEvent(component = "RoutingInputGroup", eventName = "point_added"))
-                            onAddPoint()
-                        },
-                        modifier = Modifier.semantics { contentDescription = "Add route point" }
+                    RoutingAction(
+                        icon = Icons.Default.Add,
+                        label = "Add route point",
+                        filled = false,
+                        modifier = Modifier.padding(top = if (points.size == 2) 20.dp + (if (swaps) 8.dp else 0.dp) else 0.dp)
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
+                        trackEvent(KozmosAnalyticsEvent(component = "RoutingInputGroup", eventName = "point_added"))
+                        onAddPoint()
                     }
                 }
             }
@@ -152,45 +155,126 @@ fun KozmosRoutingInputGroup(
     }
 }
 
+/**
+ * React's rail: 12 down, a 14 ring for each point but the last — the start's
+ * in the accent over a fifth of it, a waypoint's in the muted foreground — a
+ * 2 × 36 connector in the border role between each, and a 16 pin for the end,
+ * 8 apart. It was theme/500 with an 18 pin, touching, and its connectors
+ * foreground/300 until 2026-09-22.
+ */
 @Composable
 private fun RouteTimeline(points: List<KozmosRoutePoint>) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    val accent = KozmosThemeTokens.primitivesColorsTheme600
+    Column(
+        modifier = Modifier.padding(top = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         points.forEachIndexed { index, _ ->
             if (index == points.lastIndex) {
                 Icon(
                     imageVector = Icons.Default.Place,
                     contentDescription = null,
-                    tint = KozmosColors.primitivesColorsTheme500,
-                    modifier = Modifier.size(18.dp)
+                    tint = accent,
+                    modifier = Modifier.size(16.dp)
                 )
             } else {
                 Box(
                     modifier = Modifier
                         .size(14.dp)
-                        .background(
-                            if (index == 0) KozmosColors.primitivesColorsTheme500.copy(alpha = 0.18f) else androidx.compose.ui.graphics.Color.Transparent,
-                            CircleShape
-                        )
-                        .border(
-                            2.dp,
-                            if (index == 0) KozmosColors.primitivesColorsTheme500 else KozmosThemeTokens.primitivesColorsForeground400,
-                            CircleShape
-                        )
+                        .background(if (index == 0) accent.copy(alpha = 0.2f) else Color.Transparent, CircleShape)
+                        .border(2.dp, if (index == 0) accent else KozmosThemeTokens.primitivesColorsForeground400, CircleShape)
                 )
-            }
-
-            if (index < points.lastIndex) {
                 Box(
                     modifier = Modifier
                         .width(2.dp)
                         .height(36.dp)
-                        .background(KozmosColors.primitivesColorsForeground300, RoundedCornerShape(1.dp))
+                        .background(KozmosThemeTokens.semanticsBorderSubtle, CircleShape)
                 )
             }
         }
     }
 }
 
+/**
+ * One of the group's 40 icon actions, with the control radius. `filled` is the
+ * swap's secondary fill with the page ink; the others are ghost in the muted
+ * foreground, as React's are.
+ */
+@Composable
+private fun RoutingAction(
+    icon: ImageVector,
+    label: String,
+    filled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(40.dp)
+            .clip(shape)
+            .background(if (filled) KozmosThemeTokens.primitivesColorsBackground200 else Color.Transparent, shape)
+            .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
+            .semantics { contentDescription = label }
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (filled) KozmosThemeTokens.primitivesColorsForeground0 else KozmosThemeTokens.primitivesColorsForeground400,
+            modifier = Modifier.size(16.dp)
+        )
+    }
+}
+
 private fun defaultPlaceholder(index: Int): String {
     return if (index == 0) "Choose Starting Point" else "Choose Destination"
+}
+
+/**
+ * One route point's field, as React's: 40 high, the control radius, 12 in, no
+ * edge at rest but a wash — black at 5 % on light, white at 10 % on dark,
+ * doubled while focused — and the ring role's 2 dp outline marking focus.
+ * Until 2026-09-22 it was Material's outlined field: 56 high, React's 40, with
+ * the dark wash at 5 % and the focus edge in theme/500.
+ */
+@Composable
+private fun RoutingField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    val wash = (if (KozmosThemeTokens.isDark) 0.10f else 0.05f) * (if (focused) 2f else 1f)
+    val ring = KozmosThemeTokens.primitivesColorsTheme600
+    val textStyle = MaterialTheme.typography.bodyMedium
+    val placeholderColor = KozmosThemeTokens.primitivesColorsForeground400
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        singleLine = true,
+        textStyle = textStyle.copy(color = KozmosThemeTokens.primitivesColorsForeground0),
+        cursorBrush = SolidColor(ring),
+        interactionSource = interaction,
+        modifier = modifier
+            .height(40.dp)
+            .background(KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = wash), shape)
+            .then(if (focused) Modifier.border(2.dp, ring, shape) else Modifier)
+            .semantics { contentDescription = placeholder },
+        decorationBox = { inner ->
+            Box(
+                contentAlignment = Alignment.CenterStart,
+                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp)
+            ) {
+                if (value.isEmpty()) {
+                    Text(placeholder, style = textStyle, color = placeholderColor, maxLines = 1)
+                }
+                inner()
+            }
+        }
+    )
 }

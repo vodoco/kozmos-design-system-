@@ -23,7 +23,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.input.KozmosInputStatus
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 
@@ -107,7 +106,7 @@ fun KozmosOTPInput(
                             val activeIndex = displayValue.length.coerceAtMost(cellCount - 1)
                             val isActive = index == activeIndex && enabled && !readOnly
                             val borderColor = if (isActive) {
-                                KozmosColors.primitivesColorsTheme500
+                                KozmosThemeTokens.primitivesColorsTheme500
                             } else {
                                 inactiveBorderColor
                             }

@@ -7,12 +7,16 @@ public struct KozmosFeedbackCard: View {
     private let description: String
     private let isSubmitting: Bool
     private let successMessage: String
+    private let surface: KozmosSurfaceStyle
     private let onSubmitFeedback: ((Int, String) -> Void)?
 
     @State private var rating: Int
     @State private var comment: String
     @State private var submitted: Bool
 
+    /// `surface` is what the card is made of, as React's `surface` prop: `.solid`
+    /// (the default) or `.glass`, for a card over the map. Until 2026-09-22
+    /// SwiftUI drew it solid only.
     public init(
         title: String = "Rate your experience",
         description: String = "How was your navigation today?",
@@ -20,8 +24,10 @@ public struct KozmosFeedbackCard: View {
         successMessage: String = "Thank you for the feedback!",
         initialRating: Int = 0,
         initialComment: String = "",
+        surface: KozmosSurfaceStyle = .solid,
         onSubmitFeedback: ((Int, String) -> Void)? = nil
     ) {
+        self.surface = surface
         self.title = title
         self.description = description
         self.isSubmitting = isSubmitting
@@ -79,7 +85,7 @@ public struct KozmosFeedbackCard: View {
         // The solid surface React's card sits on by default: the background
         // with the subtle border. It was the background at 90 % under a
         // near-black hairline at 8 % until 2026-09-22.
-        .kozmosSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
+        .kozmosSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous), style: surface)
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 }

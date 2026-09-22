@@ -351,14 +351,43 @@
   <item name="semantics_motion_enter" type="dimen" format="float">0.949999988079071</item>
   <item name="semantics_motion_exit" type="dimen" format="float">0.949999988079071</item>
   <integer name="semantics_motion_duration_scale">1</integer>
+  <string name="semantics_motion_duration_quick">150ms</string>
+  <string name="semantics_motion_duration_standard">280ms</string>
+  <string name="semantics_motion_duration_deliberate">460ms</string>
   <integer name="semantics_motion_slide_sm">4</integer>
   <integer name="semantics_motion_slide_md">8</integer>
+  <string name="semantics_motion_easing_standard">cubic-bezier(0.4, 0, 0.2, 1)</string>
+  <string name="semantics_motion_easing_emphasised">cubic-bezier(0.34, 1.56, 0.64, 1)</string>
   <item name="semantics_effect_glass_opacity" type="dimen" format="float">0.699999988079071</item>
   <integer name="semantics_effect_glass_blur">20</integer>
   <item name="semantics_effect_glass_saturation" type="dimen" format="float">1.7999999523162842</item>
   <item name="semantics_effect_glass_noise_opacity" type="dimen" format="float">0.029999999329447746</item>
   <item name="semantics_effect_glass_border_opacity" type="dimen" format="float">0.20000000298023224</item>
   <item name="semantics_effect_glass_refraction_opacity" type="dimen" format="float">0.4000000059604645</item>
+  <color name="semantics_category_accent_yellow">#fff9ac17</color>
+  <color name="semantics_category_accent_orange">#ffe5801a</color>
+  <color name="semantics_category_accent_turquoise">#ff37a4a4</color>
+  <color name="semantics_category_accent_red">#ffd92626</color>
+  <color name="semantics_category_accent_blue">#ff2080df</color>
+  <color name="semantics_category_accent_navy">#ff4d4db2</color>
+  <color name="semantics_category_accent_green">#ff339933</color>
+  <color name="semantics_category_accent_pink">#ffb24db2</color>
+  <color name="semantics_category_fill_yellow">#fff9ac17</color>
+  <color name="semantics_category_fill_orange">#ffe5801a</color>
+  <color name="semantics_category_fill_turquoise">#ff37a4a4</color>
+  <color name="semantics_category_fill_red">#ffd92626</color>
+  <color name="semantics_category_fill_blue">#ff1e77cf</color>
+  <color name="semantics_category_fill_navy">#ff4d4db2</color>
+  <color name="semantics_category_fill_green">#ff339933</color>
+  <color name="semantics_category_fill_pink">#ffb24db2</color>
+  <color name="semantics_category_on_fill_yellow">#ff17191c</color>
+  <color name="semantics_category_on_fill_orange">#ff17191c</color>
+  <color name="semantics_category_on_fill_turquoise">#ff17191c</color>
+  <color name="semantics_category_on_fill_red">#ffffffff</color>
+  <color name="semantics_category_on_fill_blue">#ffffffff</color>
+  <color name="semantics_category_on_fill_navy">#ffffffff</color>
+  <color name="semantics_category_on_fill_green">#ff17191c</color>
+  <color name="semantics_category_on_fill_pink">#ffffffff</color>
   <color name="components_primary_buttons_themed_button_foreground_content_idle">#ffffffff</color>
   <color name="components_primary_buttons_themed_button_foreground_content_disabled">#ff464a53</color>
   <color name="components_primary_buttons_themed_button_foreground_content_hover">#ffffffff</color>
@@ -374,11 +403,11 @@
   <color name="components_primary_buttons_themed_foreground_dimmed_content_hover">#ffcad9fc</color>
   <color name="components_primary_buttons_themed_foreground_dimmed_content_pressed">#ffcad9fc</color>
   <color name="components_primary_buttons_themed_foreground_dimmed_content_focus">#ffcad9fc</color>
-  <color name="components_primary_buttons_success_button_background_idle">#ff1e995b</color>
+  <color name="components_primary_buttons_success_button_background_idle">@color/primitives_colors_emotional_success_800</color>
   <color name="components_primary_buttons_success_button_background_disabled">#ff2e3138</color>
-  <color name="components_primary_buttons_success_button_background_hover">#ff23b26b</color>
-  <color name="components_primary_buttons_success_button_background_pressed">#ff197f4c</color>
-  <color name="components_primary_buttons_success_button_background_focus">#ff23b26b</color>
+  <color name="components_primary_buttons_success_button_background_hover">@color/primitives_colors_emotional_success_900</color>
+  <color name="components_primary_buttons_success_button_background_pressed">@color/primitives_colors_emotional_success_1000</color>
+  <color name="components_primary_buttons_success_button_background_focus">@color/primitives_colors_emotional_success_900</color>
   <color name="components_primary_buttons_success_button_foreground_content_idle">#ffffffff</color>
   <color name="components_primary_buttons_success_button_foreground_content_disabled">#ff464a53</color>
   <color name="components_primary_buttons_success_button_foreground_content_hover">#ffffffff</color>
@@ -389,11 +418,11 @@
   <color name="components_primary_buttons_success_foreground_dimmed_content_hover">#ffcbf5e0</color>
   <color name="components_primary_buttons_success_foreground_dimmed_content_pressed">#ffcbf5e0</color>
   <color name="components_primary_buttons_success_foreground_dimmed_content_focus">#ffcbf5e0</color>
-  <color name="components_primary_buttons_alert_button_background_idle">#ffcd8905</color>
+  <color name="components_primary_buttons_alert_button_background_idle">@color/primitives_colors_emotional_alert_800</color>
   <color name="components_primary_buttons_alert_button_background_disabled">#ff2e3138</color>
-  <color name="components_primary_buttons_alert_button_background_hover">#fff9a707</color>
-  <color name="components_primary_buttons_alert_button_background_pressed">#ffa06b04</color>
-  <color name="components_primary_buttons_alert_button_background_focus">#fff9a707</color>
+  <color name="components_primary_buttons_alert_button_background_hover">@color/primitives_colors_emotional_alert_900</color>
+  <color name="components_primary_buttons_alert_button_background_pressed">@color/primitives_colors_emotional_alert_1000</color>
+  <color name="components_primary_buttons_alert_button_background_focus">@color/primitives_colors_emotional_alert_900</color>
   <color name="components_primary_buttons_alert_button_foreground_content_idle">#ffffffff</color>
   <color name="components_primary_buttons_alert_button_foreground_content_disabled">#ff464a53</color>
   <color name="components_primary_buttons_alert_button_foreground_content_hover">#ffffffff</color>
@@ -421,9 +450,9 @@
   <color name="components_primary_buttons_danger_foreground_dimmed_content_focus">#fffceaee</color>
   <color name="components_primary_buttons_informative_button_background_idle">#ff2379a4</color>
   <color name="components_primary_buttons_informative_button_background_disabled">#ff2e3138</color>
-  <color name="components_primary_buttons_informative_button_background_hover">#ff2a92c6</color>
+  <color name="components_primary_buttons_informative_button_background_hover">@color/primitives_colors_emotional_info_800</color>
   <color name="components_primary_buttons_informative_button_background_pressed">#ff1c6082</color>
-  <color name="components_primary_buttons_informative_button_background_focus">#ff2a92c6</color>
+  <color name="components_primary_buttons_informative_button_background_focus">@color/primitives_colors_emotional_info_800</color>
   <color name="components_primary_buttons_informative_button_foreground_content_idle">#ffffffff</color>
   <color name="components_primary_buttons_informative_button_foreground_content_disabled">#ff464a53</color>
   <color name="components_primary_buttons_informative_button_foreground_content_hover">#ffffffff</color>
@@ -469,11 +498,11 @@
   <color name="components_secondary_buttons_success_button_background_hover">#ff23b26b</color>
   <color name="components_secondary_buttons_success_button_background_pressed">#ff197f4c</color>
   <color name="components_secondary_buttons_success_button_background_focus">#ff23b26b</color>
-  <color name="components_secondary_buttons_success_button_foreground_content_idle">#ff1e995b</color>
+  <color name="components_secondary_buttons_success_button_foreground_content_idle">@color/primitives_colors_emotional_success_900</color>
   <color name="components_secondary_buttons_success_button_foreground_content_disabled">#ff464a53</color>
-  <color name="components_secondary_buttons_success_button_foreground_content_hover">#ff23b26b</color>
-  <color name="components_secondary_buttons_success_button_foreground_content_pressed">#ff197f4c</color>
-  <color name="components_secondary_buttons_success_button_foreground_content_focus">#ff23b26b</color>
+  <color name="components_secondary_buttons_success_button_foreground_content_hover">@color/primitives_colors_emotional_success_1000</color>
+  <color name="components_secondary_buttons_success_button_foreground_content_pressed">@color/primitives_colors_emotional_success_1000</color>
+  <color name="components_secondary_buttons_success_button_foreground_content_focus">@color/primitives_colors_emotional_success_1000</color>
   <color name="components_secondary_buttons_success_foreground_dimmed_content_idle">#ff23b26b</color>
   <color name="components_secondary_buttons_success_foreground_dimmed_content_disabled">#ff464a53</color>
   <color name="components_secondary_buttons_success_foreground_dimmed_content_hover">#ff28cc7a</color>
@@ -484,11 +513,11 @@
   <color name="components_secondary_buttons_danger_button_background_hover">#ffd41c42</color>
   <color name="components_secondary_buttons_danger_button_background_pressed">#ff8c132b</color>
   <color name="components_secondary_buttons_danger_button_background_focus">#ffd41c42</color>
-  <color name="components_secondary_buttons_danger_button_foreground_content_idle">#ffb01736</color>
+  <color name="components_secondary_buttons_danger_button_foreground_content_idle">@color/primitives_colors_emotional_danger_700</color>
   <color name="components_secondary_buttons_danger_button_foreground_content_disabled">#ff464a53</color>
-  <color name="components_secondary_buttons_danger_button_foreground_content_hover">#ffd41c42</color>
-  <color name="components_secondary_buttons_danger_button_foreground_content_pressed">#ff8c132b</color>
-  <color name="components_secondary_buttons_danger_button_foreground_content_focus">#ffd41c42</color>
+  <color name="components_secondary_buttons_danger_button_foreground_content_hover">@color/primitives_colors_emotional_danger_800</color>
+  <color name="components_secondary_buttons_danger_button_foreground_content_pressed">@color/primitives_colors_emotional_danger_900</color>
+  <color name="components_secondary_buttons_danger_button_foreground_content_focus">@color/primitives_colors_emotional_danger_800</color>
   <color name="components_secondary_buttons_danger_foreground_dimmed_content_idle">#ffd41c42</color>
   <color name="components_secondary_buttons_danger_foreground_dimmed_content_disabled">#ff464a53</color>
   <color name="components_secondary_buttons_danger_foreground_dimmed_content_hover">#ffe43458</color>
@@ -499,11 +528,11 @@
   <color name="components_secondary_buttons_alert_button_background_hover">#fff9a707</color>
   <color name="components_secondary_buttons_alert_button_background_pressed">#ffa06b04</color>
   <color name="components_secondary_buttons_alert_button_background_focus">#fff9a707</color>
-  <color name="components_secondary_buttons_alert_button_foreground_content_idle">#ffcd8905</color>
+  <color name="components_secondary_buttons_alert_button_foreground_content_idle">@color/primitives_colors_emotional_alert_900</color>
   <color name="components_secondary_buttons_alert_button_foreground_content_disabled">#ff464a53</color>
-  <color name="components_secondary_buttons_alert_button_foreground_content_hover">#fff9a707</color>
-  <color name="components_secondary_buttons_alert_button_foreground_content_pressed">#ffa06b04</color>
-  <color name="components_secondary_buttons_alert_button_foreground_content_focus">#fff9a707</color>
+  <color name="components_secondary_buttons_alert_button_foreground_content_hover">@color/primitives_colors_emotional_alert_1000</color>
+  <color name="components_secondary_buttons_alert_button_foreground_content_pressed">@color/primitives_colors_emotional_alert_1000</color>
+  <color name="components_secondary_buttons_alert_button_foreground_content_focus">@color/primitives_colors_emotional_alert_1000</color>
   <color name="components_secondary_buttons_alert_foreground_dimmed_content_idle">#fff9a707</color>
   <color name="components_secondary_buttons_alert_foreground_dimmed_content_disabled">#ff464a53</color>
   <color name="components_secondary_buttons_alert_foreground_dimmed_content_hover">#fffab735</color>
@@ -514,11 +543,11 @@
   <color name="components_secondary_buttons_informative_button_background_hover">#ff2a92c6</color>
   <color name="components_secondary_buttons_informative_button_background_pressed">#ff1c6082</color>
   <color name="components_secondary_buttons_informative_button_background_focus">#ff2a92c6</color>
-  <color name="components_secondary_buttons_informative_button_foreground_content_idle">#ff2379a4</color>
+  <color name="components_secondary_buttons_informative_button_foreground_content_idle">@color/primitives_colors_emotional_info_800</color>
   <color name="components_secondary_buttons_informative_button_foreground_content_disabled">#ff464a53</color>
-  <color name="components_secondary_buttons_informative_button_foreground_content_hover">#ff2a92c6</color>
-  <color name="components_secondary_buttons_informative_button_foreground_content_pressed">#ff1c6082</color>
-  <color name="components_secondary_buttons_informative_button_foreground_content_focus">#ff2a92c6</color>
+  <color name="components_secondary_buttons_informative_button_foreground_content_hover">@color/primitives_colors_emotional_info_900</color>
+  <color name="components_secondary_buttons_informative_button_foreground_content_pressed">@color/primitives_colors_emotional_info_900</color>
+  <color name="components_secondary_buttons_informative_button_foreground_content_focus">@color/primitives_colors_emotional_info_900</color>
   <color name="components_secondary_buttons_informative_foreground_dimmed_content_idle">#ff2a92c6</color>
   <color name="components_secondary_buttons_informative_foreground_dimmed_content_disabled">#ff464a53</color>
   <color name="components_secondary_buttons_informative_foreground_dimmed_content_hover">#ff42a5d7</color>
@@ -529,11 +558,11 @@
   <color name="components_secondary_buttons_neutral_button_background_hover">#ff9095a2</color>
   <color name="components_secondary_buttons_neutral_button_background_pressed">#ffc7cad1</color>
   <color name="components_secondary_buttons_neutral_button_background_focus">#ff9095a2</color>
-  <color name="components_secondary_buttons_neutral_button_foreground_content_idle">#ffabafba</color>
+  <color name="components_secondary_buttons_neutral_button_foreground_content_idle">@color/primitives_colors_foreground_400</color>
   <color name="components_secondary_buttons_neutral_button_foreground_content_disabled">#ff464a53</color>
-  <color name="components_secondary_buttons_neutral_button_foreground_content_hover">#ff9095a2</color>
-  <color name="components_secondary_buttons_neutral_button_foreground_content_pressed">#ffc7cad1</color>
-  <color name="components_secondary_buttons_neutral_button_foreground_content_focus">#ff9095a2</color>
+  <color name="components_secondary_buttons_neutral_button_foreground_content_hover">@color/primitives_colors_foreground_300</color>
+  <color name="components_secondary_buttons_neutral_button_foreground_content_pressed">@color/primitives_colors_foreground_200</color>
+  <color name="components_secondary_buttons_neutral_button_foreground_content_focus">@color/primitives_colors_foreground_300</color>
   <color name="components_secondary_buttons_neutral_foreground_dimmed_content_idle">#ff9095a2</color>
   <color name="components_secondary_buttons_neutral_foreground_dimmed_content_disabled">#ff464a53</color>
   <color name="components_secondary_buttons_neutral_foreground_dimmed_content_hover">#ff747b8b</color>

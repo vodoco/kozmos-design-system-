@@ -19,3 +19,17 @@ test("a bare border, a field and a pending step read their roles", async ({
     "rgb(116, 123, 139)",
   );
 });
+
+// Every step is a 32 circle; the current step's ring is 2, a pending one's 1,
+// as the plugin paints them. The current step's ring was 1 until 2026-09-22.
+test("a step is a 32 circle, its ring 2 when current and 1 when pending", async ({
+  mount,
+}) => {
+  const component = await mount(<EdgeRoles />);
+  const current = component.getByText("1", { exact: true });
+  const pending = component.getByText("3", { exact: true });
+  await expect(current).toHaveCSS("width", "32px");
+  await expect(current).toHaveCSS("height", "32px");
+  await expect(current).toHaveCSS("border-top-width", "2px");
+  await expect(pending).toHaveCSS("border-top-width", "1px");
+});

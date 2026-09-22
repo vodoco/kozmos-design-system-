@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosBackdrop(
@@ -21,7 +21,10 @@ fun KozmosBackdrop(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(KozmosColors.primitivesColorsBackground800.copy(alpha = 0.4f))
+                // The scrim role, as React, Figma, the dialog and the drawer
+                // draw it: black at half, in both themes. It was background/800
+                // at 40 % until 2026-09-22, which turns light in dark mode.
+                .background(KozmosThemeTokens.semanticsOverlayScrim)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,

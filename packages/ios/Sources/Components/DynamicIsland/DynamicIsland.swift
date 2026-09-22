@@ -66,6 +66,10 @@ public struct KozmosDynamicIsland<Expanded: View, CompactLeading: View, CompactT
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.7, blendDuration: 0), value: state)
-        .preferredColorScheme(.dark)
+        // The island is black in both themes, so what sits in it reads from
+        // the dark scheme. Scoped through the environment: until 2026-09-22
+        // this was `.preferredColorScheme(.dark)`, which sets the scheme of
+        // the whole window the island is in, not the island's.
+        .environment(\.colorScheme, .dark)
     }
 }

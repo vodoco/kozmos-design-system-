@@ -34,7 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 /**
  * What a step of a route asks for. The four turns, and the transitions the
@@ -92,8 +92,8 @@ fun KozmosDirectionStep(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-            .background(KozmosColors.primitivesColorsBackground0)
-            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .background(KozmosThemeTokens.primitivesColorsBackground0)
+            .border(1.dp, KozmosThemeTokens.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(KozmosDimensions.primitivesLayoutSpacing150),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -101,13 +101,13 @@ fun KozmosDirectionStep(
             modifier = Modifier
                 .size(KozmosDimensions.primitivesLayoutSizing500)
                 .clip(CircleShape)
-                .background(KozmosColors.primitivesColorsTheme500.copy(alpha = 0.1f)),
+                .background(KozmosThemeTokens.primitivesColorsTheme500.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = KozmosColors.primitivesColorsTheme500,
+                tint = KozmosThemeTokens.primitivesColorsTheme500,
                 modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300)
             )
         }
@@ -118,13 +118,13 @@ fun KozmosDirectionStep(
             Text(
                 text = instruction,
                 style = MaterialTheme.typography.titleMedium,
-                color = KozmosColors.primitivesColorsForeground100
+                color = KozmosThemeTokens.primitivesColorsForeground100
             )
             if (distance != null || duration != null) {
                 Text(
                     text = "${distance ?: ""} ${if (duration != null) "• $duration" else ""}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = KozmosColors.primitivesColorsForeground500
+                    color = KozmosThemeTokens.primitivesColorsForeground500
                 )
             }
         }

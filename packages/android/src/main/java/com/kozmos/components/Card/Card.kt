@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 @Composable
@@ -26,12 +26,12 @@ fun KozmosCard(
     Card(
         modifier = modifier.border(
             1.dp,
-            KozmosColors.primitivesColorsBackground200,
+            KozmosThemeTokens.primitivesColorsBackground200,
             RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer)
         ),
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
         colors = CardDefaults.cardColors(
-            containerColor = KozmosColors.primitivesColorsBackground0,
+            containerColor = KozmosThemeTokens.primitivesColorsBackground0,
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         content = {
@@ -63,7 +63,7 @@ fun KozmosCardTitle(
         text = title,
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.SemiBold,
-        color = KozmosColors.primitivesColorsForeground100,
+        color = KozmosThemeTokens.primitivesColorsForeground100,
         modifier = modifier
     )
 }
@@ -76,7 +76,7 @@ fun KozmosCardDescription(
     Text(
         text = description,
         style = MaterialTheme.typography.bodyMedium,
-        color = KozmosColors.primitivesColorsForeground400,
+        color = KozmosThemeTokens.primitivesColorsForeground400,
         modifier = modifier.padding(top = KozmosDimensions.primitivesLayoutSpacing50)
     )
 }

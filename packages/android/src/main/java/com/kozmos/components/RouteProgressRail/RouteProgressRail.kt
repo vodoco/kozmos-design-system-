@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.directionstep.DirectionType
 import com.kozmos.components.directionstep.icon
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 /** The rail's geometry: the end dots, the travelling disc, the track. */
@@ -67,32 +67,32 @@ fun KozmosRouteProgressRail(
                 .padding(horizontal = KozmosRouteProgressRailGeometry.dot)
                 .fillMaxWidth()
                 .height(KozmosRouteProgressRailGeometry.track)
-                .background(KozmosColors.primitivesColorsBackground300, CircleShape)
+                .background(KozmosThemeTokens.primitivesColorsBackground300, CircleShape)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .size(KozmosRouteProgressRailGeometry.dot)
-                .background(KozmosColors.primitivesColorsTheme500, CircleShape)
+                .background(KozmosThemeTokens.primitivesColorsTheme500, CircleShape)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .size(KozmosRouteProgressRailGeometry.dot)
-                .background(KozmosColors.primitivesColorsBackground300, CircleShape)
+                .background(KozmosThemeTokens.primitivesColorsBackground300, CircleShape)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .offset(x = KozmosRouteProgressRailGeometry.discLeading(clamped, maxWidth))
                 .size(KozmosRouteProgressRailGeometry.disc)
-                .background(KozmosColors.primitivesColorsTheme500, CircleShape),
+                .background(KozmosThemeTokens.primitivesColorsTheme500, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = type.icon(),
                 contentDescription = null,
-                tint = KozmosColors.primitivesColorsBackground0,
+                tint = KozmosThemeTokens.primitivesColorsBackground0,
                 modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300)
             )
         }

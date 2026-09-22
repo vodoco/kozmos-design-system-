@@ -24,7 +24,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 data class TimelineItem(
     val time: String,
@@ -92,14 +92,14 @@ fun KozmosTimelineItem(
                 modifier = Modifier
                     .size(KozmosDimensions.primitivesLayoutSpacing150)
                     .clip(CircleShape)
-                    .background(KozmosColors.primitivesColorsTheme500)
+                    .background(KozmosThemeTokens.primitivesColorsTheme500)
             )
             if (!isLast) {
                 Box(
                     modifier = Modifier
                         .width(KozmosDimensions.primitivesLayoutSpacing25)
                         .fillMaxHeight()
-                        .background(KozmosColors.primitivesColorsBackground300)
+                        .background(KozmosThemeTokens.primitivesColorsBackground300)
                         .padding(top = KozmosDimensions.primitivesLayoutSpacing50)
                 )
             }
@@ -127,7 +127,7 @@ fun KozmosTimelineTime(
     Text(
         text = time,
         style = MaterialTheme.typography.labelMedium,
-        color = KozmosColors.primitivesColorsForeground500,
+        color = KozmosThemeTokens.primitivesColorsForeground500,
         modifier = modifier
     )
 }
@@ -141,7 +141,7 @@ fun KozmosTimelineTitle(
         text = title,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = KozmosColors.primitivesColorsForeground100,
+        color = KozmosThemeTokens.primitivesColorsForeground100,
         modifier = modifier
     )
 }
@@ -154,7 +154,7 @@ fun KozmosTimelineDescription(
     Text(
         text = description,
         style = MaterialTheme.typography.bodyMedium,
-        color = KozmosColors.primitivesColorsForeground500,
+        color = KozmosThemeTokens.primitivesColorsForeground500,
         modifier = modifier
     )
 }

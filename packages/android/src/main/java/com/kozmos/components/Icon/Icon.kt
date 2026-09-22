@@ -47,7 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 enum class KozmosIconSize(val dp: Dp) {
     Xs(12.dp),
@@ -146,7 +146,7 @@ private fun resolveIconVector(rawName: String): ImageVector {
 @Composable
 private fun resolveIconTint(color: KozmosIconColor): Color = when (color) {
     KozmosIconColor.Default -> LocalContentColor.current
-    KozmosIconColor.Muted -> KozmosColors.primitivesColorsForeground500
-    KozmosIconColor.Primary -> KozmosColors.primitivesColorsTheme500
-    KozmosIconColor.Destructive -> KozmosColors.primitivesColorsEmotionalDanger600
+    KozmosIconColor.Muted -> KozmosThemeTokens.primitivesColorsForeground500
+    KozmosIconColor.Primary -> KozmosThemeTokens.primitivesColorsTheme500
+    KozmosIconColor.Destructive -> KozmosThemeTokens.primitivesColorsEmotionalDanger600
 }

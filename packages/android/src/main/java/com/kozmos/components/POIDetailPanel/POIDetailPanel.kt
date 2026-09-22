@@ -54,7 +54,6 @@ import com.kozmos.contracts.KozmosPOIAction
 import com.kozmos.contracts.KozmosPOIAvailability
 import com.kozmos.contracts.KozmosPOIPresentation
 import com.kozmos.contracts.KozmosPOIServicePresentation
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 
@@ -109,7 +108,7 @@ fun KozmosPOIDetailPanel(
     val radius = KozmosDimensions.semanticsRadiusPanel
     // An inset block's surface: the muted grey on the panel's own white, and
     // white on a sheet, whose surface is that grey.
-    val insetSurface = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) KozmosColors.primitivesColorsBackground0 else KozmosColors.primitivesColorsBackground100
+    val insetSurface = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) KozmosThemeTokens.primitivesColorsBackground0 else KozmosThemeTokens.primitivesColorsBackground100
     val shape = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) {
         RoundedCornerShape(topStart = radius, topEnd = radius)
     } else {
@@ -127,7 +126,7 @@ fun KozmosPOIDetailPanel(
         shape = shape,
         // In a sheet the panel paints no surface of its own: it sits on the
         // sheet's, as the browse panel does, with no border and no shadow.
-        color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) Color.Transparent else KozmosColors.primitivesColorsBackground0,
+        color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) Color.Transparent else KozmosThemeTokens.primitivesColorsBackground0,
         border = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) {
             null
         } else {
@@ -173,7 +172,7 @@ fun KozmosPOIDetailPanel(
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = KozmosColors.primitivesColorsForeground500
+                        color = KozmosThemeTokens.primitivesColorsForeground500
                     )
                 }
 
@@ -224,9 +223,9 @@ fun KozmosPOIDetailPanel(
                             text = message,
                             style = MaterialTheme.typography.bodyMedium,
                             color = if (state.messageTone == KozmosPOIActionState.MessageTone.Error) {
-                                KozmosColors.primitivesColorsEmotionalDanger600
+                                KozmosThemeTokens.primitivesColorsEmotionalDanger600
                             } else {
-                                KozmosColors.primitivesColorsForeground100
+                                KozmosThemeTokens.primitivesColorsForeground100
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -257,7 +256,7 @@ fun KozmosPOIDetailPanel(
                         Text(
                             text = accessRestrictionsLabel,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = KozmosColors.primitivesColorsForeground100,
+                            color = KozmosThemeTokens.primitivesColorsForeground100,
                             modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing150)
                         )
                     }
@@ -292,7 +291,7 @@ private fun Header(
     poi: KozmosPOIPresentation,
     onClose: (() -> Unit)?,
     closeLabel: String,
-    surface: Color = KozmosColors.primitivesColorsBackground100
+    surface: Color = KozmosThemeTokens.primitivesColorsBackground100
 ) {
     Row(
         modifier = Modifier
@@ -311,7 +310,7 @@ private fun Header(
                 text = poi.name,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = KozmosColors.primitivesColorsForeground100,
+                color = KozmosThemeTokens.primitivesColorsForeground100,
                 // Three lines at most, beside the buttons, as on iOS and the web.
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
@@ -327,13 +326,13 @@ private fun Header(
                 Icon(
                     imageVector = Icons.Default.Place,
                     contentDescription = null,
-                    tint = KozmosColors.primitivesColorsForeground500,
+                    tint = KozmosThemeTokens.primitivesColorsForeground500,
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = poi.locationLabel,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = KozmosColors.primitivesColorsForeground500,
+                    color = KozmosThemeTokens.primitivesColorsForeground500,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -345,9 +344,9 @@ private fun Header(
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = if (poi.availability == KozmosPOIAvailability.Open) {
-                        KozmosColors.componentsPrimaryButtonsSuccessButtonBackgroundIdle
+                        KozmosThemeTokens.componentsPrimaryButtonsSuccessButtonBackgroundIdle
                     } else {
-                        KozmosColors.primitivesColorsForeground500
+                        KozmosThemeTokens.primitivesColorsForeground500
                     },
                     modifier = Modifier.semantics {
                         contentDescription = "Availability: $availabilityLabel"
@@ -382,7 +381,7 @@ private fun Services(
             text = heading,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = KozmosColors.primitivesColorsForeground100,
+            color = KozmosThemeTokens.primitivesColorsForeground100,
             modifier = Modifier.semantics { heading() }
         )
 
@@ -398,13 +397,13 @@ private fun Services(
             services.forEach { service ->
                 Surface(
                     shape = RoundedCornerShape(percent = 50),
-                    color = KozmosColors.primitivesColorsBackground0,
+                    color = KozmosThemeTokens.primitivesColorsBackground0,
                     border = BorderStroke(1.dp, KozmosThemeTokens.semanticsBorderSubtle)
                 ) {
                     Text(
                         text = service.label,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = KozmosColors.primitivesColorsForeground100,
+                        color = KozmosThemeTokens.primitivesColorsForeground100,
                         modifier = Modifier.padding(
                             horizontal = KozmosDimensions.primitivesLayoutSpacing150,
                             vertical = KozmosDimensions.primitivesLayoutSpacing100
@@ -417,7 +416,7 @@ private fun Services(
 }
 
 @Composable
-private fun POILogo(poi: KozmosPOIPresentation, surface: Color = KozmosColors.primitivesColorsBackground100) {
+private fun POILogo(poi: KozmosPOIPresentation, surface: Color = KozmosThemeTokens.primitivesColorsBackground100) {
     val logo = poi.logo
     val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
 
@@ -442,7 +441,7 @@ private fun POILogo(poi: KozmosPOIPresentation, surface: Color = KozmosColors.pr
                 text = poi.logoFallbackInitial,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
-                color = KozmosColors.primitivesColorsForeground500
+                color = KozmosThemeTokens.primitivesColorsForeground500
             )
         }
     }

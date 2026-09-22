@@ -22,8 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
-import com.kozmos.tokens.KozmosDesignTokens
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosUserLocationMarker(
@@ -53,6 +52,9 @@ fun KozmosUserLocationMarker(
         label = "pulseAlpha"
     )
 
+    // Read in composition: the cone's draw block runs outside it.
+    val dataBlue = KozmosThemeTokens.semanticsDataBlue
+
     Box(
         modifier = modifier.size(64.dp),
         contentAlignment = Alignment.Center
@@ -62,7 +64,7 @@ fun KozmosUserLocationMarker(
             modifier = Modifier
                 .size(64.dp)
                 .alpha(0.14f)
-                .background(KozmosDesignTokens.semanticsDataBlue, CircleShape)
+                .background(KozmosThemeTokens.semanticsDataBlue, CircleShape)
         )
 
         // The ring: 48, pulsing.
@@ -74,7 +76,7 @@ fun KozmosUserLocationMarker(
                     scaleY = pulseScale
                     alpha = pulseAlpha
                 }
-                .background(KozmosDesignTokens.semanticsDataBlue, CircleShape)
+                .background(KozmosThemeTokens.semanticsDataBlue, CircleShape)
         )
 
         // Heading Cone
@@ -100,7 +102,7 @@ fun KozmosUserLocationMarker(
                             path = path,
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    KozmosDesignTokens.semanticsDataBlue.copy(alpha = 0.4f),
+                                    dataBlue.copy(alpha = 0.4f),
                                     Color.Transparent
                                 ),
                                 center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f),
@@ -116,7 +118,7 @@ fun KozmosUserLocationMarker(
             modifier = Modifier
                 // The dot: 18, with a 3 white border.
                 .size(18.dp)
-                .background(KozmosDesignTokens.semanticsDataBlue, CircleShape)
+                .background(KozmosThemeTokens.semanticsDataBlue, CircleShape)
                 .border(3.dp, Color.White, CircleShape)
         )
     }

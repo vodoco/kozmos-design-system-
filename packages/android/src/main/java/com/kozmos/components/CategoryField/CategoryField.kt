@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kozmos.components.categorytile.KozmosCategoryTint
 import com.kozmos.components.counter.KozmosInkedFill
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 
@@ -57,8 +56,8 @@ fun KozmosCategoryField(
     modifier: Modifier = Modifier,
     count: Int? = null,
     tint: KozmosCategoryTint = KozmosCategoryTint(
-        KozmosColors.primitivesColorsTheme500,
-        KozmosInkedFill(KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle, KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle)
+        KozmosThemeTokens.primitivesColorsTheme500,
+        KozmosInkedFill(KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle, KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle)
     ),
     clearLabel: String = "Clear category",
     countLabel: (Int) -> String = { "$it places" },

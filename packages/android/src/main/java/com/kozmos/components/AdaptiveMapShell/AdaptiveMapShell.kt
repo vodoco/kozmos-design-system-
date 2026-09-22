@@ -60,7 +60,7 @@ import com.kozmos.contracts.KozmosMapReadiness
 import com.kozmos.components.motion.KozmosTransitions
 import com.kozmos.components.surface.KozmosSurfaceDefaults
 import com.kozmos.components.surface.KozmosSurfaceStyle
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 enum class KozmosMapPanelPlacement {
@@ -137,7 +137,7 @@ fun KozmosAdaptiveMapShell(
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 448.dp)
-            .background(KozmosColors.primitivesColorsBackground100)
+            .background(KozmosThemeTokens.primitivesColorsBackground100)
     ) {
         // Wide layouts float the panel beside the map; compact layouts dock it
         // to the bottom edge, matching the web breakpoint behaviour.
@@ -157,7 +157,7 @@ fun KozmosAdaptiveMapShell(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(KozmosColors.primitivesColorsBackground0.copy(alpha = 0.8f))
+                    .background(KozmosThemeTokens.primitivesColorsBackground0.copy(alpha = 0.8f))
                     .semantics { liveRegion = LiveRegionMode.Polite },
                 contentAlignment = Alignment.Center
             ) {
@@ -427,7 +427,7 @@ private fun SheetHandle(
             modifier = Modifier
                 .padding(top = KozmosDimensions.primitivesLayoutSpacing75)
                 .size(width = KozmosDimensions.primitivesLayoutSizing500, height = 4.dp)
-                .background(KozmosColors.primitivesColorsBackground300, RoundedCornerShape(999.dp))
+                .background(KozmosThemeTokens.primitivesColorsBackground300, RoundedCornerShape(999.dp))
         )
     }
 }

@@ -98,6 +98,10 @@ const RoutingInputGroup = React.forwardRef<
         <div className="flex flex-col gap-3 grow">
           {points.map((point, index) => (
             <div key={point.id} className="flex items-center gap-2">
+              {/* A field keeps the control radius and the standard focus ring,
+                  as every other field does. Until 2026-09-22 this one was
+                  rounded-panel (24) and drew no ring (ring-0): the only field
+                  in the system with no visible focus. */}
               <Input
                 value={point.value}
                 onChange={(e) => onPointChange(point.id, e.target.value)}
@@ -105,7 +109,7 @@ const RoutingInputGroup = React.forwardRef<
                   point.placeholder ||
                   (index === 0 ? "Choose Starting Point" : "Choose Destination")
                 }
-                className="h-10 text-sm bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 focus-visible:ring-0 rounded-panel transition-all duration-300"
+                className="h-10 text-sm bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 transition-all duration-300"
               />
               {points.length > 2 &&
                 index > 0 &&

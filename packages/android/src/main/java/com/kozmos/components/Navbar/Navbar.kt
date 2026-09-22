@@ -16,7 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,7 +51,7 @@ fun KozmosNavbar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)
-                .background(KozmosColors.primitivesColorsBackground0)
+                .background(KozmosThemeTokens.primitivesColorsBackground0)
                 .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing200),
             horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing200),
             verticalAlignment = Alignment.CenterVertically
@@ -74,6 +74,6 @@ fun KozmosNavbar(
                 account()
             }
         }
-        Divider(color = KozmosColors.primitivesColorsBackground300)
+        Divider(color = KozmosThemeTokens.primitivesColorsBackground300)
     }
 }

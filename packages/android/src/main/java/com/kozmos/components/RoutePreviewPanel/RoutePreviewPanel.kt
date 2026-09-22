@@ -37,7 +37,6 @@ import com.kozmos.components.iconbutton.KozmosIconButtonVariant
 import com.kozmos.components.routeoptioncard.KozmosRouteOptionCard
 import com.kozmos.contracts.KozmosRouteOptionPresentation
 import com.kozmos.contracts.KozmosRouteReadiness
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.components.surface.kozmosDashedEdge
@@ -82,7 +81,7 @@ fun KozmosRoutePreviewPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(KozmosColors.primitivesColorsBackground0)
+            .background(KozmosThemeTokens.primitivesColorsBackground0)
             .semantics { contentDescription = "Route preview" }
     ) {
         Column(
@@ -95,13 +94,13 @@ fun KozmosRoutePreviewPanel(
                 text = destinationLabel.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = KozmosColors.primitivesColorsForeground500
+                color = KozmosThemeTokens.primitivesColorsForeground500
             )
             Text(
                 text = destinationName,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = KozmosColors.primitivesColorsForeground100,
+                color = KozmosThemeTokens.primitivesColorsForeground100,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -176,7 +175,7 @@ fun KozmosRoutePreviewPanel(
                     Text(
                         text = optionsCountLabel,
                         style = MaterialTheme.typography.bodySmall,
-                        color = KozmosColors.primitivesColorsForeground500
+                        color = KozmosThemeTokens.primitivesColorsForeground500
                     )
                 }
             }
@@ -186,7 +185,7 @@ fun KozmosRoutePreviewPanel(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-                        .background(KozmosColors.primitivesColorsEmotionalAlert500.copy(alpha = 0.15f))
+                        .background(KozmosThemeTokens.primitivesColorsEmotionalAlert500.copy(alpha = 0.15f))
                         .padding(KozmosDimensions.primitivesLayoutSpacing150)
                 ) {
                     alert()
