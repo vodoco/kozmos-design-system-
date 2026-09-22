@@ -504,6 +504,12 @@ _Added on the 21st, evening, from the Figma drift
   `docs/figma-pointr-icon-catalog.json`), then run Curated Icons → Update before the set.
   The plugin's definitions are generated from the registry (the audit of the 21st found the
   two had drifted by thirteen); `pnpm components:contract:check` holds both to the catalog.
+  A taxonomy quick-access symbol has no catalog entry: name its published SVG in
+  `scripts/build-taxonomy-icons.mjs`, run `node scripts/build-taxonomy-icons.mjs --fetch`
+  (it vendors the SVG under `packages/icons/src/taxonomy/svg` and writes both the React
+  component and the importer's `TAXONOMY_ICON_SVGS`), then add its registry and
+  `KOSMOS_ICON_DEFINITIONS` entries with `source: "taxonomy"`. `pnpm icons:taxonomy:check`
+  (which contract parity runs too) holds the outputs to the SVGs.
 - A helper that falls back to the library's default icon paints a magnifier where a close
   belongs: `productSdkIconInstance` falls back only when told (`fallbackToDefault`, the tile's
   and the field's data slots); a symbol's caller draws its typed glyph instead.
@@ -665,3 +671,21 @@ _Added on the 22nd, from the audit of 06:58 and its REST read-back:_
 - A build stamp older than the plugin marks a gap, not a difference. Replay both builds'
   painters in the harness before asking for an Update: the Tree block's drawing from the 14th
   is today's.
+
+_Added on the 22nd, from the three decisions:_
+
+- The runtime never lets an auto-layout frame be smaller than its padding and laid-out stroke:
+  it grows the frame the moment they outgrow it, and never shrinks a fixed frame back when the
+  padding falls. Give a frame its final padding before its stroke, or start it with none, and
+  read its size back. The harness models this; a frame larger than drawn fails the painter
+  check.
+- Curated Icons → Update keeps each icon's source layer while it is still right, because every
+  icon tint in the file is an override keyed through that layer's id. Its result says
+  `sourcesKept`; fewer than the icons already on the page means tints were lost, and the
+  warning names the icons and the sets to update.
+- A taxonomy symbol is filled, and a slot's tint is a stroke override on a Pointr outline. The
+  sets whose painter tints fills (CategoryTile, CategoryField) offer the symbols; no other set
+  does. A symbol swapped in by hand arrives black: fill its shape with the accent.
+- CI runs `pnpm tokens:radius:nesting --strict` against the live file. A Figma change is judged
+  by it after the run in Figma: a drawn frame inside another's corner must be concentric with it,
+  or be a pill.

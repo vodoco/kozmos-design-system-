@@ -1666,3 +1666,21 @@ run order with `SETS_THAT_OVERRIDE_INSIDE` and a note after an Update, ratios be
 rounded down, Dialog's and Drawer's footer widths measured, and a slot's stroke given room; the
 painter check is 290. The Tree block needs no Update: replayed, it draws as the build. Left: the
 run in drift §9, the panel's icons and two smaller decisions (handoff §7).
+
+Olcay's run of 08:10 confirmed the tile's two lines and the panel's counts in the live file, but
+DynamicIsland's slots still read 26: not the fit, as `fc1adcc` said, but the runtime growing a
+frame whose padding and stroke outgrow it — each slot had 12 above and below and its stroke
+before the fit cut the padding, and a fixed frame never shrinks back. Then Olcay's three rulings,
+as recommended (`1221183`, `b6830f4`, build `6fdc2ffbc635`; drift §9, the last two sections):
+the browse tiles carry the taxonomy's own quick-access symbols, vendored as the SVGs the
+taxonomy publishes and generated into `@kozmos/icons` and the Icons page by
+`pnpm icons:taxonomy:build`; DynamicIsland's "•" is the default icon, and the island is drawn as
+React and Compose draw it (240×44, 360×160 at 32, a 56 circle, where it was 240×48, 360×180 and
+64×48); the panel's title, which no platform draws, is hidden with its property kept, and its
+search sits in a header over a rule as on every platform. On the way: Curated Icons → Update
+drew every icon's source again under a new id, orphaning the tint of every icon slot in the file
+but four sets' — it keeps them now; the contract check could pair an icon with its neighbour's
+key; the check's scan of writes inside nested instances missed two shapes of write; and the
+typography rule, red on this branch since `a38e24a`, read `KozmosTypography.font(.callout)` as a
+bare style (`36d04e8`). The painter check is 346. Left: the run in drift §9, and four
+cross-platform differences for Olcay (handoff §7).

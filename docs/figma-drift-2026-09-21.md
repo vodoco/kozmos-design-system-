@@ -696,7 +696,8 @@ Over REST at 07:03 (`lastModified` 06:56:38):
    but none at the top and bottom, and every one of the file's 136 slots lays its stroke out
    (`strokesIncludedInLayout`, which no painter sets — the runtime's default). The fit now leaves
    both. Why a fixed 24 frame reads 26 is not established — 13 slots of 44 whose content also
-   fills them read 44 — so the next verify confirms it. The same fit gives those 13 a pixel less
+   fills them read 44 — so the next verify confirms it. **It did not**: the run of 08:10 still
+   read 26, and the cause was elsewhere (the next section). The same fit gives those 13 a pixel less
    padding on their next Update (BrowseCategoriesPanel, POIDetailPanel, RoutingInputGroup,
    MapOverlay, FeedbackCard).
 
@@ -715,4 +716,105 @@ panel's visible title.
 5. From the terminal: `pnpm figma:verify` — every enforced check ok, no overflow, one typed
    glyph (the "•") — and over REST the panel's counts (6, 14, 5, 88, 9, 22, 37, 41), its long
    names on two lines, DynamicIsland's slots at 24, and the footers at 158 and 126.
+6. Then the library can be published.
+
+### The run of 08:10, and the three decisions (build `6fdc2ffbc635`)
+
+Olcay ran Update All Product / SDK on `7241e855b611` at 08:10. Over REST at 08:12
+(`lastModified` 08:10:23): the 26 Product / SDK sets on `7241e855b611`; the panel's counts 6,
+14, 5, 88, 9, 22, 37, 41 and its long names on two lines (`HEIGHT`, `ENDING`, `maxLines` 2) —
+the order and the clamp of `fc1adcc` hold in the live runtime. **DynamicIsland's three slots
+still read 26**, and item 5 above was wrong about why.
+
+**Why a fixed 24 frame reads 26.** After `fc1adcc` the slots' padding is 3 above and below
+(Compact, a 16 label) and 1 (Minimal, a 20 label): 3 + 16 + 3 + 2 and 1 + 20 + 1 + 2 are both
+24, yet both read 26 — the same 26 they read before. 26 is 12 + 12 + 1 + 1: the slot was made 24
+high with the painter's default 12 above and below, then took its stroke, and only then did the
+fit cut the padding. The runtime never lets an auto-layout frame be smaller than its padding and
+its laid-out stroke, grows it at the moment they outgrow it, and never shrinks a fixed frame back
+when the padding falls. No document says so; the file does, and the harness now models it
+(`AUTO_LAYOUT_BOX_FIELDS`): painting every Product / SDK set and the 41 Core sets the harness
+can reach, the only frames larger than drawn are exactly DynamicIsland's three, at 26 — the
+live file's answer, including where it found nothing. A slot now starts with no padding and
+reads its size back into the log.
+
+**The three decisions of the 22nd, as recommended** (`1221183`, `b6830f4`, build
+`6fdc2ffbc635`):
+
+1. **The tiles carry the taxonomy's symbols.** The eight the aviation quick access publishes at
+   10.12.0 (`get_quick_access`: `entrance-exit-green`, `service-space_office-turquoise`,
+   `security-space-red`, `transportation-space_boarding-gate-yellow`, `amenity-space_desk-blue`,
+   `parking-space-navy`, `food-beverage-space-orange`, `retail-space-pink`) are vendored as SVGs
+   in `packages/icons/src/taxonomy/svg`. `pnpm icons:taxonomy:build` generates from them the
+   React components (`TaxonomyEntranceExit` and seven more in `@kozmos/icons`, with lucide's
+   props, filled in the caller's colour) and the block of `code.js` the importer draws
+   `Icon / taxonomy-*` from; an SVG is refused unless it is paths in one colour, and only its
+   viewBox changes, squared so the longer side spans 20 of 24. Curated Icons → Update puts the
+   eight on the Icons page's eighth row as a "Taxonomy Source" frame of black filled shapes that
+   scale. The panel swaps each tile's Icon to its symbol and fills it with the tile's
+   `Category/Accent`. CategoryTile and CategoryField offer the symbols in their Icon swap; no other
+   slot does, because a slot's tint is a stroke override on a Pointr outline, which does not reach
+   a fill. For the same reason a symbol swapped in by hand arrives black and is recoloured by hand
+   (both sets' descriptions say so). React's story `AviationQuickAccess` draws the panel as the
+   Figma set does.
+2. **DynamicIsland's "•" is an icon.** The Minimal slot holds the default icon (the curated
+   search-md, or Icon / Slot Default without it) at 16, tinted foreground/400; the typed-glyph
+   check stays strict. Building it showed the island drawn at 240×48, 360×180 and 64×48 at 24,
+   while React and Compose draw a 240×44 pill, a 360×160 card at 32 and a 56 circle; the set says
+   it is generated from React, so it is drawn as React draws it now, and the check reads those
+   numbers from the React source. SwiftUI draws the pill 36 high and full width and the circle at
+   48 (handoff §7).
+3. **The panel's title is hidden.** No platform draws the label (React's `aria-label`, SwiftUI's
+   `.accessibilityLabel`, Compose's `contentDescription`). The layer stays, hidden and bound to
+   Panel Label Text, which Code Connect reads as `label`, as Avatar's Alt Text does. The Search
+   variant now puts the search in a header padded 16 over a 1px Border/Subtle rule and the grid
+   in a body padded 16 — React's `border-b p-4` and `p-4`, and SwiftUI's and Compose's layout.
+
+**Found on the way:**
+
+- **Curated Icons → Update orphaned every icon tint in the file.** It drew each icon's Pointr
+  Source again under a new id, and each tint a slot carries is an override keyed through that id
+  (`I1965:11750;1923:8924;1007:11762`, 1923:8924 being Icon / bus's source): a run turned every
+  icon slot but the four sets it repaints back to black. It keeps a source that is still the
+  library component's now, a taxonomy source while its artwork stamp matches, and names in its
+  warnings any source it had to draw again. In the harness, a second run keeps all 64 ids; the
+  sync of `7241e855b611` changed all 56. The live ids were recorded before the run
+  (`icons-baseline-before-run.json` in the session's scratchpad) to prove it after.
+- **The contract check paired names with keys across entries** (`name: …[\s\S]*?componentKey`):
+  a taxonomy entry without a key would have borrowed its neighbour's. It reads entry by entry and
+  runs the generator's `--check`.
+- **The check's scan of who writes inside a nested instance saw two things only**: writes by
+  assignment on one line. A write through `applyIconColorOverrides(icon, …)`, and a declaration
+  prettier breaks after its `=`, both hid the panel's new writer; both are read now, and nothing
+  else in `code.js` was hiding.
+- **`tokens:typography:check` was red on this branch since `a38e24a`** (the 18th): it took
+  `KozmosTypography.font(.callout)` for a bare `.font(.callout)`. CI runs it on a pull request.
+  Fixed in the rule (`36d04e8`), which still bites on a real bare style.
+
+A replay of every Product / SDK set and the 41 reachable Core sets under `7241e855b611` and
+`6fdc2ffbc635` differs in exactly BrowseCategoriesPanel and DynamicIsland; CategoryTile's and
+CategoryField's changes are their Icon swap's offer and their descriptions. The painter check is
+346; on `7241e855b611` its 32 new and strengthened assertions fail and nothing else does.
+
+### The run, with build `6fdc2ffbc635`
+
+1. Run the plugin; the header must read **Build 6fdc2ffbc635**. An Audit Library now warns that
+   eight icon sources are missing — that is the next step.
+2. **Curated Icons → Update.** Expected under Show Details: `planned` 64, `imported` 56,
+   `drawn` 8, `created` 8, `refreshed` 56, `sourcesKept` 56, `sourcesReplaced` 8 (the eight new
+   symbols), `failed` 0, and no warning that a source was drawn anew — `sourcesKept` below 56
+   means tints were lost, and the warning names the icons. It repaints the Button, IconButton,
+   FloatingActionButton and Badge icon slots, as it always has.
+3. **Update, one at a time, never Rebuild:** CategoryTile, then BrowseCategoriesPanel (after
+   CategoryTile, whose layers it writes into, and after Curated Icons, whose symbols it tints),
+   then CategoryField, then DynamicIsland; then Dialog and Drawer, still owed from `7241e855b611`.
+4. **Audit Library**, and paste it. Expected: no warning, icons 64 of 64, Surface QA 64 of 64,
+   `pluginBuild` `6fdc2ffbc635`, the advisories as at 06:58 (54) — the panel's symbols are the
+   accents its buses were.
+5. From the terminal: `pnpm figma:verify` — every enforced check ok, no overflow, **no typed
+   glyph** — `pnpm tokens:radius:nesting --strict` (CI's gate on the live file; the island's
+   slots are pills or exact concentrics, and the panel's new frames draw nothing, so it should
+   stay at zero), and over REST: the 56 Pointr Sources under their recorded ids; the panel's
+   eight tiles on their symbols, filled in their accents; its title hidden; the island at
+   240×44, 360×160 and 56×56 with its slots at 24, 24 and 32; the footers at 158 and 126.
 6. Then the library can be published.
