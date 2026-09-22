@@ -350,8 +350,11 @@ ADAPTIVE_BROWSER=<chromium|firefox|webkit> pnpm test:search-sheet` (and `test:ma
    images showed 2 to 20 pixels more than two levels off, 0.000002 % to 0.000028 %, against 0.087 %
    for the smallest real change measured; and **the bundle is Olcay's decision**: 320.8 KB raw
    against 300, gzip over its 70 KB guarantee, grown by real features (the adaptive shell, the POI
-   anatomy, the navigation parts), subpath exports or a new budget. The site session and this one
-   both push to the branch: coordinate before pushing.
+   anatomy, the navigation parts), subpath exports or a new budget. The story audit's first CI run
+   failed five of 1,104: the POI sheet's "Open" at 3.95:1 on its grey, a colour ruling the site
+   session brings to Olcay, and two Linux-only overflows fixed in `3610636` (the AI button's
+   turning ring, the stepper's labels). The site session and this one both push to the branch:
+   coordinate before pushing.
 3. **The Figma remainder** (stage doc §5): `Surface` and its axis on five sets; ManoeuvreCard,
    Itinerary and RouteProgressRail as sets; the shell's phone sheet (a decision); the 15th–19th
    drift — Tag's and Counter's `emotion`, MapControlButton's axes, the POI panel's anatomy; `⇅`.
