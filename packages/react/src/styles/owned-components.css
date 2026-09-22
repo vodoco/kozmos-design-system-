@@ -40,15 +40,15 @@
     @apply flex h-11 w-full rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[color:var(--primitives-colors-foreground-400)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:placeholder:text-muted-foreground disabled:opacity-100;
   }
   .kozmos-input-warning {
-    @apply border-warning text-warning focus-visible:ring-warning;
+    @apply border-warning text-warning-text focus-visible:ring-warning;
   }
   .kozmos-input-success {
-    @apply border-success text-success focus-visible:ring-success;
+    @apply border-success text-success-text focus-visible:ring-success;
   }
   /* The public helper also accepts error=true alongside a status. Error wins,
      consistently with Input's resolvedStatus, without relying on class order. */
   .kozmos-input-error {
-    @apply border-destructive text-destructive focus-visible:ring-destructive;
+    @apply border-destructive text-destructive-text focus-visible:ring-destructive;
   }
   .kozmos-textarea {
     @apply flex min-h-20 w-full rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
@@ -57,7 +57,7 @@
   /* The old placeholder:text-destructive/60 compiled to nothing. Do not invent
      a replacement colour during this behavior-preserving migration. */
   .kozmos-textarea-error {
-    @apply border-destructive text-destructive focus-visible:ring-destructive;
+    @apply border-destructive text-destructive-text focus-visible:ring-destructive;
   }
   .kozmos-label {
     @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50;
@@ -75,7 +75,7 @@
     @apply sr-only;
   }
   .kozmos-field-required {
-    @apply ml-0.5 text-destructive;
+    @apply ml-0.5 text-destructive-text;
   }
   .kozmos-field-optional {
     @apply shrink-0 text-xs leading-5 text-muted-foreground;
@@ -87,13 +87,13 @@
     @apply text-muted-foreground;
   }
   .kozmos-field-error {
-    @apply text-destructive;
+    @apply text-destructive-text;
   }
   .kozmos-field-warning {
-    @apply text-warning;
+    @apply text-warning-text;
   }
   .kozmos-field-success {
-    @apply text-success;
+    @apply text-success-text;
   }
   /* The solid surface: the default. The background colour with the subtle
      border, the container edge. */

@@ -311,10 +311,12 @@ try {
         .locator("..")
         .getByRole("button");
       assert.equal(await disabledToggle.isDisabled(), true);
-      for (const [status, token] of [
-        ["error", "danger-600"],
-        ["warning", "alert-800"],
-        ["success", "success-800"],
+      // The edge and the ring keep the emotion's fill step; the glyph is text,
+      // the emotion's Text role, one step darker (2026-09-22).
+      for (const [status, token, emotion] of [
+        ["error", "danger-600", "danger"],
+        ["warning", "alert-800", "alert"],
+        ["success", "success-800", "success"],
       ]) {
         const control = page.getByTestId(`${id}-number-${status}`);
         const tone = await value(
@@ -331,7 +333,13 @@ try {
         );
         const action = control.locator("..").getByRole("button").first();
         assert.equal((await measure(action)).borderTopColor, tone);
-        assert.equal((await measure(action)).color, tone);
+        assert.equal(
+          (await measure(action)).color,
+          await value(
+            `${id}-number-${status}`,
+            `--semantics-emotion-${emotion}-text`,
+          ),
+        );
         await control.focus();
         assert.notEqual((await measure(control)).boxShadow, "none");
       }
